@@ -147,6 +147,28 @@ src/
     └── excoModules.ts        ← Config modul exco (nama, warna, route, aktif/tidak)
 ```
 
+### 2.1 Piawaian Reka Bentuk UI/UX & Token Tema Digital Flagship (Hybrid Precision-Editorial)
+
+Bagi memastikan JPP-POLISAS mencapai kualiti produk taraf flagship antarabangsa tanpa kelihatan seperti "AI Slop" generik:
+
+1. **Palet Warna Institusi Teguh (Locked Color Tokens):**
+   - **Royal Maroon:** `hsl(0 78% 29%)` / `#831010` (Elemen utama, border fokus, tindakan kepimpinan rasmi).
+   - **Refined Brass / Gold:** `hsl(43 78% 46%)` / `#D4A017` (Lencana anugerah, penunjuk merit, sorotan pencapaian).
+   - **Latar Belakang Bersih:** Mod gelap menggunakan Neutral Deep Slate `#0A0202` / `slate-950` yang jitu, manakala mod terang menggunakan `#F8FAFC` bersih.
+   - **Tiada Warna Neon Berkonflik:** Menghapuskan ungu cerah terpencil (`bg-purple-600`) dan warna chameleon yang tidak seragam merentasi navigasi dan modul.
+
+2. **Tipografi & Hirarki Kandungan:**
+   - Menggunakan sistem susunan fon natif berprestasi tinggi (`Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif`).
+   - Larangan teks berbalut melampau (banned 6-line awkward wraps); menggunakan `max-w-2xl` atau `max-w-3xl` dengan *leading-relaxed*.
+
+3. **Prinsip Anti-Slop (Strict Anti-Patterns):**
+   - **Sifar Mockup Pelayar Palsu:** Menghapuskan div palsu bertingkap tiga butang merah/kuning/hijau (*fake browser chrome*). Sebaliknya paparkan antaramuka interaktif sebenar.
+   - **Pencegahan Kebutaan Banner (Banner Blindness):** Menggabungkan banner berturut-turut yang memakan ketinggian melebihi 600px ke dalam satu `PortalNotificationCenter` kompak (72-80px) dengan navigasi bertitik dan tindakan terus.
+   - **Hirarki Tindakan Kemas:** Pada setiap kad acara EMS, elakkan timbunan 10 butang berwarna-warni. Gunakan butang tindakan utama ("Urus Acara & Skor") bersama dropdown menu bagi fungsi pengurusan lain.
+
+4. **Fizik Interaksi & Prestasi Skrol:**
+   - Navigasi terapung dan bar status wajib menggunakan `useScroll` daripada `framer-motion` dan bukan event listener manual `window.addEventListener('scroll')` bagi mengelakkan kebocoran memori dan jank susun atur.
+
 ---
 
 ## 3. Sistem Storan Hibrid (Hybrid Storage) ⚠️ PENTING
@@ -398,6 +420,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/exco/ExcoAktivitiPage.tsx` | **Template universal** aktiviti exco — jangan duplicate logik ini |
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
+| `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan `window.confirm`. Mengelakkan sekatan pelayar moden |
+| `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 
@@ -2831,3 +2855,28 @@ Bagi menyokong pengoperasian pusat edaran fizikal kampus yang berasingan (Pusat 
    - **Penyelarasan Automatik (*Reactive Clamping*):** Sekiranya pelajar menukar pusat edaran selepas memilih barangan, kuantiti barangan yang melebihi baki stok lokasi baharu diselaraskan secara automatik dengan notifikasi toast mesra.
 
 
+
+
+---
+
+## 28. Piawaian Dialog, Modal & Interaksi (Pencegahan Sekatan Pelayar & Aksesibiliti)
+
+### 28.1 Larangan Mutlak `window.prompt`, `window.confirm`, dan `window.alert`
+Pelayar moden (Chrome, Safari, Edge, Firefox) menyekat atau melumpuhkan fungsi dialog sekatan lalai (`window.prompt`, `window.confirm`, `window.alert`) dalam pelbagai konteks (contohnya tab latar belakang, PWA berskrin penuh, dan mod WebView mudah alih). Selain itu, dialog natif mencacatkan estetika institusi dan tidak memenuhi piawaian aksesibiliti (a11y).
+
+**Peraturan:**
+- **DILARANG SAMA SEKALI** memanggil `window.prompt()`, `window.confirm()`, atau `window.alert()` dalam mana-mana kod pengeluaran.
+- Sebarang keperluan input kata laluan, teks pengesahan, atau tindakan kritikal (seperti pelupusan rekod) WAJIB menggunakan komponen `<PromptDialog />`.
+
+### 28.2 Komponen Accessible `<PromptDialog />` (`src/components/ui/PromptDialog.tsx`)
+Komponen modal dialog berasaskan Radix UI Dialog yang menyediakan:
+- Sokongan dwi-tema automatik (Dark & Light Mode).
+- Mod input teks selamat (`type="password"` atau `type="text"`).
+- Pengesahan input (*validation*) terbina dalam melalui helper `src/lib/promptUtils.ts`.
+- Navigasi papan kekunci lengkap: `Enter` untuk hantar, `Escape` untuk batal, dan perangkap fokus (`focus-trap`).
+- Atribut ARIA penuh (`aria-describedby`, `aria-labelledby`) yang mesra pembaca skrin.
+
+### 28.3 Polisi Sifar Em-Dash (Tanda Sempang Standard Sahaja)
+Untuk mengekalkan konsistensi tipografi antarabangsa dan mengelakkan isu pengekodan aksara pada pelbagai platform:
+- Gunakan tanda sempang standard `-` atau simbol anak panah `->`.
+- Jangan sekali-kali memasukkan aksara em-dash dalam teks antaramuka, tooltip, mesej toast, mahupun komen kod.
