@@ -60,6 +60,7 @@ out/
 # Patch and temporary scripts
 patch_launch_video.js
 patch_launch_video.cjs
+scripts/*.mjs
 
 # Playwright & Testing Reports
 playwright-report/
