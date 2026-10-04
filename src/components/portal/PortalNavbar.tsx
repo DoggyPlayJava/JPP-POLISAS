@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Search } from 'lucide-react';
+import { Menu, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
@@ -14,9 +14,17 @@ export interface PortalNavbarProps {
   supsasActive: boolean;
   profile: any;
   setIsSidebarOpen: (v: boolean) => void;
+  onStartTour?: () => void;
 }
 
-export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile, setIsSidebarOpen }: PortalNavbarProps) {
+export function PortalNavbar({
+  isScrolled,
+  karnivalActive,
+  supsasActive,
+  profile,
+  setIsSidebarOpen,
+  onStartTour,
+}: PortalNavbarProps) {
   // Determine merit tier for Dynamic Avatar Aura
   const meritPoints = profile?.merit_points || profile?.merit || 0;
   let auraClass = "";
@@ -110,6 +118,26 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
           <span className="text-[11px] font-medium hidden md:inline">Cari...</span>
           <kbd className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-background/50 text-foreground/70">⌘K</kbd>
         </button>
+
+        {onStartTour && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onStartTour}
+            className={cn(
+              "tour-help-button rounded-xl w-10 h-10 transition-all",
+              karnivalActive
+                ? "hover:bg-pink-500/20 text-pink-200"
+                : supsasActive
+                ? "hover:bg-amber-500/20 text-amber-200"
+                : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
+            )}
+            title="Ulang Tutorial Sistem"
+            aria-label="Ulang Tutorial Sistem"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </Button>
+        )}
 
         <ThemeToggle />
         <NotificationBell />
