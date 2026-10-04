@@ -37,6 +37,12 @@ import {
   resolveTieWinner,
   EmsLeaderboardItem,
 } from '@/lib/ems';
+import {
+  StageRevealStep,
+  getNextRevealStep,
+  getPrevRevealStep,
+  isPodiumCardRevealed,
+} from '@/__tests__/emsStagePresentation.test';
 import { supabase } from '@/lib/supabase';
 import type { EmsEvent, EmsScore, EmsJuryCode, EmsRubricCriteria, EmsParticipant } from '@/types';
 
@@ -97,9 +103,58 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const [selectedTieWinnerId, setSelectedTieWinnerId] = useState<string>('');
   const [resolvingTie, setResolvingTie] = useState(false);
 
-  // Stage Display State
+  // Stage Display State & Stepped Reveal Controller
   const [isRevealed, setIsRevealed] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [revealStep, setRevealStep] = useState<StageRevealStep>('ALL');
+  const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Clock effect for live telemetry ticker
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Keyboard navigation for presentation stage mode
+  useEffect(() => {
+    if (activeTab !== 'STAGE') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      if (e.key === ' ' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setRevealStep((prev) => {
+          const next = getNextRevealStep(prev);
+          if (next === 'CHAMPION') {
+            triggerConfetti();
+          }
+          return next;
+        });
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setRevealStep((prev) => getPrevRevealStep(prev));
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        setRevealStep('HIDDEN');
+        toast.success('Pentas ditetapkan semula ke mod terlindung (Armed)');
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        triggerConfetti();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab]);
 
   // Lucky Draw Modal State
   const [showLuckyDrawModal, setShowLuckyDrawModal] = useState(false);
@@ -230,7 +285,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     };
   }, [eventId, loadData]);
 
-  // Extract Categories — kalau event guna rubrik, tunjuk KATEGORI RUBRIK je
+  // Extract Categories - kalau event guna rubrik, tunjuk KATEGORI RUBRIK je
   // (cth Best Showcase / Best Digital Promotion / Anugerah Khas Juri), bukan
   // kategori makanan peserta yang bercelaru (29+ jenis). Legacy event tanpa
   // rubrik kekal guna kategori peserta.
@@ -270,7 +325,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     return Array.from(set).sort();
   }, [rubrics]);
 
-  // Rubric award tabs — shared render between Stage Mode & Leaderboard Mode
+  // Rubric award tabs - shared render between Stage Mode & Leaderboard Mode
   const rubricTabs =
     rubricCategories.length > 1 ? (
       <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto max-w-md">
@@ -576,7 +631,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 <div className="w-full h-full bg-gradient-to-r from-amber-500 to-purple-600 animate-pulse" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
-                MOD SKRIN PENTAS EMS — MENUNGGU ISYARAT URUS SETIA
+                MOD SKRIN PENTAS EMS - MENUNGGU ISYARAT URUS SETIA
               </span>
             </div>
 
@@ -605,7 +660,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     const restItems = filteredLeaderboard.slice(3);
 
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between p-4 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans transition-colors">
+      <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 pb-32 md:pb-24 relative overflow-hidden select-none font-sans transition-colors">
         {/* Background glow effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-500/10 via-purple-500/10 to-transparent blur-[140px] pointer-events-none" />
 
@@ -639,7 +694,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             {/* Rubric Award Tabs (papan anugerah berasingan) */}
             {rubricTabs}
 
-            {/* Category Filter Tabs — sembunyi utk event rubrik (tab rubrik dah ada) */}
+            {/* Category Filter Tabs - sembunyi utk event rubrik (tab rubrik dah ada) */}
             {!isRubricDriven && categories.length > 0 && (
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto max-w-md">
                 <button
@@ -713,6 +768,90 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             </button>
           </div>
         </header>
+
+        {/* Emcee Stepped Reveal Control Dock */}
+        <div className="relative z-20 my-4 p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+              <Sparkles className="w-3.5 h-3.5" /> Kawalan Pentas:
+            </span>
+            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
+              <button
+                type="button"
+                onClick={() => setRevealStep('ALL')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  revealStep === 'ALL'
+                    ? 'bg-amber-500 text-slate-950 shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Semua Terbuka
+              </button>
+              <button
+                type="button"
+                onClick={() => setRevealStep('HIDDEN')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  revealStep === 'HIDDEN'
+                    ? 'bg-rose-500 text-white shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Kunci (Armed)
+              </button>
+              <button
+                type="button"
+                onClick={() => setRevealStep('BRONZE')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  revealStep === 'BRONZE'
+                    ? 'bg-amber-700 text-white shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Ke-3 (Gangsa)
+              </button>
+              <button
+                type="button"
+                onClick={() => setRevealStep('SILVER')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  revealStep === 'SILVER'
+                    ? 'bg-slate-300 text-slate-950 shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Ke-2 (Perak)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRevealStep('CHAMPION');
+                  triggerConfetti();
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  revealStep === 'CHAMPION'
+                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Johan (Emas) 🏆
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-3 text-[11px] text-white/50 font-medium">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">Space / →</kbd> Seterusnya
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">R</kbd> Kunci Semula
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">C</kbd> Bunga Api
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> Skrin Penuh
+            </span>
+          </div>
+        </div>
 
         {/* Main Stage Content: Top 3 Podium */}
         <main className="relative z-10 my-8 flex-1 flex flex-col justify-center">
@@ -806,7 +945,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       )}
                     </div>
                     <div className="w-full h-16 bg-amber-500/20 dark:bg-amber-500/10 rounded-b-2xl border-x border-b border-amber-500/30 dark:border-amber-500/20 flex items-center justify-center text-xs font-black text-amber-800 dark:text-amber-400 tracking-widest shadow-inner">
-                      PODIUM 1 — JOHAN
+                      PODIUM 1 - JOHAN
                     </div>
                   </div>
                 ) : null}
@@ -903,7 +1042,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
         {/* Footer */}
         <footer className="relative z-10 pt-6 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-white/40">
-          <span>JPP POLISAS — Event Management System (EMS)</span>
+          <span>JPP POLISAS - Event Management System (EMS)</span>
           <span>Dikuasa oleh Sistem Keputusan Realtime Supabase</span>
         </footer>
       </div>
@@ -1136,7 +1275,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               </div>
             )}
 
-            {/* Category Tabs — sembunyi utk event rubrik (tab rubrik dah ada) */}
+            {/* Category Tabs - sembunyi utk event rubrik (tab rubrik dah ada) */}
             {!isRubricDriven && (
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               <button
@@ -1452,7 +1591,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         />
                         <div>
                           <p className="text-xs font-black text-slate-900 dark:text-white">
-                            #{p.booth_no || p.custom_responses?.booth_no || '-'} — {p.team_name || p.leader_name}
+                            #{p.booth_no || p.custom_responses?.booth_no || '-'} - {p.team_name || p.leader_name}
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             Purata Skor: {item.average_score.toFixed(2)}
