@@ -63,7 +63,7 @@ export function EmsPublicRegisterPage() {
   // Multi-step state (1: Info, 2: Dynamic Fields, 3: Media, 4: Pass)
   const [currentStep, setCurrentStep] = useState<number>(1);
 
-  // Scroll ke atas bila step bertukar — guna double rAF + behavior auto supaya
+  // Scroll ke atas bila step bertukar - guna double rAF + behavior auto supaya
   // tak dibatalkan oleh re-render (smooth scroll boleh ter-cancel pada mobile).
   const scrollToTop = () => {
     requestAnimationFrame(() => {
