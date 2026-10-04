@@ -23,7 +23,7 @@ import { ClubSwitcher } from '@/components/ui/ClubSwitcher';
 import { AiAnalysisModal } from '@/components/ai/AiAnalysisModal';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
-import { Bot, Sparkles, HelpCircle } from 'lucide-react';
+import { PromptDialog } from '@/components/ui/PromptDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -149,6 +149,12 @@ export function DashboardPage() {
   const [showAiModal, setShowAiModal] = useState(false);
   const { runTour, startTour, closeTour } = useTour('kelab_dashboard_tour', !!profile);
 
+  // Modal dialog states replacing browser window.prompt / confirm
+  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; task: any | null }>({ open: false, task: null });
+  const [unlockDialog, setUnlockDialog] = useState<{ open: boolean; program: any | null }>({ open: false, program: null });
+  const [lateVerifyDialog, setLateVerifyDialog] = useState<{ open: boolean; task: any | null }>({ open: false, task: null });
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+
   // Derive state dari dashData
   const tasks     = dashData.tasks     || [];
   const activities= dashData.activities|| [];
@@ -223,24 +229,18 @@ export function DashboardPage() {
     } catch (error) { toast.error("Ralat semasa meluluskan"); }
   };
 
-  const handleVerifyTask = async (task: any) => {
+  const handleVerifyTask = (task: any) => {
     const isLate = new Date(task.due_date) < new Date();
-    let meritToGive = task.merit_points || 0;
-
     if (isLate) {
-      const confirmPenalty = window.confirm(`Tugasan ini LEWAT. Adakah anda ingin mengenakan PENALTI de-merit?`);
-      if (confirmPenalty) {
-        const penaltyStr = window.prompt("Masukkan jumlah merit untuk DIPOTONG (cth: 5):", "5");
-        if (penaltyStr !== null) {
-          let penalty = parseInt(penaltyStr);
-          if (isNaN(penalty)) penalty = 0;
-          penalty = Math.max(0, Math.min(100, penalty));
-          meritToGive = -penalty; 
-        }
-      }
+      setLateVerifyDialog({ open: true, task });
+    } else {
+      executeVerifyTask(task, task.merit_points || 0);
     }
+  };
 
+  const executeVerifyTask = async (task: any, meritToGive: number) => {
     try {
+      setIsProcessingAction(true);
       const { error } = await supabase.from('club_tasks').update({
         is_archived: true,
         status: 'COMPLETED'
@@ -257,46 +257,67 @@ export function DashboardPage() {
       }
     } catch (e) {
       toast.error("Ralat semasa pengesahan tugasan");
+    } finally {
+      setIsProcessingAction(false);
+      setLateVerifyDialog({ open: false, task: null });
     }
   };
 
-  const handleRejectTask = async (task: any) => {
-    const reason = window.prompt("Berikan alasan penolakan:");
-    if (!reason) return;
-    try {
-      const { error } = await supabase.from('club_tasks').update({
-        approval_status: 'REJECTED', status: 'DRAFT', rejection_reason: reason,
-        rejected_at: new Date().toISOString(), approved_by: user?.id
-      }).eq('id', task.id);
-      if (error) throw error;
-      fetchData();
-    } catch (error) { toast.error("Gagal menolak tugasan"); }
+  const handleRejectTask = (task: any) => {
+    setRejectDialog({ open: true, task });
   };
 
-  const handleRequestUnlock = async (program: any) => {
-    const reason = window.prompt("Sila nyatakan alasan mengapa anda perlu 'Unlock' program ini (cth: Salah tarikh):");
-    if (!reason) return;
-
+  const executeRejectTask = async (reason: string) => {
+    if (!rejectDialog.task) return;
     try {
+      setIsProcessingAction(true);
+      const { error } = await supabase.from('club_tasks').update({
+        approval_status: 'REJECTED',
+        status: 'DRAFT',
+        rejection_reason: reason,
+        rejected_at: new Date().toISOString(),
+        approved_by: user?.id
+      }).eq('id', rejectDialog.task.id);
+      if (error) throw error;
+      toast.success("Tugasan telah ditolak.");
+      fetchData();
+    } catch (error) {
+      toast.error("Gagal menolak tugasan");
+    } finally {
+      setIsProcessingAction(false);
+      setRejectDialog({ open: false, task: null });
+    }
+  };
+
+  const handleRequestUnlock = (program: any) => {
+    setUnlockDialog({ open: true, program });
+  };
+
+  const executeRequestUnlock = async (reason: string) => {
+    if (!unlockDialog.program) return;
+    try {
+      setIsProcessingAction(true);
       const { error } = await supabase.from('programs').update({
         status: 'REQUEST_UNLOCK',
         jpp_remarks: `Pelajar memohon unlock: ${reason}`
-      }).eq('id', program.id);
+      }).eq('id', unlockDialog.program.id);
 
       if (error) throw error;
       
-      // 4. Log Aktiviti
       await supabase.from('club_logs').insert([{
         club_id: profile?.club_id,
         user_id: user?.id,
         type: 'UNLOCK_REQUEST',
-        content: `MT [${user?.email}] memohon UNLOCK bagi program: ${program.nama_program}. Sebab: ${reason}`
+        content: `MT [${user?.email}] memohon UNLOCK bagi program: ${unlockDialog.program.nama_program}. Sebab: ${reason}`
       }]);
 
       toast.success("Permohonan Unlock dihantar ke JPP");
       fetchData();
     } catch (e) {
       toast.error("Gagal menghantar permohonan");
+    } finally {
+      setIsProcessingAction(false);
+      setUnlockDialog({ open: false, program: null });
     }
   };
 
@@ -602,6 +623,49 @@ export function DashboardPage() {
       />
       
       <TaskDetailModal task={selectedTask} isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} onRefresh={fetchData} userRole={userRole} currentUserId={user?.id} />
+
+      <PromptDialog
+        open={rejectDialog.open}
+        title="Tolak Tugasan"
+        description="Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan."
+        inputLabel="Sebab Penolakan"
+        inputType="textarea"
+        placeholder="Contoh: Lampiran minit mesyuarat tidak lengkap..."
+        confirmLabel="Tolak Tugasan"
+        confirmVariant="destructive"
+        isLoading={isProcessingAction}
+        onConfirm={executeRejectTask}
+        onCancel={() => setRejectDialog({ open: false, task: null })}
+      />
+
+      <PromptDialog
+        open={unlockDialog.open}
+        title="Mohon Buka Semula Program"
+        description="Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan."
+        inputLabel="Sebab Permohonan"
+        inputType="textarea"
+        placeholder="Contoh: Perlu mengemas kini perincian bajet dan tentatif program..."
+        confirmLabel="Hantar Permohonan"
+        isLoading={isProcessingAction}
+        onConfirm={executeRequestUnlock}
+        onCancel={() => setUnlockDialog({ open: false, program: null })}
+      />
+
+      <PromptDialog
+        open={lateVerifyDialog.open}
+        title="Pengesahan Tugasan Lewat"
+        description={`Tugasan "${lateVerifyDialog.task?.title || ''}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: ${lateVerifyDialog.task?.merit_points || 0} pts.`}
+        inputLabel="Mata Merit Diberikan (Boleh Negatif)"
+        inputType="number"
+        initialValue={String(lateVerifyDialog.task?.merit_points || 0)}
+        confirmLabel="Sahkan Tugasan"
+        isLoading={isProcessingAction}
+        onConfirm={(val) => {
+          const num = Number(val);
+          executeVerifyTask(lateVerifyDialog.task, isNaN(num) ? (lateVerifyDialog.task?.merit_points || 0) : num);
+        }}
+        onCancel={() => setLateVerifyDialog({ open: false, task: null })}
+      />
     </motion.div>
   );
 }

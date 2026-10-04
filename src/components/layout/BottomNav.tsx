@@ -7,7 +7,7 @@ import {
   Bike, Map
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
@@ -43,48 +43,18 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   const [showPolymartModal, setShowPolymartModal] = useState(false);
   const { isLowPerf } = useDevicePerformance();
 
-  // ── Auto-hide on Scroll Logic ──────────────────────────────────────────
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
+  // -- Auto-hide on Scroll Logic via Framer Motion --
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (currentScrollY) => {
+    if (!navRef.current || isActionsOpen) return;
+    const prevScrollY = scrollY.getPrevious() ?? 0;
 
-    const handleScroll = (e: Event) => {
-      // Ignore scroll events from inside Quick Actions menu or Tooltip
-      if (e.target instanceof Element && e.target.closest('#bottom-nav-dock, .quick-actions-menu')) {
-        return;
-      }
-
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          let currentScrollY = window.scrollY;
-          
-          if (e.target instanceof HTMLElement) {
-             if (e.target.clientHeight > window.innerHeight * 0.4) {
-                currentScrollY = e.target.scrollTop;
-             }
-          }
-
-          if (navRef.current && !isActionsOpen) {
-            // Shrink more if scrolling down past 50px
-            if (currentScrollY > lastScrollY && currentScrollY > 50) {
-              navRef.current.classList.add('opacity-75', 'scale-[0.85]', 'translate-y-4');
-            } 
-            // Restore if scrolling up significantly (>15px) or at the top
-            else if (lastScrollY - currentScrollY > 15 || currentScrollY <= 50) {
-              navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
-            }
-          }
-
-          lastScrollY = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
-    return () => window.removeEventListener('scroll', handleScroll, { capture: true });
-  }, [isActionsOpen]);
+    if (currentScrollY > prevScrollY && currentScrollY > 50) {
+      navRef.current.classList.add('opacity-75', 'scale-[0.85]', 'translate-y-4');
+    } else if (prevScrollY - currentScrollY > 15 || currentScrollY <= 50) {
+      navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
+    }
+  });
 
   useEffect(() => {
     const hideTooltip = localStorage.getItem('hide_bottomnav_tooltip');
@@ -134,57 +104,15 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
     { icon: User, label: 'Profil', onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' }
   ];
 
-  // ── Chameleon Theme Logic ───────────────────────────────────────────────
+  // -- Unified Institutional Theme Logic --
   const getTheme = () => {
-    const path = location.pathname;
-    if (path.startsWith('/polyrider')) return {
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-400',
-      shadow: 'shadow-[0_0_8px_rgba(251,191,36,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-amber-500 to-yellow-400 hover:shadow-amber-500/30',
-      pillBg: 'bg-amber-500/15 dark:bg-amber-400/20',
-      glow: 'shadow-[0_0_20px_rgba(251,191,36,0.5)]'
-    };
-    if (path.startsWith('/akademik')) return {
-      color: 'text-indigo-600 dark:text-indigo-400',
-      bg: 'bg-indigo-400',
-      shadow: 'shadow-[0_0_8px_rgba(99,102,241,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-indigo-600 to-indigo-400 hover:shadow-indigo-500/30',
-      pillBg: 'bg-indigo-500/15 dark:bg-indigo-400/20',
-      glow: 'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-    };
-    if (path.startsWith('/polymaps')) return {
-      color: 'text-sky-600 dark:text-sky-400',
-      bg: 'bg-sky-400',
-      shadow: 'shadow-[0_0_8px_rgba(14,165,233,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-sky-600 to-sky-400 hover:shadow-sky-500/30',
-      pillBg: 'bg-sky-500/15 dark:bg-sky-400/20',
-      glow: 'shadow-[0_0_20px_rgba(14,165,233,0.5)]'
-    };
-    if (path.startsWith('/keusahawanan')) return {
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'bg-emerald-400',
-      shadow: 'shadow-[0_0_8px_rgba(16,185,129,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-emerald-600 to-emerald-400 hover:shadow-emerald-500/30',
-      pillBg: 'bg-emerald-500/15 dark:bg-emerald-400/20',
-      glow: 'shadow-[0_0_20px_rgba(16,185,129,0.5)]'
-    };
-    if (path.startsWith('/kebajikan')) return {
-      color: 'text-teal-600 dark:text-teal-400',
-      bg: 'bg-teal-400',
-      shadow: 'shadow-[0_0_8px_rgba(20,184,166,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-teal-600 to-teal-400 hover:shadow-teal-500/30',
-      pillBg: 'bg-teal-500/15 dark:bg-teal-400/20',
-      glow: 'shadow-[0_0_20px_rgba(20,184,166,0.5)]'
-    };
-    // Default JPP / PolyMart Theme (Rose)
     return {
-      color: 'text-rose-600 dark:text-rose-400',
-      bg: 'bg-rose-400',
-      shadow: 'shadow-[0_0_8px_rgba(244,63,94,0.8)]',
-      fabBg: 'bg-gradient-to-tr from-rose-600 to-rose-400 hover:shadow-rose-500/30',
-      pillBg: 'bg-rose-500/15 dark:bg-rose-400/20',
-      glow: 'shadow-[0_0_20px_rgba(244,63,94,0.5)]'
+      color: 'text-primary dark:text-amber-400',
+      bg: 'bg-primary dark:bg-amber-400',
+      shadow: 'shadow-[0_0_8px_rgba(131,16,16,0.6)]',
+      fabBg: 'bg-gradient-to-tr from-primary to-[#a81c1c] dark:from-primary dark:to-amber-500 hover:shadow-primary/30',
+      pillBg: 'bg-primary/10 dark:bg-primary/20',
+      glow: 'shadow-[0_0_20px_rgba(131,16,16,0.4)]'
     };
   };
 
