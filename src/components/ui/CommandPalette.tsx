@@ -12,11 +12,19 @@ import {
   ShieldCheck,
   ClipboardCheck,
   Command as CommandIcon,
+  Trophy,
+  Award,
+  QrCode,
+  Sparkles,
+  ShoppingBag,
+  HeartHandshake,
+  Truck,
   ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ALL_CLUBS } from '@/types';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 interface CommandPaletteProps {
   open?: boolean;
@@ -26,6 +34,20 @@ interface CommandPaletteProps {
 export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const [emsEvents, setEmsEvents] = useState<{ id: string; title: string; category?: string }[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    supabase
+      .from('ems_events')
+      .select('id, title, category')
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => {
+        if (data) setEmsEvents(data as any);
+      });
+  }, [isOpen]);
+
 
   // Handle controlled vs uncontrolled
   const isControlled = propOpen !== undefined;
@@ -96,11 +118,49 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
                 </div>
               </Command.Empty>
 
-              <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Tindakan Pantas</span>}>
-                <Item icon={LayoutDashboard} label="Papan Pemuka" onSelect={() => runCommand(() => navigate('/dashboard'))} />
-                <Item icon={Flag} label="Senarai Kelab" onSelect={() => runCommand(() => navigate('/kelab'))} />
-                <Item icon={CalendarDays} label="Semua Aktiviti" onSelect={() => runCommand(() => navigate('/aktiviti'))} />
-                <Item icon={Users} label="Jawatankuasa" onSelect={() => runCommand(() => navigate('/ahli'))} />
+              <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Tindakan Pantas & Hub</span>}>
+                <Item icon={LayoutDashboard} label="Papan Pemuka Pelajar" onSelect={() => runCommand(() => navigate('/dashboard'))} />
+                <Item icon={Sparkles} label="Portal Pelajar POLISAS Hub" onSelect={() => runCommand(() => navigate('/portal'))} />
+                <Item icon={CalendarDays} label="Semua Aktiviti & Takwim" onSelect={() => runCommand(() => navigate('/aktiviti'))} />
+                <Item icon={Flag} label="Senarai Kelab & Persatuan" onSelect={() => runCommand(() => navigate('/kelab'))} />
+                <Item icon={Users} label="Jawatankuasa & Ahli" onSelect={() => runCommand(() => navigate('/ahli'))} />
+              </Command.Group>
+
+              <Command.Separator className="my-4 h-px bg-border/40" />
+
+              <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Pengurusan Acara EMS</span>}>
+                <Item icon={Trophy} label="Papan Pemuka EMS (Event Management)" onSelect={() => runCommand(() => navigate('/ems/dashboard'))} />
+                <Item icon={QrCode} label="Kaunter Imbasan QR Check-In" onSelect={() => runCommand(() => navigate('/ems/checkin-selector'))} />
+                <Item icon={Award} label="Portal Juri Penilai Rasmi EMS" onSelect={() => runCommand(() => navigate('/ems/jury'))} />
+                <Item icon={ShieldCheck} label="Semakan Ketulenan Sijil Digital (E-Cert)" onSelect={() => runCommand(() => navigate('/ems/cert/verify'))} />
+                <Item icon={FileText} label="Kelulusan Acara EMS (Pegawai / Exco)" onSelect={() => runCommand(() => navigate('/ems/approval'))} />
+              </Command.Group>
+
+              {emsEvents.length > 0 && (
+                <>
+                  <Command.Separator className="my-4 h-px bg-border/40" />
+                  <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Pentas & Acara EMS Terkini</span>}>
+                    {emsEvents.map((evt) => (
+                      <Item
+                        key={evt.id}
+                        icon={Sparkles}
+                        label={`Pentas Pentadbiran / Live: ${evt.title}`}
+                        shortLabel={evt.category || 'EMS'}
+                        onSelect={() => runCommand(() => navigate(`/ems/leaderboard/${evt.id}`))}
+                      />
+                    ))}
+                  </Command.Group>
+                </>
+              )}
+
+              <Command.Separator className="my-4 h-px bg-border/40" />
+
+              <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Anugerah & Kebajikan Flagship</span>}>
+                <Item icon={Award} label="Pencalonan Anugerah MAKMP 2026" onSelect={() => runCommand(() => navigate('/makmp'))} />
+                <Item icon={ClipboardCheck} label="Status Pencalonan MAKMP" onSelect={() => runCommand(() => navigate('/makmp/status'))} />
+                <Item icon={HeartHandshake} label="Food Bank Siswa POLISAS" onSelect={() => runCommand(() => navigate('/kebajikan/foodbank'))} />
+                <Item icon={ShoppingBag} label="PolyMart Campus Marketplace" onSelect={() => runCommand(() => navigate('/polymart'))} />
+                <Item icon={Truck} label="PolyServices & PolyRider" onSelect={() => runCommand(() => navigate('/services'))} />
               </Command.Group>
 
               <Command.Separator className="my-4 h-px bg-border/40" />

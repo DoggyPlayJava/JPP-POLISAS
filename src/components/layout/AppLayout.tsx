@@ -153,7 +153,7 @@ export function AppLayout() {
         {/* Global Floating AI Chat */}
         <FloatingAiChat />
 
-        {/* QR Code FAB — untuk Exco KPP jana QR */}
+        {/* QR Code FAB - untuk Exco KPP jana QR */}
         <QrCodeFab unitLinks={KPP_UNIT_LINKS} />
 
         {/* Floating Mobile Navigation Dock */}

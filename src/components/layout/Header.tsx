@@ -61,15 +61,19 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
       </div>
 
       <div className="flex-1 max-w-sm mx-6 relative group hidden md:block">
-        <form onSubmit={handleSearch} className="w-full relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-          <Input
-            placeholder="Cari kelab atau persatuan..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9 rounded-xl bg-muted/40 border-border/50 focus-visible:ring-accent/40 text-sm w-full"
-          />
-        </form>
+        <button
+          type="button"
+          onClick={() => onOpenSearch?.()}
+          className="w-full flex items-center justify-between px-3.5 h-9 rounded-xl bg-muted/40 border border-border/50 hover:border-accent/40 text-sm text-muted-foreground/60 transition-colors shadow-xs"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+            <span className="text-xs font-medium truncate">Cari kelab, acara EMS, MAKMP, kebajikan...</span>
+          </div>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-border/40 bg-background text-[10px] font-mono font-bold text-muted-foreground/70 shadow-xs">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       <div className="flex items-center gap-2">
