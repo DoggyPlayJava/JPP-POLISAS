@@ -5,12 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting } from '@/config/excoModules';
 
-import { Sparkles, Building2, HelpCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn, getMalaysianNickname } from '@/lib/utils';
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
 import { useKarnivalStatus } from '@/contexts/KarnivalContext';
-import { Badge } from '@/components/ui/badge';
 
 // Extracted Components
 import { ExcoCard } from '@/components/portal/ExcoCard';
@@ -19,15 +17,13 @@ import { SupsasEffects } from '@/components/portal/SupsasEffects';
 import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { PortalNotificationCenter } from '@/components/portal/PortalNotificationCenter';
-import MakmpWinnerBanner from '@/components/makmp/MakmpWinnerBanner';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
+import { PortalAdminToolbar } from '@/components/portal/PortalAdminToolbar';
 import { useTour } from '@/hooks/useTour';
-import { Step } from 'react-joyride';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { LayoutDashboard, GraduationCap, ShieldAlert as ShieldIcon } from 'lucide-react';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // Lazy-load SystemTour so react-joyride DOM watchers are completely bypassed during normal visits
@@ -113,7 +109,7 @@ export function PortalPage() {
     setIsScrolled(latest > 20);
   });
 
-  // ── Karnival: session toast (sekali per session) ──────────────
+  // Karnival: session toast (sekali per session)
   useEffect(() => {
     if (!karnivalActive || !karnivalStatus?.name) return;
     const key = `karnival_toast_${karnivalStatus.name}`;
@@ -126,7 +122,7 @@ export function PortalPage() {
     }
   }, [karnivalActive, karnivalStatus?.name]);
 
-  // ── SUPSAS: session toast ─────────────────────────────────────
+  // SUPSAS: session toast
   useEffect(() => {
     if (!isModuleEnabled('supsas') || !supsasEdition?.name) return;
     const key = `supsas_toast_${supsasEdition.name}`;
@@ -140,7 +136,7 @@ export function PortalPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, supsasEdition?.name]);
 
-  // ── QR Redirect Miss: tunjuk toast "Sila scan QR sekali lagi!" ──
+  // QR Redirect Miss: tunjuk toast "Sila scan QR sekali lagi!"
   // Berlaku bila user BARU register & ada QR redirect yang tidak dapat diikut
   // (kerana account baru perlu ke /portal dulu). Flag diset oleh PublicRoute.
   useEffect(() => {
@@ -156,7 +152,7 @@ export function PortalPage() {
     }
   }, []);
 
-  // ── Unified parallel data fetch (eliminates network waterfall) ──
+  // Unified parallel data fetch (eliminates network waterfall)
   const fetchAllPortalData = useCallback(async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -265,13 +261,30 @@ export function PortalPage() {
 
   return (
     <div className={cn(
-      'min-h-screen font-sans overflow-x-hidden transition-colors duration-700 relative flex flex-col',
+      'min-h-screen min-h-[100dvh] font-sans overflow-x-hidden transition-colors duration-700 relative flex flex-col',
       karnivalActive
         ? 'bg-[#060010] text-white selection:bg-violet-500/20'
         : supsasActive
           ? 'bg-[#030d1a] text-white selection:bg-amber-500/20'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
     )}>
+
+      {/* Calibrated Ambient Aura & Specular Highlights */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+        {karnivalActive ? (
+          <>
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-pink-600/10 via-violet-600/5 to-transparent blur-3xl opacity-75" />
+            <div className="absolute top-1/3 -left-48 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+          </>
+        ) : supsasActive ? (
+          <>
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-amber-500/10 via-sky-600/5 to-transparent blur-3xl opacity-75" />
+            <div className="absolute top-1/3 -right-48 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+          </>
+        ) : (
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[500px] bg-gradient-to-b from-emerald-500/5 via-slate-500/5 to-transparent blur-3xl opacity-50 dark:opacity-40" />
+        )}
+      </div>
 
       {/* SystemTour loaded lazily ONLY if runTour is true */}
       {runTour && (
@@ -346,15 +359,6 @@ export function PortalPage() {
         </React.Suspense>
       )}
 
-      {/* Help Button - Manual Tour Restart */}
-      <button
-        onClick={startTour}
-        className="tour-help-button fixed top-20 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/10 hover:scale-110 active:scale-95 transition-all"
-        title="Ulang Tutorial"
-      >
-        <HelpCircle className="w-5 h-5" />
-      </button>
-
       <PortalSidebar
         isOpen={isSidebarOpen}
         onOpen={() => setIsSidebarOpen(true)}
@@ -374,136 +378,126 @@ export function PortalPage() {
         supsasActive={supsasActive}
         profile={profile}
         setIsSidebarOpen={setIsSidebarOpen}
+        onStartTour={startTour}
       />
 
       {/* Main Content - Renders IMMEDIATELY without waiting for DB waterfalls, optimizing LCP & INP */}
-      <main className="relative z-10 pt-32 md:pt-40 after:content-[''] after:block after:h-40 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+      <main className="relative z-10 pt-28 md:pt-36 after:content-[''] after:block after:h-40 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1 w-full">
         {/* Title Section */}
-        <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
-          <motion.div
-            initial={{ opacity: isLowPerf ? 1 : 0, scale: isLowPerf ? 1 : 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={isLowPerf ? { duration: 0 } : undefined}
-            className={cn(
-              "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg",
-              !isLowPerf && "backdrop-blur-md"
-            )}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
-              EKOSISTEM DIGITAL V{__APP_VERSION__}
-            </span>
-          </motion.div>
-
+        <div className="flex flex-col items-center text-center mb-10 md:mb-14 space-y-4 md:space-y-6">
           <motion.div
             initial={{ opacity: isLowPerf ? 1 : 0, y: isLowPerf ? 0 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={isLowPerf ? { duration: 0 } : { delay: 0.2 }}
-            className="space-y-4"
+            transition={isLowPerf ? { duration: 0 } : { delay: 0.1 }}
+            className="space-y-4 w-full"
           >
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
-                {supsasActive && !karnivalActive ? 'Semangat Sukan,' :
-                  (() => {
-                    const hour = new Date().getHours();
-                    if (hour >= 5 && hour < 12) return 'Selamat Pagi,';
-                    if (hour >= 12 && hour < 19) return 'Selamat Petang,';
-                    if (hour >= 19 && hour < 24) return 'Selamat Malam,';
-                    return 'Masih berjaga,';
-                  })()
-                } <br />
-                <span className={supsasActive && !karnivalActive ? 'text-amber-400' : karnivalActive ? 'text-violet-400' : 'text-emerald-500 dark:text-emerald-400'}>
-                  {displayName}
+            {/* Executive Role & Merit Aura */}
+            {profile && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 text-slate-600 dark:text-white/70">
+                <span className={cn(
+                  "w-1.5 h-1.5 rounded-full animate-pulse",
+                  karnivalActive ? "bg-pink-400" :
+                  supsasActive ? "bg-amber-400" :
+                  "bg-emerald-500"
+                )} />
+                <span className="uppercase tracking-widest text-[10px] font-bold">
+                  {profile.role || 'STUDENT'}
                 </span>
-              </h1>
-              <p className="text-sm md:text-lg text-slate-500 dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-                {supsasActive && !karnivalActive
-                  ? <>Sokong pasukan anda. Pantau keputusan sukan secara langsung. <br className="hidden md:block" />Bawa semangat ke padang! 🏅</>
-                  : <>Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />Bawa kepimpinan anda ke tahap seterusnya.</>
-                }
-              </p>
+                {(profile.merit_points !== undefined || profile.merit !== undefined) && (
+                  <>
+                    <span className="text-black/20 dark:text-white/20">/</span>
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      {profile.merit_points ?? profile.merit ?? 0} Merit
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
 
-              {/* -- Consolidated Portal Notification Center -- */}
-              <PortalNotificationCenter
-                kamsisStatus={kamsisStatus}
-                kamsisExtraData={kamsisExtraData}
-                kamsisToggles={kamsisToggles}
-                onOpenKamsisAppeal={() => setShowAppealModal(true)}
-                supsasActive={supsasActive}
-                supsasEdition={supsasEdition}
-                karnivalActive={karnivalActive}
-                karnivalStatus={karnivalStatus}
-              />
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
+              {supsasActive && !karnivalActive ? 'Semangat Sukan,' :
+                (() => {
+                  const hour = new Date().getHours();
+                  if (hour >= 5 && hour < 12) return 'Selamat Pagi,';
+                  if (hour >= 12 && hour < 19) return 'Selamat Petang,';
+                  if (hour >= 19 && hour < 24) return 'Selamat Malam,';
+                  return 'Masih berjaga,';
+                })()
+              } <br />
+              <span className={supsasActive && !karnivalActive ? 'text-amber-400' : karnivalActive ? 'text-violet-400' : 'text-emerald-500 dark:text-emerald-400'}>
+                {displayName}
+              </span>
+            </h1>
+            <p className="text-sm md:text-lg text-slate-500 dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+              {supsasActive && !karnivalActive
+                ? <>Sokong pasukan anda. Pantau keputusan sukan secara langsung. <br className="hidden md:block" />Bawa semangat ke padang! 🏅</>
+                : <>Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />Bawa kepimpinan anda ke tahap seterusnya.</>
+              }
+            </p>
 
-              {/* MAKMP Winner Banner */}
-              <MakmpWinnerBanner />
+            {/* Campaign Deck */}
+            <PortalNotificationCenter
+              kamsisStatus={kamsisStatus}
+              kamsisExtraData={kamsisExtraData}
+              kamsisToggles={kamsisToggles}
+              onOpenKamsisAppeal={() => setShowAppealModal(true)}
+              supsasActive={supsasActive}
+              supsasEdition={supsasEdition}
+              karnivalActive={karnivalActive}
+              karnivalStatus={karnivalStatus}
+            />
 
-              {/* Quick Actions */}
-              <QuickActions
-                isSuperAdmin={isSuperAdmin}
-                isModuleEnabled={isModuleEnabled}
-                polyMartStats={polyMartStats}
-                hasKebajikanAccess={hasKebajikanAccess}
-                kbStats={kbStats}
-                isJPPMode={isJPPMode}
-                karnivalActive={karnivalActive}
-                supsasActive={supsasActive}
-              />
+            {/* Quick Actions */}
+            <QuickActions
+              isSuperAdmin={isSuperAdmin}
+              isModuleEnabled={isModuleEnabled}
+              polyMartStats={polyMartStats}
+              hasKebajikanAccess={hasKebajikanAccess}
+              kbStats={kbStats}
+              isJPPMode={isJPPMode}
+              karnivalActive={karnivalActive}
+              supsasActive={supsasActive}
+            />
 
-            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Asymmetric Linear Bento Grid */}
+        <div className="tour-exco-modules max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i) => {
+              let badgeText: string | undefined;
+              let notificationCount: number | undefined;
+
+              if (mod.id === 'karnival' && karnivalActive) {
+                badgeText = "🎪 BERLANGSUNG";
+              } else if (mod.id === 'supsas' && supsasActive) {
+                badgeText = "🏆 BERLANGSUNG";
+              } else if (mod.id === 'akademik') {
+                badgeText = "NEW";
+              }
+
+              return (
+                <ExcoCard
+                  key={mod.id}
+                  module={mod}
+                  color={getExcoColor(mod.id, settings)}
+                  index={i}
+                  totalModules={4}
+                  isEnabled={isModuleEnabled(mod.id)}
+                  isSuperAdmin={isSuperAdmin}
+                  onToggle={handleToggle}
+                  onColorSave={handleColorSave}
+                  karnivalActive={karnivalActive}
+                  supsasActive={supsasActive}
+                  badgeText={badgeText}
+                  notificationCount={notificationCount}
+                />
+              );
+            })}
           </div>
-
-          {/* Modules Grid */}
-          <div className="max-w-6xl mx-auto tour-exco-modules">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-              {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i, arr) => {
-                let badgeText;
-                let notificationCount;
-
-                if (mod.id === 'kebajikan' && kbStats?.open) {
-                  notificationCount = kbStats.open;
-                } else if (mod.id === 'karnival' && karnivalActive) {
-                  badgeText = "🎪 BERLANGSUNG";
-                } else if (mod.id === 'supsas' && supsasActive) {
-                  badgeText = "🏆 BERLANGSUNG";
-                } else if (mod.id === 'akademik') {
-                  badgeText = "NEW";
-                }
-
-                return (
-                  <ExcoCard
-                    key={mod.id}
-                    module={mod}
-                    color={getExcoColor(mod.id, settings)}
-                    index={i}
-                    isEnabled={isModuleEnabled(mod.id)}
-                    isSuperAdmin={isSuperAdmin}
-                    onToggle={handleToggle}
-                    onColorSave={handleColorSave}
-                    karnivalActive={karnivalActive}
-                    supsasActive={supsasActive}
-                    badgeText={badgeText}
-                    notificationCount={notificationCount}
-                    className={arr.length % 2 !== 0 && i === arr.length - 1 ? 'sm:col-span-2' : ''}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Global Admin Status Line */}
-          {isSuperAdmin && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-20 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500"
-            >
-              <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
-              <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
-              <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label="Dalam Pembangunan" />
-            </motion.div>
-          )}
-        </main>
+        </div>
+      </main>
 
       <PortalFooter />
 
@@ -523,15 +517,16 @@ export function PortalPage() {
 
       <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
 
-    </div>
-  );
-}
+      {/* SuperAdmin Floating Toolbar */}
+      {isSuperAdmin && (
+        <PortalAdminToolbar
+          modules={EXCO_MODULES}
+          settings={settings}
+          onToggle={handleToggle}
+          onColorSave={handleColorSave}
+        />
+      )}
 
-function AdminStatusIndicator({ color, label }: { color: string, label: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[9px] font-black uppercase tracking-widest text-slate- dark:text-white/50">{label}</span>
     </div>
   );
 }
