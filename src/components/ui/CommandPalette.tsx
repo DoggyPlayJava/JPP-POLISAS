@@ -34,6 +34,11 @@ interface CommandPaletteProps {
 export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  // Handle controlled vs uncontrolled
+  const isControlled = propOpen !== undefined;
+  const isOpen = isControlled ? propOpen : open;
+  const setIsOpen = isControlled ? onOpenChange : setOpen;
+
   const [emsEvents, setEmsEvents] = useState<{ id: string; title: string; category?: string }[]>([]);
 
   useEffect(() => {
@@ -47,12 +52,6 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
         if (data) setEmsEvents(data as any);
       });
   }, [isOpen]);
-
-
-  // Handle controlled vs uncontrolled
-  const isControlled = propOpen !== undefined;
-  const isOpen = isControlled ? propOpen : open;
-  const setIsOpen = isControlled ? onOpenChange : setOpen;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
