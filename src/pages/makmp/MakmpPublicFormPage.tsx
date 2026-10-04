@@ -78,6 +78,7 @@ import type {
 } from '@/types';
 import { getSemesterInfo, INTAKE_YEARS } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
+import { cn } from '@/lib/utils';
 
 interface CertFormItem {
   id: string;
@@ -101,7 +102,7 @@ export default function MakmpPublicFormPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  // Scroll ke atas (header form) — dipanggil bila step bertukar / error muncul.
+  // Scroll ke atas (header form) - dipanggil bila step bertukar / error muncul.
   // Guna behavior 'auto' (instant) + double requestAnimationFrame supaya tak
   // dibatalkan oleh React re-render (smooth scroll boleh ter-cancel bila DOM
   // berubah mid-animation, terutama pada mobile).
@@ -115,12 +116,12 @@ export default function MakmpPublicFormPage() {
     });
   };
 
-  // Ref ke banner error — supaya boleh scroll terus ke error bila validasi gagal.
+  // Ref ke banner error - supaya boleh scroll terus ke error bila validasi gagal.
   const errorRef = useRef<HTMLDivElement | null>(null);
 
   // Scroll terus ke banner error (bukan sekadar ke atas page). Bila student
   // tekan "Hantar Permohonan" tapi form tak lengkap, error banner ada di atas
-  // content — auto-scroll ke sana supaya student nampak apa yang patut dibetulkan.
+  // content - auto-scroll ke sana supaya student nampak apa yang patut dibetulkan.
   const scrollToError = () => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -201,7 +202,7 @@ export default function MakmpPublicFormPage() {
   const [loadingExisting, setLoadingExisting] = useState(false);
 
   // Gating tempoh: permohonan BARU ditutup selepas submission_deadline.
-  // Kemaskini (edit) TIDAK dihalang oleh deadline — hanya dihalang oleh status
+  // Kemaskini (edit) TIDAK dihalang oleh deadline - hanya dihalang oleh status
   // (hanya MENUNGGU boleh edit, dikuatkuasakan dalam RPC save_makmp_submission_edit).
   const isDeadlinePassed = !!edition?.submission_deadline
     && new Date(edition.submission_deadline).getTime() < Date.now();
@@ -224,7 +225,7 @@ export default function MakmpPublicFormPage() {
     loadData();
   }, []);
 
-  // 1a. AUTO-LOAD submission MENUNGGU sedia ada (edit mode) — hanya untuk
+  // 1a. AUTO-LOAD submission MENUNGGU sedia ada (edit mode) - hanya untuk
   //     student yang dah login & pautkan akaun. Kalau jumpa submission milik
   //     user yang masih MENUNGGU, prefill borang & tukar ke mod edit (bukan
   //     hantar baru). Ini elak double submission bila student buka semula.
@@ -367,7 +368,7 @@ export default function MakmpPublicFormPage() {
       if (profile.programme_code) setProgrammeCode(profile.programme_code);
       if (profile.intake_year) setIntakeYear(profile.intake_year);
       if (profile.intake_period) setIntakePeriod(profile.intake_period as 1 | 2);
-      // Auto-fetch semester dari data intake (profiles takde column 'semester' — dikira dari intake_year/period)
+      // Auto-fetch semester dari data intake (profiles takde column 'semester' - dikira dari intake_year/period)
       if (profile.semester_override) {
         setSemester(Number(profile.semester_override) || 1);
       } else if (profile.intake_year) {
@@ -389,10 +390,10 @@ export default function MakmpPublicFormPage() {
 
   // 2b. Selepas login Google melalui MAKMP, lengkapkan profil portal secara
   //     automatik daripada data borang (matric, dept, cohort, phone, programme)
-  //     supaya profile modal auto-fill 100% — pelajar tak perlu isi semula.
+  //     supaya profile modal auto-fill 100% - pelajar tak perlu isi semula.
   useEffect(() => {
     if (user && draftRestoredRef.current && matricNo.trim()) {
-      // Semak emel Google vs emel borang — kalau berbeza, minta confirm dulu.
+      // Semak emel Google vs emel borang - kalau berbeza, minta confirm dulu.
       let dFormEmail = '';
       try {
         const raw = sessionStorage.getItem(MAKMP_DRAFT_KEY);
@@ -407,19 +408,19 @@ export default function MakmpPublicFormPage() {
         formEmail.trim().toLowerCase() !== googleEmail.trim().toLowerCase()
       ) {
         setEmailMismatch({ google: googleEmail, form: formEmail });
-        // Jangan auto-lengkap — tunggu pengguna sahkan.
+        // Jangan auto-lengkap - tunggu pengguna sahkan.
         draftRestoredRef.current = false;
         return;
       }
 
       completeProfileFromMakmp(user.id);
-      // Sekali sahaja — jangan ulang setiap kali matricNo berubah
+      // Sekali sahaja - jangan ulang setiap kali matricNo berubah
       draftRestoredRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Pengesahan emel berbeza — link profil selepas pengguna sahkan.
+  // Pengesahan emel berbeza - link profil selepas pengguna sahkan.
   const confirmEmailMismatchLink = async () => {
     if (!user) return;
     await completeProfileFromMakmp(user.id);
@@ -503,7 +504,7 @@ export default function MakmpPublicFormPage() {
   };
 
   // ── Simpan & pulih draf borang merentasi redirect Google OAuth ──────────
-  // Google OAuth redirect keluar page & balik semula — state React akan hilang.
+  // Google OAuth redirect keluar page & balik semula - state React akan hilang.
   // Jadi kita simpan draf (termasuk anugerah & dokumen yang dipilih) ke
   // sessionStorage sebelum redirect, dan pulihkan selepas login selesai.
   const MAKMP_DRAFT_KEY = 'makmp_draft_v1';
@@ -569,8 +570,8 @@ export default function MakmpPublicFormPage() {
   // field yang diisi dalam borang MAKMP supaya profile modal auto-fill 100%.
   const completeProfileFromMakmp = async (uid: string) => {
     try {
-      // Baca nilai autoritatif daripada draf (sessionStorage) — bukan state
-      // React — supaya tak kena isu async timing selepas redirect OAuth.
+      // Baca nilai autoritatif daripada draf (sessionStorage) - bukan state
+      // React - supaya tak kena isu async timing selepas redirect OAuth.
       let d: any = null;
       try {
         const raw = sessionStorage.getItem(MAKMP_DRAFT_KEY);
@@ -608,7 +609,7 @@ export default function MakmpPublicFormPage() {
       const existingMatric = (existingProf?.matric_no || '').trim().toUpperCase();
       const matricChanged = existingMatric && existingMatric !== dMatric;
 
-      // Build payload — matric hanya di-update jika kosong/sama (bukan berbeza).
+      // Build payload - matric hanya di-update jika kosong/sama (bukan berbeza).
       const payload: Record<string, any> = {
         full_name: dName,
         phone: dPhone,
@@ -635,7 +636,7 @@ export default function MakmpPublicFormPage() {
         );
         setLoginError(
           `No. Matrik borang (${dMatric}) tidak sepadan dengan akaun anda (${existingMatric}). ` +
-          `Profil anda dikekalkan — tiada perubahan dibuat pada No. Matrik.`
+          `Profil anda dikekalkan - tiada perubahan dibuat pada No. Matrik.`
         );
       } else {
         console.log('✅ Profil dilengkapkan dari data MAKMP untuk', dMatric);
@@ -964,7 +965,7 @@ export default function MakmpPublicFormPage() {
     }
 
     // Gating tempoh (defense-in-depth): halang permohonan BARU selepas deadline.
-    // Edit (kemaskini) TIDAK dihalang di sini — hanya permohonan baru.
+    // Edit (kemaskini) TIDAK dihalang di sini - hanya permohonan baru.
     if (!isEditMode && isDeadlinePassed) {
       setErrorMessage('Tempoh permohonan telah tamat. Permohonan baharu tidak lagi diterima.');
       scrollToError();
@@ -1000,7 +1001,7 @@ export default function MakmpPublicFormPage() {
       );
 
       // 1a. Kumpul SEMUA fail yang perlu dimuat naik, kemudian upload secara
-      //     SELARI (parallel) — jauh lebih pantas daripada satu-satu.
+      //     SELARI (parallel) - jauh lebih pantas daripada satu-satu.
       //     Key: `${awardId}::${docIndex}` supaya boleh rujuk hasil kemudian.
       type PendingUpload = { key: string; doc: any; file: File };
       const pendingUploads: PendingUpload[] = [];
@@ -1127,7 +1128,7 @@ export default function MakmpPublicFormPage() {
           throw new Error(updResult.message || 'Gagal mengemaskini permohonan.');
         }
 
-        // Berjaya — bawa ke halaman status (bukan resit baru).
+        // Berjaya - bawa ke halaman status (bukan resit baru).
         // tracking_code sedia ada kekal sama.
         if (existingTrackingCode) {
           navigate(`/makmp/status?code=${encodeURIComponent(existingTrackingCode)}`, { replace: true });
@@ -1338,50 +1339,54 @@ export default function MakmpPublicFormPage() {
               </p>
 
               {/* Step indicator */}
-              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-3 gap-2">
-                <div
-                  className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 1 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    1
-                  </div>
-                  <span>Biodata Pelajar</span>
-                </div>
-
-                <div
-                  className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 2 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    2
-                  </div>
-                  <span>Pilihan Anugerah ({selectedAwardIds.length})</span>
-                </div>
-
-                <div
-                  className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    3
-                  </div>
-                  <span>Muat Naik Dokumen</span>
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800/80">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
+                  {[
+                    { num: 1, label: 'Biodata', fullLabel: 'Maklumat Calon' },
+                    { num: 2, label: `Anugerah (${selectedAwardIds.length})`, fullLabel: `Pilihan Anugerah (${selectedAwardIds.length})` },
+                    { num: 3, label: 'Dokumen', fullLabel: 'Muat Naik Sijil' },
+                    { num: 4, label: 'Hantar', fullLabel: 'Pengesahan & Hantar' },
+                  ].map((s) => {
+                    const isCompleted = step > s.num;
+                    const isCurrent = step === s.num;
+                    return (
+                      <div
+                        key={s.num}
+                        className={cn(
+                          "relative flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2.5 p-1.5 sm:p-2 rounded-xl transition-all",
+                          isCurrent && "bg-amber-500/10 border border-amber-500/30",
+                          !isCurrent && "opacity-80"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0 transition-transform",
+                            isCompleted && "bg-emerald-500 text-white shadow-sm",
+                            isCurrent && "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/30 font-black",
+                            !isCompleted && !isCurrent && "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          )}
+                        >
+                          {isCompleted ? <Check className="w-3.5 h-3.5" /> : s.num}
+                        </div>
+                        <div className="text-center sm:text-left min-w-0">
+                          <span
+                            className={cn(
+                              "block text-[10px] sm:text-xs font-semibold truncate transition-colors leading-tight",
+                              isCurrent && "text-amber-700 dark:text-amber-400 font-bold",
+                              isCompleted && "text-emerald-700 dark:text-emerald-400",
+                              !isCurrent && !isCompleted && "text-slate-500 dark:text-slate-400"
+                            )}
+                          >
+                            <span className="sm:hidden">{s.label}</span>
+                            <span className="hidden sm:inline">{s.fullLabel}</span>
+                          </span>
+                          <span className="hidden md:block text-[10px] text-slate-400 dark:text-slate-500">
+                            {isCompleted ? 'Selesai' : isCurrent ? 'Sedang diisi' : `Langkah ${s.num}`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -2148,7 +2153,7 @@ export default function MakmpPublicFormPage() {
                     </div>
                   </div>
 
-                  {/* Banner Muat Turun Templat Laporan — hanya jika templat BENAR-BENAR disediakan */}
+                  {/* Banner Muat Turun Templat Laporan - hanya jika templat BENAR-BENAR disediakan */}
                   {currentAward.doc_requirement_type === 'REPORT_AND_EVIDENCE' && currentAward.template_url && (
                     <div className="p-4 md:p-5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-50 to-white dark:via-slate-900 dark:to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm dark:shadow-md">
                       <div className="space-y-1">
@@ -2270,11 +2275,11 @@ export default function MakmpPublicFormPage() {
                                 Muat naik <strong>laporan lengkap dalam format PDF</strong>{' '}
                                 {currentAward?.template_url
                                   ? <>mengikut templat rasmi ({currentAward?.template_name || 'Format Laporan'}).{' '}</>
-                                  : <><strong>tiada templat khusus</strong> — gunakan format laporan anda sendiri.{' '}</>}
+                                  : <><strong>tiada templat khusus</strong> - gunakan format laporan anda sendiri.{' '}</>}
                                 {currentAward?.doc_instructions || ''}
                               </p>
                               <p className="text-sky-700 dark:text-sky-200/70">
-                                Anda <strong>tidak perlu</strong> isi markah atau tahap pencapaian — penilaian akan
+                                Anda <strong>tidak perlu</strong> isi markah atau tahap pencapaian - penilaian akan
                                 diberikan oleh juri/pegawai (markah 0-100).
                               </p>
                             </div>
@@ -2440,7 +2445,7 @@ export default function MakmpPublicFormPage() {
                                             0
                                           )} KB)`
                                         : doc.uploadedUrl
-                                        ? 'Sijil sedia ada — klik untuk tukar fail baharu'
+                                        ? 'Sijil sedia ada - klik untuk tukar fail baharu'
                                         : isReportFile
                                         ? 'Pilih Fail Laporan Projek (PDF mengikut templat)...'
                                         : 'Pilih Fail Sijil / Bukti (PDF / Gambar)...'}

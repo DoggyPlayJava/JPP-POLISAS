@@ -6,12 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 /**
- * MakmpJppChrome — chrome JPP ringan untuk halaman MAKMP awam.
+ * MakmpJppChrome - chrome JPP ringan untuk halaman MAKMP awam.
  *
  * Tujuan: buat MAKMP nampak sebahagian daripada ekosistem JPP Polisas
  * (bukan sistem berasingan) TANPA memaksa login.
  *
- * - Bottom nav ringan (Menu → portal, Utama, Semak Status, Profil)
+ * - Bottom nav ringan (Menu -> portal, Utama, Semak Status, Profil)
  * - Spacer bawah supaya content tak bertindih dengan floating bottom nav
  */
 export function MakmpJppChrome() {
@@ -23,7 +23,7 @@ export function MakmpJppChrome() {
 
   return (
     <>
-      {/* Bottom spacer — pastikan content tak tersorok di belakang dock */}
+      {/* Bottom spacer - pastikan content tak tersorok di belakang dock */}
       <div className="h-24 md:h-20" aria-hidden="true" />
 
       <BottomNav
@@ -53,7 +53,7 @@ export function MakmpJppChrome() {
 }
 
 /**
- * MakmpJppHeader — banner JPP kecil untuk dipaparkan di atas halaman MAKMP.
+ * MakmpJppHeader - banner JPP kecil untuk dipaparkan di atas halaman MAKMP.
  * Menunjukkan MAKMP adalah modul di bawah JPP Polisas.
  */
 export function MakmpJppHeader({ subtitle }: { subtitle?: string }) {
