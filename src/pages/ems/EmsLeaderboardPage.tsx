@@ -120,12 +120,46 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     return () => clearInterval(interval);
   }, []);
 
+  // Trigger Confetti Effect
+  const triggerConfetti = useCallback(() => {
+    // Multi-stage confetti celebration
+    const end = Date.now() + 3 * 1000;
+    const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981'];
+
+    (function frame() {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  }, []);
+
   // Keyboard navigation for presentation stage mode
   useEffect(() => {
-    if (activeTab !== 'STAGE') return;
+    if (!isStageMode && activeTab !== 'STAGE') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)
+      ) {
+        return;
+      }
 
       if (e.key === ' ' || e.key === 'ArrowRight') {
         e.preventDefault();
@@ -154,7 +188,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab]);
+  }, [isStageMode, activeTab, triggerConfetti]);
 
   // Lucky Draw Modal State
   const [showLuckyDrawModal, setShowLuckyDrawModal] = useState(false);
@@ -405,34 +439,6 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const hasTiedParticipants = useMemo(() => {
     return leaderboard.some((item) => item.is_tied);
   }, [leaderboard]);
-
-  // Trigger Confetti Effect
-  const triggerConfetti = useCallback(() => {
-    // Multi-stage confetti celebration
-    const end = Date.now() + 3 * 1000;
-    const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981'];
-
-    (function frame() {
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    })();
-  }, []);
 
   // Toggle Leaderboard Public Visibility
   const handleToggleVisibility = async () => {

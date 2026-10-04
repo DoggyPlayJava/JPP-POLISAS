@@ -150,7 +150,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
           {filteredEvents.map((event) => (
             <div
               key={event.id}
-              className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 hover:border-purple-500/50 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all group hover:shadow-purple-500/5"
+              className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 hover:border-purple-500/50 rounded-2xl p-5 shadow-sm hover:shadow-xl flex flex-col justify-between transition-all group hover:shadow-purple-500/10 hover:-translate-y-0.5"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">

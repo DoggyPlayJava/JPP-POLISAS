@@ -468,7 +468,7 @@ export function EmsAudienceScanPage() {
       </div>
 
       <footer className="relative z-10 text-[11px] text-slate-500 text-center mt-8">
-        JPP POLISAS — Event Management System (EMS) Attendance Portal
+        JPP POLISAS - Event Management System (EMS) Attendance Portal
       </footer>
     </div>
   );

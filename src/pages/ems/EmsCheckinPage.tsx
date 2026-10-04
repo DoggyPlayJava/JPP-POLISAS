@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Html5Qrcode } from 'html5-qrcode';
 import toast from 'react-hot-toast';
 import {
@@ -33,7 +34,7 @@ import {
 import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import type { EmsParticipant } from '@/types';
+import type { EmsParticipant, EmsVisitor } from '@/types';
 
 // Web Audio API beep sound generator for scan feedback
 function playSuccessChime() {
