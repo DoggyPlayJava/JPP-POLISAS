@@ -10,7 +10,7 @@ import { ExcoModule } from '@/config/excoModules';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 import { cn, hexToRgba, getContrastText, triggerHaptic } from '@/lib/utils';
 
-// ─── Color Picker Popover ───
+// -- Color Picker Popover --
 interface ColorPickerProps {
   moduleId: string;
   moduleName: string;
@@ -114,9 +114,7 @@ export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave,
   );
 }
 
-// ─────────────────────────────────────────────
-// Kad Exco (Premium Bento Style)
-// ─────────────────────────────────────────────
+// -- Kad Exco (Institutional Bento Style) --
 export interface ExcoCardProps {
   module: ExcoModule;
   color: string;
@@ -170,46 +168,40 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
       onClick={handleClick}
       className={cn(
         `tour-mod-${module.id}`,
-        "group relative cursor-pointer overflow-hidden rounded-[2rem] p-8 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
-        "border shadow-sm hover:shadow-2xl dark:shadow-none",
+        "group relative cursor-pointer overflow-hidden rounded-2xl p-6 sm:p-7 transition-all duration-300 min-h-[260px] flex flex-col justify-between active:scale-[0.99]",
+        "border shadow-sm hover:shadow-md dark:shadow-none",
         !isLowPerf && "backdrop-blur-xl",
         !canAccess && "opacity-60 grayscale-[0.8] cursor-not-allowed",
         isEventMode 
           ? cn(
-              karnivalActive ? (isLowPerf ? "bg-black/80 border-violet-500/20" : "bg-black/40 backdrop-blur-xl border-violet-500/20") : "bg-black/20 border-white/10",
-              karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
+              karnivalActive ? (isLowPerf ? "bg-card border-violet-500/20" : "bg-card/90 backdrop-blur-xl border-violet-500/20") : "bg-card border-white/10",
+              karnivalActive ? "hover:border-violet-500/40 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)]" : "hover:border-primary/40 hover:shadow-[0_8px_30px_rgba(131,16,16,0.12)]"
             )
-          : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1",
+          : "bg-card border-border/70 hover:border-primary/40 hover:bg-card/95 hover:-translate-y-0.5",
         className
       )}
       style={!isEventMode ? {
-        '--hover-shadow': `0 10px 40px -10px ${hexToRgba(color, 0.2)}`,
-        '--hover-border': hexToRgba(color, 0.3)
+        '--hover-shadow': `0 10px 30px -10px ${hexToRgba(color, 0.2)}`,
+        '--hover-border': hexToRgba(color, 0.35)
       } as React.CSSProperties : {}}
     >
       {/* Accent Line - Top */}
       {!karnivalActive && (
         <div 
-          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
         />
       )}
       
-      {/* Animated Conic Gradient Border (Karnival Mode) */}
+      {/* Subtle highlight border during Karnival mode */}
       {karnivalActive && (
-        <div 
-          className="absolute inset-0 pointer-events-none rounded-[2rem] p-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
-          style={{ WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude' }}
-        >
-          <div className="absolute inset-[-50%] w-[200%] h-[200%] animate-[spin_4s_linear_infinite]"
-               style={{ background: `conic-gradient(from 0deg, transparent 60%, #c084fc 80%, #f472b6 90%, transparent 100%)` }} />
-        </div>
+        <div className="absolute inset-0 pointer-events-none rounded-2xl border border-violet-500/20 group-hover:border-violet-500/40 transition-colors" />
       )}
 
-      {/* Very Subtle Hover Gradient Background */}
+      {/* Subtle Hover Gradient Background */}
       <div
-        className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 100% 0%, ${hexToRgba(karnivalActive ? '#c084fc' : color, 0.08)}, transparent 60%)` }}
+        className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 100% 0%, ${hexToRgba(karnivalActive ? '#c084fc' : color, 0.06)}, transparent 65%)` }}
       />
 
       <div className="relative z-10 space-y-6">

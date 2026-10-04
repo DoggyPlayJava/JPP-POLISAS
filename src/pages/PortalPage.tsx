@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting } from '@/config/excoModules';
@@ -18,8 +18,7 @@ import { KarnivalEffects } from '@/components/portal/KarnivalEffects';
 import { SupsasEffects } from '@/components/portal/SupsasEffects';
 import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
-import { KarnivalMegaBanner } from '@/components/portal/KarnivalMegaBanner';
-import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
+import { PortalNotificationCenter } from '@/components/portal/PortalNotificationCenter';
 import MakmpWinnerBanner from '@/components/makmp/MakmpWinnerBanner';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
@@ -109,20 +108,10 @@ export function PortalPage() {
     fetchKamsisStatus();
   }, [fetchKamsisStatus]);
 
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 20);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 20);
+  });
 
   // ── Karnival: session toast (sekali per session) ──────────────
   useEffect(() => {
@@ -178,15 +167,15 @@ export function PortalPage() {
         supabase.from('portal_settings')
           .select('exco_module, color, is_enabled')
           .abortSignal(controller.signal),
-        // 2. Kebajikan — open tickets
+        // 2. Kebajikan - open tickets
         supabase.from('kebajikan_tickets')
           .select('id', { count: 'exact', head: true })
           .not('status', 'in', '(RESOLVED,CLOSED,CANCELLED)'),
-        // 3. Kebajikan — resolved tickets
+        // 3. Kebajikan - resolved tickets
         supabase.from('kebajikan_tickets')
           .select('id', { count: 'exact', head: true })
           .in('status', ['RESOLVED', 'CLOSED']),
-        // 4. Kebajikan — ratings
+        // 4. Kebajikan - ratings
         supabase.from('kebajikan_tickets')
           .select('rating')
           .not('rating', 'is', null),
@@ -206,7 +195,7 @@ export function PortalPage() {
           localStorage.setItem('jpp_portal_settings_cache', JSON.stringify(settingsData));
         } catch {}
 
-        // SUPSAS edition — only fetch if supsas module is enabled
+        // SUPSAS edition - only fetch if supsas module is enabled
         const supsasSetting = settingsData.find(s => s.exco_module === 'supsas');
         const supsasOn = supsasSetting ? supsasSetting.is_enabled : false;
         if (supsasOn) {
@@ -357,7 +346,7 @@ export function PortalPage() {
         </React.Suspense>
       )}
 
-      {/* Help Button — Manual Tour Restart */}
+      {/* Help Button - Manual Tour Restart */}
       <button
         onClick={startTour}
         className="tour-help-button fixed top-20 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/10 hover:scale-110 active:scale-95 transition-all"
@@ -387,7 +376,7 @@ export function PortalPage() {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      {/* Main Content — Renders IMMEDIATELY without waiting for DB waterfalls, optimizing LCP & INP */}
+      {/* Main Content - Renders IMMEDIATELY without waiting for DB waterfalls, optimizing LCP & INP */}
       <main className="relative z-10 pt-32 md:pt-40 after:content-[''] after:block after:h-40 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1">
         {/* Title Section */}
         <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
@@ -433,91 +422,20 @@ export function PortalPage() {
                 }
               </p>
 
-              {/* ── Event Banners ── */}
-              <AnimatePresence>
-                {supsasActive && !karnivalActive && (
-                  <SupsasMegaBanner supsasEdition={supsasEdition} />
-                )}
-              </AnimatePresence>
+              {/* -- Consolidated Portal Notification Center -- */}
+              <PortalNotificationCenter
+                kamsisStatus={kamsisStatus}
+                kamsisExtraData={kamsisExtraData}
+                kamsisToggles={kamsisToggles}
+                onOpenKamsisAppeal={() => setShowAppealModal(true)}
+                supsasActive={supsasActive}
+                supsasEdition={supsasEdition}
+                karnivalActive={karnivalActive}
+                karnivalStatus={karnivalStatus}
+              />
 
-              <AnimatePresence>
-                {karnivalActive && (
-                  <KarnivalMegaBanner karnivalStatus={karnivalStatus} />
-                )}
-              </AnimatePresence>
-
-              {/* ── MAKMP WINNER BANNER ── */}
+              {/* MAKMP Winner Banner */}
               <MakmpWinnerBanner />
-
-              {/* ── KAMSIS STATUS BANNER ── */}
-              <AnimatePresence>
-                {kamsisStatus && kamsisStatus !== 'OPT_OUT' && (() => {
-                  const isAppeal = !!kamsisExtraData?.appeal_reason || kamsisStatus === 'APPEALING' || kamsisStatus === 'APPEAL_REJECTED';
-                  const isResultOpen = kamsisToggles['kamsis_result_open'];
-                  const isAppealResultOpen = kamsisToggles['kamsis_appeal_result_open'];
-                  const isAppealOpen = kamsisToggles['kamsis_appeal_open'];
-
-                  let displayStatus = kamsisStatus;
-
-                  if (!isAppeal) {
-                    // Normal phase
-                    if (!isResultOpen) displayStatus = 'PENDING';
-                  } else {
-                    // Appeal phase
-                    if (!isAppealResultOpen) displayStatus = 'APPEALING';
-                  }
-
-                  const canAppeal = kamsisStatus === 'REJECTED' && isResultOpen && isAppealOpen && !isAppeal;
-
-                  return (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn(
-                      "p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm w-full backdrop-blur-md text-left mt-4",
-                      displayStatus === 'APPROVED' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" :
-                        (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400" :
-                          "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400"
-                    )}>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
-                          <Building2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-black text-sm uppercase tracking-widest mb-0.5">Status Permohonan Asrama (KAMSIS)</h3>
-                          <p className="text-xs font-bold opacity-80 leading-relaxed max-w-[250px] sm:max-w-none">
-                            {displayStatus === 'APPROVED' ? 'Tahniah! Permohonan asrama anda telah DILULUSKAN.' :
-                              displayStatus === 'REJECTED' ? 'Dukacita dimaklumkan permohonan asrama anda DITOLAK.' :
-                                displayStatus === 'APPEAL_REJECTED' ? 'Dukacita dimaklumkan rayuan asrama anda DITOLAK.' :
-                                  displayStatus === 'APPEALING' ? 'Rayuan anda sedang dalam proses semakan pihak pengurusan.' :
-                                    'Permohonan anda sedang dalam proses semakan pihak pengurusan.'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                        <Badge className={cn(
-                          "border-none px-4 py-2 font-black uppercase tracking-widest text-[10px] w-full sm:w-auto justify-center shadow-md shrink-0",
-                          displayStatus === 'APPROVED' ? "bg-emerald-500 text-white" :
-                            (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500 text-white" :
-                              "bg-amber-500 text-white"
-                        )}>
-                          {displayStatus === 'APPROVED' ? 'LULUS' :
-                            displayStatus === 'REJECTED' ? 'TOLAK' :
-                              displayStatus === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' :
-                                displayStatus === 'APPEALING' ? 'RAYUAN DIPROSES' :
-                                  'MENUNGGU KELULUSAN'}
-                        </Badge>
-
-                        {canAppeal && (
-                          <button
-                            onClick={() => setShowAppealModal(true)}
-                            className="w-full sm:w-auto px-4 py-2 rounded-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shrink-0"
-                          >
-                            Buat Rayuan
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-              </AnimatePresence>
 
               {/* Quick Actions */}
               <QuickActions
