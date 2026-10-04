@@ -46,7 +46,7 @@ export const getParticipantCategory = (p: EmsParticipant): string => {
 /**
  * Checks whether a participant is assigned to a specific jury code.
  * Keys: assigned_categories boleh jadi KATEGORI RUBRIK (cth "Best Showcase Award")
- * atau KATEGORI PESERTA (cth "Makanan"). Kalau kategori rubrik — semua peserta
+ * atau KATEGORI PESERTA (cth "Makanan"). Kalau kategori rubrik - semua peserta
  * dinilai oleh juri tu (wizard juri pilih kategori masa menilai).
  */
 export function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): boolean {
@@ -67,8 +67,8 @@ export function isParticipantAssignedToJury(participant: EmsParticipant, jury: E
     const pCat = getParticipantCategory(participant).toLowerCase();
 
     if (isRubricScope) {
-      // Kategori RUBRIK: kalau peserta sendiri ber-kategori rubrik (cth MAKMP / iFAMB) — padan ikut makna.
-      // Kalau peserta kategori biasa (food/booth, cth Siswapreneur) — semua assigned.
+      // Kategori RUBRIK: kalau peserta sendiri ber-kategori rubrik (cth MAKMP / iFAMB) - padan ikut makna.
+      // Kalau peserta kategori biasa (food/booth, cth Siswapreneur) - semua assigned.
       if (pCat && rubricCatNames.has(pCat)) {
         matchCat = catSet.includes(pCat);
       }
@@ -353,7 +353,7 @@ export function EmsJuryAuditMatrix({
     const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
     const org = j.organization ? ` (${j.organization})` : '';
 
-    const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara ini.\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n— *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+    const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara ini.\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
 
     navigator.clipboard.writeText(waMsg);
     setCopiedJuryId(j.id);

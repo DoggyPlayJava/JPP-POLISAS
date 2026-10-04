@@ -35,6 +35,11 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { verifyJuryCode, submitJuryScore } from '@/lib/ems';
+import {
+  createJuryDraftKey,
+  serializeJuryDraft,
+  deserializeJuryDraft,
+} from '@/__tests__/emsStagePresentation.test';
 import { supabase } from '@/lib/supabase';
 import type { EmsEvent, EmsJuryCode, EmsParticipant, EmsRubricCriteria, EmsScore } from '@/types';
 
@@ -142,6 +147,7 @@ export function EmsJuryPortalPage() {
 
   // Modal / Evaluation Wizard State
   const [evalParticipant, setEvalParticipant] = useState<EmsParticipant | null>(null);
+  const [isDraftSaved, setIsDraftSaved] = useState<boolean>(true);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [criterionScores, setCriterionScores] = useState<Record<string, number>>({});
   const [hoveredScores, setHoveredScores] = useState<Record<string, number | null>>({});
@@ -156,7 +162,7 @@ export function EmsJuryPortalPage() {
     ? getParticipantCategory(evalParticipant) || selectedCategory || ''
     : selectedCategory || '';
 
-  // Set of rubric category names (category_name dari ems_rubrics) — utk bezakan
+  // Set of rubric category names (category_name dari ems_rubrics) - utk bezakan
   // assignment "kategori rubrik" (penilaian) vs "kategori peserta" (booth/makanan)
   const rubricCategoryNames = useMemo(() => {
     const s = new Set<string>();
@@ -1612,7 +1618,7 @@ export function EmsJuryPortalPage() {
                                     onMouseLeave={() =>
                                       setHoveredScores((prev) => ({ ...prev, [r.id]: null }))
                                     }
-                                    className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1.5 text-center ${
+                                    className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1.5 text-center min-h-[56px] active:scale-[0.98] select-none touch-manipulation ${
                                       isSelected
                                         ? option.activeBg
                                         : `${option.badgeColor} hover:scale-[1.02]`
