@@ -24,14 +24,28 @@ const MODULES = [
     path: '/portal',
     stats: ['120+ Kelab Aktif', '98% Kelulusan Digital'],
     preview: (
-      <div className="flex flex-col gap-2 p-4 md:p-6 h-full justify-center">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] shadow-sm">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-            <div className="h-2 w-32 bg-white/20 rounded-full" />
-            <div className="ml-auto h-2 w-10 bg-white/10 rounded-full hidden sm:block" />
+      <div className="flex flex-col gap-2 p-3.5 h-full justify-center">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-bold text-white/90">Kertas Kerja DSK</span>
           </div>
-        ))}
+          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Diluluskan</span>
+        </div>
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-bold text-white/90">Bengkel AI Siswa</span>
+          </div>
+          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Semakan</span>
+        </div>
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-xs font-bold text-white/90">Minit AGM Kelab</span>
+          </div>
+          <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">Disahkan</span>
+        </div>
       </div>
     )
   },
@@ -45,17 +59,20 @@ const MODULES = [
     path: '/keusahawanan',
     stats: ['RM 45k+ Jualan', '85+ Vendor Aktif'],
     preview: (
-      <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
-        <div className="flex items-end justify-between w-full h-full pb-4">
-          {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
-            <motion.div
-              key={i}
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: 0.5 + (i * 0.1), duration: 1 }}
-              className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-emerald-500/20 to-emerald-500 rounded-t-md shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-            />
-          ))}
+      <div className="flex flex-col justify-center h-full p-4 gap-3">
+        <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Jualan Hari Ini</span>
+            <p className="text-lg font-black text-white font-mono">RM 3,420.50</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] text-white/40">Transaksi</span>
+            <p className="text-xs font-bold text-white/80">142 Pesanan</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-[9px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-semibold border border-emerald-500/20">POS Pintar</span>
+          <span className="text-[9px] px-2.5 py-1 rounded-md bg-white/[0.04] text-white/70 font-semibold border border-white/10">Katalog Digital</span>
         </div>
       </div>
     )
@@ -70,17 +87,22 @@ const MODULES = [
     path: '/akademik',
     stats: ['12k+ Rekod', 'Sistem Merit QR'],
     preview: (
-      <div className="flex items-center justify-center h-full relative">
-        <div className="w-24 h-24 rounded-full border border-blue-500/30 flex items-center justify-center bg-blue-500/5 shadow-[0_0_30px_rgba(37,99,235,0.15)]">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent border-l-transparent"
-          />
+      <div className="flex flex-col justify-center h-full p-4 gap-2.5">
+        <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">Imbasan QR Merit</p>
+              <p className="text-[9px] text-blue-300/80">Disahkan Serta-Merta</p>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-bold text-blue-400">+15 Merit</span>
         </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-black text-white dropshadow-md">4.00</span>
-          <span className="text-[8px] font-bold text-blue-400 uppercase tracking-widest">HPNM</span>
+        <div className="flex items-center justify-between px-2 text-[10px] text-white/50 font-medium">
+          <span>Rekod Terkumpul Siswa</span>
+          <span className="text-white font-bold">12,450 Transaksi</span>
         </div>
       </div>
     )
@@ -89,48 +111,23 @@ const MODULES = [
     id: 'polymart',
     title: 'PolyMart',
     subtitle: 'Ekosistem Niaga',
-    desc: 'Platform e-dagang berpusat khas buat siswa POLISAS. Jom support perniagaan pelajar kita!',
+    desc: 'Platform e-dagang berpusat khas buat siswa POLISAS. Jom sokong produk dan servis pelajar kita.',
     icon: ShoppingCart,
     color: '#f59e0b',
     path: '/polymart',
     stats: ['Produk Tempatan', 'JPP Pay Secure'],
     colSpan: 'lg:col-span-2',
     preview: (
-      <div className="flex w-full h-full p-4 items-center justify-between overflow-hidden relative">
-        {/* Left Side: Main Icon */}
-        <div className="w-1/3 flex flex-col items-center justify-center relative z-10 pl-2 md:pl-6">
-          <motion.div 
-             animate={{ y: [0, -8, 0] }}
-             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-             className="w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-[#f59e0b]/20 border border-[#f59e0b]/50 flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.3)] mb-4"
-          >
-            <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-[#f59e0b]" />
-          </motion.div>
-          <div className="h-2 w-16 bg-[#f59e0b]/40 rounded-full" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 h-full items-center">
+        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">Barangan Rasmi</span>
+          <p className="text-xs font-bold text-white truncate">Baju Korporat JPP</p>
+          <span className="text-xs font-mono font-black text-amber-300">RM 45.00</span>
         </div>
-        
-        {/* Right Side: Animated Transactions */}
-        <div className="w-2/3 flex flex-col gap-3 relative pr-2 md:pr-8">
-           <div className="absolute left-0 top-[-20px] bottom-[-20px] w-px bg-gradient-to-b from-transparent via-[#f59e0b]/30 to-transparent" />
-           {[1, 2, 3].map((item, i) => (
-             <motion.div
-               key={i}
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               transition={{ delay: 0.2 + (i * 0.3), duration: 0.5 }}
-               className="flex items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-[#f59e0b]/10 to-transparent border border-[#f59e0b]/20 ml-6"
-             >
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[#f59e0b]/20 flex-shrink-0" />
-                <div className="flex-1 flex flex-col gap-2">
-                   <div className="h-2 w-[80%] bg-[#f59e0b]/40 rounded-full" />
-                   <div className="h-2 w-[50%] bg-[#f59e0b]/20 rounded-full" />
-                </div>
-                <div className="flex flex-col gap-1.5 items-end flex-shrink-0 hidden sm:flex">
-                   <div className="w-12 h-2 bg-[#f59e0b]/50 rounded-full" />
-                   <div className="w-8 h-1.5 bg-[#f59e0b]/30 rounded-full" />
-                </div>
-             </motion.div>
-           ))}
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Perkhidmatan</span>
+          <p className="text-xs font-bold text-white truncate">Pakej Foto Konvo</p>
+          <span className="text-xs font-mono font-black text-white/90">RM 15.00</span>
         </div>
       </div>
     )
@@ -139,52 +136,26 @@ const MODULES = [
     id: 'kebajikan',
     title: 'e-Kebajikan',
     subtitle: 'Semak & Prihatin',
-    desc: 'Sistem pelaporan dan penjejakan aduan telus. Salurkan isu-isu kebajikan mahasiswa secara terus kepada pentadbiran JPP.',
+    desc: 'Sistem pelaporan dan penjejakan aduan telus. Salurkan isu kebajikan mahasiswa secara terus kepada JPP.',
     icon: HeartHandshake,
     color: '#14b8a6',
     path: '/kebajikan',
     stats: ['Tindakan Pantas', 'Jejak Aduan'],
     preview: (
-      <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
-        {/* Pulse rings */}
-        <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              animate={{ scale: [1, 2.5, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute w-24 h-24 md:w-32 md:h-32 border-2 border-[#14b8a6]/40 rounded-full"
-            />
-            <motion.div
-              animate={{ scale: [1, 3.5, 1], opacity: [0.2, 0, 0.2] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-              className="absolute w-24 h-24 md:w-32 md:h-32 border border-[#14b8a6]/20 rounded-full"
-            />
-        </div>
-
-        <div className="relative z-10 w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#14b8a6]/10 border border-[#14b8a6]/40 flex items-center justify-center shadow-[0_0_50px_rgba(20,184,166,0.3)] backdrop-blur-sm">
-          <HeartHandshake className="w-10 h-10 md:w-14 md:h-14 text-[#14b8a6]" />
-        </div>
-        
-        {/* Floating Status Nodes */}
-        <motion.div 
-           animate={{ y: [-15, 15, -15] }}
-           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-           className="absolute top-[10%] right-[5%] md:right-[15%] w-16 h-12 md:w-20 md:h-16 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/30 flex flex-col items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(20,184,166,0.2)] backdrop-blur-md"
-        >
-            <div className="w-6 md:w-10 h-1.5 md:h-2 rounded-full bg-[#14b8a6]/80" />
-            <div className="w-10 md:w-14 h-1 md:h-1.5 rounded-full bg-[#14b8a6]/40" />
-        </motion.div>
-
-        <motion.div 
-           animate={{ y: [15, -15, 15] }}
-           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-           className="absolute bottom-[10%] left-[5%] w-20 h-12 md:w-24 md:h-14 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/30 flex items-center justify-center gap-2 px-3 shadow-[0_0_15px_rgba(20,184,166,0.2)] backdrop-blur-md"
-        >
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] flex-shrink-0" />
-            <div className="flex flex-col gap-1.5 w-full relative top-0.5">
-               <div className="w-full h-1.5 md:h-2 rounded-full bg-white/60" />
-               <div className="w-3/4 h-1 md:h-1.5 rounded-full bg-white/30" />
+      <div className="flex flex-col justify-center h-full p-4 gap-2.5">
+        <div className="p-3.5 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
+              <HeartHandshake className="w-4 h-4 text-teal-400" />
             </div>
-        </motion.div>
+            <span className="text-xs font-bold text-white">Aduan KAMSIS & Fasiliti</span>
+          </div>
+          <span className="text-[9px] font-bold text-teal-400 bg-teal-500/20 px-2 py-0.5 rounded-full border border-teal-500/30">Selesai 24j</span>
+        </div>
+        <div className="flex items-center justify-between px-2 text-[10px] text-white/50">
+          <span>Kadar Penyelesaian Isu</span>
+          <span className="text-teal-400 font-bold">98.2%</span>
+        </div>
       </div>
     )
   }
@@ -373,56 +344,39 @@ const Navbar = () => {
 };
 
 const TickerTape = () => (
-  <div className="w-full bg-[#0A0202] border-y border-white/5 py-3 md:py-4 overflow-hidden flex items-center relative z-20 shadow-[0_0_50px_rgba(131,16,16,0.1)]">
+  <div className="w-full bg-[#0A0202] border-y border-white/5 py-3 md:py-3.5 overflow-hidden flex items-center relative z-20 shadow-[0_0_50px_rgba(131,16,16,0.1)]">
     <motion.div
       animate={{ x: ["0%", "-50%"] }}
-      transition={{ ease: "linear", duration: 40, repeat: Infinity }}
-      className="flex whitespace-nowrap gap-8 md:gap-16 items-center transform-gpu will-change-transform"
+      transition={{ ease: "linear", duration: 35, repeat: Infinity }}
+      className="flex whitespace-nowrap gap-8 md:gap-14 items-center transform-gpu will-change-transform"
     >
-      {[...Array(4)].map((_, i) => (
-        <React.Fragment key={i}>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Zap className="w-3 h-3 md:w-4 md:h-4 text-amber-500" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">Nexus AI: 12 Laporan Telah Disemak</span>
+      {[...Array(2)].map((_, loopIdx) => (
+        <React.Fragment key={loopIdx}>
+          <div className="flex items-center gap-2.5">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">Nexus AI: Semakan Kertas Kerja Pintar Beroperasi</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-3.5 h-3.5 text-red-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Aktiviti: 120+ Kelab & Persatuan Berdaftar</span>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <BarChart3 className="w-3 h-3 md:w-4 md:h-4 text-emerald-500" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">e-Keusahawanan: Transaksi RM 2.5k Direkod</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Akademik: Pengesahan Merit QR Masa Nyata</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">PolyMart: Platform Niaga Mahasiswa POLISAS</span>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <GraduationCap className="w-3 h-3 md:w-4 md:h-4 text-blue-500" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">e-Akademik: 45 Pelajar Imbas QR Merit</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <HeartHandshake className="w-3.5 h-3.5 text-teal-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Kebajikan: Tindakan Aduan & Food Bank Prihatin</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Shield className="w-3 h-3 md:w-4 md:h-4 text-maroon fill-maroon/20" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">PORTAL JPP: Kertas Kerja DSK Lulus</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 text-[#f59e0b]" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">PolyMart: 120 Pesanan Baharu Hari Ini</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <HeartHandshake className="w-3 h-3 md:w-4 md:h-4 text-[#14b8a6]" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">e-Kebajikan: 98% Aduan Selesai Pantas</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
         </React.Fragment>
       ))}
     </motion.div>
@@ -433,196 +387,334 @@ const Hero = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-[90vh] md:min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden">
-      {/* Deep Space Background Effects */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#0a0202] transform-gpu">
-        {/* Core Glowing Orb */}
+    <section className="relative min-h-[92dvh] flex items-center justify-center pt-24 md:pt-28 pb-16 overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#0a0202]">
         <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.3, 0.15] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] md:w-[60vw] max-w-4xl aspect-square bg-maroon/20 md:bg-maroon/30 blur-[60px] md:blur-[140px] rounded-full transform-gpu will-change-transform"
+          animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[70vw] max-w-4xl aspect-square bg-maroon/25 blur-[120px] rounded-full transform-gpu will-change-transform"
         />
-        {/* Secondary Accents */}
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-red-900/10 blur-[60px] md:blur-[100px] rounded-full transform-gpu will-change-transform" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-rose-900/10 blur-[60px] md:blur-[120px] rounded-full transform-gpu will-change-transform" />
-
-        {/* Subtle Grid Overlay */}
-        <div className="hidden md:block absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] md:opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
+        <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-amber-500/5 blur-[100px] rounded-full" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
       </div>
 
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
-        {/* Status Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/[0.02] border border-white/5 backdrop-blur-xl mb-8 md:mb-10 shadow-[0_0_20px_rgba(131,16,16,0.15)]"
-        >
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
-            Sistem Operasi Institusi v{__APP_VERSION__}
-          </span>
-        </motion.div>
-
-        {/* Big Typography */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-[3.25rem] leading-[0.95] sm:text-6xl md:text-8xl xl:text-[8rem] font-black tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-white/30 mb-6 md:mb-8 pb-2"
-        >
-          Masa Depan <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-maroon drop-shadow-sm">
-            Tadbir Urus.
-          </span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-sm md:text-lg text-white/50 max-w-2xl mx-auto font-medium leading-relaxed mb-10 md:mb-12 px-2"
-        >
-          Jadi sebahagian dari Transformasi Digital yang dibawakan khas oleh Jawatankuasa Perwakilan Pelajar POLISAS.
-        </motion.p>
-
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto px-6 sm:px-0"
-        >
-          <button
-            onClick={() => navigate('/portal')}
-            className="w-full sm:w-auto group relative px-8 md:px-10 py-4 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-maroon hover:text-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(131,16,16,0.5)] overflow-hidden"
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        {/* Left Editorial Content */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl mb-6 shadow-sm"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/50 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <span className="relative z-10">Mula Sesi Digital</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform relative z-10" />
-          </button>
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+              Jawatankuasa Perwakilan Pelajar POLISAS
+            </span>
+          </motion.div>
 
-          <button
-            onClick={() => scrollTo('nexus')}
-            className="w-full sm:w-auto group px-8 md:px-10 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-white/70 font-black uppercase text-xs tracking-widest hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-500 flex items-center justify-center gap-3 backdrop-blur-md"
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[1.0] text-left"
           >
-            <PlayCircle className="w-4 h-4 text-white/40 group-hover:text-red-400 transition-colors" />
-            Kenali Nexus
-          </button>
-        </motion.div>
+            Masa Depan <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-400 to-amber-200">
+              Tadbir Urus Kampus.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-base md:text-lg text-white/60 font-medium leading-relaxed my-6 max-w-xl text-left"
+          >
+            Platform digital rasmi memacu kepimpinan mahasiswa, automasi kelab, dan ekosistem kampus terpadu POLISAS.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-wrap items-center gap-4 text-left pt-2"
+          >
+            <button
+              onClick={() => navigate('/portal')}
+              className="px-8 py-3.5 rounded-xl bg-white text-black font-black uppercase text-xs tracking-wider hover:bg-maroon hover:text-white transition-all duration-300 flex items-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.15)] active:scale-[0.98]"
+            >
+              <span>Masuk Portal Pelajar</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => scrollTo('ekosistem')}
+              className="px-6 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-white/80 font-bold uppercase text-xs tracking-wider hover:bg-white/10 hover:text-white transition-all backdrop-blur-md active:scale-[0.98]"
+            >
+              Lihat Ekosistem
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Right Executive Preview Widget */}
+        <div className="lg:col-span-5 w-full">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            className="w-full rounded-[2rem] bg-gradient-to-b from-[#160505] to-[#0A0202] border border-white/10 p-6 md:p-8 shadow-2xl relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-white/90 uppercase tracking-wider">Pusat Operasi Eksekutif</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                Sesi 2026/2027
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3.5 mb-6">
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Kelab Berdaftar</span>
+                <p className="text-3xl font-black text-white mt-1">120+</p>
+                <span className="text-[11px] font-semibold text-emerald-400 mt-1 inline-block">100% Aktif</span>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Kelulusan Kertas</span>
+                <p className="text-3xl font-black text-white mt-1">98.4%</p>
+                <span className="text-[11px] font-semibold text-emerald-400 mt-1 inline-block">Digital & Pantas</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  <div>
+                    <p className="text-xs font-bold text-white/90">Anugerah MAKMP 2026</p>
+                    <p className="text-[10px] text-white/40">Fasa Penjurian Calon</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Aktif</span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <div>
+                    <p className="text-xs font-bold text-white/90">Food Bank & Kebajikan</p>
+                    <p className="text-[10px] text-white/40">Pengagihan Berkala Siswa</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Beroperasi</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
 };
 
 const SystemShowcase = () => {
-  const { scrollYProgress } = useScroll();
-  const scale = useTransform(scrollYProgress, [0, 0.4], [0.9, 1]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [0.3, 1]);
-  const rotateX = useTransform(scrollYProgress, [0, 0.4], [20, 0]);
+  const [activeTab, setActiveTab] = useState<'aktiviti' | 'services' | 'makmp'>('aktiviti');
+  const navigate = useNavigate();
 
   return (
-    <section id="ekosistem" className="relative pb-20 md:after:content-[''] after:block after:h-36 after:shrink-0 pt-16 md:pt-24 z-10 flex flex-col items-center justify-center px-4 overflow-hidden" style={{ perspective: 1200 }}>
+    <section id="ekosistem" className="relative pb-20 pt-16 md:pt-24 z-10 flex flex-col items-center justify-center px-4 overflow-hidden">
       {/* Decorative Blur behind showcase */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-48 md:h-64 bg-red-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-      <motion.div
-        style={{ scale, opacity, rotateX, willChange: 'transform, opacity' }}
-        className="relative w-full max-w-6xl rounded-t-[2rem] md:rounded-[2.5rem] border-x border-t border-white/10 bg-[#0A0202]/90 backdrop-blur-md md:backdrop-blur-3xl shadow-[0_-20px_60px_-20px_rgba(131,16,16,0.3)] md:shadow-[0_-30px_100px_-20px_rgba(131,16,16,0.35)] overflow-hidden transform-gpu"
-      >
-        {/* Fake Browser Chrome */}
-        <div className="h-10 md:h-12 border-b border-white/5 flex items-center px-4 md:px-6 gap-3 bg-white/[0.02]">
-          <div className="flex gap-1.5 md:gap-2">
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white/10 border border-white/5" />
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white/10 border border-white/5" />
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white/10 border border-white/5" />
+      <div className="relative w-full max-w-6xl rounded-[2rem] md:rounded-[2.5rem] border border-white/10 bg-[#0A0202]/95 backdrop-blur-3xl shadow-[0_20px_70px_-20px_rgba(131,16,16,0.35)] overflow-hidden">
+        {/* Authentic Executive Header Deck */}
+        <div className="border-b border-white/10 px-5 md:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-maroon/30 border border-maroon/50 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-red-400" />
+            </div>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-white">Sistem Eksekutif Siswa POLISAS</span>
+              <p className="text-[10px] text-white/40">Pratonton Langsung Kawalan Kampus</p>
+            </div>
           </div>
-          <div className="mx-auto flex items-center gap-2 px-6 md:px-12 py-1 md:py-1.5 rounded-full bg-black/60 border border-white/5">
-            <Shield className="w-3 h-3 text-white/30 hidden md:block" />
-            <span className="text-[9px] md:text-[10px] text-white/30 font-medium tracking-widest">portal.jpppolisas.edu.my</span>
+
+          {/* Interactive Showcase Tabs */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+            <button
+              onClick={() => setActiveTab('aktiviti')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'aktiviti'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              e-Aktiviti (e-KPP)
+            </button>
+            <button
+              onClick={() => setActiveTab('services')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'services'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              PolyServices
+            </button>
+            <button
+              onClick={() => setActiveTab('makmp')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'makmp'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
+            >
+              Penjurian MAKMP
+            </button>
           </div>
+
+          <button
+            onClick={() => navigate('/portal')}
+            className="hidden md:flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors"
+          >
+            <span>Buka Portal Penuh</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Dashboard Content Mockup */}
-        <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-4 gap-6 h-[400px] md:h-[600px] bg-gradient-to-b from-[#0A0202] to-black relative">
-
-          {/* Bottom Fade Mask */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 md:h-56 bg-gradient-to-t from-[#050101] to-transparent z-10 block pointer-events-none" />
-
-          {/* Sidebar */}
-          <div className="hidden md:block col-span-1 space-y-6">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-8 h-8 rounded-lg bg-maroon border border-red-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(131,16,16,0.4)]">
-                <div className="w-4 h-4 bg-white/50 rounded-sm" />
-              </div>
-              <div className="h-3 w-20 bg-white/20 rounded-full" />
-            </div>
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`h-11 w-full rounded-xl flex items-center px-4 gap-4 ${i === 1 ? 'bg-maroon/10 border border-maroon/20' : 'bg-transparent border border-transparent hover:bg-white/[0.02]'}`}>
-                  <div className={`w-4 h-4 rounded-md ${i === 1 ? 'bg-red-400' : 'bg-white/10'}`} />
-                  <div className={`h-2.5 w-20 rounded-full ${i === 1 ? 'bg-white/60' : 'bg-white/10'}`} />
+        {/* Tab Showcase Deck Content */}
+        <div className="p-6 md:p-8 min-h-[360px]">
+          {activeTab === 'aktiviti' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+              <div className="lg:col-span-2 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-bold text-white/80 uppercase tracking-wider">Saluran Kelulusan Kertas Kerja Terkini</h4>
+                  <span className="text-[10px] font-mono text-emerald-400">Status Semasa</span>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Main Content Area */}
-          <div className="col-span-1 md:col-span-3 space-y-6 pt-2">
-            {/* Header part */}
-            <div className="flex justify-between items-center mb-2 md:mb-6">
-              <div className="space-y-2.5">
-                <div className="h-6 md:h-8 w-32 md:w-48 bg-white/10 rounded-lg" />
-                <div className="h-2 md:h-3 w-48 md:w-64 bg-white/5 rounded-full" />
-              </div>
-              <div className="h-10 w-10 md:w-32 bg-maroon/20 border border-maroon/30 rounded-xl" />
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-              {[
-                { c: 'border-white/5', b: 'bg-white/[0.02]', icon: <Zap className="w-4 h-4 text-amber-500/50" /> },
-                { c: 'border-emerald-500/10', b: 'bg-emerald-500/[0.02]', icon: <Activity className="w-4 h-4 text-emerald-500/50" /> },
-                { c: 'border-blue-500/10', b: 'bg-blue-500/[0.02]', hideOnMobile: true, icon: <Users className="w-4 h-4 text-blue-500/50" /> }
-              ].map((style, i) => (
-                <div key={i} className={cn("h-28 md:h-36 border rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col justify-between shadow-sm", style.c, style.b, style.hideOnMobile && "hidden lg:flex")}>
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/5 flex items-center justify-center">
-                    {style.icon}
-                  </div>
-                  <div className="space-y-2.5">
-                    <div className="h-5 md:h-7 w-2/3 bg-white/20 rounded-md" />
-                    <div className="h-2 w-1/2 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Chart Area */}
-            <div className="h-48 md:h-72 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-5 md:p-8 flex flex-col">
-              <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-maroon" />
-                  <div className="h-3 md:h-4 w-24 md:w-32 bg-white/10 rounded-full" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-2 w-8 bg-white/5 rounded-full" />
-                  <div className="h-2 w-8 bg-white/10 rounded-full" />
-                </div>
-              </div>
-              <div className="flex-1 flex items-end justify-between gap-1.5 md:gap-3 px-1 md:px-4">
-                {[30, 50, 45, 80, 50, 95, 65, 40, 85, 55, 75].map((h, i) => (
-                  <div key={i} className="group relative w-full h-full flex items-end justify-center">
-                    <div
-                      style={{ height: `${h}%` }}
-                      className="w-full max-w-[1.5rem] bg-gradient-to-t from-maroon/20 to-red-500/60 rounded-t-sm md:rounded-t-md transition-all duration-300 group-hover:from-maroon/40 group-hover:to-red-400"
-                    />
+                {[
+                  { title: "Karnival Keusahawanan Siswa 2026", club: "Kelab Keusahawanan", budget: "RM 3,500", status: "Diluluskan", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                  { title: "Bengkel Robotik & AI Industri", club: "Persatuan Sains Komputer", budget: "RM 1,200", status: "Diluluskan", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                  { title: "Sukan Antara Jabatan (SUPSAS)", club: "Majlis Sukan POLISAS", budget: "RM 5,800", status: "Pelaksanaan", statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
+                ].map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between hover:bg-white/[0.05] transition-colors">
+                    <div>
+                      <h5 className="text-sm font-bold text-white">{item.title}</h5>
+                      <p className="text-xs text-white/50">{item.club} • Peruntukan: <span className="font-mono text-white/80">{item.budget}</span></p>
+                    </div>
+                    <span className={cn("text-[10px] font-bold px-2.5 py-1 rounded-full border", item.statusColor)}>
+                      {item.status}
+                    </span>
                   </div>
                 ))}
               </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-2">Metrik Tadbir Urus</h4>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Kertas Kerja Disahkan</span>
+                    <p className="text-2xl font-black text-white font-mono">128 Dokumen</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Peruntukan Dipantau</span>
+                    <p className="text-2xl font-black text-amber-400 font-mono">RM 45,200</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Penyertaan Pelajar</span>
+                    <p className="text-2xl font-black text-white font-mono">2,450 Mahasiswa</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'services' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    <h5 className="text-sm font-bold text-white">PolyRider Kampus</h5>
+                  </div>
+                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Masa Nyata</span>
+                </div>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Perkhidmatan penghantaran dan mobiliti sesama pelajar di dalam kawasan POLISAS dan persekitaran Semambu.
+                </p>
+                <div className="space-y-2 pt-2">
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Penunggang Aktif Bertugas</span>
+                    <span className="font-mono font-bold text-emerald-400">8 Rider</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Kadar Tambang Selamat</span>
+                    <span className="font-mono font-bold text-white">Bermula RM 2.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                    <h5 className="text-sm font-bold text-white">PolyRent Peralatan</h5>
+                  </div>
+                  <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">Automasi</span>
+                </div>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Tempahan peralatan audio, khemah persatuan, dan fasiliti sukan JPP tanpa borang manual yang rumit.
+                </p>
+                <div className="space-y-2 pt-2">
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Peralatan Tersedia</span>
+                    <span className="font-mono font-bold text-emerald-400">24 Kategori</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Pengambilan Pantas</span>
+                    <span className="font-mono font-bold text-white">Imbas Kod Pengesahan</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'makmp' && (
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Portal Penjurian MAKMP 2026</h4>
+                  <p className="text-xs text-white/50">Sistem penilaian anugerah kepimpinan & kecemerlangan siswa berasaskan rubrik rasmi.</p>
+                </div>
+                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                  Rubrik Automatik
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Anugerah Kepimpinan JPP</span>
+                  <p className="text-sm font-bold text-white mt-1">Calon Berpotensi Tertinggi</p>
+                  <p className="text-[11px] text-emerald-400 mt-2">Merit Maksimum 10 Pts / Dokumen</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Anugerah Usahawan Siswa</span>
+                  <p className="text-sm font-bold text-white mt-1">Penilaian Prestasi & Hasil Jualan</p>
+                  <p className="text-[11px] text-blue-400 mt-2">Penyelarasan Data POS PolyMart</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Audit Ketelusan Juri</span>
+                  <p className="text-sm font-bold text-white mt-1">Penyegerakan Skor Bersepadu</p>
+                  <p className="text-[11px] text-amber-400 mt-2">Jejak Log Audit Lengkap</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 };
@@ -701,105 +793,104 @@ const BentoSection = () => {
 
 const NexusAISection = () => {
   return (
-    <section id="nexus" className="py-24 md:py-40 relative overflow-hidden bg-gradient-to-b from-[#0A0202] via-[#140202] to-[#0A0202] border-y border-white/5">
+    <section id="nexus" className="py-24 md:py-36 relative overflow-hidden bg-gradient-to-b from-[#0A0202] via-[#140202] to-[#0A0202] border-y border-white/5">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] mix-blend-screen" />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center relative z-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
 
-        {/* Core Visualization */}
+        {/* Text Editorial Content */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="relative aspect-square md:aspect-auto md:h-[600px] w-full rounded-[3rem] border border-white/5 flex items-center justify-center p-8 md:p-12 overflow-hidden bg-black/40 lg:order-2 shadow-2xl"
-        >
-          {/* Reactor Background Glow */}
-          <div className="absolute inset-0 z-0 flex items-center justify-center">
-            <div className="w-48 h-48 md:w-64 md:h-64 bg-red-600/20 blur-[80px] md:blur-[100px] rounded-full animate-pulse" />
-          </div>
-
-          <div className="relative z-10 w-full h-full flex items-center justify-center">
-            {/* Dynamic Rings */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[90%] h-[90%] border border-dashed border-red-500/20 rounded-full transform-gpu will-change-transform"
-            />
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[65%] h-[65%] border border-solid border-r-red-500/30 border-t-red-500/10 border-b-transparent border-l-transparent rounded-full transform-gpu will-change-transform"
-            />
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[45%] h-[45%] border border-dotted border-white/20 rounded-full transform-gpu will-change-transform"
-            />
-
-            {/* Core Element */}
-            <div className="relative z-20 flex flex-col items-center justify-center">
-              <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#0A0202] border border-red-500/40 flex items-center justify-center backdrop-blur-xl shadow-[0_0_50px_rgba(220,38,38,0.3)]">
-                <BrainCircuit className="w-8 h-8 md:w-12 md:h-12 text-white/90 drop-shadow-md" />
-              </div>
-            </div>
-
-            {/* Floating Nodes */}
-            <motion.div
-              animate={{ y: [-10, 10, -10] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-[15%] left-[15%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
-            >
-              <FileText className="w-4 h-4 md:w-5 md:h-5 text-white/50" />
-            </motion.div>
-
-            <motion.div
-              animate={{ y: [10, -10, 10] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute bottom-[20%] right-[20%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
-            >
-              <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-emerald-500/70" />
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Text Content */}
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
+          initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="space-y-6 md:space-y-8 lg:order-1"
+          className="lg:col-span-5 space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 backdrop-blur-md">
             <BrainCircuit className="w-4 h-4 text-red-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-300">A.I Core Engine</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-300">Enjin Kepintaran Nexus</span>
           </div>
 
-          <h3 className="text-5xl sm:text-7xl md:text-[5rem] font-black tracking-tight text-white leading-[0.9]">
+          <h3 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.0]">
             Kepintaran <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-white">Nexus.</span>
           </h3>
 
-          <p className="text-sm md:text-lg text-white/50 font-medium leading-relaxed max-w-lg">
-            Sistem dipacu LLM (Large Language Model) untuk menyemak kualiti laporan teknikal dan merumuskan sentimen mahasiswa. Serahkan tugasan analitik kepada ejen pintar JPP.
+          <p className="text-sm md:text-base text-white/60 font-medium leading-relaxed">
+            Sistem analisis berbantu AI yang menyemak struktur kertas kerja, pengiraan belanjawan, dan pematuhan format HEP sebelum dihantar kepada penasihat kelab.
           </p>
 
-          <div className="grid grid-cols-2 gap-6 md:gap-10 pt-4 md:pt-8 border-t border-white/5 mt-8">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
             {[
               { label: 'Analisis Minit', desc: 'Sintaks Kewangan', icon: Activity },
-              { label: 'Penjanaan', desc: 'Teks Automatik', icon: BookOpen },
-              { label: 'Audit Semak', desc: 'Ralat Pemformatan', icon: Shield },
-              { label: 'Pakar JPP', desc: 'Resolusi Isu 24/7', icon: Zap }
+              { label: 'Semakan Format', desc: 'Piawaian HEP 2026', icon: BookOpen },
+              { label: 'Audit Bajet', desc: 'Pengesahan Jumlah', icon: Shield },
+              { label: 'Bantuan 24/7', desc: 'Resolusi Isu Siswa', icon: Zap }
             ].map((f, i) => (
-              <div key={i} className="flex flex-col gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center">
-                  <f.icon className="w-4 h-4 md:w-5 md:h-5 text-white/60" />
-                </div>
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                <f.icon className="w-4 h-4 text-red-400" />
                 <div>
-                  <h4 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white mb-1 md:mb-1.5">{f.label}</h4>
-                  <p className="text-[8px] md:text-[9px] uppercase font-bold tracking-[0.2em] text-white/30">{f.desc}</p>
+                  <h4 className="text-xs font-bold text-white">{f.label}</h4>
+                  <p className="text-[10px] text-white/40">{f.desc}</p>
                 </div>
               </div>
             ))}
+          </div>
+        </motion.div>
+
+        {/* High-Fidelity Document Audit Workbench Preview */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="lg:col-span-7 w-full rounded-[2.5rem] border border-white/10 bg-[#070101] p-6 md:p-8 shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-4 h-4 text-red-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Nexus AI Document Audit Workbench</span>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              Skor Pematuhan: 98%
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+              <span className="text-[9px] font-mono uppercase text-white/40 tracking-wider">Kertas Kerja Disemak</span>
+              <p className="text-sm font-bold text-white">KERTAS KERJA: BENGKEL KEMAHIRAN AI & ROBOTIK SISWA 2026</p>
+              <p className="text-xs text-white/50">Pemohon: Persatuan Teknologi Maklumat POLISAS</p>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-emerald-300">Format Template HEP: Sempurna</span>
+                  <p className="text-white/60 mt-0.5">Semua 8 seksyen wajib merangkumi objektif, hasil pembelajaran, dan tentatif lengkap.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-emerald-300">Semakan Bajet: RM 1,500.00 Sah</span>
+                  <p className="text-white/60 mt-0.5">Pengiraan item jamuan, penceramah, dan cenderahati seimbang tanpa ralat aritmetik.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-amber-300">Cadangan Penambahbaikan</span>
+                  <p className="text-white/60 mt-0.5">Tambahkan pemetaan SDG 4 (Pendidikan Berkualiti) untuk meningkatkan skor penilaian aktiviti.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between text-[11px] text-white/40 border-t border-white/5">
+              <span>Masa Pemprosesan: 1.2s</span>
+              <span className="font-mono text-emerald-400">Integriti Data: Disahkan</span>
+            </div>
           </div>
         </motion.div>
 
