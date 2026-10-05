@@ -164,17 +164,13 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('setComposeModalOpen(false)');
     });
 
-    it('renders CampusPulseBar story mood rings track at top of feed', () => {
+    it('does not render deprecated CampusPulseBar story mood rings track', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Campus pulse bar items
-      expect(html).toContain('+ Luah');
-      expect(html).toContain('Semua');
-      expect(html).toContain('Hangat');
-      expect(html).toContain('Exam');
-      expect(html).toContain('Kamsis');
-      expect(html).toContain('Kafe');
-      expect(html).toContain('Aduan');
+      // Campus pulse bar items should no longer exist
+      expect(html).not.toContain('+ Luah');
+      expect(html).not.toContain('Exam');
+      expect(html).not.toContain('Kafe');
     });
 
     it('renders SocialTabNav animated 3-way feed switcher with Untuk Anda, Terkini, and Hangat tabs', () => {
@@ -186,15 +182,19 @@ describe('PolySuaraPage Suite', () => {
       expect(html).toContain('Hangat');
     });
 
-    it('renders FloatingComposeFab and mobile dock spacer h-32 md:hidden', () => {
+    it('does not render FloatingComposeFab and renders exactly one BottomNav with mobile dock spacer', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // FAB
-      expect(html).toContain('aria-label="Tulis Luahan Rahsia Baharu"');
-      expect(html).toContain('fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2');
+      // FAB should no longer exist
+      expect(html).not.toContain('aria-label="Tulis Luahan Rahsia Baharu"');
+      expect(html).not.toContain('fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2');
 
       // Mobile dock spacer
       expect(html).toContain('h-32 md:hidden');
+
+      // Deduplicated BottomNav: exactly 1 instance rendered
+      const bottomNavMatches = html.match(/data-testid="mock-bottom-nav"/g);
+      expect(bottomNavMatches).toHaveLength(1);
     });
   });
 
@@ -318,11 +318,11 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('toggleBookmark');
     });
 
-    it('manages pulse bubble, social tab and bookmark states in PolySuaraPage', () => {
-      expect(pageContent).toContain('const [activePulseId, setActivePulseId] = useState');
+    it('manages social tab and bookmark states in PolySuaraPage and removes pulse state', () => {
+      expect(pageContent).not.toContain('const [activePulseId, setActivePulseId] = useState');
+      expect(pageContent).not.toContain('handleSelectPulse');
       expect(pageContent).toContain('const [activeSocialTab, setActiveSocialTab] = useState');
       expect(pageContent).toContain('const [bookmarkedIds, setBookmarkedIds] = useState');
-      expect(pageContent).toContain('handleSelectPulse');
       expect(pageContent).toContain('handleSocialTabChange');
     });
   });

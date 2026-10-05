@@ -18,9 +18,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import ReactMarkdown from 'react-markdown';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PolySuaraReactions } from '@/components/polysuara/PolySuaraReactions';
-import { CampusPulseBar } from '@/components/polysuara/CampusPulseBar';
 import { SocialTabNav, SocialTabType } from '@/components/polysuara/SocialTabNav';
-import { FloatingComposeFab } from '@/components/polysuara/FloatingComposeFab';
 import {
   cleanConfessionText,
   getAnimalAvatarFromCodename,
@@ -62,22 +60,8 @@ export function PolySuaraPage() {
   // Filter & sort
   const [activeCategory, setActiveCategory] = useState<string>('SEMUA');
   const [sortBy, setSortBy] = useState<'LATEST'|'TRENDING'>('LATEST');
-  const [activePulseId, setActivePulseId] = useState<string>('all');
   const [activeSocialTab, setActiveSocialTab] = useState<SocialTabType>('LATEST');
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
-
-  const handleSelectPulse = (id: string, categoryFilter?: string) => {
-    setActivePulseId(id);
-    if (id === 'trending') {
-      setSortBy('TRENDING');
-      setActiveCategory('SEMUA');
-      setActiveSocialTab('TRENDING');
-    } else if (categoryFilter) {
-      setActiveCategory(categoryFilter);
-    } else {
-      setActiveCategory('SEMUA');
-    }
-  };
 
   const handleSocialTabChange = (tab: SocialTabType) => {
     setActiveSocialTab(tab);
@@ -1059,14 +1043,6 @@ export function PolySuaraPage() {
           </div>
         ) : (
           <>
-            {/* Top Story-Style Campus Mood Rings Track */}
-            <CampusPulseBar
-              activePulseId={activePulseId}
-              onSelectPulse={handleSelectPulse}
-              onOpenCompose={() => setComposeModalOpen(true)}
-              className="mb-4"
-            />
-
             {/* Quick-compose capsule */}
             <div
               onClick={() => setComposeModalOpen(true)}
@@ -1791,9 +1767,6 @@ export function PolySuaraPage() {
         )}
       </AnimatePresence>
 
-      {/* Include BottomNav to prevent the bottom from being cut off on mobile without navigation */}
-      <BottomNav />
-      <FloatingAiChat />
 
       {/* Comments Drawer */}
       <AnimatePresence>
@@ -2192,7 +2165,6 @@ export function PolySuaraPage() {
         )}
       </AnimatePresence>
 
-      <FloatingComposeFab onClick={() => setComposeModalOpen(true)} />
       <BottomNav />
       <FloatingAiChat />
     </div>
