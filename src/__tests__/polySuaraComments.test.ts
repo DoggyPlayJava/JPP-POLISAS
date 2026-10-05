@@ -125,31 +125,49 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).toContain('cleanConfessionText(activeConfessionForComments.content)');
     });
 
-    it('applies dual Light & Dark mode classes to comments drawer container and header', () => {
+    it('applies dual Light & Dark mode classes, z-[999] elevation, and bottom clearance to comments drawer', () => {
       // Drawer container
       expect(pageContent).toContain('bg-white dark:bg-slate-900');
       expect(pageContent).toContain('border-slate-200 dark:border-slate-800');
       expect(pageContent).toContain('text-slate-900 dark:text-white');
+      expect(pageContent).toContain('z-[999]');
+      expect(pageContent).toContain('pb-8 sm:pb-4');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]');
 
       // Drawer close button dual mode
-      expect(pageContent).toMatch(/hover:bg-slate-100 dark:hover:bg-slate-800/);
       expect(pageContent).toMatch(/text-slate-500 dark:text-slate-400/);
     });
 
-    it('applies dual mode classes to active confession preview inside drawer', () => {
-      expect(pageContent).toContain('bg-slate-50 dark:bg-slate-950/60');
-      expect(pageContent).toMatch(/text-slate-700 dark:text-slate-300|text-slate-600 dark:text-slate-400/);
+    it('applies minimalist quotation card styling to active confession preview inside drawer', () => {
+      expect(pageContent).toContain('bg-slate-50/80 dark:bg-white/[0.03]');
+      expect(pageContent).toContain('border-b border-slate-100 dark:border-white/5');
+      expect(pageContent).toMatch(/text-slate-600 dark:text-slate-300|text-slate-700 dark:text-slate-300/);
     });
 
-    it('renders comment items with dual mode styling', () => {
-      // Comment item card styling
-      expect(pageContent).toContain('bg-slate-50 dark:bg-slate-950/40');
-      expect(pageContent).toContain('border-slate-200 dark:border-slate-800/60');
+    it('renders clean modern conversation thread styling, role badges, and discrete actions', () => {
+      // Clean conversation rows with hairline dividers
+      expect(pageContent).toContain('border-b border-slate-100 dark:border-white/5 py-3.5 px-4');
+
+      // Nested replies hairline thread line
+      expect(pageContent).toContain('border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5');
+
+      // OP role badge
+      expect(pageContent).toContain('text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20');
+
+      // JPP RASMI role badge
+      expect(pageContent).toContain('text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20');
+      expect(pageContent).toContain('JPP RASMI');
+
+      // Discrete escalation trigger replacing bulky yellow button
+      expect(pageContent).toContain('title="Eskalasi kecemasan ke Kebajikan (Rahsia)"');
+      expect(pageContent).not.toContain('bg-amber-500/10 hover:bg-amber-500/20');
     });
 
-    it('renders clean single-line comment input form without sticker trigger', () => {
-      expect(pageContent).toContain('bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800');
+    it('renders modern floating capsule comment input bar and sensitive comment blur toggle', () => {
+      expect(pageContent).toContain('bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm');
+      expect(pageContent).toContain('focus:outline-none focus:border-rose-500/50');
       expect(pageContent).not.toContain('Pelekat Kampus');
+      expect(pageContent).toContain('Tanda sebagai Sensitif (Blur)');
     });
   });
 });

@@ -156,10 +156,13 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).not.toContain('composerStickerId');
       expect(pageContent).not.toContain('stickerPickerOpen');
 
-      // Modal dialog elements
+      // Modal dialog elements with z-[999] elevation and bottom clearance
       expect(pageContent).toContain('Tulis Luahan Rahsia');
       expect(pageContent).toContain('100% Rahsia');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]');
+      expect(pageContent).toContain('z-[999]');
+      expect(pageContent).toContain('pb-28 sm:pb-6');
+      expect(pageContent).toContain('rounded-t-[2.5rem] sm:rounded-3xl');
       expect(pageContent).toContain('Kongsi Luahan');
       expect(pageContent).toContain('setComposeModalOpen(false)');
     });
