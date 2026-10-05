@@ -111,3 +111,53 @@ describe('BusinessShiftModule Table Overflow Protection', () => {
     expect(source).toContain('min-w-[600px]');
   });
 });
+
+describe('UrusPerniagaanPage Consolidated 3 Core Domains', () => {
+  const urusPath = path.resolve(__dirname, '../pages/keusahawanan/UrusPerniagaanPage.tsx');
+  const source = fs.readFileSync(urusPath, 'utf-8');
+
+  it('defines the 3 consolidated domains (profil, pasukan, kupon_log)', () => {
+    expect(source).toContain("'profil'");
+    expect(source).toContain("'pasukan'");
+    expect(source).toContain("'kupon_log'");
+    expect(source).toContain("key: 'profil'");
+    expect(source).toContain("key: 'pasukan'");
+    expect(source).toContain("key: 'kupon_log'");
+  });
+
+  it('replaces old micro-tabs (identiti, ciri, staff, pos, etc.) from the tabs array', () => {
+    expect(source).not.toContain("key: 'identiti'");
+    expect(source).not.toContain("key: 'staff'");
+    expect(source).not.toContain("key: 'pos'");
+    expect(source).not.toContain("key: 'ciri'");
+    expect(source).not.toContain("key: 'syif'");
+    expect(source).not.toContain("key: 'sesi'");
+    expect(source).not.toContain("key: 'log'");
+  });
+
+  it('renders modern segmented thumb-friendly pill tab bar with Store, Users, and Tag icons', () => {
+    expect(source).toMatch(/import\s*\{[^}]*Store[^}]*\}\s*from\s*['"]lucide-react['"]/);
+    expect(source).toMatch(/import\s*\{[^}]*Users[^}]*\}\s*from\s*['"]lucide-react['"]/);
+    expect(source).toMatch(/import\s*\{[^}]*Tag[^}]*\}\s*from\s*['"]lucide-react['"]/);
+    expect(source).toContain('tour-urus-nav');
+    expect(source).toContain('Profil & Kedai');
+    expect(source).toContain('Pasukan & Operasi');
+    expect(source).toContain('Kupon & Log Audit');
+    expect(source).toContain('rounded-2xl bg-muted/40 border border-border/50 max-w-xl');
+  });
+
+  it('contains zero raw emoji pictographs in UrusPerniagaanPage.tsx', () => {
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]/gu;
+    const matches = source.match(emojiRegex);
+    expect(matches).toBeNull();
+  });
+
+  it('preserves essential sub-modules and functions', () => {
+    expect(source).toContain('<BusinessJadual');
+    expect(source).toContain('<SesiBusiness');
+    expect(source).toContain('handleSavePaymentSettings');
+    expect(source).toContain('handleTransferOwnership');
+    expect(source).toContain('handleAddPromo');
+  });
+});
+

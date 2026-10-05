@@ -5,12 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { usePosData } from '@/hooks/usePosData';
 import { supabase } from '@/lib/supabase';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
-  Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
-  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert, HelpCircle,
-  CreditCard, Handshake, Phone, Upload, Image,
+  Activity, Building2, ToggleLeft, ToggleRight, UserPlus,
+  Tag, Ticket, BadgePercent, Plus, ShieldAlert, HelpCircle,
+  CreditCard, Handshake, Phone, Upload, Image, Store, Crown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTour } from '@/hooks/useTour';
@@ -18,7 +18,6 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
 import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
-
 
 type LogActionLabel = Record<string, string>;
 const LOG_LABELS: LogActionLabel = {
@@ -46,7 +45,7 @@ const fmtDT = (iso: string) => new Date(iso).toLocaleString('ms-MY', {
 
 export function UrusPerniagaanPage() {
   const { color } = useExcoTheme();
-  const { user, profile, isSuperAdmin } = useAuth();
+  const { user, profile } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin, refreshBusinesses } = useBusinessSwitcher();
   const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_URUS', !!selectedBusiness?.id);
 
@@ -54,13 +53,13 @@ export function UrusPerniagaanPage() {
   const [members, setMembers]           = useState<any[]>([]);
   const [uploading, setUploading]       = useState(false);
   const [saving, setSaving]             = useState(false);
-  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'ciri' | 'log' | 'syif' | 'sesi'>('identiti');
+  const [activeTab, setActiveTab]       = useState<'profil' | 'pasukan' | 'kupon_log'>('profil');
 
   const [description, setDescription] = useState('');
   const [useShiftSystem, setUseShiftSystem] = useState(false);
   const [regType, setRegType] = useState<'SSM' | 'PUSKEP' | 'EMS'>('PUSKEP');
   const [ssmRegNumber, setSsmRegNumber] = useState('');
-  const [mentors, setMentors] = useState<{name: string, department: string}[]>([]);
+  const [mentors, setMentors] = useState<{ name: string; department: string }[]>([]);
 
   // Derived
   const businessId = selectedBusiness?.id;
@@ -70,7 +69,7 @@ export function UrusPerniagaanPage() {
 
   const pos = usePosData(businessId);
 
-  // Ciri: toggles & promosi
+  // Commercial toggles & promosi
   const [promotionsEnabled, setPromotionsEnabled] = useState(false);
   const [cashSessionEnabled, setCashSessionEnabled] = useState(false);
   const [toggSaving, setToggSaving] = useState<string | null>(null);
@@ -132,9 +131,9 @@ export function UrusPerniagaanPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Load promotions when ciri tab is opened
+  // Load promotions when kupon_log tab is opened
   useEffect(() => {
-    if (activeTab === 'ciri' && businessId) loadPromotions();
+    if (activeTab === 'kupon_log' && businessId) loadPromotions();
   }, [activeTab, businessId]);
 
   const loadPromotions = async () => {
@@ -215,8 +214,7 @@ export function UrusPerniagaanPage() {
     await loadPromotions();
   };
 
-  // ── Identity save ────────────────────────────────────────────────────────
-
+  // Identity save
   const handleSave = async () => {
     if (!businessId) return;
     setSaving(true);
@@ -252,8 +250,37 @@ export function UrusPerniagaanPage() {
     setSaving(false);
   };
 
-  // ── Logo upload ──────────────────────────────────────────────────────────
+  // Payment settings save
+  const handleSavePaymentSettings = async () => {
+    if (!businessId) return;
+    if (onlinePayEnabled && !paymentQrUrl) {
+      toast.error('Sila muat naik gambar QR dahulu.');
+      return;
+    }
+    setPaymentSaving(true);
+    const { error } = await supabase.from('keusahawanan_businesses').update({
+      online_payment_enabled: onlinePayEnabled,
+      cod_enabled: codEnabled,
+      payment_qr_url: paymentQrUrl || null,
+      payment_instructions: paymentInstructions || null,
+      business_phone: businessPhone || null,
+      payment_deadline_value: paymentDeadlineValue,
+      payment_deadline_unit: paymentDeadlineUnit,
+    }).eq('id', businessId);
+    if (error) {
+      toast.error('Gagal menyimpan: ' + error.message);
+    } else {
+      await pos.writeLog(
+        businessId,
+        'SETTINGS_UPDATED',
+        `Tetapan pembayaran PolyMart dikemaskini. Online QR: ${onlinePayEnabled ? 'ON' : 'OFF'}, COD: ${codEnabled ? 'ON' : 'OFF'}`
+      );
+      toast.success('Tetapan pembayaran disimpan!');
+    }
+    setPaymentSaving(false);
+  };
 
+  // Logo upload
   const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
@@ -283,8 +310,7 @@ export function UrusPerniagaanPage() {
     }
   };
 
-  // ── Staff management ──────────────────────────────────────────────────────
-
+  // Staff management
   const handleApproveMember = async (memberId: string, userId: string, userName: string) => {
     const { error } = await supabase.from('student_business_memberships').update({ status: 'ACTIVE' }).eq('id', memberId);
     if (error) {
@@ -294,7 +320,7 @@ export function UrusPerniagaanPage() {
     await pos.writeLog(businessId!, 'STAFF_APPROVED', `${userName} telah diluluskan sebagai ahli perniagaan.`, { user_id: userId, user_name: userName });
     try {
       await sendNotificationToUser(userId, {
-        title: '🎉 Permohonan Diterima!',
+        title: 'Permohonan Diterima!',
         message: `Anda telah diluluskan sebagai ahli perniagaan "${businessData?.name}". Selamat datang!`,
         type: 'STATUS_UPDATE',
         module: 'KEUSAHAWANAN',
@@ -345,22 +371,15 @@ export function UrusPerniagaanPage() {
     fetchData();
   };
 
-  // ── Members by status ─────────────────────────────────────────────────────
-
+  // Members by status
   const pending  = members.filter(m => m.status === 'PENDING');
   const active   = members.filter(m => m.status === 'ACTIVE');
-  const rejected = members.filter(m => m.status === 'REJECTED');
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
+  // Tabs configuration: 3 Consolidated Domains
   const tabs = [
-    { key: 'identiti', label: 'Identiti',  icon: Building2 },
-    { key: 'staff',    label: 'Staff',      icon: Users },
-    { key: 'pos',      label: 'POS',        icon: ToggleRight },
-    { key: 'ciri',     label: 'Ciri',       icon: Tag },
-    ...(useShiftSystem ? [{ key: 'syif' as const, label: 'Syif', icon: Calendar }] : []),
-    ...(useShiftSystem ? [{ key: 'sesi' as const, label: 'Sesi', icon: Clock }] : []),
-    { key: 'log',      label: 'Log',        icon: Logs },
+    { key: 'profil' as const, label: 'Profil & Kedai', icon: Store },
+    { key: 'pasukan' as const, label: 'Pasukan & Operasi', icon: Users, badge: pending.length > 0 ? pending.length : undefined },
+    { key: 'kupon_log' as const, label: 'Kupon & Log Audit', icon: Tag },
   ];
 
   return (
@@ -376,7 +395,7 @@ export function UrusPerniagaanPage() {
             <div>
               <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                 Urus Perniagaan
-                <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
                   <HelpCircle className="w-4 h-4" />
                 </button>
               </h1>
@@ -392,18 +411,33 @@ export function UrusPerniagaanPage() {
         </div>
       </motion.div>
 
-      {/* Tab bar */}
-      <div className="tour-urus-nav flex gap-1 bg-muted/30 p-1 rounded-2xl overflow-x-auto">
-        {tabs.map(({ key, label, icon: Icon }) => {
+      {/* Modern Segmented Tab bar */}
+      <div className="tour-urus-nav flex gap-1.5 p-1 rounded-2xl bg-muted/40 border border-border/50 max-w-xl overflow-x-auto scrollbar-hide">
+        {tabs.map(({ key, label, icon: Icon, badge }) => {
           let tourClass = '';
-          if (key === 'staff') tourClass = 'tour-urus-add';
-          if (key === 'ciri') tourClass = 'tour-urus-setting';
+          if (key === 'pasukan') tourClass = 'tour-urus-add';
+          if (key === 'kupon_log') tourClass = 'tour-urus-setting';
 
           return (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all min-w-[80px] ${tourClass}`}
-              style={activeTab === key ? { background: color, color: '#fff' } : { color: 'hsl(var(--muted-foreground)/0.6)' }}>
-              <Icon className="w-3.5 h-3.5" /> {label}
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 h-10 px-3 rounded-xl text-xs font-black tracking-wide transition-all shrink-0 cursor-pointer",
+                tourClass,
+                activeTab === key
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+              )}
+              style={activeTab === key ? { background: color, color: '#fff' } : undefined}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{label}</span>
+              {badge && (
+                <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">
+                  {badge}
+                </span>
+              )}
             </button>
           );
         })}
@@ -411,348 +445,134 @@ export function UrusPerniagaanPage() {
 
       {/* Tab content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'identiti' && (
-          <motion.div key="identiti" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="grid lg:grid-cols-3 gap-6">
-            {/* Logo + visual */}
-            <div className="rounded-[2rem] p-6 bg-card border border-border space-y-6">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                <Camera className="w-3.5 h-3.5" /> Logo Perniagaan
-              </p>
-              <div className="relative group mx-auto w-32">
-                <div className="w-32 h-32 rounded-[2rem] bg-muted/30 border-4 overflow-hidden flex items-center justify-center shadow-xl"
-                  style={{ borderColor: hexToRgba(color, 0.4) }}>
-                  {businessData?.logo_url
-                    ? <img src={businessData.logo_url} alt="logo" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                    : <Building2 className="w-12 h-12 text-muted-foreground/20" />
-                  }
+        {activeTab === 'profil' && (
+          <motion.div key="profil" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Logo + visual */}
+              <div className="rounded-[2rem] p-6 bg-card border border-border space-y-6">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+                  <Camera className="w-3.5 h-3.5" /> Logo Perniagaan
+                </p>
+                <div className="relative group mx-auto w-32">
+                  <div className="w-32 h-32 rounded-[2rem] bg-muted/30 border-4 overflow-hidden flex items-center justify-center shadow-xl"
+                    style={{ borderColor: hexToRgba(color, 0.4) }}>
+                    {businessData?.logo_url
+                      ? <img src={businessData.logo_url} alt="logo" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                      : <Building2 className="w-12 h-12 text-muted-foreground/20" />
+                    }
+                  </div>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem] cursor-pointer">
+                    <Camera className="w-6 h-6 text-white" />
+                    <input type="file" accept="image/*" className="hidden" onChange={uploadLogo} disabled={uploading} />
+                  </label>
                 </div>
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem] cursor-pointer">
-                  <Camera className="w-6 h-6 text-white" />
-                  <input type="file" accept="image/*" className="hidden" onChange={uploadLogo} disabled={uploading} />
-                </label>
-              </div>
-              <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{uploading ? 'Memuat naik...' : 'Klik logo untuk tukar'}</p>
+                <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{uploading ? 'Memuat naik...' : 'Klik logo untuk tukar'}</p>
 
-              <div className="p-4 rounded-2xl bg-muted/30">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Kategori</p>
-                <p className="text-sm font-black">{businessData?.category?.name || '—'}</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-muted/30">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Status Perniagaan</p>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${businessData?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                  <p className="text-sm font-black">{businessData?.status === 'ACTIVE' ? 'Aktif' : businessData?.status === 'PENDING_INTERVIEW' ? 'Menunggu Temuduga' : businessData?.status}</p>
+                <div className="p-4 rounded-2xl bg-muted/30">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Kategori</p>
+                  <p className="text-sm font-black">{businessData?.category?.name || '—'}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-muted/30">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Status Perniagaan</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${businessData?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                    <p className="text-sm font-black">{businessData?.status === 'ACTIVE' ? 'Aktif' : businessData?.status === 'PENDING_INTERVIEW' ? 'Menunggu Temuduga' : businessData?.status}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Description */}
-            <div className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5" /> Maklumat Perniagaan
-              </p>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Perniagaan</p>
-                <p className="text-xl font-black text-foreground">{businessData?.name}</p>
-              </div>
-
-              {/* Registration and Mentor */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Description & Business Info */}
+              <div className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5" /> Maklumat Perniagaan
+                </p>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jenis Pendaftaran</p>
-                  <select value={regType} onChange={e => setRegType(e.target.value as 'SSM'|'PUSKEP'|'EMS')} disabled={regType === 'EMS'}
-                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
-                    <option value="PUSKEP">PUSKEP-POLISAS</option>
-                    <option value="SSM">SSM</option>
-                    <option value="EMS">EMS (Sementara)</option>
-                  </select>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Perniagaan</p>
+                  <p className="text-xl font-black text-foreground">{businessData?.name}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">No. Pendaftaran</p>
-                  <input type="text" value={ssmRegNumber} onChange={e => setSsmRegNumber(e.target.value)} disabled={regType === 'PUSKEP' || regType === 'EMS'}
-                    placeholder={regType === 'PUSKEP' ? 'Akan Dijana' : regType === 'EMS' ? 'No. Siri EMS' : 'Contoh: 202101000001'}
-                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Mentor Penasihat (Maks 5)</p>
-                  {isOwner && mentors.length < 5 && (
-                    <button type="button" onClick={() => setMentors([...mentors, { name: '', department: '' }])}
-                      className="text-xs text-amber-500 font-bold hover:text-amber-400 flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Tambah Mentor
-                    </button>
-                  )}
+                {/* Registration and Mentor */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jenis Pendaftaran</p>
+                    <select value={regType} onChange={e => setRegType(e.target.value as 'SSM'|'PUSKEP'|'EMS')} disabled={regType === 'EMS'}
+                      className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                      <option value="PUSKEP">PUSKEP-POLISAS</option>
+                      <option value="SSM">SSM</option>
+                      <option value="EMS">EMS (Sementara)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">No. Pendaftaran</p>
+                    <input type="text" value={ssmRegNumber} onChange={e => setSsmRegNumber(e.target.value)} disabled={regType === 'PUSKEP' || regType === 'EMS'}
+                      placeholder={regType === 'PUSKEP' ? 'Akan Dijana' : regType === 'EMS' ? 'No. Siri EMS' : 'Contoh: 202101000001'}
+                      className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
+                  </div>
                 </div>
-                {mentors.map((m, i) => (
-                  <div key={i} className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 relative group">
-                    {isOwner && (
-                      <button type="button" onClick={() => setMentors(mentors.filter((_, idx) => idx !== i))}
-                        className="absolute top-3 right-3 text-muted-foreground/40 hover:text-rose-500">
-                        Tutup
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Mentor Penasihat (Maks 5)</p>
+                    {isOwner && mentors.length < 5 && (
+                      <button type="button" onClick={() => setMentors([...mentors, { name: '', department: '' }])}
+                        className="text-xs text-amber-500 font-bold hover:text-amber-400 flex items-center gap-1 cursor-pointer">
+                        <Plus className="w-3 h-3" /> Tambah Mentor
                       </button>
                     )}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor</p>
-                        <input type="text" value={m.name} onChange={e => {
-                            const newM = [...mentors];
-                            newM[i].name = e.target.value;
-                            setMentors(newM);
-                          }}
-                          placeholder="Contoh: Dr. Ahmad Ali"
-                          disabled={!isOwner}
-                          className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor</p>
-                        <input type="text" value={m.department} onChange={e => {
-                            const newM = [...mentors];
-                            newM[i].department = e.target.value;
-                            setMentors(newM);
-                          }}
-                          placeholder="Contoh: JTMK"
-                          disabled={!isOwner}
-                          className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
-                      </div>
-                    </div>
                   </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Penerangan</p>
-                <textarea value={description} onChange={e => setDescription(e.target.value)}
-                  placeholder="Ceritakan tentang perniagaan anda..."
-                  className="w-full h-28 px-4 py-3 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-              </div>
-              {isOwner && (
-                <button onClick={handleSave} disabled={saving}
-                  className="flex items-center gap-2 h-11 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95"
-                  style={{ background: color }}>
-                  <Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Maklumat'}
-                </button>
-              )}
-
-              {/* Transfer Ownership */}
-              {isOwner && (
-                <>
-                  <hr className="my-6 border-border" />
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-rose-500">
-                      <ShieldAlert className="w-4 h-4" />
-                      <p className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">Zon Berbahaya</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Pindah Milik Perniagaan</p>
-                      <p className="text-xs text-muted-foreground mb-4">Pilih ahli untuk diserahkan tanggungjawab sebagai Pemilik baharu. Tindakan ini tidak boleh diundurkan dan selepas berjaya, anda akan berstatus Ahli biasa.</p>
-                      
-                      <div className="flex gap-2">
-                        <select 
-                          value={transferToId} 
-                          onChange={e => setTransferToId(e.target.value)}
-                          className="flex-1 h-11 px-4 rounded-2xl bg-muted/30 border border-border/50 text-sm font-medium focus:border-rose-500/50 outline-none transition-all"
-                        >
-                          <option value="">-- Pilih Ahli Aktif --</option>
-                          {active.filter(m => m.user_id !== user?.id).map((m) => (
-                            <option key={m.id} value={m.user_id}>{m.user?.full_name}</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={handleTransferOwnership}
-                          disabled={!transferToId || isTransferring}
-                          className="h-11 px-6 rounded-2xl bg-rose-500 text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-all hover:bg-rose-600 active:scale-95 whitespace-nowrap"
-                        >
-                          {isTransferring ? 'Memindahkan...' : 'Pindah Milik'}
+                  {mentors.map((m, i) => (
+                    <div key={i} className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 relative group">
+                      {isOwner && (
+                        <button type="button" onClick={() => setMentors(mentors.filter((_, idx) => idx !== i))}
+                          className="absolute top-3 right-3 text-muted-foreground/40 hover:text-rose-500 cursor-pointer">
+                          Tutup
                         </button>
-                      </div>
-                      {active.filter(m => m.user_id !== user?.id).length === 0 && (
-                        <p className="text-[10px] text-rose-500/80 mt-2">Perniagaan mesti mempunyai sekurang-kurangnya seorang Ahli Aktif lain sebelum pindah milik boleh dilakukan.</p>
                       )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'staff' && (
-          <motion.div key="staff" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-            {/* Pending */}
-            {pending.length > 0 && (
-              <div className="rounded-[2rem] border border-amber-500/30 bg-amber-500/[0.03] p-6 space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5" /> {pending.length} Permohonan Menunggu
-                </p>
-                {pending.map(m => (
-                  <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center font-black text-sm flex-shrink-0" style={{ color }}>
-                      {m.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-foreground">{m.user?.full_name}</p>
-                      <p className="text-[10px] text-muted-foreground">Memohon {new Date(m.joined_at).toLocaleDateString('ms-MY')}</p>
-                    </div>
-                    {isOwner && (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleRejectMember(m.id, m.user_id, m.user?.full_name)}
-                          className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center hover:bg-rose-500/20 transition-colors">
-                          <X className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleApproveMember(m.id, m.user_id, m.user?.full_name)}
-                          className="w-9 h-9 rounded-xl text-white flex items-center justify-center transition-colors hover:brightness-110"
-                          style={{ background: color }}>
-                          <Check className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Active members */}
-            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5" /> Ahli Aktif ({active.length})
-              </p>
-              {active.length === 0
-                ? <p className="text-sm text-muted-foreground/40 text-center py-6">Tiada ahli aktif lagi.</p>
-                : active.map(m => (
-                  <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0" style={{ background: color }}>
-                      {m.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-foreground">{m.user?.full_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{m.role === 'OWNER' ? '👑 Pemilik' : 'Ahli'}</p>
-                    </div>
-                    {isOwner && m.role !== 'OWNER' && (
-                      <button onClick={() => handleRemoveMember(m.id, m.user_id, m.user?.full_name)}
-                        className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                ))
-              }
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'pos' && (
-          <motion.div key="pos" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="rounded-[2rem] bg-card border border-border p-6 space-y-6">
-            <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-              <ToggleRight className="w-4 h-4" style={{ color }} /> Tetapan Akses POS
-            </p>
-
-            {/* Shift system toggle */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
-              <div>
-                <p className="text-sm font-black text-foreground">Sistem Syif Automatik</p>
-                <p className="text-xs text-muted-foreground mt-0.5">POS diaktifkan secara auto apabila staff ada syif hari ini. Jika dimatikan, semua staf {isOwner ? '(termasuk anda)' : ''} dibenarkan akses.</p>
-              </div>
-              <button onClick={() => isOwner && handleToggleFeature('is_shift_enabled', !useShiftSystem)}
-                disabled={toggSaving === 'is_shift_enabled' || !isOwner}
-                className="transition-transform active:scale-95 disabled:opacity-40">
-                {useShiftSystem
-                  ? <ToggleRight className="w-8 h-8" style={{ color }} />
-                  : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />
-                }
-              </button>
-            </div>
-
-            {/* Manual assignment */}
-            {!useShiftSystem && (
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                  <UserPlus className="w-3.5 h-3.5" /> Assign Staff POS Manual (Hari Ini)
-                </p>
-                <div className="space-y-2">
-                  {active.filter(m => m.role !== 'OWNER').map(m => {
-                    const isAssigned = pos.assignments.some(a => a.user_id === m.user_id);
-                    return (
-                      <div key={m.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20">
-                        <div className="flex-1">
-                          <p className="text-sm font-black">{m.user?.full_name}</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor</p>
+                          <input type="text" value={m.name} onChange={e => {
+                              const newM = [...mentors];
+                              newM[i].name = e.target.value;
+                              setMentors(newM);
+                            }}
+                            placeholder="Contoh: Dr. Ahmad Ali"
+                            disabled={!isOwner}
+                            className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
                         </div>
-                        <button
-                          onClick={() => isAssigned
-                            ? pos.removePosAssignment(pos.assignments.find(a => a.user_id === m.user_id)!.id, businessId!)
-                            : pos.assignPosToday(businessId!, m.user_id, m.user?.full_name)
-                          }
-                          className="h-8 px-4 rounded-xl text-[10px] font-black uppercase border transition-all"
-                          style={isAssigned
-                            ? { background: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.4), color }
-                            : { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground)/0.5)' }
-                          }>
-                          {isAssigned ? '✓ Bertugas' : 'Assign'}
-                        </button>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor</p>
+                          <input type="text" value={m.department} onChange={e => {
+                              const newM = [...mentors];
+                              newM[i].department = e.target.value;
+                              setMentors(newM);
+                            }}
+                            placeholder="Contoh: JTMK"
+                            disabled={!isOwner}
+                            className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
+                        </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
-              </div>
-            )}
 
-            <div className="text-[10px] text-muted-foreground/40 italic px-1">
-              * Pemilik perniagaan dan Exco Keusahawanan sentiasa boleh akses POS tanpa assignment.
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'ciri' && (
-          <motion.div key="ciri" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="space-y-6">
-
-            {/* Feature toggles */}
-            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-                <ToggleRight className="w-4 h-4" style={{ color }} /> Aktifkan Ciri Komersial
-              </p>
-
-              {/* Promotions toggle */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <Ticket className="w-4 h-4" style={{ color }} />
-                    <p className="text-sm font-black text-foreground">Sistem Kupon & Promosi</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Benarkan penggunaan kod kupon semasa proses pembayaran di POS.</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Penerangan</p>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)}
+                    placeholder="Ceritakan tentang perniagaan anda..."
+                    className="w-full h-28 px-4 py-3 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                 </div>
-                <button onClick={() => isOwner && handleToggleFeature('promotions_enabled', !promotionsEnabled)}
-                  disabled={toggSaving === 'promotions_enabled' || !isOwner}
-                  className="transition-transform active:scale-95 disabled:opacity-40">
-                  {promotionsEnabled
-                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
-                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
-                </button>
-              </div>
-
-              {/* Cash session toggle */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <BadgePercent className="w-4 h-4" style={{ color }} />
-                    <p className="text-sm font-black text-foreground">Sesi Baldi Wang (Cash Checkpoint)</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Rekod amaun tunai dalam baldi pada sebarang masa (buka pagi, semak tengahari, tutup malam).</p>
-                </div>
-                <button onClick={() => isOwner && handleToggleFeature('cash_session_enabled', !cashSessionEnabled)}
-                  disabled={toggSaving === 'cash_session_enabled' || !isOwner}
-                  className="transition-transform active:scale-95 disabled:opacity-40">
-                  {cashSessionEnabled
-                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
-                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
-                </button>
+                {isOwner && (
+                  <button onClick={handleSave} disabled={saving}
+                    className="flex items-center gap-2 h-11 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95 cursor-pointer"
+                    style={{ background: color }}>
+                    <Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Maklumat'}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* ── PolyMart Payment Settings ── */}
+            {/* PolyMart Payment Settings */}
             <div className="rounded-[2rem] bg-card border border-border p-6 space-y-5">
               <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
                 <CreditCard className="w-4 h-4" style={{ color }} /> Tetapan Pembayaran PolyMart
@@ -766,7 +586,7 @@ export function UrusPerniagaanPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-blue-500" />
-                    <p className="text-sm font-black text-foreground">💳 Pembayaran Online (QR)</p>
+                    <p className="text-sm font-black text-foreground">Pembayaran Online (QR)</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Pelanggan bayar melalui QR dan upload resit sebagai bukti.</p>
                 </div>
@@ -777,7 +597,7 @@ export function UrusPerniagaanPage() {
                     setOnlinePayEnabled(newVal);
                   }}
                   disabled={!isOwner}
-                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  className="transition-transform active:scale-95 disabled:opacity-40 cursor-pointer">
                   {onlinePayEnabled
                     ? <ToggleRight className="w-8 h-8" style={{ color }} />
                     : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
@@ -789,7 +609,7 @@ export function UrusPerniagaanPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <Handshake className="w-4 h-4 text-amber-500" />
-                    <p className="text-sm font-black text-foreground">🤝 Bayar Bersemuka (COD)</p>
+                    <p className="text-sm font-black text-foreground">Bayar Bersemuka (COD)</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Pelanggan bayar terus kepada vendor semasa ambil pesanan.</p>
                 </div>
@@ -800,14 +620,14 @@ export function UrusPerniagaanPage() {
                     setCodEnabled(newVal);
                   }}
                   disabled={!isOwner}
-                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  className="transition-transform active:scale-95 disabled:opacity-40 cursor-pointer">
                   {codEnabled
                     ? <ToggleRight className="w-8 h-8" style={{ color }} />
                     : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
                 </button>
               </div>
 
-              {/* QR Details — only show when online payment enabled */}
+              {/* QR Details */}
               <AnimatePresence>
                 {onlinePayEnabled && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
@@ -848,12 +668,7 @@ export function UrusPerniagaanPage() {
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Arahan / Maklumat Bank (untuk pelanggan salin)</p>
                         <textarea value={paymentInstructions} onChange={e => setPaymentInstructions(e.target.value)}
-                          placeholder="Contoh:
-Bank: Maybank
-No. Akaun: 1234567890
-Nama: Ahmad Bin Ali
-
-Sila masukkan ID Pesanan dalam rujukan pembayaran."
+                          placeholder="Contoh:&#10;Bank: Maybank&#10;No. Akaun: 1234567890&#10;Nama: Ahmad Bin Ali&#10;&#10;Sila masukkan ID Pesanan dalam rujukan pembayaran."
                           className="w-full h-28 px-4 py-3 rounded-2xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-blue-500/50 transition-all" />
                       </div>
                     </div>
@@ -874,7 +689,9 @@ Sila masukkan ID Pesanan dalam rujukan pembayaran."
 
               {/* Payment Deadline */}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">⏰ Had Masa Pembayaran</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground/60" /> Had Masa Pembayaran
+                </p>
                 <p className="text-xs text-muted-foreground mb-3">Pesanan akan auto-cancel jika pembayaran tidak disahkan dalam tempoh ini.</p>
                 <div className="flex gap-3">
                   <input type="number" min={1} value={paymentDeadlineValue} onChange={e => setPaymentDeadlineValue(parseInt(e.target.value) || 1)}
@@ -890,32 +707,281 @@ Sila masukkan ID Pesanan dalam rujukan pembayaran."
 
               {/* Save Payment Settings */}
               {isOwner && (
-                <button onClick={async () => {
-                    if (!businessId) return;
-                    if (onlinePayEnabled && !paymentQrUrl) { toast.error('Sila muat naik gambar QR dahulu.'); return; }
-                    setPaymentSaving(true);
-                    const { error } = await supabase.from('keusahawanan_businesses').update({
-                      online_payment_enabled: onlinePayEnabled,
-                      cod_enabled: codEnabled,
-                      payment_qr_url: paymentQrUrl || null,
-                      payment_instructions: paymentInstructions || null,
-                      business_phone: businessPhone || null,
-                      payment_deadline_value: paymentDeadlineValue,
-                      payment_deadline_unit: paymentDeadlineUnit,
-                    }).eq('id', businessId);
-                    if (error) { toast.error('Gagal menyimpan: ' + error.message); }
-                    else {
-                      await pos.writeLog(businessId, 'SETTINGS_UPDATED', `Tetapan pembayaran PolyMart dikemaskini. Online QR: ${onlinePayEnabled ? 'ON' : 'OFF'}, COD: ${codEnabled ? 'ON' : 'OFF'}`);
-                      toast.success('Tetapan pembayaran disimpan!');
-                    }
-                    setPaymentSaving(false);
-                  }}
+                <button onClick={handleSavePaymentSettings}
                   disabled={paymentSaving}
-                  className="w-full h-11 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                   style={{ background: color }}>
                   <Save className="w-4 h-4" /> {paymentSaving ? 'Menyimpan...' : 'Simpan Tetapan Pembayaran'}
                 </button>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'pasukan' && (
+          <motion.div key="pasukan" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+            {/* Summary Header */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-card border border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Ahli Aktif</p>
+                <p className="text-2xl font-black text-foreground">{active.length}</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-card border border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Permohonan Tertunggak</p>
+                <p className={cn("text-2xl font-black", pending.length > 0 ? "text-amber-500" : "text-muted-foreground")}>{pending.length}</p>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-card border border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Mod Syif</p>
+                <p className="text-sm font-black text-foreground mt-1.5">{useShiftSystem ? 'Sistem Syif Aktif' : 'Penugasan Manual'}</p>
+              </div>
+            </div>
+
+            {/* Pending Requests */}
+            {pending.length > 0 && (
+              <div className="rounded-[2rem] border border-amber-500/30 bg-amber-500/[0.03] p-6 space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5" /> {pending.length} Permohonan Menunggu
+                </p>
+                {pending.map(m => (
+                  <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border">
+                    <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center font-black text-sm flex-shrink-0" style={{ color }}>
+                      {m.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-foreground">{m.user?.full_name}</p>
+                      <p className="text-[10px] text-muted-foreground">Memohon {new Date(m.joined_at).toLocaleDateString('ms-MY')}</p>
+                    </div>
+                    {isOwner && (
+                      <div className="flex gap-2">
+                        <button onClick={() => handleRejectMember(m.id, m.user_id, m.user?.full_name)}
+                          className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center hover:bg-rose-500/20 transition-colors cursor-pointer">
+                          <X className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleApproveMember(m.id, m.user_id, m.user?.full_name)}
+                          className="w-9 h-9 rounded-xl text-white flex items-center justify-center transition-colors hover:brightness-110 cursor-pointer"
+                          style={{ background: color }}>
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Active members */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5" /> Ahli Aktif ({active.length})
+              </p>
+              {active.length === 0
+                ? <p className="text-sm text-muted-foreground/40 text-center py-6">Tiada ahli aktif lagi.</p>
+                : active.map(m => (
+                  <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0" style={{ background: color }}>
+                      {m.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-foreground">{m.user?.full_name}</p>
+                      <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                        {m.role === 'OWNER' ? (
+                          <>
+                            <Crown className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span className="font-bold text-amber-600">Pemilik</span>
+                          </>
+                        ) : (
+                          <span>Ahli</span>
+                        )}
+                      </div>
+                    </div>
+                    {isOwner && m.role !== 'OWNER' && (
+                      <button onClick={() => handleRemoveMember(m.id, m.user_id, m.user?.full_name)}
+                        className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 transition-colors cursor-pointer">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              }
+            </div>
+
+            {/* Transfer Ownership */}
+            {isOwner && (
+              <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
+                <div className="flex items-center gap-2 text-rose-500">
+                  <ShieldAlert className="w-4 h-4" />
+                  <p className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">Zon Berbahaya</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Pindah Milik Perniagaan</p>
+                  <p className="text-xs text-muted-foreground mb-4">Pilih ahli untuk diserahkan tanggungjawab sebagai Pemilik baharu. Tindakan ini tidak boleh diundurkan dan selepas berjaya, anda akan berstatus Ahli biasa.</p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select 
+                      value={transferToId} 
+                      onChange={e => setTransferToId(e.target.value)}
+                      className="flex-1 h-11 px-4 rounded-2xl bg-muted/30 border border-border/50 text-sm font-medium focus:border-rose-500/50 outline-none transition-all"
+                    >
+                      <option value="">-- Pilih Ahli Aktif --</option>
+                      {active.filter(m => m.user_id !== user?.id).map((m) => (
+                        <option key={m.id} value={m.user_id}>{m.user?.full_name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleTransferOwnership}
+                      disabled={!transferToId || isTransferring}
+                      className="h-11 px-6 rounded-2xl bg-rose-500 text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-all hover:bg-rose-600 active:scale-95 whitespace-nowrap cursor-pointer"
+                    >
+                      {isTransferring ? 'Memindahkan...' : 'Pindah Milik'}
+                    </button>
+                  </div>
+                  {active.filter(m => m.user_id !== user?.id).length === 0 && (
+                    <p className="text-[10px] text-rose-500/80 mt-2">Perniagaan mesti mempunyai sekurang-kurangnya seorang Ahli Aktif lain sebelum pindah milik boleh dilakukan.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Shift & Session Operations */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <ToggleRight className="w-4 h-4" style={{ color }} /> Tetapan Operasi & Syif
+              </p>
+
+              {/* Shift system toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <p className="text-sm font-black text-foreground">Sistem Syif Automatik</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">POS diaktifkan secara auto apabila staff ada syif hari ini. Jika dimatikan, semua staf {isOwner ? '(termasuk anda)' : ''} dibenarkan akses secara manual.</p>
+                </div>
+                <button onClick={() => isOwner && handleToggleFeature('is_shift_enabled', !useShiftSystem)}
+                  disabled={toggSaving === 'is_shift_enabled' || !isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40 cursor-pointer">
+                  {useShiftSystem
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />
+                  }
+                </button>
+              </div>
+
+              {/* If shift system is enabled, display Shift Schedule and Cashier Sessions */}
+              {useShiftSystem && businessId ? (
+                <div className="space-y-6 pt-2">
+                  <div className="rounded-2xl border border-border/60 p-4 sm:p-6 bg-muted/10">
+                    <h3 className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-emerald-600" />
+                      Jadual Syif Bertugas
+                    </h3>
+                    <BusinessJadual 
+                      businessId={businessId}
+                      color={color}
+                      canManage={isOwner}
+                      currentUserId={user!.id}
+                      businessMembers={members.filter(m => m.status === 'ACTIVE')}
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 p-4 sm:p-6 bg-muted/10">
+                    <h3 className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      Sesi Bertugas Semasa
+                    </h3>
+                    <SesiBusiness 
+                      businessId={businessId}
+                      color={color}
+                      profile={profile}
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Manual assignment when shift system is off */
+                <div className="space-y-3">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+                    <UserPlus className="w-3.5 h-3.5" /> Assign Staff POS Manual (Hari Ini)
+                  </p>
+                  <div className="space-y-2">
+                    {active.filter(m => m.role !== 'OWNER').map(m => {
+                      const isAssigned = pos.assignments.some(a => a.user_id === m.user_id);
+                      return (
+                        <div key={m.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20">
+                          <div className="flex-1">
+                            <p className="text-sm font-black">{m.user?.full_name}</p>
+                          </div>
+                          <button
+                            onClick={() => isAssigned
+                              ? pos.removePosAssignment(pos.assignments.find(a => a.user_id === m.user_id)!.id, businessId!)
+                              : pos.assignPosToday(businessId!, m.user_id, m.user?.full_name)
+                            }
+                            className="h-8 px-4 rounded-xl text-[10px] font-black uppercase border transition-all flex items-center gap-1 cursor-pointer"
+                            style={isAssigned
+                              ? { background: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.4), color }
+                              : { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground)/0.5)' }
+                            }>
+                            {isAssigned ? (
+                              <>
+                                <Check className="w-3 h-3 shrink-0" />
+                                <span>Bertugas</span>
+                              </>
+                            ) : (
+                              'Assign'
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/40 italic px-1">
+                    * Pemilik perniagaan dan Exco Keusahawanan sentiasa boleh akses POS tanpa assignment.
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'kupon_log' && (
+          <motion.div key="kupon_log" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+            {/* Section A: Commercial Features & POS Coupons */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <ToggleRight className="w-4 h-4" style={{ color }} /> Aktifkan Ciri Komersial
+              </p>
+
+              {/* Promotions toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-4 h-4" style={{ color }} />
+                    <p className="text-sm font-black text-foreground">Sistem Kupon & Promosi</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Benarkan penggunaan kod kupon semasa proses pembayaran di POS.</p>
+                </div>
+                <button onClick={() => isOwner && handleToggleFeature('promotions_enabled', !promotionsEnabled)}
+                  disabled={toggSaving === 'promotions_enabled' || !isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40 cursor-pointer">
+                  {promotionsEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
+
+              {/* Cash session toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <BadgePercent className="w-4 h-4" style={{ color }} />
+                    <p className="text-sm font-black text-foreground">Sesi Baldi Wang (Cash Checkpoint)</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Rekod amaun tunai dalam baldi pada sebarang masa (buka pagi, semak tengahari, tutup malam).</p>
+                </div>
+                <button onClick={() => isOwner && handleToggleFeature('cash_session_enabled', !cashSessionEnabled)}
+                  disabled={toggSaving === 'cash_session_enabled' || !isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40 cursor-pointer">
+                  {cashSessionEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
             </div>
 
             {/* Promotion management — only shown when promotions enabled */}
@@ -984,7 +1050,7 @@ Sila masukkan ID Pesanan dalam rujukan pembayaran."
                   </div>
 
                   <button onClick={handleAddPromo} disabled={promoSaving}
-                    className="w-full h-10 rounded-xl text-xs font-black transition-all hover:opacity-90 disabled:opacity-50"
+                    className="w-full h-10 rounded-xl text-xs font-black transition-all hover:opacity-90 disabled:opacity-50 cursor-pointer"
                     style={{ background: color, color: '#fff' }}>
                     {promoSaving ? 'Menyimpan...' : '+ Cipta Kupon'}
                   </button>
@@ -1022,13 +1088,13 @@ Sila masukkan ID Pesanan dalam rujukan pembayaran."
                               </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <button onClick={() => handleTogglePromo(p)} className="transition-transform active:scale-95">
+                              <button onClick={() => handleTogglePromo(p)} className="transition-transform active:scale-95 cursor-pointer">
                                 {p.is_active
                                   ? <ToggleRight className="w-6 h-6" style={{ color }} />
                                   : <ToggleLeft className="w-6 h-6 text-muted-foreground/40" />}
                               </button>
                               <button onClick={() => handleDeletePromo(p)}
-                                className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all">
+                                className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all cursor-pointer">
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -1040,63 +1106,37 @@ Sila masukkan ID Pesanan dalam rujukan pembayaran."
                 </div>
               </div>
             )}
-          </motion.div>
-        )}
 
-        {activeTab === 'syif' && useShiftSystem && businessId && (
-          <motion.div key="syif" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-             className="rounded-[2rem] bg-card border border-border p-6 space-y-6 min-h-[500px]">
-             <BusinessJadual 
-               businessId={businessId}
-               color={color}
-               canManage={isOwner}
-               currentUserId={user!.id}
-               businessMembers={members.filter(m => m.status === 'ACTIVE')}
-             />
-          </motion.div>
-        )}
-
-        {activeTab === 'sesi' && useShiftSystem && businessId && (
-          <motion.div key="sesi" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-             className="rounded-[2rem] bg-card border border-border p-6 space-y-6">
-             <SesiBusiness 
-               businessId={businessId}
-               color={color}
-               profile={profile}
-             />
-          </motion.div>
-        )}
-
-        {activeTab === 'log' && (
-          <motion.div key="log" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="rounded-[2rem] bg-card border border-border p-6 space-y-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5" style={{ color }} /> Log Aktiviti Perniagaan
-            </p>
-            <p className="text-[10px] text-muted-foreground/50 italic">Rekod terperinci semua tindakan dalam sistem. Menunjukkan 100 log terkini.</p>
-            {pos.logs.length === 0 ? (
-              <div className="py-12 text-center">
-                <Activity className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm font-black text-muted-foreground/40">Tiada log lagi.</p>
-              </div>
-            ) : (
-              <div className="space-y-2 mt-4">
-                {pos.logs.map((log, i) => (
-                  <motion.div key={log.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.02 * i }}
-                    className="flex items-start gap-4 p-4 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors">
-                    <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs font-black text-foreground">{LOG_LABELS[log.action_type] || log.action_type}</p>
-                        <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-black uppercase text-muted-foreground">{log.action_type}</span>
+            {/* Section B: System Logs & Audit */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5" style={{ color }} /> Log Aktiviti Perniagaan
+              </p>
+              <p className="text-[10px] text-muted-foreground/50 italic">Rekod terperinci semua tindakan dalam sistem. Menunjukkan 100 log terkini.</p>
+              {pos.logs.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Activity className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+                  <p className="text-sm font-black text-muted-foreground/40">Tiada log lagi.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 mt-4 max-h-[500px] overflow-y-auto scrollbar-hide">
+                  {pos.logs.map((log, i) => (
+                    <motion.div key={log.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.02 * i }}
+                      className="flex items-start gap-4 p-4 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                      <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs font-black text-foreground">{LOG_LABELS[log.action_type] || log.action_type}</p>
+                          <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-black uppercase text-muted-foreground">{log.action_type}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{log.description}</p>
+                        <p className="text-[9px] text-muted-foreground/40 mt-1">{log.actor_name} · {fmtDT(log.created_at)}</p>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{log.description}</p>
-                      <p className="text-[9px] text-muted-foreground/40 mt-1">{log.actor_name} · {fmtDT(log.created_at)}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
