@@ -20,7 +20,7 @@ function LoadingScreen() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 2, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-orange-500/20 blur-[100px] rounded-full animate-pulse" 
         />
         
@@ -28,7 +28,7 @@ function LoadingScreen() {
         <motion.img 
           initial={{ scale: 0.85, opacity: 0, filter: "blur(15px)" }}
           animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
-          transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }} // smooth spring-like ease out
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} // smooth spring-like ease out
           src="/HZ.png?v=2" 
           alt="HZ Infinity" 
           className="relative z-10 w-[85vw] max-w-[320px] md:max-w-[450px] h-auto object-contain drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]" 
@@ -39,7 +39,7 @@ function LoadingScreen() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.8 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
         className="flex flex-col items-center gap-2 z-10"
       >
         <h1 className="text-base md:text-lg font-black uppercase tracking-[0.4em] text-black/80 dark:text-white/90 drop-shadow-md text-center pl-1">
@@ -97,11 +97,11 @@ export function ProtectedRoute() {
       // Jika dah tengok (contoh: tengah navigate dari PolyMart), skip delay terus!
       setMinDelayPassed(true);
     } else {
-      // Jika ini cold boot PWA / tab baru, tunjuk splash screen 3 saat
+      // Jika ini cold boot PWA / tab baru, tunjuk splash screen seketika (800ms)
       const timer = setTimeout(() => {
         setMinDelayPassed(true);
         sessionStorage.setItem('hz_splash_seen', 'true');
-      }, 3000);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -148,11 +148,11 @@ export function PublicRoute() {
       // Jika dah tengok (contoh: klik PolyMart), skip delay terus!
       setMinDelayPassed(true);
     } else {
-      // Jika ini cold boot PWA / tab baru, tunjuk splash screen 3 saat
+      // Jika ini cold boot PWA / tab baru, tunjuk splash screen seketika (800ms)
       const timer = setTimeout(() => {
         setMinDelayPassed(true);
         sessionStorage.setItem('hz_splash_seen', 'true');
-      }, 3000);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, []);

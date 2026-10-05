@@ -70,6 +70,15 @@ export function CampusCampaignCarousel({
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Auto-advance every 6 seconds when more than 1 slide
+  useEffect(() => {
+    if (!slides || slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [slides?.length]);
+
   if (!slides || slides.length === 0) {
     return null;
   }
@@ -77,14 +86,9 @@ export function CampusCampaignCarousel({
   const safeIndex = currentIndex < slides.length ? currentIndex : 0;
   const currentSlide = slides[safeIndex];
 
-  // Auto-advance every 6 seconds when more than 1 slide
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
+  if (!currentSlide) {
+    return null;
+  }
 
   const handleAction = (slide: CampaignSlide) => {
     if (slide.actionPath) {

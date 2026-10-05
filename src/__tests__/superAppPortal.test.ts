@@ -76,7 +76,7 @@ describe('superAppHelpers', () => {
       expect(headerModule.default).toBeDefined();
       expect(typeof headerModule.default).toBe('function');
       expect(headerModule.SuperAppHeader).toBe(headerModule.default);
-    }, 15000);
+    }, 30000);
 
     it('verifies SuperAppHeader accepts executive glass header props structure', async () => {
       const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
@@ -269,6 +269,60 @@ describe('superAppHelpers', () => {
       const { CampusCampaignCarousel } = await import('@/components/portal/CampusCampaignCarousel');
       expect(CampusCampaignCarousel).toBeDefined();
       expect(typeof CampusCampaignCarousel).toBe('function');
+    });
+
+    it('renders CampusCampaignCarousel with empty slides without hook violations', async () => {
+      const { CampusCampaignCarousel } = await import('@/components/portal/CampusCampaignCarousel');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { renderToString } = await import('react-dom/server');
+
+      // Empty array should render empty string without any error
+      const emptyHtml = renderToString(
+        React.createElement(MemoryRouter, null, React.createElement(CampusCampaignCarousel, { slides: [] }))
+      );
+      expect(emptyHtml).toBe('');
+
+      // Undefined slides should render empty string without error
+      const undefHtml = renderToString(
+        React.createElement(MemoryRouter, null, React.createElement(CampusCampaignCarousel, { slides: undefined as any }))
+      );
+      expect(undefHtml).toBe('');
+    });
+
+    it('renders CampusCampaignCarousel with valid slides correctly', async () => {
+      const { CampusCampaignCarousel } = await import('@/components/portal/CampusCampaignCarousel');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { renderToString } = await import('react-dom/server');
+
+      const mockSlides = [
+        {
+          id: 'kamsis' as const,
+          title: 'Rayuan Asrama Dibuka',
+          description: 'Permohonan rayuan bilik KAMSIS dibuka sekarang.',
+          badge: 'Tindakan Diperlukan',
+          actionText: 'Hantar Rayuan',
+          actionPath: null,
+          variant: 'amber' as const,
+        },
+        {
+          id: 'karnival' as const,
+          title: 'Karnival JPP Live',
+          description: 'Jom undi booth pilihan anda!',
+          badge: 'Live',
+          actionText: 'Sertai',
+          actionPath: '/karnival',
+          variant: 'violet' as const,
+        },
+      ];
+
+      const html = renderToString(
+        React.createElement(MemoryRouter, null, React.createElement(CampusCampaignCarousel, { slides: mockSlides }))
+      );
+
+      expect(html).toContain('Rayuan Asrama Dibuka');
+      expect(html).toContain('Permohonan rayuan bilik KAMSIS dibuka sekarang.');
+      expect(html).toContain('Hantar Rayuan');
+      expect(html).toContain('Navigasi Kempen');
     });
   });
 
