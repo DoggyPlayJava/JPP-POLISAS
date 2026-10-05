@@ -125,3 +125,63 @@ describe('PolyMartVendorStorefront Dedicated Merchant Page', () => {
   });
 });
 
+describe('PolyMartProductDetail & BottomNav Suppression Revamp', () => {
+  it('exports PolyMartProductDetail and ProductVariationBottomSheet cleanly', async () => {
+    const { PolyMartProductDetail, ProductVariationBottomSheet } = await import('@/pages/polymart/PolyMartProductDetail');
+    expect(PolyMartProductDetail).toBeDefined();
+    expect(typeof PolyMartProductDetail).toBe('function');
+    expect(ProductVariationBottomSheet).toBeDefined();
+    expect(typeof ProductVariationBottomSheet).toBe('function');
+  });
+
+  it('suppresses BottomNav on /polymart/produk/ in PolyMartLayout.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const layoutPath = path.resolve(__dirname, '../pages/polymart/PolyMartLayout.tsx');
+    const source = fs.readFileSync(layoutPath, 'utf-8');
+
+    expect(source).toContain("location.pathname.includes('/polymart/produk/')");
+  });
+
+  it('contains sticky bottom action dock with fixed bottom-0 and twin CTAs in PolyMartProductDetail.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const detailPath = path.resolve(__dirname, '../pages/polymart/PolyMartProductDetail.tsx');
+    const source = fs.readFileSync(detailPath, 'utf-8');
+
+    // Sticky bottom dock tokens
+    expect(source).toContain('fixed bottom-0');
+    expect(source).toContain('+ Troli');
+    expect(source).toContain('Beli Sekarang');
+    expect(source).toContain('pb-28');
+  });
+
+  it('contains slide-up variation bottom sheet with spring animations', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const detailPath = path.resolve(__dirname, '../pages/polymart/PolyMartProductDetail.tsx');
+    const source = fs.readFileSync(detailPath, 'utf-8');
+
+    // Slide-up bottom sheet tokens
+    expect(source).toContain("y: '100%'");
+    expect(source).toContain('y: 0');
+    expect(source).toContain('ProductVariationBottomSheet');
+  });
+
+  it('contains 0 raw emojis in PolyMartProductDetail.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const detailPath = path.resolve(__dirname, '../pages/polymart/PolyMartProductDetail.tsx');
+    const source = fs.readFileSync(detailPath, 'utf-8');
+
+    // Purged raw emojis
+    expect(source).not.toContain('🛒');
+    expect(source).not.toContain('🛍️');
+    expect(source).not.toContain('⚠️');
+    expect(source).not.toContain('✅');
+    expect(source).not.toContain('📦');
+    expect(source).not.toContain('⚡');
+    expect(source).not.toContain('😔');
+  });
+});
+

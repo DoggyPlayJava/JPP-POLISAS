@@ -554,7 +554,11 @@ export function PolyMartLayout() {
         </AnimatePresence>
 
         {/* ── Mobile Bottom Nav (Global Standardized) ── */}
-        {!(location.pathname.includes('/polymart/vendor') || location.pathname.includes('/polymart/admin')) && (
+        {!(
+          location.pathname.includes('/polymart/vendor') ||
+          location.pathname.includes('/polymart/admin') ||
+          location.pathname.includes('/polymart/produk/')
+        ) && (
           <div className="tour-polymart-mobile-nav">
             <BottomNav 
               customLinks={{
