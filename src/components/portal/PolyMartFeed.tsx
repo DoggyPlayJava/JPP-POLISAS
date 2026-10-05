@@ -106,35 +106,42 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
 
   return (
     <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="PolyMart Siswa">
-      {/* Section Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400 shrink-0">
-            <ShoppingBag className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
+      {/* Section Header - Clean 2-Row Spacious Layout */}
+      <div className="space-y-2.5">
+        {/* Row 1: Title and Action */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400 shrink-0">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
                 PolyMart Siswa
               </h2>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shrink-0">
-                Pasaran Kampus
-              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate">
+                Produk & makanan usahawan siswa POLISAS
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate">
-              Produk & makanan usahawan siswa POLISAS
-            </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleOpenMart}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group shrink-0 py-1 px-2.5 rounded-xl hover:bg-amber-500/10 active:scale-95"
+          >
+            <span>Buka Mart</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Chip Tabs Container */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/10">
+        {/* Row 2: Filter Chips - Spacious & Non-Colliding */}
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/10">
             <button
               type="button"
               onClick={() => setActiveFilter('hot')}
               className={cn(
-                "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight transition-all cursor-pointer",
+                "px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
                 activeFilter === 'hot'
                   ? "bg-amber-500 text-slate-950 shadow-sm"
                   : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
@@ -146,7 +153,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               type="button"
               onClick={() => setActiveFilter('latest')}
               className={cn(
-                "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight transition-all cursor-pointer",
+                "px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
                 activeFilter === 'latest'
                   ? "bg-amber-500 text-slate-950 shadow-sm"
                   : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
@@ -155,15 +162,6 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               ✨ Terkini
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleOpenMart}
-            className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group"
-          >
-            <span>Buka Mart</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-          </button>
         </div>
       </div>
 
