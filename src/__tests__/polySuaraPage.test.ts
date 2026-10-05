@@ -261,4 +261,43 @@ describe('PolySuaraPage Suite', () => {
       expect(REACTION_EMOJIS).toHaveLength(6);
     });
   });
+
+  describe('Editorial Confession Card & Action Bar Refinement', () => {
+    const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+    it('cleans confession content with cleanConfessionText and removes sticker badges from cards', () => {
+      expect(pageContent).toContain('cleanConfessionText(confession.content)');
+      expect(pageContent).not.toContain('<PolySuaraStickerBadge');
+    });
+
+    it('renders clean squircle avatar with avatar.bgClass and avatar.emoji', () => {
+      expect(pageContent).toContain('avatar.bgClass');
+      expect(pageContent).toContain('avatar.emoji');
+    });
+
+    it('formats author name and relative time with subtle bullet separator', () => {
+      expect(pageContent).toMatch(/•/);
+      expect(pageContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
+    });
+
+    it('renders subtle rounded-full category badge chip', () => {
+      expect(pageContent).toContain('text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full');
+    });
+
+    it('applies refined editorial typography to confession card content', () => {
+      expect(pageContent).toContain('text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3');
+    });
+
+    it('renders JPP official reply with clean quote callout styling', () => {
+      expect(pageContent).toContain('border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl');
+    });
+
+    it('renders refined action bar with reactions, subtle thumbs down, comments, and share', () => {
+      expect(pageContent).toContain('<PolySuaraReactions');
+      expect(pageContent).toContain('ThumbsDown');
+      expect(pageContent).toContain('MessageCircle');
+      expect(pageContent).toContain('Share2');
+    });
+  });
 });

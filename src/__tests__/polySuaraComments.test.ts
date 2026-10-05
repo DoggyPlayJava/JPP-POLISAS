@@ -7,13 +7,14 @@ import path from 'path';
 import {
   extractStickerToken,
   embedStickerToken,
+  cleanConfessionText,
   POLISAS_CAMPUS_STICKERS,
 } from '@/lib/polySuaraHelpers';
 import { PolySuaraStickerBadge } from '@/components/polysuara/PolySuaraStickerBadge';
 import { PolySuaraStickerPicker } from '@/components/polysuara/PolySuaraStickerPicker';
 
 describe('PolySuara Comments Suite (TDD)', () => {
-  describe('Sticker Token Helpers for Comments', () => {
+  describe('Sticker Token Helpers & Content Sanitization for Comments', () => {
     it('extracts sticker token and clean content from a comment content string', () => {
       const commentWithSticker = '[sticker:kamsis_berhantu] Memang seram lalu blok B waktu malam!';
       const { stickerId, cleanContent } = extractStickerToken(commentWithSticker);
@@ -28,6 +29,14 @@ describe('PolySuara Comments Suite (TDD)', () => {
 
       expect(stickerId).toBeNull();
       expect(cleanContent).toBe('Setuju sangat dengan pandangan penulis confession ini.');
+    });
+
+    it('cleans comment content using cleanConfessionText', () => {
+      const commentWithSticker = '[sticker:otak_jem] Pening kepala buat assignment.';
+      expect(cleanConfessionText(commentWithSticker)).toBe('Pening kepala buat assignment.');
+
+      const cleanComment = 'Komen biasa tanpa sebarang pelekat.';
+      expect(cleanConfessionText(cleanComment)).toBe('Komen biasa tanpa sebarang pelekat.');
     });
 
     it('handles comment containing only a sticker token', () => {
@@ -63,7 +72,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
   });
 
   describe('Comment Sticker Picker & Badge Components', () => {
-    it('renders PolySuaraStickerBadge with onRemove for comment input preview', () => {
+    it('renders PolySuaraStickerBadge with onRemove for preview', () => {
       const handleRemove = vi.fn();
       const html = renderToString(
         React.createElement(PolySuaraStickerBadge, {
@@ -76,11 +85,10 @@ describe('PolySuara Comments Suite (TDD)', () => {
 
       expect(html).toContain('Otak Jem');
       expect(html).toContain('🧠💥');
-      // Should have remove button
       expect(html).toContain('button');
     });
 
-    it('renders PolySuaraStickerPicker with sticker options for comments', () => {
+    it('renders PolySuaraStickerPicker with sticker options', () => {
       const handleSelect = vi.fn();
       const handleClose = vi.fn();
       const html = renderToString(
@@ -100,20 +108,21 @@ describe('PolySuara Comments Suite (TDD)', () => {
     });
   });
 
-  describe('PolySuaraPage Comments Drawer Dual Mode & Sticker Integration', () => {
+  describe('PolySuaraPage Comments Drawer Dual Mode & Deprecated Stickers', () => {
     const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
     const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
 
-    it('implements state for comment sticker in PolySuaraPage', () => {
-      expect(pageContent).toContain('commentStickerId');
-      expect(pageContent).toContain('setCommentStickerId');
-      expect(pageContent).toContain('commentStickerPickerOpen');
-      expect(pageContent).toContain('setCommentStickerPickerOpen');
+    it('removes comment sticker state and pickers from PolySuaraPage', () => {
+      expect(pageContent).not.toContain('commentStickerId');
+      expect(pageContent).not.toContain('commentStickerPickerOpen');
+      expect(pageContent).not.toContain('selectedStickerId={commentStickerId}');
+      expect(pageContent).not.toContain('title="Pelekat Kampus"');
     });
 
-    it('embeds comment sticker into comment content and resets it on insert', () => {
-      expect(pageContent).toMatch(/embedStickerToken\([^)]*commentStickerId[^)]*\)|commentStickerId\s*\?\s*embedStickerToken/);
-      expect(pageContent).toContain('setCommentStickerId(null)');
+    it('uses cleanConfessionText to clean comments, replies, and drawer preview', () => {
+      expect(pageContent).toContain('cleanConfessionText(comment.content)');
+      expect(pageContent).toContain('cleanConfessionText(reply.content)');
+      expect(pageContent).toContain('cleanConfessionText(activeConfessionForComments.content)');
     });
 
     it('applies dual Light & Dark mode classes to comments drawer container and header', () => {
@@ -132,24 +141,15 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).toMatch(/text-slate-700 dark:text-slate-300|text-slate-600 dark:text-slate-400/);
     });
 
-    it('renders comment items with dual mode styling and sticker badges', () => {
+    it('renders comment items with dual mode styling', () => {
       // Comment item card styling
       expect(pageContent).toContain('bg-slate-50 dark:bg-slate-950/40');
       expect(pageContent).toContain('border-slate-200 dark:border-slate-800/60');
-
-      // Sticker badge rendering in comments
-      expect(pageContent).toContain('PolySuaraStickerBadge');
-      expect(pageContent).toMatch(/extractStickerToken\((?:comment|reply)\.content\)/);
     });
 
-    it('provides sticker picker button and preview in comments input form', () => {
-      // Comment input form dual styling
+    it('renders clean single-line comment input form without sticker trigger', () => {
       expect(pageContent).toContain('bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800');
-      // Sticker trigger button
-      expect(pageContent).toContain('Pelekat Kampus');
-      expect(pageContent).toContain('setCommentStickerPickerOpen(true)');
-      // Sticker picker mounted for comments
-      expect(pageContent).toContain('selectedStickerId={commentStickerId}');
+      expect(pageContent).not.toContain('Pelekat Kampus');
     });
   });
 });

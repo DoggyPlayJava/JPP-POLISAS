@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert, Smile } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -18,11 +18,8 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import ReactMarkdown from 'react-markdown';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PolySuaraReactions } from '@/components/polysuara/PolySuaraReactions';
-import { PolySuaraStickerBadge } from '@/components/polysuara/PolySuaraStickerBadge';
-import { PolySuaraStickerPicker } from '@/components/polysuara/PolySuaraStickerPicker';
 import {
-  extractStickerToken,
-  embedStickerToken,
+  cleanConfessionText,
   getAnimalAvatarFromCodename,
   aggregateReactions,
 } from '@/lib/polySuaraHelpers';
@@ -124,8 +121,6 @@ export function PolySuaraPage() {
   const [commentSortBy, setCommentSortBy] = useState<'LATEST' | 'TOP'>('LATEST');
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
-  const [commentStickerId, setCommentStickerId] = useState<string | null>(null);
-  const [commentStickerPickerOpen, setCommentStickerPickerOpen] = useState(false);
   
   // Comments votes tracking
   const [commentUpvotes, setCommentUpvotes] = useState<Set<string>>(new Set());
@@ -753,7 +748,7 @@ export function PolySuaraPage() {
   const handleAddComment = async (e: React.FormEvent, parentId: string | null = null) => {
     e.preventDefault();
     const commentText = parentId ? replyCommentText : newCommentText;
-    const finalCommentContent = commentStickerId ? embedStickerToken(commentText.trim(), commentStickerId) : commentText.trim();
+    const finalCommentContent = commentText.trim();
     if (!finalCommentContent || !profile || !activeConfessionForComments) return;
 
     setSubmittingComment(true);
@@ -787,7 +782,6 @@ export function PolySuaraPage() {
         setIsSensitiveComment(false);
         setCommentFile(null);
         setCommentImagePreview(null);
-        setCommentStickerId(null);
       }
       
       setComments(prev => [...prev, data]);
@@ -1309,7 +1303,6 @@ export function PolySuaraPage() {
                     const isUpvoted = userUpvotes.has(confession.id);
                     const isMine = myConfessions.has(confession.id);
                     const isTrending = confession.upvotes > 30 && (new Date().getTime() - new Date(confession.created_at).getTime() < 24 * 60 * 60 * 1000);
-                    const { stickerId, cleanContent } = extractStickerToken(confession.content);
                     const avatar = getAnimalAvatarFromCodename(confession.codename);
 
                     return (
@@ -1327,41 +1320,50 @@ export function PolySuaraPage() {
                         {isTrending && (
                           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-rose-500/5 to-transparent pointer-events-none" />
                         )}
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3 min-w-0">
                             <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-xl shadow-xs", avatar.bgClass)}>
                               <span>{avatar.emoji}</span>
                             </div>
-                            <div className="flex flex-col">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">{confession.codename || 'Pelajar Anon'}</h4>
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{confession.codename || 'Pelajar Anon'}</h4>
                                 {isMine && <span className="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase shrink-0" data-html2canvas-ignore>Milik Anda</span>}
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md shrink-0">
+                                <span className="text-slate-300 dark:text-slate-600 text-xs select-none">•</span>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">
+                                  {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
+                                </span>
+                              </div>
+                              <div className="mt-1">
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full inline-block">
                                   {confession.category}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-0.5">
-                                {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
-                              </p>
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap gap-2 shrink-0" data-html2canvas-ignore>
-                            {isTrending && <span className="bg-rose-500/20 text-rose-500 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 animate-pulse shrink-0"><Flame className="w-3 h-3" /> Hangat</span>}
-                            {confession.is_pinned && <span className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Pin className="w-3 h-3" /> Pinned</span>}
-                            {confession.status === 'NEW' && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Baru</span>}
-                            {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
-                            {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
-                            {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
+                          <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore>
+                            {isTrending && <span className="bg-rose-500/20 text-rose-500 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 animate-pulse shrink-0"><Flame className="w-3 h-3" /> Hangat</span>}
+                            {confession.is_pinned && <span className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Pin className="w-3 h-3" /> Pinned</span>}
+                            {confession.status === 'NEW' && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Baru</span>}
+                            {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
+                            {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
+                            {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
+                            <button 
+                              onClick={() => {
+                                setReportTargetId(confession.id);
+                                setReportModalOpen(true);
+                              }}
+                              title="Laporkan kandungan ini"
+                              className="text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                              <AlertTriangle className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
 
-                        {stickerId && (
-                          <PolySuaraStickerBadge stickerId={stickerId} size="md" className="mb-3" />
-                        )}
-
-                        <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-3 whitespace-pre-wrap">
-                          {cleanContent}
+                        <p className="text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3">
+                          {cleanConfessionText(confession.content)}
                         </p>
 
                         {confession.polysuara_polls && confession.polysuara_polls.length > 0 && (
@@ -1371,8 +1373,8 @@ export function PolySuaraPage() {
                         )}
 
                         {confession.image_url && (
-                          <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40">
-                            <img src={confession.image_url} alt="Attachment" className="w-full max-h-[250px] object-contain" />
+                          <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40">
+                            <img src={confession.image_url} alt="Attachment" className="w-full max-h-[300px] object-contain" />
                           </div>
                         )}
 
@@ -1386,12 +1388,12 @@ export function PolySuaraPage() {
                         )}
 
                         {confession.official_reply && (
-                          <div className="mb-4 bg-teal-500/10 border border-teal-500/20 rounded-2xl p-4">
+                          <div className="mb-4 border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl">
                             <div className="flex items-center gap-2 mb-2">
                               <Shield className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                               <span className="text-xs font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">Maklum Balas JPP</span>
                             </div>
-                            <div className="text-teal-900 dark:text-teal-50 text-sm leading-relaxed">
+                            <div className="text-teal-900 dark:text-teal-100 text-sm leading-relaxed">
                               <ReactMarkdown 
                                 components={{
                                   p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
@@ -1413,13 +1415,13 @@ export function PolySuaraPage() {
 
                         {/* Author Reply Section */}
                         {confession.author_reply && (
-                           <div className="mb-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 ml-8">
+                           <div className="mb-4 border-l-2 border-rose-500 bg-rose-50 dark:bg-rose-500/[0.04] p-3.5 rounded-r-2xl ml-4 sm:ml-6">
                             <div className="flex items-center gap-2 mb-2">
                               <UserCircle2 className="w-4 h-4 text-rose-500 dark:text-rose-400" />
                               <span className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Balasan Pengarang</span>
                             </div>
-                            <p className="text-rose-900 dark:text-rose-50 text-sm leading-relaxed">
-                              {confession.author_reply}
+                            <p className="text-rose-950 dark:text-rose-100 text-sm leading-relaxed">
+                              {cleanConfessionText(confession.author_reply)}
                             </p>
                             <div className="mt-2 text-[10px] text-rose-600/70 dark:text-rose-500/60 font-bold uppercase tracking-widest">
                               {formatDistanceToNow(new Date(confession.author_reply_at), { addSuffix: true, locale: ms })}
@@ -1427,8 +1429,8 @@ export function PolySuaraPage() {
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/50" data-html2canvas-ignore>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/[0.06]" data-html2canvas-ignore>
+                          <div className="flex items-center gap-1.5 sm:gap-2">
                             <PolySuaraReactions
                               confessionId={confession.id}
                               reactions={aggregateReactions(confessionReactions[confession.id] || [], profile?.id)}
@@ -1438,9 +1440,10 @@ export function PolySuaraPage() {
                             <button
                               onClick={() => handleDownvote(confession.id)}
                               className={cn(
-                                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all group",
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all group",
                                 userDownvotes.has(confession.id) ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-indigo-500"
                               )}
+                              title="Tidak Setuju"
                             >
                               <motion.div
                                 animate={userDownvotes.has(confession.id) ? { scale: [1, 1.3, 1] } : {}}
@@ -1457,7 +1460,7 @@ export function PolySuaraPage() {
                                 fetchComments(confession.id);
                                 setCommentDrawerOpen(true);
                               }}
-                              className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-rose-500 transition-all group"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-rose-500 transition-all group"
                               title="Lihat Ulasan"
                             >
                               <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -1468,23 +1471,23 @@ export function PolySuaraPage() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleShareImage(confession.id)}
-                              className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 flex items-center justify-center"
+                              className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center"
                               title="Kongsi Grafik"
                             >
                               {shareLoadingId === confession.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Share2 className="w-4 h-4" />}
                             </button>
 
                             {isMine && confession.official_reply && !confession.author_reply && (
-                               <button
-                               onClick={() => {
-                                 setAuthorReplyTargetId(confession.id);
-                                 setAuthorReplyModalOpen(true);
-                               }}
-                               className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mr-2 uppercase tracking-wider"
-                             >
-                               <MessageSquare className="w-3.5 h-3.5" />
-                               Balas JPP
-                             </button>
+                              <button
+                                onClick={() => {
+                                  setAuthorReplyTargetId(confession.id);
+                                  setAuthorReplyModalOpen(true);
+                                }}
+                                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                Balas JPP
+                              </button>
                             )}
 
                             {['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '') && !confession.official_reply && (
@@ -1493,7 +1496,7 @@ export function PolySuaraPage() {
                                   setReplyTargetId(confession.id);
                                   setReplyModalOpen(true);
                                 }}
-                                className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 hover:bg-teal-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mr-2 uppercase tracking-wider"
+                                className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 hover:bg-teal-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 Reply as JPP
@@ -1503,7 +1506,7 @@ export function PolySuaraPage() {
                               <button
                                 onClick={() => handleTogglePin(confession.id, !!confession.is_pinned)}
                                 className={cn(
-                                  "text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mr-2 uppercase tracking-wider",
+                                  "text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider",
                                   confession.is_pinned ? "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20" : "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10"
                                 )}
                               >
@@ -1511,16 +1514,6 @@ export function PolySuaraPage() {
                                 {confession.is_pinned ? 'Unpin' : 'Pin'}
                               </button>
                             )}
-                            <button 
-                              onClick={() => {
-                                setReportTargetId(confession.id);
-                                setReportModalOpen(true);
-                              }}
-                              title="Laporkan kandungan ini"
-                              className="text-slate-400 dark:text-slate-600 hover:text-amber-500 transition-colors p-2"
-                            >
-                              <AlertTriangle className="w-4 h-4" />
-                            </button>
                           </div>
                         </div>
                       </motion.div>
@@ -1852,7 +1845,7 @@ export function PolySuaraPage() {
                   <span className="font-bold text-slate-800 dark:text-slate-300">{activeConfessionForComments.codename || 'Pelajar Anon'}</span>
                   <span className="bg-slate-200 dark:bg-slate-800 text-[8px] font-black uppercase px-2 py-0.5 rounded text-slate-700 dark:text-slate-400">{activeConfessionForComments.category}</span>
                 </div>
-                <p className="text-slate-700 dark:text-slate-300 italic line-clamp-2">"{activeConfessionForComments.content}"</p>
+                <p className="text-slate-700 dark:text-slate-300 italic line-clamp-2">"{cleanConfessionText(activeConfessionForComments.content)}"</p>
               </div>
 
               {/* Comments Scrollable Feed */}
@@ -1886,7 +1879,7 @@ export function PolySuaraPage() {
                         const isCommDownvoted = commentDownvotes.has(comment.id);
                         const isOP = comment.codename.includes('[Penulis]');
                         const displayName = isOP ? comment.codename.replace(' [Penulis]', '') : comment.codename;
-                        const { stickerId: commStickerId, cleanContent: cleanCommContent } = extractStickerToken(comment.content);
+                        const cleanCommContent = cleanConfessionText(comment.content);
 
                         return (
                           <div key={comment.id} className="space-y-3">
@@ -1918,10 +1911,6 @@ export function PolySuaraPage() {
                                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
                                 </span>
                               </div>
-
-                              {commStickerId && (
-                                <PolySuaraStickerBadge stickerId={commStickerId} size="sm" className="mb-2" />
-                              )}
 
                               {/* Comment Content (With Sensitive Content Blur) */}
                               {comment.is_deleted_by_moderator ? (
@@ -2044,7 +2033,7 @@ export function PolySuaraPage() {
                                   const isReplyDown = commentDownvotes.has(reply.id);
                                   const isReplyOP = reply.codename.includes('[Penulis]');
                                   const displayReplyName = isReplyOP ? reply.codename.replace(' [Penulis]', '') : reply.codename;
-                                  const { stickerId: replyStickerId, cleanContent: cleanReplyContent } = extractStickerToken(reply.content);
+                                  const cleanReplyContent = cleanConfessionText(reply.content);
 
                                   return (
                                     <div key={reply.id} className={cn(
@@ -2074,10 +2063,6 @@ export function PolySuaraPage() {
                                           {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: ms })}
                                         </span>
                                       </div>
-
-                                      {replyStickerId && (
-                                        <PolySuaraStickerBadge stickerId={replyStickerId} size="sm" className="mb-2" />
-                                      )}
 
                                       <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 break-words leading-relaxed">{cleanReplyContent}</p>
                                       
@@ -2128,16 +2113,6 @@ export function PolySuaraPage() {
               {/* Comments Input Form Footer */}
               <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 px-6">
                 <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-3">
-                  {/* Sticker Preview */}
-                  {commentStickerId && (
-                    <PolySuaraStickerBadge
-                      stickerId={commentStickerId}
-                      size="sm"
-                      onRemove={() => setCommentStickerId(null)}
-                      className="mb-2"
-                    />
-                  )}
-
                   {commentImagePreview && (
                     <div className="relative mb-2 w-20 h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 group animate-in fade-in zoom-in duration-200">
                       <img src={commentImagePreview} alt="Pratonton" className="w-full h-full object-cover" />
@@ -2160,21 +2135,6 @@ export function PolySuaraPage() {
                       className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/10 transition-all"
                       maxLength={300}
                     />
-
-                    {/* Pelekat Sticker Button */}
-                    <button
-                      type="button"
-                      onClick={() => setCommentStickerPickerOpen(true)}
-                      className={cn(
-                        "p-2 rounded-xl transition-all flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]",
-                        commentStickerId
-                          ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-                          : "text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
-                      )}
-                      title="Pelekat Kampus"
-                    >
-                      <Smile className="w-4 h-4" />
-                    </button>
                     
                     {/* Camera/Image Selector Button */}
                     <label className="cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]">
@@ -2184,7 +2144,7 @@ export function PolySuaraPage() {
 
                     <button
                       type="submit"
-                      disabled={(!newCommentText.trim() && !commentStickerId) || submittingComment}
+                      disabled={!newCommentText.trim() || submittingComment}
                       className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 p-3.5 rounded-xl font-bold transition-all shrink-0 flex items-center justify-center min-w-[40px] min-h-[40px]"
                     >
                       {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -2210,14 +2170,6 @@ export function PolySuaraPage() {
                     </span>
                   </div>
                 </form>
-
-                {/* Comment Sticker Picker Modal */}
-                <PolySuaraStickerPicker
-                  isOpen={commentStickerPickerOpen}
-                  onClose={() => setCommentStickerPickerOpen(false)}
-                  onSelectSticker={(id) => setCommentStickerId(id)}
-                  selectedStickerId={commentStickerId}
-                />
               </div>
             </motion.div>
           </>
