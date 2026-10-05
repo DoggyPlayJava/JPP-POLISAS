@@ -3118,89 +3118,90 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
 
 ---
 
-## 30. Modul PolySuara Super App: Reaksi Terapung, Pelekat Kampus & Dwi-Mod Tema
+## 30. Modul PolySuara Super App: Suapan Sosial Minimalis (Threads/X Aesthetic) & Reaksi WhatsApp
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
 
-Modul PolySuara telah dinaik taraf daripada paparan monokrom gelap lapuk kepada **Platform Sosial Mahasiswa Super App** bertaraf moden. Pembaharuan ini memperkenalkan bar reaksi WhatsApp terapung, pek pelekat rasmi POLISAS, sokongan dwi-tema Cerah/Gelap (Light & Dark Mode), serta avatar haiwan comel yang dipadankan secara dinamik dengan nama samaran rahsia pelajar.
+Modul PolySuara telah dinaik taraf kepada **Platform Sosial Mahasiswa Super App** bertaraf moden berteraskan prinsip reka bentuk minimalis ala Threads dan X. Reka bentuk ini mengutamakan ketenangan visual (*uncluttered*), tipografi editorial yang selesa, bar penggubah pantas (*quick-compose capsule*), penyatuan navigasi suapan satu baris (*single-line track*), serta enjin reaksi WhatsApp terapung dengan sokongan penuh dwi-tema (**Light & Dark Mode**).
+
+---
 
 ### 30.1 Konsep Reka Bentuk & Dwi-Mod Tema (Light & Dark Mode Parity)
 
 1. **Kanvas Bersih Dwi-Mod:**
    - PolySuara menyokong penuh peralihan mod tema cerah dan gelap melalui suis `<ThemeToggle />` di bahagian atas bar navigasi lekat (*sticky header*).
-   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad putih bersih berkabus halus `bg-white border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-slate-300`.
-   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian dalam `dark:bg-slate-900/80 dark:border-white/[0.08] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:border-slate-700`.
+   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad putih bersih `bg-white border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:border-slate-300`.
+   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian nipis `dark:bg-slate-900/60 dark:border-white/[0.06] dark:hover:border-white/[0.12] rounded-3xl p-5 sm:p-6`.
    - Mesh aura ambien di latar belakang (`bg-rose-500/5 dark:bg-rose-500/10 blur-[100px]`) memberikan kedalaman visual tanpa membebankan pemproses grafik peranti bajet.
 
 2. **Header Lekat Pintar (*Sticky Top Bar*):**
    - Menempatkan butang kembali pantas ke Portal `/portal`, suis tema `<ThemeToggle />`, suis loceng notifikasi PolySuara (diselaraskan dengan jadual `polysuara_notif_optout`), dan lencana mod tanpa nama (*Anon Mode* berbingkai perisai ros).
 
-### 30.2 Enjin Reaksi Terapung WhatsApp (`PolySuaraReactions.tsx`)
+---
+
+### 30.2 Bar Penggubah Cepat Ala Threads (`Quick-Compose Bar`) & Modal Bebas Gangguan
+
+1. **Kapsul Sentuhan Interaktif Suapan:**
+   - Menggantikan borang statik lama yang mengambil ruang skrin dengan satu kapsul sentuhan elegan:
+     `[✍️ Avatar] "Ada luahan atau rahsia kampus? Kongsi secara rahsia..." [Luahkan]`
+   - Menjimatkan lebih 250px ruang menegak pada telefon pintar dan meletakkan suapan luahan sebagai fokus utama (*feed-first experience*).
+2. **Modal Penggubah Bebas Gangguan (*Compose Modal / Drawer*):**
+   - Mengetik kapsul membuka dialog penggubah khusus (helaian leret bawah di telefon mudah alih atau kad terapung berpusat di desktop).
+   - Ruang menaip teks yang luas dengan auto-fokus, pemilih kategori, lampiran gambar, dan modul undian mini (*poll creator*).
+   - Ditutup secara automatik apabila luahan berjaya dihantar.
+3. **Pemansuhan Pelekat (*Zero Sticker Clutter*):**
+   - Sistem pelekat visual dimansuhkan sepenuhnya daripada penggubah dan kad luahan untuk mengekalkan keaslian penulisan mahasiswa dan mengelakkan kekusutan visual.
+   - Fungsi `cleanConfessionText` menapis sebarang token teks lama secara automatik agar teks luahan kekal kemas.
+
+---
+
+### 30.3 Jalur Navigasi & Penapis Suapan Tunggal (*Single-Line Feed Navigation Track*)
+
+1. **Penyatuan Isih & Kategori:**
+   - Mod isih (`✨ Terkini` dan `🔥 Hangat`) digabungkan bersama cip penapis kategori (`Semua`, `Akademik`, `Fasiliti`, `Kamsis`, `Kaunseling`) ke dalam satu baris tatalan melintang (`overflow-x-auto scrollbar-none snap-x`).
+   - Garis pemisah menegak halus memisahkan kawalan isih daripada kategori.
+   - Mengelakkan penimbunan baris bertingkat yang menolak suapan ke bawah.
+
+---
+
+### 30.4 Kad Luahan Editorial & Bar Tindakan Komuniti
+
+1. **Struktur Kad Luahan Bersih:**
+   - **Header Kad:**
+     - Avatar *squircle* watak haiwan hidup mengikut *codename* pangkalan data (`avatar.emoji` + `avatar.bgClass`).
+     - Nama samaran rahsia dalam teks tebal bersama format peluru masa relatif: `[Nama] • [masa lalu]`.
+     - Maksimum 1 lencana kategori padat (`text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full`).
+     - Butang laporan bendera ditempatkan secara berhemah di penjuru kanan atas.
+   - **Tipografi Editorial Luahan:**
+     - Teks luahan selesa dibaca: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3`.
+     - Maklum balas rasmi JPP direka sebagai *quote callout* berprestij dengan sempadan sisi hijau firus (`border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl`).
+2. **Bar Tindakan Interaksi Sosial:**
+   - **Kiri:**
+     - Bar reaksi terapung WhatsApp `<PolySuaraReactions />` bersama pil kiraan reaksi aktif.
+     - Butang Dislike (👎) komuniti yang tenang dan padat di sebelah reaksi.
+     - Butang Ulasan (💬) dengan kiraan komen membuka laci komen pantas.
+   - **Kanan:**
+     - Butang Kongsi Grafik (`Share2`) untuk Instagram Story / perkongsian web.
+     - Tindakan Exco (Semat Pos, Balas sebagai JPP) dipaparkan secara bersyarat mengikut kebenaran RBAC.
+
+---
+
+### 30.5 Enjin Reaksi Terapung WhatsApp (`PolySuaraReactions.tsx`)
 
 1. **Bar Kapsul Terapung Popover:**
    - Digerakkan oleh Framer Motion dengan fizik spring cergas (`stiffness: 400, damping: 25`).
-   - Menyediakan 6 emoji reaksi ekspresif mahasiswa POLISAS:
-     - ❤️ **Suka / Setuju** (`heart`)
-     - 😂 **Lawak / Terhibur** (`laugh`)
-     - 🔥 **Padu / Hangat** (`fire`)
-     - 😢 **Sedih / Sebak** (`cry`)
-     - 😮 **Terkejut / Weh** (`shock`)
-     - 💯 **Solid / Mantap** (`hundred`)
+   - 6 emoji reaksi ekspresif mahasiswa POLISAS: ❤️ *(Suka)*, 😂 *(Lawak)*, 🔥 *(Padu)*, 😢 *(Sedih)*, 😮 *(Terkejut)*, 💯 *(Mantap)*.
    - Setiap emoji dilengkapi lantunan spring animasi (`whileHover={{ scale: 1.35, y: -4 }}`) dan kesan haptik pantas.
-   - Popover tertutup secara automatik apabila emoji ditekan atau apabila pengguna menyentuh ruang luar skrin.
-
 2. **Pil Ringkasan Kaunter Reaksi (*Interactive Reaction Pills*):**
-   - Di bawah setiap teks luahan, pil interaktif memaparkan emoji aktif berserta jumlah kiraan (cth: `[❤️ 14]` `[🔥 28]` `[😂 5]`).
-   - Mengetik terus pada pil membolehkan pelajar mengundi atau membatalkan undian emoji tersebut serta-merta tanpa perlu membuka menu terapung.
-   - Pilihan aktif pelajar diserlahkan dengan latar khas bercahaya (`bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold`).
+   - Dipaparkan di bawah setiap pos (cth: `[❤️ 14]` `[🔥 28]` `[😂 5]`).
+   - Mengetik terus pada pil membolehkan pelajar mengundi atau membatalkan undian emoji secara serta-merta tanpa perlu membuka menu terapung.
+   - Pilihan aktif diserlahkan (`bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold`).
+3. **Integriti Kiraan Upvotes & Pangkalan Data:**
+   - Semua reaksi positif dikira sebagai sokongan (*upvote increment*) yang menaikkan luahan ke suapan "Hangat".
+   - Disokong oleh jadual Supabase berprestasi tinggi `polysuara_reactions` (`confession_id`, `user_id`, `reaction_type`, `created_at`) dengan RLS ketat `(SELECT auth.uid()) = user_id` dan indeks FK pantas.
+   - *Optimistic UI*: Reaksi dikemas kini secara langsung dalam memori pelayar (0ms lag), kemudian disegerakan ke pelayan pangkalan data di latar belakang.
 
-3. **Integriti Kiraan "Upvotes" & Pangkalan Data:**
-   - Setiap reaksi positif dikira sebagai sokongan kepada pos (*upvote increment*), membantu luahan berkualiti naik ke suapan "Hangat" (Trending).
-   - Disokong oleh jadual Supabase berprestasi tinggi `polysuara_reactions`:
-     - Kolum: `id`, `confession_id`, `user_id`, `reaction_type`, `created_at`.
-     - Kekangan unik: `(confession_id, user_id, reaction_type)`.
-     - Indeks FK pantas: `idx_polysuara_reactions_confession_id` dan `idx_polysuara_reactions_user_id`.
-     - RLS ketat berasaskan `(SELECT auth.uid()) = user_id`.
-   - **Antara Muka Optimistik (Optimistic UI):** Reaksi dikemas kini secara langsung dalam memori pelayar pengguna (0ms lag), kemudian disegerakan ke pelayan pangkalan data di latar belakang.
-
-### 30.3 Pek Pelekat Rasmi Mahasiswa POLISAS (`POLISAS_CAMPUS_STICKERS`)
-
-Bagi meraikan budaya dan cabaran sebenar mahasiswa Politeknik Sultan Haji Ahmad Shah, 8 pelekat berilustrasi khas diperkenalkan:
-
-| ID Pelekat | Label | Emoji | Frasa Budaya Kampus | Kategori |
-|---|---|---|---|---|
-| `otak_jem` | Otak Jem | 🧠 | *Assignment Bertimbun!* | `STUDY` |
-| `exam_mood` | Exam Mood | 📚 | *Kopi & Nota Sepanjang Malam* | `STUDY` |
-| `relatable` | Relatable Teruk | 😭 | *Semua Orang Rasa Benda Sama* | `MOOD` |
-| `pakat_makan` | Pakat Makan | 🍔 | *Jom Food Court Semambu!* | `CAMPUS` |
-| `nangis_katil` | Nangis Katil | 🛏️ | *Redha Tapi Sakit Hati* | `MOOD` |
-| `solidariti` | Solidariti | ✊ | *Satu Suara Mahasiswa POLISAS* | `CAMPUS` |
-| `deadline_esok` | Deadline Esok | ⏳ | *Kecemasan 11:59 Malam!* | `STUDY` |
-| `geng_repeat` | Geng Repeat | 🔄 | *Bangkit Semula, Tak Give Up!* | `MEME` |
-
-#### Seni Bina Storan Berasaskan Token Ringan (Tokenized Text):
-- Pelekat disimpan di dalam ruangan teks sedia ada (`content`) menggunakan format token `[sticker:id]` (cth: `[sticker:otak_jem] Korang faham tak soalan lab 3 tadi?`).
-- **Sifar Penggunaan Kuota Storan & Rangkaian (0KB):** Tiada fail imej binari dimuat naik ke Supabase Storage. Pelekat dirender menggunakan komponen SVG/CSS vektor pintar client-side (`PolySuaraStickerBadge.tsx`).
-- **Keserasian Ke Belakang Penuh (100% Backward Compatible):** Luahan lama dipaparkan secara normal, manakala luahan baru ditafsir secara automatik melalui pembantu `extractStickerToken` dan `embedStickerToken`.
-
-### 30.4 Sintesis Avatar Haiwan Dinamik (`getAnimalAvatarFromCodename`)
-
-Database trigger PostgreSQL sedia ada menjana nama samaran berasaskan gabungan haiwan dan sifat (contohnya *"Kucing Misteri"*, *"Harimau Berani"*, *"Elang Sakti"*). PolySuara kini menukar nama-nama ini kepada avatar watak haiwan yang hidup dan comel:
-- **16 Spesies Haiwan:** Kucing 🐱, Harimau 🐯, Elang 🦅, Singa 🦁, Serigala 🐺, Kuda 🐴, Beruang 🐻, Kancil 🦌, Gajah 🐘, Tupai 🐿️, Kura 🐢, Lumba 🐬, Burung 🦜, Panda 🐼, Musang 🦊, Landak 🦔.
-- Dipaparkan dalam bekas bentuk *squircle* comel dengan warna aksen serasi, membasmi bulatan kelabu suram lama dan menyuntik elemen keceriaan komuniti kampus.
-
-### 30.5 Laci Ulasan Interaktif & Sokongan Pelekat Komen
-
-1. **Dwi-Mod Laci Ulasan (Comments Drawer):**
-   - Reka bentuk helaian moden (`bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white`).
-   - Menyokong ulasan berhierarki dua tingkat (Tier-1 ulasan utama & Tier-2 balasan bersarang).
-2. **Balasan Pelekat Segera (Instant Campus Sticker Reply):**
-   - Borang input komen dilengkapi butang ikon wajah senyum comel `Smile` yang membuka `PolySuaraStickerPicker`.
-   - Pelajar boleh membalas luahan rakan kampus dengan pelekat padu (cth: "Relatable Teruk 😭" atau "Solidariti ✊").
-   - Pelekat dipaparkan secara kemas pada kad ulasan melalui lencana saiz padat (`size="sm"`).
-3. **Sistem Pengesanan OP & Rasmi JPP:**
-   - Penulis asal ditandakan dengan lencana kecerunan `OP` (*Original Poster*).
-   - Ulasan wakil Majlis Perwakilan Pelajar diserlahkan dengan lencana hijau firus `JPP Official` dan bingkai khas.
+---
 
 ### 30.6 Pengekalan Mekanisme Auto-Moderasi Komuniti & Keselamatan
 
