@@ -9,7 +9,7 @@ import {
   Store, Star, ShoppingBag, ShoppingCart, MessageCircle, Phone, Share2,
   Package, Search, ChevronRight, CheckCircle2, Award, Clock, ArrowLeft,
   Heart, PackageSearch, Utensils, Shirt, Wrench, Sparkles, MapPin,
-  CreditCard, Banknote, X, Zap
+  CreditCard, Banknote, X, Zap, TrendingUp
 } from 'lucide-react';
 
 interface VendorBusiness {
@@ -52,6 +52,8 @@ interface VendorProduct {
   is_preorder?: boolean;
   avg_rating?: number;
   review_count?: number;
+  sales_count?: number;
+  created_at?: string;
   polymart_pickup_info?: string | null;
   polymart_location?: string | null;
 }
@@ -94,22 +96,38 @@ export function PolyMartVendorStorefront() {
 
         setBusiness(bizData as VendorBusiness);
 
-        // Fetch products
-        const { data: prodsData, error: prodsErr } = await supabase
-          .from('business_products')
-          .select('*')
-          .eq('business_id', id)
-          .eq('publish_to_polymart', true)
-          .eq('is_available', true)
-          .order('created_at', { ascending: false });
+        // Fetch products and confirmed/completed orders concurrently
+        const [prodsRes, ordersRes] = await Promise.all([
+          supabase
+            .from('business_products')
+            .select('*')
+            .eq('business_id', id)
+            .eq('publish_to_polymart', true)
+            .eq('is_available', true)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('polymart_orders')
+            .select('product_id, quantity')
+            .eq('business_id', id)
+            .in('status', ['COMPLETED', 'CONFIRMED', 'READY'])
+        ]);
 
-        if (prodsErr) {
-          console.error('Error fetching vendor products:', prodsErr);
+        if (prodsRes.error) {
+          console.error('Error fetching vendor products:', prodsRes.error);
           setLoading(false);
           return;
         }
 
-        const rawProducts = (prodsData || []) as VendorProduct[];
+        const rawProducts = (prodsRes.data || []) as VendorProduct[];
+
+        // Compute sales_count per product
+        const salesMap: Record<string, number> = {};
+        (ordersRes.data || []).forEach(o => {
+          salesMap[o.product_id] = (salesMap[o.product_id] || 0) + (o.quantity || 1);
+        });
+        rawProducts.forEach(p => {
+          p.sales_count = salesMap[p.id] || 0;
+        });
 
         // Fetch reviews for rating computation
         if (rawProducts.length > 0) {
@@ -266,9 +284,13 @@ export function PolyMartVendorStorefront() {
     // Tab filter
     if (activeTab === 'popular') {
       list.sort((a, b) => {
+        const salesA = a.sales_count || 0;
+        const salesB = b.sales_count || 0;
+        if (salesB !== salesA) return salesB - salesA;
         const scoreA = (a.avg_rating || 0) * (a.review_count || 1);
         const scoreB = (b.avg_rating || 0) * (b.review_count || 1);
-        return scoreB - scoreA;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
     }
 
@@ -762,14 +784,22 @@ export function PolyMartVendorStorefront() {
                             </span>
                           )}
 
-                          {p.avg_rating && p.avg_rating > 0 ? (
-                            <div className="flex items-center gap-0.5 shrink-0">
-                              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                              <span className="text-[10px] font-bold text-muted-foreground">
-                                {p.avg_rating.toFixed(1)}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {p.sales_count && p.sales_count > 0 ? (
+                              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                                <TrendingUp className="w-2.5 h-2.5" />
+                                {p.sales_count} terjual
                               </span>
-                            </div>
-                          ) : null}
+                            ) : null}
+                            {p.avg_rating && p.avg_rating > 0 ? (
+                              <div className="flex items-center gap-0.5">
+                                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                <span className="text-[10px] font-bold text-muted-foreground">
+                                  {p.avg_rating.toFixed(1)}
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     </motion.div>

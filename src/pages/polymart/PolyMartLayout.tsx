@@ -247,7 +247,7 @@ export function PolyMartLayout() {
               {/* Search Bar - Desktop: Full Stadium Input, Mobile: Stadium Trigger Button */}
               <button
                 onClick={() => setShowMobileSearch(true)}
-                className="flex sm:hidden flex-1 items-center gap-2.5 h-10 px-3.5 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 shadow-xs text-muted-foreground/60 cursor-pointer"
+                className="flex sm:hidden flex-1 min-w-0 items-center gap-2.5 h-10 px-3 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 shadow-xs text-muted-foreground/60 cursor-pointer"
               >
                 <Search className="w-4 h-4 text-amber-500 shrink-0" />
                 <span className="text-xs text-left truncate flex-1">Cari makanan, servis, pakaian...</span>
@@ -330,13 +330,13 @@ export function PolyMartLayout() {
                     {isVendor ? (
                       <button
                         onClick={() => navigate('/polymart/vendor')}
-                        className="tour-polymart-vendor relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
+                        className="tour-polymart-vendor relative w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                         title="Kedai Saya"
                       >
                         <Store className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">Kedai</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">Kedai</span>
                         {pendingVendorCount > 0 && (
-                          <span className="min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 sm:static min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                             {pendingVendorCount}
                           </span>
                         )}
@@ -346,20 +346,20 @@ export function PolyMartLayout() {
                       (hasKeusahawananAccess || isSuperAdmin) ? (
                         <button
                           onClick={() => navigate('/polymart/admin')}
-                          className="relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
+                          className="relative w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full flex items-center justify-center gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                           title="Panel Admin"
                         >
                           <Shield className="w-3.5 h-3.5" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
+                          <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">Admin</span>
                         </button>
                       ) : (
                         <button
                           onClick={() => navigate('/keusahawanan/onboarding')}
-                          className="relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
+                          className="relative w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                           title="Mulai Bisnes"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">Mulai Bisnes</span>
+                          <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">Mulai Bisnes</span>
                         </button>
                       )
                     )}

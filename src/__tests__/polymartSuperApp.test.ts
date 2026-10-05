@@ -185,3 +185,111 @@ describe('PolyMartProductDetail & BottomNav Suppression Revamp', () => {
   });
 });
 
+describe('Task 1 Pembaikan PolyMart Bugfixes & SuperApp Modernization', () => {
+  it('exports ActiveVendorsSheet and integrates it into PolyMartHome.tsx cleanly', async () => {
+    const { ActiveVendorsSheet } = await import('@/pages/polymart/PolyMartHome');
+    expect(ActiveVendorsSheet).toBeDefined();
+    expect(typeof ActiveVendorsSheet).toBe('function');
+
+    const fs = await import('fs');
+    const path = await import('path');
+    const homePath = path.resolve(__dirname, '../pages/polymart/PolyMartHome.tsx');
+    const source = fs.readFileSync(homePath, 'utf-8');
+
+    // Slide-up ActiveVendorsSheet tokens and connection
+    expect(source).toContain('ActiveVendorsSheet');
+    expect(source).toContain('setShowAllVendors(true)');
+    expect(source).toContain("y: '100%'");
+    expect(source).toContain('y: 0');
+    expect(source).toContain('Peniaga Siswa Sah POLISAS');
+    expect(source).toContain('Lawati Kedai');
+    expect(source).toContain('<option value="popular">Paling Laris</option>');
+    expect(source).toContain("case 'popular':");
+  });
+
+  it('renders ActiveVendorsSheet when open with vendor list and search input', async () => {
+    const { ActiveVendorsSheet } = await import('@/pages/polymart/PolyMartHome');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { renderToString } = await import('react-dom/server');
+
+    const mockBusinesses = [
+      {
+        id: 'biz-1',
+        name: 'Kafe Siswa POLISAS',
+        logo_url: null,
+        product_count: 5,
+        avg_rating: 4.8,
+        review_count: 12,
+      },
+    ];
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(ActiveVendorsSheet, {
+          isOpen: true,
+          onClose: () => {},
+          businesses: mockBusinesses,
+        })
+      )
+    );
+
+    expect(html).toContain('Semua Peniaga Siswa');
+    expect(html).toContain('Kafe Siswa POLISAS');
+    expect(html).toContain('Peniaga Siswa Sah POLISAS');
+    expect(html).toContain('5 produk');
+    expect(html).toContain('Lawati Kedai');
+    expect(html).toContain('Cari peniaga atau jenama...');
+  });
+
+  it('verifies mobile search capsule min-w-0 and responsive circular buttons in PolyMartLayout.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const layoutPath = path.resolve(__dirname, '../pages/polymart/PolyMartLayout.tsx');
+    const source = fs.readFileSync(layoutPath, 'utf-8');
+
+    // Mobile search button capsule min-w-0
+    expect(source).toContain('flex sm:hidden flex-1 min-w-0 items-center gap-2.5 h-10 px-3 rounded-full');
+
+    // Responsive store button classes eliminating overflow on <380px mobile screens
+    expect(source).toContain('w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full');
+    expect(source).toContain('hidden sm:inline');
+    expect(source).toContain('absolute -top-1 -right-1 sm:static');
+  });
+
+  it('queries polymart_orders and calculates sales_count in PolyMartVendorStorefront.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const storefrontPath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorStorefront.tsx');
+    const source = fs.readFileSync(storefrontPath, 'utf-8');
+
+    // Query polymart_orders with completed/confirmed statuses
+    expect(source).toContain("from('polymart_orders')");
+    expect(source).toContain("'COMPLETED', 'CONFIRMED', 'READY'");
+    expect(source).toContain('salesMap');
+    expect(source).toContain('sales_count');
+
+    // Popular tab sorts primarily by sales_count descending
+    expect(source).toContain("activeTab === 'popular'");
+    expect(source).toContain('salesB - salesA');
+
+    // Micro-badge with TrendingUp icon for sold counts
+    expect(source).toContain('TrendingUp');
+    expect(source).toContain('terjual');
+  });
+
+  it('verifies PolyMartFeed sorts hot products by sales and orders count', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const feedPath = path.resolve(__dirname, '../components/portal/PolyMartFeed.tsx');
+    const source = fs.readFileSync(feedPath, 'utf-8');
+
+    // Queries polymart_orders
+    expect(source).toContain("from('polymart_orders')");
+    expect(source).toContain('salesMap');
+    expect(source).toContain('salesB - salesA');
+  });
+});
+
+

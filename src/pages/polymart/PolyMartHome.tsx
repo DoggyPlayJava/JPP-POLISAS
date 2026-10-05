@@ -10,6 +10,7 @@ import { type PolyAd } from '@/types';
 import {
   Star, ShoppingCart, Store, TrendingUp, Zap, ChevronRight, ChevronLeft,
   Package, Clock, AlertCircle, Heart, Sparkles, PackageSearch, ShoppingBag,
+  CheckCircle2, X, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -33,6 +34,7 @@ interface PolyProduct {
   } | null;
   avg_rating?: number;
   review_count?: number;
+  sales_count?: number;
   // Flash sale / pre-order
   sale_price?: number | null;
   sale_start_at?: string | null;
@@ -40,11 +42,13 @@ interface PolyProduct {
   is_preorder?: boolean;
 }
 
-interface PolyBusiness {
+export interface PolyBusiness {
   id: string;
   name: string;
   logo_url: string | null;
   product_count?: number;
+  avg_rating?: number;
+  review_count?: number;
 }
 
 
@@ -237,6 +241,157 @@ function InFeedAdCard({ ad }: { ad: PolyAd }) {
   );
 }
 
+// ── Active Vendors Slide-Up Sheet ──────────────────────────────────────────
+export function ActiveVendorsSheet({
+  isOpen,
+  onClose,
+  businesses,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  businesses: PolyBusiness[];
+}) {
+  const navigate = useNavigate();
+  const [vendorSearch, setVendorSearch] = useState('');
+
+  const filteredBusinesses = useMemo(() => {
+    if (!vendorSearch.trim()) return businesses;
+    const q = vendorSearch.toLowerCase().trim();
+    return businesses.filter(b => b.name.toLowerCase().includes(q));
+  }, [businesses, vendorSearch]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+      />
+
+      {/* Sheet Modal */}
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+        className="relative w-full max-w-lg bg-background border border-border/80 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] z-10 overflow-hidden"
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-12 h-1.5 rounded-full bg-muted-foreground/20" />
+        </div>
+
+        {/* Header */}
+        <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500">
+              <Store className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-foreground">Semua Peniaga Siswa</h3>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                {businesses.length} perniagaan berdaftar di POLISAS
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="p-4 pb-2">
+          <div className="flex items-center gap-2 h-10 px-3.5 rounded-2xl bg-muted/30 border border-border/70 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
+            <Search className="w-4 h-4 text-amber-500 shrink-0" />
+            <input
+              value={vendorSearch}
+              onChange={e => setVendorSearch(e.target.value)}
+              placeholder="Cari peniaga atau jenama..."
+              className="flex-1 text-xs bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60"
+            />
+            {vendorSearch && (
+              <button onClick={() => setVendorSearch('')} className="p-1 rounded-full hover:bg-muted text-muted-foreground cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Vendors List */}
+        <div className="p-4 pt-2 overflow-y-auto space-y-2.5 flex-1 min-h-0">
+          {filteredBusinesses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <Store className="w-8 h-8 text-muted-foreground/40 mb-2" />
+              <p className="text-xs font-bold">Tiada peniaga ditemui</p>
+              <p className="text-[11px] text-muted-foreground/60">Cuba carian dengan kata kunci lain</p>
+            </div>
+          ) : (
+            filteredBusinesses.map(b => (
+              <div
+                key={b.id}
+                className="flex items-center justify-between p-3 rounded-2xl border border-border/60 bg-card hover:border-amber-400/50 hover:bg-amber-500/5 transition-all group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Squircle Avatar */}
+                  <div className="w-12 h-12 rounded-2xl border border-border/70 bg-muted/30 overflow-hidden relative shrink-0 flex items-center justify-center">
+                    {b.logo_url ? (
+                      <img src={b.logo_url} alt={b.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Store className="w-5 h-5 text-amber-500" />
+                    )}
+                  </div>
+                  {/* Vendor Details */}
+                  <div className="min-w-0 space-y-0.5">
+                    <h4 className="text-xs font-black text-foreground truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                      {b.name}
+                    </h4>
+                    <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      <span>Peniaga Siswa Sah POLISAS</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      {b.avg_rating && b.avg_rating > 0 ? (
+                        <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          <span>{b.avg_rating.toFixed(1)}</span>
+                          {b.review_count ? <span>({b.review_count})</span> : null}
+                        </div>
+                      ) : null}
+                      <span className="flex items-center gap-1 font-medium">
+                        <Package className="w-3 h-3 text-muted-foreground/60" />
+                        {`${b.product_count || 0} produk`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visit Store Button */}
+                <button
+                  onClick={() => {
+                    navigate('/polymart/kedai/' + b.id);
+                    onClose();
+                  }}
+                  className="px-3 py-1.5 rounded-full text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all shrink-0 active:scale-95 cursor-pointer ml-2"
+                >
+                  Lawati Kedai
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Ads Banner Carousel ────────────────────────────────────────────────────────
 function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: number; totalVendors: number; ads: PolyAd[] }) {
   const navigate = useNavigate();
@@ -371,7 +526,8 @@ export function PolyMartHome() {
   const [businesses, setBusinesses] = useState<PolyBusiness[]>([]);
   const [ads,       setAds]       = useState<PolyAd[]>([]);
   const [loading,   setLoading]   = useState(true);
-  const [sortBy,    setSortBy]    = useState<'newest' | 'price_asc' | 'price_desc' | 'rating'>('newest');
+  const [sortBy,    setSortBy]    = useState<'newest' | 'popular' | 'price_asc' | 'price_desc' | 'rating'>('newest');
+  const [showAllVendors, setShowAllVendors] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('vendor');
@@ -403,7 +559,7 @@ export function PolyMartHome() {
         setWishlistIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
         if (!error.message.includes('duplicate')) toast.error('Gagal menyimpan ke wishlist');
       } else {
-        toast.success('Disimpan ke wishlist ❤️', { duration: 1500 });
+        toast.success('Disimpan ke wishlist', { duration: 1500 });
       }
     }
   };
@@ -412,8 +568,8 @@ export function PolyMartHome() {
     const load = async () => {
       setLoading(true);
       
-      // Fetch Products and Ads in parallel
-      const [prodsRes, adsRes] = await Promise.all([
+      // Fetch Products, Ads, and Orders in parallel
+      const [prodsRes, adsRes, ordersRes] = await Promise.all([
         supabase
           .from('business_products')
           .select(`
@@ -432,7 +588,12 @@ export function PolyMartHome() {
           .select('*')
           .eq('status', 'ACTIVE')
           .order('created_at', { ascending: false })
-          .limit(10)
+          .limit(10),
+
+        supabase
+          .from('polymart_orders')
+          .select('product_id, quantity')
+          .in('status', ['COMPLETED', 'CONFIRMED', 'READY'])
       ]);
 
       const prods = prodsRes.data;
@@ -442,6 +603,15 @@ export function PolyMartHome() {
       const active = ((prods ?? []) as unknown as PolyProduct[]).filter(
         (p: PolyProduct) => (p.keusahawanan_businesses as any)?.status === 'ACTIVE'
       );
+
+      // Compute sales_count per product
+      const salesMap: Record<string, number> = {};
+      (ordersRes.data || []).forEach((o: any) => {
+        salesMap[o.product_id] = (salesMap[o.product_id] || 0) + (o.quantity || 1);
+      });
+      active.forEach(p => {
+        p.sales_count = salesMap[p.id] || 0;
+      });
 
       // Get review stats
       const productIds = active.map(p => p.id);
@@ -476,6 +646,10 @@ export function PolyMartHome() {
         if (b && bizMap.has(b.id)) {
           const entry = bizMap.get(b.id)!;
           entry.product_count = (entry.product_count ?? 0) + 1;
+          if (p.avg_rating && p.review_count) {
+            entry.avg_rating = Math.max(entry.avg_rating ?? 0, p.avg_rating);
+            entry.review_count = (entry.review_count ?? 0) + p.review_count;
+          }
         }
       });
       setBusinesses(Array.from(bizMap.values()));
@@ -553,6 +727,17 @@ export function PolyMartHome() {
         .map(s => s.p);
     }
     switch (sortBy) {
+      case 'popular':
+        list.sort((a, b) => {
+          const salesA = a.sales_count || 0;
+          const salesB = b.sales_count || 0;
+          if (salesB !== salesA) return salesB - salesA;
+          const scoreA = (a.avg_rating || 0) * (a.review_count || 1);
+          const scoreB = (b.avg_rating || 0) * (b.review_count || 1);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return 0;
+        });
+        break;
       case 'price_asc':  list.sort((a, b) => a.price - b.price); break;
       case 'price_desc': list.sort((a, b) => b.price - a.price); break;
       case 'rating':     list.sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0)); break;
@@ -616,7 +801,11 @@ export function PolyMartHome() {
               </div>
               <h2 className="text-sm font-black text-foreground">Peniaga Aktif</h2>
             </div>
-            <button className="flex items-center gap-1 text-[11px] font-bold" style={{ color: PM_ACCENT }}>
+            <button
+              onClick={() => setShowAllVendors(true)}
+              className="flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+              style={{ color: PM_ACCENT }}
+            >
               <span>Lihat Semua</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -646,6 +835,7 @@ export function PolyMartHome() {
           <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
             className="h-7 px-2 rounded-xl text-[10px] font-bold outline-none bg-muted/40 border border-border/50 text-foreground focus:border-border transition-all">
             <option value="newest">Terbaru</option>
+            <option value="popular">Paling Laris</option>
             <option value="price_asc">Harga ↑</option>
             <option value="price_desc">Harga ↓</option>
             <option value="rating">Rating</option>
@@ -703,6 +893,17 @@ export function PolyMartHome() {
           </div>
         </motion.div>
       )}
+
+      {/* Slide-Up Active Vendors Bottom Sheet */}
+      <AnimatePresence>
+        {showAllVendors && (
+          <ActiveVendorsSheet
+            isOpen={showAllVendors}
+            onClose={() => setShowAllVendors(false)}
+            businesses={businesses}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

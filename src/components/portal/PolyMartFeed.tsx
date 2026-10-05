@@ -48,20 +48,28 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
         if (activeFilter === 'latest') {
           query = query.order('created_at', { ascending: false }).limit(12);
         } else {
-          // 'hot' filter: query active polymart products and prioritize items with promotions/sales
-          query = query.order('created_at', { ascending: false }).limit(16);
+          // 'hot' filter: query active polymart products and prioritize items with sales & promotions
+          query = query.order('created_at', { ascending: false }).limit(24);
         }
 
-        const { data, error } = await query;
+        const [prodsRes, ordersRes] = await Promise.all([
+          query,
+          activeFilter === 'hot'
+            ? supabase
+                .from('polymart_orders')
+                .select('product_id, quantity')
+                .in('status', ['COMPLETED', 'CONFIRMED', 'READY'])
+            : Promise.resolve({ data: [] as any[], error: null }),
+        ]);
 
-        if (error) {
-          console.warn('[PolyMartFeed] Error fetching products:', error.message);
+        if (prodsRes.error) {
+          console.warn('[PolyMartFeed] Error fetching products:', prodsRes.error.message);
           return;
         }
 
-        if (isMounted && data) {
+        if (isMounted && prodsRes.data) {
           // Filter out products from inactive businesses
-          const activeProducts = data.filter((item: any) => {
+          const activeProducts = prodsRes.data.filter((item: any) => {
             const biz = Array.isArray(item.keusahawanan_businesses)
               ? item.keusahawanan_businesses[0]
               : item.keusahawanan_businesses;
@@ -69,10 +77,19 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
           });
 
           if (activeFilter === 'hot') {
+            const salesMap: Record<string, number> = {};
+            ((ordersRes as any).data || []).forEach((o: any) => {
+              salesMap[o.product_id] = (salesMap[o.product_id] || 0) + (o.quantity || 1);
+            });
+
             const sortedHot = [...activeProducts].sort((a, b) => {
+              const salesA = salesMap[a.id] || 0;
+              const salesB = salesMap[b.id] || 0;
+              if (salesB !== salesA) return salesB - salesA;
               const aHasSale = a.sale_price !== null && a.sale_price !== undefined && a.sale_price < a.price ? 1 : 0;
               const bHasSale = b.sale_price !== null && b.sale_price !== undefined && b.sale_price < b.price ? 1 : 0;
-              return bHasSale - aHasSale;
+              if (bHasSale !== aHasSale) return bHasSale - aHasSale;
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
             });
             setProducts(sortedHot.slice(0, 12));
           } else {
