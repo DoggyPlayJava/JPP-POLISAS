@@ -3230,7 +3230,7 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Jaminan Konsistensi RPC:** Logik peringkat pangkalan data (`toggle_polysuara_reaction` dan `toggle_polysuara_downvote`) menguatkuasakan penghapusan rekod songsang secara atomik bagi memastikan integriti data 100%.
 
 4. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
-   - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none`.
+   - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-visible`.
    - **Kiri (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
      - Kluster Reaksi & Suka Sekali Sentuh `<PolySuaraReactions />`.
      - Butang Dislike (👎) komuniti untuk semakan auto-moderasi dengan bilangan undian.

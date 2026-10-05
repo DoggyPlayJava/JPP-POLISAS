@@ -66,7 +66,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn('relative inline-flex items-center flex-nowrap shrink-0 gap-1.5', className)}
+      className={cn('relative inline-flex items-center flex-nowrap shrink-0 gap-1.5', isPopoverOpen && 'z-40', className)}
     >
       {/* Floating Capsule Popover */}
       <AnimatePresence>
@@ -75,7 +75,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
             {/* Transparent backdrop for outside tap/click dismiss */}
             <div
               data-testid="reaction-backdrop"
-              className="fixed inset-0 z-20 cursor-default"
+              className="fixed inset-0 z-30 cursor-default"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenChange(false);
@@ -90,7 +90,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 6 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="absolute bottom-full mb-2 left-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/15 shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap"
+              className="absolute bottom-full mb-2 left-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/15 shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap"
             >
               {REACTION_EMOJIS.map((item) => {
                 const hasReacted = reactions.some((r) => r.type === item.type && r.userReacted);

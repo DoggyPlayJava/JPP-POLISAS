@@ -2082,7 +2082,7 @@ export function PolySuaraPage({
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none" data-html2canvas-ignore>
+                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-visible" data-html2canvas-ignore>
                           {isConfessionDeleted ? (
                             <div className="flex items-center gap-1.5 shrink-0 flex-nowrap text-slate-400">
                               <button
