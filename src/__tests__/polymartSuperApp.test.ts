@@ -77,3 +77,51 @@ describe('PolyMartHome SuperApp Modernization', () => {
   });
 });
 
+describe('PolyMartVendorStorefront Dedicated Merchant Page', () => {
+  it('exports PolyMartVendorStorefront function component cleanly', async () => {
+    const { PolyMartVendorStorefront } = await import('@/pages/polymart/PolyMartVendorStorefront');
+    expect(PolyMartVendorStorefront).toBeDefined();
+    expect(typeof PolyMartVendorStorefront).toBe('function');
+  });
+
+  it('contains the /polymart/kedai/:id route registered in App.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const appPath = path.resolve(__dirname, '../App.tsx');
+    const source = fs.readFileSync(appPath, 'utf-8');
+
+    expect(source).toContain('/polymart/kedai/:id');
+    expect(source).toContain('PolyMartVendorStorefront');
+  });
+
+  it('contains navigation to vendor storefront in PolyMartHome.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const homePath = path.resolve(__dirname, '../pages/polymart/PolyMartHome.tsx');
+    const source = fs.readFileSync(homePath, 'utf-8');
+
+    expect(source).toContain('/polymart/kedai/');
+  });
+
+  it('contains Smart Preset Ambient Mesh tokens and 0 raw emojis in PolyMartVendorStorefront.tsx', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const storefrontPath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorStorefront.tsx');
+    const source = fs.readFileSync(storefrontPath, 'utf-8');
+
+    // Smart Preset Ambient Mesh tokens
+    expect(source).toContain('from-amber-950 via-slate-900 to-stone-950');
+    expect(source).toContain('bg-amber-500/15 blur-3xl');
+
+    // Verified badge token
+    expect(source).toContain('Peniaga Siswa Sah POLISAS');
+
+    // Zero raw emojis
+    expect(source).not.toContain('🛍️');
+    expect(source).not.toContain('🏪');
+    expect(source).not.toContain('🛒');
+    expect(source).not.toContain('⭐');
+    expect(source).not.toContain('📦');
+  });
+});
+

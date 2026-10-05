@@ -18,6 +18,7 @@ type OrderStatus = 'PENDING' | 'CONFIRMED' | 'READY' | 'COMPLETED' | 'CANCELLED'
 
 interface Order {
   id: string;
+  business_id: string;
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -422,9 +423,18 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] text-muted-foreground/50 font-bold flex items-center gap-1">
-            <Store className="w-2.5 h-2.5" /> {biz?.name ?? 'Kedai'}
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const targetId = order.business_id || biz?.id;
+              if (targetId) navigate(`/polymart/kedai/${targetId}`);
+            }}
+            className="text-[10px] text-muted-foreground/60 hover:text-amber-500 font-bold flex items-center gap-1 transition-colors text-left group cursor-pointer"
+          >
+            <Store className="w-2.5 h-2.5 text-amber-500" />
+            <span className="group-hover:underline">{biz?.name ?? 'Kedai'}</span>
+            <ChevronRight className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
+          </button>
           <p className="text-sm font-black text-foreground truncate">{order.business_products?.name}</p>
           <div className="flex items-center gap-3 mt-1">
             <span className="text-xs font-black" style={{ color: PM_ACCENT }}>RM {(order.total_price ?? order.unit_price * order.quantity).toFixed(2)}</span>
@@ -567,7 +577,7 @@ export function PolyMartMyOrders() {
     if (showRefreshSpinner) setIsRefreshing(true);
     const { data } = await supabase.from('polymart_orders')
       .select(`
-        id, quantity, unit_price, total_price, note, pickup_time, share_phone,
+        id, business_id, quantity, unit_price, total_price, note, pickup_time, share_phone,
         status, created_at, confirmed_at, ready_at, cancel_reason,
         payment_method, payment_receipt_url, payment_receipt_rejected,
         payment_verified_at, payment_deadline_at,

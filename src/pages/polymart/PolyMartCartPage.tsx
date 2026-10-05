@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
-import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake } from 'lucide-react';
+import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight } from 'lucide-react';
 
 interface CartItem {
   id: string;
@@ -257,7 +257,10 @@ export function PolyMartCartPage() {
                 className="bg-card border border-border/50 rounded-3xl overflow-hidden shadow-sm"
               >
                 {/* Vendor Header */}
-                <div className="p-3 bg-muted/30 border-b border-border/40 flex items-center gap-2">
+                <div
+                  onClick={() => navigate(`/polymart/kedai/${business?.id || bizId}`)}
+                  className="p-3 bg-muted/30 border-b border-border/40 flex items-center gap-2 cursor-pointer hover:bg-muted/50 transition-colors group"
+                >
                   <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-muted flex items-center justify-center">
                     {business?.logo_url ? (
                       <img src={business.logo_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
@@ -265,7 +268,10 @@ export function PolyMartCartPage() {
                       <Store className="w-4 h-4 text-muted-foreground" />
                     )}
                   </div>
-                  <h3 className="text-sm font-black text-foreground">{business?.name || 'Kedai'}</h3>
+                  <h3 className="text-sm font-black text-foreground group-hover:text-amber-500 transition-colors flex items-center gap-1">
+                    <span>{business?.name || 'Kedai'}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-amber-500" />
+                  </h3>
                 </div>
 
                 {/* Items */}

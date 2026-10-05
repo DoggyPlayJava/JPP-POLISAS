@@ -87,6 +87,7 @@ const PolyMartVerifyPickup = lazy(() => import('./pages/polymart/PolyMartVerifyP
 const PolyMartPaymentPage = lazy(() => import('./pages/polymart/PolyMartPaymentPage').then(m => ({ default: m.PolyMartPaymentPage })));
 const PolyMartWishlist = lazy(() => import('./pages/polymart/PolyMartWishlist').then(m => ({ default: m.PolyMartWishlist })));
 const PolyMartChat = lazy(() => import('./pages/polymart/PolyMartChat').then(m => ({ default: m.PolyMartChat })));
+const PolyMartVendorStorefront = lazy(() => import('./pages/polymart/PolyMartVendorStorefront').then(m => ({ default: m.PolyMartVendorStorefront })));
 
 // ── e-Akademik ──
 const AkademikLayout = lazy(() => import('./pages/akademik/AkademikLayout').then(m => ({ default: m.AkademikLayout })));
@@ -415,6 +416,7 @@ function AppRoutes() {
       <Route element={<PolyMartLayout />}>
         <Route path="/polymart"            element={<PolyMartHome />} />
         <Route path="/polymart/produk/:id" element={<PolyMartProductDetail />} />
+        <Route path="/polymart/kedai/:id"  element={<PolyMartVendorStorefront />} />
       </Route>
 
       {/* ── PolyMart Marketplace - PROTECTED (perlu log masuk & approval) ── */}

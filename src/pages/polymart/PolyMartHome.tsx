@@ -175,7 +175,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness }) {
   return (
     <motion.div
       whileTap={{ scale: 0.96 }}
-      onClick={() => navigate(`/polymart?vendor=${biz.id}`)}
+      onClick={() => navigate('/polymart/kedai/' + biz.id)}
       className="group flex flex-col items-center gap-2 cursor-pointer shrink-0"
     >
       <div className="w-14 h-14 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-muted/30 overflow-hidden relative transition-all group-hover:scale-105 shadow-xs">
