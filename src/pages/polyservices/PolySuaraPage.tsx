@@ -1936,7 +1936,7 @@ export function PolySuaraPage({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={cn(
-                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-100 dark:border-white/[0.07] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.07)] rounded-[2rem] p-5 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
+                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-200/70 dark:border-white/[0.07] shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-[2rem] p-5 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
                           isTrending && "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
                         )}
                       >
@@ -1977,7 +1977,7 @@ export function PolySuaraPage({
                             {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
                             {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
                             {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
-                            <span className="text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 shrink-0">
+                            <span className="text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full text-slate-600 dark:text-slate-400 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] shrink-0">
                               {confession.category}
                             </span>
                             {canDeleteConfession && (

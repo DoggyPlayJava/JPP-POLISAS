@@ -3122,20 +3122,45 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
 
-Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mahasiswa** bertaraf tinggi dengan seni bina bersih dan moden (*anti-slop clean social architecture*). Elemen visual berlebihan seperti bar cerita bertingkat (*story pulse bar*) dan butang FAB terapung bertindih telah dimansuhkan. Sebaliknya, suapan kini menampilkan bar navigasi atas lekat (*sticky header*) dwi-mod, kapsul penggubah pantas (*quick-compose capsule*), trek navigasi suapan tunggal eksekutif (*Executive Single-Line Track*), kad luahan terapung mewah bersudut melengkung `rounded-[2rem]`, baris tindakan sosial bersepadu dengan corak *One-Tap Heart + WhatsApp Reactions*, laci ulasan moden gaya Threads (*Threads-Style Comments Drawer*), serta kepatuhan mutlak terhadap peraturan pelepasan selamat kerangka navigasi (*Z-[999] Safe Clearance Rule*).
+Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mahasiswa** bertaraf tinggi dengan seni bina bersih dan moden (*anti-slop clean social architecture*). Elemen visual berlebihan seperti bar cerita bertingkat (*story pulse bar*) dan butang FAB terapung bertindih telah dimansuhkan. Sebaliknya, suapan kini menampilkan bar navigasi atas lekat (*sticky header*) dwi-mod, kapsul penggubah pantas (*quick-compose capsule*), trek navigasi suapan tunggal eksekutif (*Executive Single-Line Track*), kad luahan terapung mewah bersudut melengkung `rounded-[2rem]` dalam palet **Apple Porcelain & Rose Glow**, baris tindakan sosial bersepadu dengan corak *One-Tap Heart + WhatsApp Reactions* dan saling eksklusif (like vs dislike), laci ulasan moden gaya Threads (*Threads-Style Comments Drawer*) dengan 4-depth nested comment threading dan persona haiwan mesra, penaikan modal melalui React Portal berserta penindasan chrome global (`BottomNav` / `FloatingAiChat`), serta mekanisme pemadaman kendiri 1 jam (*1-Hour Self-Delete*) bertombstone.
 
 ---
 
-### 30.1 Konsep Reka Bentuk & Dwi-Mod Tema (Light & Dark Mode Parity)
+### 30.1 Konsep Reka Bentuk & Spesifikasi Apple Porcelain & Rose Glow (Light & Dark Mode Parity)
 
-1. **Kanvas Bersih Dwi-Mod:**
+1. **Kanvas Bersih Dwi-Mod Apple Porcelain & Obsidian Glow:**
    - PolySuara menyokong penuh peralihan mod tema cerah dan gelap melalui suis `<ThemeToggle />` di bahagian atas bar navigasi lekat (*sticky header*).
-   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad terapung putih bersih `bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.07)]`.
-   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian dalam `dark:bg-slate-900/70 dark:backdrop-blur-xl dark:border-white/[0.07] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] rounded-[2rem] p-5 sm:p-6`.
-   - Mesh aura ambien di latar belakang (`bg-rose-500/5 dark:bg-rose-500/10 blur-[100px]`) memberikan kedalaman visual tanpa membebankan pemproses grafik peranti bajet.
+   - **Mod Cerah (Apple Porcelain):** 
+     - Kanvas latar belakang lembut: `bg-slate-50 text-slate-900`.
+     - Kad luahan terapung porselin bersih: `bg-white border border-slate-200/70 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-[2rem] p-5 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden`.
+     - Lencana kategori: `text-slate-600 bg-slate-100/90 border border-slate-200/60 rounded-full text-[10px] uppercase font-black tracking-wider px-3 py-1`.
+     - Tipografi editorial luas: `text-[15px] sm:text-base leading-relaxed text-slate-800 whitespace-pre-wrap font-normal mb-3.5`.
+   - **Mod Gelap (Obsidian Rose Glow):** 
+     - Kanvas: `dark:bg-slate-950 text-slate-100`.
+     - Aras kaca obsidian dalam: `dark:bg-slate-900/70 dark:backdrop-blur-xl dark:border-white/[0.07] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)]`.
+     - Lencana kategori: `dark:text-slate-400 dark:bg-white/[0.06] dark:border-white/[0.08]`.
+     - Tipografi editorial: `dark:text-slate-200`.
+   - Mesh aura ambien di latar belakang (`bg-rose-500/5 dark:bg-rose-500/10 blur-[100px]`) memberikan kedalaman visual tanpa membebankan pemproses grafik peranti mudah alih.
 
 2. **Header Lekat Pintar (*Sticky Top Bar*):**
    - Menempatkan butang kembali bulat pantas ke Portal `/portal`, penunjuk status hidup bulatan hijau bersinar, suis tema `<ThemeToggle />`, suis loceng notifikasi PolySuara (diselaraskan dengan jadual `polysuara_notif_optout`), dan lencana mod tanpa nama (*Anon Mode* berbingkai perisai ros).
+
+3. **Spesifikasi Modul Undian Apple Porcelain & Dual Mode (`PolySuaraPoll.tsx`):**
+   - Menghapuskan sepenuhnya kelas konkrit gelap tegar (`bg-slate-900/50`, `border-slate-800`, `text-slate-300`).
+   - **Bekas Utama:** `bg-slate-50/90 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs`.
+   - **Header Undian:** `flex items-center gap-2 mb-3 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider`.
+   - **Butang Pilihan (Bukan Diundi):** `border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs`.
+   - **Butang Pilihan (Telah Diundi):** `border-rose-400/60 dark:border-rose-500/50 bg-rose-50/60 dark:bg-rose-500/10 shadow-xs ring-1 ring-rose-400/20 dark:ring-rose-500/20`.
+   - **Bar Kemajuan (Progress Fill):**
+     - Diundi: `bg-rose-500/20 dark:bg-rose-500/25`
+     - Bukan diundi: `bg-slate-100 dark:bg-slate-700/40`
+   - **Teks Pilihan:**
+     - Diundi: `text-rose-950 dark:text-rose-100 font-semibold`
+     - Bukan diundi: `text-slate-800 dark:text-slate-200 font-medium`
+   - **Peratusan & Bilangan Undi:**
+     - Diundi: `text-rose-600 dark:text-rose-400 font-bold font-mono`
+     - Bukan diundi: `text-slate-500 dark:text-slate-400 font-bold font-mono`
+   - **Jumlah Undian:** `text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]`.
 
 ---
 
@@ -3173,7 +3198,7 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 30.4 Kad Luahan Terapung Mewah & Corak Reaksi "One-Tap Heart + WhatsApp Reactions" (`PolySuaraReactions.tsx`)
+### 30.4 Kad Luahan Terapung & Reaksi Saling Eksklusif (Strict Mutual Exclusivity)
 
 1. **Struktur Kad Lapang & Berkarisma:**
    - Sudut melengkung eksekutif `rounded-[2rem]` dengan bayang terapung moden.
@@ -3181,12 +3206,12 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
      - Avatar bulat watak haiwan di dalam gelang neon kecerunan tebal (`bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400`).
      - Nama samaran rahsia dalam teks tebal (`font-extrabold text-slate-900 dark:text-white`) bersama lencana semakan anon biru/cyan comel (✓) bertajuk *"Identiti Anon Sah Disahkan"*.
      - Masa relatif kiriman (`2 jam lepas`) di bawah nama pengarang.
-     - Lencana kategori berbentuk pil berhuruf besar (`text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full`).
+     - Lencana kategori berbentuk pil berhuruf besar bersempadan halus (`border border-slate-200/60 dark:border-white/[0.08]`).
      - Butang laporan bendera ditempatkan secara kemas di penjuru kanan atas.
    - **Badan Luahan:**
      - Teks luahan editorial luas: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5`.
      - Lampiran imej dengan nisbah aspek penuh, sempadan `rounded-2xl`, dan animasi zum pada sentuhan.
-     - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-4 rounded-r-2xl`).
+     - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl`).
 
 2. **Corak Reaksi "One-Tap Heart + WhatsApp Reactions" (`PolySuaraReactions.tsx`):**
    - **Butang Suka Sekali Sentuh (*One-Tap Heart*):**
@@ -3199,7 +3224,12 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Pil Reaksi Aktif Sebaris (*Inline Reaction Chips*):**
      - Reaksi bukan-hati yang aktif (kiraan > 0) dipaparkan secara kemas dalam barisan mendatar sebaris tanpa limpahan (*zero-wrap horizontal row*).
 
-3. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
+3. **Peraturan Ketat Saling Eksklusif Like & Dislike (*Strict Mutual Exclusivity*):**
+   - **Suka Membatalkan Tidak Suka (Like Cancels Dislike):** Mengetik reaksi suka (Heart atau mana-mana emoji WhatsApp) secara automatik membatalkan rekod downvote pengguna pada luahan berkenaan, menolak kiraan `downvotes` sebanyak 1, dan menghapuskannya daripada `userDownvotes` (`syncReactionToggleState`).
+   - **Tidak Suka Membatalkan Suka (Dislike Cancels Like):** Mengetik butang Downvote (👎) secara automatik membatalkan sebarang reaksi aktif pengguna pada luahan tersebut, menolak kiraan `upvotes` sebanyak 1, dan mengeluarkan reaksi dari `confessionReactions` (`syncDownvoteToggleState`).
+   - **Jaminan Konsistensi RPC:** Logik peringkat pangkalan data (`toggle_polysuara_reaction` dan `toggle_polysuara_downvote`) menguatkuasakan penghapusan rekod songsang secara atomik bagi memastikan integriti data 100%.
+
+4. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
    - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none`.
    - **Kiri (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
      - Kluster Reaksi & Suka Sekali Sentuh `<PolySuaraReactions />`.
@@ -3212,33 +3242,53 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 30.5 Laci Ulasan Moden Gaya Threads & Peraturan Pelepasan Selamat "Z-[999] Safe Clearance Rule"
+### 30.5 Laci Ulasan Gaya Threads, Threading Bersarang 4 Aras & Persona Haiwan Mesra
 
 1. **Laci Ulasan Moden Gaya Threads (*Threads-Style Comments Drawer*):**
    - **Reka Bentuk Berpusatkan Pembacaan:**
      - Pemegang seret atas (*drag pill indicator*) untuk gerak isyarat tutup pantas pada peranti mudah alih.
      - Pratonton ringkas teks luahan asal di bawah tajuk laci untuk mengekalkan konteks perbincangan.
-     - Pemisah garis halus (*hairline dividers* `border-b border-slate-100 dark:border-white/5 py-3.5 px-4`) antara ulasan Tier-1 dan jawapan bersarang, menggantikan kad berkotak yang sempit dengan gaya editorial lapang.
+     - Pemisah garis halus (*hairline dividers* `border-b border-slate-100 dark:border-white/5 py-3.5 px-4`) antara ulasan induk dan jawapan bersarang, menggantikan kad berkotak yang sempit dengan gaya editorial lapang.
    - **Lencana Pengenalan Khusus:**
      - **Lencana OP (*Original Poster*):** Ditandakan secara automatik (`bg-rose-500/10 text-rose-500 border border-rose-500/20`) apabila penulis luahan asal membalas sebarang komen.
      - **Lencana Rasmi JPP:** Ditandakan dengan lencana zamrud (`bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20`) berserta ikon perisai bagi maklum balas rasmi kepimpinan pelajar.
-   - **Set Tindakan Diskret (*Discrete Action Set*):**
-     - Suka ulasan (❤️) dan Tidak suka (👎) dengan butang pil halus.
-     - Butang Balas pantas untuk memulakan respon ulasan anak bertingkat (Tier-2).
-     - Butang eskalasi krisis sulit terus ke Exco Kebajikan (`ShieldAlert`) serta butang laporan ulasan melanggar etika (`AlertTriangle`).
-   - **Togol Isih Ulasan Dwipil:**
-     - Pilihan isihan `Terkini` (kronologi) vs `Terbaik` (berdasarkan undian bersih ulasan).
 
-2. **Peraturan Pelepasan Selamat Z-[999] (*Z-[999] Safe Clearance Rule*):**
-   - **Hierarki Lapisan Z-Index:** Kerangka terapung `BottomNav` berada pada `z-[120]` dengan menu tindakan pantas pada `z-[111]`. Oleh itu, semua modal terapung (Compose Modal, Comments Drawer, Report Modal) dan latar belakangnya WAJIB menggunakan `z-[990]` bagi backdrop dan `z-[999]` bagi panel modal utama. Ini memastikan tiada konflik z-index atau elemen UI lain mencelah di atas borang input pengguna.
-   - **Penjarakan Selamat Bahagian Bawah (*Bottom Safe Clearance*):**
-     - Modal penggubah luahan: `pb-28 sm:pb-6` bagi memastikan butang hantar tidak terlindung oleh dock navigasi.
-     - Laci ulasan: `pb-8 sm:pb-4` untuk input baris balas ulasan.
-     - Halaman utama suapan: `pb-32` berserta `<div className="h-32 md:hidden" aria-hidden="true" />` menjamin kad luahan paling akhir boleh ditatal sepenuhnya melepasi `BottomNav` tanpa halangan visual.
+2. **Threading Ulasan Bersarang 4 Aras (*4-Depth Nested Comment Threading*):**
+   - Ulasan menyokong perbincangan berstruktur anak-beranak sehingga 4 kedalaman (`depth <= 4`):
+     - Aras 1: Ulasan primer bergaris pemisah penuh.
+     - Aras 2: Anjakan ke dalam `ml-6` dengan sempadan sisi halus (`border-l-2 border-slate-200 dark:border-slate-800 pl-3`).
+     - Aras 3: Anjakan tambahan `ml-4` dengan penanda garis salur.
+     - Aras 4: Aras jawapan terdalam dengan penunjuk `@nama_persona` bagi mengelakkan limpahan melintang (*horizontal overflow*) pada peranti mudah alih kompak.
+
+3. **Persona Haiwan Mesra Deterministik (*Deterministic Friendly Animal Personas*):**
+   - Setiap pengulas tanpa nama diberikan nama samaran haiwan mesra melalui fungsi `getFriendlyAnonName(authorId, confessionId)`:
+     - Gabungan haiwan kampus (cth: `Kucing Oren`, `Panda Santai`, `Arnab Putih`, `Koala Comel`, `Musang Cerdik`, dll.) dengan palet warna avatar lembut.
+     - Dijana secara deterministik berasaskan cincangan ID pengguna dan ID luahan, membolehkan pembaca mengenali pengulas yang konsisten dalam utas komen tanpa membocorkan identiti sebenar mahasiswa.
+
+4. **Penaikan Modal Melalui React Portal & Penindasan Chrome Global (*Portal Elevation & Global Chrome Suppression*):**
+   - **Penaikan React Portal:** Semua dialog dan panel skrin penuh (Compose Modal, Comments Drawer, Report Modal) dirender terus ke `document.body` menggunakan `createPortal(..., document.body)` bagi mengelakkan perangkapan konteks tindanan z-index daripada bekas induk.
+   - **Penindasan Chrome Global:** Apabila modal atau laci aktif (`composeModalOpen || commentDrawerOpen`), komponen navigasi bawah (`<BottomNav />`) dan pembantu AI terapung (`<FloatingAiChat />`) **ditindas sepenuhnya daripada rendering** (`!composeModalOpen && !commentDrawerOpen && (...)`). Ini menghapuskan sebarang pertembungan sentuh atau gangguan pandangan semasa menaip ulasan atau luahan.
 
 ---
 
-### 30.6 Pengekalan Mekanisme Auto-Moderasi Komuniti & Keselamatan
+### 30.6 Mekanisme Pemadaman Kendiri 1 Jam Bertombstone (*1-Hour Self-Delete with Tombstone*)
+
+1. **Had Masa Pemadaman Kendiri 1 Jam:**
+   - Pengarang luahan atau ulasan mempunyai tingkap masa selama 1 jam dari waktu penghantaran (`isWithin1Hour(created_at)`) untuk memadamkan kiriman mereka sendiri.
+   - Selepas 1 jam luput, butang `Padam` disembunyikan secara automatik untuk mengekalkan arkib perbincangan kampus.
+
+2. **Pemeliharaan Integriti Utas dengan Mesej Tombstone:**
+   - Sekiranya pengarang memadamkan luahan mereka dalam tempoh 1 jam:
+     - Teks asal digantikan dengan `[deleted]` dan bendera `is_deleted_by_author = true` ditetapkan dalam pangkalan data.
+     - Lampiran imej dan undian dipadamkan/disembunyikan.
+     - UI luahan memaparkan mesej tombstone rasmi:
+       `<Trash2 className="w-4 h-4 text-slate-400" /> <nama> telah memadamkan ruangan ini`
+       (contoh: *"Kucing Oren telah memadamkan ruangan ini"*).
+     - Seluruh rantaian ulasan sedia ada di bawah luahan dikekalkan bagi memastikan konteks maklum balas dan perbincangan mahasiswa lain tidak hilang secara mendadak.
+
+---
+
+### 30.7 Pengekalan Mekanisme Auto-Moderasi Komuniti & Keselamatan
 
 1. **Pengekalan Butang Dislike / Undi Turun (👎):**
    - Butang Dislike dikekalkan sebagai instrumen berasingan di sebelah reaksi.
@@ -3246,4 +3296,5 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 2. **Eskalasi Krisis & Kebajikan Rahsia:**
    - Butang *"Bantuan"* pada ulasan dan butang laporan perisai pada kad luahan membolehkan pelajar menghantar isyarat kecemasan terus kepada barisan pimpinan kebajikan secara 100% sulit.
 3. **Ergonomik Mudah Alih & Ruang Bawah:**
-   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah.
+   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah semasa suapan ditatal.
+

@@ -303,7 +303,7 @@ describe('PolySuaraPage Suite', () => {
 
     it('renders elevated floating card container with rounded-[2rem] and modern shadows', () => {
       expect(pageContent).toContain('rounded-[2rem]');
-      expect(pageContent).toContain('shadow-[0_8px_30px_rgb(0,0,0,0.04)]');
+      expect(pageContent).toContain('shadow-[0_4px_24px_rgba(0,0,0,0.03)]');
       expect(pageContent).toContain('dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]');
     });
 
@@ -319,7 +319,7 @@ describe('PolySuaraPage Suite', () => {
     });
 
     it('renders modern uppercase category badge chip', () => {
-      expect(pageContent).toContain('text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 shrink-0');
+      expect(pageContent).toContain('text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full text-slate-600 dark:text-slate-400 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] shrink-0');
     });
 
     it('applies refined editorial typography mb-3.5 to confession card content', () => {
