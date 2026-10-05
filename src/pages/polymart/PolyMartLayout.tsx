@@ -5,8 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle, Store, Plus, Heart, MessageCircle
+  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle, Store, Plus, Heart, MessageCircle,
+  Utensils, Coffee, Sparkles, Wrench, Shirt, Smartphone
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
@@ -19,15 +21,25 @@ export const PM_GLOW     = 'rgba(245,158,11,0.3)';
 export const PM_GRADIENT = 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)';
 
 export const CATEGORY_LIST = [
-  { key: 'all',           label: 'Semua',          emoji: '🛍️' },
-  { key: 'Makanan',       label: 'Makanan',         emoji: '🍔' },
-  { key: 'Minuman',       label: 'Minuman',         emoji: '☕' },
-  { key: 'Aksesori',      label: 'Aksesori',        emoji: '💎' },
-  { key: 'Perkhidmatan',  label: 'Perkhidmatan',    emoji: '🔧' },
-  { key: 'Pakaian',       label: 'Pakaian',         emoji: '👕' },
-  { key: 'Elektronik',    label: 'Elektronik',       emoji: '📱' },
-  { key: 'Umum',          label: 'Umum',            emoji: '📦' },
+  { key: 'all',          label: 'Semua',        icon: LayoutGrid },
+  { key: 'Makanan',      label: 'Makanan',      icon: Utensils },
+  { key: 'Minuman',      label: 'Minuman',      icon: Coffee },
+  { key: 'Aksesori',     label: 'Aksesori',     icon: Sparkles },
+  { key: 'Perkhidmatan', label: 'Servis',       icon: Wrench },
+  { key: 'Pakaian',      label: 'Pakaian',      icon: Shirt },
+  { key: 'Elektronik',   label: 'Gadget',       icon: Smartphone },
+  { key: 'Umum',         label: 'Umum',         icon: Package },
 ];
+
+export const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Makanan: Utensils,
+  Minuman: Coffee,
+  Aksesori: Sparkles,
+  Perkhidmatan: Wrench,
+  Pakaian: Shirt,
+  Elektronik: Smartphone,
+  Umum: Package,
+};
 
 export const CATEGORY_EMOJI: Record<string, string> = {
   Makanan: '🍔', Minuman: '☕', Aksesori: '💎',
@@ -196,7 +208,7 @@ export function PolyMartLayout() {
       <div className="min-h-screen bg-background">
 
         {/* ── Top Navbar ─────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/40">
+        <header className="sticky top-0 z-40 bg-background/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-amber-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
           <div className="max-w-5xl mx-auto px-3 sm:px-5">
 
             {/* Main row */}
@@ -205,44 +217,52 @@ export function PolyMartLayout() {
               {/* Back */}
               <button
                 onClick={() => isHome ? navigate(user ? '/portal' : '/') : navigate(-1)}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0 group">
-                <ArrowLeft className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
+                className="w-9 h-9 rounded-full bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 flex items-center justify-center shrink-0 active:scale-95 transition-all cursor-pointer group"
+                aria-label="Kembali"
+              >
+                <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
 
               {/* Logo */}
               <motion.button
-                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
                 onClick={() => { navigate('/polymart'); setActiveCategory('all'); }}
-                className="flex items-center gap-2 shrink-0">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
-                  style={{ background: PM_GRADIENT }}>
+                className="flex items-center gap-2.5 shrink-0 cursor-pointer text-left"
+              >
+                <div
+                  className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20 border border-amber-400/30"
+                  style={{ background: PM_GRADIENT }}
+                >
                   <ShoppingBag className="w-4 h-4 text-white" />
                 </div>
-                <div className="leading-none text-left hidden sm:block">
-                  <p className="text-[13px] font-black text-foreground">PolyMart</p>
-                  <p className="text-[8px] font-bold tracking-widest uppercase" style={{ color: PM_ACCENT }}>marketplace</p>
+                <div className="leading-tight hidden sm:block">
+                  <p className="text-[13px] font-black tracking-tight text-foreground">PolyMart</p>
+                  <p className="text-[8px] font-black tracking-widest uppercase text-amber-600 dark:text-amber-400">
+                    MARKETPLACE
+                  </p>
                 </div>
               </motion.button>
 
-              {/* Search Bar - Desktop: Full Input, Mobile: Compact Trigger Button */}
+              {/* Search Bar - Desktop: Full Stadium Input, Mobile: Stadium Trigger Button */}
               <button
                 onClick={() => setShowMobileSearch(true)}
-                className="flex sm:hidden flex-1 items-center gap-2 h-8 px-3 rounded-full bg-muted/40 border border-border/45 text-muted-foreground/50 cursor-pointer"
+                className="flex sm:hidden flex-1 items-center gap-2.5 h-10 px-3.5 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 shadow-xs text-muted-foreground/60 cursor-pointer"
               >
-                <Search className="w-3.5 h-3.5 shrink-0" />
-                <span className="text-[12px] text-left truncate flex-1">Cari...</span>
+                <Search className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-xs text-left truncate flex-1">Cari makanan, servis, pakaian...</span>
               </button>
 
-              <div className="hidden sm:flex flex-1 items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
-                <Search className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+              <div className="hidden sm:flex flex-1 items-center gap-2.5 h-10 px-4 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/25 shadow-xs transition-all">
+                <Search className="w-4 h-4 text-amber-500 shrink-0" />
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Cari produk..."
-                  className="flex-1 text-[12px] bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                  placeholder="Cari makanan, minuman, servis, pakaian..."
+                  className="flex-1 text-xs bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="p-0.5 rounded-full hover:bg-muted shrink-0">
+                  <button onClick={() => setSearchQuery('')} className="p-1 rounded-full hover:bg-muted shrink-0 cursor-pointer">
                     <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
@@ -250,59 +270,73 @@ export function PolyMartLayout() {
 
               {/* Right icons */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <button onClick={startTour}
-                  className="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-amber-500/10 text-amber-500/70 hover:text-amber-500 transition-colors">
-                  <HelpCircle className="w-[18px] h-[18px]" />
+                <button
+                  onClick={startTour}
+                  className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-amber-500/80 hover:text-amber-500 transition-all active:scale-95 cursor-pointer"
+                  aria-label="Panduan PolyMart"
+                >
+                  <HelpCircle className="w-4 h-4" />
                 </button>
 
                 {user ? (
                   <>
                     {/* Hide Cart on mobile since it is in BottomNav */}
-                    <button onClick={() => navigate('/polymart/troli')}
-                      className="tour-polymart-cart relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-muted/60 transition-colors">
-                      <ShoppingCart className="w-[18px] h-[18px] text-muted-foreground" />
+                    <button
+                      onClick={() => navigate('/polymart/troli')}
+                      className="tour-polymart-cart relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                      aria-label="Troli Beli-belah"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
                       {cartCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
-                          style={{ background: PM_ACCENT }}>
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-slate-950 text-[8px] font-black flex items-center justify-center shadow-xs bg-amber-400">
                           {cartCount > 9 ? '9+' : cartCount}
                         </span>
                       )}
                     </button>
 
                     {/* Hide Orders on mobile since it is in BottomNav */}
-                    <button onClick={() => navigate('/polymart/pesanan-saya')}
-                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-muted/60 transition-colors">
-                      <Package className="w-[18px] h-[18px] text-muted-foreground" />
+                    <button
+                      onClick={() => navigate('/polymart/pesanan-saya')}
+                      className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                      aria-label="Pesanan Saya"
+                    >
+                      <Package className="w-4 h-4" />
                       {myActiveOrdersCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
-                          style={{ background: PM_ACCENT }}>
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-slate-950 text-[8px] font-black flex items-center justify-center shadow-xs bg-amber-400">
                           {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
                         </span>
                       )}
                     </button>
 
                     {/* Wishlist */}
-                    <button onClick={() => navigate('/polymart/wishlist')}
-                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-rose-500/10 transition-colors">
-                      <Heart className="w-[18px] h-[18px] text-muted-foreground" />
+                    <button
+                      onClick={() => navigate('/polymart/wishlist')}
+                      className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-rose-400/40 text-muted-foreground hover:text-rose-500 transition-all active:scale-95 cursor-pointer"
+                      aria-label="Senarai Hajat"
+                    >
+                      <Heart className="w-4 h-4" />
                     </button>
 
                     {/* Chat */}
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-inbox'))}
-                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-amber-500/10 transition-colors">
-                      <MessageCircle className="w-[18px] h-[18px] text-muted-foreground" />
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('open-inbox'))}
+                      className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                      aria-label="Mesej"
+                    >
+                      <MessageCircle className="w-4 h-4" />
                     </button>
 
                     {/* Button: Kedai (if vendor) OR Admin (if non-vendor JPP/Admin) OR Mulai Bisnes (if regular non-vendor student) */}
                     {isVendor ? (
-                      <button onClick={() => navigate('/polymart/vendor')}
-                        className="tour-polymart-vendor relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/15 transition-all shrink-0 shadow-sm shadow-amber-500/5 animate-in fade-in zoom-in duration-200"
+                      <button
+                        onClick={() => navigate('/polymart/vendor')}
+                        className="tour-polymart-vendor relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                         title="Kedai Saya"
                       >
-                        <Store className="w-[15px] h-[15px]" />
+                        <Store className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-black uppercase tracking-wider">Kedai</span>
                         {pendingVendorCount > 0 && (
-                          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
+                          <span className="min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                             {pendingVendorCount}
                           </span>
                         )}
@@ -310,16 +344,18 @@ export function PolyMartLayout() {
                     ) : (
                       /* Not a Vendor: Show Admin for JPP/Admins, or Mulai Bisnes with text for regular students */
                       (hasKeusahawananAccess || isSuperAdmin) ? (
-                        <button onClick={() => navigate('/polymart/admin')}
-                          className="relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/15 transition-all shrink-0 shadow-sm shadow-rose-500/5 animate-in fade-in zoom-in duration-200"
+                        <button
+                          onClick={() => navigate('/polymart/admin')}
+                          className="relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                           title="Panel Admin"
                         >
-                          <Shield className="w-[15px] h-[15px]" />
+                          <Shield className="w-3.5 h-3.5" />
                           <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
                         </button>
                       ) : (
-                        <button onClick={() => navigate('/keusahawanan/onboarding')}
-                          className="relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/15 transition-all shrink-0 shadow-sm shadow-emerald-500/5 animate-in fade-in zoom-in duration-200"
+                        <button
+                          onClick={() => navigate('/keusahawanan/onboarding')}
+                          className="relative h-9 px-3.5 rounded-full flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
                           title="Mulai Bisnes"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -332,7 +368,7 @@ export function PolyMartLayout() {
                   /* Pelawat — tunjuk butang Log Masuk */
                   <button
                     onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
-                    className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[11px] font-black text-white transition-all hover:brightness-110"
+                    className="flex items-center gap-1.5 h-9 px-3.5 rounded-full text-xs font-black text-white transition-all hover:brightness-110 active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer"
                     style={{ background: PM_GRADIENT }}>
                     <LogIn className="w-3.5 h-3.5" />
                     <span>Log Masuk</span>
@@ -343,22 +379,27 @@ export function PolyMartLayout() {
 
             {/* Category pills – only on homepage */}
             {isHome && !showSearch && (
-              <div className="tour-polymart-categories flex items-center gap-1.5 pb-3 pt-0.5 overflow-x-auto scrollbar-hide">
-                {CATEGORY_LIST.map(cat => (
-                  <motion.button
-                    key={cat.key}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveCategory(cat.key)}
-                    className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all"
-                    style={activeCategory === cat.key
-                      ? { background: PM_LIGHT, color: PM_ACCENT, border: `1.5px solid ${PM_ACCENT}40` }
-                      : { background: 'transparent', color: 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border)/0.5)' }
-                    }
-                  >
-                    <span className="text-[13px] leading-none">{cat.emoji}</span>
-                    <span>{cat.label}</span>
-                  </motion.button>
-                ))}
+              <div className="tour-polymart-categories flex items-center gap-2 pb-3 pt-1 overflow-x-auto scrollbar-hide">
+                {CATEGORY_LIST.map(cat => {
+                  const Icon = cat.icon;
+                  const isActive = activeCategory === cat.key;
+                  return (
+                    <motion.button
+                      key={cat.key}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveCategory(cat.key)}
+                      className={cn(
+                        'flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer border',
+                        isActive
+                          ? 'bg-amber-500 text-slate-950 border-amber-400/60 shadow-md shadow-amber-500/20 font-black'
+                          : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50'
+                      )}
+                    >
+                      <Icon className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-slate-950' : 'text-muted-foreground')} />
+                      <span>{cat.label}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -407,24 +448,39 @@ export function PolyMartLayout() {
                   <>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Penapis Kategori</p>
                     <div className="flex flex-col gap-2">
-                      {CATEGORY_LIST.map(cat => (
-                        <button
-                          key={cat.key}
-                          onClick={() => {
-                            setActiveCategory(cat.key);
-                            setShowMobileSearch(false);
-                            navigate('/polymart');
-                          }}
-                          className="flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] border border-border/40 transition-all hover:bg-muted/50"
-                          style={activeCategory === cat.key ? { background: PM_LIGHT, color: PM_ACCENT, borderColor: `${PM_ACCENT}40` } : {}}
-                        >
-                          <span className="text-lg">{cat.emoji}</span>
-                          <span className="text-sm font-bold flex-1 text-left">{cat.label}</span>
-                          {activeCategory === cat.key && (
-                            <div className="w-2 h-2 rounded-full" style={{ background: PM_ACCENT }} />
-                          )}
-                        </button>
-                      ))}
+                      {CATEGORY_LIST.map(cat => {
+                        const Icon = cat.icon;
+                        const isActive = activeCategory === cat.key;
+                        return (
+                          <button
+                            key={cat.key}
+                            onClick={() => {
+                              setActiveCategory(cat.key);
+                              setShowMobileSearch(false);
+                              navigate('/polymart');
+                            }}
+                            className={cn(
+                              'flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all cursor-pointer text-left',
+                              isActive
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/40 font-bold'
+                                : 'border-border/40 hover:bg-muted/50 text-foreground'
+                            )}
+                          >
+                            <div className={cn(
+                              'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border',
+                              isActive
+                                ? 'bg-amber-500 text-slate-950 border-amber-400/50'
+                                : 'bg-muted/60 text-muted-foreground border-border/40'
+                            )}>
+                              <Icon className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-semibold flex-1">{cat.label}</span>
+                            {isActive && (
+                              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-xs" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 ) : (
