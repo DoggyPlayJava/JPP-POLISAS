@@ -286,7 +286,7 @@ export function PortalPage() {
 
   return (
     <div className={cn(
-      'min-h-screen font-sans overflow-x-hidden w-full max-w-full transition-colors duration-700 relative flex flex-col',
+      'min-h-screen font-sans overflow-x-hidden w-full max-w-full transition-colors duration-700 relative isolate flex flex-col',
       karnivalActive
         ? 'bg-[#060010] text-white selection:bg-violet-500/20'
         : supsasActive
@@ -379,6 +379,12 @@ export function PortalPage() {
       <CurtainReveal karnivalActive={karnivalActive} supsasActive={supsasActive} />
       {karnivalActive && <KarnivalEffects />}
       {supsasActive && !karnivalActive && <SupsasEffects />}
+
+      {/* Dark Mode Ambient Mesh Aura (OLED Deep Glass) */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden hidden dark:block" aria-hidden="true">
+        <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-emerald-500/[0.035] blur-[130px] rounded-full transform-gpu" />
+        <div className="absolute top-[55%] left-1/4 w-[500px] h-[320px] bg-indigo-500/[0.025] blur-[150px] rounded-full transform-gpu" />
+      </div>
 
       {/* Modern Super App Header */}
       <SuperAppHeader

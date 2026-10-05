@@ -344,6 +344,93 @@ describe('superAppHelpers', () => {
       expect(typeof module.PortalFooter).toBe('function');
     });
   });
+
+  describe('OLED Dark Mode Glass Aura & Glowing Service Tiles (Task 3)', () => {
+    it('verifies CampusServicesGrid renders dark mode glass tiles, glowing squircle icons and neon badges', async () => {
+      const { CampusServicesGrid } = await import('@/components/portal/CampusServicesGrid');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { renderToString } = await import('react-dom/server');
+
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(CampusServicesGrid, {
+            isModuleEnabled: () => true,
+            isSuperAdmin: false,
+            kbStats: { open: 3, resolved: 10 },
+          })
+        )
+      );
+
+      // Deep glass tile container
+      expect(html).toContain('dark:bg-white/[0.04]');
+      expect(html).toContain('dark:hover:bg-white/[0.08]');
+      expect(html).toContain('dark:border-white/[0.08]');
+      expect(html).toContain('dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)]');
+
+      // Squircle icon container
+      expect(html).toContain('dark:bg-white/[0.06]');
+      expect(html).toContain('dark:border-white/10');
+      expect(html).toContain('dark:shadow-inner');
+
+      // All 8 glowing neon-pastel icon classes
+      expect(html).toContain('dark:text-rose-400'); // polysuara
+      expect(html).toContain('dark:text-amber-400'); // polymart
+      expect(html).toContain('dark:text-indigo-400'); // takwim
+      expect(html).toContain('dark:text-emerald-400'); // polymaps
+      expect(html).toContain('dark:text-cyan-400'); // polyrent
+      expect(html).toContain('dark:text-teal-400'); // kebajikan
+      expect(html).toContain('dark:text-purple-400'); // akademik_qr
+      expect(html).toContain('dark:text-blue-400'); // ekpp
+
+      // Glowing badges
+      expect(html).toContain('dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]'); // MERIT
+      expect(html).toContain('dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]'); // KELAB
+      expect(html).toContain('dark:shadow-[0_0_10px_rgba(244,63,94,0.5)]'); // kebajikan count (3)
+    });
+
+    it('verifies EmsEventsFeed renders deep glass cards with WCAG AA compliant labels and glowing badge', async () => {
+      const { EmsEventsFeed } = await import('@/components/portal/EmsEventsFeed');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { renderToString } = await import('react-dom/server');
+
+      const mockEvents = [
+        {
+          id: 'evt-999',
+          title: 'Kejohanan Futsal Mahasiswa',
+          description: 'Pertandingan antara jabatan',
+          category: 'Sukan',
+          event_date: '2026-10-20',
+          location: 'Dewan Jubli Perak',
+          status: 'PUBLISHED',
+        },
+      ];
+
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(EmsEventsFeed, {
+            events: mockEvents,
+          })
+        )
+      );
+
+      // Deep glass card elevation
+      expect(html).toContain('dark:bg-slate-900/60');
+      expect(html).toContain('dark:backdrop-blur-md');
+      expect(html).toContain('dark:border-white/[0.08]');
+      expect(html).toContain('dark:hover:border-emerald-500/40');
+
+      // Glowing TERBUKA badge
+      expect(html).toContain('TERBUKA');
+      expect(html).toContain('dark:shadow-[0_0_8px_rgba(244,63,94,0.4)]');
+
+      // WCAG AA compliant text contrast
+      expect(html).toContain('dark:text-slate-300');
+    });
+  });
 });
 
 

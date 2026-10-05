@@ -39,35 +39,35 @@ const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 const SERVICE_STYLES: Record<string, { squircleClass: string }> = {
   polysuara: {
     squircleClass:
-      'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border-rose-500/25 group-hover:border-rose-500/50 group-hover:bg-rose-500/15',
+      'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/25 group-hover:border-rose-500/50 group-hover:bg-rose-500/15 dark:group-hover:border-rose-400/40 dark:group-hover:bg-rose-500/20',
   },
   polymart: {
     squircleClass:
-      'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/25 group-hover:border-amber-500/50 group-hover:bg-amber-500/15',
+      'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/25 group-hover:border-amber-500/50 group-hover:bg-amber-500/15 dark:group-hover:border-amber-400/40 dark:group-hover:bg-amber-500/20',
   },
   takwim: {
     squircleClass:
-      'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 border-indigo-500/25 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/15',
+      'bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-500/25 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/15 dark:group-hover:border-indigo-400/40 dark:group-hover:bg-indigo-500/20',
   },
   polymaps: {
     squircleClass:
-      'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/25 group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15',
+      'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/25 group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15 dark:group-hover:border-emerald-400/40 dark:group-hover:bg-emerald-500/20',
   },
   polyrent: {
     squircleClass:
-      'bg-sky-500/10 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 border-sky-500/25 group-hover:border-sky-500/50 group-hover:bg-sky-500/15',
+      'bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border-cyan-500/25 group-hover:border-cyan-500/50 group-hover:bg-cyan-500/15 dark:group-hover:border-cyan-400/40 dark:group-hover:bg-cyan-500/20',
   },
   kebajikan: {
     squircleClass:
-      'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 border-teal-500/25 group-hover:border-teal-500/50 group-hover:bg-teal-500/15',
+      'bg-teal-500/10 text-teal-500 dark:text-teal-400 border-teal-500/25 group-hover:border-teal-500/50 group-hover:bg-teal-500/15 dark:group-hover:border-teal-400/40 dark:group-hover:bg-teal-500/20',
   },
   akademik_qr: {
     squircleClass:
-      'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/25 group-hover:border-purple-500/50 group-hover:bg-purple-500/15',
+      'bg-purple-500/10 text-purple-500 dark:text-purple-400 border-purple-500/25 group-hover:border-purple-500/50 group-hover:bg-purple-500/15 dark:group-hover:border-purple-400/40 dark:group-hover:bg-purple-500/20',
   },
   ekpp: {
     squircleClass:
-      'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/25 group-hover:border-blue-500/50 group-hover:bg-blue-500/15',
+      'bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/25 group-hover:border-blue-500/50 group-hover:bg-blue-500/15 dark:group-hover:border-blue-400/40 dark:group-hover:bg-blue-500/20',
   },
 };
 
@@ -146,6 +146,7 @@ export function CampusServicesGrid({
               onClick={() => handleAction(service)}
               className={cn(
                 'flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 p-2 sm:p-3 rounded-2xl sm:rounded-3xl transition-all',
+                'bg-white/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] backdrop-blur-md border border-slate-200/60 dark:border-white/[0.08] hover:border-emerald-500/30 dark:hover:border-emerald-400/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] shadow-sm hover:shadow-md',
                 service.tourClass,
                 !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed hover:scale-100'
               )}
@@ -153,7 +154,7 @@ export function CampusServicesGrid({
             >
               <div
                 className={cn(
-                  'w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center mb-1.5 relative shadow-sm border transition-all duration-200 group-hover:shadow-md',
+                  'w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center mb-1.5 relative shadow-sm border transition-all duration-200 group-hover:shadow-md dark:bg-white/[0.06] dark:border dark:border-white/10 dark:shadow-inner',
                   style.squircleClass
                 )}
               >
@@ -164,10 +165,10 @@ export function CampusServicesGrid({
                     className={cn(
                       'absolute -top-1.5 -right-1.5 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-full shadow-md leading-none border border-white dark:border-slate-900',
                       service.badge === 'MERIT'
-                        ? 'bg-purple-600 text-white'
+                        ? 'bg-purple-600 text-white dark:bg-purple-500 dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]'
                         : service.badge === 'KELAB'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-rose-600 text-white'
+                        ? 'bg-blue-600 text-white dark:bg-blue-500 dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                        : 'bg-rose-600 text-white dark:bg-rose-500 dark:shadow-[0_0_10px_rgba(244,63,94,0.5)]'
                     )}
                   >
                     {service.badge}
@@ -180,7 +181,7 @@ export function CampusServicesGrid({
               </span>
 
               {(service.sublabel || service.description) && (
-                <span className="hidden sm:block text-[9px] text-slate-400 dark:text-slate-500 truncate w-full">
+                <span className="hidden sm:block text-[9px] text-slate-400 dark:text-slate-400/80 truncate w-full">
                   {service.sublabel || service.description}
                 </span>
               )}
