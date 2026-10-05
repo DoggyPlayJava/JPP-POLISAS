@@ -159,7 +159,7 @@ export function getCampusServicesConfig(params: {
       label: 'PolyMart',
       sublabel: 'Pasaran Siswa',
       description: 'Pasaran Siswa',
-      routeOrAction: '/keusahawanan/dashboard',
+      routeOrAction: '/polymart',
       color: 'amber',
     },
     {

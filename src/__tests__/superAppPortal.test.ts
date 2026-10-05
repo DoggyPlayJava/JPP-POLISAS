@@ -156,7 +156,7 @@ describe('superAppHelpers', () => {
       expect(serviceMap.polysuara.routeOrAction).toBe('/polysuara');
       expect(serviceMap.polysuara.sublabel).toBe('Suara Siswa');
 
-      expect(serviceMap.polymart.routeOrAction).toBe('/keusahawanan/dashboard');
+      expect(serviceMap.polymart.routeOrAction).toBe('/polymart');
       expect(serviceMap.polymart.sublabel).toBe('Pasaran Siswa');
 
       expect(serviceMap.takwim.routeOrAction).toBe('/akademik/takwim');
