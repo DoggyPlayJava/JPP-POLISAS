@@ -2978,7 +2978,7 @@ Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti harian 
 | No | ID Servis | Nama Paparan | Sublabel | Tindakan / Laluan | Tour Class | Lencana (*Badge*) | Ikon |
 |---|---|---|---|---|---|---|---|
 | 1 | `polysuara` | PolySuara | Suara Siswa | Route: `/polysuara` | - | - | Megaphone |
-| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/keusahawanan/dashboard` | - | - | UtensilsCrossed |
+| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/polymart` | - | - | UtensilsCrossed |
 | 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim` | `tour-qa-polyservices` | - | CalendarDays |
 | 4 | `polymaps` | PolyMaps | Peta Kampus | Route: `/polymaps` | - | - | Map |
 | 5 | `polyrent` | PolyRent | Sewa Barangan | Route: `/polyrent` | - | - | Package |
@@ -3012,6 +3012,9 @@ Bagi menjamin pengalaman penggunaan tanpa cela pada pelbagai resolusi peranti mu
 3. **Kelegaan Bawah Menyeluruh (*Bottom Navigation Clearance*):**
    - Bekas `<main>` di `PortalPage.tsx` dikonfigurasi dengan kelas penjarakan `pb-36 sm:pb-32` serta pseudo-elemen `flex-1 after:content-[''] after:block after:h-28 after:shrink-0`.
    - Konfigurasi ini menjamin ruang pemisah menegak yang selamat antara bahagian bawah kandungan (Grid Modul Exco) dan bar navigasi terapung mudah alih (`BottomNav`), menghalang kad atau butang tindakan daripada terlindung atau tertekan secara tidak sengaja.
+4. **Estetika "OLED Glass Aura" & Jubin Bersinar (Dark Mode):**
+   - Latar belakang ambient mesh aura (`hidden dark:block -z-10`) dengan kecerunan kabur zamrud dan nila (`bg-emerald-500/[0.035]` dan `bg-indigo-500/[0.025]`).
+   - Jubin servis 8-ikon dan kad suapan menggunakan aras kaca gelap (*deep glass elevation*): `dark:bg-slate-900/60 dark:backdrop-blur-md dark:border-white/[0.08]` dengan warna ikon neon-pastel yang menyerlah dan tidak kusam pada skrin OLED.
 
 ---
 
@@ -3045,10 +3048,14 @@ Bagi menghidupkan ekosistem kampus harian, portal memaparkan dua suapan mendatar
 
 2. **Suapan Pasaran Siswa (`PolyMartFeed.tsx`):**
    - Mengambil produk usahawan siswa daripada jadual `business_products` yang ditandakan `publish_to_polymart = true` dan `is_available = true`.
+   - **Cip Penapis Dwi-Mod:**
+     - **🔥 Terhangat:** Mengisih produk paling popular dan promosi daripada perniagaan berstatus `ACTIVE`.
+     - **✨ Terkini:** Mengisih produk mengikut masa penambahan terbaharu (`created_at DESC`).
+   - **Navigasi Terus Pasaran:**
+     - Klik kad produk membuka halaman katalog produk khusus **`/polymart/produk/:id`**.
+     - Butang *"Buka Mart"* membuka pasaran utama **`/polymart`**.
    - Integriti perniagaan: Produk daripada perniagaan tidak aktif ditapis keluar secara automatik (`biz.status === 'ACTIVE'`).
    - Memaparkan gambar produk, tag `Pesan`, nama produk, serta harga terformat RM melalui `formatProductPrice(displayPrice)` termasuk sokongan harga diskaun `sale_price`.
-   - Klik kad mengarah terus ke modul perniagaan `/keusahawanan/dashboard`.
-   - Skeleton loading dan empty state mesra pengguna.
 
 ---
 
@@ -3068,5 +3075,43 @@ Bagi menghidupkan ekosistem kampus harian, portal memaparkan dua suapan mendatar
 3. **Pengoptimuman Prestasi & Ketahanan Skalabiliti:**
    - Semua panggilan rangkaian portal menggunakan `Promise.all` serentak dengan `AbortController` (timeout 5 saat) bagi menjamin *First Contentful Paint (FCP)* di bawah 1.0 saat ketika 1,500 pengguna melayari serentak.
    - Notifikasi unread count dihubungkan ke selector atomik Zustand `useNotificationStore(s => s.unreadCount)` tanpa mencetuskan render semula komponen lain yang tidak berkaitan.
+
+---
+
+### 29.8 Seni Bina Hab Profil & Tetapan Super App (`/tetapan`)
+
+Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk desktop lama kepada **Hab Profil & Tetapan Super App** bertaraf mudah alih (ala iOS / Grab):
+
+1. **Kad Identiti Pelajar (Hero Profile Card):**
+   - Ditempatkan di bahagian teratas dengan gaya kaca mendalam (`bg-card/70 dark:bg-slate-900/70 backdrop-blur-xl border border-border/60 dark:border-white/10 shadow-lg rounded-[2rem] p-5 sm:p-7`).
+   - Avatar besar bersama pemicu butang kamera bagi muat naik gambar profil (dengan perlindungan had 5MB dan kompresi automatik).
+   - Nama Penuh & Nombor Matrik rasmi bersama lencana peranan (`PENTADBIR UTAMA`, `MAJLIS JPP`, `SISWA POLISAS`).
+   - **Jalur Ringkasan Status Pintar (*Live Status Strip*):**
+     - 🎓 **Semester:** Bilangan semester aktif semasa (contoh: *Semester 4*).
+     - ⭐ **Mata Merit:** Baki mata merit pelajar dari modul akademik.
+     - 🏠 **Status Kediaman:** *Asrama Kamsis* atau *Rumah Sewa (Luar)*.
+
+2. **Bar Navigasi Kapsul Mendatar (Segmented Tab Bar):**
+   - Menggantikan *select dropdown* telefon lama dan sidebar menegak dengan bar tab kapsul mudah leret (`flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x`):
+     - `profil`: Maklumat peribadi, nombor telefon, e-mel, dan seksyen permohonan pindaan matrik/semester (`profile_edit_requests`).
+     - `kediaman`: Pengisytiharan status kediaman KLK, pemilihan kawasan, dan perincian alamat sewa.
+     - `tema`: Pemilih tema visual (☀️ Cerah, 🌙 Gelap, 💻 Ikut Sistem) dengan kad pratonton interaktif berbingkai hijau zamrud aktif.
+     - `notifikasi`: Suis amaran pintar (pesanan PolyMart, tiket E-Kebajikan, acara EMS, hebahan JPP).
+     - `keselamatan`: Borang penukaran kata laluan, penunjuk sesi web aktif, dan butang Log Keluar merah berprestij.
+     - `bantuan`: Butang mulakan semula panduan sistem (Joyride tour), hubungan pantas Majlis JPP, dan borang maklum balas.
+   - *Tab 'Langganan / Billing' Nexus lapuk telah dimansuhkan sepenuhnya.*
+
+3. **Keserasian Parameter URL Sedia Ada (*Backward Compatibility*):**
+   - Menyokong pemetaan automatik:
+     - `?tab=general` → `profil`
+     - `?tab=notifications` → `notifikasi`
+     - `?tab=security` → `keselamatan`
+     - `?tab=help` → `bantuan`
+   - Memastikan pautan luar daripada e-mel, bookmark, dan `PortalSidebar` kekal berfungsi 100%.
+
+4. **Ergonomik & Prestasi Peranti Rendah:**
+   - Kelegaan bawah `pb-36` dan `after:h-28` untuk menghalang halangan `BottomNav`.
+   - Sasaran sentuhan minimum 44px (`min-h-[44px]`).
+   - Mengelakkan operasi gelung N+1 dan memelihara operasi berasaskan perkakasan GPU `transform-gpu`.
 
 
