@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert, Smile } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -125,6 +125,8 @@ export function PolySuaraPage() {
   const [commentSortBy, setCommentSortBy] = useState<'LATEST' | 'TOP'>('LATEST');
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
+  const [commentStickerId, setCommentStickerId] = useState<string | null>(null);
+  const [commentStickerPickerOpen, setCommentStickerPickerOpen] = useState(false);
   
   // Comments votes tracking
   const [commentUpvotes, setCommentUpvotes] = useState<Set<string>>(new Set());
@@ -754,8 +756,9 @@ export function PolySuaraPage() {
 
   const handleAddComment = async (e: React.FormEvent, parentId: string | null = null) => {
     e.preventDefault();
-    const text = parentId ? replyCommentText.trim() : newCommentText.trim();
-    if (!text || !profile || !activeConfessionForComments) return;
+    const commentText = parentId ? replyCommentText : newCommentText;
+    const finalCommentContent = commentStickerId ? embedStickerToken(commentText.trim(), commentStickerId) : commentText.trim();
+    if (!finalCommentContent || !profile || !activeConfessionForComments) return;
 
     setSubmittingComment(true);
     try {
@@ -770,7 +773,7 @@ export function PolySuaraPage() {
           confession_id: activeConfessionForComments.id,
           user_id: profile.id,
           parent_id: parentId,
-          content: text,
+          content: finalCommentContent,
           is_sensitive: parentId ? false : isSensitiveComment,
           image_url: commentImageUrl
         })
@@ -788,6 +791,7 @@ export function PolySuaraPage() {
         setIsSensitiveComment(false);
         setCommentFile(null);
         setCommentImagePreview(null);
+        setCommentStickerId(null);
       }
       
       setComments(prev => [...prev, data]);
@@ -1708,24 +1712,24 @@ export function PolySuaraPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[151] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-6"
+              className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[151] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-6 text-slate-900 dark:text-white"
             >
               {/* Drawer drag indicator/Header */}
-              <div className="flex flex-col items-center py-4 border-b border-slate-800/50 shrink-0">
-                <div className="w-12 h-1 bg-slate-700 rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
+              <div className="flex flex-col items-center py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
                 <div className="flex items-center justify-between w-full px-6">
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-rose-500" />
                     Ulasan Pelajar
                   </h3>
                   <div className="flex items-center gap-2">
                     {/* Sort Toggle */}
-                    <div className="flex bg-slate-950 rounded-lg p-0.5 border border-slate-800/80">
+                    <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800/80">
                       <button
                         onClick={() => setCommentSortBy('LATEST')}
                         className={cn(
                           "px-2.5 py-1 rounded-md text-[10px] font-bold transition-all",
-                          commentSortBy === 'LATEST' ? "bg-slate-800 text-white" : "text-slate-500 hover:text-white"
+                          commentSortBy === 'LATEST' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                         )}
                       >
                         Terkini
@@ -1734,7 +1738,7 @@ export function PolySuaraPage() {
                         onClick={() => setCommentSortBy('TOP')}
                         className={cn(
                           "px-2.5 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1",
-                          commentSortBy === 'TOP' ? "bg-rose-500/20 text-rose-400" : "text-slate-500 hover:text-white"
+                          commentSortBy === 'TOP' ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                         )}
                       >
                         Terbaik
@@ -1743,35 +1747,35 @@ export function PolySuaraPage() {
 
                     <button 
                       onClick={() => setCommentDrawerOpen(false)}
-                      className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
+                      className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
                     >
-                      X
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Confession Preview */}
-              <div className="bg-slate-950/40 p-4 border-b border-slate-800/30 shrink-0 text-xs px-6">
+              <div className="bg-slate-50 dark:bg-slate-950/60 p-4 border-b border-slate-200 dark:border-slate-800 shrink-0 text-xs px-6 text-slate-700 dark:text-slate-300">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Ghost className="w-3.5 h-3.5 text-rose-400" />
-                  <span className="font-bold text-slate-300">{activeConfessionForComments.codename || 'Pelajar Anon'}</span>
-                  <span className="bg-slate-800 text-[8px] font-black uppercase px-2 py-0.5 rounded text-slate-400">{activeConfessionForComments.category}</span>
+                  <Ghost className="w-3.5 h-3.5 text-rose-500" />
+                  <span className="font-bold text-slate-800 dark:text-slate-300">{activeConfessionForComments.codename || 'Pelajar Anon'}</span>
+                  <span className="bg-slate-200 dark:bg-slate-800 text-[8px] font-black uppercase px-2 py-0.5 rounded text-slate-700 dark:text-slate-400">{activeConfessionForComments.category}</span>
                 </div>
-                <p className="text-slate-400 italic line-clamp-2">"{activeConfessionForComments.content}"</p>
+                <p className="text-slate-700 dark:text-slate-300 italic line-clamp-2">"{activeConfessionForComments.content}"</p>
               </div>
 
               {/* Comments Scrollable Feed */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {commentsLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-2">
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
                     <p className="text-xs font-bold uppercase tracking-widest">Membaca maklum balas...</p>
                   </div>
                 ) : comments.length === 0 ? (
-                  <div className="text-center py-12 text-slate-600">
-                    <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm font-bold">Tiada Ulasan Lagi</p>
+                  <div className="text-center py-12 text-slate-400 dark:text-slate-600">
+                    <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-400">Tiada Ulasan Lagi</p>
                     <p className="text-xs text-slate-500 mt-0.5">Jadilah yang pertama menulis pendapat anda.</p>
                   </div>
                 ) : (
@@ -1792,19 +1796,20 @@ export function PolySuaraPage() {
                         const isCommDownvoted = commentDownvotes.has(comment.id);
                         const isOP = comment.codename.includes('[Penulis]');
                         const displayName = isOP ? comment.codename.replace(' [Penulis]', '') : comment.codename;
+                        const { stickerId: commStickerId, cleanContent: cleanCommContent } = extractStickerToken(comment.content);
 
                         return (
                           <div key={comment.id} className="space-y-3">
                             {/* Tier-1 Comment Card */}
                             <div className={cn(
-                              "bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 transition-all hover:border-slate-800",
-                              comment.is_jpp_official && "border-teal-500/30 bg-teal-950/10"
+                              "bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-4 transition-all hover:border-slate-300 dark:hover:border-slate-800",
+                              comment.is_jpp_official && "border-teal-500/40 bg-teal-50 dark:bg-teal-950/10"
                             )}>
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                   <span className={cn(
-                                    "text-xs font-bold text-slate-200 flex items-center gap-1",
-                                    comment.is_jpp_official && "text-teal-400"
+                                    "text-xs font-bold text-slate-900 dark:text-slate-200 flex items-center gap-1",
+                                    comment.is_jpp_official && "text-teal-600 dark:text-teal-400"
                                   )}>
                                     {comment.is_jpp_official ? <Shield className="w-3.5 h-3.5" /> : null}
                                     {displayName}
@@ -1816,215 +1821,235 @@ export function PolySuaraPage() {
                                     </span>
                                   )}
                                   {comment.is_jpp_official && (
-                                    <span className="bg-teal-500/20 text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
+                                    <span className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
                                   )}
                                 </div>
-                                <span className="text-[9px] text-slate-500">
-                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
-                              </span>
+                                <span className="text-[9px] text-slate-500 dark:text-slate-400">
+                                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
+                                </span>
+                              </div>
+
+                              {commStickerId && (
+                                <PolySuaraStickerBadge stickerId={commStickerId} size="sm" className="mb-2" />
+                              )}
+
+                              {/* Comment Content (With Sensitive Content Blur) */}
+                              {comment.is_deleted_by_moderator ? (
+                                <div className="bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/40 p-3.5 rounded-xl flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 italic select-none">
+                                  <ShieldAlert className="w-4 h-4 text-slate-400 dark:text-slate-600 shrink-0" />
+                                  {cleanCommContent}
+                                </div>
+                              ) : comment.is_sensitive ? (
+                                <SensitiveCommentContent content={cleanCommContent} />
+                              ) : (
+                                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-words">{cleanCommContent}</p>
+                              )}
+
+                              {comment.image_url && !comment.is_deleted_by_moderator && (
+                                <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40 max-w-xs">
+                                  <img 
+                                    src={comment.image_url} 
+                                    alt="Bukti Lampiran" 
+                                    className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
+                                    onClick={() => window.open(comment.image_url, '_blank')} 
+                                  />
+                                </div>
+                              )}
+
+                              {/* Comment Action Buttons */}
+                              {!comment.is_deleted_by_moderator && (
+                                <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800/40">
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => handleCommentVote(comment.id, 'UPVOTE')}
+                                      className={cn(
+                                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
+                                        isCommUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500"
+                                      )}
+                                    >
+                                      <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
+                                      {comment.upvotes || 0}
+                                    </button>
+                                    <button
+                                      onClick={() => handleCommentVote(comment.id, 'DOWNVOTE')}
+                                      className={cn(
+                                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
+                                        isCommDownvoted ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-500"
+                                      )}
+                                    >
+                                      <ThumbsDown className={cn("w-3.5 h-3.5", isCommDownvoted && "fill-indigo-500")} />
+                                      {comment.downvotes || 0}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setReplyingToCommentId(comment.id);
+                                        setReplyCommentText('');
+                                      }}
+                                      className="text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1"
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" /> Balas
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleEscalateComment(comment)}
+                                      disabled={escalatingCommentId === comment.id}
+                                      className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-full transition-all flex items-center gap-1 border border-amber-500/20 shrink-0"
+                                      title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
+                                    >
+                                      {escalatingCommentId === comment.id ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <ShieldAlert className="w-3 h-3" />
+                                      )}
+                                      Bantuan
+                                    </button>
+                                    <button
+                                      onClick={() => handleReportComment(comment.id)}
+                                      className="text-slate-400 hover:text-amber-500 transition-colors p-1"
+                                      title="Lapor ulasan"
+                                    >
+                                      <AlertTriangle className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
-                            {/* Comment Content (With Sensitive Content Blur) */}
-                            {comment.is_deleted_by_moderator ? (
-                              <div className="bg-slate-950/60 border border-slate-800/40 p-3.5 rounded-xl flex items-center gap-2 text-xs text-slate-500 italic select-none">
-                                <ShieldAlert className="w-4 h-4 text-slate-600 shrink-0" />
-                                {comment.content}
-                              </div>
-                            ) : comment.is_sensitive ? (
-                              <SensitiveCommentContent content={comment.content} />
-                            ) : (
-                              <p className="text-sm text-slate-300 leading-relaxed break-words">{comment.content}</p>
-                            )}
-
-                            {comment.image_url && !comment.is_deleted_by_moderator && (
-                              <div className="mt-3 rounded-xl overflow-hidden border border-slate-800 bg-black/40 max-w-xs">
-                                <img 
-                                  src={comment.image_url} 
-                                  alt="Bukti Lampiran" 
-                                  className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
-                                  onClick={() => window.open(comment.image_url, '_blank')} 
+                            {/* Reply Input Form (Tier-1 Specific) */}
+                            {replyingToCommentId === comment.id && (
+                              <form onSubmit={(e) => handleAddComment(e, comment.id)} className="ml-6 p-3 bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/40 rounded-xl flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <input
+                                  type="text"
+                                  placeholder={`Balas kepada ${comment.codename}...`}
+                                  value={replyCommentText}
+                                  onChange={(e) => setReplyCommentText(e.target.value)}
+                                  className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50"
+                                  maxLength={300}
+                                  required
                                 />
-                              </div>
+                                <button
+                                  type="submit"
+                                  disabled={!replyCommentText.trim() || submittingComment}
+                                  className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shrink-0"
+                                >
+                                  {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                  Balas
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setReplyingToCommentId(null)}
+                                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-1.5 text-xs font-bold transition-all shrink-0"
+                                >
+                                  Batal
+                                </button>
+                              </form>
                             )}
 
-                            {/* Comment Action Buttons */}
-                            {!comment.is_deleted_by_moderator && (
-                              <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-800/40">
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => handleCommentVote(comment.id, 'UPVOTE')}
-                                    className={cn(
-                                      "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
-                                      isCommUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500 hover:text-rose-400"
-                                    )}
-                                  >
-                                    <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
-                                    {comment.upvotes || 0}
-                                  </button>
-                                  <button
-                                    onClick={() => handleCommentVote(comment.id, 'DOWNVOTE')}
-                                    className={cn(
-                                      "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
-                                      isCommDownvoted ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-800 text-slate-500 hover:text-indigo-400"
-                                    )}
-                                  >
-                                    <ThumbsDown className={cn("w-3.5 h-3.5", isCommDownvoted && "fill-indigo-500")} />
-                                    {comment.downvotes || 0}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setReplyingToCommentId(comment.id);
-                                      setReplyCommentText('');
-                                    }}
-                                    className="text-[10px] font-bold text-slate-500 hover:text-white px-2.5 py-1 rounded-full hover:bg-slate-800 transition-colors flex items-center gap-1"
-                                  >
-                                    <MessageSquare className="w-3.5 h-3.5" /> Balas
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => handleEscalateComment(comment)}
-                                    disabled={escalatingCommentId === comment.id}
-                                    className="text-[9px] font-black uppercase text-amber-500/70 hover:text-amber-400 bg-amber-500/5 hover:bg-amber-500/10 px-2.5 py-1 rounded-full transition-all flex items-center gap-1 border border-amber-500/10 shrink-0"
-                                    title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
-                                  >
-                                    {escalatingCommentId === comment.id ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <ShieldAlert className="w-3 h-3" />
-                                    )}
-                                    Bantuan
-                                  </button>
-                                  <button
-                                    onClick={() => handleReportComment(comment.id)}
-                                    className="text-slate-600 hover:text-amber-500 transition-colors p-1"
-                                    title="Lapor ulasan"
-                                  >
-                                    <AlertTriangle className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
+                            {/* Tier-2 Nested Replies Section */}
+                            {replies.length > 0 && (
+                              <div className="pl-6 space-y-2.5 relative border-l border-slate-200 dark:border-slate-800 ml-5">
+                                {replies.map(reply => {
+                                  const isReplyUp = commentUpvotes.has(reply.id);
+                                  const isReplyDown = commentDownvotes.has(reply.id);
+                                  const isReplyOP = reply.codename.includes('[Penulis]');
+                                  const displayReplyName = isReplyOP ? reply.codename.replace(' [Penulis]', '') : reply.codename;
+                                  const { stickerId: replyStickerId, cleanContent: cleanReplyContent } = extractStickerToken(reply.content);
+
+                                  return (
+                                    <div key={reply.id} className={cn(
+                                      "bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-4 transition-all hover:border-slate-300 dark:hover:border-slate-800 relative",
+                                      reply.is_jpp_official && "border-teal-500/30 bg-teal-50 dark:bg-teal-950/5"
+                                    )}>
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className={cn(
+                                            "text-xs font-bold text-slate-900 dark:text-slate-300 flex items-center gap-1",
+                                            reply.is_jpp_official && "text-teal-600 dark:text-teal-400"
+                                          )}>
+                                            {reply.is_jpp_official && <Shield className="w-3.5 h-3.5" />}
+                                            {displayReplyName}
+                                          </span>
+                                          {isReplyOP && (
+                                            <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
+                                              <UserCircle2 className="w-2.5 h-2.5" />
+                                              OP
+                                            </span>
+                                          )}
+                                          {reply.is_jpp_official && (
+                                            <span className="bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
+                                          )}
+                                        </div>
+                                        <span className="text-[9px] text-slate-500 dark:text-slate-400">
+                                          {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: ms })}
+                                        </span>
+                                      </div>
+
+                                      {replyStickerId && (
+                                        <PolySuaraStickerBadge stickerId={replyStickerId} size="sm" className="mb-2" />
+                                      )}
+
+                                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 break-words leading-relaxed">{cleanReplyContent}</p>
+                                      
+                                      {/* Action Buttons for Tier 2 */}
+                                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60">
+                                        <div className="flex items-center gap-1.5">
+                                          <button
+                                            onClick={() => handleCommentVote(reply.id, 'UPVOTE')}
+                                            className={cn(
+                                              "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
+                                              isReplyUp ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                            )}
+                                          >
+                                            <Heart className="w-3 h-3" />
+                                            {reply.upvotes || 0}
+                                          </button>
+                                          <button
+                                            onClick={() => handleCommentVote(reply.id, 'DOWNVOTE')}
+                                            className={cn(
+                                              "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
+                                              isReplyDown ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                            )}
+                                          >
+                                            <ThumbsDown className="w-3 h-3" />
+                                            {reply.downvotes || 0}
+                                          </button>
+                                        </div>
+                                        <button
+                                          onClick={() => handleReportComment(reply.id)}
+                                          className="text-slate-400 hover:text-amber-500 transition-colors p-1"
+                                          title="Lapor ulasan"
+                                        >
+                                          <AlertTriangle className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
-
-                          {/* Reply Input Form (Tier-1 Specific) */}
-                          {replyingToCommentId === comment.id && (
-                            <form onSubmit={(e) => handleAddComment(e, comment.id)} className="ml-6 p-3 bg-slate-950/60 border border-slate-800/40 rounded-xl flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                              <input
-                                type="text"
-                                placeholder={`Balas kepada ${comment.codename}...`}
-                                value={replyCommentText}
-                                onChange={(e) => setReplyCommentText(e.target.value)}
-                                className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50"
-                                maxLength={300}
-                                required
-                              />
-                              <button
-                                type="submit"
-                                disabled={!replyCommentText.trim() || submittingComment}
-                                className="bg-rose-500 disabled:bg-slate-800 text-white disabled:text-slate-500 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shrink-0"
-                              >
-                                {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                                Balas
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setReplyingToCommentId(null)}
-                                className="text-slate-400 hover:text-white px-2 py-1.5 text-xs font-bold transition-all shrink-0"
-                              >
-                                Batal
-                              </button>
-                            </form>
-                          )}
-
-                          {/* Tier-2 Nested Replies Section */}
-                          {replies.length > 0 && (
-                            <div className="pl-6 space-y-2.5 relative border-l border-slate-800 ml-5">
-                              {replies.map(reply => {
-                                const isReplyUp = commentUpvotes.has(reply.id);
-                                const isReplyDown = commentDownvotes.has(reply.id);
-                                const isReplyOP = reply.codename.includes('[Penulis]');
-                                const displayReplyName = isReplyOP ? reply.codename.replace(' [Penulis]', '') : reply.codename;
-
-                                return (
-                                  <div key={reply.id} className={cn(
-                                    "bg-slate-950/20 border border-slate-900 rounded-2xl p-3.5 relative",
-                                    reply.is_jpp_official && "border-teal-500/20 bg-teal-950/5"
-                                  )}>
-                                    <div className="flex items-center justify-between mb-1.5">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className={cn(
-                                          "text-xs font-bold text-slate-300 flex items-center gap-1",
-                                          reply.is_jpp_official && "text-teal-400"
-                                        )}>
-                                          {reply.is_jpp_official && <Shield className="w-3.5 h-3.5" />}
-                                          {displayReplyName}
-                                        </span>
-                                        {isReplyOP && (
-                                          <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
-                                            <UserCircle2 className="w-2.5 h-2.5" />
-                                            OP
-                                          </span>
-                                        )}
-                                        {reply.is_jpp_official && (
-                                          <span className="bg-teal-500/20 text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
-                                        )}
-                                      </div>
-                                      <span className="text-[9px] text-slate-500">
-                                        {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: ms })}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs text-slate-300 break-words leading-relaxed">{reply.content}</p>
-                                    
-                                    {/* Action Buttons for Tier 2 */}
-                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-900/60">
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => handleCommentVote(reply.id, 'UPVOTE')}
-                                          className={cn(
-                                            "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
-                                            isReplyUp ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500"
-                                          )}
-                                        >
-                                          <Heart className="w-3 h-3" />
-                                          {reply.upvotes || 0}
-                                        </button>
-                                        <button
-                                          onClick={() => handleCommentVote(reply.id, 'DOWNVOTE')}
-                                          className={cn(
-                                            "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
-                                            isReplyDown ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-800 text-slate-500"
-                                          )}
-                                        >
-                                          <ThumbsDown className="w-3 h-3" />
-                                          {reply.downvotes || 0}
-                                        </button>
-                                      </div>
-                                      <button
-                                        onClick={() => handleReportComment(reply.id)}
-                                        className="text-slate-600 hover:text-amber-500 transition-colors p-1"
-                                        title="Lapor ulasan"
-                                      >
-                                        <AlertTriangle className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 )}
               </div>
 
               {/* Comments Input Form Footer */}
-              <div className="p-4 border-t border-slate-800/50 bg-slate-900 shrink-0 px-6">
+              <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 px-6">
                 <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-3">
+                  {/* Sticker Preview */}
+                  {commentStickerId && (
+                    <PolySuaraStickerBadge
+                      stickerId={commentStickerId}
+                      size="sm"
+                      onRemove={() => setCommentStickerId(null)}
+                      className="mb-2"
+                    />
+                  )}
+
                   {commentImagePreview && (
-                    <div className="relative mb-2 w-20 h-20 rounded-lg overflow-hidden border border-slate-800 group animate-in fade-in zoom-in duration-200">
+                    <div className="relative mb-2 w-20 h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 group animate-in fade-in zoom-in duration-200">
                       <img src={commentImagePreview} alt="Pratonton" className="w-full h-full object-cover" />
                       <button 
                         type="button"
@@ -2042,21 +2067,35 @@ export function PolySuaraPage() {
                       placeholder="Tulis ulasan sulit anda..."
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/10 transition-all"
+                      className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/10 transition-all"
                       maxLength={300}
-                      required
                     />
+
+                    {/* Pelekat Sticker Button */}
+                    <button
+                      type="button"
+                      onClick={() => setCommentStickerPickerOpen(true)}
+                      className={cn(
+                        "p-2 rounded-xl transition-all flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]",
+                        commentStickerId
+                          ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                          : "text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
+                      )}
+                      title="Pelekat Kampus"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
                     
                     {/* Camera/Image Selector Button */}
-                    <label className="cursor-pointer bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0">
+                    <label className="cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]">
                       <ImageIcon className="w-4 h-4" />
                       <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
                     </label>
 
                     <button
                       type="submit"
-                      disabled={!newCommentText.trim() || submittingComment}
-                      className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-800 text-white disabled:text-slate-500 p-3.5 rounded-xl font-bold transition-all shrink-0 flex items-center justify-center"
+                      disabled={(!newCommentText.trim() && !commentStickerId) || submittingComment}
+                      className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 p-3.5 rounded-xl font-bold transition-all shrink-0 flex items-center justify-center min-w-[40px] min-h-[40px]"
                     >
                       {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
@@ -2069,18 +2108,26 @@ export function PolySuaraPage() {
                         type="checkbox"
                         checked={isSensitiveComment}
                         onChange={(e) => setIsSensitiveComment(e.target.checked)}
-                        className="rounded border-slate-800 bg-slate-950 text-rose-500 focus:ring-rose-500/30"
+                        className="rounded border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 text-rose-500 focus:ring-rose-500/30"
                       />
-                      <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-wider flex items-center gap-1">
+                      <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors uppercase tracking-wider flex items-center gap-1">
                         <EyeOff className="w-3.5 h-3.5" />
                         Tanda sebagai Sensitif (Blur)
                       </span>
                     </label>
-                    <span className="text-[10px] text-slate-500 font-medium">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                       {300 - newCommentText.length} baki
                     </span>
                   </div>
                 </form>
+
+                {/* Comment Sticker Picker Modal */}
+                <PolySuaraStickerPicker
+                  isOpen={commentStickerPickerOpen}
+                  onClose={() => setCommentStickerPickerOpen(false)}
+                  onSelectSticker={(id) => setCommentStickerId(id)}
+                  selectedStickerId={commentStickerId}
+                />
               </div>
             </motion.div>
           </>
@@ -2097,16 +2144,16 @@ function SensitiveCommentContent({ content }: { content: string }) {
   const [revealed, setRevealed] = React.useState(false);
   
   if (revealed) {
-    return <p className="text-sm text-slate-300 leading-relaxed break-words animate-in fade-in duration-300">{content}</p>;
+    return <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-words animate-in fade-in duration-300">{content}</p>;
   }
 
   return (
     <div 
       onClick={() => setRevealed(true)}
-      className="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl cursor-pointer hover:bg-slate-950 transition-colors flex items-center gap-2 group"
+      className="bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-950 transition-colors flex items-center gap-2 group"
     >
       <EyeOff className="w-4 h-4 text-rose-500/70 shrink-0 group-hover:scale-105 transition-transform" />
-      <span className="text-xs font-bold text-slate-500 group-hover:text-slate-300 transition-colors select-none">
+      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors select-none">
         Ulasan ini mengandungi kandungan sensitif. Klik untuk baca.
       </span>
     </div>
