@@ -29,6 +29,126 @@ const FEED_CATEGORIES = ['AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
 const MAX_POLL_OPTIONS = 4;
 const FEED_PAGE_SIZE = 20;
 
+export interface ConfessionVoteItem {
+  id: string;
+  upvotes: number;
+  downvotes: number;
+}
+
+export interface ConfessionVoteState {
+  confessions: ConfessionVoteItem[];
+  confessionReactions: Record<string, Array<{ reaction_type: string; user_id?: string }>>;
+  userDownvotes: Set<string>;
+}
+
+export function syncReactionToggleState(
+  prevState: ConfessionVoteState,
+  confessionId: string,
+  reactionType: string,
+  userId: string
+): ConfessionVoteState {
+  const currentList = prevState.confessionReactions[confessionId] || [];
+  const existingReaction = currentList.find(r => r.user_id === userId);
+  const isSameReaction = existingReaction?.reaction_type === reactionType;
+  const wasDownvoted = prevState.userDownvotes.has(confessionId);
+
+  // 1. Next userDownvotes: cancel downvote if active
+  const nextUserDownvotes = new Set(prevState.userDownvotes);
+  if (wasDownvoted) {
+    nextUserDownvotes.delete(confessionId);
+  }
+
+  // 2. Next reactions: remove user reaction if same, or update to new reactionType
+  const listWithoutUser = currentList.filter(r => r.user_id !== userId);
+  const nextReactions = isSameReaction
+    ? listWithoutUser
+    : [...listWithoutUser, { reaction_type: reactionType, user_id: userId }];
+
+  // 3. Next confessions: adjust upvotes and downvotes
+  const nextConfessions = prevState.confessions.map(c => {
+    if (c.id !== confessionId) return c;
+    let ups = c.upvotes || 0;
+    let downs = c.downvotes || 0;
+
+    if (wasDownvoted) {
+      downs = Math.max(downs - 1, 0);
+    }
+
+    if (isSameReaction) {
+      // Un-liking / removing reaction: decrement upvotes
+      ups = Math.max(ups - 1, 0);
+    } else if (!existingReaction) {
+      // New reaction/like: increment upvotes
+      ups = ups + 1;
+    }
+
+    return { ...c, upvotes: ups, downvotes: downs };
+  });
+
+  return {
+    confessions: nextConfessions,
+    confessionReactions: {
+      ...prevState.confessionReactions,
+      [confessionId]: nextReactions,
+    },
+    userDownvotes: nextUserDownvotes,
+  };
+}
+
+export function syncDownvoteToggleState(
+  prevState: ConfessionVoteState,
+  confessionId: string,
+  userId: string
+): ConfessionVoteState {
+  const currentReactions = prevState.confessionReactions[confessionId] || [];
+  const existingReaction = currentReactions.find(r => r.user_id === userId);
+  const isCurrentlyDownvoted = prevState.userDownvotes.has(confessionId);
+
+  // 1. Next userDownvotes
+  const nextUserDownvotes = new Set(prevState.userDownvotes);
+  if (isCurrentlyDownvoted) {
+    nextUserDownvotes.delete(confessionId);
+  } else {
+    nextUserDownvotes.add(confessionId);
+  }
+
+  // 2. Next reactions: cancel user reactions if downvoting
+  let nextReactions = currentReactions;
+  if (!isCurrentlyDownvoted && existingReaction) {
+    nextReactions = currentReactions.filter(r => r.user_id !== userId);
+  }
+
+  // 3. Next confessions: adjust downvotes and upvotes
+  const nextConfessions = prevState.confessions.map(c => {
+    if (c.id !== confessionId) return c;
+    let ups = c.upvotes || 0;
+    let downs = c.downvotes || 0;
+
+    if (isCurrentlyDownvoted) {
+      // Un-downvoting: decrement downvotes
+      downs = Math.max(downs - 1, 0);
+    } else {
+      // Downvoting: increment downvotes
+      downs = downs + 1;
+      // Dislike cancels Like: decrement upvotes if user had active reaction
+      if (existingReaction) {
+        ups = Math.max(ups - 1, 0);
+      }
+    }
+
+    return { ...c, upvotes: ups, downvotes: downs };
+  });
+
+  return {
+    confessions: nextConfessions,
+    confessionReactions: {
+      ...prevState.confessionReactions,
+      [confessionId]: nextReactions,
+    },
+    userDownvotes: nextUserDownvotes,
+  };
+}
+
 export function PolySuaraPage() {
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
@@ -399,20 +519,24 @@ export function PolySuaraPage() {
     }
 
     const currentList = confessionReactions[confessionId] || [];
-    const hasReacted = currentList.some(
-      (r: any) => r.reaction_type === reactionType && r.user_id === profile.id
-    );
+    const existingReaction = currentList.find((r: any) => r.user_id === profile.id);
+    const isSameReaction = existingReaction?.reaction_type === reactionType;
+    const wasDownvoted = userDownvotes.has(confessionId);
 
-    // Optimistically updates confessionReactions[confessionId]
+    // 1. Cancel downvote if active (mutual exclusivity)
+    if (wasDownvoted) {
+      setUserDownvotes(prev => {
+        const next = new Set(prev);
+        next.delete(confessionId);
+        return next;
+      });
+    }
+
+    // 2. Optimistically update confessionReactions
     setConfessionReactions(prev => {
-      const list = prev[confessionId] || [];
-      if (hasReacted) {
-        return {
-          ...prev,
-          [confessionId]: list.filter(
-            (r: any) => !(r.reaction_type === reactionType && r.user_id === profile.id)
-          )
-        };
+      const list = (prev[confessionId] || []).filter((r: any) => r.user_id !== profile.id);
+      if (isSameReaction) {
+        return { ...prev, [confessionId]: list };
       } else {
         return {
           ...prev,
@@ -421,23 +545,65 @@ export function PolySuaraPage() {
       }
     });
 
-    // Also increments confession.upvotes optimistically if user is adding reaction
-    if (!hasReacted) {
-      setConfessions(prev =>
-        prev.map(c => (c.id === confessionId ? { ...c, upvotes: (c.upvotes || 0) + 1 } : c))
-      );
-    }
+    // Sync legacy userUpvotes for backward compatibility
+    setUserUpvotes(prev => {
+      const next = new Set(prev);
+      if (isSameReaction) {
+        next.delete(confessionId);
+      } else {
+        next.add(confessionId);
+      }
+      return next;
+    });
 
+    // 3. Optimistically update confession upvotes & downvotes
+    setConfessions(prev =>
+      prev.map(c => {
+        if (c.id !== confessionId) return c;
+        let ups = c.upvotes || 0;
+        let downs = c.downvotes || 0;
+
+        // Like cancels downvote
+        if (wasDownvoted) {
+          downs = Math.max(downs - 1, 0);
+        }
+
+        if (isSameReaction) {
+          // Un-react / un-like: decrement upvotes
+          ups = Math.max(ups - 1, 0);
+        } else if (!existingReaction) {
+          // New reaction/like: increment upvotes
+          ups = ups + 1;
+        }
+
+        return { ...c, upvotes: ups, downvotes: downs };
+      })
+    );
+
+    // 4. Database synchronization
     try {
-      if (hasReacted) {
+      if (wasDownvoted) {
+        await supabase
+          .from('polysuara_downvotes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('user_id', profile.id);
+      }
+
+      if (isSameReaction) {
         const { error } = await supabase
           .from('polysuara_reactions')
           .delete()
           .eq('confession_id', confessionId)
-          .eq('user_id', profile.id)
-          .eq('reaction_type', reactionType);
+          .eq('user_id', profile.id);
         if (error) throw error;
       } else {
+        await supabase
+          .from('polysuara_reactions')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('user_id', profile.id);
+
         const { error } = await supabase
           .from('polysuara_reactions')
           .insert({
@@ -454,6 +620,7 @@ export function PolySuaraPage() {
 
   const handleUpvote = async (confessionId: string) => {
     const isCurrentlyUpvoted = userUpvotes.has(confessionId);
+    const wasDownvoted = userDownvotes.has(confessionId);
     
     setUserUpvotes(prev => {
       const next = new Set(prev);
@@ -475,13 +642,21 @@ export function PolySuaraPage() {
         return { 
           ...c, 
           upvotes: (c.upvotes || 0) + (isCurrentlyUpvoted ? -1 : 1),
-          downvotes: userDownvotes.has(confessionId) ? (c.downvotes || 0) - 1 : (c.downvotes || 0)
+          downvotes: wasDownvoted ? Math.max((c.downvotes || 0) - 1, 0) : (c.downvotes || 0)
         };
       }
       return c;
     }));
 
     try {
+      if (wasDownvoted) {
+        await supabase
+          .from('polysuara_downvotes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('user_id', profile?.id || '');
+      }
+
       const { error } = await supabase.rpc('toggle_polysuara_upvote', {
         p_confession_id: confessionId
       });
@@ -494,35 +669,73 @@ export function PolySuaraPage() {
   };
 
   const handleDownvote = async (confessionId: string) => {
+    if (!profile?.id) {
+      toast.error('Sila log masuk untuk mengundi.');
+      return;
+    }
+
+    const currentReactions = confessionReactions[confessionId] || [];
+    const existingReaction = currentReactions.find((r: any) => r.user_id === profile.id);
     const isCurrentlyDownvoted = userDownvotes.has(confessionId);
-    
+    const hasAnyReaction = Boolean(existingReaction);
+
+    // 1. If downvoting (not un-downvoting) and user has active reaction/like, cancel it
+    if (!isCurrentlyDownvoted && hasAnyReaction) {
+      setConfessionReactions(prev => {
+        const list = (prev[confessionId] || []).filter((r: any) => r.user_id !== profile.id);
+        return { ...prev, [confessionId]: list };
+      });
+      setUserUpvotes(prev => {
+        const next = new Set(prev);
+        next.delete(confessionId);
+        return next;
+      });
+    }
+
+    // 2. Update userDownvotes
     setUserDownvotes(prev => {
       const next = new Set(prev);
-      if (isCurrentlyDownvoted) next.delete(confessionId);
-      else {
+      if (isCurrentlyDownvoted) {
+        next.delete(confessionId);
+      } else {
         next.add(confessionId);
-        // Mutual exclusion
-        setUserUpvotes(up => {
-          const upNext = new Set(up);
-          upNext.delete(confessionId);
-          return upNext;
-        });
       }
       return next;
     });
 
-    setConfessions(prev => prev.map(c => {
-      if (c.id === confessionId) {
-        return { 
-          ...c, 
-          downvotes: (c.downvotes || 0) + (isCurrentlyDownvoted ? -1 : 1),
-          upvotes: userUpvotes.has(confessionId) ? (c.upvotes || 0) - 1 : (c.upvotes || 0)
-        };
-      }
-      return c;
-    }));
+    // 3. Optimistically update confession counts
+    setConfessions(prev =>
+      prev.map(c => {
+        if (c.id !== confessionId) return c;
+        let ups = c.upvotes || 0;
+        let downs = c.downvotes || 0;
 
+        if (isCurrentlyDownvoted) {
+          // Un-downvoting: decrement downvotes
+          downs = Math.max(downs - 1, 0);
+        } else {
+          // Downvoting: increment downvotes
+          downs = downs + 1;
+          // Dislike cancels Like: decrement upvotes if user had active reaction or upvote
+          if (hasAnyReaction || userUpvotes.has(confessionId)) {
+            ups = Math.max(ups - 1, 0);
+          }
+        }
+
+        return { ...c, upvotes: ups, downvotes: downs };
+      })
+    );
+
+    // 4. Database synchronization
     try {
+      if (!isCurrentlyDownvoted && hasAnyReaction) {
+        await supabase
+          .from('polysuara_reactions')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('user_id', profile.id);
+      }
+
       const { data: justHidden, error } = await supabase.rpc('toggle_polysuara_downvote', {
         p_confession_id: confessionId
       });

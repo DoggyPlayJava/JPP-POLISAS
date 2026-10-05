@@ -79,7 +79,12 @@ vi.mock('@/lib/supabase', () => {
   };
 });
 
-import { PolySuaraPage } from '@/pages/polyservices/PolySuaraPage';
+import {
+  PolySuaraPage,
+  syncReactionToggleState,
+  syncDownvoteToggleState,
+  type ConfessionVoteState,
+} from '@/pages/polyservices/PolySuaraPage';
 import DefaultPolySuaraPage from '@/pages/polyservices/PolySuaraPage';
 import {
   extractStickerToken,
@@ -342,6 +347,96 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('const [activeCategory, setActiveCategory] = useState');
       expect(pageContent).toContain('const [sortBy, setSortBy] = useState');
       expect(pageContent).toContain('const [bookmarkedIds, setBookmarkedIds] = useState');
+    });
+  });
+
+  describe('Like (❤️) vs Dislike (👎) Strict Mutual Exclusivity and State Sync', () => {
+    it('enforces exact sequence: 28 -> 29 (Like) -> 28 (Dislike cancels Like) -> 29 (Like cancels Dislike) -> 28 (Un-like)', () => {
+      const userId = 'usr-test-123';
+      const confessionId = 'conf-sync-1';
+
+      let state: ConfessionVoteState = {
+        confessions: [{ id: confessionId, upvotes: 28, downvotes: 0 }],
+        confessionReactions: {},
+        userDownvotes: new Set<string>(),
+      };
+
+      // 0. Initial baseline: 28 upvotes, 0 downvotes
+      expect(state.confessions[0].upvotes).toBe(28);
+      expect(state.confessions[0].downvotes).toBe(0);
+      expect(state.userDownvotes.has(confessionId)).toBe(false);
+
+      // 1. User Likes (adds reaction 'heart'): 28 -> 29 upvotes, 0 downvotes
+      state = syncReactionToggleState(state, confessionId, 'heart', userId);
+      expect(state.confessions[0].upvotes).toBe(29);
+      expect(state.confessions[0].downvotes).toBe(0);
+      expect(state.userDownvotes.has(confessionId)).toBe(false);
+      expect(state.confessionReactions[confessionId]).toEqual([
+        { reaction_type: 'heart', user_id: userId },
+      ]);
+
+      // 2. User Dislikes (Dislike cancels Like): 29 -> 28 upvotes, 0 -> 1 downvote
+      state = syncDownvoteToggleState(state, confessionId, userId);
+      expect(state.confessions[0].upvotes).toBe(28);
+      expect(state.confessions[0].downvotes).toBe(1);
+      expect(state.userDownvotes.has(confessionId)).toBe(true);
+      expect(state.confessionReactions[confessionId]).toEqual([]);
+
+      // 3. User Likes again (Like cancels Dislike): 1 -> 0 downvotes, 28 -> 29 upvotes
+      state = syncReactionToggleState(state, confessionId, 'heart', userId);
+      expect(state.confessions[0].upvotes).toBe(29);
+      expect(state.confessions[0].downvotes).toBe(0);
+      expect(state.userDownvotes.has(confessionId)).toBe(false);
+      expect(state.confessionReactions[confessionId]).toEqual([
+        { reaction_type: 'heart', user_id: userId },
+      ]);
+
+      // 4. User Un-likes (removes reaction 'heart'): 29 -> 28 upvotes, 0 downvotes
+      state = syncReactionToggleState(state, confessionId, 'heart', userId);
+      expect(state.confessions[0].upvotes).toBe(28);
+      expect(state.confessions[0].downvotes).toBe(0);
+      expect(state.userDownvotes.has(confessionId)).toBe(false);
+      expect(state.confessionReactions[confessionId]).toEqual([]);
+    });
+
+    it('enforces un-downvoting cancels downvote back to 0 without inflating counts', () => {
+      const userId = 'usr-test-123';
+      const confessionId = 'conf-sync-2';
+
+      let state: ConfessionVoteState = {
+        confessions: [{ id: confessionId, upvotes: 15, downvotes: 0 }],
+        confessionReactions: {},
+        userDownvotes: new Set<string>(),
+      };
+
+      // 1. User downvotes -> 1 downvote, 15 upvotes
+      state = syncDownvoteToggleState(state, confessionId, userId);
+      expect(state.confessions[0].downvotes).toBe(1);
+      expect(state.confessions[0].upvotes).toBe(15);
+      expect(state.userDownvotes.has(confessionId)).toBe(true);
+
+      // 2. User un-downvotes -> 0 downvotes, 15 upvotes
+      state = syncDownvoteToggleState(state, confessionId, userId);
+      expect(state.confessions[0].downvotes).toBe(0);
+      expect(state.confessions[0].upvotes).toBe(15);
+      expect(state.userDownvotes.has(confessionId)).toBe(false);
+    });
+
+    it('verifies PolySuaraPage code structure implements mutual exclusivity and state cancellation', () => {
+      const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+      const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+      // handleToggleReaction must cancel downvote and delete from polysuara_downvotes
+      expect(pageContent).toContain('const wasDownvoted = userDownvotes.has(confessionId);');
+      expect(pageContent).toContain('next.delete(confessionId);');
+      expect(pageContent).toContain("from('polysuara_downvotes')");
+      expect(pageContent).toContain('Math.max(downs - 1, 0)');
+
+      // handleDownvote must cancel reaction and delete from polysuara_reactions
+      expect(pageContent).toContain('const hasAnyReaction = Boolean(existingReaction);');
+      expect(pageContent).toContain("from('polysuara_reactions')");
+      expect(pageContent).toContain('toggle_polysuara_downvote');
+      expect(pageContent).toContain('Math.max(ups - 1, 0)');
     });
   });
 });
