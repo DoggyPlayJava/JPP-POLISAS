@@ -1936,7 +1936,7 @@ export function PolySuaraPage({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={cn(
-                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-200/70 dark:border-white/[0.07] shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-[2rem] p-5 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
+                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-200/70 dark:border-white/[0.07] shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-[2rem] p-4 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
                           isTrending && "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
                         )}
                       >
@@ -2082,7 +2082,7 @@ export function PolySuaraPage({
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-visible" data-html2canvas-ignore>
+                        <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none" data-html2canvas-ignore>
                           {isConfessionDeleted ? (
                             <div className="flex items-center gap-1.5 shrink-0 flex-nowrap text-slate-400">
                               <button
@@ -2157,7 +2157,7 @@ export function PolySuaraPage({
                             </div>
                           )}
 
-                          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+                          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-nowrap">
                             <button
                               type="button"
                               onClick={() => handleShareImage(confession.id)}
@@ -2188,7 +2188,7 @@ export function PolySuaraPage({
                                   setReplyTargetId(confession.id);
                                   setReplyModalOpen(true);
                                 }}
-                                className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
+                                className="px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 Balas JPP
@@ -2202,7 +2202,7 @@ export function PolySuaraPage({
                                   setAuthorReplyTargetId(confession.id);
                                   setAuthorReplyModalOpen(true);
                                 }}
-                                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 uppercase tracking-wider shrink-0 flex-nowrap cursor-pointer"
+                                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2 sm:px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 uppercase tracking-wider shrink-0 flex-nowrap cursor-pointer"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 Balas JPP

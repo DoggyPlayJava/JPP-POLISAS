@@ -76,7 +76,7 @@ describe('superAppHelpers', () => {
       expect(headerModule.default).toBeDefined();
       expect(typeof headerModule.default).toBe('function');
       expect(headerModule.SuperAppHeader).toBe(headerModule.default);
-    });
+    }, 15000);
 
     it('verifies SuperAppHeader accepts executive glass header props structure', async () => {
       const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');

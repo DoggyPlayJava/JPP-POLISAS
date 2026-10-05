@@ -3213,32 +3213,36 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
      - Lampiran imej dengan nisbah aspek penuh, sempadan `rounded-2xl`, dan animasi zum pada sentuhan.
      - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl`).
 
-2. **Corak Reaksi "One-Tap Heart + WhatsApp Reactions" (`PolySuaraReactions.tsx`):**
-   - **Butang Suka Sekali Sentuh (*One-Tap Heart*):**
-     - Butang utama memaparkan ikon Hati (❤️) bersama angka bilangan suka secara terus (`tabular-nums font-mono text-[11px] leading-none shrink-0`).
-     - Sekali sentuhan serta-merta menogol status Suka (*instant toggle*) tanpa memerlukan interaksi dua langkah.
-     - Format kontena `inline-flex flex-nowrap shrink-0` memastikan teks bilangan suka tidak sekali-kali terputus atau terbalut ke baris baharu (*non-wrapping inline count*).
+2. **Corak Reaksi Facebook/LinkedIn "Dynamic User Emoji + Stacked Badges" (`PolySuaraReactions.tsx`):**
+   - **Transformasi Emoji Dinamik Butang Utama:**
+     - Butang utama memaparkan ikon Hati (❤️) secara lalai dengan angka bilangan suka (`tabular-nums font-mono text-[11px] leading-none shrink-0`).
+     - Sekiranya pengguna memilih reaksi lain (cth: 😂, 🔥, 😢, 😮, 💯), ikon Hati secara automatik **digantikan** dengan emoji yang dipilih bersama tona warna aktif yang sepadan (cth: `bg-amber-500/15 text-amber-600` untuk 😂).
+     - Mengetik semula butang tersebut serta-merta membatalkan reaksi (*un-react*) dan mengembalikannya kepada ikon ❤️ lalai.
+   - **Kluster Emoji Bertindan Komuniti (*Stacked Overlapping Badges*):**
+     - Apabila luahan menerima pelbagai reaksi, sehingga 3 emoji teratas dipaparkan bertindan separa (*overlapping micro-circles* dengan sempadan cincin halus `ring-1 ring-white dark:ring-slate-900`) di dalam kapsul utama.
+     - Menyediakan paparan sentimen komuniti secara padat (~55px) tanpa menduplikasi pil berasingan yang memanjangkan barisan.
+   - **Pecahan Terperinci Interaktif (*Interactive Breakdown Popover*):**
+     - Mengetik kluster emoji bertindan membuka popover mini pecahan komuniti (`reactions-breakdown-popover`) yang dipancarkan melalui `createPortal` (`z-[9985]`).
+     - Memaparkan kiraan setiap emoji (cth: `❤️ 12`, `😂 5`, `🔥 2`) berserta lencana `Anda` bagi reaksi milik pengguna, dan membenarkan pertukaran reaksi terus dari dalam senarai pecahan.
    - **Pencetus Popover 6 Emoji WhatsApp:**
-     - Butang `+` halus di sebelah butang Hati membuka popover terapung berisi 6 emoji WhatsApp (❤️, 😂, 🔥, 😢, 😮, 💯).
-     - Dilengkapi backdrop telus skrin penuh (`fixed inset-0 z-20`) dan pengesanan klik di luar (*outside tap dismiss*) untuk memudahkan penutupan.
-   - **Pil Reaksi Aktif Sebaris (*Inline Reaction Chips*):**
-     - Reaksi bukan-hati yang aktif (kiraan > 0) dipaparkan secara kemas dalam barisan mendatar sebaris tanpa limpahan (*zero-wrap horizontal row*).
+     - Butang `+` halus di hujung kapsul membuka popover terapung berisi 6 emoji WhatsApp (❤️, 😂, 🔥, 😢, 😮, 💯) menggunakan `createPortal` (`z-[9999]`) dengan penutupan klik di luar (*outside tap dismiss*).
 
 3. **Peraturan Ketat Saling Eksklusif Like & Dislike (*Strict Mutual Exclusivity*):**
    - **Suka Membatalkan Tidak Suka (Like Cancels Dislike):** Mengetik reaksi suka (Heart atau mana-mana emoji WhatsApp) secara automatik membatalkan rekod downvote pengguna pada luahan berkenaan, menolak kiraan `downvotes` sebanyak 1, dan menghapuskannya daripada `userDownvotes` (`syncReactionToggleState`).
    - **Tidak Suka Membatalkan Suka (Dislike Cancels Like):** Mengetik butang Downvote (👎) secara automatik membatalkan sebarang reaksi aktif pengguna pada luahan tersebut, menolak kiraan `upvotes` sebanyak 1, dan mengeluarkan reaksi dari `confessionReactions` (`syncDownvoteToggleState`).
    - **Jaminan Konsistensi RPC:** Logik peringkat pangkalan data (`toggle_polysuara_reaction` dan `toggle_polysuara_downvote`) menguatkuasakan penghapusan rekod songsang secara atomik bagi memastikan integriti data 100%.
 
-4. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
-   - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-visible`.
+4. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar* & Portal Popover):**
+   - Bekas kontena: `flex items-center justify-between gap-1.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none`.
+   - **Ketinggian Popover Terapung (React Portal Elevation):** Popover 6 emoji WhatsApp dipancarkan terus ke `document.body` menggunakan `createPortal` dengan koordinat dinamik (`position: fixed; z-index: 9999;`). Ini membolehkan baris tindakan menggunakan `overflow-x-auto scrollbar-none` bagi menyokong leretan peranti mudah alih tanpa memotong atau menindih popover emoji.
    - **Kiri (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
      - Kluster Reaksi & Suka Sekali Sentuh `<PolySuaraReactions />`.
      - Butang Dislike (👎) komuniti untuk semakan auto-moderasi dengan bilangan undian.
      - Butang Ulasan (💬) dengan bilangan komen untuk membuka laci ulasan.
-   - **Kanan (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
+   - **Kanan (`flex items-center gap-1 sm:gap-1.5 shrink-0 flex-nowrap`):**
      - Butang Perkongsian grafik pantas (`Share2`).
      - Butang Simpanan / Bookmark (`Bookmark`).
-     - Butang `Balas JPP` hanya dipaparkan bagi pemegang peranan autoriti (`JPP`, `ADMIN`, `SUPER_ADMIN`).
+     - Butang `Balas JPP` padat (`px-2 sm:px-2.5 py-1 shrink-0 flex-nowrap`) hanya dipaparkan bagi pemegang peranan autoriti (`JPP`, `ADMIN`, `SUPER_ADMIN`) atau penulis asal.
 
 ---
 

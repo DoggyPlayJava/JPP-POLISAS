@@ -211,60 +211,75 @@ describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
     });
   });
 
-  describe('Inline Active Non-Heart Reaction Pills', () => {
-    it('renders non-heart reactions with count > 0 inline with flex-nowrap', () => {
+  describe('Stacked Community Emoji Badges & Dynamic User Reaction', () => {
+    it('renders stacked community badges with top emojis and total count when diverse reactions exist', () => {
       const { html, tree } = renderComponentTree({
         confessionId: 'conf-301',
-        reactions: sampleReactions, // heart(12), laugh(5), fire(8)
+        reactions: sampleReactions, // heart(12), fire(8), laugh(5) -> total 25
         onToggleReaction: vi.fn(),
       });
 
-      // Heart is in the main heart button, laugh & fire are in non-heart pills
-      const laughPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-laugh')[0];
-      const firePill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-fire')[0];
-      const heartPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-heart')[0];
+      const summaryBadge = findElements(tree, el => el.props?.['data-testid'] === 'reactions-summary-badge')[0];
+      expect(summaryBadge).toBeDefined();
+      expect(summaryBadge.props.className).toContain('shrink-0');
 
-      expect(laughPill).toBeDefined();
-      expect(firePill).toBeDefined();
-      // Heart pill is not duplicated as a separate pill since it's the main button
-      expect(heartPill).toBeUndefined();
+      const heartStacked = findElements(tree, el => el.props?.['data-testid'] === 'stacked-emoji-heart')[0];
+      const fireStacked = findElements(tree, el => el.props?.['data-testid'] === 'stacked-emoji-fire')[0];
+      const laughStacked = findElements(tree, el => el.props?.['data-testid'] === 'stacked-emoji-laugh')[0];
 
-      expect(laughPill.props.className).toContain('flex-nowrap');
-      expect(laughPill.props.className).toContain('shrink-0');
-      expect(html).toContain('5');
-      expect(html).toContain('8');
+      expect(heartStacked).toBeDefined();
+      expect(fireStacked).toBeDefined();
+      expect(laughStacked).toBeDefined();
+
+      // Total count across all reactions (12 + 5 + 8 = 25)
+      expect(html).toContain('25');
     });
 
-    it('clicking non-heart reaction pill toggles reaction', () => {
+    it('transforms main button to chosen reaction emoji and toggles it off on click', () => {
       const onToggle = vi.fn();
-      const { tree } = renderComponentTree({
+      const reactionsWithUserLaugh: ReactionSummary[] = [
+        { type: 'heart', emoji: '❤️', label: 'Suka', count: 1, userReacted: false },
+        { type: 'laugh', emoji: '😂', label: 'Lawak', count: 3, userReacted: true },
+      ];
+
+      const { tree, html } = renderComponentTree({
         confessionId: 'conf-302',
-        reactions: sampleReactions,
+        reactions: reactionsWithUserLaugh,
         onToggleReaction: onToggle,
       });
 
-      const firePill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-fire')[0];
-      firePill.props.onClick({ stopPropagation: vi.fn() });
+      const mainBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(mainBtn).toBeDefined();
+      // Transformed to laugh reaction styling
+      expect(mainBtn.props.className).toContain('bg-amber-500/15');
+      expect(mainBtn.props.className).toContain('text-amber-600');
+      expect(html).toContain('😂');
 
-      expect(onToggle).toHaveBeenCalledWith('conf-302', 'fire');
+      // Clicking un-reacts the laugh reaction
+      mainBtn.props.onClick({ stopPropagation: vi.fn() });
+      expect(onToggle).toHaveBeenCalledWith('conf-302', 'laugh');
     });
 
-    it('highlights active userReacted non-heart pill with active styles', () => {
-      const reactionsWithUserLaugh: ReactionSummary[] = [
-        { type: 'heart', emoji: '❤️', count: 1, userReacted: false },
-        { type: 'laugh', emoji: '😂', count: 3, userReacted: true },
+    it('transforms main button to fire emoji with orange styling when user reacts with fire', () => {
+      const onToggle = vi.fn();
+      const reactionsWithUserFire: ReactionSummary[] = [
+        { type: 'fire', emoji: '🔥', label: 'Padu', count: 4, userReacted: true },
       ];
 
-      const { tree } = renderComponentTree({
+      const { tree, html } = renderComponentTree({
         confessionId: 'conf-303',
-        reactions: reactionsWithUserLaugh,
-        onToggleReaction: vi.fn(),
+        reactions: reactionsWithUserFire,
+        onToggleReaction: onToggle,
       });
 
-      const laughPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-laugh')[0];
-      expect(laughPill.props.className).toContain('bg-rose-500/15');
-      expect(laughPill.props.className).toContain('border-rose-500/40');
-      expect(laughPill.props.className).toContain('font-bold');
+      const mainBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(mainBtn).toBeDefined();
+      expect(mainBtn.props.className).toContain('bg-orange-500/15');
+      expect(mainBtn.props.className).toContain('text-orange-600');
+      expect(html).toContain('🔥');
+
+      mainBtn.props.onClick({ stopPropagation: vi.fn() });
+      expect(onToggle).toHaveBeenCalledWith('conf-303', 'fire');
     });
   });
 

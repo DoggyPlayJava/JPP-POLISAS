@@ -337,7 +337,7 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('Share2');
       expect(pageContent).toContain('Bookmark');
       expect(pageContent).toContain('toggleBookmark');
-      expect(pageContent).toContain('flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-visible');
+      expect(pageContent).toContain('flex items-center justify-between gap-1.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none');
     });
 
     it('manages sort, category filter, and bookmark states in PolySuaraPage and removes SocialTabNav', () => {
