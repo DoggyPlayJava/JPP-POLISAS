@@ -12,6 +12,7 @@ export interface PolyMartFeedProps {
 
 export function PolyMartFeed({ products: initialProducts, className }: PolyMartFeedProps) {
   const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<'hot' | 'latest'>('hot');
   const [products, setProducts] = useState<any[]>(initialProducts || []);
   const [loading, setLoading] = useState<boolean>(!initialProducts);
 
@@ -26,7 +27,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
     async function fetchProducts() {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        let query = supabase
           .from('business_products')
           .select(`
             id,
@@ -38,12 +39,20 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             publish_to_polymart,
             is_available,
             business_id,
+            created_at,
             keusahawanan_businesses!business_id(id, name, status)
           `)
           .eq('publish_to_polymart', true)
-          .eq('is_available', true)
-          .order('created_at', { ascending: false })
-          .limit(12);
+          .eq('is_available', true);
+
+        if (activeFilter === 'latest') {
+          query = query.order('created_at', { ascending: false }).limit(12);
+        } else {
+          // 'hot' filter: query active polymart products and prioritize items with promotions/sales
+          query = query.order('created_at', { ascending: false }).limit(16);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           console.warn('[PolyMartFeed] Error fetching products:', error.message);
@@ -58,7 +67,17 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               : item.keusahawanan_businesses;
             return !biz || biz.status === 'ACTIVE';
           });
-          setProducts(activeProducts);
+
+          if (activeFilter === 'hot') {
+            const sortedHot = [...activeProducts].sort((a, b) => {
+              const aHasSale = a.sale_price !== null && a.sale_price !== undefined && a.sale_price < a.price ? 1 : 0;
+              const bHasSale = b.sale_price !== null && b.sale_price !== undefined && b.sale_price < b.price ? 1 : 0;
+              return bHasSale - aHasSale;
+            });
+            setProducts(sortedHot.slice(0, 12));
+          } else {
+            setProducts(activeProducts.slice(0, 12));
+          }
         }
       } catch (err) {
         console.warn('[PolyMartFeed] Unexpected error:', err);
@@ -71,14 +90,14 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
     return () => {
       isMounted = false;
     };
-  }, [initialProducts]);
+  }, [initialProducts, activeFilter]);
 
-  const handleCardClick = () => {
-    navigate('/keusahawanan/dashboard');
+  const handleCardClick = (productId: string) => {
+    navigate(`/polymart/produk/${productId}`);
   };
 
   const handleOpenMart = () => {
-    navigate('/keusahawanan/dashboard');
+    navigate('/polymart');
   };
 
   if (!loading && products.length === 0) {
@@ -89,33 +108,63 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
     <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="PolyMart Siswa">
       {/* Section Header */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400 shrink-0">
             <ShoppingBag className="w-4 h-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
                 PolyMart Siswa
               </h2>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shrink-0">
                 Pasaran Kampus
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate">
               Produk & makanan usahawan siswa POLISAS
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenMart}
-          className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group"
-        >
-          <span>Buka Mart</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Chip Tabs Container */}
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/10">
+            <button
+              type="button"
+              onClick={() => setActiveFilter('hot')}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight transition-all cursor-pointer",
+                activeFilter === 'hot'
+                  ? "bg-amber-500 text-slate-950 shadow-sm"
+                  : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
+              )}
+            >
+              🔥 Terhangat
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter('latest')}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-tight transition-all cursor-pointer",
+                activeFilter === 'latest'
+                  ? "bg-amber-500 text-slate-950 shadow-sm"
+                  : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
+              )}
+            >
+              ✨ Terkini
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenMart}
+            className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group"
+          >
+            <span>Buka Mart</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
       </div>
 
       {/* Horizontal Feed */}
@@ -143,14 +192,14 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             return (
               <div
                 key={item.id}
-                onClick={handleCardClick}
-                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
+                onClick={() => handleCardClick(item.id)}
+                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/80 dark:border-white/[0.08] hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    handleCardClick();
+                    handleCardClick(item.id);
                   }
                 }}
               >

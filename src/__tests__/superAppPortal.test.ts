@@ -248,11 +248,84 @@ describe('superAppHelpers', () => {
       expect(typeof module.EmsEventsFeed).toBe('function');
     });
 
-    it('exports PolyMartFeed component correctly', async () => {
+    it('exports PolyMartFeed component correctly and creates valid elements', async () => {
       const module = await import('@/components/portal/PolyMartFeed');
       expect(module.PolyMartFeed).toBeDefined();
       expect(module.default).toBeDefined();
       expect(typeof module.PolyMartFeed).toBe('function');
+
+      const mockProducts = [
+        {
+          id: 'prod-123',
+          name: 'Pencuci Kasut Siswa',
+          price: 15.0,
+          sale_price: 12.0,
+          image_url: null,
+          category: 'Servis',
+          publish_to_polymart: true,
+          is_available: true,
+        }
+      ];
+
+      const element = React.createElement(module.PolyMartFeed, {
+        products: mockProducts,
+        className: 'test-feed-class',
+      });
+
+      expect(React.isValidElement(element)).toBe(true);
+      expect(element.type).toBe(module.PolyMartFeed);
+      expect(element.props.products).toEqual(mockProducts);
+      expect(element.props.className).toBe('test-feed-class');
+    });
+
+    it('mounts PolyMartFeed with initial products and renders chip tabs cleanly', async () => {
+      const { PolyMartFeed } = await import('@/components/portal/PolyMartFeed');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { renderToString } = await import('react-dom/server');
+
+      const mockProducts = [
+        {
+          id: 'prod-abc',
+          name: 'Nasi Lemak Ayam Berempah',
+          price: 7.5,
+          sale_price: 6.0,
+          image_url: 'https://example.com/nasi-lemak.jpg',
+          category: 'Makanan',
+          publish_to_polymart: true,
+          is_available: true,
+        },
+        {
+          id: 'prod-xyz',
+          name: 'Kemeja Korporat POLISAS',
+          price: 45.0,
+          sale_price: null,
+          image_url: null,
+          category: 'Pakaian',
+          publish_to_polymart: true,
+          is_available: true,
+        },
+      ];
+
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(PolyMartFeed, {
+            products: mockProducts,
+            className: 'test-polymart-feed',
+          })
+        )
+      );
+
+      expect(html).toContain('PolyMart Siswa');
+      expect(html).toContain('Terhangat');
+      expect(html).toContain('Terkini');
+      expect(html).toContain('Buka Mart');
+      expect(html).toContain('Nasi Lemak Ayam Berempah');
+      expect(html).toContain('RM 6.00');
+      expect(html).toContain('RM 7.50');
+      expect(html).toContain('Kemeja Korporat POLISAS');
+      expect(html).toContain('RM 45.00');
     });
   });
 
