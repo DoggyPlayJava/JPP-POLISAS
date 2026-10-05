@@ -3046,7 +3046,7 @@ Bagi menjamin pengalaman penggunaan tanpa cela pada pelbagai resolusi peranti mu
 Komponen `src/components/portal/CampusCampaignCarousel.tsx` menyediakan slaid sorotan berimpak tinggi yang dipaparkan secara kontekstual melalui pembantu `buildCampaignSlides`:
 
 1. **Jenis-jenis Slaid Kempen (`CampaignSlide`):**
-   - **MAKMP (`gold`):** Muncul apabila mahasiswa menerima jemputan anugerah (`makmpStatus === 'DIJEMPUT'`), membolehkan semakan status dan pengesahan kehadiran terus ke `/makmp`.
+   - **MAKMP (`gold`):** Muncul apabila mahasiswa menerima jemputan anugerah (`makmpStatus === 'DIJEMPUT'`) dan edisi MAKMP berkaitan sedang aktif (`makmp_editions.is_active = true`), membolehkan semakan status dan pengesahan kehadiran terus ke `/makmp`. Sekiranya edisi dinyahaktifkan di pusat MAKMP, slaid ini disenyapkan secara automatik di portal pelajar dan papan pemuka Exco Akademik (`AkademikUnitDashboard.tsx`) memaparkan status `Sesi Ditutup`.
    - **KAMSIS (`emerald` atau `amber`):** Muncul untuk pelajar yang memohon asrama. Memaparkan tawaran penempatan lulus (`emerald`) atau status rayuan/pemprosesan (`amber`) dengan pautan modal rayuan.
    - **Karnival Siswa (`violet`):** Muncul secara automatik semasa karnival tahunan berlangsung (`karnivalActive === true`) membawa pelajar ke hab pengundian `/karnival`.
    - **SUPSAS (`amber`):** Muncul semasa kejohanan sukan antara jabatan berlangsung (`supsasActive === true`) menuju ke papan kedudukan `/supsas`.

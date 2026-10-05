@@ -20,8 +20,9 @@ export default function MakmpWinnerBanner() {
       // Cari submission MAKMP user semasa yang dah ada keputusan (winner_status)
       const { data } = await supabase
         .from('makmp_submissions')
-        .select('tracking_code, winner_status')
+        .select('tracking_code, winner_status, makmp_editions!inner(id, is_active)')
         .eq('user_id', user.id)
+        .eq('makmp_editions.is_active', true)
         .not('winner_status', 'is', null)
         .order('created_at', { ascending: false })
         .limit(1)

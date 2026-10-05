@@ -658,6 +658,7 @@ export function AkademikUnitDashboard() {
   const urlTab = searchParams.get('tab');
   const [tab, setTab]     = useState(urlTab || 'overview');
   const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0, pendingUnlock: 0, makmpPending: 0 });
+  const [activeEdition, setActiveEdition] = useState<{ id: string; year: number; title: string; is_active: boolean } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
   const jppPos = profile?.jpp_position as string | undefined;
@@ -675,13 +676,14 @@ export function AkademikUnitDashboard() {
     setSearchParams(newTab === 'overview' ? {} : { tab: newTab });
   };
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     Promise.all([
       supabase.from('akademik_pencapaian').select('status'),
       supabase.from('merit_transactions').select('points').eq('source', 'AKADEMIK'),
       supabase.from('akademik_unlock_requests').select('id').eq('status', 'MENUNGGU'),
       supabase.from('makmp_submissions').select('id').in('status', ['MENUNGGU', 'DALAM_SEMAKAN']),
-    ]).then(([pencRes, meritRes, unlockRes, makmpRes]) => {
+      supabase.from('makmp_editions').select('id, year, title, is_active').eq('is_active', true).order('year', { ascending: false }).limit(1).maybeSingle(),
+    ]).then(([pencRes, meritRes, unlockRes, makmpRes, edRes]) => {
       const pencs = pencRes.data || [];
       const merits = meritRes.data || [];
       setStats({
@@ -692,9 +694,16 @@ export function AkademikUnitDashboard() {
         pendingUnlock: (unlockRes.data || []).length,
         makmpPending:  (makmpRes.data || []).length,
       });
+      setActiveEdition(edRes.data || null);
       setLoadingStats(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (tab === 'overview') {
+      loadStats();
+    }
+  }, [tab, loadStats]);
 
   return (
     <div className="space-y-6">
@@ -751,19 +760,29 @@ export function AkademikUnitDashboard() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-black text-slate-900 dark:text-white">Majlis Anugerah Kecemerlangan POLISAS (MAKMP 2026)</p>
-                      {stats.makmpPending > 0 ? (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                          {stats.makmpPending} Menunggu Semakan
-                        </span>
+                      <p className="text-sm font-black text-slate-900 dark:text-white">
+                        Majlis Anugerah Kecemerlangan POLISAS {activeEdition ? `(${activeEdition.title || `MAKMP ${activeEdition.year}`})` : '(MAKMP)'}
+                      </p>
+                      {activeEdition ? (
+                        stats.makmpPending > 0 ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            {stats.makmpPending} Menunggu Semakan
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                            Sesi Aktif
+                          </span>
+                        )
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                          Aktif
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                          Sesi Ditutup
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-amber-700 dark:text-amber-300/70 mt-0.5">
-                      Pusat Urus Setia Exco Akademik: 18 Anugerah Rasmi, Templat Laporan, Penjanaan Kod PIN Juri & Semakan Pencalonan Pelajar.
+                      {activeEdition
+                        ? 'Pusat Urus Setia Exco Akademik: 18 Anugerah Rasmi, Templat Laporan, Penjanaan Kod PIN Juri & Semakan Pencalonan Pelajar.'
+                        : 'Sesi MAKMP kini ditutup / dinyahaktifkan. Buka Urus Setia MAKMP untuk menguruskan edisi atau menyemak rekod lepas.'}
                     </p>
                   </div>
                 </div>

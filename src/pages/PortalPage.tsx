@@ -91,8 +91,9 @@ export function PortalPage() {
           .select('key, value')
           .like('key', 'kamsis_%'),
         supabase.from('makmp_submissions')
-          .select('winner_status')
+          .select('winner_status, makmp_editions!inner(id, is_active)')
           .eq('user_id', profile.id)
+          .eq('makmp_editions.is_active', true)
           .not('winner_status', 'is', null)
           .order('created_at', { ascending: false })
           .limit(1)
