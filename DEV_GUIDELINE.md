@@ -2925,70 +2925,65 @@ Untuk mengekalkan konsistensi tipografi antarabangsa dan mengelakkan isu pengeko
 
 Laman Portal Utama (`/portal` - `src/pages/PortalPage.tsx`) telah dinaik taraf kepada pengalaman **Campus Super App** berorientasikan mudah alih (*mobile-first hybrid experience*). Transformasi ini menggabungkan utiliti harian kampus, suapan perkhidmatan langsung, dan integrasi modul rasmi Exco JPP dalam satu hab sehenti yang intuitif dan responsif.
 
-### 29.1 Konsep Reka Bentuk Hibrid Mudah Alih (Mobile-First Campus Super App)
+### 29.1 Palet Warna Rasmi Maroon Eksekutif POLISAS & Pemasangan Logo JPP
 
-1. **Falsafah Berasaskan Panduan `/design-taste-frontend` & Rujukan UnixGo:**
-   - **Antara Muka Gaya Hidup Pelajar (*Daily Student Lifestyle App*):** Mengalihkan fokus daripada papan pemuka pentadbiran yang kaku (*boring enterprise admin dashboard*) kepada aplikasi harian kampus yang segar, bertenaga, dan relevan dengan kehidupan seharian mahasiswa.
-   - **Aliran Visual Berperingkat (*Progressive Visual Stacking*):**
-     1. Header Pintar & Tag Lokasi Kampus dengan Bar Carian Terapung.
-     2. Grid 8 Butang Servis Teras Kampus berkadaran sentuhan (*tactile buttons*).
-     3. Carousel Sorotan Kempen Dinamik berasaskan status mahasiswa.
-     4. Suapan Mendatar Acara Semasa (EMS).
-     5. Suapan Mendatar Pasaran & Makanan Siswa (PolyMart).
-     6. Grid Kad Modul Rasmi Pentadbiran Exco JPP.
-   - **Sentuhan & Maklum Balas Haptik Digital:** Elemen butang menggunakan animasi spring Framer Motion (`whileHover={{ scale: 1.05 }}`, `whileTap={{ scale: 0.95 }}`) bagi menghasilkan rasa sentuhan (*tactile feel*) aplikasi natif.
-   - **Dwi-Tema Harmoni (Dark & Light Mode):** Dilengkapi kecerunan ambien gelap (*ambient decorative glows*) dan sokongan kontras tinggi yang melepasi piawaian WCAG AA.
+1. **Palet Warna Rasmi Maroon Eksekutif POLISAS:**
+   - Kecerunan rasmi portal (`getHeaderGradientClass`) kini menggunakan tona Maroon Eksekutif POLISAS:
+     ```css
+     from-[#4A0E17] via-[#6B141E] to-[#1C0508] text-white border-b border-amber-500/20
+     ```
+   - Menggantikan tema hijau zamrud terdahulu dengan identiti korporat dan prestij institusi POLISAS, diperkasakan dengan garisan sempadan halus keemasan (`border-b border-amber-500/20`) serta pencahayaan ambien gelap (*ambient decorative glows*).
+   - Kecerunan beralih secara kontekstual sekiranya musim sukan atau karnival kampus sedang aktif:
+     - **Karnival Aktif:** Kecerunan Violet/Purple (`from-violet-950 via-purple-900 to-indigo-950`).
+     - **SUPSAS Aktif:** Kecerunan Amber/Navy (`from-amber-950 via-slate-900 to-sky-950`).
+     - **Lalai (Maroon Eksekutif POLISAS):** `from-[#4A0E17] via-[#6B141E] to-[#1C0508]`.
 
-### 29.2 Header Pintar & Bar Carian Terapung (`SuperAppHeader.tsx`)
+2. **Pemasangan Logo Rasmi JPP (`/jpp-logo.png`):**
+   - Logo rasmi JPP dipasang secara menonjol dalam kapsul kaca gelap (`bg-black/25 backdrop-blur-md border border-white/15 shadow-sm`) di sebelah kiri atas header.
+   - Mengandungi aset imej logo rasmi `/jpp-logo.png` (`w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 drop-shadow`), teks jenama `JPP POLISAS`, dan sublabel keemasan `Portal Rasmi` (`text-amber-300/80 font-bold`).
+   - Berdampingan dengan kapsul lokasi fizikal kampus: `"POLISAS, Semambu"` dengan ikon pin peta beranimasi (`animate-pulse`).
 
-Komponen `src/components/portal/SuperAppHeader.tsx` bertindak sebagai bumbung visual utama portal dengan maklumat konteks masa nyata:
+3. **Sapaan Kontekstual & Lencana Peranan Berdisiplin:**
+   - **Sapaan Masa Nyata (`formatGreeting`):** Mengikut waktu (Pagi: 05:00-11:59, Petang: 12:00-18:59, Malam: 19:00-23:59, Dinihari: 00:00-04:59) disatukan dengan nama pertama pengguna daripada profil (`profile.full_name`).
+   - **Lencana Peranan Berdisiplin (`getRoleBadgeTitle`):** Menukar peranan mentah pangkalan data kepada gelaran rasmi mesra pengguna (`PENTADBIR UTAMA`, `MAJLIS JPP`, `STAF POLISAS`, atau `SISWA POLISAS`).
 
-1. **Tag Lokasi Kampus Beranimasi:**
-   - Memaparkan lokasi kampus rasmi: `"POLISAS, Semambu, Kuantan"`.
-   - Menggunakan ikon pin peta berdenyut (`animate-pulse`) di dalam kapsul kaca lutsinar (`backdrop-blur-md bg-black/20 border-white/20`).
+---
 
-2. **Sapaan Masa Nyata Berasaskan Waktu (`formatGreeting`):**
-   - Waktu 05:00 - 11:59: *"Selamat Pagi,"*
-   - Waktu 12:00 - 18:59: *"Selamat Petang,"*
-   - Waktu 19:00 - 23:59: *"Selamat Malam,"*
-   - Waktu 00:00 - 04:59: *"Masih Berjaga,"*
-   - Digandingkan secara automatik dengan nama pertama pelajar daripada profil (`profile.full_name?.split(' ')[0]`).
+### 29.2 Kawalan Header Tersepadu & Bar Carian Pintar (`SuperAppHeader.tsx`)
 
-3. **Lencana Peranan Berdisiplin (`getRoleBadgeTitle`):**
-   - Mengelakkan kebocoran teks teknikal peranan mentah pangkalan data kepada pelajar:
-     - `SUPERADMIN` / `SUPER_ADMIN_JPP` -> `PENTADBIR UTAMA`
-     - `JPP` -> `MAJLIS JPP`
-     - `STAFF` / `PENSYARAH` -> `STAF POLISAS`
-     - Pengguna umum -> `SISWA POLISAS`
+1. **Kawalan Header Tersepadu (Active Integrated Header Controls):**
+   - Mengintegrasikan kawalan penting terus ke bar atas header di sebelah kanan:
+     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif yang diolah dengan gaya butang kaca seragam.
+     - `<NotificationBell variant="dark" />`: Lonceng notifikasi masa nyata aktif dengan lencana bilangan notifikasi belum dibaca.
+     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berbingkai putih (`border-2 border-white/30`) yang memicu pembukaan `PortalSidebar` untuk tetapan akaun dan log keluar.
+   - Penggayaan butang kaca seragam (`[&_button]:bg-black/25 [&_button]:hover:bg-white/20 [&_button]:border [&_button]:border-white/15 [&_button]:text-white [&_button]:h-9 sm:[&_button]:h-10 [&_button]:w-9 sm:[&_button]:w-10 [&_button]:rounded-2xl transition-all`) menjamin kontras dan keharmonian visual di atas latar maroon.
 
-4. **Kecerunan Header Dinamik Berkonteks (`getHeaderGradientClass`):**
-   - **Karnival Aktif:** Kecerunan Violet/Purple (`from-violet-950 via-purple-900 to-indigo-950`).
-   - **SUPSAS Aktif:** Kecerunan Amber/Navy (`from-amber-950 via-slate-900 to-sky-950`).
-   - **Lalai (Default):** Kecerunan Zamrud/Slate (`from-emerald-950 via-slate-900 to-slate-950`).
-
-5. **Bar Carian Terapung (Floating Search Bar):**
+2. **Bar Carian Terapung (Floating Search Bar):**
    - Kad terapung berlatar belakang kaca kabur 95% (`bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-xl border border-white/30`).
    - Placeholder interaktif: *"Cari makanan, runner, servis, acara, merit..."*.
    - Mengintegrasikan fungsi Command Palette global (`triggerCommandPalette(true)`) dengan paparan pintasan papan kekunci `Ctrl+K`.
 
-### 29.3 Grid 8 Servis Teras Kampus (`CampusServicesGrid.tsx`)
+---
 
-Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti utama kampus dalam format 4 kolum mesra sentuhan telefon pintar (`grid grid-cols-4 gap-2 sm:gap-3 md:gap-4`):
+### 29.3 8 Servis Teras Kampus Yang Diselaraskan (`CampusServicesGrid.tsx`)
+
+Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti harian kampus ke dalam susun atur grid 4 kolum mesra sentuhan telefon pintar (`grid grid-cols-4 gap-2 sm:gap-3 md:gap-4`):
 
 | No | ID Servis | Nama Paparan | Sublabel | Tindakan / Laluan | Tour Class | Lencana (*Badge*) | Ikon |
 |---|---|---|---|---|---|---|---|
-| 1 | `polysuara` | PolySuara | Suara Siswa | Route: `/polysuara` | — | — | Megaphone |
-| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/keusahawanan/dashboard` | — | — | UtensilsCrossed |
-| 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim` | `tour-qa-polyservices` | — | CalendarDays |
-| 4 | `polymaps` | PolyMaps | Peta Kampus | Route: `/polymaps` | — | — | Map |
-| 5 | `polyrent` | PolyRent | Sewa Barangan | Route: `/polyrent` | — | — | Package |
+| 1 | `polysuara` | PolySuara | Suara Siswa | Route: `/polysuara` | - | - | Megaphone |
+| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/keusahawanan/dashboard` | - | - | UtensilsCrossed |
+| 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim` | `tour-qa-polyservices` | - | CalendarDays |
+| 4 | `polymaps` | PolyMaps | Peta Kampus | Route: `/polymaps` | - | - | Map |
+| 5 | `polyrent` | PolyRent | Sewa Barangan | Route: `/polyrent` | - | - | Package |
 | 6 | `kebajikan` | E-Kebajikan | Aduan & Bantuan | Route: `/kebajikan` | `tour-qa-kebajikan` | Bilangan aktif (`kbStats.open`) | HeartHandshake |
 | 7 | `akademik_qr` | Scan QR | Kumpul Merit | Route: `/akademik/qr` | `tour-qa-qr` | `MERIT` | QrCode |
 | 8 | `ekpp` | Kelab EKPP | Persatuan Siswa | Route: `/kelab` | `tour-mod-ekpp` | `KELAB` | Landmark |
 
-- **Ergonomik & Susun Atur Mudah Alih:**
+- **Ergonomik Butang Sentuh (*Tactile Buttons*):**
   - Butang jubin padat `p-2 sm:p-3 rounded-2xl sm:rounded-3xl` dengan bekas ikon bersaiz `w-11 h-11 sm:w-13 sm:h-13 rounded-2xl` bagi mengelakkan limpahan melintang (*horizontal overflow*) pada skrin 360px+.
-  - Label dipotong kemas (`truncate w-full text-center text-[10px] sm:text-xs font-bold`) dan sublabel disembunyikan pada telefon (`hidden sm:block text-[9px]`).
+  - Animasi sentuhan spring Framer Motion (`whileHover={{ scale: 1.04, y: -2 }}`, `whileTap={{ scale: 0.95 }}`).
+  - Label teks dipotong kemas (`truncate w-full text-center text-[10px] sm:text-xs font-bold`) dan sublabel disembunyikan pada telefon (`hidden sm:block text-[9px]`).
 - **Lencana Dinamik (*Badging*):**
   - E-Kebajikan memaparkan lencana bilangan tiket aduan aktif (`kbStats.open`) jika melebihi 0.
   - Scan QR memaparkan lencana ungu `MERIT`.
@@ -2996,7 +2991,25 @@ Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti utama k
 - **Pengendalian Modul Dinyahaktifkan (*Graceful Degradation*):**
   - Sekiranya modul ditutup dalam konfigurasi `portal_settings` dan pengguna bukan SuperAdmin, ikon dipudarkan (`opacity-50 grayscale cursor-not-allowed`) dan klik menghasilkan makluman toast mesra *"sedang dikemas kini"*.
 
-### 29.4 Carousel Sorotan Kempen Dinamik (`CampusCampaignCarousel.tsx`)
+---
+
+### 29.4 Ergonomik & Responsif Mudah Alih (Mobile Ergonomics & Layout Balance)
+
+Bagi menjamin pengalaman penggunaan tanpa cela pada pelbagai resolusi peranti mudah alih (termasuk skrin kompak 360px-390px):
+
+1. **Pencegahan Limpahan Mendatar (*Horizontal Overflow Prevention*):**
+   - Penggunaan kelas `-mx-4 px-4 sm:mx-0 sm:px-0` pada bekas suapan tatalan melintang (`EmsEventsFeed.tsx` dan `PolyMartFeed.tsx`).
+   - Pendekatan ini membolehkan kad suapan beranimasi tatal mendatar secara penuh tepi-ke-tepi (*edge-to-edge bleed scroll*) pada peranti mudah alih, sambil mengekalkan penjajaran grid kemas di tablet dan desktop tanpa menyebabkan sebarang limpahan paksi-X pada badan dokumen (`overflow-x-hidden w-full max-w-full`).
+2. **Semakan Automatik Kekosongan Acara (*Auto Empty State Suppression*):**
+   - Komponen `EmsEventsFeed` secara automatik menyembunyikan seksyen (`return null`) sekiranya penapisan `filterUpcomingEvents(events, 8)` mendapati tiada sebarang acara aktif atau acara masa depan yang tersedia (`!loading && events.length === 0`).
+   - Ini mengelakkan pembaziran ruang visual pada peranti mudah alih dan membolehkan suapan PolyMart naik secara elegan di bawah servis teras.
+3. **Kelegaan Bawah Menyeluruh (*Bottom Navigation Clearance*):**
+   - Bekas `<main>` di `PortalPage.tsx` dikonfigurasi dengan kelas penjarakan `pb-36 sm:pb-32` serta pseudo-elemen `flex-1 after:content-[''] after:block after:h-28 after:shrink-0`.
+   - Konfigurasi ini menjamin ruang pemisah menegak yang selamat antara bahagian bawah kandungan (Grid Modul Exco) dan bar navigasi terapung mudah alih (`BottomNav`), menghalang kad atau butang tindakan daripada terlindung atau tertekan secara tidak sengaja.
+
+---
+
+### 29.5 Carousel Sorotan Kempen Dinamik (`CampusCampaignCarousel.tsx`)
 
 Komponen `src/components/portal/CampusCampaignCarousel.tsx` menyediakan slaid sorotan berimpak tinggi yang dipaparkan secara kontekstual melalui pembantu `buildCampaignSlides`:
 
@@ -3011,7 +3024,9 @@ Komponen `src/components/portal/CampusCampaignCarousel.tsx` menyediakan slaid so
    - Pertukaran slaid automatik setiap 6 saat sekiranya terdapat lebih daripada 1 slaid aktif.
    - Kawalan titik (*dot indicators*) boleh diklik untuk melompat terus ke slaid pilihan.
 
-### 29.5 Suapan Langsung Acara (EMS) & Makanan (PolyMart) (`EmsEventsFeed.tsx` & `PolyMartFeed.tsx`)
+---
+
+### 29.6 Suapan Langsung Acara (EMS) & Makanan (PolyMart) (`EmsEventsFeed.tsx` & `PolyMartFeed.tsx`)
 
 Bagi menghidupkan ekosistem kampus harian, portal memaparkan dua suapan mendatar (*horizontal feeds*) masa nyata dengan tatalan sentuhan berasaskan *snap scroll* (`snap-x snap-mandatory`):
 
@@ -3020,7 +3035,7 @@ Bagi menghidupkan ekosistem kampus harian, portal memaparkan dua suapan mendatar
    - Penapis utiliti `filterUpcomingEvents(events, 8)` menyingkirkan acara yang telah tamat atau dibatalkan, menyusun tarikh secara kronologi terdekat.
    - Kad acara memaparkan poster/banner acara, lencana `TERBUKA`, tajuk acara, tarikh terformat Bahasa Melayu, dan nama lokasi.
    - Klik kad membuka halaman pendaftaran pantas `/ems/register/:id`, manakala butang *"Lihat Semua"* membawa ke `/ems/dashboard`.
-   - Keadaan skeleton loading terurus dan paparan kosong yang kemas (*empty state*).
+   - Keadaan skeleton loading terurus dan paparan kosong pintar yang menekan seksyen secara automatik.
 
 2. **Suapan Pasaran Siswa (`PolyMartFeed.tsx`):**
    - Mengambil produk usahawan siswa daripada jadual `business_products` yang ditandakan `publish_to_polymart = true` dan `is_available = true`.
@@ -3029,7 +3044,9 @@ Bagi menghidupkan ekosistem kampus harian, portal memaparkan dua suapan mendatar
    - Klik kad mengarah terus ke modul perniagaan `/keusahawanan/dashboard`.
    - Skeleton loading dan empty state mesra pengguna.
 
-### 29.6 Integriti Modul Exco & Kawalan SuperAdmin
+---
+
+### 29.7 Integriti Modul Exco & Kawalan SuperAdmin
 
 1. **Pengekalan Papan Kawalan Exco Rasmi:**
    - Grid modul rasmi JPP di bahagian bawah portal (`tour-exco-modules`) mengekalkan kad rasmi (`ExcoCard`) bagi membolehkan wakil kelab, pimpinan siswa, dan staf mengakses pengurusan khusus (KPP, Keusahawanan, Kebajikan, Akademik, dll).
