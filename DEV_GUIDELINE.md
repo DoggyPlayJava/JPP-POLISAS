@@ -3118,11 +3118,11 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
 
 ---
 
-## 30. Modul PolySuara Super App: Suapan Sosial Minimalis (Threads/X Aesthetic) & Reaksi WhatsApp
+## 30. Modul PolySuara Super App: Suapan Media Sosial Generasi Baharu (Pipel / Dribbble UI)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
 
-Modul PolySuara telah dinaik taraf kepada **Platform Sosial Mahasiswa Super App** bertaraf moden berteraskan prinsip reka bentuk minimalis ala Threads dan X. Reka bentuk ini mengutamakan ketenangan visual (*uncluttered*), tipografi editorial yang selesa, bar penggubah pantas (*quick-compose capsule*), penyatuan navigasi suapan satu baris (*single-line track*), serta enjin reaksi WhatsApp terapung dengan sokongan penuh dwi-tema (**Light & Dark Mode**).
+Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mahasiswa** bertaraf tinggi yang diinspirasikan secara langsung oleh konsep reka bentuk moden Pipel dan Dribbble. Reka bentuk ini membawakan bar cerita *Campus Pulse* dengan cincin gradien neon di bahagian atas, navigasi suapan 3-tab beranimasi (*Untuk Anda*, *Terkini*, *Hangat*), kad luahan terapung mewah bersudut melengkung `rounded-[2rem]`, baris tindakan sosial bersepadu (Reaksi WhatsApp, Komen, Dislike, Simpanan, dan Kongsi), serta butang tindakan terapung bercahaya (*Radiant Floating Action Button — FAB `+`*).
 
 ---
 
@@ -3130,76 +3130,74 @@ Modul PolySuara telah dinaik taraf kepada **Platform Sosial Mahasiswa Super App*
 
 1. **Kanvas Bersih Dwi-Mod:**
    - PolySuara menyokong penuh peralihan mod tema cerah dan gelap melalui suis `<ThemeToggle />` di bahagian atas bar navigasi lekat (*sticky header*).
-   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad putih bersih `bg-white border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:border-slate-300`.
-   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian nipis `dark:bg-slate-900/60 dark:border-white/[0.06] dark:hover:border-white/[0.12] rounded-3xl p-5 sm:p-6`.
+   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad terapung putih bersih `bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.07)]`.
+   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian dalam `dark:bg-slate-900/70 dark:backdrop-blur-xl dark:border-white/[0.07] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] rounded-[2rem] p-5 sm:p-6`.
    - Mesh aura ambien di latar belakang (`bg-rose-500/5 dark:bg-rose-500/10 blur-[100px]`) memberikan kedalaman visual tanpa membebankan pemproses grafik peranti bajet.
 
 2. **Header Lekat Pintar (*Sticky Top Bar*):**
-   - Menempatkan butang kembali pantas ke Portal `/portal`, suis tema `<ThemeToggle />`, suis loceng notifikasi PolySuara (diselaraskan dengan jadual `polysuara_notif_optout`), dan lencana mod tanpa nama (*Anon Mode* berbingkai perisai ros).
+   - Menempatkan butang kembali bulat pantas ke Portal `/portal`, penunjuk status hidup bulatan hijau bersinar, suis tema `<ThemeToggle />`, suis loceng notifikasi PolySuara (diselaraskan dengan jadual `polysuara_notif_optout`), dan lencana mod tanpa nama (*Anon Mode* berbingkai perisai ros).
 
 ---
 
-### 30.2 Bar Penggubah Cepat Ala Threads (`Quick-Compose Bar`) & Modal Bebas Gangguan
+### 30.2 Bar "Campus Pulse" (Story Rings Bertaraf Instagram/Pipel — `CampusPulseBar.tsx`)
 
-1. **Kapsul Sentuhan Interaktif Suapan:**
-   - Menggantikan borang statik lama yang mengambil ruang skrin dengan satu kapsul sentuhan elegan:
-     `[✍️ Avatar] "Ada luahan atau rahsia kampus? Kongsi secara rahsia..." [Luahkan]`
-   - Menjimatkan lebih 250px ruang menegak pada telefon pintar dan meletakkan suapan luahan sebagai fokus utama (*feed-first experience*).
-2. **Modal Penggubah Bebas Gangguan (*Compose Modal / Drawer*):**
-   - Mengetik kapsul membuka dialog penggubah khusus (helaian leret bawah di telefon mudah alih atau kad terapung berpusat di desktop).
-   - Ruang menaip teks yang luas dengan auto-fokus, pemilih kategori, lampiran gambar, dan modul undian mini (*poll creator*).
-   - Ditutup secara automatik apabila luahan berjaya dihantar.
-3. **Pemansuhan Pelekat (*Zero Sticker Clutter*):**
-   - Sistem pelekat visual dimansuhkan sepenuhnya daripada penggubah dan kad luahan untuk mengekalkan keaslian penulisan mahasiswa dan mengelakkan kekusutan visual.
-   - Fungsi `cleanConfessionText` menapis sebarang token teks lama secara automatik agar teks luahan kekal kemas.
-
----
-
-### 30.3 Jalur Navigasi & Penapis Suapan Tunggal (*Single-Line Feed Navigation Track*)
-
-1. **Penyatuan Isih & Kategori:**
-   - Mod isih (`✨ Terkini` dan `🔥 Hangat`) digabungkan bersama cip penapis kategori (`Semua`, `Akademik`, `Fasiliti`, `Kamsis`, `Kaunseling`) ke dalam satu baris tatalan melintang (`overflow-x-auto scrollbar-none snap-x`).
-   - Garis pemisah menegak halus memisahkan kawalan isih daripada kategori.
-   - Mengelakkan penimbunan baris bertingkat yang menolak suapan ke bawah.
+1. **Jalur Suapan Cerita Mendatar (*Story Bubble Track*):**
+   - Ditempatkan di bahagian teratas suapan dengan tatalan melintang lancar (*horizontal snap scroll*):
+     - `+ Luah`: Gelembung pertama dengan cincin gradien ros dan lencana `+` di penjuru bulatan. Mengetuknya membuka modal penggubah luahan rahsia.
+     - `Semua`: Paparan luahan penuh tanpa tapisan kategori.
+     - `⚡ Hangat`: Luahan trending dengan reaksi tertinggi.
+     - `📚 Exam`: Luahan akademik, sesi ulangkaji, dan kuiz.
+     - `🏠 Kamsis`: Hal ehwal asrama dan kolej kediaman.
+     - `🍔 Kafe`: Cerita makanan dan lepak di food court Semambu.
+     - `💬 Aduan`: Saluran kaunseling dan aduan kebajikan.
+2. **Cincin Gradien Neon & Animasi Haptik:**
+   - Setiap bulatan mempunyai cincin gradien tebal dwi-warna (`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] active:scale-95`).
+   - Gelembung yang aktif diserlahkan dengan bayang bersinar (`shadow-[0_0_15px_rgba(244,63,94,0.35)] ring-2 ring-rose-500/50`).
 
 ---
 
-### 30.4 Kad Luahan Editorial & Bar Tindakan Komuniti
+### 30.3 Navigasi Suapan Tiga Tab Beranimasi (`SocialTabNav.tsx`)
 
-1. **Struktur Kad Luahan Bersih:**
+1. **Tiga Mod Paparan Suapan:**
+   - **Untuk Anda (For You):** Suapan pintar berteraskan campuran perkongsian kampus.
+   - **Terkini (Latest):** Susunan kronologi terbaharu (`created_at DESC`).
+   - **Hangat (Trending):** Luahan paling hangat berasaskan reaksi dan perbincangan komuniti.
+2. **Penunjuk Garis Gelongsor Spring (*Spring-Animated Underline Indicator*):**
+   - Dilengkapi garis kecerunan ros-merah jambu bergerak lancar menggunakan Framer Motion `layoutId="activeFeedTabIndicator"` yang meluncur ke tab aktif secara automatik.
+
+---
+
+### 30.4 Kad Luahan Terapung Mewah (`rounded-[2rem]` Floating Cards)
+
+1. **Struktur Kad Lapang & Berkarisma:**
+   - Sudut melengkung eksekutif `rounded-[2rem]` dengan bayang terapung moden.
    - **Header Kad:**
-     - Avatar *squircle* watak haiwan hidup mengikut *codename* pangkalan data (`avatar.emoji` + `avatar.bgClass`).
-     - Nama samaran rahsia dalam teks tebal bersama format peluru masa relatif: `[Nama] • [masa lalu]`.
-     - Maksimum 1 lencana kategori padat (`text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full`).
-     - Butang laporan bendera ditempatkan secara berhemah di penjuru kanan atas.
-   - **Tipografi Editorial Luahan:**
-     - Teks luahan selesa dibaca: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3`.
-     - Maklum balas rasmi JPP direka sebagai *quote callout* berprestij dengan sempadan sisi hijau firus (`border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl`).
-2. **Bar Tindakan Interaksi Sosial:**
+     - Avatar bulat watak haiwan di dalam gelang neon kecerunan tebal (`bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400`).
+     - Nama samaran rahsia dalam teks tebal (`font-extrabold text-slate-900 dark:text-white`) bersama lencana semakan anon biru/cyan comel (✓) bertajuk *"Identiti Anon Sah Disahkan"*.
+     - Masa relatif kiriman (`2 jam lepas`) di bawah nama pengarang.
+     - Lencana kategori berbentuk pil berhuruf besar (`text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full`).
+     - Butang laporan bendera ditempatkan secara kemas di penjuru kanan atas.
+   - **Badan Luahan:**
+     - Teks luahan editorial luas: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5`.
+     - Lampiran imej dengan nisbah aspek penuh, sempadan `rounded-2xl`, dan animasi zum pada sentuhan.
+     - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-4 rounded-r-2xl`).
+2. **Baris Tindakan Sosial Bersepadu (Pipel Social Action Row):**
    - **Kiri:**
-     - Bar reaksi terapung WhatsApp `<PolySuaraReactions />` bersama pil kiraan reaksi aktif.
-     - Butang Dislike (👎) komuniti yang tenang dan padat di sebelah reaksi.
-     - Butang Ulasan (💬) dengan kiraan komen membuka laci komen pantas.
+     - Bar reaksi terapung WhatsApp `<PolySuaraReactions />` (❤️, 😂, 🔥, 😢, 😮, 💯) bersama pil kiraan aktif.
+     - Butang Ulasan (💬) dengan bilangan komen membuka laci ulasan.
+     - Butang Dislike (👎) komuniti untuk semakan auto-moderasi.
    - **Kanan:**
-     - Butang Kongsi Grafik (`Share2`) untuk Instagram Story / perkongsian web.
-     - Tindakan Exco (Semat Pos, Balas sebagai JPP) dipaparkan secara bersyarat mengikut kebenaran RBAC.
+     - Butang Perkongsian pantas (`Share2`) untuk Instagram Story / perkongsian web.
+     - Butang Simpanan / Bookmark (`Bookmark`) dengan penandaan aktif.
 
 ---
 
-### 30.5 Enjin Reaksi Terapung WhatsApp (`PolySuaraReactions.tsx`)
+### 30.5 Butang Tindakan Terapung Bercahaya (`FloatingComposeFab.tsx` FAB `+`)
 
-1. **Bar Kapsul Terapung Popover:**
-   - Digerakkan oleh Framer Motion dengan fizik spring cergas (`stiffness: 400, damping: 25`).
-   - 6 emoji reaksi ekspresif mahasiswa POLISAS: ❤️ *(Suka)*, 😂 *(Lawak)*, 🔥 *(Padu)*, 😢 *(Sedih)*, 😮 *(Terkejut)*, 💯 *(Mantap)*.
-   - Setiap emoji dilengkapi lantunan spring animasi (`whileHover={{ scale: 1.35, y: -4 }}`) dan kesan haptik pantas.
-2. **Pil Ringkasan Kaunter Reaksi (*Interactive Reaction Pills*):**
-   - Dipaparkan di bawah setiap pos (cth: `[❤️ 14]` `[🔥 28]` `[😂 5]`).
-   - Mengetik terus pada pil membolehkan pelajar mengundi atau membatalkan undian emoji secara serta-merta tanpa perlu membuka menu terapung.
-   - Pilihan aktif diserlahkan (`bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold`).
-3. **Integriti Kiraan Upvotes & Pangkalan Data:**
-   - Semua reaksi positif dikira sebagai sokongan (*upvote increment*) yang menaikkan luahan ke suapan "Hangat".
-   - Disokong oleh jadual Supabase berprestasi tinggi `polysuara_reactions` (`confession_id`, `user_id`, `reaction_type`, `created_at`) dengan RLS ketat `(SELECT auth.uid()) = user_id` dan indeks FK pantas.
-   - *Optimistic UI*: Reaksi dikemas kini secara langsung dalam memori pelayar (0ms lag), kemudian disegerakan ke pelayan pangkalan data di latar belakang.
+1. **Butang Bulat Bergradien Neon Terapung:**
+   - Ditempatkan secara tetap di bahagian tengah bawah skrin (`fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2 z-40`).
+   - Butang bulat besar `w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-rose-400 text-white` dengan bayang merah jambu bersinar (`shadow-[0_8px_25px_rgba(244,63,94,0.45)]`) dan aura ambien berdenyut.
+   - Mengetik butang ini mencetuskan pembukaan **Modal Penggubah Bebas Gangguan (*Compose Modal*)** dari mana-mana bahagian suapan dengan sentuhan haptik `active:scale-90`.
 
 ---
 
@@ -3211,4 +3209,4 @@ Modul PolySuara telah dinaik taraf kepada **Platform Sosial Mahasiswa Super App*
 2. **Eskalasi Krisis & Kebajikan Rahsia:**
    - Butang *"Bantuan"* pada ulasan dan butang laporan perisai pada kad luahan membolehkan pelajar menghantar isyarat kecemasan terus kepada barisan pimpinan kebajikan secara 100% sulit.
 3. **Ergonomik Mudah Alih & Ruang Bawah:**
-   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-28 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau bar menaip ulasan.
+   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` dan FAB tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah.
