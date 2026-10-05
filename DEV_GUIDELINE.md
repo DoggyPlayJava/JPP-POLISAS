@@ -3137,7 +3137,67 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
    - Sasaran sentuhan minimum 44px (`min-h-[44px]`).
    - Mengelakkan operasi gelung N+1 dan memelihara operasi berasaskan perkakasan GPU `transform-gpu`.
 
+---
 
+### 29.9 Seni Bina PolyMart SuperApp: Obsidian-Amber Marketplace & Performance Guardrails
+
+> Route prefix: `/polymart/*` | Komponen Utama: `src/pages/polymart/PolyMartLayout.tsx` & `src/pages/polymart/PolyMartHome.tsx`
+
+Laman Pasaran Mahasiswa PolyMart (`/polymart`) telah dinaik taraf kepada pengalaman **PolyMart SuperApp** berprestasi tinggi berteraskan reka bentuk moden, navigasi pantas, dan ergonomik peranti mudah alih:
+
+1. **Identiti Tema Obsidian-Amber (#f59e0b):**
+   - **Rasional Penjenamaan:** Modul e-Keusahawanan dan pasaran PolyMart mengekalkan tema warna Amber / Warm Gold (`#f59e0b`, `amber-500` / `amber-400`) sebagai identiti visual unik yang berasingan daripada tema hijau zamrud Portal Kampus (*Emerald Portal*).
+   - Kecerunan rasmi bar tajuk atas menggunakan tona obsidian ambar:
+     ```css
+     from-amber-950 via-slate-900 to-slate-950 text-white border-b border-amber-500/20
+     ```
+     disokong oleh lingkaran aura ambar lembut (`bg-amber-500/10 blur-2xl`) untuk memberikan impresi kedalaman visual premium tanpa menjejaskan kejelasan teks.
+
+2. **Kapsul Carian Stadium Moden (Stadium Search Capsule):**
+   - Bar carian produk direka bentuk semula sebagai kapsul stadium anggun (`h-10 px-4 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 focus-within:border-amber-500 shadow-xs`).
+   - Dilengkapi ikon kanta pembesar aksen ambar (`Search` Lucide, `text-amber-500`) dan teks penanda tempat kontras tinggi:
+     `Cari makanan, minuman, servis, pakaian...`
+   - Menyediakan butang pembersihan pantas (`X`) apabila teks ditaip serta butang hantar carian interaktif berkontras mesra sentuhan.
+
+3. **Butang Tindakan Terapung Bulat (Floating Discrete Action Circles):**
+   - Menggantikan kapsul/pill lapuk atau bar bertembok lama dengan susunan butang tindakan diskret bulat seragam bersaiz 36px (`w-9 h-9 rounded-full`):
+     - **Kembali (`Back`):** Akses kembali pantas ke Portal Siswa `/portal` dengan ikon `ArrowLeft`.
+     - **Bakul (`Cart`):** Akses troli belian (`ShoppingCart`) lengkap dengan lencana kuantiti terapung ambar (`bg-amber-500 text-white font-bold`).
+     - **Pesanan (`Orders`):** Laluan pantas ke senarai pesanan aktif pembeli (`/polymart/pesanan-saya`) dengan ikon `ShoppingBag`.
+     - **Senarai Hajat (`Wishlist`):** Membuka laci senarai hajat pengguna dengan ikon `Heart`.
+   - Menggunakan gaya butang permata kaca porselin/obsidian bersinar:
+     ```css
+     bg-white/80 dark:bg-slate-900/80 border border-border/60 hover:border-amber-400/60 hover:text-amber-500 active:scale-95 shadow-xs transition-all duration-200
+     ```
+
+4. **Pemetaan Kategori Vektor Lucide (Vector Category Mapping):**
+   - Semua penggunaan emoji mentah (seperti 🍔, ☕, 📱, dsb.) telah dimansuhkan sepenuhnya daripada antaramuka pasaran PolyMart.
+   - Dipetakan secara konsisten menerusi kamus `CATEGORY_ICON_MAP`:
+     - `'SEMUA'`: `LayoutGrid`
+     - `'MAKANAN'`: `Utensils`
+     - `'MINUMAN'`: `Coffee`
+     - `'KECANTIKAN'`: `Sparkles`
+     - `'SERVIS'`: `Wrench`
+     - `'PAKAIAN'`: `Shirt`
+     - `'ELEKTRONIK'`: `Smartphone`
+     - `'LAIN-LAIN'`: `Package`
+   - Bar kapsul kategori mendatar (`overflow-x-auto scrollbar-none snap-x`) membolehkan penapisan sepintas lalu dengan maklum balas visual pantas (latar ambar pekat `bg-amber-500 text-white` untuk kategori aktif).
+
+5. **3 Pengawal Senior (Senior Guardrails):**
+   - **Guardrail 1 (Prestasi Telefon Pelajar / 60fps Scrolling):**
+     - Sifar `backdrop-blur` berat atau glow berlapis-lapis pada 50 kad produk dalam grid.
+     - Setiap kad produk menggunakan struktur garis halus ringan (*hairline border*):
+       ```css
+       rounded-2xl bg-card dark:bg-slate-900/90 border border-border/60 hover:border-amber-400/50 transition-all duration-200
+       ```
+     - Ini mengelakkan bebanan berlebihan pada GPU mudah alih dan memastikan kelancaran tatalan 60fps pada peranti bajet seperti jenama Redmi dan Infinix yang popular dalam kalangan mahasiswa.
+   - **Guardrail 2 (Ruang Skrin Mudah Alih Padat / Screen Estate):**
+     - Showcase Hero Banner dihadkan ketinggiannya secara ketat kepada `max-h-[180px]`.
+     - Dilengkapi pil statistik metrik beku (*frosted stats pills* untuk jumlah produk & peniaga) dengan latar separa lutsinar (`bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-full px-3 py-1 text-xs border border-white/15`).
+     - Memastikan barangan pasaran terus nampak pada lipatan pertama skrin telefon (*above-the-fold*) tanpa memerlukan pelajar menatal jauh ke bawah.
+   - **Guardrail 3 (Disiplin Jenama & Integriti Logik):**
+     - Mengekalkan warna tema Amber PolyMart tanpa pencampuran yang mengelirukan dengan tema modul lain.
+     - Pematuhan ketat 0% pengubahsuaian terhadap logik perniagaan, troli, pesanan, mahupun skema database (100% Visual & UI Polish).
 
 ---
 
