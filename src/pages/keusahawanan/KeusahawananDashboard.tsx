@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { hexToRgba, getMalaysianNickname } from '@/lib/utils';
+import { hexToRgba, getMalaysianNickname, cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import {

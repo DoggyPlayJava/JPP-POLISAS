@@ -84,6 +84,11 @@ describe('KeusahawananDashboard PolyMart Hub Card & Zero Overflow', () => {
     const matches = source.match(emojiRegex);
     expect(matches).toBeNull();
   });
+
+  it('imports cn utility from @/lib/utils in KeusahawananDashboard.tsx', () => {
+    const dashboardSrc = source;
+    expect(dashboardSrc).toMatch(/import\s*\{[^}]*cn[^}]*\}\s*from\s*['"]@\/lib\/utils['"]/);
+  });
 });
 
 describe('KeusahawananLayout Zero Horizontal Overflow', () => {
