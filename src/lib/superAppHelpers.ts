@@ -113,11 +113,25 @@ export function getHeaderGradientClass(karnivalActive?: boolean, supsasActive?: 
   if (supsasActive) {
     return 'from-amber-950 via-slate-900 to-sky-950';
   }
-  return 'from-emerald-950 via-slate-900 to-slate-950';
+  return 'from-[#4A0E17] via-[#6B141E] to-[#1C0508] text-white border-b border-amber-500/20';
 }
 
+export type CampusServiceId =
+  | 'polysuara'
+  | 'polymart'
+  | 'takwim'
+  | 'polymaps'
+  | 'polyrent'
+  | 'kebajikan'
+  | 'akademik_qr'
+  | 'ekpp'
+  | 'polyrider'
+  | 'polyservices'
+  | 'kamsis'
+  | 'ems';
+
 export interface CampusServiceItem {
-  id: 'polyrider' | 'polymart' | 'polyservices' | 'kamsis' | 'ems' | 'kebajikan' | 'akademik_qr' | 'ekpp';
+  id: CampusServiceId;
   label: string;
   routeOrAction: string;
   badge?: string;
@@ -127,16 +141,16 @@ export interface CampusServiceItem {
 }
 
 export function getCampusServicesConfig(params: {
-  kamsisStatus: string | null;
+  kamsisStatus?: string | null;
   kbOpenCount?: number;
 }): CampusServiceItem[] {
   return [
     {
-      id: 'polyrider',
-      label: 'PolyRider',
-      routeOrAction: '/polyrider',
-      description: 'Ride & Penghantaran',
-      color: 'emerald',
+      id: 'polysuara',
+      label: 'PolySuara',
+      routeOrAction: '/polysuara',
+      description: 'Suara Mahasiswa',
+      color: 'rose',
     },
     {
       id: 'polymart',
@@ -146,28 +160,26 @@ export function getCampusServicesConfig(params: {
       color: 'amber',
     },
     {
-      id: 'polyservices',
-      label: 'PolyServices',
-      routeOrAction: 'modal:polymart',
-      description: 'Khidmat Kampus',
+      id: 'takwim',
+      label: 'Takwim',
+      routeOrAction: '/akademik/takwim',
+      description: 'Jadual & Kalendar',
       color: 'indigo',
-      tourClass: 'tour-qa-polyservices',
+      tourClass: 'tour-qa-takwim tour-qa-polyservices',
     },
     {
-      id: 'kamsis',
-      label: 'Kamsis',
-      routeOrAction: 'modal:kamsis',
-      description: 'Penempatan Asrama',
-      badge: params.kamsisStatus === 'APPROVED' ? 'LULUS' : undefined,
+      id: 'polymaps',
+      label: 'PolyMaps',
+      routeOrAction: '/polymaps',
+      description: 'Navigasi Kampus',
+      color: 'emerald',
+    },
+    {
+      id: 'polyrent',
+      label: 'PolyRent',
+      routeOrAction: '/polyrent',
+      description: 'Sewa Barangan',
       color: 'cyan',
-    },
-    {
-      id: 'ems',
-      label: 'EMS',
-      routeOrAction: '/ems/dashboard',
-      description: 'Pengurusan Acara',
-      color: 'rose',
-      tourClass: 'tour-qa-takwim',
     },
     {
       id: 'kebajikan',

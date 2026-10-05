@@ -62,9 +62,11 @@ describe('superAppHelpers', () => {
       const supsasGrad = getHeaderGradientClass(false, true);
       expect(supsasGrad).toContain('amber');
 
-      // Default portal state
+      // Default portal state (Executive Maroon)
       const defaultGrad = getHeaderGradientClass(false, false);
-      expect(defaultGrad).toContain('emerald');
+      expect(defaultGrad).toContain('#4A0E17');
+      expect(defaultGrad).toContain('#6B141E');
+      expect(defaultGrad).toContain('#1C0508');
     });
 
     it('exports SuperAppHeader component correctly', async () => {
@@ -80,11 +82,11 @@ describe('superAppHelpers', () => {
       expect(services).toHaveLength(8);
       const ids = services.map(s => s.id);
       expect(ids).toEqual([
-        'polyrider',
+        'polysuara',
         'polymart',
-        'polyservices',
-        'kamsis',
-        'ems',
+        'takwim',
+        'polymaps',
+        'polyrent',
         'kebajikan',
         'akademik_qr',
         'ekpp',
@@ -94,17 +96,6 @@ describe('superAppHelpers', () => {
         expect(s.label).toBeTruthy();
         expect(s.routeOrAction).toBeTruthy();
       });
-    });
-
-    it("attaches 'LULUS' badge when kamsisStatus === 'APPROVED'", () => {
-      const services = getCampusServicesConfig({ kamsisStatus: 'APPROVED' });
-      const kamsis = services.find(s => s.id === 'kamsis');
-      expect(kamsis).toBeDefined();
-      expect(kamsis?.badge).toBe('LULUS');
-
-      const nonApproved = getCampusServicesConfig({ kamsisStatus: 'PENDING' });
-      const nonApprovedKamsis = nonApproved.find(s => s.id === 'kamsis');
-      expect(nonApprovedKamsis?.badge).toBeUndefined();
     });
 
     it('attaches active ticket count badge when kbOpenCount > 0', () => {
