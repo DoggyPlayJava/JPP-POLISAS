@@ -5,6 +5,7 @@ import {
   buildCampaignSlides,
   getRoleBadgeTitle,
   getHeaderGradientClass,
+  getCampusServicesConfig,
 } from '@/lib/superAppHelpers';
 
 describe('superAppHelpers', () => {
@@ -68,6 +69,57 @@ describe('superAppHelpers', () => {
       const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
       expect(SuperAppHeader).toBeDefined();
       expect(typeof SuperAppHeader).toBe('function');
+    });
+  });
+
+  describe('getCampusServicesConfig & CampusServicesGrid', () => {
+    it('returns exactly 8 core campus services in expected IDs', () => {
+      const services = getCampusServicesConfig({ kamsisStatus: null });
+      expect(services).toHaveLength(8);
+      const ids = services.map(s => s.id);
+      expect(ids).toEqual([
+        'polyrider',
+        'polymart',
+        'polyservices',
+        'kamsis',
+        'ems',
+        'kebajikan',
+        'akademik_qr',
+        'ekpp',
+      ]);
+      services.forEach(s => {
+        expect(s.id).toBeTruthy();
+        expect(s.label).toBeTruthy();
+        expect(s.routeOrAction).toBeTruthy();
+      });
+    });
+
+    it("attaches 'LULUS' badge when kamsisStatus === 'APPROVED'", () => {
+      const services = getCampusServicesConfig({ kamsisStatus: 'APPROVED' });
+      const kamsis = services.find(s => s.id === 'kamsis');
+      expect(kamsis).toBeDefined();
+      expect(kamsis?.badge).toBe('LULUS');
+
+      const nonApproved = getCampusServicesConfig({ kamsisStatus: 'PENDING' });
+      const nonApprovedKamsis = nonApproved.find(s => s.id === 'kamsis');
+      expect(nonApprovedKamsis?.badge).toBeUndefined();
+    });
+
+    it('attaches active ticket count badge when kbOpenCount > 0', () => {
+      const servicesWithTickets = getCampusServicesConfig({ kamsisStatus: null, kbOpenCount: 4 });
+      const kb = servicesWithTickets.find(s => s.id === 'kebajikan');
+      expect(kb).toBeDefined();
+      expect(kb?.badge).toBe('4');
+
+      const servicesWithoutTickets = getCampusServicesConfig({ kamsisStatus: null, kbOpenCount: 0 });
+      const kbZero = servicesWithoutTickets.find(s => s.id === 'kebajikan');
+      expect(kbZero?.badge).toBeUndefined();
+    });
+
+    it('exports CampusServicesGrid component correctly', async () => {
+      const { CampusServicesGrid } = await import('@/components/portal/CampusServicesGrid');
+      expect(CampusServicesGrid).toBeDefined();
+      expect(typeof CampusServicesGrid).toBe('function');
     });
   });
 });

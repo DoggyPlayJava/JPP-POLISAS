@@ -116,3 +116,83 @@ export function getHeaderGradientClass(karnivalActive?: boolean, supsasActive?: 
   return 'from-emerald-950 via-slate-900 to-slate-950';
 }
 
+export interface CampusServiceItem {
+  id: 'polyrider' | 'polymart' | 'polyservices' | 'kamsis' | 'ems' | 'kebajikan' | 'akademik_qr' | 'ekpp';
+  label: string;
+  routeOrAction: string;
+  badge?: string;
+  description?: string;
+  color?: string;
+  tourClass?: string;
+}
+
+export function getCampusServicesConfig(params: {
+  kamsisStatus: string | null;
+  kbOpenCount?: number;
+}): CampusServiceItem[] {
+  return [
+    {
+      id: 'polyrider',
+      label: 'PolyRider',
+      routeOrAction: '/polyrider',
+      description: 'Ride & Penghantaran',
+      color: 'emerald',
+    },
+    {
+      id: 'polymart',
+      label: 'PolyMart',
+      routeOrAction: '/polymart',
+      description: 'Pasaran Siswa',
+      color: 'amber',
+    },
+    {
+      id: 'polyservices',
+      label: 'PolyServices',
+      routeOrAction: 'modal:polymart',
+      description: 'Khidmat Kampus',
+      color: 'indigo',
+      tourClass: 'tour-qa-polyservices',
+    },
+    {
+      id: 'kamsis',
+      label: 'Kamsis',
+      routeOrAction: 'modal:kamsis',
+      description: 'Penempatan Asrama',
+      badge: params.kamsisStatus === 'APPROVED' ? 'LULUS' : undefined,
+      color: 'cyan',
+    },
+    {
+      id: 'ems',
+      label: 'EMS',
+      routeOrAction: '/ems/dashboard',
+      description: 'Pengurusan Acara',
+      color: 'rose',
+    },
+    {
+      id: 'kebajikan',
+      label: 'E-Kebajikan',
+      routeOrAction: '/kebajikan',
+      description: 'Aduan & Bantuan',
+      badge: params.kbOpenCount && params.kbOpenCount > 0 ? String(params.kbOpenCount) : undefined,
+      color: 'teal',
+      tourClass: 'tour-qa-kebajikan',
+    },
+    {
+      id: 'akademik_qr',
+      label: 'Scan QR',
+      routeOrAction: '/akademik/qr',
+      description: 'Kumpul Merit',
+      color: 'purple',
+      tourClass: 'tour-qa-qr',
+    },
+    {
+      id: 'ekpp',
+      label: 'Kelab EKPP',
+      routeOrAction: '/kelab',
+      description: 'Persatuan Siswa',
+      color: 'blue',
+      tourClass: 'tour-mod-ekpp',
+    },
+  ];
+}
+
