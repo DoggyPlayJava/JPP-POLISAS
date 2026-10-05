@@ -23,6 +23,7 @@ export function SuperAppHeader({
   karnivalActive = false,
   supsasActive = false,
   onOpenSidebar,
+  unreadCount: _unreadCount,
   className,
 }: SuperAppHeaderProps) {
   const currentHour = useMemo(() => new Date().getHours(), []);
@@ -51,66 +52,57 @@ export function SuperAppHeader({
 
       {/* Main Header Container */}
       <div className="relative z-10 px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 pb-7 sm:pb-8 max-w-7xl mx-auto flex flex-col gap-5 sm:gap-6">
-        {/* Top Action Bar: Brand Logo & Location (Left) + ThemeToggle, NotificationBell & Profile (Right) */}
+        {/* Top Action Bar: Brand Logo & Location (Left) + Unified Glass Dock (Right) */}
         <div className="flex items-center justify-between gap-3">
-          {/* Left Side: Prominent JPP Logo Pill + Campus Location Pill */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Prominent JPP Logo Pill */}
-            <div className="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-1.5 rounded-2xl bg-black/25 backdrop-blur-md border border-white/15 shadow-sm">
-              <img
-                src="/jpp-logo.png"
-                alt="JPP POLISAS"
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 drop-shadow"
-              />
+          {/* Left Side: Prominent JPP Logo & Campus Location Pill */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            {/* JPP Brand Badge */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm shrink-0">
+                <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
+              </div>
               <div className="flex flex-col">
-                <span className="font-black text-xs sm:text-sm tracking-tight text-white leading-none">
+                <span className="font-black text-xs sm:text-sm tracking-tight text-white leading-tight">
                   JPP POLISAS
                 </span>
-                <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-amber-300/80 font-bold mt-0.5">
-                  Portal Rasmi
+                <span className="text-[9px] font-bold text-emerald-400 tracking-wide">
+                  Portal Rasmi Pelajar
                 </span>
               </div>
             </div>
 
             {/* Campus Location Pill */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/25 border border-white/10 text-white/90 text-xs font-semibold shrink-0">
-              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-black/25 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium shrink-0">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>POLISAS, Semambu</span>
             </div>
           </div>
 
-          {/* Right Side: ThemeToggle + NotificationBell + Profile Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* ThemeToggle with glass styling */}
-            <div className="[&_button]:bg-black/25 [&_button]:hover:bg-white/20 [&_button]:border [&_button]:border-white/15 [&_button]:text-white [&_button]:h-9 sm:[&_button]:h-10 [&_button]:w-9 sm:[&_button]:w-10 [&_button]:rounded-2xl transition-all">
+          {/* Right Side: Consolidated Unified Glass Dock Capsule */}
+          <div className="inline-flex items-center p-1 rounded-2xl bg-white/10 dark:bg-black/30 backdrop-blur-2xl border border-white/15 divide-x divide-white/10 shadow-lg shrink-0">
+            <div className="px-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white [&_button]:!rounded-xl">
               <ThemeToggle />
             </div>
-
-            {/* NotificationBell with dark variant & unified glass button */}
-            <div className="[&_button]:bg-black/25 [&_button]:hover:bg-white/20 [&_button]:border [&_button]:border-white/15 [&_button]:text-white [&_button]:hover:text-white [&_button]:h-9 sm:[&_button]:h-10 [&_button]:w-9 sm:[&_button]:w-10 [&_button]:rounded-2xl transition-all">
+            <div className="px-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white [&_button]:!rounded-xl">
               <NotificationBell variant="dark" />
             </div>
-
-            {/* User Profile Avatar / Trigger */}
-            <button
-              type="button"
-              onClick={onOpenSidebar}
-              aria-label="Buka profil dan menu sisi"
-              className="tour-navbar-profile relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl overflow-hidden border-2 border-white/30 hover:border-white/50 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer bg-white/10 shrink-0"
-            >
-              <Avatar className="w-full h-full rounded-none">
-                {profile?.avatar_url && (
-                  <AvatarImage
-                    src={profile.avatar_url}
-                    className="object-cover"
-                    alt={profile?.full_name || displayName || 'Profil'}
-                  />
-                )}
-                <AvatarFallback className="bg-white/20 text-white text-xs font-black">
-                  {(profile?.full_name || displayName || 'P')?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </button>
+            <div className="pl-1.5 pr-0.5">
+              <button
+                type="button"
+                onClick={onOpenSidebar}
+                className="tour-navbar-profile relative w-8 h-8 rounded-xl overflow-hidden border border-white/20 active:scale-95 transition-all shadow-sm focus:outline-none cursor-pointer shrink-0"
+                aria-label="Buka profil dan tetapan"
+              >
+                <Avatar className="w-full h-full rounded-none">
+                  {profile?.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} className="object-cover" alt="Profil" />
+                  ) : null}
+                  <AvatarFallback className="bg-white/20 text-white text-[11px] font-black">
+                    {profile?.full_name?.[0]?.toUpperCase() || displayName?.[0]?.toUpperCase() || 'P'}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -121,7 +113,7 @@ export function SuperAppHeader({
               {greeting.title}
             </span>
             {roleTitle && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-white/15 backdrop-blur-md border border-white/20 text-amber-200 shadow-sm">
+              <span className="inline-flex items-center text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full shadow-sm">
                 {roleTitle}
               </span>
             )}
@@ -136,7 +128,7 @@ export function SuperAppHeader({
             ) : null}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
             {displayName || nameToDisplay}
           </h1>
 
@@ -149,38 +141,25 @@ export function SuperAppHeader({
           </p>
         </div>
 
-        {/* Floating Search Button */}
+        {/* Frosted Glass Search Button */}
         <div className="pt-1">
           <button
             type="button"
             onClick={() => triggerCommandPalette(true)}
-            aria-label="Cari makanan, runner, servis, acara, merit..."
-            className={cn(
-              'w-full group flex items-center justify-between gap-3 px-4 sm:px-5',
-              'h-12 sm:h-13 sm:h-[52px]',
-              'rounded-2xl bg-white dark:bg-slate-900 backdrop-blur-xl',
-              'text-slate-700 dark:text-slate-200 shadow-xl shadow-black/20',
-              'border border-white/30 dark:border-white/10 hover:border-emerald-500/50 dark:hover:border-emerald-400/50',
-              'hover:shadow-2xl transition-all duration-300 text-left cursor-pointer active:scale-[0.99]',
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500/60'
-            )}
+            className="w-full h-12 px-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] dark:bg-white/[0.05] dark:hover:bg-white/[0.08] backdrop-blur-2xl border border-white/15 hover:border-emerald-400/40 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] group cursor-pointer"
+            aria-label="Cari makanan, servis, peta, aduan, merit..."
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-400/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Search className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Search className="w-3.5 h-3.5" />
               </div>
-              <div className="truncate">
-                <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                  Cari makanan, runner, servis, acara, merit...
-                </span>
-              </div>
+              <span className="text-xs sm:text-sm text-white/70 group-hover:text-white font-medium truncate">
+                Cari makanan, servis, peta, aduan, merit...
+              </span>
             </div>
-
-            <div className="shrink-0 flex items-center gap-1.5">
-              <kbd className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner">
-                <span className="text-[10px]">Ctrl</span>+<span>K</span>
-              </kbd>
-            </div>
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-white/50 bg-white/10 rounded-md border border-white/10">
+              <span>Ctrl</span>+<span>K</span>
+            </kbd>
           </button>
         </div>
       </div>
