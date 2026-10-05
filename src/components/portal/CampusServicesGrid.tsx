@@ -39,35 +39,35 @@ const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 const SERVICE_STYLES: Record<string, { squircleClass: string }> = {
   polysuara: {
     squircleClass:
-      'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/25 group-hover:border-rose-500/50 group-hover:bg-rose-500/15 dark:group-hover:border-rose-400/40 dark:group-hover:bg-rose-500/20',
+      'bg-rose-50 text-rose-600 border-rose-200 shadow-xs dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/40 dark:shadow-[0_0_12px_rgba(244,63,94,0.3)]',
   },
   polymart: {
     squircleClass:
-      'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/25 group-hover:border-amber-500/50 group-hover:bg-amber-500/15 dark:group-hover:border-amber-400/40 dark:group-hover:bg-amber-500/20',
+      'bg-amber-50 text-amber-600 border-amber-200 shadow-xs dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/40 dark:shadow-[0_0_12px_rgba(245,158,11,0.3)]',
   },
   takwim: {
     squircleClass:
-      'bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-500/25 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/15 dark:group-hover:border-indigo-400/40 dark:group-hover:bg-indigo-500/20',
+      'bg-indigo-50 text-indigo-600 border-indigo-200 shadow-xs dark:bg-indigo-500/20 dark:text-indigo-400 dark:border-indigo-500/40 dark:shadow-[0_0_12px_rgba(99,102,241,0.3)]',
   },
   polymaps: {
     squircleClass:
-      'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/25 group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15 dark:group-hover:border-emerald-400/40 dark:group-hover:bg-emerald-500/20',
+      'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-xs dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/40 dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]',
   },
   polyrent: {
     squircleClass:
-      'bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border-cyan-500/25 group-hover:border-cyan-500/50 group-hover:bg-cyan-500/15 dark:group-hover:border-cyan-400/40 dark:group-hover:bg-cyan-500/20',
+      'bg-cyan-50 text-cyan-600 border-cyan-200 shadow-xs dark:bg-cyan-500/20 dark:text-cyan-400 dark:border-cyan-500/40 dark:shadow-[0_0_12px_rgba(6,182,212,0.3)]',
   },
   kebajikan: {
     squircleClass:
-      'bg-teal-500/10 text-teal-500 dark:text-teal-400 border-teal-500/25 group-hover:border-teal-500/50 group-hover:bg-teal-500/15 dark:group-hover:border-teal-400/40 dark:group-hover:bg-teal-500/20',
+      'bg-teal-50 text-teal-600 border-teal-200 shadow-xs dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/40 dark:shadow-[0_0_12px_rgba(20,184,166,0.3)]',
   },
   akademik_qr: {
     squircleClass:
-      'bg-purple-500/10 text-purple-500 dark:text-purple-400 border-purple-500/25 group-hover:border-purple-500/50 group-hover:bg-purple-500/15 dark:group-hover:border-purple-400/40 dark:group-hover:bg-purple-500/20',
+      'bg-purple-50 text-purple-600 border-purple-200 shadow-xs dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/40 dark:shadow-[0_0_12px_rgba(168,85,247,0.3)]',
   },
   ekpp: {
     squircleClass:
-      'bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/25 group-hover:border-blue-500/50 group-hover:bg-blue-500/15 dark:group-hover:border-blue-400/40 dark:group-hover:bg-blue-500/20',
+      'bg-blue-50 text-blue-600 border-blue-200 shadow-xs dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40 dark:shadow-[0_0_12px_rgba(59,130,246,0.3)]',
   },
 };
 
@@ -132,7 +132,7 @@ export function CampusServicesGrid({
           const Icon = SERVICE_ICONS[service.id] || Landmark;
           const style = SERVICE_STYLES[service.id] || {
             squircleClass:
-              'bg-slate-500/10 text-slate-700 dark:bg-slate-800/40 dark:text-slate-300 border-slate-300 dark:border-white/10',
+              'bg-slate-50 text-slate-700 border-slate-200 shadow-xs dark:bg-slate-800/40 dark:text-slate-300 dark:border-white/10',
           };
           const isEnabled = checkEnabled(service.id);
 
@@ -145,8 +145,9 @@ export function CampusServicesGrid({
               transition={{ type: 'spring', stiffness: 400, damping: 22 }}
               onClick={() => handleAction(service)}
               className={cn(
-                'flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 p-2 sm:p-3 rounded-2xl sm:rounded-3xl transition-all',
-                'bg-white/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] backdrop-blur-md border border-slate-200/60 dark:border-white/[0.08] hover:border-emerald-500/30 dark:hover:border-emerald-400/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] shadow-sm hover:shadow-md',
+                'flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 p-2 sm:p-3 transition-all',
+                'bg-white hover:bg-slate-50 border border-slate-200/70 hover:border-emerald-400/40 shadow-xs hover:shadow-md rounded-2xl sm:rounded-3xl',
+                'dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:backdrop-blur-md dark:border-white/[0.08] dark:hover:border-emerald-500/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
                 service.tourClass,
                 !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed hover:scale-100'
               )}
@@ -154,7 +155,7 @@ export function CampusServicesGrid({
             >
               <div
                 className={cn(
-                  'w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center mb-1.5 relative shadow-sm border transition-all duration-200 group-hover:shadow-md dark:bg-white/[0.06] dark:border dark:border-white/10 dark:shadow-inner',
+                  'w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center mb-1.5 relative border transition-all duration-200 group-hover:scale-105',
                   style.squircleClass
                 )}
               >
@@ -176,7 +177,7 @@ export function CampusServicesGrid({
                 )}
               </div>
 
-              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate w-full text-center">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-white transition-colors truncate w-full text-center">
                 {service.label}
               </span>
 

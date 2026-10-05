@@ -411,18 +411,30 @@ describe('superAppHelpers', () => {
         )
       );
 
-      // Deep glass tile container
-      expect(html).toContain('dark:bg-white/[0.04]');
-      expect(html).toContain('dark:hover:bg-white/[0.08]');
+      // Elevated card container depth (light + dark mode)
+      expect(html).toContain('bg-white');
+      expect(html).toContain('hover:bg-slate-50');
+      expect(html).toContain('border-slate-200/70');
+      expect(html).toContain('dark:bg-slate-900/80');
+      expect(html).toContain('dark:hover:bg-slate-800/90');
       expect(html).toContain('dark:border-white/[0.08]');
-      expect(html).toContain('dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)]');
+      expect(html).toContain('dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]');
 
-      // Squircle icon container
-      expect(html).toContain('dark:bg-white/[0.06]');
-      expect(html).toContain('dark:border-white/10');
-      expect(html).toContain('dark:shadow-inner');
+      // Squircle icon container does NOT contain hardcoded overriding dark classes
+      expect(html).not.toContain('dark:bg-white/[0.06]');
+      expect(html).not.toContain('dark:shadow-inner');
 
-      // All 8 glowing neon-pastel icon classes
+      // Cyber luminescent squircle tokens (8 services)
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(244,63,94,0.3)]'); // polysuara
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(245,158,11,0.3)]'); // polymart
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(99,102,241,0.3)]'); // takwim
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]'); // polymaps
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(6,182,212,0.3)]'); // polyrent
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(20,184,166,0.3)]'); // kebajikan
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(168,85,247,0.3)]'); // akademik_qr
+      expect(html).toContain('dark:shadow-[0_0_12px_rgba(59,130,246,0.3)]'); // ekpp
+
+      // All 8 glowing neon-pastel icon text classes
       expect(html).toContain('dark:text-rose-400'); // polysuara
       expect(html).toContain('dark:text-amber-400'); // polymart
       expect(html).toContain('dark:text-indigo-400'); // takwim
@@ -431,6 +443,11 @@ describe('superAppHelpers', () => {
       expect(html).toContain('dark:text-teal-400'); // kebajikan
       expect(html).toContain('dark:text-purple-400'); // akademik_qr
       expect(html).toContain('dark:text-blue-400'); // ekpp
+
+      // Light mode pastel styles
+      expect(html).toContain('bg-rose-50');
+      expect(html).toContain('text-rose-600');
+      expect(html).toContain('border-rose-200');
 
       // Glowing badges
       expect(html).toContain('dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]'); // MERIT
