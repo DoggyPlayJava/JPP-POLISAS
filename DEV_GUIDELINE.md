@@ -3267,6 +3267,44 @@ Laman pasaran mahasiswa PolyMart menyediakan pengalaman peruncitan kampus menyel
 
 ---
 
+### 29.11 Integrasi Pusat Peniaga Siswa e-Keusahawanan & Penyahpepijatan PolyMart
+
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/polymart/PolyMartHome.tsx`, `src/pages/polymart/ActiveVendorsSheet.tsx`, `src/pages/keusahawanan/KeusahawananDashboard.tsx`, `src/pages/keusahawanan/UrusPerniagaanPage.tsx`, `src/pages/keusahawanan/KeusahawananLayout.tsx`
+
+Seni bina integrasi antara modul e-Keusahawanan dan pasaran terbuka PolyMart telah diperkukuh melalui penambahbaikan penemuan peniaga, pembaikan limpahan paparan telefon pintar, penyelarasan jualan sebenar (*real order-based sales*), kad jambatan perniagaan siswa, dan pemudahan pengurusan kedai 3 domain teras:
+
+1. **Pembaikan 3 Pepijat Utama PolyMart (Systematic Bugfixes):**
+   - **Helaian Bawah Direktori Peniaga Aktif (`ActiveVendorsSheet.tsx`):**
+     - Pengendali klik pada *"Lihat Semua >"* di seksyen *Peniaga Aktif POLISAS* (`PolyMartHome.tsx`) kini membuka *Slide-Up Bottom Sheet* direktori peniaga interaktif (`ActiveVendorsSheet`).
+     - Menyediakan bar carian nama kedai masa nyata, penunjuk rating purata, jumlah produk aktif, lokasi gerai/kampus, dan navigasi terus satu-sentuhan ke storefront `/polymart/kedai/:id`.
+   - **Header Sifar-Limpahan Telefon Pintar (Mobile Zero-Overflow Header):**
+     - Kapsul carian utama diberi kelas `min-w-0 flex-1` untuk mengelakkan penolakan kontena melepasi lebar viewport peranti kecil (<380px).
+     - Butang tindakan kanan (*"Kedai"*, *"Admin"*, *"Mulai Bisnes"*) ditukar kepada reka bentuk butang bulat kemas `w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full` dengan label teks disembunyikan pada telefon (`hidden sm:inline`) dan penunjuk amaran merah diletakkan secara mutlak (`absolute -top-1 -right-1`), menjamin *zero horizontal scroll / zero window flowing* pada semua skrin mudah alih.
+   - **Susunan Jualan Sebenar "Paling Laris" (Order-Based Best Sellers):**
+     - Menggantikan metrik simulasi atau `sold_count` statik dengan pengiraan kuantiti pesanan sebenar (`sales_count`) berasaskan jadual `polymart_orders` (menapis status sah/selesai: `COMPLETED`, `CONFIRMED`, `READY`).
+     - Setiap kad produk memaparkan lencana mikro kemas `{p.sales_count} terjual` (atau `{p.sales_count} tempahan`) dan susunan tab *Paling Laris* di etalase kedai (`PolyMartVendorStorefront.tsx`), laman utama (`PolyMartHome.tsx`), serta suapan portal (`PolyMartFeed.tsx`) disusun secara dinamik mengikut volum jualan sebenar.
+
+2. **Kad Integrasi PolyMart di Dashboard e-Keusahawanan (`KeusahawananDashboard.tsx`):**
+   - **Paparan Aktif (Obsidian-Amber Merchant Card):**
+     - Apabila sesebuah perniagaan mempunyai produk yang aktif di PolyMart, dashboard e-Keusahawanan memaparkan kad status PolyMart dalam palet Obsidian-Amber mewah.
+     - Menampilkan metrik produk aktif, penunjuk pesanan baharu menunggu kelulusan (`PENDING`), pautan terus ke etalase kedai (`/polymart/kedai/:id`), dan pautan pantas ke portal pemprosesan pesanan vendor (`/polymart/vendor`).
+   - **Paparan Jemputan Onboarding Mesra Siswa (Empty-State CTA Card):**
+     - Apabila perniagaan belum mempunyai sebarang produk aktif di PolyMart, dashboard memaparkan kad jemputan khas yang menggalakkan usahawan siswa memulakan jualan: *"Anda belum mempunyai produk yang aktif di PolyMart! Terbitkan produk anda sekarang untuk mula menerima tempahan daripada warga kampus."*
+     - Dilengkapi dengan butang tindakan utama berkilau `[+ Terbitkan Produk ke PolyMart]` yang mengarahkan peniaga terus ke pengurusan inventori `/keusahawanan/inventori`.
+
+3. **Pemudahan Halaman Urus Perniagaan 3 Domain (`UrusPerniagaanPage.tsx`):**
+   - Menyusun semula dan memadatkan 7 tab mikro lapuk yang berserabut (`identiti`, `staff`, `pos`, `ciri`, `syif`, `sesi`, `log`) kepada 3 domain teras yang intuitif:
+     - `profil` (**Profil & Kedai**): Identiti dan logo perniagaan, kategori, status pendaftaran (PUSKEP, SSM, EMS) berserta penjanaan nombor automatik, senarai mentor penasihat, dan tetapan kaedah pembayaran PolyMart (muat naik DuitNow QR, arahan bank, nombor telefon peniaga, tempoh had masa bayaran, serta sokongan COD).
+     - `pasukan` (**Pasukan & Operasi**): Pengurusan staf (senarai ahli aktif, kelulusan permohonan staf tertunggak, penyingkiran ahli), zon pemindahan hak milik perniagaan (*transfer ownership*), sub-modul jadual syif bertugas (`BusinessJadual`), rekod sesi syif (`SesiBusiness`), dan penugasan manual terminal POS harian.
+     - `kupon_log` (**Kupon & Log Audit**): Kawalan ciri komersial (suis kupon dan sesi baldi tunai), borang penciptaan kupon promosi POS dan senarai kupon aktif, serta log audit aktiviti sistem menyeluruh dengan pemetaan label tindakan terperinci.
+   - Menggunakan bar navigasi pil bersegmen (*segmented pill tabs*) mesra sentuhan ibu jari (`Store`, `Users`, `Tag`) dengan lencana notifikasi permohonan tertunggak dan pembersihan 100% emoji mentah kepada ikon SVG Lucide.
+
+4. **Jaminan Sifar Limpahan Mendatar (Zero Window Flowing Architecture):**
+   - **Pembungkus Utama Layout:** Menetapkan `w-full max-w-full overflow-x-hidden` pada pembungkus `<main>` di `KeusahawananLayout.tsx` untuk menghalang sebarang sub-komponen daripada menolak lebar tetingkap pelayar pada peranti mudah alih.
+   - **Kontena Tatalan Dalaman Selamat:** Menggunakan kelas `overflow-x-auto scrollbar-hide` pada jadual syif perniagaan (`BusinessShiftModule.tsx`) dan grid/heatmap analisis jualan (`KeusahawananDashboard.tsx`) agar tatalan mendatar terkurung di dalam bekas masing-masing tanpa merosakkan susun atur halaman global.
+
+---
+
 ## 30. Modul PolySuara Super App: Suapan Media Sosial Bersih & Moden (Clean Modern Social Architecture)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
