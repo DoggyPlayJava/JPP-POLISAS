@@ -38,6 +38,7 @@ export function PortalFooter() {
           </div>
         </div>
       </footer>
+      <div className="h-20 md:hidden" aria-hidden="true" />
       <Suspense fallback={null}>
         <FloatingAiChat />
       </Suspense>

@@ -230,6 +230,12 @@ describe('superAppHelpers', () => {
       expect(module.default).toBeDefined();
       expect(typeof module.default).toBe('function');
     });
+
+    it('exports PortalFooter component correctly', async () => {
+      const module = await import('@/components/portal/PortalFooter');
+      expect(module.PortalFooter).toBeDefined();
+      expect(typeof module.PortalFooter).toBe('function');
+    });
   });
 });
 

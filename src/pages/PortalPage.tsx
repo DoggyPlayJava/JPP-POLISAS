@@ -287,7 +287,7 @@ export function PortalPage() {
 
   return (
     <div className={cn(
-      'min-h-screen font-sans overflow-x-hidden transition-colors duration-700 relative flex flex-col',
+      'min-h-screen font-sans overflow-x-hidden w-full max-w-full transition-colors duration-700 relative flex flex-col',
       karnivalActive
         ? 'bg-[#060010] text-white selection:bg-violet-500/20'
         : supsasActive
@@ -398,7 +398,7 @@ export function PortalPage() {
       />
 
       {/* Main Content Experience */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-8 pt-6 pb-24 flex-1">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-8 pt-6 pb-36 sm:pb-32 flex-1 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden w-full max-w-full">
         {/* 1. Campus Services Grid */}
         <CampusServicesGrid
           isModuleEnabled={isModuleEnabled}
