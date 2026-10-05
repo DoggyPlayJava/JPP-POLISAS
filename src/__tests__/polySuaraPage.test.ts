@@ -157,15 +157,15 @@ describe('PolySuaraPage Suite', () => {
       const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
 
       // State check: composeModalOpen defined, composer sticker states removed
-      expect(pageContent).toContain('const [composeModalOpen, setComposeModalOpen] = useState(false);');
+      expect(pageContent).toContain('const [composeModalOpen, setComposeModalOpen] = useState(initialComposeModalOpen);');
       expect(pageContent).not.toContain('composerStickerId');
       expect(pageContent).not.toContain('stickerPickerOpen');
 
-      // Modal dialog elements with z-[999] elevation and bottom clearance
+      // Modal dialog elements with z-[99999] elevation and bottom clearance
       expect(pageContent).toContain('Tulis Luahan Rahsia');
       expect(pageContent).toContain('100% Rahsia');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]');
-      expect(pageContent).toContain('z-[999]');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]');
+      expect(pageContent).toContain('z-[99999]');
       expect(pageContent).toContain('pb-28 sm:pb-6');
       expect(pageContent).toContain('rounded-t-[2.5rem] sm:rounded-3xl');
       expect(pageContent).toContain('Kongsi Luahan');
@@ -439,4 +439,64 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('Math.max(ups - 1, 0)');
     });
   });
+
+  describe('Modal & Comment Drawer Portal Elevation and Navigation Suppression', () => {
+    it('renders BottomNav and FloatingAiChat when compose modal and comment drawer are closed', () => {
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialComposeModalOpen: false,
+        initialCommentDrawerOpen: false,
+      }));
+
+      expect(html).toContain('data-testid="mock-bottom-nav"');
+      expect(html).toContain('data-testid="mock-floating-chat"');
+    });
+
+    it('suppresses BottomNav and FloatingAiChat when composeModalOpen is true', () => {
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialComposeModalOpen: true,
+        initialCommentDrawerOpen: false,
+      }));
+
+      expect(html).not.toContain('data-testid="mock-bottom-nav"');
+      expect(html).not.toContain('data-testid="mock-floating-chat"');
+    });
+
+    it('suppresses BottomNav and FloatingAiChat when commentDrawerOpen is true', () => {
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialComposeModalOpen: false,
+        initialCommentDrawerOpen: true,
+      }));
+
+      expect(html).not.toContain('data-testid="mock-bottom-nav"');
+      expect(html).not.toContain('data-testid="mock-floating-chat"');
+    });
+
+    it('suppresses BottomNav and FloatingAiChat when both compose modal and comment drawer are open', () => {
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialComposeModalOpen: true,
+        initialCommentDrawerOpen: true,
+      }));
+
+      expect(html).not.toContain('data-testid="mock-bottom-nav"');
+      expect(html).not.toContain('data-testid="mock-floating-chat"');
+    });
+
+    it('wraps Compose Modal and Comment Drawer in createPortal with z-[99990] and z-[99999] elevation', () => {
+      const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+      const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+      // createPortal import and target
+      expect(pageContent).toContain("import { createPortal } from 'react-dom';");
+      expect(pageContent).toContain('createPortal(');
+      expect(pageContent).toContain('document.body');
+
+      // Elevation classes for modal and drawer
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]');
+      expect(pageContent).toContain('z-[99999]');
+
+      // Conditional suppression check
+      expect(pageContent).toContain('!composeModalOpen && !commentDrawerOpen');
+    });
+  });
 });
+

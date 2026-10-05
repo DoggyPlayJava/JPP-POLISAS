@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -149,7 +150,15 @@ export function syncDownvoteToggleState(
   };
 }
 
-export function PolySuaraPage() {
+export interface PolySuaraPageProps {
+  initialComposeModalOpen?: boolean;
+  initialCommentDrawerOpen?: boolean;
+}
+
+export function PolySuaraPage({
+  initialComposeModalOpen = false,
+  initialCommentDrawerOpen = false,
+}: PolySuaraPageProps = {}) {
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
   const { isSubscribed, requestPermission, unsubscribe } = usePushNotifications();
@@ -198,7 +207,7 @@ export function PolySuaraPage() {
   };
 
   // Compose state
-  const [composeModalOpen, setComposeModalOpen] = useState(false);
+  const [composeModalOpen, setComposeModalOpen] = useState(initialComposeModalOpen);
   const [newContent, setNewContent] = useState('');
   const [postCategory, setPostCategory] = useState<string>('UMUM');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -246,7 +255,7 @@ export function PolySuaraPage() {
   const [notifToggleLoading, setNotifToggleLoading] = useState(false);
 
   // Comments (Ulasan) States
-  const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
+  const [commentDrawerOpen, setCommentDrawerOpen] = useState(initialCommentDrawerOpen);
   const [activeConfessionForComments, setActiveConfessionForComments] = useState<any | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -1340,25 +1349,26 @@ export function PolySuaraPage() {
             </div>
 
             {/* Compose Modal */}
-            <AnimatePresence>
-              {composeModalOpen && (
-                <>
-                  <motion.div
-                    key="compose-backdrop"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setComposeModalOpen(false)}
-                    className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]"
-                  />
-                  <motion.div
-                    key="compose-modal"
-                    initial={{ opacity: 0, y: 40, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 40, scale: 0.96 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-lg bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-[999] max-h-[90vh] overflow-y-auto pb-28 sm:pb-6"
-                  >
+            {typeof document !== 'undefined' && createPortal(
+              <AnimatePresence>
+                {composeModalOpen && (
+                  <>
+                    <motion.div
+                      key="compose-backdrop"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setComposeModalOpen(false)}
+                      className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]"
+                    />
+                    <motion.div
+                      key="compose-modal"
+                      initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 40, scale: 0.96 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-lg bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-[99999] max-h-[90vh] overflow-y-auto pb-28 sm:pb-6"
+                    >
                     {/* Modal Header */}
                     <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-4">
                       <div className="flex items-center gap-2.5">
@@ -1503,7 +1513,9 @@ export function PolySuaraPage() {
                   </motion.div>
                 </>
               )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+          )}
 
             {trendingTags.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-2">
@@ -2036,23 +2048,24 @@ export function PolySuaraPage() {
 
 
       {/* Comments Drawer */}
-      <AnimatePresence>
-        {commentDrawerOpen && activeConfessionForComments && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setCommentDrawerOpen(false)}
-              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[999] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-slate-900 dark:text-white"
-            >
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {commentDrawerOpen && activeConfessionForComments && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setCommentDrawerOpen(false)}
+                className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]"
+              />
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[99999] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-slate-900 dark:text-white"
+              >
               {/* Drawer drag indicator/Header */}
               <div className="flex flex-col items-center py-3.5 border-b border-slate-100 dark:border-white/5 shrink-0">
                 <div className="w-12 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
@@ -2450,10 +2463,16 @@ export function PolySuaraPage() {
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
-      <BottomNav />
-      <FloatingAiChat />
+    {!composeModalOpen && !commentDrawerOpen && (
+      <>
+        <BottomNav />
+        <FloatingAiChat />
+      </>
+    )}
     </div>
   );
 }
