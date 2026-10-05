@@ -3156,14 +3156,12 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 30.3 Navigasi Suapan Tiga Tab Beranimasi (`SocialTabNav.tsx`)
+### 30.3 Trek Navigasi Suapan Tunggal Eksekutif (Executive Single-Line Track)
 
-1. **Tiga Mod Paparan Suapan:**
-   - **Untuk Anda (For You):** Suapan pintar berteraskan campuran perkongsian kampus.
-   - **Terkini (Latest):** Susunan kronologi terbaharu (`created_at DESC`).
-   - **Hangat (Trending):** Luahan paling hangat berasaskan reaksi dan perbincangan komuniti.
-2. **Penunjuk Garis Gelongsor Spring (*Spring-Animated Underline Indicator*):**
-   - Dilengkapi garis kecerunan ros-merah jambu bergerak lancar menggunakan Framer Motion `layoutId="activeFeedTabIndicator"` yang meluncur ke tab aktif secara automatik.
+1. **Susun Atur Sebaris Padat & Kemas (*Single-Line Consolidated Navigation Track*):**
+   - **Togol Segmen Isih (Kiri):** Butang dwipil untuk `🕒 Terkini` (`sortBy === 'LATEST'`) dan `🔥 Hangat` (`sortBy === 'TRENDING'`).
+   - **Garis Pemisah Halus (Tengah):** Penanda sempadan menegak halus (`w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0`).
+   - **Cip Penapis Kategori (Kanan):** Trek leret mendatar (*horizontal snap track* `overflow-x-auto scrollbar-none snap-x flex items-center gap-1.5 shrink-0`) merangkumi cip `Semua`, `Akademik`, `Fasiliti`, `Kamsis`, dan `Kaunseling`.
 
 ---
 
@@ -3181,14 +3179,16 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
      - Teks luahan editorial luas: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5`.
      - Lampiran imej dengan nisbah aspek penuh, sempadan `rounded-2xl`, dan animasi zum pada sentuhan.
      - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-4 rounded-r-2xl`).
-2. **Baris Tindakan Sosial Bersepadu (Pipel Social Action Row):**
-   - **Kiri:**
-     - Bar reaksi terapung WhatsApp `<PolySuaraReactions />` (❤️, 😂, 🔥, 😢, 😮, 💯) bersama pil kiraan aktif.
-     - Butang Ulasan (💬) dengan bilangan komen membuka laci ulasan.
-     - Butang Dislike (👎) komuniti untuk semakan auto-moderasi.
-   - **Kanan:**
-     - Butang Perkongsian pantas (`Share2`) untuk Instagram Story / perkongsian web.
-     - Butang Simpanan / Bookmark (`Bookmark`) dengan penandaan aktif.
+2. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
+   - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none`.
+   - **Kiri (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
+     - Butang Suka Sekali Sentuh & Menu Popover WhatsApp `<PolySuaraReactions />` bersama pil reaksi aktif.
+     - Butang Dislike (👎) komuniti untuk semakan auto-moderasi dengan bilangan undian.
+     - Butang Ulasan (💬) dengan bilangan komen membuka laci komen pelajar.
+   - **Kanan (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
+     - Butang Perkongsian grafik pantas (`Share2`).
+     - Butang Simpanan / Bookmark (`Bookmark`).
+     - Butang `Balas JPP` hanya dipaparkan bagi pemegang peranan autoriti (`JPP`, `ADMIN`, `SUPER_ADMIN`).
 
 ---
 

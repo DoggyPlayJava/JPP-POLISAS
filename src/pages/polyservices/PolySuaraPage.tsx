@@ -18,7 +18,6 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import ReactMarkdown from 'react-markdown';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PolySuaraReactions } from '@/components/polysuara/PolySuaraReactions';
-import { SocialTabNav, SocialTabType } from '@/components/polysuara/SocialTabNav';
 import {
   cleanConfessionText,
   getAnimalAvatarFromCodename,
@@ -26,11 +25,13 @@ import {
 } from '@/lib/polySuaraHelpers';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
+const FEED_CATEGORIES = ['AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
 const MAX_POLL_OPTIONS = 4;
 const FEED_PAGE_SIZE = 20;
 
 export function PolySuaraPage() {
   const { profile } = useAuth();
+  const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
   const { isSubscribed, requestPermission, unsubscribe } = usePushNotifications();
   const navigate = useNavigate();
 
@@ -60,19 +61,7 @@ export function PolySuaraPage() {
   // Filter & sort
   const [activeCategory, setActiveCategory] = useState<string>('SEMUA');
   const [sortBy, setSortBy] = useState<'LATEST'|'TRENDING'>('LATEST');
-  const [activeSocialTab, setActiveSocialTab] = useState<SocialTabType>('LATEST');
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
-
-  const handleSocialTabChange = (tab: SocialTabType) => {
-    setActiveSocialTab(tab);
-    if (tab === 'TRENDING') {
-      setSortBy('TRENDING');
-    } else if (tab === 'LATEST') {
-      setSortBy('LATEST');
-    } else if (tab === 'FOR_YOU') {
-      setSortBy('LATEST');
-    }
-  };
 
   const toggleBookmark = (confessionId: string) => {
     setBookmarkedIds(prev => {
@@ -1072,12 +1061,70 @@ export function PolySuaraPage() {
               </div>
             </div>
 
-            {/* Animated 3-Way Social Tab Navigation */}
-            <SocialTabNav
-              activeTab={activeSocialTab}
-              onChangeTab={handleSocialTabChange}
-              className="mb-6"
-            />
+            {/* Executive Single-Line Feed Navigation Track */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none snap-x w-full">
+              {/* Sort Segmented Toggle */}
+              <div className="flex items-center p-0.5 rounded-2xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSortBy('LATEST')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
+                    sortBy === 'LATEST'
+                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  )}
+                >
+                  <Clock className="w-3.5 h-3.5" /> Terkini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortBy('TRENDING')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
+                    sortBy === 'TRENDING'
+                      ? "bg-rose-500 text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  )}
+                >
+                  <Flame className="w-3.5 h-3.5" /> Hangat
+                </button>
+              </div>
+
+              {/* Subtle Vertical Hairline Divider */}
+              <div className="w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0" aria-hidden="true" />
+
+              {/* Category Filter Chips inside horizontal snap track */}
+              <div className="overflow-x-auto scrollbar-none snap-x flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('SEMUA')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0",
+                    activeCategory === 'SEMUA'
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                      : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
+                  )}
+                >
+                  Semua
+                </button>
+                {FEED_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0",
+                      activeCategory === cat
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                        : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
+                    )}
+                  >
+                    {cat.charAt(0) + cat.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Compose Modal */}
             <AnimatePresence>
@@ -1408,8 +1455,8 @@ export function PolySuaraPage() {
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/[0.06]" data-html2canvas-ignore>
-                          <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none" data-html2canvas-ignore>
+                          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
                             <PolySuaraReactions
                               confessionId={confession.id}
                               reactions={aggregateReactions(confessionReactions[confession.id] || [], profile?.id)}
@@ -1417,93 +1464,100 @@ export function PolySuaraPage() {
                               totalUpvotes={confession.upvotes}
                             />
                             <button
+                              type="button"
                               onClick={() => handleDownvote(confession.id)}
                               className={cn(
-                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all group",
-                                userDownvotes.has(confession.id) ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-indigo-500"
+                                "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 flex-nowrap cursor-pointer",
+                                userDownvotes.has(confession.id)
+                                  ? "bg-slate-800 text-white dark:bg-slate-700"
+                                  : "bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                               )}
-                              title="Tidak Setuju"
+                              title="Tidak setuju (Auto-moderasi)"
                             >
-                              <motion.div
-                                animate={userDownvotes.has(confession.id) ? { scale: [1, 1.3, 1] } : {}}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <ThumbsDown className={cn("w-4 h-4", userDownvotes.has(confession.id) && "fill-indigo-500")} />
-                              </motion.div>
-                              <span className="text-xs font-bold">{confession.downvotes || 0}</span>
+                              <ThumbsDown className={cn("w-3.5 h-3.5", userDownvotes.has(confession.id) && "fill-current")} />
+                              <span className="font-mono text-[11px] leading-none">{confession.downvotes || 0}</span>
                             </button>
 
                             <button
+                              type="button"
                               onClick={() => {
                                 setActiveConfessionForComments(confession);
                                 fetchComments(confession.id);
                                 setCommentDrawerOpen(true);
                               }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-rose-500 transition-all group"
-                              title="Lihat Ulasan"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
+                              title="Ulasan Pelajar"
                             >
-                              <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                              <span className="text-xs font-bold">{confession.comments_count || 0}</span>
+                              <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                              <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
                             </button>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
                             <button
+                              type="button"
                               onClick={() => handleShareImage(confession.id)}
-                              className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center"
+                              className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
                               title="Kongsi Grafik"
                             >
                               {shareLoadingId === confession.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Share2 className="w-4 h-4" />}
                             </button>
 
                             <button
+                              type="button"
                               onClick={() => toggleBookmark(confession.id)}
                               className={cn(
-                                "p-2 rounded-full transition-colors flex items-center justify-center",
+                                "p-1.5 sm:p-2 rounded-full transition-colors shrink-0 flex items-center justify-center cursor-pointer",
                                 bookmarkedIds.has(confession.id)
                                   ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10"
-                                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  : "text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10"
                               )}
                               title={bookmarkedIds.has(confession.id) ? "Padam Penanda Buku" : "Simpan Penanda Buku"}
                             >
                               <Bookmark className={cn("w-4 h-4", bookmarkedIds.has(confession.id) && "fill-rose-500")} />
                             </button>
 
-                            {isMine && confession.official_reply && !confession.author_reply && (
+                            {canReplyJpp && !confession.official_reply && (
                               <button
-                                onClick={() => {
-                                  setAuthorReplyTargetId(confession.id);
-                                  setAuthorReplyModalOpen(true);
-                                }}
-                                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Balas JPP
-                              </button>
-                            )}
-
-                            {['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '') && !confession.official_reply && (
-                              <button
+                                type="button"
                                 onClick={() => {
                                   setReplyTargetId(confession.id);
                                   setReplyModalOpen(true);
                                 }}
-                                className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 hover:bg-teal-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider"
+                                className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Reply as JPP
+                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                                Balas JPP
                               </button>
                             )}
-                            {['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '') && (
+
+                            {isMine && confession.official_reply && !confession.author_reply && (
                               <button
+                                type="button"
+                                onClick={() => {
+                                  setAuthorReplyTargetId(confession.id);
+                                  setAuthorReplyModalOpen(true);
+                                }}
+                                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 uppercase tracking-wider shrink-0 flex-nowrap cursor-pointer"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                                Balas JPP
+                              </button>
+                            )}
+
+                            {canReplyJpp && (
+                              <button
+                                type="button"
                                 onClick={() => handleTogglePin(confession.id, !!confession.is_pinned)}
                                 className={cn(
-                                  "text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 uppercase tracking-wider",
-                                  confession.is_pinned ? "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20" : "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10"
+                                  "p-1.5 rounded-full transition-colors shrink-0 cursor-pointer",
+                                  confession.is_pinned
+                                    ? "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20"
+                                    : "text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-500/10"
                                 )}
+                                title={confession.is_pinned ? "Nyah-pin luahan" : "Pin ke atas suapan"}
                               >
-                                <Pin className="w-3.5 h-3.5" />
-                                {confession.is_pinned ? 'Unpin' : 'Pin'}
+                                <Pin className={cn("w-4 h-4", confession.is_pinned && "fill-yellow-500")} />
                               </button>
                             )}
                           </div>

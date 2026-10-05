@@ -173,13 +173,26 @@ describe('PolySuaraPage Suite', () => {
       expect(html).not.toContain('Kafe');
     });
 
-    it('renders SocialTabNav animated 3-way feed switcher with Untuk Anda, Terkini, and Hangat tabs', () => {
+    it('renders Executive Single-Line Feed Navigation Track with sort pills and category chips', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      expect(html).toContain('role="tablist"');
-      expect(html).toContain('Untuk Anda');
+      // Sort segmented pills
       expect(html).toContain('Terkini');
       expect(html).toContain('Hangat');
+
+      // Hairline divider
+      expect(html).toContain('w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0');
+
+      // Category filter chips
+      expect(html).toContain('Semua');
+      expect(html).toContain('Akademik');
+      expect(html).toContain('Fasiliti');
+      expect(html).toContain('Kamsis');
+      expect(html).toContain('Kaunseling');
+
+      // Old tabs no longer exist
+      expect(html).not.toContain('Untuk Anda');
+      expect(html).not.toContain('role="tablist"');
     });
 
     it('does not render FloatingComposeFab and renders exactly one BottomNav with mobile dock spacer', () => {
@@ -316,14 +329,16 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('Share2');
       expect(pageContent).toContain('Bookmark');
       expect(pageContent).toContain('toggleBookmark');
+      expect(pageContent).toContain('flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none');
     });
 
-    it('manages social tab and bookmark states in PolySuaraPage and removes pulse state', () => {
+    it('manages sort, category filter, and bookmark states in PolySuaraPage and removes SocialTabNav', () => {
       expect(pageContent).not.toContain('const [activePulseId, setActivePulseId] = useState');
       expect(pageContent).not.toContain('handleSelectPulse');
-      expect(pageContent).toContain('const [activeSocialTab, setActiveSocialTab] = useState');
+      expect(pageContent).not.toContain('SocialTabNav');
+      expect(pageContent).toContain('const [activeCategory, setActiveCategory] = useState');
+      expect(pageContent).toContain('const [sortBy, setSortBy] = useState');
       expect(pageContent).toContain('const [bookmarkedIds, setBookmarkedIds] = useState');
-      expect(pageContent).toContain('handleSocialTabChange');
     });
   });
 });
