@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import { supabase } from '@/lib/supabase';
-import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
+import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { type PolyAd } from '@/types';
 import {
   Star, ShoppingCart, Store, TrendingUp, Zap, ChevronRight, ChevronLeft,
-  Package, Clock, AlertCircle, Heart,
+  Package, Clock, AlertCircle, Heart, Sparkles, PackageSearch, ShoppingBag,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -49,23 +51,22 @@ interface PolyBusiness {
 // ── Product Card ───────────────────────────────────────────────────────────────
 function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { product: PolyProduct; index: number; isWishlisted: boolean; onToggleWishlist: (id: string) => void }) {
   const navigate = useNavigate();
-  const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
+  const FallbackIcon = CATEGORY_ICON_MAP[product.category] || Package;
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= 5;
   const isOut = product.stock_quantity === 0;
   const avgRating = product.avg_rating;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
-      whileTap={{ scale: 0.97 }}
+      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.25 }}
+      whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/polymart/produk/${product.id}`)}
-      className="relative group cursor-pointer rounded-2xl bg-card border border-border/60 overflow-hidden hover:border-amber-500/30 hover:shadow-lg transition-all duration-300"
-      style={{ '--hover-shadow': PM_GLOW } as React.CSSProperties}
+      className="group cursor-pointer rounded-2xl bg-card dark:bg-slate-900/90 border border-border/60 hover:border-amber-400/50 hover:shadow-[0_8px_24px_rgba(245,158,11,0.08)] transition-all duration-300 overflow-hidden flex flex-col"
     >
       {/* Image / Placeholder */}
-      <div className="relative aspect-square overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-muted/20 flex items-center justify-center">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -75,22 +76,23 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl"
-            style={{ background: `linear-gradient(135deg, ${PM_LIGHT}, rgba(249,115,22,0.08))` }}>
-            {emoji}
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-orange-500/5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-xs group-hover:scale-110 transition-transform">
+              <FallbackIcon className="w-6 h-6" />
+            </div>
           </div>
         )}
 
         {/* Status badges */}
         {isOut && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/60 px-3 py-1 rounded-full">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+            <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
               Habis
             </span>
           </div>
         )}
         {isLowStock && !isOut && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full z-10 shadow-xs">
             <Clock className="w-2.5 h-2.5" />
             <span>Hampir habis</span>
           </div>
@@ -98,62 +100,65 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
 
         {/* Category pill */}
         {!isLowStock && (
-          <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full z-10">
+          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-xs text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
             {product.category}
           </div>
         )}
         {/* Flash sale badge */}
         {product.sale_price && product.sale_start_at && product.sale_end_at &&
           new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at) && (
-          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
-            ⚡ -{Math.round((1 - product.sale_price / product.price) * 100)}%
+          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 animate-pulse z-10">
+            <Zap className="w-2.5 h-2.5 fill-current" />
+            <span>-{Math.round((1 - product.sale_price / product.price) * 100)}%</span>
           </div>
         )}
         {/* Pre-order badge */}
         {product.is_preorder && (
-          <div className="absolute bottom-2 left-2 bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
-            📦 PRA-TEMPAH
+          <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
+            <Package className="w-2.5 h-2.5" />
+            <span>PRA-TEMPAH</span>
           </div>
         )}
+
+        {/* Wishlist toggle */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80 backdrop-blur-xs border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+          aria-label="Wishlist"
+        >
+          <Heart className={`w-3.5 h-3.5 transition-all ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/60'}`} />
+        </button>
       </div>
 
-      {/* Wishlist heart */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
-        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 transition-all hover:scale-110"
-      >
-        <Heart className={`w-3.5 h-3.5 transition-all ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/50'}`} />
-      </button>
-
       {/* Info */}
-      <div className="p-2.5 space-y-1">
+      <div className="p-2.5 sm:p-3 flex flex-col flex-1 gap-1">
         {/* Business name */}
-        <p className="text-[9px] font-bold text-muted-foreground/60 truncate flex items-center gap-1">
-          <Store className="w-2.5 h-2.5 shrink-0" />
-          {product.keusahawanan_businesses?.name ?? 'Kedai'}
+        <p className="text-[9px] font-bold text-muted-foreground/70 truncate flex items-center gap-1">
+          <Store className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+          <span>{product.keusahawanan_businesses?.name ?? 'Kedai'}</span>
         </p>
 
         {/* Product name */}
-        <h3 className="text-[12px] font-black text-foreground leading-tight line-clamp-2">
+        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem]">
           {product.name}
         </h3>
 
         {/* Price + rating */}
-        <div className="flex items-center justify-between pt-0.5">
+        <div className="flex items-center justify-between pt-1 mt-auto">
           {(() => {
             const isOnSale = product.sale_price && product.sale_start_at && product.sale_end_at &&
               new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at);
             return isOnSale ? (
-              <span className="text-[13px] font-black">
-                <span className="text-rose-500">RM {product.sale_price!.toFixed(2)}</span>
-                <span className="text-[10px] text-muted-foreground/50 line-through ml-1">RM {product.price.toFixed(2)}</span>
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs sm:text-sm font-black text-rose-500">RM {product.sale_price!.toFixed(2)}</span>
+                <span className="text-[10px] text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
+              </div>
             ) : (
-              <span className="text-[13px] font-black" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
+              <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400">RM {product.price.toFixed(2)}</span>
             );
           })()}
           {avgRating && avgRating > 0 ? (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 shrink-0">
               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span className="text-[10px] font-bold text-muted-foreground">{avgRating.toFixed(1)}</span>
             </div>
@@ -173,14 +178,16 @@ function BusinessCard({ biz }: { biz: PolyBusiness }) {
       onClick={() => navigate(`/polymart?vendor=${biz.id}`)}
       className="group flex flex-col items-center gap-2 cursor-pointer shrink-0"
     >
-      <div className="w-14 h-14 rounded-2xl border-2 border-border/50 group-hover:border-amber-500/40 transition-colors overflow-hidden relative"
-        style={{ background: PM_LIGHT }}>
-        {biz.logo_url
-          ? <img src={biz.logo_url} alt={biz.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-          : <div className="w-full h-full flex items-center justify-center"><Store className="w-6 h-6" style={{ color: PM_ACCENT }} /></div>
-        }
+      <div className="w-14 h-14 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-muted/30 overflow-hidden relative transition-all group-hover:scale-105 shadow-xs">
+        {biz.logo_url ? (
+          <img src={biz.logo_url} alt={biz.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-amber-500">
+            <Store className="w-6 h-6" />
+          </div>
+        )}
       </div>
-      <p className="text-[9px] font-bold text-center text-muted-foreground max-w-[60px] truncate">
+      <p className="text-[10px] font-bold text-center text-muted-foreground group-hover:text-foreground transition-colors max-w-[64px] truncate">
         {biz.name}
       </p>
     </motion.div>
@@ -213,9 +220,9 @@ function InFeedAdCard({ ad }: { ad: PolyAd }) {
       animate={{ opacity: 1, scale: 1 }}
       whileTap={{ scale: 0.97 }}
       onClick={handleClick}
-      className="group cursor-pointer rounded-2xl border-2 border-amber-500/50 overflow-hidden relative shadow-lg hover:shadow-xl hover:border-amber-500 transition-all duration-300 flex flex-col bg-amber-500/10"
+      className="group cursor-pointer rounded-2xl border border-amber-500/40 overflow-hidden relative shadow-sm hover:shadow-md hover:border-amber-500 transition-all duration-300 flex flex-col bg-amber-500/10"
     >
-      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-[9px] font-black tracking-widest text-white uppercase z-10 shadow-md">
+      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-[9px] font-black tracking-widest text-white uppercase z-10 shadow-xs">
         Disponsor
       </div>
       
@@ -223,15 +230,12 @@ function InFeedAdCard({ ad }: { ad: PolyAd }) {
         <img src={ad.image_url} alt={ad.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute bottom-2 left-2 right-2">
-          <p className="text-[12px] font-black text-white leading-tight drop-shadow-md">{ad.title}</p>
+          <p className="text-[12px] font-black text-white leading-tight drop-shadow-sm">{ad.title}</p>
         </div>
       </div>
     </motion.div>
   );
 }
-
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 
 // ── Ads Banner Carousel ────────────────────────────────────────────────────────
 function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: number; totalVendors: number; ads: PolyAd[] }) {
@@ -267,50 +271,50 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
   };
 
   const DefaultBanner = () => (
-    <div className="relative rounded-3xl overflow-hidden w-full shrink-0"
-      style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 50%, #1c1207 100%)' }}>
-      <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full blur-3xl opacity-30"
-        style={{ background: PM_GRADIENT }} />
-      <div className="absolute -bottom-8 -left-4 w-32 h-32 rounded-full blur-2xl opacity-20"
-        style={{ background: 'radial-gradient(circle, #f97316, transparent)' }} />
+    <div
+      className="relative rounded-3xl overflow-hidden w-full shrink-0 border border-amber-500/20 max-h-[180px] bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950/40"
+    >
+      <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-20 bg-amber-500 pointer-events-none" />
+      <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full blur-2xl opacity-15 bg-orange-500 pointer-events-none" />
 
-      <div className="relative p-5 sm:p-7">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-xl flex items-center justify-center"
-                style={{ background: PM_GRADIENT }}>
-                <ShoppingCart className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-[10px] font-black text-amber-400/80 uppercase tracking-widest">PolyMart Beta</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">
-              Jelajah Kedai<br />
-              <span style={{ background: PM_GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Kampus Anda
-              </span>
-            </h1>
-            <p className="text-[11px] text-white/50 font-medium mb-4">
-              Tempah produk dari peniaga berdaftar JPP.
-            </p>
-            <div className="flex items-center gap-3">
-              {[
-                { icon: Package, value: totalProducts, label: 'Produk' },
-                { icon: Store,   value: totalVendors,  label: 'Peniaga' },
-              ].map(s => (
-                <div key={s.label} className="flex items-center gap-1.5">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: PM_LIGHT }}>
-                    <s.icon className="w-3 h-3" style={{ color: PM_ACCENT }} />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-black text-white leading-none">{s.value}</p>
-                    <p className="text-[8px] text-white/40 font-medium">{s.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="relative p-4 sm:p-5 flex items-center justify-between h-full">
+        <div className="flex-1 pr-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-wider mb-1.5">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>Pasar Mahasiswa POLISAS</span>
           </div>
-          <div className="text-5xl sm:text-6xl leading-none select-none mt-1">🛍️</div>
+
+          <h1 className="text-base sm:text-xl font-black text-white leading-tight mb-1">
+            Jelajah & Tempah Produk{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
+              Kampus Anda
+            </span>
+          </h1>
+
+          <p className="text-[10px] sm:text-[11px] text-white/60 font-medium mb-3 line-clamp-1">
+            Tempah produk terus dari usahawan mahasiswa POLISAS.
+          </p>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {[
+              { icon: Package, value: totalProducts, label: 'Produk' },
+              { icon: Store,   value: totalVendors,  label: 'Peniaga' },
+            ].map(s => (
+              <div key={s.label} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/5 border border-white/10">
+                <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-amber-500/15 text-amber-400">
+                  <s.icon className="w-3 h-3" />
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xs sm:text-sm font-black text-white leading-none">{s.value}</span>
+                  <span className="text-[8px] sm:text-[9px] text-white/50 font-medium">{s.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden sm:flex w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 items-center justify-center text-amber-400 shadow-inner shrink-0 mr-2">
+          <ShoppingBag className="w-8 h-8" />
         </div>
       </div>
     </div>
@@ -632,7 +636,7 @@ export function PolyMartHome() {
             </div>
             <h2 className="text-sm font-black text-foreground">
               {searchQuery ? `Hasil Carian "${searchQuery}"` :
-               activeCategory !== 'all' ? `${CATEGORY_EMOJI[activeCategory] ?? ''} ${activeCategory}` :
+               activeCategory !== 'all' ? activeCategory :
                vendorFilter ? 'Produk Kedai' : 'Semua Produk'}
               <span className="text-xs font-medium text-muted-foreground ml-1.5">({filtered.length})</span>
             </h2>
@@ -654,7 +658,9 @@ export function PolyMartHome() {
               key="empty"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="text-5xl">🛒</div>
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-xs">
+                <PackageSearch className="w-7 h-7" />
+              </div>
               <p className="text-sm font-bold text-muted-foreground/60">
                 {searchQuery ? 'Tiada produk dijumpai' : 'Tiada produk dalam kategori ini'}
               </p>
@@ -680,7 +686,9 @@ export function PolyMartHome() {
       {products.length === 0 && !loading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="text-6xl">🏪</div>
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-xs">
+            <Store className="w-8 h-8" />
+          </div>
           <div className="text-center">
             <p className="text-base font-black text-foreground">PolyMart Belum Ada Produk</p>
             <p className="text-sm text-muted-foreground/60 mt-1">

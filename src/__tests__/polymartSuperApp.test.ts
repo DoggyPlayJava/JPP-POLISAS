@@ -48,3 +48,32 @@ describe('PolyMartLayout SuperApp Modernization', () => {
     expect(html).toContain('MARKETPLACE');
   }, 30000);
 });
+
+describe('PolyMartHome SuperApp Modernization', () => {
+  it('exports PolyMartHome function component cleanly', async () => {
+    const { PolyMartHome } = await import('@/pages/polymart/PolyMartHome');
+    expect(PolyMartHome).toBeDefined();
+    expect(typeof PolyMartHome).toBe('function');
+  });
+
+  it('contains no raw emojis 🛍️ or 🛒 and utilizes vector fallbacks in PolyMartHome', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartHome.tsx');
+    const source = fs.readFileSync(filePath, 'utf-8');
+
+    // Ensure raw emojis are eliminated
+    expect(source).not.toContain('🛍️');
+    expect(source).not.toContain('🛒');
+    expect(source).not.toContain('🏪');
+
+    // Ensure obsidian-amber banner tokens
+    expect(source).toContain('max-h-[180px]');
+    expect(source).toContain('Pasar Mahasiswa POLISAS');
+    expect(source).toContain('CATEGORY_ICON_MAP');
+    expect(source).toContain('FallbackIcon');
+    expect(source).toContain('ShoppingBag');
+    expect(source).toContain('PackageSearch');
+  });
+});
+
