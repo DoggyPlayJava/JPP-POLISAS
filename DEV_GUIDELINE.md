@@ -3115,3 +3115,99 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
    - Mengelakkan operasi gelung N+1 dan memelihara operasi berasaskan perkakasan GPU `transform-gpu`.
 
 
+
+---
+
+## 30. Modul PolySuara Super App: Reaksi Terapung, Pelekat Kampus & Dwi-Mod Tema
+
+> Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
+
+Modul PolySuara telah dinaik taraf daripada paparan monokrom gelap lapuk kepada **Platform Sosial Mahasiswa Super App** bertaraf moden. Pembaharuan ini memperkenalkan bar reaksi WhatsApp terapung, pek pelekat rasmi POLISAS, sokongan dwi-tema Cerah/Gelap (Light & Dark Mode), serta avatar haiwan comel yang dipadankan secara dinamik dengan nama samaran rahsia pelajar.
+
+### 30.1 Konsep Reka Bentuk & Dwi-Mod Tema (Light & Dark Mode Parity)
+
+1. **Kanvas Bersih Dwi-Mod:**
+   - PolySuara menyokong penuh peralihan mod tema cerah dan gelap melalui suis `<ThemeToggle />` di bahagian atas bar navigasi lekat (*sticky header*).
+   - **Mod Cerah (Light Mode):** Kanvas `bg-slate-50 text-slate-900` dengan kad putih bersih berkabus halus `bg-white border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-slate-300`.
+   - **Mod Gelap (Dark Mode):** Kanvas `dark:bg-slate-950 text-slate-100` dengan aras kaca obsidian dalam `dark:bg-slate-900/80 dark:border-white/[0.08] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:border-slate-700`.
+   - Mesh aura ambien di latar belakang (`bg-rose-500/5 dark:bg-rose-500/10 blur-[100px]`) memberikan kedalaman visual tanpa membebankan pemproses grafik peranti bajet.
+
+2. **Header Lekat Pintar (*Sticky Top Bar*):**
+   - Menempatkan butang kembali pantas ke Portal `/portal`, suis tema `<ThemeToggle />`, suis loceng notifikasi PolySuara (diselaraskan dengan jadual `polysuara_notif_optout`), dan lencana mod tanpa nama (*Anon Mode* berbingkai perisai ros).
+
+### 30.2 Enjin Reaksi Terapung WhatsApp (`PolySuaraReactions.tsx`)
+
+1. **Bar Kapsul Terapung Popover:**
+   - Digerakkan oleh Framer Motion dengan fizik spring cergas (`stiffness: 400, damping: 25`).
+   - Menyediakan 6 emoji reaksi ekspresif mahasiswa POLISAS:
+     - ❤️ **Suka / Setuju** (`heart`)
+     - 😂 **Lawak / Terhibur** (`laugh`)
+     - 🔥 **Padu / Hangat** (`fire`)
+     - 😢 **Sedih / Sebak** (`cry`)
+     - 😮 **Terkejut / Weh** (`shock`)
+     - 💯 **Solid / Mantap** (`hundred`)
+   - Setiap emoji dilengkapi lantunan spring animasi (`whileHover={{ scale: 1.35, y: -4 }}`) dan kesan haptik pantas.
+   - Popover tertutup secara automatik apabila emoji ditekan atau apabila pengguna menyentuh ruang luar skrin.
+
+2. **Pil Ringkasan Kaunter Reaksi (*Interactive Reaction Pills*):**
+   - Di bawah setiap teks luahan, pil interaktif memaparkan emoji aktif berserta jumlah kiraan (cth: `[❤️ 14]` `[🔥 28]` `[😂 5]`).
+   - Mengetik terus pada pil membolehkan pelajar mengundi atau membatalkan undian emoji tersebut serta-merta tanpa perlu membuka menu terapung.
+   - Pilihan aktif pelajar diserlahkan dengan latar khas bercahaya (`bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 font-bold`).
+
+3. **Integriti Kiraan "Upvotes" & Pangkalan Data:**
+   - Setiap reaksi positif dikira sebagai sokongan kepada pos (*upvote increment*), membantu luahan berkualiti naik ke suapan "Hangat" (Trending).
+   - Disokong oleh jadual Supabase berprestasi tinggi `polysuara_reactions`:
+     - Kolum: `id`, `confession_id`, `user_id`, `reaction_type`, `created_at`.
+     - Kekangan unik: `(confession_id, user_id, reaction_type)`.
+     - Indeks FK pantas: `idx_polysuara_reactions_confession_id` dan `idx_polysuara_reactions_user_id`.
+     - RLS ketat berasaskan `(SELECT auth.uid()) = user_id`.
+   - **Antara Muka Optimistik (Optimistic UI):** Reaksi dikemas kini secara langsung dalam memori pelayar pengguna (0ms lag), kemudian disegerakan ke pelayan pangkalan data di latar belakang.
+
+### 30.3 Pek Pelekat Rasmi Mahasiswa POLISAS (`POLISAS_CAMPUS_STICKERS`)
+
+Bagi meraikan budaya dan cabaran sebenar mahasiswa Politeknik Sultan Haji Ahmad Shah, 8 pelekat berilustrasi khas diperkenalkan:
+
+| ID Pelekat | Label | Emoji | Frasa Budaya Kampus | Kategori |
+|---|---|---|---|---|
+| `otak_jem` | Otak Jem | 🧠 | *Assignment Bertimbun!* | `STUDY` |
+| `exam_mood` | Exam Mood | 📚 | *Kopi & Nota Sepanjang Malam* | `STUDY` |
+| `relatable` | Relatable Teruk | 😭 | *Semua Orang Rasa Benda Sama* | `MOOD` |
+| `pakat_makan` | Pakat Makan | 🍔 | *Jom Food Court Semambu!* | `CAMPUS` |
+| `nangis_katil` | Nangis Katil | 🛏️ | *Redha Tapi Sakit Hati* | `MOOD` |
+| `solidariti` | Solidariti | ✊ | *Satu Suara Mahasiswa POLISAS* | `CAMPUS` |
+| `deadline_esok` | Deadline Esok | ⏳ | *Kecemasan 11:59 Malam!* | `STUDY` |
+| `geng_repeat` | Geng Repeat | 🔄 | *Bangkit Semula, Tak Give Up!* | `MEME` |
+
+#### Seni Bina Storan Berasaskan Token Ringan (Tokenized Text):
+- Pelekat disimpan di dalam ruangan teks sedia ada (`content`) menggunakan format token `[sticker:id]` (cth: `[sticker:otak_jem] Korang faham tak soalan lab 3 tadi?`).
+- **Sifar Penggunaan Kuota Storan & Rangkaian (0KB):** Tiada fail imej binari dimuat naik ke Supabase Storage. Pelekat dirender menggunakan komponen SVG/CSS vektor pintar client-side (`PolySuaraStickerBadge.tsx`).
+- **Keserasian Ke Belakang Penuh (100% Backward Compatible):** Luahan lama dipaparkan secara normal, manakala luahan baru ditafsir secara automatik melalui pembantu `extractStickerToken` dan `embedStickerToken`.
+
+### 30.4 Sintesis Avatar Haiwan Dinamik (`getAnimalAvatarFromCodename`)
+
+Database trigger PostgreSQL sedia ada menjana nama samaran berasaskan gabungan haiwan dan sifat (contohnya *"Kucing Misteri"*, *"Harimau Berani"*, *"Elang Sakti"*). PolySuara kini menukar nama-nama ini kepada avatar watak haiwan yang hidup dan comel:
+- **16 Spesies Haiwan:** Kucing 🐱, Harimau 🐯, Elang 🦅, Singa 🦁, Serigala 🐺, Kuda 🐴, Beruang 🐻, Kancil 🦌, Gajah 🐘, Tupai 🐿️, Kura 🐢, Lumba 🐬, Burung 🦜, Panda 🐼, Musang 🦊, Landak 🦔.
+- Dipaparkan dalam bekas bentuk *squircle* comel dengan warna aksen serasi, membasmi bulatan kelabu suram lama dan menyuntik elemen keceriaan komuniti kampus.
+
+### 30.5 Laci Ulasan Interaktif & Sokongan Pelekat Komen
+
+1. **Dwi-Mod Laci Ulasan (Comments Drawer):**
+   - Reka bentuk helaian moden (`bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white`).
+   - Menyokong ulasan berhierarki dua tingkat (Tier-1 ulasan utama & Tier-2 balasan bersarang).
+2. **Balasan Pelekat Segera (Instant Campus Sticker Reply):**
+   - Borang input komen dilengkapi butang ikon wajah senyum comel `Smile` yang membuka `PolySuaraStickerPicker`.
+   - Pelajar boleh membalas luahan rakan kampus dengan pelekat padu (cth: "Relatable Teruk 😭" atau "Solidariti ✊").
+   - Pelekat dipaparkan secara kemas pada kad ulasan melalui lencana saiz padat (`size="sm"`).
+3. **Sistem Pengesanan OP & Rasmi JPP:**
+   - Penulis asal ditandakan dengan lencana kecerunan `OP` (*Original Poster*).
+   - Ulasan wakil Majlis Perwakilan Pelajar diserlahkan dengan lencana hijau firus `JPP Official` dan bingkai khas.
+
+### 30.6 Pengekalan Mekanisme Auto-Moderasi Komuniti & Keselamatan
+
+1. **Pengekalan Butang Dislike / Undi Turun (👎):**
+   - Butang Dislike dikekalkan sebagai instrumen berasingan di sebelah reaksi.
+   - **Peraturan Ambang Auto-Sembunyi POLISAS:** Sekiranya sesuatu luahan menerima lebih daripada 60% downvote daripada minimum 40 jumlah undian, fungsi RPC `toggle_polysuara_downvote` akan menyembunyikan luahan tersebut dari tatapan awam secara automatik dan menghantar amaran kecemasan kepada Exco Kebajikan.
+2. **Eskalasi Krisis & Kebajikan Rahsia:**
+   - Butang *"Bantuan"* pada ulasan dan butang laporan perisai pada kad luahan membolehkan pelajar menghantar isyarat kecemasan terus kepada barisan pimpinan kebajikan secara 100% sulit.
+3. **Ergonomik Mudah Alih & Ruang Bawah:**
+   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-28 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau bar menaip ulasan.
