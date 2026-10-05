@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Search, HelpCircle } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { triggerCommandPalette } from '@/lib/commandPalette';
 
 export interface PortalNavbarProps {
   isScrolled: boolean;
@@ -14,17 +13,9 @@ export interface PortalNavbarProps {
   supsasActive: boolean;
   profile: any;
   setIsSidebarOpen: (v: boolean) => void;
-  onStartTour?: () => void;
 }
 
-export function PortalNavbar({
-  isScrolled,
-  karnivalActive,
-  supsasActive,
-  profile,
-  setIsSidebarOpen,
-  onStartTour,
-}: PortalNavbarProps) {
+export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile, setIsSidebarOpen }: PortalNavbarProps) {
   // Determine merit tier for Dynamic Avatar Aura
   const meritPoints = profile?.merit_points || profile?.merit || 0;
   let auraClass = "";
@@ -101,44 +92,6 @@ export function PortalNavbar({
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        <button
-          type="button"
-          onClick={() => triggerCommandPalette()}
-          className={cn(
-            "hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all shadow-xs",
-            karnivalActive
-              ? "border-pink-500/30 bg-pink-500/10 text-pink-200 hover:bg-pink-500/20"
-              : supsasActive
-              ? "border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
-              : "border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground"
-          )}
-          title="Carian Pintar (Ctrl+K)"
-        >
-          <Search className="w-3.5 h-3.5 opacity-60" />
-          <span className="text-[11px] font-medium hidden md:inline">Cari...</span>
-          <kbd className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-background/50 text-foreground/70">⌘K</kbd>
-        </button>
-
-        {onStartTour && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onStartTour}
-            className={cn(
-              "tour-help-button rounded-xl w-10 h-10 transition-all",
-              karnivalActive
-                ? "hover:bg-pink-500/20 text-pink-200"
-                : supsasActive
-                ? "hover:bg-amber-500/20 text-amber-200"
-                : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
-            )}
-            title="Ulang Tutorial Sistem"
-            aria-label="Ulang Tutorial Sistem"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </Button>
-        )}
-
         <ThemeToggle />
         <NotificationBell />
 

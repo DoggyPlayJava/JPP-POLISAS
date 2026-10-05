@@ -1,5 +1,5 @@
 // ============================================================
-// JPP Digital Portal - Exco Module Config
+// JPP Digital Portal — Exco Module Config
 // ============================================================
 // Setiap exco ada ID, nama, warna tandatangan, route dan status.
 // Warna DEFAULT ada di sini, tetapi ia boleh ditindih secara
@@ -61,7 +61,7 @@ export const EXCO_MODULES: ExcoModule[] = [
     name: 'e-Akademik',
     fullName: 'Exco Akademik & Pembangunan Intelek',
     tagline: 'Ilmu · Pencapaian · Kecemerlangan',
-    description: 'Portal akademik pelajar - rekod pencapaian, sijil, CGPA & merit secara digital.',
+    description: 'Portal akademik pelajar — rekod pencapaian, sijil, CGPA & merit secara digital.',
     defaultColor: '#818CF8',
     icon: 'GraduationCap',
     basePath: '/akademik',
@@ -78,12 +78,12 @@ export const EXCO_MODULES: ExcoModule[] = [
     basePath: '/ems/dashboard',
     isActive: true,
   },
-  // NOTA: SUPSAS dan PolyRider tidak dimasukkan dalam senarai ini - ia dikawal
+  // NOTA: SUPSAS dan PolyRider tidak dimasukkan dalam senarai ini — ia dikawal
   // secara berasingan melalui komponen tersendiri (BottomNav atau event banner).
 ];
 
 // ============================================================
-// Context warna aktif - dikemaskini dari Supabase portal_settings
+// Context warna aktif — dikemaskini dari Supabase portal_settings
 // ============================================================
 
 // Jenis untuk rekod warna yang disimpan dalam DB
