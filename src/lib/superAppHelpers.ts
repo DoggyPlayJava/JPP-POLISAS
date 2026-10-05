@@ -213,3 +213,27 @@ export function getCampaignVariantClasses(variant: CampaignSlide['variant']): st
   }
 }
 
+/**
+ * Formats a numeric or string price into standard 'RM X.XX' format.
+ * Handles invalid, negative, or undefined values safely by returning 'RM 0.00'.
+ */
+export function formatProductPrice(price: number | string | null | undefined): string {
+  if (price === null || price === undefined || price === '') {
+    return 'RM 0.00';
+  }
+
+  let num: number;
+  if (typeof price === 'number') {
+    num = price;
+  } else {
+    const cleaned = String(price).replace(/[^0-9.-]+/g, '');
+    num = parseFloat(cleaned);
+  }
+
+  if (isNaN(num) || num < 0) {
+    return 'RM 0.00';
+  }
+
+  return `RM ${num.toFixed(2)}`;
+}
+

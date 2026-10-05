@@ -301,6 +301,7 @@ function AppRoutes() {
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
       {/* 🎪 EMS Public Participant Registration Wizard, Jury Portal & Stage Display */}
       <Route path="/ems/e/:eventId/register" element={<EmsPublicRegisterPage />} />
+      <Route path="/ems/register/:eventId" element={<EmsPublicRegisterPage />} />
       <Route path="/ems/v/:eventId/scan" element={<EmsAudienceScanPage />} />
       <Route path="/ems/juri" element={<EmsJuryPortalPage />} />
       <Route path="/ems/stage/:eventId" element={<EmsLeaderboardPage isStageMode={true} />} />

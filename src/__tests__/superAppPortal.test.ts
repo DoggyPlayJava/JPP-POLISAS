@@ -7,6 +7,7 @@ import {
   getHeaderGradientClass,
   getCampusServicesConfig,
   getCampaignVariantClasses,
+  formatProductPrice,
 } from '@/lib/superAppHelpers';
 
 describe('superAppHelpers', () => {
@@ -154,6 +155,43 @@ describe('superAppHelpers', () => {
       const { CampusCampaignCarousel } = await import('@/components/portal/CampusCampaignCarousel');
       expect(CampusCampaignCarousel).toBeDefined();
       expect(typeof CampusCampaignCarousel).toBe('function');
+    });
+  });
+
+  describe('formatProductPrice', () => {
+    it('formats number and string prices to RM format with 2 decimals', () => {
+      expect(formatProductPrice(3.5)).toBe('RM 3.50');
+      expect(formatProductPrice('4')).toBe('RM 4.00');
+      expect(formatProductPrice(12.9)).toBe('RM 12.90');
+      expect(formatProductPrice('RM 5.20')).toBe('RM 5.20');
+      expect(formatProductPrice(0)).toBe('RM 0.00');
+    });
+
+    it('handles invalid, negative, or empty prices safely', () => {
+      expect(formatProductPrice(null as any)).toBe('RM 0.00');
+      expect(formatProductPrice(undefined as any)).toBe('RM 0.00');
+      expect(formatProductPrice('')).toBe('RM 0.00');
+      expect(formatProductPrice('abc')).toBe('RM 0.00');
+      expect(formatProductPrice(NaN)).toBe('RM 0.00');
+      expect(formatProductPrice(-10)).toBe('RM 0.00');
+      expect(formatProductPrice('.75')).toBe('RM 0.75');
+      expect(formatProductPrice(99.999)).toBe('RM 100.00');
+    });
+  });
+
+  describe('EmsEventsFeed & PolyMartFeed component exports', () => {
+    it('exports EmsEventsFeed component correctly', async () => {
+      const module = await import('@/components/portal/EmsEventsFeed');
+      expect(module.EmsEventsFeed).toBeDefined();
+      expect(module.default).toBeDefined();
+      expect(typeof module.EmsEventsFeed).toBe('function');
+    });
+
+    it('exports PolyMartFeed component correctly', async () => {
+      const module = await import('@/components/portal/PolyMartFeed');
+      expect(module.PolyMartFeed).toBeDefined();
+      expect(module.default).toBeDefined();
+      expect(typeof module.PolyMartFeed).toBe('function');
     });
   });
 });
