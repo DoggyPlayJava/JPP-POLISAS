@@ -109,7 +109,7 @@ describe('superAppHelpers', () => {
       expect(element.props.className).toBe('custom-glass-header');
     });
 
-    it('renders pure white stadium search capsule and ultra-clear frosted dock', async () => {
+    it('renders pure white stadium search capsule and floating discrete action circles', async () => {
       if (typeof globalThis.localStorage === 'undefined') {
         globalThis.localStorage = {
           getItem: () => 'light',
@@ -150,10 +150,15 @@ describe('superAppHelpers', () => {
       expect(html).toContain('shadow-[0_8px_30px_rgba(0,0,0,0.18)]');
       expect(html).toContain('Cari makanan, runner, servis, acara, merit...');
 
-      // Dock capsule & Profile avatar
-      expect(html).toContain('bg-white/[0.08]');
-      expect(html).toContain('backdrop-blur-xl');
-      expect(html).toContain('ring-2 ring-emerald-400/50');
+      // Floating discrete action circles container
+      expect(html).toContain('flex items-center gap-3 shrink-0');
+      expect(html).not.toContain('divide-x');
+      expect(html).not.toContain('rounded-2xl bg-white/[0.08]');
+      expect(html).not.toContain('bg-white/[0.08]');
+
+      // Discrete circular buttons & Profile avatar
+      expect(html).toContain('w-9 h-9 rounded-full');
+      expect(html).toContain('ring-2 ring-emerald-400/60');
       expect(html).toContain('from-emerald-600 to-teal-500');
     });
   });

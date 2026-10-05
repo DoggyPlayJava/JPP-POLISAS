@@ -52,7 +52,7 @@ export function SuperAppHeader({
 
       {/* Main Header Container */}
       <div className="relative z-10 px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 pb-7 sm:pb-8 max-w-7xl mx-auto flex flex-col gap-5 sm:gap-6">
-        {/* Top Action Bar: Brand Logo & Location (Left) + Unified Glass Dock (Right) */}
+        {/* Top Action Bar: Brand Logo & Location (Left) + Floating Discrete Action Circles (Right) */}
         <div className="flex items-center justify-between gap-3">
           {/* Left Side: Prominent JPP Logo & Campus Location Pill */}
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -78,31 +78,34 @@ export function SuperAppHeader({
             </div>
           </div>
 
-          {/* Right Side: Consolidated Unified Glass Dock Capsule */}
-          <div className="inline-flex items-center p-1 rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/15 divide-x divide-white/10 shadow-lg shrink-0">
-            <div className="px-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white [&_button]:!rounded-xl">
+          {/* Right Side: Floating Discrete Action Circles */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* 1. ThemeToggle circular button */}
+            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <ThemeToggle />
             </div>
-            <div className="px-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white [&_button]:!rounded-xl">
+
+            {/* 2. NotificationBell circular button */}
+            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <NotificationBell variant="dark" />
             </div>
-            <div className="pl-1.5 pr-0.5">
-              <button
-                type="button"
-                onClick={onOpenSidebar}
-                className="tour-navbar-profile relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-emerald-400/50 hover:ring-emerald-400/80 active:scale-95 transition-all shadow-sm focus:outline-none cursor-pointer shrink-0"
-                aria-label="Buka profil dan tetapan"
-              >
-                <Avatar className="w-full h-full rounded-none">
-                  {profile?.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} className="object-cover" alt="Profil" />
-                  ) : null}
-                  <AvatarFallback className="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full">
-                    {profile?.full_name?.[0]?.toUpperCase() || displayName?.[0]?.toUpperCase() || 'P'}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </div>
+
+            {/* 3. Profile Avatar button */}
+            <button
+              type="button"
+              onClick={onOpenSidebar}
+              className="tour-navbar-profile relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-emerald-400/60 hover:ring-emerald-400 active:scale-95 transition-all shadow-md focus:outline-none cursor-pointer shrink-0"
+              aria-label="Buka profil dan tetapan"
+            >
+              <Avatar className="w-full h-full rounded-none">
+                {profile?.avatar_url ? (
+                  <AvatarImage src={profile.avatar_url} className="object-cover" alt="Profil" />
+                ) : null}
+                <AvatarFallback className="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full">
+                  {profile?.full_name?.[0]?.toUpperCase() || displayName?.[0]?.toUpperCase() || 'P'}
+                </AvatarFallback>
+              </Avatar>
+            </button>
           </div>
         </div>
 

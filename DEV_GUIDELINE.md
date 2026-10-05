@@ -2951,12 +2951,12 @@ Laman Portal Utama (`/portal` - `src/pages/PortalPage.tsx`) telah dinaik taraf k
 
 ### 29.2 Kawalan Header Kaca Eksekutif & Kapsul Carian Stadium Putih Tulen (`SuperAppHeader.tsx`)
 
-1. **Duk Kaca Eksekutif Ultra-Jelas Bersepadu (Ultra-Clear Frosted Glass Dock):**
-   - Menggabungkan kesemua tindakan sudut kanan atas ke dalam satu kapsul kaca terapung berasingan (`inline-flex items-center p-1 rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/15 divide-x divide-white/10 shadow-lg`):
-     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif tanpa sempadan berasingan (`[&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white`).
-     - `<NotificationBell variant="dark" />`: Lonceng notifikasi masa nyata aktif dengan lencana bilangan notifikasi belum dibaca.
-     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berkelas (`.tour-navbar-profile`) dengan cecincin zamrud (`ring-2 ring-emerald-400/50 hover:ring-emerald-400/80`) serta avatar fallback kecerunan (`bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full`), memicu pembukaan `PortalSidebar`.
-   - Menggantikan butang-butang bulat terapung yang berserakan dengan satu duk kapsul kompak, kemas dan mewah bertaraf eksekutif.
+1. **Butang Bulatan Tindakan Terapung Diskret (Floating Discrete Action Circles):**
+   - Menggantikan kapsul duk bertembok/berpembahagi sebelum ini dengan susunan baris terbuka (`flex items-center gap-3 shrink-0`):
+     - `<ThemeToggle />`: Butang bulat terapung bersaiz 36px (`w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0`).
+     - `<NotificationBell variant="dark" />`: Butang bulat terapung bersaiz 36px (`w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0`).
+     - **Pencetus Profil Pengguna (`Avatar`):** Butang bulat profil berkelas (`.tour-navbar-profile relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-emerald-400/60 hover:ring-emerald-400 active:scale-95 transition-all shadow-md focus:outline-none cursor-pointer shrink-0`) serta avatar fallback kecerunan (`bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full`), memicu pembukaan `PortalSidebar`.
+   - Menghapuskan kapsul pil legap (`divide-x`, `bg-white/[0.08]`) untuk memberikan estetika moden, bersih, dan terapung bebas di atas latar header obsidian-emerald.
 
 2. **Pembersihan Butang Terapung Bantuan & Pemindahan ke Sidebar:**
    - Butang bantuan terapung canggung (`.tour-help-button` di `fixed top-20 right-4`) telah dibuang sepenuhnya daripada `PortalPage.tsx`.
