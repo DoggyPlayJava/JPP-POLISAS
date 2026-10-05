@@ -1,0 +1,240 @@
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderToString } from 'react-dom/server';
+
+// Mocks for dependencies used by PolySuaraPage
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    profile: {
+      id: 'usr-test-123',
+      role: 'STUDENT',
+      full_name: 'Siswa Ujian',
+    },
+  }),
+}));
+
+vi.mock('@/hooks/usePushNotifications', () => ({
+  usePushNotifications: () => ({
+    isSubscribed: true,
+    requestPermission: vi.fn(),
+    unsubscribe: vi.fn(),
+  }),
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+vi.mock('@/contexts/ThemeContext', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: vi.fn(),
+  }),
+}));
+
+vi.mock('@/lib/notifications', () => ({
+  sendNotificationToKebajikanExco: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/components/layout/BottomNav', () => ({
+  BottomNav: () => React.createElement('div', { 'data-testid': 'mock-bottom-nav' }),
+}));
+
+vi.mock('@/components/ai/FloatingAiChat', () => ({
+  FloatingAiChat: () => React.createElement('div', { 'data-testid': 'mock-floating-chat' }),
+}));
+
+vi.mock('html2canvas', () => ({
+  default: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase', () => {
+  const chainable = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    range: vi.fn().mockResolvedValue({ data: [], error: null }),
+    maybeSingle: vi.fn().mockResolvedValue({ data: { is_enabled: true }, error: null }),
+    single: vi.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }),
+    insert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockResolvedValue({ error: null }),
+    update: vi.fn().mockReturnThis(),
+  };
+
+  return {
+    supabase: {
+      from: vi.fn(() => chainable),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+      storage: {
+        from: vi.fn(() => ({
+          upload: vi.fn().mockResolvedValue({ data: { path: 'mock.webp' } }),
+          getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/mock.webp' } }),
+        })),
+      },
+    },
+  };
+});
+
+import { PolySuaraPage } from '@/pages/polyservices/PolySuaraPage';
+import DefaultPolySuaraPage from '@/pages/polyservices/PolySuaraPage';
+import {
+  extractStickerToken,
+  embedStickerToken,
+  getAnimalAvatarFromCodename,
+  aggregateReactions,
+  POLISAS_CAMPUS_STICKERS,
+  REACTION_EMOJIS,
+} from '@/lib/polySuaraHelpers';
+
+describe('PolySuaraPage Suite', () => {
+  describe('Module Exports & Component Definition', () => {
+    it('exports PolySuaraPage as named and default component', () => {
+      expect(PolySuaraPage).toBeDefined();
+      expect(typeof PolySuaraPage).toBe('function');
+      expect(DefaultPolySuaraPage).toBeDefined();
+      expect(typeof DefaultPolySuaraPage).toBe('function');
+      expect(PolySuaraPage).toBe(DefaultPolySuaraPage);
+    });
+  });
+
+  describe('Dual Light & Dark Mode Layout Integration', () => {
+    it('renders outer container with smooth transition and light/dark theme classes', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+
+      // Container checks
+      expect(html).toContain('bg-slate-50');
+      expect(html).toContain('dark:bg-slate-950');
+      expect(html).toContain('text-slate-900');
+      expect(html).toContain('dark:text-slate-100');
+      expect(html).toContain('transition-colors');
+    });
+
+    it('renders sticky header with dual glass background and ThemeToggle integration', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+
+      // Header background
+      expect(html).toContain('bg-white/85');
+      expect(html).toContain('dark:bg-slate-950/80');
+      expect(html).toContain('border-slate-200/80');
+      expect(html).toContain('dark:border-white/5');
+
+      // Theme toggle presence in top navigation
+      expect(html).toContain('Tukar Tema');
+
+      // Anon mode indicator
+      expect(html).toContain('Anon Mode');
+    });
+
+    it('renders composer box with Pelekat sticker trigger and dual theme styling', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+
+      // Composer container classes
+      expect(html).toContain('bg-white');
+      expect(html).toContain('dark:bg-slate-900');
+      expect(html).toContain('border-slate-200');
+      expect(html).toContain('dark:border-slate-800');
+
+      // Pelekat button trigger in composer toolbar
+      expect(html).toContain('Pelekat');
+
+      // Form placeholder
+      expect(html).toContain('Apa yang bermain di fikiran anda?');
+
+      // Aksara counter
+      expect(html).toContain('aksara baki');
+    });
+
+    it('renders filter and sort bar with dual mode classes and mobile spacer', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+
+      // Filter tabs
+      expect(html).toContain('SEMUA');
+      expect(html).toContain('AKADEMIK');
+      expect(html).toContain('FASILITI');
+      expect(html).toContain('KAMSIS');
+      expect(html).toContain('KAUNSELING');
+
+      // Sort buttons
+      expect(html).toContain('Terkini');
+      expect(html).toContain('Hangat');
+
+      // Mobile dock spacer
+      expect(html).toContain('h-28 md:hidden');
+    });
+  });
+
+  describe('Sticker and Reaction Helpers Integration with PolySuaraPage', () => {
+    it('correctly extracts sticker tokens from confession content for card badges', () => {
+      const sampleContent = '[sticker:otak_jem] Otak saya tengah jem nak submit lab malam ni.';
+      const { stickerId, cleanContent } = extractStickerToken(sampleContent);
+
+      expect(stickerId).toBe('otak_jem');
+      expect(cleanContent).toBe('Otak saya tengah jem nak submit lab malam ni.');
+
+      const matchingSticker = POLISAS_CAMPUS_STICKERS.find(s => s.id === stickerId);
+      expect(matchingSticker).toBeDefined();
+      expect(matchingSticker?.label).toBe('Otak Jem');
+      expect(matchingSticker?.emoji).toBe('🧠💥');
+    });
+
+    it('correctly embeds sticker token into composer clean content', () => {
+      const userText = 'Jumpa di Dewan Sri Mahkota esok!';
+      const embedded = embedStickerToken(userText, 'solidariti');
+
+      expect(embedded).toBe('[sticker:solidariti] Jumpa di Dewan Sri Mahkota esok!');
+
+      // Re-extraction roundtrip
+      const extracted = extractStickerToken(embedded);
+      expect(extracted.stickerId).toBe('solidariti');
+      expect(extracted.cleanContent).toBe(userText);
+    });
+
+    it('derives dynamic animal avatar and colors from anonymous codename', () => {
+      const kucingAvatar = getAnimalAvatarFromCodename('Kucing Misteri');
+      expect(kucingAvatar.emoji).toBe('🐱');
+      expect(kucingAvatar.bgClass).toContain('amber');
+
+      const harimauAvatar = getAnimalAvatarFromCodename('Harimau Berani');
+      expect(harimauAvatar.emoji).toBe('🐯');
+      expect(harimauAvatar.bgClass).toContain('orange');
+
+      const defaultAvatar = getAnimalAvatarFromCodename(undefined);
+      expect(defaultAvatar.emoji).toBe('👻');
+    });
+
+    it('aggregates raw reactions into summary list for PolySuaraReactions action bar', () => {
+      const rawReactions = [
+        { reaction_type: 'heart', user_id: 'usr-1' },
+        { reaction_type: 'heart', user_id: 'usr-test-123' },
+        { reaction_type: 'laugh', user_id: 'usr-2' },
+        { reaction_type: 'fire', user_id: 'usr-3' },
+        { reaction_type: 'fire', user_id: 'usr-4' },
+      ];
+
+      const summaries = aggregateReactions(rawReactions, 'usr-test-123');
+
+      // Heart reaction
+      const heart = summaries.find(s => s.type === 'heart');
+      expect(heart).toBeDefined();
+      expect(heart?.count).toBe(2);
+      expect(heart?.userReacted).toBe(true);
+
+      // Laugh reaction
+      const laugh = summaries.find(s => s.type === 'laugh');
+      expect(laugh).toBeDefined();
+      expect(laugh?.count).toBe(1);
+      expect(laugh?.userReacted).toBe(false);
+
+      // Fire reaction
+      const fire = summaries.find(s => s.type === 'fire');
+      expect(fire).toBeDefined();
+      expect(fire?.count).toBe(2);
+      expect(fire?.userReacted).toBe(false);
+
+      // All 6 emoji types are accounted in constant
+      expect(REACTION_EMOJIS).toHaveLength(6);
+    });
+  });
+});
