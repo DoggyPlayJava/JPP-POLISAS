@@ -2949,25 +2949,25 @@ Laman Portal Utama (`/portal` - `src/pages/PortalPage.tsx`) telah dinaik taraf k
 
 ---
 
-### 29.2 Kawalan Header Kaca Eksekutif & Bar Carian Frosted Glass (`SuperAppHeader.tsx`)
+### 29.2 Kawalan Header Kaca Eksekutif & Kapsul Carian Stadium Putih Tulen (`SuperAppHeader.tsx`)
 
-1. **Duk Kaca Eksekutif Bersepadu (Executive Glass Dock):**
-   - Menggabungkan kesemua tindakan sudut kanan atas ke dalam satu kapsul kaca terapung berasingan (`inline-flex items-center p-1 rounded-2xl bg-white/10 dark:bg-black/30 backdrop-blur-2xl border border-white/15 divide-x divide-white/10 shadow-lg`):
-     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif tanpa sempadan berasingan.
+1. **Duk Kaca Eksekutif Ultra-Jelas Bersepadu (Ultra-Clear Frosted Glass Dock):**
+   - Menggabungkan kesemua tindakan sudut kanan atas ke dalam satu kapsul kaca terapung berasingan (`inline-flex items-center p-1 rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/15 divide-x divide-white/10 shadow-lg`):
+     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif tanpa sempadan berasingan (`[&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white`).
      - `<NotificationBell variant="dark" />`: Lonceng notifikasi masa nyata aktif dengan lencana bilangan notifikasi belum dibaca.
-     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berkelas (`.tour-navbar-profile`) dengan fallback inisial nama, memicu pembukaan `PortalSidebar`.
+     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berkelas (`.tour-navbar-profile`) dengan cecincin zamrud (`ring-2 ring-emerald-400/50 hover:ring-emerald-400/80`) serta avatar fallback kecerunan (`bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full`), memicu pembukaan `PortalSidebar`.
    - Menggantikan butang-butang bulat terapung yang berserakan dengan satu duk kapsul kompak, kemas dan mewah bertaraf eksekutif.
 
 2. **Pembersihan Butang Terapung Bantuan & Pemindahan ke Sidebar:**
    - Butang bantuan terapung canggung (`.tour-help-button` di `fixed top-20 right-4`) telah dibuang sepenuhnya daripada `PortalPage.tsx`.
    - Pencetus "Panduan Sistem (Tutorial)" kini disepadukan dengan kemas di dalam laci navigasi sisi `PortalSidebar.tsx` melalui prop `onStartTour`.
 
-3. **Bar Carian Kaca Frosted (Frosted Glass Search Bar):**
-   - Menggantikan bar carian putih tebal dengan butang carian kaca berkabus (*frosted glass button*):
-     `bg-white/[0.08] hover:bg-white/[0.12] dark:bg-white/[0.05] dark:hover:bg-white/[0.08] backdrop-blur-2xl border border-white/15 hover:border-emerald-400/40 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]`.
-   - Ikon carian bertempat dalam squircle zamrud lembut (`bg-emerald-500/20 text-emerald-300`).
-   - Placeholder carian berimbang: *"Cari makanan, servis, peta, aduan, merit..."*.
-   - Menyertakan lencana pintasan papan kekunci monokrom `Ctrl+K`.
+3. **Kapsul Carian Stadium Putih Tulen (Pure White Stadium Search Capsule):**
+   - Menggantikan bar carian kaca terdahulu dengan kapsul carian stadium penuh (*pure white stadium capsule* - `rounded-full`) putih tulen berkontras tinggi yang terapung jelas di atas latar belakang kecerunan obsidian:
+     `bg-white hover:bg-slate-50 text-slate-800 shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-white/40`.
+   - **Kanta Pembesar Pudina/Zamrud (*Mint Magnifying Glass*):** Ikon kanta pembesar bertempat dalam bekas bulatan mint lembut (`w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`).
+   - **Placeholder Carian Inklusif:** Teks placeholder dikemas kini kepada *"Cari makanan, runner, servis, acara, merit..."* (`text-slate-500 group-hover:text-slate-700 font-medium truncate`).
+   - **Lencana Pintasan Papan Kekunci Monokrom:** Menyertakan lencana kekunci `Ctrl+K` (`text-slate-400 bg-slate-100 rounded-full border border-slate-200/80`).
 
 ---
 
@@ -2986,14 +2986,33 @@ Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti harian 
 | 7 | `akademik_qr` | Scan QR | Kumpul Merit | Route: `/akademik/qr` | `tour-qa-qr` | `MERIT` | QrCode |
 | 8 | `ekpp` | Kelab EKPP | Persatuan Siswa | Route: `/kelab` | `tour-mod-ekpp` | `KELAB` | Landmark |
 
+- **Kedalaman Bekas Kad Dipertingkatkan (Elevated Card Container Depth):**
+  - Bekas kad butang perkhidmatan menggunakan kedalaman visual berlapis untuk menaikkan kontras pada kedua-dua mod terang dan gelap:
+    - **Mod Terang:** `bg-white hover:bg-slate-50 border border-slate-200/70 hover:border-emerald-400/40 shadow-xs hover:shadow-md rounded-2xl sm:rounded-3xl`
+    - **Mod Gelap:** `dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:backdrop-blur-md dark:border-white/[0.08] dark:hover:border-emerald-500/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]`
+- **Kad Servis Cyber Luminescent (Cyber Luminescent Service Cards):**
+  - Bekas ikon squircle (`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl`) menggunakan sistem warna semantik dwi-tema berkontras tinggi:
+    - **Mod Terang (High-Contrast Pastel):** Latar belakang pastel lembut dengan teks dan sempadan warna tepu yang jelas bagi keterlihatan maksimum:
+      `bg-{color}-50 text-{color}-600 border-{color}-200 shadow-xs`
+    - **Mod Gelap (Cyber Luminescent Micro-Glow):** Latar belakang lutsinar bertenaga dengan pendaran cahaya mikro neon-pastel:
+      `dark:bg-{color}-500/20 dark:text-{color}-400 dark:border-{color}-500/40 dark:shadow-[0_0_12px_rgba(...)]`
+  - Contoh pemetaan warna semantik dalam `SERVICE_STYLES`:
+    - PolySuara: Rose (`bg-rose-50 text-rose-600 border-rose-200` / `dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/40 dark:shadow-[0_0_12px_rgba(244,63,94,0.3)]`)
+    - PolyMart: Amber (`bg-amber-50 text-amber-600 border-amber-200` / `dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/40 dark:shadow-[0_0_12px_rgba(245,158,11,0.3)]`)
+    - Takwim: Indigo (`bg-indigo-50 text-indigo-600 border-indigo-200` / `dark:bg-indigo-500/20 dark:text-indigo-400 dark:border-indigo-500/40 dark:shadow-[0_0_12px_rgba(99,102,241,0.3)]`)
+    - PolyMaps: Emerald (`bg-emerald-50 text-emerald-600 border-emerald-200` / `dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/40 dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]`)
+    - PolyRent: Cyan (`bg-cyan-50 text-cyan-600 border-cyan-200` / `dark:bg-cyan-500/20 dark:text-cyan-400 dark:border-cyan-500/40 dark:shadow-[0_0_12px_rgba(6,182,212,0.3)]`)
+    - E-Kebajikan: Teal (`bg-teal-50 text-teal-600 border-teal-200` / `dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/40 dark:shadow-[0_0_12px_rgba(20,184,166,0.3)]`)
+    - Scan QR: Violet (`bg-violet-50 text-violet-600 border-violet-200` / `dark:bg-violet-500/20 dark:text-violet-400 dark:border-violet-500/40 dark:shadow-[0_0_12px_rgba(139,92,246,0.3)]`)
+    - Kelab EKPP: Blue (`bg-blue-50 text-blue-600 border-blue-200` / `dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40 dark:shadow-[0_0_12px_rgba(59,130,246,0.3)]`)
 - **Ergonomik Butang Sentuh (*Tactile Buttons*):**
   - Butang jubin padat `p-2 sm:p-3 rounded-2xl sm:rounded-3xl` dengan bekas ikon bersaiz `w-11 h-11 sm:w-13 sm:h-13 rounded-2xl` bagi mengelakkan limpahan melintang (*horizontal overflow*) pada skrin 360px+.
   - Animasi sentuhan spring Framer Motion (`whileHover={{ scale: 1.04, y: -2 }}`, `whileTap={{ scale: 0.95 }}`).
   - Label teks dipotong kemas (`truncate w-full text-center text-[10px] sm:text-xs font-bold`) dan sublabel disembunyikan pada telefon (`hidden sm:block text-[9px]`).
 - **Lencana Dinamik (*Badging*):**
   - E-Kebajikan memaparkan lencana bilangan tiket aduan aktif (`kbStats.open`) jika melebihi 0.
-  - Scan QR memaparkan lencana ungu `MERIT`.
-  - Kelab EKPP memaparkan lencana biru `KELAB`.
+  - Scan QR memaparkan lencana ungu `MERIT` (`bg-purple-600 text-white dark:bg-purple-500 dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]`).
+  - Kelab EKPP memaparkan lencana biru `KELAB` (`bg-blue-600 text-white dark:bg-blue-500 dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]`).
 - **Pengendalian Modul Dinyahaktifkan (*Graceful Degradation*):**
   - Sekiranya modul ditutup dalam konfigurasi `portal_settings` dan pengguna bukan SuperAdmin, ikon dipudarkan (`opacity-50 grayscale cursor-not-allowed`) dan klik menghasilkan makluman toast mesra *"sedang dikemas kini"*.
 
@@ -3014,7 +3033,7 @@ Bagi menjamin pengalaman penggunaan tanpa cela pada pelbagai resolusi peranti mu
    - Konfigurasi ini menjamin ruang pemisah menegak yang selamat antara bahagian bawah kandungan (Grid Modul Exco) dan bar navigasi terapung mudah alih (`BottomNav`), menghalang kad atau butang tindakan daripada terlindung atau tertekan secara tidak sengaja.
 4. **Estetika "OLED Glass Aura" & Jubin Bersinar (Dark Mode):**
    - Latar belakang ambient mesh aura (`hidden dark:block -z-10`) dengan kecerunan kabur zamrud dan nila (`bg-emerald-500/[0.035]` dan `bg-indigo-500/[0.025]`).
-   - Jubin servis 8-ikon dan kad suapan menggunakan aras kaca gelap (*deep glass elevation*): `dark:bg-slate-900/60 dark:backdrop-blur-md dark:border-white/[0.08]` dengan warna ikon neon-pastel yang menyerlah dan tidak kusam pada skrin OLED.
+   - Jubin servis 8-ikon dan kad suapan menggunakan aras kaca gelap (*deep glass elevation*): `dark:bg-slate-900/80 dark:backdrop-blur-md dark:border-white/[0.08]` dengan warna ikon cyber luminescent neon-pastel yang menyerlah dan tidak kusam pada skrin OLED.
 
 ---
 
