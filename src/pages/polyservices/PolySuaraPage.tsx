@@ -1215,49 +1215,68 @@ export function PolySuaraPage() {
               )}
             </AnimatePresence>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Streamlined Single-Line Feed Navigation */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none snap-x w-full">
+              {/* Sort Segmented Pills */}
+              <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 shrink-0">
                 <button
-                  onClick={() => setActiveCategory('SEMUA')}
+                  type="button"
+                  onClick={() => setSortBy('LATEST')}
                   className={cn(
-                    "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all",
-                    activeCategory === 'SEMUA' ? "bg-rose-500 text-white shadow-xs" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                    sortBy === 'LATEST'
+                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   )}
                 >
-                  SEMUA
+                  <Ghost className="w-3.5 h-3.5" /> Terkini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortBy('TRENDING')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+                    sortBy === 'TRENDING'
+                      ? "bg-rose-500 text-white shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                  )}
+                >
+                  <Flame className="w-3.5 h-3.5" /> Hangat
+                </button>
+              </div>
+
+              {/* Subtle Divider */}
+              <div className="h-6 w-px bg-slate-200 dark:bg-white/10 shrink-0" aria-hidden="true" />
+
+              {/* Category Filter Chips */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('SEMUA')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                    activeCategory === 'SEMUA'
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                      : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
+                  )}
+                >
+                  Semua
                 </button>
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat}
+                    type="button"
                     onClick={() => setActiveCategory(cat)}
                     className={cn(
-                      "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all",
-                      activeCategory === cat ? "bg-rose-500 text-white shadow-xs" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                      activeCategory === cat
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                        : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
                     )}
                   >
-                    {cat}
+                    {cat.charAt(0) + cat.slice(1).toLowerCase()}
                   </button>
                 ))}
-              </div>
-              <div className="flex bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shrink-0">
-                <button
-                  onClick={() => setSortBy('LATEST')}
-                  className={cn(
-                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
-                    sortBy === 'LATEST' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <Ghost className="w-3 h-3" /> Terkini
-                </button>
-                <button
-                  onClick={() => setSortBy('TRENDING')}
-                  className={cn(
-                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
-                    sortBy === 'TRENDING' ? "bg-rose-500/20 text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  )}
-                >
-                  <Flame className="w-3 h-3" /> Hangat
-                </button>
               </div>
             </div>
 

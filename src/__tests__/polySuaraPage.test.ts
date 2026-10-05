@@ -164,19 +164,25 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('setComposeModalOpen(false)');
     });
 
-    it('renders filter and sort bar with dual mode classes and mobile spacer', () => {
+    it('renders single-line streamlined feed navigation track with sort pills, divider and category chips', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Filter tabs
-      expect(html).toContain('SEMUA');
-      expect(html).toContain('AKADEMIK');
-      expect(html).toContain('FASILITI');
-      expect(html).toContain('KAMSIS');
-      expect(html).toContain('KAUNSELING');
+      // Unified horizontal navigation track
+      expect(html).toContain('flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none snap-x w-full');
 
       // Sort buttons
       expect(html).toContain('Terkini');
       expect(html).toContain('Hangat');
+
+      // Subtle Divider
+      expect(html).toContain('h-6 w-px bg-slate-200 dark:bg-white/10 shrink-0');
+
+      // Filter chips in title case
+      expect(html).toContain('Semua');
+      expect(html).toContain('Akademik');
+      expect(html).toContain('Fasiliti');
+      expect(html).toContain('Kamsis');
+      expect(html).toContain('Kaunseling');
 
       // Mobile dock spacer
       expect(html).toContain('h-28 md:hidden');
