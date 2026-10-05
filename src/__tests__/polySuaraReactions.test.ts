@@ -35,14 +35,14 @@ function findElements(node: any, predicate: (element: any) => boolean, results: 
   return results;
 }
 
-describe('PolySuaraReactions Component Suite', () => {
+describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
   const sampleReactions: ReactionSummary[] = [
     { type: 'heart', emoji: '❤️', count: 12, userReacted: true },
     { type: 'laugh', emoji: '😂', count: 5, userReacted: false },
     { type: 'fire', emoji: '🔥', count: 8, userReacted: false },
   ];
 
-  describe('Component Exports & Basic Structure', () => {
+  describe('Component Exports & Layout Architecture', () => {
     it('exports PolySuaraReactions as named and default export', () => {
       expect(PolySuaraReactions).toBeDefined();
       expect(typeof PolySuaraReactions).toBe('function');
@@ -50,124 +50,155 @@ describe('PolySuaraReactions Component Suite', () => {
       expect(PolySuaraReactions).toBe(DefaultPolySuaraReactions);
     });
 
-    it('renders reaction trigger button with minimum 44px mobile touch target and tooltip', () => {
-      const onToggle = vi.fn();
-      const { html, tree } = renderComponentTree({
-        confessionId: 'conf-101',
+    it('renders outer container with flex-nowrap and shrink-0 to prevent line breaks', () => {
+      const { tree } = renderComponentTree({
+        confessionId: 'conf-1',
         reactions: sampleReactions,
-        onToggleReaction: onToggle,
+        onToggleReaction: vi.fn(),
       });
-
-      // HTML contains accessibility title/tooltip "Beri Reaksi"
-      expect(html).toContain('Beri Reaksi');
-      expect(html).toContain('min-h-[44px]');
-      expect(html).toContain('min-w-[44px]');
-
-      // Tree has trigger button
-      const triggerBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-trigger-btn')[0];
-      expect(triggerBtn).toBeDefined();
-      expect(triggerBtn.props.title).toBe('Beri Reaksi');
-      expect(typeof triggerBtn.props.onClick).toBe('function');
-    });
-
-    it('renders active and inactive reaction pills for counts > 0', () => {
-      const onToggle = vi.fn();
-      const { html, tree } = renderComponentTree({
-        confessionId: 'conf-101',
-        reactions: sampleReactions,
-        onToggleReaction: onToggle,
-      });
-
-      // Shows counts 12, 5, 8
-      expect(html).toContain('12');
-      expect(html).toContain('5');
-      expect(html).toContain('8');
-
-      // 3 reaction pills rendered
-      const pills = findElements(tree, el => el.props?.['data-testid']?.startsWith('reaction-pill-'));
-      expect(pills.length).toBe(3);
+      expect(tree.props.className).toContain('flex-nowrap');
+      expect(tree.props.className).toContain('shrink-0');
     });
   });
 
-  describe('Reaction Popover & Emoji Selection', () => {
-    it('opens floating reaction popover displaying all 6 reaction emojis when open', () => {
-      const onToggle = vi.fn();
+  describe('One-Tap Heart (❤️) Like Button', () => {
+    it('renders one-tap Heart Like button with count inline and without line breaks', () => {
       const { html, tree } = renderComponentTree({
         confessionId: 'conf-101',
-        reactions: sampleReactions,
-        onToggleReaction: onToggle,
-        defaultOpen: true,
+        reactions: [{ type: 'heart', emoji: '❤️', label: 'Suka', count: 29, userReacted: false }],
+        totalUpvotes: 29,
+        onToggleReaction: vi.fn(),
       });
 
-      // Popover container exists
-      const popover = findElements(tree, el => el.props?.['data-testid'] === 'reaction-popover')[0];
-      expect(popover).toBeDefined();
+      // The count must be rendered inline with heart button
+      expect(html).toContain('29');
 
-      // All 6 emojis are present in the popover
-      REACTION_EMOJIS.forEach(item => {
-        expect(html).toContain(item.emoji);
-        const emojiBtn = findElements(tree, el => el.props?.['data-testid'] === `reaction-emoji-${item.type}`)[0];
-        expect(emojiBtn).toBeDefined();
-        expect(typeof emojiBtn.props.onClick).toBe('function');
-      });
+      const heartBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(heartBtn).toBeDefined();
+      expect(heartBtn.props.className).toContain('flex-nowrap');
+      expect(heartBtn.props.className).toContain('shrink-0');
+      expect(heartBtn.props.title).toBe('Suka luahan ini');
     });
 
-    it('clicking trigger button opens and toggles the floating reaction popover', () => {
+    it('falls back to totalUpvotes when heart reaction count is 0 or absent', () => {
+      const { html, tree } = renderComponentTree({
+        confessionId: 'conf-102',
+        reactions: [],
+        totalUpvotes: 42,
+        onToggleReaction: vi.fn(),
+      });
+
+      expect(html).toContain('42');
+      const heartBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(heartBtn).toBeDefined();
+      expect(heartBtn.props['aria-label']).toContain('42');
+    });
+
+    it('toggles heart reaction on single tap of the Heart button', () => {
+      const onToggle = vi.fn();
+      const { tree } = renderComponentTree({
+        confessionId: 'conf-103',
+        reactions: [{ type: 'heart', emoji: '❤️', label: 'Suka', count: 5, userReacted: false }],
+        onToggleReaction: onToggle,
+      });
+
+      const heartBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(heartBtn).toBeDefined();
+
+      heartBtn.props.onClick({ stopPropagation: vi.fn() });
+      expect(onToggle).toHaveBeenCalledTimes(1);
+      expect(onToggle).toHaveBeenCalledWith('conf-103', 'heart');
+    });
+
+    it('highlights heart button with active styling when userReacted is true', () => {
+      const { tree } = renderComponentTree({
+        confessionId: 'conf-104',
+        reactions: [{ type: 'heart', emoji: '❤️', label: 'Suka', count: 12, userReacted: true }],
+        onToggleReaction: vi.fn(),
+      });
+
+      const heartBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-heart-btn')[0];
+      expect(heartBtn).toBeDefined();
+      expect(heartBtn.props.className).toMatch(/bg-rose-500/);
+    });
+  });
+
+  describe('Reaction Menu Trigger & WhatsApp Popover', () => {
+    it('renders reaction menu trigger button right beside the heart', () => {
+      const { tree } = renderComponentTree({
+        confessionId: 'conf-201',
+        reactions: sampleReactions,
+        onToggleReaction: vi.fn(),
+      });
+
+      const menuTrigger = findElements(tree, el => el.props?.['data-testid'] === 'reaction-menu-trigger')[0];
+      expect(menuTrigger).toBeDefined();
+      expect(menuTrigger.props.title).toBe('Pilih reaksi lain');
+    });
+
+    it('opens popover when reaction menu trigger is clicked', () => {
       let openState = false;
       const onOpenChange = vi.fn((next: boolean) => {
         openState = next;
       });
 
       const { tree } = renderComponentTree({
-        confessionId: 'conf-101',
+        confessionId: 'conf-202',
         reactions: sampleReactions,
         onToggleReaction: vi.fn(),
         isOpen: openState,
         onOpenChange,
       });
 
-      const triggerBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-trigger-btn')[0];
-      expect(triggerBtn).toBeDefined();
-
-      // Trigger click toggles popover
-      triggerBtn.props.onClick({ stopPropagation: vi.fn() });
+      const menuTrigger = findElements(tree, el => el.props?.['data-testid'] === 'reaction-menu-trigger')[0];
+      menuTrigger.props.onClick({ stopPropagation: vi.fn() });
       expect(onOpenChange).toHaveBeenCalledWith(true);
     });
 
-    it('clicking an emoji in the popover calls onToggleReaction(confessionId, reactionType) and closes popover', () => {
+    it('renders all 6 emojis in popover when open', () => {
+      const { html, tree } = renderComponentTree({
+        confessionId: 'conf-203',
+        reactions: sampleReactions,
+        onToggleReaction: vi.fn(),
+        defaultOpen: true,
+      });
+
+      const popover = findElements(tree, el => el.props?.['data-testid'] === 'reaction-popover')[0];
+      expect(popover).toBeDefined();
+
+      REACTION_EMOJIS.forEach(item => {
+        expect(html).toContain(item.emoji);
+        const emojiBtn = findElements(tree, el => el.props?.['data-testid'] === `reaction-emoji-${item.type}`)[0];
+        expect(emojiBtn).toBeDefined();
+      });
+    });
+
+    it('selecting an emoji calls onToggleReaction and closes popover', () => {
       const onToggle = vi.fn();
       const onOpenChange = vi.fn();
 
       const { tree } = renderComponentTree({
-        confessionId: 'conf-202',
+        confessionId: 'conf-204',
         reactions: sampleReactions,
         onToggleReaction: onToggle,
-        defaultOpen: true,
         isOpen: true,
         onOpenChange,
       });
 
-      // Click on fire emoji
       const fireBtn = findElements(tree, el => el.props?.['data-testid'] === 'reaction-emoji-fire')[0];
       expect(fireBtn).toBeDefined();
 
       fireBtn.props.onClick({ stopPropagation: vi.fn() });
-
-      // Verifies onToggleReaction was called with correct confessionId and reactionType
-      expect(onToggle).toHaveBeenCalledTimes(1);
-      expect(onToggle).toHaveBeenCalledWith('conf-202', 'fire');
-
-      // Verifies popover is requested to close
+      expect(onToggle).toHaveBeenCalledWith('conf-204', 'fire');
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
-    it('clicking outside / backdrop overlay closes the popover', () => {
+    it('clicking backdrop overlay closes popover', () => {
       const onOpenChange = vi.fn();
       const { tree } = renderComponentTree({
-        confessionId: 'conf-202',
+        confessionId: 'conf-205',
         reactions: sampleReactions,
         onToggleReaction: vi.fn(),
-        defaultOpen: true,
         isOpen: true,
         onOpenChange,
       });
@@ -180,76 +211,77 @@ describe('PolySuaraReactions Component Suite', () => {
     });
   });
 
-  describe('Reaction Pills & Highlight Styling', () => {
-    it('clicking an existing reaction pill calls onToggleReaction(confessionId, reactionType)', () => {
+  describe('Inline Active Non-Heart Reaction Pills', () => {
+    it('renders non-heart reactions with count > 0 inline with flex-nowrap', () => {
+      const { html, tree } = renderComponentTree({
+        confessionId: 'conf-301',
+        reactions: sampleReactions, // heart(12), laugh(5), fire(8)
+        onToggleReaction: vi.fn(),
+      });
+
+      // Heart is in the main heart button, laugh & fire are in non-heart pills
+      const laughPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-laugh')[0];
+      const firePill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-fire')[0];
+      const heartPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-heart')[0];
+
+      expect(laughPill).toBeDefined();
+      expect(firePill).toBeDefined();
+      // Heart pill is not duplicated as a separate pill since it's the main button
+      expect(heartPill).toBeUndefined();
+
+      expect(laughPill.props.className).toContain('flex-nowrap');
+      expect(laughPill.props.className).toContain('shrink-0');
+      expect(html).toContain('5');
+      expect(html).toContain('8');
+    });
+
+    it('clicking non-heart reaction pill toggles reaction', () => {
       const onToggle = vi.fn();
       const { tree } = renderComponentTree({
-        confessionId: 'conf-303',
+        confessionId: 'conf-302',
         reactions: sampleReactions,
         onToggleReaction: onToggle,
       });
 
-      // Find the 'heart' pill
-      const heartPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-heart')[0];
-      expect(heartPill).toBeDefined();
+      const firePill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-fire')[0];
+      firePill.props.onClick({ stopPropagation: vi.fn() });
 
-      heartPill.props.onClick({ stopPropagation: vi.fn() });
-      expect(onToggle).toHaveBeenCalledTimes(1);
-      expect(onToggle).toHaveBeenCalledWith('conf-303', 'heart');
-
-      // Find the 'laugh' pill
-      const laughPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-laugh')[0];
-      expect(laughPill).toBeDefined();
-
-      laughPill.props.onClick({ stopPropagation: vi.fn() });
-      expect(onToggle).toHaveBeenCalledTimes(2);
-      expect(onToggle).toHaveBeenCalledWith('conf-303', 'laugh');
+      expect(onToggle).toHaveBeenCalledWith('conf-302', 'fire');
     });
 
-    it('highlights active reactions (userReacted: true) with active border, tint, and bold text', () => {
+    it('highlights active userReacted non-heart pill with active styles', () => {
+      const reactionsWithUserLaugh: ReactionSummary[] = [
+        { type: 'heart', emoji: '❤️', count: 1, userReacted: false },
+        { type: 'laugh', emoji: '😂', count: 3, userReacted: true },
+      ];
+
       const { tree } = renderComponentTree({
-        confessionId: 'conf-404',
-        reactions: sampleReactions,
+        confessionId: 'conf-303',
+        reactions: reactionsWithUserLaugh,
         onToggleReaction: vi.fn(),
       });
 
-      const heartPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-heart')[0];
       const laughPill = findElements(tree, el => el.props?.['data-testid'] === 'reaction-pill-laugh')[0];
-
-      // Heart pill (userReacted: true) must have active highlight classes
-      expect(heartPill.props.className).toContain('bg-rose-500/15');
-      expect(heartPill.props.className).toContain('border-rose-500/40');
-      expect(heartPill.props.className).toContain('text-rose-600');
-      expect(heartPill.props.className).toContain('dark:text-rose-400');
-      expect(heartPill.props.className).toContain('font-bold');
-
-      // Laugh pill (userReacted: false) must NOT have active bold or rose border
-      expect(laughPill.props.className).not.toContain('border-rose-500/40');
-      expect(laughPill.props.className).not.toContain('font-bold');
+      expect(laughPill.props.className).toContain('bg-rose-500/15');
+      expect(laughPill.props.className).toContain('border-rose-500/40');
+      expect(laughPill.props.className).toContain('font-bold');
     });
   });
 
   describe('Light & Dark Mode Classes', () => {
-    it('supports dual light and dark mode classes on popover container and pills', () => {
+    it('supports dual light and dark mode classes on popover container', () => {
       const { html } = renderComponentTree({
-        confessionId: 'conf-505',
+        confessionId: 'conf-401',
         reactions: sampleReactions,
         onToggleReaction: vi.fn(),
         defaultOpen: true,
       });
 
-      // Popover dual mode container classes
       expect(html).toContain('bg-white/95');
       expect(html).toContain('dark:bg-slate-900/95');
       expect(html).toContain('border-slate-200/90');
       expect(html).toContain('dark:border-white/15');
-      expect(html).toContain('shadow-xl');
-      expect(html).toContain('dark:shadow-2xl');
       expect(html).toContain('backdrop-blur-2xl');
-
-      // Pills dark mode text and border
-      expect(html).toContain('dark:text-rose-400');
-      expect(html).toContain('dark:border-white/10');
     });
   });
 });
