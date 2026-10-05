@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, ArrowRight, Trophy, Sparkles } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, Trophy } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { filterUpcomingEvents } from '@/lib/superAppHelpers';
 import { cn } from '@/lib/utils';
@@ -63,10 +63,14 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
     navigate('/ems/dashboard');
   };
 
+  if (!loading && events.length === 0) {
+    return null;
+  }
+
   return (
-    <section className={cn('w-full max-w-4xl mx-auto px-4', className)} aria-label="Acara Kampus">
+    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="Acara Kampus">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-500 dark:text-rose-400">
             <Trophy className="w-4 h-4" />
@@ -98,11 +102,11 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
 
       {/* Horizontal Feed */}
       {loading ? (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="snap-start shrink-0 w-[240px] sm:w-[260px] h-[190px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-3 flex flex-col justify-between animate-pulse"
+              className="snap-start shrink-0 w-[230px] sm:w-[270px] h-[190px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-3 flex flex-col justify-between animate-pulse"
             >
               <div className="w-full h-24 rounded-xl bg-slate-200 dark:bg-slate-800" />
               <div className="space-y-2 mt-2">
@@ -112,22 +116,8 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
             </div>
           ))}
         </div>
-      ) : events.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-6 text-center bg-white/30 dark:bg-slate-900/30">
-          <Sparkles className="w-7 h-7 mx-auto mb-2 text-slate-400" />
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Tiada acara akan datang buat masa ini.
-          </p>
-          <button
-            type="button"
-            onClick={handleSeeAll}
-            className="mt-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
-          >
-            Lihat Arkib Acara EMS
-          </button>
-        </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {events.map((evt) => {
             const dateStr = evt.event_date
               ? new Date(evt.event_date).toLocaleDateString('ms-MY', {
@@ -143,7 +133,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
               <div
                 key={evt.id}
                 onClick={() => handleCardClick(evt.id)}
-                className="snap-start shrink-0 w-[240px] sm:w-[260px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-rose-500/40 dark:hover:border-rose-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group"
+                className="snap-start shrink-0 w-[230px] sm:w-[270px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-rose-500/40 dark:hover:border-rose-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {

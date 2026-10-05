@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ArrowRight, Tag, Sparkles } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Tag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatProductPrice } from '@/lib/superAppHelpers';
 import { cn } from '@/lib/utils';
@@ -81,10 +81,14 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
     navigate('/keusahawanan/dashboard');
   };
 
+  if (!loading && products.length === 0) {
+    return null;
+  }
+
   return (
-    <section className={cn('w-full max-w-4xl mx-auto px-4', className)} aria-label="PolyMart Siswa">
+    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="PolyMart Siswa">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400">
             <ShoppingBag className="w-4 h-4" />
@@ -116,13 +120,13 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
 
       {/* Horizontal Feed */}
       {loading ? (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="snap-start shrink-0 w-[170px] sm:w-[190px] h-[210px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-2.5 flex flex-col justify-between animate-pulse"
+              className="snap-start shrink-0 w-[145px] sm:w-[180px] h-[210px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-2.5 flex flex-col justify-between animate-pulse"
             >
-              <div className="w-full h-28 rounded-xl bg-slate-200 dark:bg-slate-800" />
+              <div className="w-full h-24 sm:h-28 rounded-xl bg-slate-200 dark:bg-slate-800" />
               <div className="space-y-2 mt-2">
                 <div className="w-3/4 h-3 rounded bg-slate-200 dark:bg-slate-800" />
                 <div className="w-1/2 h-2.5 rounded bg-slate-200 dark:bg-slate-800" />
@@ -130,22 +134,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             </div>
           ))}
         </div>
-      ) : products.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-6 text-center bg-white/30 dark:bg-slate-900/30">
-          <Sparkles className="w-7 h-7 mx-auto mb-2 text-slate-400" />
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Tiada produk aktif di pasaran sekarang.
-          </p>
-          <button
-            type="button"
-            onClick={handleOpenMart}
-            className="mt-2 text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
-          >
-            Layari Dashboard Siswapreneur
-          </button>
-        </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {products.map((item) => {
             const hasSale = item.sale_price !== null && item.sale_price !== undefined && item.sale_price < item.price;
             const displayPrice = hasSale ? item.sale_price : item.price;
@@ -154,7 +144,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               <div
                 key={item.id}
                 onClick={handleCardClick}
-                className="snap-start shrink-0 w-[170px] sm:w-[190px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group"
+                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -165,17 +155,17 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                 }}
               >
                 {/* Photo & Pesan Tag */}
-                <div className="relative h-28 sm:h-32 w-full overflow-hidden bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center">
+                <div className="relative h-24 sm:h-28 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center">
                   {item.image_url ? (
                     <img
                       src={item.image_url}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-24 sm:h-28 object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 p-2">
-                      <ShoppingBag className="w-8 h-8 mb-1 stroke-1" />
+                      <ShoppingBag className="w-7 h-7 mb-1 stroke-1" />
                       <span className="text-[10px] text-center line-clamp-1">
                         {item.category || 'Produk'}
                       </span>
@@ -192,8 +182,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                 </div>
 
                 {/* Product Info */}
-                <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                <div className="pt-2 flex-1 flex flex-col justify-between space-y-1.5 min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={item.name}>
                     {item.name}
                   </h3>
 

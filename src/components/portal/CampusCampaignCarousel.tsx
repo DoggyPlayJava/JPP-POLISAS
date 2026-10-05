@@ -99,7 +99,7 @@ export function CampusCampaignCarousel({
   const variantClass = getCampaignVariantClasses(currentSlide.variant);
 
   return (
-    <div className={cn('w-full max-w-4xl mx-auto px-4', className)}>
+    <div className={cn('w-full max-w-full overflow-hidden', className)}>
       <div className="relative overflow-hidden rounded-3xl border shadow-sm backdrop-blur-md bg-white/40 dark:bg-slate-900/60 transition-all duration-300">
         <AnimatePresence mode="wait">
           <motion.div
