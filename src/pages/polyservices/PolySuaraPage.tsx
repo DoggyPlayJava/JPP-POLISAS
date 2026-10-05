@@ -64,10 +64,9 @@ export function PolySuaraPage() {
   const [sortBy, setSortBy] = useState<'LATEST'|'TRENDING'>('LATEST');
 
   // Compose state
+  const [composeModalOpen, setComposeModalOpen] = useState(false);
   const [newContent, setNewContent] = useState('');
   const [postCategory, setPostCategory] = useState<string>('UMUM');
-  const [composerStickerId, setComposerStickerId] = useState<string | null>(null);
-  const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -319,10 +318,7 @@ export function PolySuaraPage() {
     if (!newContent.trim() || !profile) return;
     
     // Content censorship is handled by DB trigger (censor_polysuara_content)
-    let cleanContent = newContent.trim();
-    if (composerStickerId) {
-      cleanContent = embedStickerToken(cleanContent, composerStickerId);
-    }
+    const cleanContent = newContent.trim();
 
     const hashtagsMatch = cleanContent.match(/#[a-zA-Z0-9_]+/g);
     const hashtags = hashtagsMatch ? hashtagsMatch.map(t => t.toLowerCase()) : [];
@@ -367,7 +363,7 @@ export function PolySuaraPage() {
       setImagePreview(null);
       setShowPoll(false);
       setPollOptions(['', '']);
-      setComposerStickerId(null);
+      setComposeModalOpen(false);
       fetchConfessions(0, true);
       // Notification broadcast kini diurus oleh Supabase Database Webhook
       // (server endpoint /api/polysuara-new-confession-notify)
@@ -1025,124 +1021,199 @@ export function PolySuaraPage() {
           </div>
         ) : (
           <>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 mb-8 shadow-sm dark:shadow-xl relative overflow-hidden"
+            <div
+              onClick={() => setComposeModalOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setComposeModalOpen(true);
+                }
+              }}
+              className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-6 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
+              role="button"
+              tabIndex={0}
+              aria-label="Tulis luahan kampus baharu"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <Sparkles className="w-24 h-24 text-slate-900 dark:text-white" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
+                  ✍️
+                </div>
+                <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-medium truncate">
+                  Ada luahan atau rahsia kampus? Kongsi secara rahsia...
+                </span>
               </div>
-              
-              <form onSubmit={handlePost} className="relative z-10">
-                {composerStickerId && (
-                  <PolySuaraStickerBadge
-                    stickerId={composerStickerId}
-                    size="md"
-                    onRemove={() => setComposerStickerId(null)}
-                    className="mb-3"
-                  />
-                )}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                  Luahkan
+                </span>
+              </div>
+            </div>
 
-                <textarea
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Apa yang bermain di fikiran anda?"
-                  className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 resize-none transition-all"
-                  rows={3}
-                  maxLength={500}
-                />
-                
-                {imagePreview && (
-                  <div className="relative mt-3 w-32 h-32 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button 
-                      type="button"
-                      onClick={() => { setSelectedFile(null); setImagePreview(null); }}
-                      className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white hover:bg-rose-500 transition-colors"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                
-                {showPoll && (
-                  <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Pilihan Undian</span>
-                      <button type="button" onClick={() => setIsMultipleChoice(!isMultipleChoice)} className={cn("text-[10px] font-bold px-2 py-1 rounded-md", isMultipleChoice ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
-                        {isMultipleChoice ? 'Pilihan Pelbagai' : 'Pilihan Tunggal'}
+            {/* Compose Modal */}
+            <AnimatePresence>
+              {composeModalOpen && (
+                <>
+                  <motion.div
+                    key="compose-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setComposeModalOpen(false)}
+                    className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]"
+                  />
+                  <motion.div
+                    key="compose-modal"
+                    initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 40, scale: 0.96 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-lg bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-[210] max-h-[90vh] overflow-y-auto"
+                  >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                          <Shield className="w-4 h-4" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                            Tulis Luahan Rahsia
+                          </h3>
+                          <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">
+                            100% Rahsia
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setComposeModalOpen(false)}
+                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        aria-label="Tutup"
+                      >
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
-                    {pollOptions.map((opt, idx) => (
-                      <input key={idx} placeholder={`Pilihan ${idx + 1}`} value={opt} onChange={(e) => {
-                        const next = [...pollOptions]; next[idx] = e.target.value; setPollOptions(next);
-                      }} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white mb-2" />
-                    ))}
-                    {pollOptions.length < MAX_POLL_OPTIONS && (
-                      <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[10px] font-bold text-rose-500">+ Tambah Pilihan (max {MAX_POLL_OPTIONS})</button>
-                    )}
-                  </div>
-                )}
-                
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <select
-                      value={postCategory}
-                      onChange={(e) => setPostCategory(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none focus:border-rose-500/50"
-                    >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
 
-                    <label className="cursor-pointer bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none transition-colors flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4" />
-                      <span className="hidden sm:inline">Imej</span>
-                      <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                    </label>
+                    {/* Form */}
+                    <form onSubmit={handlePost}>
+                      <textarea
+                        autoFocus
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        placeholder="Apa yang bermain di fikiran anda?"
+                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 resize-none transition-all text-sm leading-relaxed"
+                        rows={4}
+                        maxLength={500}
+                      />
 
-                    <button
-                      type="button"
-                      onClick={() => setStickerPickerOpen(true)}
-                      className={cn(
-                        "px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
-                        composerStickerId
-                          ? "bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400"
-                          : "bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
+                      {imagePreview && (
+                        <div className="relative mt-3 w-32 h-32 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group">
+                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedFile(null); setImagePreview(null); }}
+                            className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white hover:bg-rose-500 transition-colors"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
-                    >
-                      <Sparkles className="w-4 h-4 text-rose-500" />
-                      <span>Pelekat</span>
-                    </button>
 
-                    <button type="button" onClick={() => setShowPoll(!showPoll)} className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2", showPoll ? "bg-rose-500/20 text-rose-600 dark:text-rose-400" : "bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300")}>
-                      <BarChart className="w-4 h-4" />
-                    </button>
+                      {showPoll && (
+                        <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Pilihan Undian</span>
+                            <button
+                              type="button"
+                              onClick={() => setIsMultipleChoice(!isMultipleChoice)}
+                              className={cn(
+                                "text-[10px] font-bold px-2 py-1 rounded-md transition-colors",
+                                isMultipleChoice ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                              )}
+                            >
+                              {isMultipleChoice ? 'Pilihan Pelbagai' : 'Pilihan Tunggal'}
+                            </button>
+                          </div>
+                          {pollOptions.map((opt, idx) => (
+                            <input
+                              key={idx}
+                              placeholder={`Pilihan ${idx + 1}`}
+                              value={opt}
+                              onChange={(e) => {
+                                const next = [...pollOptions];
+                                next[idx] = e.target.value;
+                                setPollOptions(next);
+                              }}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white mb-2 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
+                            />
+                          ))}
+                          {pollOptions.length < MAX_POLL_OPTIONS && (
+                            <button
+                              type="button"
+                              onClick={() => setPollOptions([...pollOptions, ''])}
+                              className="text-[10px] font-bold text-rose-500 hover:text-rose-600"
+                            >
+                              + Tambah Pilihan (max {MAX_POLL_OPTIONS})
+                            </button>
+                          )}
+                        </div>
+                      )}
 
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      {500 - newContent.length} aksara baki
-                    </span>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!newContent.trim() || isSubmitting}
-                    className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-xs"
-                  >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    Luahkan
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+                      <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            value={postCategory}
+                            onChange={(e) => setPostCategory(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none focus:border-rose-500/50 font-medium"
+                          >
+                            {CATEGORIES.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
 
-            <PolySuaraStickerPicker
-              isOpen={stickerPickerOpen}
-              onClose={() => setStickerPickerOpen(false)}
-              onSelectSticker={(id) => setComposerStickerId(id)}
-              selectedStickerId={composerStickerId}
-            />
+                          <label className="cursor-pointer bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none transition-colors flex items-center gap-2 font-medium">
+                            <ImageIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                            <span>Imej</span>
+                            <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowPoll(!showPoll)}
+                            className={cn(
+                              "px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5",
+                              showPoll
+                                ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                                : "bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                            )}
+                          >
+                            <BarChart className="w-4 h-4" />
+                            <span>Undian</span>
+                          </button>
+
+                          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-1">
+                            {500 - newContent.length} aksara baki
+                          </span>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={!newContent.trim() || isSubmitting}
+                          className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs shrink-0"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                          <span>Kongsi Luahan</span>
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
             <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">

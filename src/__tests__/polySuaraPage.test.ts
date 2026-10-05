@@ -1,6 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import fs from 'fs';
+import path from 'path';
 
 // Mocks for dependencies used by PolySuaraPage
 vi.mock('@/contexts/AuthContext', () => ({
@@ -127,23 +129,39 @@ describe('PolySuaraPage Suite', () => {
       expect(html).toContain('Anon Mode');
     });
 
-    it('renders composer box with Pelekat sticker trigger and dual theme styling', () => {
+    it('renders Threads-style quick-compose capsule and removes sticker trigger from composer', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Composer container classes
-      expect(html).toContain('bg-white');
-      expect(html).toContain('dark:bg-slate-900');
-      expect(html).toContain('border-slate-200');
-      expect(html).toContain('dark:border-slate-800');
+      // Quick-compose capsule prompt text
+      expect(html).toContain('Ada luahan atau rahsia kampus?');
+      expect(html).toContain('Kongsi secara rahsia...');
 
-      // Pelekat button trigger in composer toolbar
-      expect(html).toContain('Pelekat');
+      // Action button and aria label
+      expect(html).toContain('Luahkan');
+      expect(html).toContain('aria-label="Tulis luahan kampus baharu"');
 
-      // Form placeholder
-      expect(html).toContain('Apa yang bermain di fikiran anda?');
+      // Pelekat sticker trigger should NOT be in the composer
+      expect(html).not.toContain('<span>Pelekat</span>');
 
-      // Aksara counter
-      expect(html).toContain('aksara baki');
+      // Quick-compose capsule styling
+      expect(html).toContain('rounded-2xl sm:rounded-3xl');
+    });
+
+    it('defines composeModalOpen state and modal dialog structure in PolySuaraPage', () => {
+      const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+      const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+      // State check: composeModalOpen defined, composer sticker states removed
+      expect(pageContent).toContain('const [composeModalOpen, setComposeModalOpen] = useState(false);');
+      expect(pageContent).not.toContain('composerStickerId');
+      expect(pageContent).not.toContain('stickerPickerOpen');
+
+      // Modal dialog elements
+      expect(pageContent).toContain('Tulis Luahan Rahsia');
+      expect(pageContent).toContain('100% Rahsia');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]');
+      expect(pageContent).toContain('Kongsi Luahan');
+      expect(pageContent).toContain('setComposeModalOpen(false)');
     });
 
     it('renders filter and sort bar with dual mode classes and mobile spacer', () => {
