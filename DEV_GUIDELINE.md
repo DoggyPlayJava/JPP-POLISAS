@@ -2973,22 +2973,26 @@ Komponen `src/components/portal/SuperAppHeader.tsx` bertindak sebagai bumbung vi
 
 ### 29.3 Grid 8 Servis Teras Kampus (`CampusServicesGrid.tsx`)
 
-Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti utama kampus dalam format 4 kolum mesra sentuhan telefon pintar (`grid grid-cols-4 gap-2.5 sm:gap-4 md:gap-6`):
+Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti utama kampus dalam format 4 kolum mesra sentuhan telefon pintar (`grid grid-cols-4 gap-2 sm:gap-3 md:gap-4`):
 
-| No | ID Servis | Nama Paparan | Keterangan | Tindakan / Laluan | Tema Squircle |
-|---|---|---|---|---|---|
-| 1 | `polyrider` | PolyRider | Ride & Penghantaran | Route: `/polyrider` | Emerald |
-| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/polymart` | Amber |
-| 3 | `polyservices` | PolyServices | Khidmat Kampus | Modal: `onOpenPolymartModal()` | Indigo |
-| 4 | `kamsis` | Kamsis | Penempatan Asrama | Modal: `onOpenKamsisModal()` | Cyan / Sky |
-| 5 | `ems` | EMS | Pengurusan Acara | Route: `/ems/dashboard` | Rose |
-| 6 | `kebajikan` | E-Kebajikan | Aduan & Bantuan | Route: `/kebajikan` | Teal |
-| 7 | `akademik_qr` | Scan QR | Kumpul Merit | Route: `/akademik/qr` | Purple |
-| 8 | `ekpp` | Kelab EKPP | Persatuan Siswa | Route: `/kelab` | Orange / Blue |
+| No | ID Servis | Nama Paparan | Sublabel | Tindakan / Laluan | Tour Class | Lencana (*Badge*) | Ikon |
+|---|---|---|---|---|---|---|---|
+| 1 | `polysuara` | PolySuara | Suara Siswa | Route: `/polysuara` | — | — | Megaphone |
+| 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/keusahawanan/dashboard` | — | — | UtensilsCrossed |
+| 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim` | `tour-qa-polyservices` | — | CalendarDays |
+| 4 | `polymaps` | PolyMaps | Peta Kampus | Route: `/polymaps` | — | — | Map |
+| 5 | `polyrent` | PolyRent | Sewa Barangan | Route: `/polyrent` | — | — | Package |
+| 6 | `kebajikan` | E-Kebajikan | Aduan & Bantuan | Route: `/kebajikan` | `tour-qa-kebajikan` | Bilangan aktif (`kbStats.open`) | HeartHandshake |
+| 7 | `akademik_qr` | Scan QR | Kumpul Merit | Route: `/akademik/qr` | `tour-qa-qr` | `MERIT` | QrCode |
+| 8 | `ekpp` | Kelab EKPP | Persatuan Siswa | Route: `/kelab` | `tour-mod-ekpp` | `KELAB` | Landmark |
 
+- **Ergonomik & Susun Atur Mudah Alih:**
+  - Butang jubin padat `p-2 sm:p-3 rounded-2xl sm:rounded-3xl` dengan bekas ikon bersaiz `w-11 h-11 sm:w-13 sm:h-13 rounded-2xl` bagi mengelakkan limpahan melintang (*horizontal overflow*) pada skrin 360px+.
+  - Label dipotong kemas (`truncate w-full text-center text-[10px] sm:text-xs font-bold`) dan sublabel disembunyikan pada telefon (`hidden sm:block text-[9px]`).
 - **Lencana Dinamik (*Badging*):**
-  - KAMSIS memaparkan lencana `LULUS` berwarna hijau zamrud sekiranya status permohonan asrama diluluskan (`kamsisStatus === 'APPROVED'`).
   - E-Kebajikan memaparkan lencana bilangan tiket aduan aktif (`kbStats.open`) jika melebihi 0.
+  - Scan QR memaparkan lencana ungu `MERIT`.
+  - Kelab EKPP memaparkan lencana biru `KELAB`.
 - **Pengendalian Modul Dinyahaktifkan (*Graceful Degradation*):**
   - Sekiranya modul ditutup dalam konfigurasi `portal_settings` dan pengguna bukan SuperAdmin, ikon dipudarkan (`opacity-50 grayscale cursor-not-allowed`) dan klik menghasilkan makluman toast mesra *"sedang dikemas kini"*.
 

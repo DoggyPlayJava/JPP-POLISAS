@@ -114,6 +114,42 @@ describe('superAppHelpers', () => {
       expect(CampusServicesGrid).toBeDefined();
       expect(typeof CampusServicesGrid).toBe('function');
     });
+
+    it('verifies 8 core services have correct routes, sublabels, tourClasses and badges', () => {
+      const services = getCampusServicesConfig({ kamsisStatus: null, kbOpenCount: 2 });
+      const serviceMap = Object.fromEntries(services.map(s => [s.id, s]));
+
+      expect(serviceMap.polysuara.routeOrAction).toBe('/polysuara');
+      expect(serviceMap.polysuara.sublabel).toBe('Suara Siswa');
+
+      expect(serviceMap.polymart.routeOrAction).toBe('/keusahawanan/dashboard');
+      expect(serviceMap.polymart.sublabel).toBe('Pasaran Siswa');
+
+      expect(serviceMap.takwim.routeOrAction).toBe('/akademik/takwim');
+      expect(serviceMap.takwim.sublabel).toBe('Kalendar Rasmi');
+      expect(serviceMap.takwim.tourClass).toContain('tour-qa-polyservices');
+
+      expect(serviceMap.polymaps.routeOrAction).toBe('/polymaps');
+      expect(serviceMap.polymaps.sublabel).toBe('Peta Kampus');
+
+      expect(serviceMap.polyrent.routeOrAction).toBe('/polyrent');
+      expect(serviceMap.polyrent.sublabel).toBe('Sewa Barangan');
+
+      expect(serviceMap.kebajikan.routeOrAction).toBe('/kebajikan');
+      expect(serviceMap.kebajikan.sublabel).toBe('Aduan & Bantuan');
+      expect(serviceMap.kebajikan.tourClass).toContain('tour-qa-kebajikan');
+      expect(serviceMap.kebajikan.badge).toBe('2');
+
+      expect(serviceMap.akademik_qr.routeOrAction).toBe('/akademik/qr');
+      expect(serviceMap.akademik_qr.sublabel).toBe('Kumpul Merit');
+      expect(serviceMap.akademik_qr.tourClass).toContain('tour-qa-qr');
+      expect(serviceMap.akademik_qr.badge).toBe('MERIT');
+
+      expect(serviceMap.ekpp.routeOrAction).toBe('/kelab');
+      expect(serviceMap.ekpp.sublabel).toBe('Persatuan Siswa');
+      expect(serviceMap.ekpp.tourClass).toContain('tour-mod-ekpp');
+      expect(serviceMap.ekpp.badge).toBe('KELAB');
+    });
   });
 
   describe('CampusCampaignCarousel & campaign helpers', () => {

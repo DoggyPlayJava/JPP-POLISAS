@@ -136,6 +136,7 @@ export interface CampusServiceItem {
   routeOrAction: string;
   badge?: string;
   description?: string;
+  sublabel?: string;
   color?: string;
   tourClass?: string;
 }
@@ -148,44 +149,50 @@ export function getCampusServicesConfig(params: {
     {
       id: 'polysuara',
       label: 'PolySuara',
+      sublabel: 'Suara Siswa',
+      description: 'Suara Siswa',
       routeOrAction: '/polysuara',
-      description: 'Suara Mahasiswa',
       color: 'rose',
     },
     {
       id: 'polymart',
       label: 'PolyMart',
-      routeOrAction: '/polymart',
+      sublabel: 'Pasaran Siswa',
       description: 'Pasaran Siswa',
+      routeOrAction: '/keusahawanan/dashboard',
       color: 'amber',
     },
     {
       id: 'takwim',
       label: 'Takwim',
+      sublabel: 'Kalendar Rasmi',
+      description: 'Kalendar Rasmi',
       routeOrAction: '/akademik/takwim',
-      description: 'Jadual & Kalendar',
       color: 'indigo',
-      tourClass: 'tour-qa-takwim tour-qa-polyservices',
+      tourClass: 'tour-qa-polyservices',
     },
     {
       id: 'polymaps',
       label: 'PolyMaps',
+      sublabel: 'Peta Kampus',
+      description: 'Peta Kampus',
       routeOrAction: '/polymaps',
-      description: 'Navigasi Kampus',
       color: 'emerald',
     },
     {
       id: 'polyrent',
       label: 'PolyRent',
-      routeOrAction: '/polyrent',
+      sublabel: 'Sewa Barangan',
       description: 'Sewa Barangan',
+      routeOrAction: '/polyrent',
       color: 'cyan',
     },
     {
       id: 'kebajikan',
       label: 'E-Kebajikan',
-      routeOrAction: '/kebajikan',
+      sublabel: 'Aduan & Bantuan',
       description: 'Aduan & Bantuan',
+      routeOrAction: '/kebajikan',
       badge: params.kbOpenCount && params.kbOpenCount > 0 ? String(params.kbOpenCount) : undefined,
       color: 'teal',
       tourClass: 'tour-qa-kebajikan',
@@ -193,16 +200,20 @@ export function getCampusServicesConfig(params: {
     {
       id: 'akademik_qr',
       label: 'Scan QR',
-      routeOrAction: '/akademik/qr',
+      sublabel: 'Kumpul Merit',
       description: 'Kumpul Merit',
+      routeOrAction: '/akademik/qr',
+      badge: 'MERIT',
       color: 'purple',
       tourClass: 'tour-qa-qr',
     },
     {
       id: 'ekpp',
       label: 'Kelab EKPP',
-      routeOrAction: '/kelab',
+      sublabel: 'Persatuan Siswa',
       description: 'Persatuan Siswa',
+      routeOrAction: '/kelab',
+      badge: 'KELAB',
       color: 'blue',
       tourClass: 'tour-mod-ekpp',
     },
