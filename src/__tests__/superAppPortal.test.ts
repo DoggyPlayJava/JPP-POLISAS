@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { formatGreeting, filterUpcomingEvents, buildCampaignSlides } from '@/lib/superAppHelpers';
+import {
+  formatGreeting,
+  filterUpcomingEvents,
+  buildCampaignSlides,
+  getRoleBadgeTitle,
+  getHeaderGradientClass,
+} from '@/lib/superAppHelpers';
 
 describe('superAppHelpers', () => {
   it('formats appropriate greetings according to the hour of day', () => {
@@ -33,4 +39,37 @@ describe('superAppHelpers', () => {
     expect(slides.some(s => s.id === 'karnival')).toBe(true);
     expect(slides.some(s => s.id === 'supsas')).toBe(false);
   });
+
+  describe('SuperAppHeader logic', () => {
+    it('resolves role badge title correctly for various roles', () => {
+      expect(getRoleBadgeTitle('SUPERADMIN')).toBe('PENTADBIR UTAMA');
+      expect(getRoleBadgeTitle('SUPER_ADMIN_JPP')).toBe('PENTADBIR UTAMA');
+      expect(getRoleBadgeTitle('JPP')).toBe('MAJLIS JPP');
+      expect(getRoleBadgeTitle('STUDENT')).toBe('SISWA POLISAS');
+      expect(getRoleBadgeTitle(undefined)).toBe('SISWA POLISAS');
+      expect(getRoleBadgeTitle('')).toBe('SISWA POLISAS');
+    });
+
+    it('selects theme gradient class based on karnivalActive and supsasActive state', () => {
+      // Karnival active
+      const karnivalGrad = getHeaderGradientClass(true, false);
+      expect(karnivalGrad).toContain('violet');
+
+      // SUPSAS active
+      const supsasGrad = getHeaderGradientClass(false, true);
+      expect(supsasGrad).toContain('amber');
+
+      // Default portal state
+      const defaultGrad = getHeaderGradientClass(false, false);
+      expect(defaultGrad).toContain('emerald');
+    });
+
+    it('exports SuperAppHeader component correctly', async () => {
+      const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
+      expect(SuperAppHeader).toBeDefined();
+      expect(typeof SuperAppHeader).toBe('function');
+    });
+  });
 });
+
+

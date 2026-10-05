@@ -90,3 +90,29 @@ export function buildCampaignSlides(params: {
 
   return slides;
 }
+
+export function getRoleBadgeTitle(role?: string): string {
+  if (!role) return 'SISWA POLISAS';
+  const r = role.trim().toUpperCase();
+  if (r === 'SUPERADMIN' || r === 'SUPER_ADMIN' || r === 'SUPER_ADMIN_JPP' || r.includes('SUPER_ADMIN')) {
+    return 'PENTADBIR UTAMA';
+  }
+  if (r === 'JPP') {
+    return 'MAJLIS JPP';
+  }
+  if (r === 'STAFF' || r === 'PENSYARAH') {
+    return 'STAF POLISAS';
+  }
+  return 'SISWA POLISAS';
+}
+
+export function getHeaderGradientClass(karnivalActive?: boolean, supsasActive?: boolean): string {
+  if (karnivalActive) {
+    return 'from-violet-950 via-purple-900 to-indigo-950';
+  }
+  if (supsasActive) {
+    return 'from-amber-950 via-slate-900 to-sky-950';
+  }
+  return 'from-emerald-950 via-slate-900 to-slate-950';
+}
+
