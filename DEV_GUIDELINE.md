@@ -1172,8 +1172,11 @@ Sistem variasi produk (saiz baju, warna, dll.) ditukar daripada senarai teks bia
 |---|---|---|
 | `/polymart` | `PolyMartHome` | Semua (termasuk pelawat tanpa login) |
 | `/polymart/produk/:id` | `PolyMartProductDetail` | Semua |
+| `/polymart/kedai/:id` | `PolyMartVendorStorefront` | Semua (termasuk pelawat tanpa login) |
+| `/polymart/troli` | `PolyMartCartPage` | Authenticated |
 | `/polymart/pesanan-saya` | `PolyMartMyOrders` | Authenticated |
-| `/polymart/chat` | `PolyMartChat` | Authenticated — sembang langsung pembeli-vendor |
+| `/polymart/chat` / `/polymart/mesej` | `PolyMartChat` | Authenticated — sembang langsung pembeli-vendor |
+| `/polymart/wishlist` | `PolyMartWishlist` | Authenticated |
 | `/polymart/vendor` | `PolyMartVendorDashboard` | Vendor (ada perniagaan aktif) |
 | `/polymart/verify/:orderId` | `PolyMartVerifyPickup` | Vendor (ahli perniagaan) — scan QR pickup |
 | `/polymart/bayar/:orderId` | `PolyMartPaymentPage` | Authenticated — muat naik resit QR (checkout portal) |
@@ -3198,6 +3201,69 @@ Laman Pasaran Mahasiswa PolyMart (`/polymart`) telah dinaik taraf kepada pengala
    - **Guardrail 3 (Disiplin Jenama & Integriti Logik):**
      - Mengekalkan warna tema Amber PolyMart tanpa pencampuran yang mengelirukan dengan tema modul lain.
      - Pematuhan ketat 0% pengubahsuaian terhadap logik perniagaan, troli, pesanan, mahupun skema database (100% Visual & UI Polish).
+
+---
+
+### 29.10 Seni Bina Kedai Peniaga Berdedikasi & Laman Produk SuperApp
+
+> Laluan Utama: `/polymart/kedai/:id` & `/polymart/produk/:id` | Komponen: `src/pages/polymart/PolyMartVendorStorefront.tsx`, `src/pages/polymart/PolyMartProductDetail.tsx`, & `src/pages/polymart/PolyMartLayout.tsx`
+
+Laman pasaran mahasiswa PolyMart menyediakan pengalaman peruncitan kampus menyeluruh daripada penemuan produk sehingga profil kedai peniaga dan helaian belian pantas:
+
+1. **Laman Kedai Peniaga Berdedikasi (`PolyMartVendorStorefront.tsx`):**
+   - **Laluan Awam:** `/polymart/kedai/:id`. Membolehkan peniaga siswa mempromosikan katalog dan jenama kedai mereka secara berasingan melalui pautan luaran mahupun kod QR kedai.
+   - **Smart Preset Ambient Mesh:** Apabila peniaga belum memuat naik gambar penutup (`cover_url`), sistem menjana latar belakang kecerunan Obsidian-Amber pintar (`from-amber-950 via-slate-900 to-stone-950`) secara automatik berserta tanda air (*watermark*) vektor geometri kategori perniagaan berskala besar yang estetik dan tidak kelihatan kosong.
+   - **Jalur Profil & Metrik Kedai:** Memaparkan lencana pengesahan rasmi (*Peniaga Siswa Sah POLISAS* / *Siswapreneur*), skor penarafan bintang dan jumlah ulasan, jumlah produk aktif, ketersediaan sokongan pembayaran (DuitNow QR Online / Tunai Semasa Ambil COD), nombor pendaftaran perniagaan/SSM, serta maklumat waktu operasi dan lokasi pengambilan barang dalam kampus.
+   - **Tab Navigasi Kedai Interaktif:**
+     - `Semua Produk`: Penjelajahan katalog penuh dengan sokongan carian dalam kedai dan penapisan kategori vektor pantas.
+     - `Paling Laris`: Susunan produk dengan ulasan tertinggi dan terlaris untuk memudahkan pelajar membuat pilihan pantas.
+     - `Info & Lokasi Ambil`: Butiran lengkap waktu operasi, koordinat/nama zon serahan kampus, panduan pembayaran, dan butang tindakan langsung (WhatsApp, panggilan telefon, kongsi pautan kedai).
+   - **Pautan Silang Menyeluruh (Omnipresent Cross-Linking):** Navigasi ke storefront kedai peniaga disepadukan secara menyeluruh dari kad produk `PolyMartHome`, laci/halaman `PolyMartCartPage`, pautan penjual dalam `PolyMartMyOrders`, dan butang mikro pada dok pembelian `PolyMartProductDetail`.
+
+2. **Penyahduplikasian Navigasi Mudah Alih (BottomNav Deduplication):**
+   - **Kekangan Antaramuka (UI Clutter Prevention):** Laman perincian produk (`/polymart/produk/*`) memerlukan dok pembelian pantas yang melekat di bahagian bawah skrin (`fixed bottom-0`). Jika bar navigasi global `<BottomNav />` turut dirender serentak, ia mencetuskan pertembungan dwi-dok (*double-docking clash*) yang memakan ruang skrin secara berlebihan dan menghalang butang tindakan utama.
+   - **Logik Penindasan Kondisional (`PolyMartLayout.tsx`):**
+     ```tsx
+     {!(
+       location.pathname.includes('/polymart/vendor') ||
+       location.pathname.includes('/polymart/admin') ||
+       location.pathname.includes('/polymart/produk/')
+     ) && (
+       <div className="tour-polymart-mobile-nav">
+         <BottomNav ... />
+       </div>
+     )}
+     ```
+   - **Kesinambungan Navigasi:** Laluan kedai `/polymart/kedai/:id` mengekalkan paparan `<BottomNav />` global supaya pembeli dapat melompat kembali ke Utiliti Kampus, Kegemaran, Troli, atau Pesanan dengan satu sentuhan.
+
+3. **Dok Pembelian Produk Melekat Mudah Alih (Mobile Sticky Bottom Purchase Dock):**
+   - **Kedudukan & Ergonomik:** Berada pada posisi `fixed bottom-0 left-0 right-0 z-40 bg-card/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]` lengkap dengan bayang lembut dan penampan bawah `pb-28 sm:pb-32` pada kontena kandungan utama supaya tiada teks atau ulasan terselindung di sebalik dok.
+   - **Trio Butang Mikro Kiri:**
+     - **Kedai (`Store`):** Membuka terus etalase kedai peniaga (`/polymart/kedai/:business_id`).
+     - **Sembang (`MessageCircle`):** Membuka tetingkap sembang segera (*real-time chat modal*) terus kepada peniaga untuk sebarang pertanyaan stok atau kustomisasi.
+     - **Troli (`ShoppingCart`):** Akses segera ke `/polymart/troli` lengkap dengan lencana bilangan item semasa (`cartCount`) berwarna merah jambu (`bg-rose-500 text-white`).
+   - **Butang Tindakan Berkembar Kanan:**
+     - `+ Troli`: Membuka helaian bawah pemilihan variasi dalam mod penambahan troli (`CART`).
+     - `Beli Sekarang`: Membuka helaian bawah dalam mod pesanan terus (`BUY`) dengan gaya kecerunan ambar bertenaga (`PM_GRADIENT`).
+
+4. **Helaian Bawah Variasi Bergerak Naik Ergonomik (Ergonomic Slide-Up Variation Bottom Sheet):**
+   - **Komponen:** `ProductVariationBottomSheet` menggantikan modal kotak tengah lapuk (*antiquated centered dialog modal*) yang sukar dicapai oleh ibu jari pada peranti skrin panjang.
+   - **Ciri-ciri Utama:**
+     - Animasi luncuran spring daripada bahagian bawah skrin (`framer-motion`) berserta penguncian tatalan latar belakang (*body scroll lock*).
+     - Tajuk mini dengan pratonton lakaran *squircle thumbnail*, paparan harga dinamik mengikut variasi, dan pembilang baki stok sebenar.
+     - Cip pemilihan saiz/warna/variasi interaktif berserta petunjuk kehabisan stok bagi setiap variasi secara automatik.
+     - Kaunter kuantiti (+/-) ergonomik dihadkan mengikut baki stok sedia ada.
+     - Bahagian pemilihan waktu ambil (*pickup time slot*) dan penukaran kaedah pembayaran (DuitNow QR Online / Tunai Semasa Ambil COD) mengikut tetapan peniaga.
+     - Menyokong dua mod aliran lancar: Mod `'CART'` (simpan ke troli Supabase dan kemas kini lencana masa nyata) dan Mod `'BUY'` (aliran terus ke pengesahan tempahan).
+
+5. **Karusel Produk Silang (Cross-Selling Horizontal Snap Carousel):**
+   - Memaparkan seksyen *"Produk Lain dari Kedai Ini"* di bahagian bawah laman produk untuk memacu jualan silang (*cross-selling*).
+   - Susun atur leretan mendatar (*horizontal snap carousel* `overflow-x-auto scrollbar-none snap-x`) yang membolehkan pelajar meluncur katalog tanpa membebankan ruang vertikal skrin.
+   - Data produk silang dimuatkan secara selari menggunakan `Promise.all` serentak dengan maklumat produk utama, mematuhi prinsip pencegahan N+1 queries.
+
+6. **Disiplin Prestasi Telefon Siswa & Sifar Emoji Mentah:**
+   - **60fps Mobile Performance:** Mengelakkan penggunaan `backdrop-blur` berat atau bayang-bayang kompleks merentasi kad grid dan kad karusel. Mengutamakan sempadan garis halus (*hairline border*) `border border-border/60` yang ringan diproses oleh cip pemproses peranti kelas permulaan mahasiswa.
+   - **Sifar Emoji Mentah:** Penghapusan 100% aksara emoji mentah dalam semua teks status, butang, dan kategori produk. Digantikan sepenuhnya oleh ikon vektor Lucide seragam (`CATEGORY_ICON_MAP`: `Utensils`, `Coffee`, `Sparkles`, `Wrench`, `Shirt`, `Smartphone`, `Package`) untuk memastikan rupa antaramuka yang konsisten merentasi sistem operasi Android, iOS, Windows, dan macOS tanpa isu glyph hilang atau perbezaan rendering emoji pengeluar telefon.
 
 ---
 
