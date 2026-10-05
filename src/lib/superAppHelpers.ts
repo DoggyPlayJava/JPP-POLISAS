@@ -167,6 +167,7 @@ export function getCampusServicesConfig(params: {
       routeOrAction: '/ems/dashboard',
       description: 'Pengurusan Acara',
       color: 'rose',
+      tourClass: 'tour-qa-takwim',
     },
     {
       id: 'kebajikan',

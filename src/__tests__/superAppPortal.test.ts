@@ -194,6 +194,16 @@ describe('superAppHelpers', () => {
       expect(typeof module.PolyMartFeed).toBe('function');
     });
   });
+
+  describe('PortalPage integration', () => {
+    it('exports PortalPage component correctly as named and default exports', async () => {
+      const module = await import('@/pages/PortalPage');
+      expect(module.PortalPage).toBeDefined();
+      expect(typeof module.PortalPage).toBe('function');
+      expect(module.default).toBeDefined();
+      expect(typeof module.default).toBe('function');
+    });
+  });
 });
 
 

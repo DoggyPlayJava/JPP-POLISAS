@@ -95,7 +95,7 @@ export function SuperAppHeader({
                 type="button"
                 onClick={onOpenSidebar}
                 aria-label="Buka profil dan tetapan"
-                className="relative w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/30 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
+                className="tour-navbar-profile relative w-10 h-10 rounded-2xl overflow-hidden border-2 border-white/30 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
               >
                 <Avatar className="w-full h-full rounded-none">
                   <AvatarImage src={profile.avatar_url || ''} className="object-cover" alt={profile.full_name || 'Profil'} />
