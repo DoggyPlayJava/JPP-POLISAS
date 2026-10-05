@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert, Bookmark } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert, Bookmark, Trash2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +24,7 @@ import {
   getAnimalAvatarFromCodename,
   aggregateReactions,
   getFriendlyAnonName,
+  isWithin1Hour,
 } from '@/lib/polySuaraHelpers';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
@@ -154,11 +155,19 @@ export function syncDownvoteToggleState(
 export interface PolySuaraPageProps {
   initialComposeModalOpen?: boolean;
   initialCommentDrawerOpen?: boolean;
+  initialConfessions?: any[];
+  initialComments?: any[];
+  initialActiveConfession?: any;
+  initialMyConfessions?: Set<string>;
 }
 
 export function PolySuaraPage({
   initialComposeModalOpen = false,
   initialCommentDrawerOpen = false,
+  initialConfessions,
+  initialComments,
+  initialActiveConfession,
+  initialMyConfessions,
 }: PolySuaraPageProps = {}) {
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
@@ -166,11 +175,11 @@ export function PolySuaraPage({
   const navigate = useNavigate();
 
   // Core state
-  const [confessions, setConfessions] = useState<any[]>([]);
+  const [confessions, setConfessions] = useState<any[]>(initialConfessions || []);
   const [userUpvotes, setUserUpvotes] = useState<Set<string>>(new Set());
   const [userDownvotes, setUserDownvotes] = useState<Set<string>>(new Set());
   const [confessionReactions, setConfessionReactions] = useState<Record<string, Array<{ reaction_type: string; user_id?: string }>>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialConfessions);
   const [moduleEnabled, setModuleEnabled] = useState(true);
 
   // Pagination state
@@ -222,7 +231,7 @@ export function PolySuaraPage({
 
   // Feed metadata
   const [trendingTags, setTrendingTags] = useState<{tag: string, count: number}[]>([]);
-  const [myConfessions, setMyConfessions] = useState<Set<string>>(new Set());
+  const [myConfessions, setMyConfessions] = useState<Set<string>>(initialMyConfessions || new Set());
 
   // Share / export
   const [shareLoadingId, setShareLoadingId] = useState<string | null>(null);
@@ -257,8 +266,8 @@ export function PolySuaraPage({
 
   // Comments (Ulasan) States
   const [commentDrawerOpen, setCommentDrawerOpen] = useState(initialCommentDrawerOpen);
-  const [activeConfessionForComments, setActiveConfessionForComments] = useState<any | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [activeConfessionForComments, setActiveConfessionForComments] = useState<any | null>(initialActiveConfession || null);
+  const [comments, setComments] = useState<any[]>(initialComments || []);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [isSensitiveComment, setIsSensitiveComment] = useState(false);
@@ -354,6 +363,7 @@ export function PolySuaraPage({
 
   useEffect(() => {
     checkModuleStatus();
+    if (initialConfessions) return;
     // Reset pagination on sort change
     setConfessions([]);
     setFeedOffset(0);
@@ -804,6 +814,48 @@ export function PolySuaraPage({
     }
   };
 
+  const handleDeleteConfession = async (confessionId: string) => {
+    const confession = confessions.find(c => c.id === confessionId);
+    if (!confession) return;
+    const isAuthor = Boolean(myConfessions.has(confessionId) || (profile?.id && confession.author_id === profile.id));
+    if (!isAuthor || !isWithin1Hour(confession.created_at)) {
+      toast.error('Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.');
+      return;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (!window.confirm('Adakah anda pasti ingin memadamkan luahan ini?')) {
+        return;
+      }
+    }
+
+    setConfessions(prev => prev.map(c => {
+      if (c.id === confessionId) {
+        return {
+          ...c,
+          content: '[deleted]',
+          is_deleted_by_author: true,
+        };
+      }
+      return c;
+    }));
+
+    toast.success('Luahan telah dipadamkan.');
+
+    try {
+      const { error } = await supabase
+        .from('polysuara_confessions')
+        .update({ content: '[deleted]' })
+        .eq('id', confessionId);
+
+      if (error) {
+        console.error('[Delete Confession DB Error]', error);
+      }
+    } catch (err) {
+      console.error('[Delete Confession Catch Error]', err);
+    }
+  };
+
   // (state moved to top of component)
 
   const submitReply = async () => {
@@ -953,7 +1005,7 @@ export function PolySuaraPage({
     try {
       const { data, error } = await supabase
         .from('polysuara_comments')
-        .select('id, confession_id, parent_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
+        .select('id, confession_id, parent_id, user_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
         .eq('confession_id', confessionId)
         .order('created_at', { ascending: true });
 
@@ -1009,7 +1061,7 @@ export function PolySuaraPage({
           is_sensitive: parentId ? false : isSensitiveComment,
           image_url: commentImageUrl
         })
-        .select('id, confession_id, parent_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
+        .select('id, confession_id, parent_id, user_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
         .single();
 
       if (error) throw error;
@@ -1143,6 +1195,49 @@ export function PolySuaraPage({
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+    const isCommentAuthor = Boolean(profile?.id && comment.user_id === profile.id);
+    if (!isCommentAuthor || !isWithin1Hour(comment.created_at)) {
+      toast.error('Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.');
+      return;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (!window.confirm('Adakah anda pasti ingin memadamkan ulasan ini?')) {
+        return;
+      }
+    }
+
+    // Optimistically update local state: mark is_deleted_by_author = true and content to '[deleted]'
+    setComments(prev => prev.map(c => {
+      if (c.id === commentId) {
+        return {
+          ...c,
+          content: '[deleted]',
+          is_deleted_by_author: true,
+        };
+      }
+      return c;
+    }));
+
+    toast.success('Ulasan telah dipadamkan.');
+
+    try {
+      const { error } = await supabase
+        .from('polysuara_comments')
+        .update({ content: '[deleted]' })
+        .eq('id', commentId);
+
+      if (error) {
+        console.error('[Delete Comment DB Error]', error);
+      }
+    } catch (err) {
+      console.error('[Delete Comment Catch Error]', err);
+    }
+  };
+
   const handleEscalateComment = async (comment: any) => {
     if (!window.confirm('Hantar laporan krisis/kebajikan kecemasan bagi ulasan ini ke Exco Kebajikan? Tindakan ini 100% rahsia.')) return;
     
@@ -1181,6 +1276,9 @@ export function PolySuaraPage({
     const displayName = comment.is_jpp_official ? 'JPP RASMI' : persona.displayName;
     const isCommUpvoted = commentUpvotes.has(comment.id);
     const cleanCommContent = cleanConfessionText(comment.content);
+    const isCommentAuthor = Boolean(profile?.id && comment.user_id === profile.id);
+    const isCommentDeletedByAuthor = Boolean(comment.is_deleted_by_author || comment.content === '[deleted]');
+    const canDeleteComment = isCommentAuthor && !isCommentDeletedByAuthor && isWithin1Hour(comment.created_at);
 
     return (
       <div
@@ -1238,13 +1336,19 @@ export function PolySuaraPage({
                 <ShieldAlert className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                 {cleanCommContent}
               </div>
+            ) : isCommentDeletedByAuthor ? (
+              <div className="py-1">
+                <span className="text-slate-400 dark:text-slate-500 italic text-xs flex items-center gap-1">
+                  <Trash2 className="w-3.5 h-3.5 text-slate-400" /> {`${displayName} telah memadamkan ruangan ini`}
+                </span>
+              </div>
             ) : comment.is_sensitive ? (
               <SensitiveCommentContent content={cleanCommContent} />
             ) : (
               <p className="leading-relaxed text-sm text-slate-800 dark:text-slate-200 break-words">{cleanCommContent}</p>
             )}
 
-            {comment.image_url && !comment.is_deleted_by_moderator && (
+            {comment.image_url && !comment.is_deleted_by_moderator && !isCommentDeletedByAuthor && (
               <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/40 max-w-xs">
                 <img 
                   src={comment.image_url} 
@@ -1256,21 +1360,57 @@ export function PolySuaraPage({
             )}
 
             {/* Threads-Style Micro-Actions */}
-            {!comment.is_deleted_by_moderator && (
-              <div className="flex items-center justify-between mt-2 pt-0.5 text-xs">
-                {/* Left: Subtle Balas button */}
+            {isCommentDeletedByAuthor ? (
+              <div className="flex items-center gap-3 mt-1.5 pt-0.5 text-xs text-slate-400 dark:text-slate-500">
                 <button
                   type="button"
-                  onClick={() => {
-                    setReplyingToCommentId(comment.id);
-                    setReplyCommentText(`@${displayName} `);
-                  }}
-                  className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
+                  disabled
+                  className="text-[10px] font-semibold text-slate-300 dark:text-slate-600 cursor-not-allowed flex items-center gap-1 select-none"
                   aria-label="Balas komen"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>Balas</span>
                 </button>
+                <button
+                  type="button"
+                  disabled
+                  className="flex items-center gap-1 text-[10px] font-medium text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
+                  aria-label="Suka ulasan"
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                  <span>0</span>
+                </button>
+              </div>
+            ) : !comment.is_deleted_by_moderator ? (
+              <div className="flex items-center justify-between mt-2 pt-0.5 text-xs">
+                {/* Left: Subtle Balas button & optional Padam Ulasan button */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyingToCommentId(comment.id);
+                      setReplyCommentText(`@${displayName} `);
+                    }}
+                    className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
+                    aria-label="Balas komen"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Balas</span>
+                  </button>
+
+                  {canDeleteComment && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="text-[10px] font-semibold text-rose-500 hover:text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Padam Ulasan"
+                      aria-label="Padam Ulasan"
+                    >
+                      <Trash2 className="w-3 h-3 text-rose-500" />
+                      <span>Padam Ulasan</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Right: Micro-Heart & Discrete ··· Action Trigger */}
                 <div className="flex items-center gap-1.5 relative">
@@ -1307,6 +1447,21 @@ export function PolySuaraPage({
                           onClick={() => setCommentMenuOpenId(null)}
                         />
                         <div className="absolute right-0 bottom-full mb-1 z-50 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-lg p-1 text-xs animate-in fade-in zoom-in-95 duration-150">
+                          {canDeleteComment && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCommentMenuOpenId(null);
+                                handleDeleteComment(comment.id);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 dark:text-rose-400 font-medium flex items-center gap-2 transition-colors cursor-pointer"
+                              title="Padam ulasan"
+                              aria-label="Padam Ulasan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                              <span>Padam Ulasan</span>
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => {
@@ -1344,10 +1499,10 @@ export function PolySuaraPage({
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Reply Input Form */}
-            {replyingToCommentId === comment.id && (
+            {replyingToCommentId === comment.id && !isCommentDeletedByAuthor && (
               <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
                 <input
                   type="text"
@@ -1766,9 +1921,12 @@ export function PolySuaraPage({
                 <AnimatePresence>
                   {confessions.filter(c => activeCategory === 'SEMUA' || c.category === activeCategory).map((confession, index) => {
                     const isUpvoted = userUpvotes.has(confession.id);
-                    const isMine = myConfessions.has(confession.id);
+                    const isMine = myConfessions.has(confession.id) || (profile?.id && confession.author_id === profile.id);
                     const isTrending = confession.upvotes > 30 && (new Date().getTime() - new Date(confession.created_at).getTime() < 24 * 60 * 60 * 1000);
                     const avatar = getAnimalAvatarFromCodename(confession.codename);
+                    const isConfessionDeleted = Boolean(confession.is_deleted_by_author || confession.content === '[deleted]');
+                    const isAuthor = Boolean(isMine || myConfessions.has(confession.id) || (profile?.id && confession.author_id === profile?.id));
+                    const canDeleteConfession = isAuthor && !isConfessionDeleted && isWithin1Hour(confession.created_at);
 
                     return (
                       <motion.div
@@ -1822,37 +1980,59 @@ export function PolySuaraPage({
                             <span className="text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 shrink-0">
                               {confession.category}
                             </span>
-                            <button 
-                              onClick={() => {
-                                setReportTargetId(confession.id);
-                                setReportModalOpen(true);
-                              }}
-                              title="Laporkan kandungan ini"
-                              className="text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                              <AlertTriangle className="w-4 h-4" />
-                            </button>
+                            {canDeleteConfession && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteConfession(confession.id)}
+                                title="Padam luahan anda"
+                                aria-label="Padam Luahan"
+                                className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-xs"
+                              >
+                                <Trash2 className="w-4 h-4 text-slate-400" />
+                                <span className="hidden sm:inline text-[11px] font-medium">Padam Luahan</span>
+                              </button>
+                            )}
+                            {!isConfessionDeleted && (
+                              <button 
+                                onClick={() => {
+                                  setReportTargetId(confession.id);
+                                  setReportModalOpen(true);
+                                }}
+                                title="Laporkan kandungan ini"
+                                className="text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                              >
+                                <AlertTriangle className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
 
-                        <p className="text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5">
-                          {cleanConfessionText(confession.content)}
-                        </p>
+                        {isConfessionDeleted ? (
+                          <div className="py-2 mb-3.5">
+                            <span className="text-slate-400 dark:text-slate-500 italic text-sm flex items-center gap-1.5">
+                              <Trash2 className="w-4 h-4 text-slate-400" /> {`${confession.codename || 'Penulis'} telah memadamkan ruangan ini`}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5">
+                            {cleanConfessionText(confession.content)}
+                          </p>
+                        )}
 
-                        {confession.polysuara_polls && confession.polysuara_polls.length > 0 && (
+                        {!isConfessionDeleted && confession.polysuara_polls && confession.polysuara_polls.length > 0 && (
                           <div className="mb-4">
                             <PolySuaraPoll poll={confession.polysuara_polls[0]} currentUserId={profile?.id || ''} />
                           </div>
                         )}
 
-                        {confession.image_url && (
+                        {!isConfessionDeleted && confession.image_url && (
                           <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40 group/media">
                             <img src={confession.image_url} alt="Attachment" className="w-full max-h-[350px] object-cover transition-transform duration-300 group-hover/media:scale-105" />
                           </div>
                         )}
 
                         {/* Hashtags */}
-                        {confession.hashtags && confession.hashtags.length > 0 && (
+                        {!isConfessionDeleted && confession.hashtags && confession.hashtags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-4">
                             {confession.hashtags.map((tag: string, i: number) => (
                               <span key={i} className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">{tag}</span>
@@ -1903,42 +2083,79 @@ export function PolySuaraPage({
                         )}
 
                         <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none" data-html2canvas-ignore>
-                          <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
-                            <PolySuaraReactions
-                              confessionId={confession.id}
-                              reactions={aggregateReactions(confessionReactions[confession.id] || [], profile?.id)}
-                              onToggleReaction={handleToggleReaction}
-                              totalUpvotes={confession.upvotes}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleDownvote(confession.id)}
-                              className={cn(
-                                "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 flex-nowrap cursor-pointer",
-                                userDownvotes.has(confession.id)
-                                  ? "bg-slate-800 text-white dark:bg-slate-700"
-                                  : "bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                              )}
-                              title="Tidak setuju (Auto-moderasi)"
-                            >
-                              <ThumbsDown className={cn("w-3.5 h-3.5", userDownvotes.has(confession.id) && "fill-current")} />
-                              <span className="font-mono text-[11px] leading-none">{confession.downvotes || 0}</span>
-                            </button>
+                          {isConfessionDeleted ? (
+                            <div className="flex items-center gap-1.5 shrink-0 flex-nowrap text-slate-400">
+                              <button
+                                type="button"
+                                disabled
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
+                                aria-label="Suka (Dinyahdayakan)"
+                              >
+                                <Heart className="w-3.5 h-3.5" />
+                                <span className="tabular-nums font-mono text-[11px] leading-none">0</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
+                                aria-label="Tidak setuju (Dinyahdayakan)"
+                              >
+                                <ThumbsDown className="w-3.5 h-3.5" />
+                                <span className="font-mono text-[11px] leading-none">0</span>
+                              </button>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveConfessionForComments(confession);
-                                fetchComments(confession.id);
-                                setCommentDrawerOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
-                              title="Ulasan Pelajar"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                              <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
-                            </button>
-                          </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveConfessionForComments(confession);
+                                  fetchComments(confession.id);
+                                  setCommentDrawerOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
+                                title="Ulasan Pelajar"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+                              <PolySuaraReactions
+                                confessionId={confession.id}
+                                reactions={aggregateReactions(confessionReactions[confession.id] || [], profile?.id)}
+                                onToggleReaction={handleToggleReaction}
+                                totalUpvotes={confession.upvotes}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleDownvote(confession.id)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 flex-nowrap cursor-pointer",
+                                  userDownvotes.has(confession.id)
+                                    ? "bg-slate-800 text-white dark:bg-slate-700"
+                                    : "bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                )}
+                                title="Tidak setuju (Auto-moderasi)"
+                              >
+                                <ThumbsDown className={cn("w-3.5 h-3.5", userDownvotes.has(confession.id) && "fill-current")} />
+                                <span className="font-mono text-[11px] leading-none">{confession.downvotes || 0}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveConfessionForComments(confession);
+                                  fetchComments(confession.id);
+                                  setCommentDrawerOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
+                                title="Ulasan Pelajar"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
+                              </button>
+                            </div>
+                          )}
 
                           <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
                             <button

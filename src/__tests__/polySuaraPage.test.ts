@@ -498,5 +498,96 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('!composeModalOpen && !commentDrawerOpen');
     });
   });
+
+  describe('1-Hour Self-Delete Feature for Confessions', () => {
+    const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+    it('defines handleDeleteConfession with 1-hour time check and tombstone update in PolySuaraPage', () => {
+      expect(pageContent).toContain('handleDeleteConfession');
+      expect(pageContent).toContain('isWithin1Hour');
+      expect(pageContent).toContain("content: '[deleted]'");
+      expect(pageContent).toContain('is_deleted_by_author: true');
+      expect(pageContent).toContain('telah memadamkan ruangan ini');
+    });
+
+    it('renders "Padam Luahan" button when confession was created within 1 hour by author', () => {
+      const confessionId = 'conf-recent-1';
+      const recentTimestamp = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // 20 mins ago
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: 'Luahan baharu dalam tempoh satu jam.',
+          category: 'UMUM',
+          created_at: recentTimestamp,
+          codename: 'Kucing Oren',
+          upvotes: 5,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      expect(html).toContain('Padam Luahan');
+      expect(html).toContain('aria-label="Padam Luahan"');
+      expect(html).toContain('Luahan baharu dalam tempoh satu jam.');
+    });
+
+    it('does NOT render "Padam Luahan" button when confession is older than 1 hour', () => {
+      const confessionId = 'conf-old-1';
+      const oldTimestamp = new Date(Date.now() - 90 * 60 * 1000).toISOString(); // 90 mins ago
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: 'Luahan lama yang telah melebihi tempoh satu jam.',
+          category: 'UMUM',
+          created_at: oldTimestamp,
+          codename: 'Kucing Oren',
+          upvotes: 12,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      expect(html).not.toContain('Padam Luahan');
+      expect(html).not.toContain('aria-label="Padam Luahan"');
+      expect(html).toContain('Luahan lama yang telah melebihi tempoh satu jam.');
+    });
+
+    it('renders tombstone message and disables Like/Dislike interactions when confession is deleted by author', () => {
+      const confessionId = 'conf-deleted-1';
+      const recentTimestamp = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: '[deleted]',
+          is_deleted_by_author: true,
+          category: 'UMUM',
+          created_at: recentTimestamp,
+          codename: 'Musang Cerdik',
+          upvotes: 0,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      // Tombstone message with exact text and styling
+      expect(html).toContain('Musang Cerdik telah memadamkan ruangan ini');
+      expect(html).toContain('text-slate-400 dark:text-slate-500 italic text-sm');
+
+      // Actions are disabled on deleted confessions
+      expect(html).toContain('aria-label="Suka (Dinyahdayakan)"');
+      expect(html).toContain('aria-label="Tidak setuju (Dinyahdayakan)"');
+      expect(html).toContain('cursor-not-allowed');
+
+      // Padam button is NOT shown on already deleted confession
+      expect(html).not.toContain('Padam Luahan');
+    });
+  });
 });
 

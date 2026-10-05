@@ -534,3 +534,15 @@ export function aggregateReactions(
 
   return result;
 }
+
+/**
+ * Checks whether a given timestamp is within the last 1 hour (60 minutes).
+ * Used for author self-delete grace period in PolySuara confessions and comments.
+ */
+export function isWithin1Hour(createdAt: string | Date | null | undefined): boolean {
+  if (!createdAt) return false;
+  const time = new Date(createdAt).getTime();
+  if (isNaN(time)) return false;
+  const diffMs = Date.now() - time;
+  return diffMs >= 0 && diffMs <= 60 * 60 * 1000;
+}

@@ -13,6 +13,83 @@ import {
 import { PolySuaraStickerBadge } from '@/components/polysuara/PolySuaraStickerBadge';
 import { PolySuaraStickerPicker } from '@/components/polysuara/PolySuaraStickerPicker';
 
+// Mock document for SSR createPortal rendering in Node environment
+if (typeof document === 'undefined') {
+  (global as any).document = {
+    createElement: () => ({}),
+    body: {},
+  };
+}
+
+// Mocks for dependencies used when rendering PolySuaraPage comments drawer
+vi.mock('react-dom', async () => {
+  const actual = await vi.importActual<any>('react-dom');
+  return {
+    ...actual,
+    createPortal: (node: any) => node,
+  };
+});
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    profile: {
+      id: 'usr-test-123',
+      role: 'STUDENT',
+      full_name: 'Siswa Ujian',
+    },
+  }),
+}));
+
+vi.mock('@/hooks/usePushNotifications', () => ({
+  usePushNotifications: () => ({
+    isSubscribed: true,
+    requestPermission: vi.fn(),
+    unsubscribe: vi.fn(),
+  }),
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+vi.mock('@/contexts/ThemeContext', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: vi.fn(),
+  }),
+}));
+
+vi.mock('@/lib/notifications', () => ({
+  sendNotificationToKebajikanExco: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/components/layout/BottomNav', () => ({
+  BottomNav: () => React.createElement('div', { 'data-testid': 'mock-bottom-nav' }),
+}));
+
+vi.mock('@/components/ai/FloatingAiChat', () => ({
+  FloatingAiChat: () => React.createElement('div', { 'data-testid': 'mock-floating-chat' }),
+}));
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockResolvedValue({ data: [], error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { is_enabled: true }, error: null }),
+      single: vi.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+    })),
+    rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+  },
+}));
+
+import { PolySuaraPage } from '@/pages/polyservices/PolySuaraPage';
+
 describe('PolySuara Comments Suite (TDD)', () => {
   describe('Sticker Token Helpers & Content Sanitization for Comments', () => {
     it('extracts sticker token and clean content from a comment content string', () => {
@@ -210,6 +287,118 @@ describe('PolySuara Comments Suite (TDD)', () => {
       // Subtle Balas button
       expect(pageContent).toContain('aria-label="Balas komen"');
       expect(pageContent).toContain('<MessageCircle className="w-3.5 h-3.5" />');
+    });
+  });
+
+  describe('1-Hour Self-Delete Feature for Comments', () => {
+    const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+    it('defines handleDeleteComment with 1-hour time check and tombstone update in PolySuaraPage', () => {
+      expect(pageContent).toContain('handleDeleteComment');
+      expect(pageContent).toContain('isWithin1Hour');
+      expect(pageContent).toContain("content: '[deleted]'");
+      expect(pageContent).toContain('is_deleted_by_author: true');
+      expect(pageContent).toContain('telah memadamkan ruangan ini');
+    });
+
+    it('renders "Padam Ulasan" option when comment was created within 1 hour by author', () => {
+      const recentTimestamp = new Date(Date.now() - 15 * 60 * 1000).toISOString(); // 15 mins ago
+      const confessionId = 'conf-drawer-1';
+      const commentId = 'comm-recent-1';
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialCommentDrawerOpen: true,
+        initialActiveConfession: {
+          id: confessionId,
+          content: 'Confession dengan ulasan terkini',
+          codename: 'Kucing Oren',
+          category: 'UMUM',
+        },
+        initialComments: [{
+          id: commentId,
+          confession_id: confessionId,
+          user_id: 'usr-test-123',
+          content: 'Ulasan baharu saya yang boleh dipadam.',
+          codename: 'Musang Cerdik',
+          created_at: recentTimestamp,
+          upvotes: 2,
+          downvotes: 0,
+        }],
+      }));
+
+      expect(html).toContain('Padam Ulasan');
+      expect(html).toContain('aria-label="Padam Ulasan"');
+      expect(html).toContain('Ulasan baharu saya yang boleh dipadam.');
+    });
+
+    it('does NOT render "Padam Ulasan" option when comment is older than 1 hour', () => {
+      const oldTimestamp = new Date(Date.now() - 75 * 60 * 1000).toISOString(); // 75 mins ago
+      const confessionId = 'conf-drawer-2';
+      const commentId = 'comm-old-1';
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialCommentDrawerOpen: true,
+        initialActiveConfession: {
+          id: confessionId,
+          content: 'Confession dengan ulasan lama',
+          codename: 'Kucing Oren',
+          category: 'UMUM',
+        },
+        initialComments: [{
+          id: commentId,
+          confession_id: confessionId,
+          user_id: 'usr-test-123',
+          content: 'Ulasan lama yang melebihi satu jam.',
+          codename: 'Musang Cerdik',
+          created_at: oldTimestamp,
+          upvotes: 4,
+          downvotes: 0,
+        }],
+      }));
+
+      expect(html).not.toContain('Padam Ulasan');
+      expect(html).not.toContain('aria-label="Padam Ulasan"');
+      expect(html).toContain('Ulasan lama yang melebihi satu jam.');
+    });
+
+    it('renders tombstone message and disables reply and like actions when comment is deleted by author', () => {
+      const recentTimestamp = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const confessionId = 'conf-drawer-3';
+      const commentId = 'comm-deleted-1';
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialCommentDrawerOpen: true,
+        initialActiveConfession: {
+          id: confessionId,
+          content: 'Confession dengan ulasan dipadam',
+          codename: 'Kucing Oren',
+          category: 'UMUM',
+        },
+        initialComments: [{
+          id: commentId,
+          confession_id: confessionId,
+          user_id: 'usr-test-123',
+          content: '[deleted]',
+          is_deleted_by_author: true,
+          codename: 'Tupai Laju',
+          created_at: recentTimestamp,
+          upvotes: 0,
+          downvotes: 0,
+        }],
+      }));
+
+      // Tombstone message with exact text and styling
+      expect(html).toContain('Tupai Laju telah memadamkan ruangan ini');
+      expect(html).toContain('text-slate-400 dark:text-slate-500 italic text-xs');
+
+      // Reply and Like actions are disabled on deleted comment
+      expect(html).toContain('aria-label="Balas komen"');
+      expect(html).toContain('aria-label="Suka ulasan"');
+      expect(html).toContain('cursor-not-allowed');
+
+      // Padam option is NOT shown on already deleted comment
+      expect(html).not.toContain('Padam Ulasan');
     });
   });
 });

@@ -9,6 +9,7 @@ import {
   cleanConfessionText,
   FRIENDLY_ANON_PERSONAS,
   getFriendlyAnonName,
+  isWithin1Hour,
 } from '../lib/polySuaraHelpers';
 
 describe('polySuaraHelpers', () => {
@@ -330,6 +331,43 @@ describe('polySuaraHelpers', () => {
       const nullResult = getFriendlyAnonName(null as unknown as string, true);
       expect(nullResult.displayName).toBe('Pelajar Anon');
       expect(nullResult.isOP).toBe(true);
+    });
+  });
+
+  describe('isWithin1Hour', () => {
+    it('returns true for timestamps within 1 hour (e.g. 30 mins ago, 59 mins ago)', () => {
+      const now = Date.now();
+      const thirtyMinsAgo = new Date(now - 30 * 60 * 1000).toISOString();
+      const fiftyNineMinsAgo = new Date(now - 59 * 60 * 1000).toISOString();
+      const justNow = new Date(now - 5 * 1000).toISOString();
+
+      expect(isWithin1Hour(thirtyMinsAgo)).toBe(true);
+      expect(isWithin1Hour(fiftyNineMinsAgo)).toBe(true);
+      expect(isWithin1Hour(justNow)).toBe(true);
+    });
+
+    it('returns false for timestamps older than 1 hour (e.g. 61 mins ago, 2 hours ago)', () => {
+      const now = Date.now();
+      const sixtyOneMinsAgo = new Date(now - 61 * 60 * 1000).toISOString();
+      const twoHoursAgo = new Date(now - 2 * 60 * 60 * 1000).toISOString();
+
+      expect(isWithin1Hour(sixtyOneMinsAgo)).toBe(false);
+      expect(isWithin1Hour(twoHoursAgo)).toBe(false);
+    });
+
+    it('returns false for falsy or invalid dates', () => {
+      expect(isWithin1Hour(null)).toBe(false);
+      expect(isWithin1Hour(undefined)).toBe(false);
+      expect(isWithin1Hour('')).toBe(false);
+      expect(isWithin1Hour('invalid-date')).toBe(false);
+    });
+
+    it('handles Date objects appropriately', () => {
+      const fifteenMinsAgoDate = new Date(Date.now() - 15 * 60 * 1000);
+      const ninetyMinsAgoDate = new Date(Date.now() - 90 * 60 * 1000);
+
+      expect(isWithin1Hour(fifteenMinsAgoDate)).toBe(true);
+      expect(isWithin1Hour(ninetyMinsAgoDate)).toBe(false);
     });
   });
 });
