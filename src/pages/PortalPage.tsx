@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting } from '@/config/excoModules';
-import { HelpCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
@@ -368,20 +367,12 @@ export function PortalPage() {
         </React.Suspense>
       )}
 
-      {/* Help Button — Manual Tour Restart */}
-      <button
-        onClick={startTour}
-        className="tour-help-button fixed top-20 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/10 hover:scale-110 active:scale-95 transition-all"
-        title="Ulang Tutorial"
-      >
-        <HelpCircle className="w-5 h-5" />
-      </button>
-
       <PortalSidebar
         isOpen={isSidebarOpen}
         onOpen={() => setIsSidebarOpen(true)}
         onClose={() => setIsSidebarOpen(false)}
         settings={settings}
+        onStartTour={startTour}
       />
 
       {/* Visual Effects */}

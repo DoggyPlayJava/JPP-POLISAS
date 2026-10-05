@@ -8,7 +8,8 @@ import {
   Crown, 
   ChevronRight,
   X,
-  LayoutGrid
+  LayoutGrid,
+  HelpCircle
 } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,9 +24,10 @@ interface PortalSidebarProps {
   onClose: () => void;
   onOpen: () => void;
   settings?: any[]; // For colors
+  onStartTour?: () => void;
 }
 
-export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: PortalSidebarProps) {
+export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartTour }: PortalSidebarProps) {
   const { profile, signOut, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -131,6 +133,22 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
             <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">Utama</p>
             <SidebarLink icon={Home} label="Laman Utama" to="/portal" onClick={onClose} />
             <SidebarLink icon={Settings} label="Tetapan Profil" to="/tetapan" onClick={onClose} />
+            {onStartTour && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onStartTour();
+                }}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group text-slate-500 dark:text-white/40 hover:bg-black/[0.03] dark:hover:bg-white/5 cursor-pointer text-left"
+              >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 bg-black/[0.03] dark:bg-white/10 text-emerald-500">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-[0.1em]">Panduan Sistem (Tutorial)</span>
+                <ChevronRight className="ml-auto w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
+              </button>
+            )}
           </div>
 
           {/* JPP HQ Shortcut */}
