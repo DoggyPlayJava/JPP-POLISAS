@@ -160,6 +160,41 @@ export function cleanConfessionText(content: string): string {
 }
 
 const ANIMAL_AVATAR_MAP: Record<string, AnimalAvatar> = {
+  hantu: {
+    emoji: '🦉',
+    bgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
+    textClass: 'text-purple-600 dark:text-purple-400',
+  },
+  arnab: {
+    emoji: '🐇',
+    bgClass: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
+    textClass: 'text-pink-600 dark:text-pink-400',
+  },
+  koala: {
+    emoji: '🐨',
+    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+    textClass: 'text-emerald-600 dark:text-emerald-400',
+  },
+  helang: {
+    emoji: '🦅',
+    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
+    textClass: 'text-sky-600 dark:text-sky-400',
+  },
+  rusa: {
+    emoji: '🦌',
+    bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-300',
+    textClass: 'text-emerald-700 dark:text-emerald-400',
+  },
+  otter: {
+    emoji: '🦦',
+    bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-600/20 dark:text-cyan-300',
+    textClass: 'text-cyan-700 dark:text-cyan-400',
+  },
+  zirafah: {
+    emoji: '🦒',
+    bgClass: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/20 dark:text-yellow-300',
+    textClass: 'text-yellow-700 dark:text-yellow-400',
+  },
   kucing: {
     emoji: '🐱',
     bgClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
@@ -242,6 +277,115 @@ const ANIMAL_AVATAR_MAP: Record<string, AnimalAvatar> = {
   },
 };
 
+export interface FriendlyPersona {
+  displayName: string;
+  name: string;
+  emoji: string;
+  bgClass: string;
+}
+
+/**
+ * 16 distinct Malaysian campus animal personas for anonymous student interaction.
+ */
+export const FRIENDLY_ANON_PERSONAS: FriendlyPersona[] = [
+  {
+    displayName: 'Kucing Oren',
+    name: 'Kucing Oren',
+    emoji: '🐱',
+    bgClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  },
+  {
+    displayName: 'Tupai Laju',
+    name: 'Tupai Laju',
+    emoji: '🐿️',
+    bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-600/20 dark:text-orange-300',
+  },
+  {
+    displayName: 'Panda Comel',
+    name: 'Panda Comel',
+    emoji: '🐼',
+    bgClass: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700/50 dark:text-zinc-200',
+  },
+  {
+    displayName: 'Arnab Pantas',
+    name: 'Arnab Pantas',
+    emoji: '🐇',
+    bgClass: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
+  },
+  {
+    displayName: 'Musang Cerdik',
+    name: 'Musang Cerdik',
+    emoji: '🦊',
+    bgClass: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
+  },
+  {
+    displayName: 'Koala Tenang',
+    name: 'Koala Tenang',
+    emoji: '🐨',
+    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+  },
+  {
+    displayName: 'Helang Biru',
+    name: 'Helang Biru',
+    emoji: '🦅',
+    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
+  },
+  {
+    displayName: 'Rusa Riang',
+    name: 'Rusa Riang',
+    emoji: '🦌',
+    bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-300',
+  },
+  {
+    displayName: 'Singa Santai',
+    name: 'Singa Santai',
+    emoji: '🦁',
+    bgClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300',
+  },
+  {
+    displayName: 'Beruang Madu',
+    name: 'Beruang Madu',
+    emoji: '🐻',
+    bgClass: 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+  },
+  {
+    displayName: 'Kancil Bijak',
+    name: 'Kancil Bijak',
+    emoji: '🦌',
+    bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-600/20 dark:text-teal-300',
+  },
+  {
+    displayName: 'Otter Ceria',
+    name: 'Otter Ceria',
+    emoji: '🦦',
+    bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-600/20 dark:text-cyan-300',
+  },
+  {
+    displayName: 'Harimau Berani',
+    name: 'Harimau Berani',
+    emoji: '🐯',
+    bgClass: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
+  },
+  {
+    displayName: 'Zirafah Tinggi',
+    name: 'Zirafah Tinggi',
+    emoji: '🦒',
+    bgClass: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/20 dark:text-yellow-300',
+  },
+  {
+    displayName: 'Kucing Hitam',
+    name: 'Kucing Hitam',
+    emoji: '🐈‍⬛',
+    bgClass: 'bg-slate-300 text-slate-900 dark:bg-slate-700 dark:text-slate-100',
+  },
+  {
+    displayName: 'Burung Hantu',
+    name: 'Burung Hantu',
+    emoji: '🦉',
+    bgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
+  },
+];
+
 const DEFAULT_AVATAR: AnimalAvatar = {
   emoji: '👻',
   bgClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
@@ -266,6 +410,75 @@ export function getAnimalAvatarFromCodename(codename?: string): AnimalAvatar {
   }
 
   return DEFAULT_AVATAR;
+}
+
+/**
+ * Deterministically maps anonymous hashes (e.g. "Anon-eb689", "anon-12345", hashes)
+ * into friendly Malaysian campus animal personas.
+ * Preserves existing animal names (e.g. "Burung Pantas [Penulis]") while stripping [Penulis] tags.
+ */
+export function getFriendlyAnonName(
+  codename?: string,
+  isOP?: boolean
+): { displayName: string; name: string; emoji: string; bgClass: string; isOP?: boolean } {
+  if (!codename || typeof codename !== 'string' || !codename.trim()) {
+    return {
+      displayName: 'Pelajar Anon',
+      name: 'Pelajar Anon',
+      emoji: '👻',
+      bgClass: DEFAULT_AVATAR.bgClass,
+      isOP: Boolean(isOP),
+    };
+  }
+
+  const hasPenulisTag = codename.includes('[Penulis]');
+  const isOriginalPoster = Boolean(isOP || hasPenulisTag);
+  const cleanName = codename.replace(/\[Penulis\]/gi, '').trim();
+
+  if (!cleanName) {
+    return {
+      displayName: 'Pelajar Anon',
+      name: 'Pelajar Anon',
+      emoji: '👻',
+      bgClass: DEFAULT_AVATAR.bgClass,
+      isOP: isOriginalPoster,
+    };
+  }
+
+  // Check if codename matches Anon-xxxxx, anon_xxxxx, or random alphanumeric hash/hex
+  const isAnonHash =
+    /^anon[-_]?[a-z0-9_-]*$/i.test(cleanName) ||
+    /^[0-9a-f]{8,}(-[0-9a-f]{4,})*$/i.test(cleanName);
+
+  if (isAnonHash) {
+    // Deterministic polynomial rolling hash over string characters
+    let hash = 0;
+    const lower = cleanName.toLowerCase();
+    for (let i = 0; i < lower.length; i++) {
+      hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
+    }
+    const personaIndex = hash % FRIENDLY_ANON_PERSONAS.length;
+    const persona = FRIENDLY_ANON_PERSONAS[personaIndex];
+
+    return {
+      displayName: persona.displayName,
+      name: persona.displayName,
+      emoji: persona.emoji,
+      bgClass: persona.bgClass,
+      isOP: isOriginalPoster,
+    };
+  }
+
+  // Codename is already a named animal or custom identity (e.g. "Burung Pantas")
+  const avatar = getAnimalAvatarFromCodename(cleanName);
+
+  return {
+    displayName: cleanName,
+    name: cleanName,
+    emoji: avatar.emoji,
+    bgClass: avatar.bgClass,
+    isOP: isOriginalPoster,
+  };
 }
 
 /**

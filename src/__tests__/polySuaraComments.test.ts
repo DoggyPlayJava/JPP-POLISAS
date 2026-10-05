@@ -119,9 +119,8 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).not.toContain('title="Pelekat Kampus"');
     });
 
-    it('uses cleanConfessionText to clean comments, replies, and drawer preview', () => {
+    it('uses cleanConfessionText to clean comments and drawer preview', () => {
       expect(pageContent).toContain('cleanConfessionText(comment.content)');
-      expect(pageContent).toContain('cleanConfessionText(reply.content)');
       expect(pageContent).toContain('cleanConfessionText(activeConfessionForComments.content)');
     });
 
@@ -148,7 +147,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
       // Clean conversation rows with hairline dividers
       expect(pageContent).toContain('border-b border-slate-100 dark:border-white/5 py-3.5 px-4');
 
-      // Nested replies hairline thread line
+      // Nested replies hairline thread line with compact 12px indentation
       expect(pageContent).toContain('border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5');
 
       // OP role badge
@@ -164,10 +163,53 @@ describe('PolySuara Comments Suite (TDD)', () => {
     });
 
     it('renders modern floating capsule comment input bar and sensitive comment blur toggle', () => {
-      expect(pageContent).toContain('bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm');
-      expect(pageContent).toContain('focus:outline-none focus:border-rose-500/50');
+      expect(pageContent).toContain('rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center gap-2');
+      expect(pageContent).toContain('placeholder="Tulis ulasan sulit anda..."');
       expect(pageContent).not.toContain('Pelekat Kampus');
       expect(pageContent).toContain('Tanda sebagai Sensitif (Blur)');
+    });
+  });
+
+  describe('Phase 2: Friendly Animal Personas & 4-Depth Nested Comments Layout', () => {
+    const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+
+    it('maps comments and active confession to friendly animal personas', () => {
+      expect(pageContent).toContain('getFriendlyAnonName(comment.codename)');
+      expect(pageContent).toContain('getFriendlyAnonName(activeConfessionForComments.codename)');
+      expect(pageContent).toContain('persona.displayName');
+      expect(pageContent).toContain('persona.emoji');
+      expect(pageContent).toContain('persona.bgClass');
+    });
+
+    it('supports 4-depth nested threaded replies with compact 12px indentation', () => {
+      expect(pageContent).toContain('Math.min(depth + 1, 4)');
+      expect(pageContent).toContain('border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5');
+    });
+
+    it('auto-tags parent username in reply input', () => {
+      expect(pageContent).toContain('setReplyingToCommentId(comment.id)');
+      expect(pageContent).toContain('setReplyCommentText(`@${displayName} `)');
+    });
+
+    it('renders Threads-style clean micro-actions and typography', () => {
+      // Squircle persona avatar
+      expect(pageContent).toMatch(/rounded-xl flex items-center justify-center shrink-0 text-sm/);
+
+      // Generous line-height typography
+      expect(pageContent).toContain('leading-relaxed text-sm text-slate-800 dark:text-slate-200');
+
+      // Discrete ··· action trigger
+      expect(pageContent).toContain('···');
+      expect(pageContent).toContain('title="Pilihan ulasan"');
+
+      // Micro-heart like button
+      expect(pageContent).toContain('aria-label="Suka ulasan"');
+      expect(pageContent).toContain('comment.upvotes || 0');
+
+      // Subtle Balas button
+      expect(pageContent).toContain('aria-label="Balas komen"');
+      expect(pageContent).toContain('<MessageCircle className="w-3.5 h-3.5" />');
     });
   });
 });

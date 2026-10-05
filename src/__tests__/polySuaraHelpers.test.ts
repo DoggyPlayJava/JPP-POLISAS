@@ -7,6 +7,8 @@ import {
   getAnimalAvatarFromCodename,
   aggregateReactions,
   cleanConfessionText,
+  FRIENDLY_ANON_PERSONAS,
+  getFriendlyAnonName,
 } from '../lib/polySuaraHelpers';
 
 describe('polySuaraHelpers', () => {
@@ -224,6 +226,110 @@ describe('polySuaraHelpers', () => {
       expect(cleanConfessionText('')).toBe('');
       expect(cleanConfessionText(undefined as unknown as string)).toBe('');
       expect(cleanConfessionText(null as unknown as string)).toBe('');
+    });
+  });
+
+  describe('FRIENDLY_ANON_PERSONAS constant', () => {
+    it('has at least 16 distinct Malaysian campus animal personas with required fields', () => {
+      expect(FRIENDLY_ANON_PERSONAS).toBeDefined();
+      expect(FRIENDLY_ANON_PERSONAS.length).toBeGreaterThanOrEqual(16);
+
+      const requiredAnimals = [
+        'Kucing Oren',
+        'Tupai Laju',
+        'Panda Comel',
+        'Arnab Pantas',
+        'Musang Cerdik',
+        'Koala Tenang',
+        'Helang Biru',
+        'Rusa Riang',
+        'Singa Santai',
+        'Beruang Madu',
+        'Kancil Bijak',
+        'Otter Ceria',
+        'Harimau Berani',
+        'Zirafah Tinggi',
+        'Kucing Hitam',
+        'Burung Hantu',
+      ];
+
+      const names = FRIENDLY_ANON_PERSONAS.map((p) => p.displayName);
+      requiredAnimals.forEach((requiredName) => {
+        expect(names).toContain(requiredName);
+      });
+
+      FRIENDLY_ANON_PERSONAS.forEach((persona) => {
+        expect(persona.displayName).toBeTruthy();
+        expect(persona.emoji).toBeTruthy();
+        expect(persona.bgClass).toBeTruthy();
+      });
+    });
+  });
+
+  describe('getFriendlyAnonName', () => {
+    it('deterministically maps an Anon hash to a friendly animal persona', () => {
+      const result1 = getFriendlyAnonName('Anon-eb689');
+      const result2 = getFriendlyAnonName('Anon-eb689');
+
+      expect(result1.displayName).toBeTruthy();
+      expect(result1.displayName).not.toContain('Anon');
+      expect(result1.emoji).toBeTruthy();
+      expect(result1.bgClass).toBeTruthy();
+
+      // Determinism test: calling multiple times must return the identical persona
+      expect(result1.displayName).toBe(result2.displayName);
+      expect(result1.emoji).toBe(result2.emoji);
+      expect(result1.bgClass).toBe(result2.bgClass);
+    });
+
+    it('maps different Anon hashes deterministically across render cycles', () => {
+      const resultA1 = getFriendlyAnonName('Anon-112233');
+      const resultA2 = getFriendlyAnonName('Anon-112233');
+      const resultB = getFriendlyAnonName('Anon-998877');
+
+      expect(resultA1.displayName).toBe(resultA2.displayName);
+      expect(resultA1.emoji).toBe(resultA2.emoji);
+
+      const personaNames = FRIENDLY_ANON_PERSONAS.map((p) => p.displayName);
+      expect(personaNames).toContain(resultA1.displayName);
+      expect(personaNames).toContain(resultB.displayName);
+    });
+
+    it('handles codenames formatted with [Penulis] and preserves OP status', () => {
+      const opResult = getFriendlyAnonName('Anon-eb689 [Penulis]');
+      const normalResult = getFriendlyAnonName('Anon-eb689');
+
+      expect(opResult.displayName).toBe(normalResult.displayName);
+      expect(opResult.displayName).not.toContain('[Penulis]');
+      expect(opResult.displayName).not.toContain('Anon');
+      expect(opResult.isOP).toBe(true);
+      expect(normalResult.isOP).toBe(false);
+    });
+
+    it('preserves existing named animals and strips [Penulis] while using appropriate emoji', () => {
+      const namedResult = getFriendlyAnonName('Burung Pantas [Penulis]');
+      expect(namedResult.displayName).toBe('Burung Pantas');
+      expect(namedResult.emoji).toBe('🦜');
+      expect(namedResult.isOP).toBe(true);
+
+      const namedWithoutOp = getFriendlyAnonName('Harimau Perkasa');
+      expect(namedWithoutOp.displayName).toBe('Harimau Perkasa');
+      expect(namedWithoutOp.emoji).toBe('🐯');
+      expect(namedWithoutOp.isOP).toBe(false);
+    });
+
+    it('gracefully handles missing, empty, or undefined codenames', () => {
+      const emptyResult = getFriendlyAnonName('');
+      expect(emptyResult.displayName).toBe('Pelajar Anon');
+      expect(emptyResult.emoji).toBe('👻');
+
+      const undefinedResult = getFriendlyAnonName(undefined);
+      expect(undefinedResult.displayName).toBe('Pelajar Anon');
+      expect(undefinedResult.emoji).toBe('👻');
+
+      const nullResult = getFriendlyAnonName(null as unknown as string, true);
+      expect(nullResult.displayName).toBe('Pelajar Anon');
+      expect(nullResult.isOP).toBe(true);
     });
   });
 });

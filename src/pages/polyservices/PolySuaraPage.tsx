@@ -23,6 +23,7 @@ import {
   cleanConfessionText,
   getAnimalAvatarFromCodename,
   aggregateReactions,
+  getFriendlyAnonName,
 } from '@/lib/polySuaraHelpers';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
@@ -272,6 +273,7 @@ export function PolySuaraPage({
   const [commentUpvotes, setCommentUpvotes] = useState<Set<string>>(new Set());
   const [commentDownvotes, setCommentDownvotes] = useState<Set<string>>(new Set());
   const [escalatingCommentId, setEscalatingCommentId] = useState<string | null>(null);
+  const [commentMenuOpenId, setCommentMenuOpenId] = useState<string | null>(null);
 
   // Fetch notification preference from DB on mount
   useEffect(() => {
@@ -1170,6 +1172,226 @@ export function PolySuaraPage({
     }
   };
 
+  const renderCommentThread = (comment: any, depth = 1): React.ReactNode => {
+    const childReplies = comments
+      .filter(r => r.parent_id === comment.id)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const persona = getFriendlyAnonName(comment.codename);
+    const isOP = Boolean(comment.codename?.includes('[Penulis]'));
+    const displayName = comment.is_jpp_official ? 'JPP RASMI' : persona.displayName;
+    const isCommUpvoted = commentUpvotes.has(comment.id);
+    const cleanCommContent = cleanConfessionText(comment.content);
+
+    return (
+      <div
+        key={comment.id}
+        className={cn(
+          "border-b border-slate-100 dark:border-white/5 py-3.5 px-4 transition-colors",
+          depth > 1 && "border-b-0 py-1.5 px-0"
+        )}
+      >
+        <div className="flex items-start gap-2.5">
+          {/* Persona Avatar Squircle */}
+          <div
+            className={cn(
+              "w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 text-sm shadow-xs select-none",
+              comment.is_jpp_official
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300"
+                : persona.bgClass
+            )}
+          >
+            {comment.is_jpp_official ? '🛡️' : persona.emoji}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {/* Header: Name, Badges, Dot, Relative Time */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={cn(
+                  "text-xs sm:text-sm font-bold flex items-center gap-1",
+                  comment.is_jpp_official ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"
+                )}>
+                  {displayName}
+                </span>
+                {isOP && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1">
+                    <UserCircle2 className="w-2.5 h-2.5" />
+                    OP
+                  </span>
+                )}
+                {comment.is_jpp_official && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <Shield className="w-2.5 h-2.5" />
+                    JPP RASMI
+                  </span>
+                )}
+                <span className="text-[10px] text-slate-300 dark:text-slate-600 select-none">•</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
+                </span>
+              </div>
+            </div>
+
+            {/* Comment Content (With Sensitive Content Blur) */}
+            {comment.is_deleted_by_moderator ? (
+              <div className="bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 italic select-none">
+                <ShieldAlert className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                {cleanCommContent}
+              </div>
+            ) : comment.is_sensitive ? (
+              <SensitiveCommentContent content={cleanCommContent} />
+            ) : (
+              <p className="leading-relaxed text-sm text-slate-800 dark:text-slate-200 break-words">{cleanCommContent}</p>
+            )}
+
+            {comment.image_url && !comment.is_deleted_by_moderator && (
+              <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/40 max-w-xs">
+                <img 
+                  src={comment.image_url} 
+                  alt="Bukti Lampiran" 
+                  className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
+                  onClick={() => window.open(comment.image_url, '_blank')} 
+                />
+              </div>
+            )}
+
+            {/* Threads-Style Micro-Actions */}
+            {!comment.is_deleted_by_moderator && (
+              <div className="flex items-center justify-between mt-2 pt-0.5 text-xs">
+                {/* Left: Subtle Balas button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyingToCommentId(comment.id);
+                    setReplyCommentText(`@${displayName} `);
+                  }}
+                  className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
+                  aria-label="Balas komen"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Balas</span>
+                </button>
+
+                {/* Right: Micro-Heart & Discrete ··· Action Trigger */}
+                <div className="flex items-center gap-1.5 relative">
+                  <button
+                    type="button"
+                    onClick={() => handleCommentVote(comment.id, 'UPVOTE')}
+                    className={cn(
+                      "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+                      isCommUpvoted
+                        ? "text-rose-500 font-semibold"
+                        : "text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
+                    )}
+                    aria-label="Suka ulasan"
+                  >
+                    <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
+                    <span>{comment.upvotes || 0}</span>
+                  </button>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setCommentMenuOpenId(commentMenuOpenId === comment.id ? null : comment.id)}
+                      className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-bold tracking-widest text-xs flex items-center justify-center w-6 h-6 leading-none"
+                      title="Pilihan ulasan"
+                      aria-label="Pilihan ulasan"
+                    >
+                      ···
+                    </button>
+
+                    {commentMenuOpenId === comment.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setCommentMenuOpenId(null)}
+                        />
+                        <div className="absolute right-0 bottom-full mb-1 z-50 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-lg p-1 text-xs animate-in fade-in zoom-in-95 duration-150">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCommentMenuOpenId(null);
+                              handleEscalateComment(comment);
+                            }}
+                            disabled={escalatingCommentId === comment.id}
+                            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition-colors"
+                            title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
+                            aria-label="Eskalasi kecemasan ke Kebajikan"
+                          >
+                            {escalatingCommentId === comment.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" />
+                            ) : (
+                              <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                            )}
+                            <span>Bantuan Kebajikan</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCommentMenuOpenId(null);
+                              handleReportComment(comment.id);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 dark:text-rose-400 font-medium flex items-center gap-2 transition-colors"
+                            title="Lapor ulasan"
+                            aria-label="Lapor ulasan"
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span>Lapor Ulasan</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reply Input Form */}
+            {replyingToCommentId === comment.id && (
+              <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
+                <input
+                  type="text"
+                  placeholder={`Balas kepada ${displayName}...`}
+                  value={replyCommentText}
+                  onChange={(e) => setReplyCommentText(e.target.value)}
+                  className="flex-1 bg-transparent px-3 py-1 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+                  maxLength={300}
+                  autoFocus
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={!replyCommentText.trim() || submittingComment}
+                  className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all shrink-0"
+                >
+                  {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                  Balas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyingToCommentId(null);
+                    setReplyCommentText('');
+                  }}
+                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-1 text-xs font-bold transition-all shrink-0"
+                >
+                  Batal
+                </button>
+              </form>
+            )}
+
+            {/* Hierarchical 4-Depth Nested Replies */}
+            {childReplies.length > 0 && (
+              <div className="border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5">
+                {childReplies.map(reply => renderCommentThread(reply, Math.min(depth + 1, 4)))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-36 md:pb-32 relative overflow-hidden transition-colors duration-200">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-rose-500/10 blur-[100px] rounded-full pointer-events-none" />
@@ -2057,14 +2279,14 @@ export function PolySuaraPage({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setCommentDrawerOpen(false)}
-                className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]"
+                className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]"
               />
               <motion.div
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[99999] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-slate-900 dark:text-white"
+                className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[999] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-slate-900 dark:text-white"
               >
               {/* Drawer drag indicator/Header */}
               <div className="flex flex-col items-center py-3.5 border-b border-slate-100 dark:border-white/5 shrink-0">
@@ -2118,7 +2340,9 @@ export function PolySuaraPage({
               <div className="bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-100 dark:border-white/5 p-4 text-xs px-5 sm:px-6 text-slate-700 dark:text-slate-300 shrink-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Ghost className="w-3.5 h-3.5 text-rose-500" />
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{activeConfessionForComments.codename || 'Pelajar Anon'}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    {getFriendlyAnonName(activeConfessionForComments.codename).displayName}
+                  </span>
                   <span className="bg-slate-200/80 dark:bg-white/10 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full text-slate-600 dark:text-slate-400">{activeConfessionForComments.category}</span>
                 </div>
                 <p className="text-slate-600 dark:text-slate-300 italic line-clamp-2">"{cleanConfessionText(activeConfessionForComments.content)}"</p>
@@ -2149,260 +2373,16 @@ export function PolySuaraPage({
                         }
                         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
                       })
-                      .map(comment => {
-                        const replies = comments.filter(r => r.parent_id === comment.id);
-                        const isCommUpvoted = commentUpvotes.has(comment.id);
-                        const isCommDownvoted = commentDownvotes.has(comment.id);
-                        const isOP = comment.codename.includes('[Penulis]');
-                        const displayName = isOP ? comment.codename.replace(' [Penulis]', '') : comment.codename;
-                        const cleanCommContent = cleanConfessionText(comment.content);
-
-                        return (
-                          <div key={comment.id} className="border-b border-slate-100 dark:border-white/5 py-3.5 px-4">
-                            {/* Tier-1 Comment Header */}
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-1.5">
-                                <span className={cn(
-                                  "text-xs font-bold flex items-center gap-1",
-                                  comment.is_jpp_official ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-200"
-                                )}>
-                                  {displayName}
-                                </span>
-                                {isOP && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1">
-                                    <UserCircle2 className="w-2.5 h-2.5" />
-                                    OP
-                                  </span>
-                                )}
-                                {comment.is_jpp_official && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                                    <Shield className="w-2.5 h-2.5" />
-                                    JPP RASMI
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[9px] text-slate-400 dark:text-slate-500">
-                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
-                              </span>
-                            </div>
-
-                            {/* Comment Content (With Sensitive Content Blur) */}
-                            {comment.is_deleted_by_moderator ? (
-                              <div className="bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 italic select-none">
-                                <ShieldAlert className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-                                {cleanCommContent}
-                              </div>
-                            ) : comment.is_sensitive ? (
-                              <SensitiveCommentContent content={cleanCommContent} />
-                            ) : (
-                              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-words">{cleanCommContent}</p>
-                            )}
-
-                            {comment.image_url && !comment.is_deleted_by_moderator && (
-                              <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/40 max-w-xs">
-                                <img 
-                                  src={comment.image_url} 
-                                  alt="Bukti Lampiran" 
-                                  className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
-                                  onClick={() => window.open(comment.image_url, '_blank')} 
-                                />
-                              </div>
-                            )}
-
-                            {/* Comment Action Buttons */}
-                            {!comment.is_deleted_by_moderator && (
-                              <div className="flex items-center justify-between mt-2.5 pt-1 text-xs">
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleCommentVote(comment.id, 'UPVOTE')}
-                                    className={cn(
-                                      "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all",
-                                      isCommUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-rose-500"
-                                    )}
-                                    aria-label="Suka komen"
-                                  >
-                                    <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
-                                    <span>{comment.upvotes || 0}</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleCommentVote(comment.id, 'DOWNVOTE')}
-                                    className={cn(
-                                      "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all",
-                                      isCommDownvoted ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-indigo-500"
-                                    )}
-                                    aria-label="Tidak suka komen"
-                                  >
-                                    <ThumbsDown className={cn("w-3.5 h-3.5", isCommDownvoted && "fill-indigo-500")} />
-                                    <span>{comment.downvotes || 0}</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setReplyingToCommentId(comment.id);
-                                      setReplyCommentText('');
-                                    }}
-                                    className="text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
-                                    aria-label="Balas komen"
-                                  >
-                                    <MessageSquare className="w-3.5 h-3.5" />
-                                    <span>Balas</span>
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEscalateComment(comment)}
-                                    disabled={escalatingCommentId === comment.id}
-                                    className="text-slate-400 hover:text-amber-500 dark:text-slate-500 dark:hover:text-amber-400 p-1.5 rounded-lg hover:bg-amber-500/10 transition-colors"
-                                    title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
-                                    aria-label="Eskalasi kecemasan ke Kebajikan"
-                                  >
-                                    {escalatingCommentId === comment.id ? (
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" />
-                                    ) : (
-                                      <ShieldAlert className="w-3.5 h-3.5" />
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleReportComment(comment.id)}
-                                    className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
-                                    title="Lapor ulasan"
-                                    aria-label="Lapor ulasan"
-                                  >
-                                    <AlertTriangle className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Reply Input Form (Tier-1 Specific) */}
-                            {replyingToCommentId === comment.id && (
-                              <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <input
-                                  type="text"
-                                  placeholder={`Balas kepada ${displayName}...`}
-                                  value={replyCommentText}
-                                  onChange={(e) => setReplyCommentText(e.target.value)}
-                                  className="flex-1 bg-transparent px-2 py-1 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
-                                  maxLength={300}
-                                  required
-                                />
-                                <button
-                                  type="submit"
-                                  disabled={!replyCommentText.trim() || submittingComment}
-                                  className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all shrink-0"
-                                >
-                                  {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                                  Balas
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setReplyingToCommentId(null)}
-                                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-1 text-xs font-bold transition-all shrink-0"
-                                >
-                                  Batal
-                                </button>
-                              </form>
-                            )}
-
-                            {/* Tier-2 Nested Replies Section */}
-                            {replies.length > 0 && (
-                              <div className="border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5">
-                                {replies.map(reply => {
-                                  const isReplyUp = commentUpvotes.has(reply.id);
-                                  const isReplyDown = commentDownvotes.has(reply.id);
-                                  const isReplyOP = reply.codename.includes('[Penulis]');
-                                  const displayReplyName = isReplyOP ? reply.codename.replace(' [Penulis]', '') : reply.codename;
-                                  const cleanReplyContent = cleanConfessionText(reply.content);
-
-                                  return (
-                                    <div key={reply.id} className="py-2">
-                                      <div className="flex items-center justify-between mb-1">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className={cn(
-                                            "text-xs font-bold flex items-center gap-1",
-                                            reply.is_jpp_official ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-300"
-                                          )}>
-                                            {displayReplyName}
-                                          </span>
-                                          {isReplyOP && (
-                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1">
-                                              <UserCircle2 className="w-2.5 h-2.5" />
-                                              OP
-                                            </span>
-                                          )}
-                                          {reply.is_jpp_official && (
-                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                                              <Shield className="w-2.5 h-2.5" />
-                                              JPP RASMI
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="text-[9px] text-slate-400 dark:text-slate-500">
-                                          {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: ms })}
-                                        </span>
-                                      </div>
-
-                                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 break-words leading-relaxed">{cleanReplyContent}</p>
-
-                                      {/* Action Buttons for Tier 2 */}
-                                      <div className="flex items-center justify-between mt-1.5 pt-1 text-xs">
-                                        <div className="flex items-center gap-1">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleCommentVote(reply.id, 'UPVOTE')}
-                                            className={cn(
-                                              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition-all",
-                                              isReplyUp ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400"
-                                            )}
-                                            aria-label="Suka balasan"
-                                          >
-                                            <Heart className="w-3 h-3" />
-                                            <span>{reply.upvotes || 0}</span>
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleCommentVote(reply.id, 'DOWNVOTE')}
-                                            className={cn(
-                                              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition-all",
-                                              isReplyDown ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400"
-                                            )}
-                                            aria-label="Tidak suka balasan"
-                                          >
-                                            <ThumbsDown className="w-3 h-3" />
-                                            <span>{reply.downvotes || 0}</span>
-                                          </button>
-                                        </div>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleReportComment(reply.id)}
-                                          className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 p-1 rounded transition-colors"
-                                          title="Lapor ulasan"
-                                          aria-label="Lapor ulasan"
-                                        >
-                                          <AlertTriangle className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      .map(comment => renderCommentThread(comment, 1))}
                   </div>
                 )}
               </div>
 
               {/* Comments Input Form Footer */}
-              <div className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/5 p-4 shrink-0 px-4 sm:px-6">
-                <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-3">
+              <div className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/5 p-3 sm:p-4 shrink-0 px-4 sm:px-6">
+                <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-2">
                   {commentImagePreview && (
-                    <div className="relative mb-2 w-20 h-20 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 group animate-in fade-in zoom-in duration-200">
+                    <div className="relative mb-2 w-16 h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 group animate-in fade-in zoom-in duration-200">
                       <img src={commentImagePreview} alt="Pratonton" className="w-full h-full object-cover" />
                       <button 
                         type="button"
@@ -2414,34 +2394,36 @@ export function PolySuaraPage({
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2">
+                  {/* Rounded-full floating capsule pill */}
+                  <div className="rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center gap-2">
+                    {/* Camera/Image Selector Button */}
+                    <label className="cursor-pointer text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-white dark:hover:bg-white/10 transition-all flex items-center justify-center shrink-0 w-8 h-8" title="Lampirkan Imej">
+                      <ImageIcon className="w-4 h-4" />
+                      <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
+                    </label>
+
                     <input
                       type="text"
                       placeholder="Tulis ulasan sulit anda..."
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
-                      className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-rose-500/50 transition-all"
+                      className="flex-1 bg-transparent px-2 py-1 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
                       maxLength={300}
                     />
-                    
-                    {/* Camera/Image Selector Button */}
-                    <label className="cursor-pointer bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-3 rounded-2xl transition-all flex items-center justify-center shrink-0 min-w-[42px] min-h-[42px]" title="Lampirkan Imej">
-                      <ImageIcon className="w-4 h-4" />
-                      <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
-                    </label>
 
+                    {/* Vibrant rose circular send button */}
                     <button
                       type="submit"
                       disabled={!newCommentText.trim() || submittingComment}
-                      className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 p-3 rounded-2xl font-bold transition-all shrink-0 flex items-center justify-center min-w-[42px] min-h-[42px] shadow-sm hover:shadow-rose-500/20"
+                      className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 w-8 h-8 rounded-full font-bold transition-all shrink-0 flex items-center justify-center shadow-xs hover:shadow-rose-500/20"
                       aria-label="Hantar ulasan"
                     >
-                      {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {submittingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                   
                   {/* Sensitive Comment Blur checkbox */}
-                  <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center justify-between px-2 pt-0.5">
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input 
                         type="checkbox"
