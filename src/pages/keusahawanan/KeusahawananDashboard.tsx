@@ -8,7 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Activity, Star, Eye, ShieldCheck, 
   TrendingUp, TrendingDown, Target, ShoppingBag, DollarSign,
-  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3, HelpCircle, Sparkles, Store
+  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3, HelpCircle, Sparkles, Store,
+  CheckCircle2, Clock
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { requestPuskepUpgrade } from '@/lib/keusahawanan';
@@ -38,6 +39,8 @@ interface StatData {
   productHeatmap: ProductHeatmapRow[];
   onlinePendingRevenue: number;
   totalCashCollected: number;
+  polymartProductsCount: number;
+  pendingPmOrdersCount: number;
 }
 
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
@@ -58,6 +61,7 @@ export function KeusahawananDashboard() {
   const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_DASHBOARD', !!profile);
   const { isLowPerf } = useDevicePerformance();
 
+  const businessId = selectedBusiness?.id;
   const [isSubmittingPuskep, setIsSubmittingPuskep] = useState(false);
 
   const regNo = selectedBusiness?.registration_no || selectedBusiness?.ssm_registration_number || '';
@@ -110,6 +114,8 @@ export function KeusahawananDashboard() {
     productHeatmap: [],
     onlinePendingRevenue: 0,
     totalCashCollected: 0,
+    polymartProductsCount: 0,
+    pendingPmOrdersCount: 0,
   });
   useEffect(() => {
     async function fetchData() {
@@ -121,7 +127,12 @@ export function KeusahawananDashboard() {
         const monthlyTarget = selectedBusiness?.monthly_target || 5000;
 
         if (!businessId) {
-          setData(prev => ({ ...prev, monthlyTarget }));
+          setData(prev => ({
+            ...prev,
+            monthlyTarget,
+            polymartProductsCount: 0,
+            pendingPmOrdersCount: 0,
+          }));
           setIsLoading(false);
           return;
         }
@@ -152,7 +163,9 @@ export function KeusahawananDashboard() {
           polymartRes,
           expensesRes,
           lowStockRes,
-          reviewsRes
+          reviewsRes,
+          polymartProductsRes,
+          pendingPmOrdersRes
         ] = await Promise.all([
           supabase.from('business_sessions')
             .select('id', { count: 'exact' })
@@ -190,6 +203,19 @@ export function KeusahawananDashboard() {
                 .order('created_at', { ascending: false })
                 .limit(5)
             : Promise.resolve({ data: [] }),
+
+          // PolyMart active storefront products
+          supabase.from('business_products')
+            .select('id', { count: 'exact', head: true })
+            .eq('business_id', businessId)
+            .eq('publish_to_polymart', true)
+            .eq('is_available', true),
+
+          // PolyMart pending orders (PENDING, CONFIRMED, READY)
+          supabase.from('polymart_orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('business_id', businessId)
+            .in('status', ['PENDING', 'CONFIRMED', 'READY']),
         ]);
 
         // Process POS completed transactions
@@ -422,6 +448,8 @@ export function KeusahawananDashboard() {
           activityHeatmap: heatmap,
           onlinePendingRevenue,
           totalCashCollected: monthRev + monthPending,
+          polymartProductsCount: polymartProductsRes?.count ?? 0,
+          pendingPmOrdersCount: pendingPmOrdersRes?.count ?? 0,
           productHeatmap: (() => {
             // Build product x day matrix — always last 14 days
             const heatDays: string[] = [];
@@ -483,7 +511,7 @@ export function KeusahawananDashboard() {
   ];
 
   return (
-    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto pb-28 md:pb-8">
+    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6 max-w-[1600px] w-full max-w-full min-w-0 mx-auto pb-28 md:pb-8">
       
       {/* Admin Banner */}
       {isSuperAdmin && (
@@ -590,7 +618,7 @@ export function KeusahawananDashboard() {
               </div>
               <div className="space-y-1">
                 <h3 className="text-base sm:text-lg font-black text-white">
-                  🛍️ Perniagaan Siswapreneur EMS
+                  Perniagaan Siswapreneur EMS
                 </h3>
                 <p className="text-xs sm:text-sm font-medium text-emerald-100/80 max-w-2xl leading-relaxed">
                   Perniagaan ini didaftarkan secara automatik melalui Acara EMS. Adakah anda berminat mendaftar secara rasmi di bawah PUSKEP bagi mendapatkan No. Siri PUSKEP rasmi & keahlian kekal PUSKEP?
@@ -601,11 +629,13 @@ export function KeusahawananDashboard() {
             <div className="flex items-center shrink-0 self-end md:self-center">
               {isPuskepApproved ? (
                 <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
-                  <span>✅ Ahli PUSKEP Rasmi (Kekal)</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Ahli PUSKEP Rasmi (Kekal)</span>
                 </div>
               ) : isPuskepPending ? (
                 <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
-                  <span>⏳ Permohonan No. Siri PUSKEP Sedang Diproses</span>
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Permohonan No. Siri PUSKEP Sedang Diproses</span>
                 </div>
               ) : (
                 <button
@@ -625,12 +655,99 @@ export function KeusahawananDashboard() {
         </motion.div>
       )}
 
+      {/* PolyMart Hub Card */}
+      {selectedBusiness && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.09 }}
+          className="w-full max-w-full min-w-0"
+        >
+          {data.polymartProductsCount > 0 ? (
+            <div className="rounded-[2rem] p-5 sm:p-6 bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="space-y-3 relative z-10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Etalase PolyMart Aktif</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-foreground">
+                    {selectedBusiness.name || 'Kedai Anda'} di PolyMart
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Etalase kampus aktif. Pelajar dan staf POLISAS boleh membuat pesanan secara terus.
+                  </p>
+                </div>
+                {/* Metrics strip */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="px-3 py-1.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground flex items-center gap-2">
+                    <span className="font-black text-amber-500">{data.polymartProductsCount}</span>
+                    <span>Produk Dipaparkan</span>
+                  </div>
+                  <div className={cn(
+                    "px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2",
+                    data.pendingPmOrdersCount > 0
+                      ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 font-black animate-pulse"
+                      : "bg-background/80 border-border/40 text-muted-foreground"
+                  )}>
+                    <span className={cn(data.pendingPmOrdersCount > 0 ? "text-rose-500 font-black" : "text-foreground font-black")}>
+                      {data.pendingPmOrdersCount}
+                    </span>
+                    <span>Pesanan Baru Menunggu</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 relative z-10 shrink-0">
+                <button
+                  onClick={() => navigate('/polymart/kedai/' + businessId)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black text-foreground bg-muted hover:bg-muted/80 border border-border/50 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Lihat Etalase Kedai</span>
+                </button>
+                <button
+                  onClick={() => navigate('/polymart/vendor')}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Urus Pesanan PolyMart</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-[2rem] p-5 sm:p-6 bg-card border border-amber-500/20 relative overflow-hidden flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                <Store className="w-7 h-7" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-black text-foreground">
+                  Anda belum mempunyai produk yang aktif di PolyMart!
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                  Mula terbitkan produk atau perkhidmatan anda ke PolyMart untuk mula menerima tempahan daripada warga kampus POLISAS secara dalam talian!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/keusahawanan/pos/products')}
+                className="mt-2 sm:mt-0 shrink-0 px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+              >
+                + Terbitkan Produk ke PolyMart
+              </button>
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* TOP CARDS GRID */}
-      <div className="tour-keusahawanan-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
+      <div className="tour-keusahawanan-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 w-full max-w-full min-w-0">
         
         {/* Total Revenue */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="tour-sales-metric bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          className="tour-sales-metric bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500"><DollarSign className="w-4 h-4" /></div>
@@ -645,11 +762,11 @@ export function KeusahawananDashboard() {
               
               <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-border/30 text-[10px] font-bold text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>🛍️ Jualan Selesai (Accrual):</span>
+                  <span>Jualan Selesai (Accrual):</span>
                   <span className="text-foreground">RM {data.revenue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>💳 Online Pending:</span>
+                  <span>Online Pending:</span>
                   <span className="text-blue-500">RM {data.onlinePendingRevenue.toFixed(2)}</span>
                 </div>
               </div>
@@ -730,11 +847,11 @@ export function KeusahawananDashboard() {
       </div>
 
       {/* MIDDLE SECTION - CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-full min-w-0">
         
         {/* Sales Analytics Line Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="tour-sales-chart lg:col-span-2 bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-h-[350px]">
+          className="tour-sales-chart lg:col-span-2 bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-h-[350px] min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-black text-foreground">Sales Analytics</h2>
@@ -798,7 +915,7 @@ export function KeusahawananDashboard() {
 
         {/* Top Products Heatmap/List */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col">
+          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-black text-foreground">Top Products</h2>
             <div className="px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-bold text-muted-foreground">
@@ -828,7 +945,7 @@ export function KeusahawananDashboard() {
 
       {/* PRODUCT ACTIVITY HEATMAP */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-        className="w-full bg-card border border-border/50 rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
+        className="w-full max-w-full min-w-0 bg-card border border-border/50 rounded-[2rem] p-5 sm:p-6 shadow-sm overflow-hidden">
         {/* Header */}
         <div className="flex w-full items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -858,7 +975,7 @@ export function KeusahawananDashboard() {
             <p className="text-xs font-bold">Tiada data jualan produk dalam 14 hari terakhir</p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
             <div className="min-w-max">
               {/* Date header row */}
               <div className="flex mb-1.5 ml-[7.5rem]">
@@ -914,34 +1031,36 @@ export function KeusahawananDashboard() {
       </motion.div>
 
       {/* BOTTOM SECTION - WIDGETS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-full min-w-0">
         
         {/* Budget Usage */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-black text-foreground">Budget Usage</h2>
-            <button className="p-2 rounded-xl hover:bg-muted transition-colors"><ExternalLink className="w-4 h-4 text-muted-foreground" /></button>
-          </div>
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-bold text-foreground">Jumlah Perbelanjaan</span>
-                <span className="font-black text-muted-foreground">RM {data.expenses.toFixed(2)}</span>
-              </div>
-              <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${Math.min((data.expenses / (data.monthlyTarget || 1)) * 100, 100)}%`, background: color }} />
+          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm min-w-0 w-full max-w-full flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black text-foreground">Budget Usage</h2>
+              <button className="p-2 rounded-xl hover:bg-muted transition-colors"><ExternalLink className="w-4 h-4 text-muted-foreground" /></button>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="font-bold text-foreground">Jumlah Perbelanjaan</span>
+                  <span className="font-black text-muted-foreground">RM {data.expenses.toFixed(2)}</span>
+                </div>
+                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${Math.min((data.expenses / (data.monthlyTarget || 1)) * 100, 100)}%`, background: color }} />
+                </div>
               </div>
             </div>
           </div>
           <div className="mt-6 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-medium leading-relaxed">
-            <span className="font-bold text-indigo-600 dark:text-indigo-300">💡 Tip Bajet:</span> Perbelanjaan operasi anda berada pada tahap yang sihat. Pertimbangkan untuk melabur dalam bahan berkualiti.
+            <span className="font-bold text-indigo-600 dark:text-indigo-300">Tip Bajet:</span> Perbelanjaan operasi anda berada pada tahap yang sihat. Pertimbangkan untuk melabur dalam bahan berkualiti.
           </div>
         </motion.div>
 
         {/* Customer Review */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm">
+          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-black text-foreground">Customer Review</h2>
             <div className="px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-bold text-muted-foreground">Terkini</div>
@@ -972,7 +1091,7 @@ export function KeusahawananDashboard() {
 
         {/* Low Stock Alert */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-          className="tour-low-stock bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
+          className="tour-low-stock bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between min-w-0 w-full max-w-full">
           <div>
              <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-black text-foreground">Low Stock Alert</h2>
@@ -987,7 +1106,7 @@ export function KeusahawananDashboard() {
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
-                        <span>📦</span>
+                        <PackageSearch className="w-5 h-5 text-muted-foreground/40" />
                       )}
                     </div>
                     <div className="flex-1">

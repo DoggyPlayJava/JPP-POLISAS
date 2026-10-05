@@ -182,10 +182,10 @@ function KeusahawananSidebar({ color }: { color: string }) {
 
         <div className="flex items-center gap-3 px-5 pb-4 pt-1">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg"
+            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
             style={{ background: hexToRgba(color, 0.2), border: `1px solid ${hexToRgba(color, 0.3)}` }}
           >
-            💡
+            <Lightbulb className="w-5 h-5 text-amber-400" />
           </div>
           <div>
             <p className="font-black text-sm tracking-tight text-white/90">e-Keusahawanan</p>
@@ -332,26 +332,26 @@ export function KeusahawananLayout() {
     {
       target: 'body',
       content: 'Selamat datang ke modul e-Keusahawanan! Di sini anda boleh menguruskan perniagaan, rekod kewangan, dan sistem POS.',
-      title: 'e-Keusahawanan 💡',
+      title: 'e-Keusahawanan',
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-keusahawanan-sidebar',
       content: isMobile ? 'Gunakan menu ini untuk mengakses sistem POS, statistik, senarai perniagaan, dan banyak lagi.' : 'Pilih fungsi yang diinginkan dari senarai menu ini termasuk sistem POS pintar kami.',
-      title: 'Navigasi Penuh 📑',
+      title: 'Navigasi Penuh',
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-keusahawanan-quickpos',
       content: 'Tekan pautan ini untuk akses terus ke mesin Kaunter Jualan (POS) bagi merekod setiap transaksi pelanggan.',
-      title: 'Akses Pantas POS 🛒',
+      title: 'Akses Pantas POS',
       placement: 'bottom' as const,
     },
     {
       target: '.tour-keusahawanan-stats',
       content: 'Prestasi perniagaan, carta sasaran bulanan dan kutipan dipaparkan di ruang jualan ini.',
-      title: 'Prestasi Bisnes 📈',
+      title: 'Prestasi Bisnes',
       placement: 'bottom' as const,
     }
   ];
@@ -469,10 +469,10 @@ function LayoutInner({
               </button>
               <div className="flex items-center gap-2.5">
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-lg"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg"
                   style={{ background: hexToRgba(themeColor, 0.1), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}
                 >
-                  💡
+                  <Lightbulb className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-black text-xs tracking-tight text-foreground uppercase">e-Keusahawanan</span>
@@ -536,7 +536,7 @@ function LayoutInner({
           {/* Pages */}
           {/* PENTING: Jangan guna y/x transforms di sini — ia akan merosakkan
               position:fixed modal di semua sub-pages (stacking context bug) */}
-          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 relative">
+          <main className="flex-1 overflow-y-auto w-full max-w-full overflow-x-hidden bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

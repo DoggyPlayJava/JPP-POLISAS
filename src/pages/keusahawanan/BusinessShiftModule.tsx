@@ -165,7 +165,7 @@ export function BusinessJadual({
       status:       'PENDING',
     });
     if (error) toast.error('Gagal hantar request: ' + error.message);
-    else { toast.success('Permintaan tukar syif dihantar! 🔄'); setSwapModal(null); setSwapTarget(''); setSwapReason(''); fetchData(); }
+    else { toast.success('Permintaan tukar syif dihantar!'); setSwapModal(null); setSwapTarget(''); setSwapReason(''); fetchData(); }
     setSaving(false);
   };
 
@@ -182,7 +182,7 @@ export function BusinessJadual({
       if (sw?.shift_id) {
         await supabase.from('business_shifts').update({ assigned_to: currentUserId }).eq('id', sw.shift_id);
       }
-      toast.success('Tukar syif diterima! ✅');
+      toast.success('Tukar syif diterima!');
     } else {
       toast.success('Permintaan ditolak.');
     }
@@ -362,7 +362,7 @@ export function BusinessJadual({
           </div>
 
           {/* Desktop View: Full Table */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block w-full max-w-full overflow-x-auto scrollbar-hide rounded-2xl border border-border/40">
             <table className="w-full text-xs min-w-[600px]">
               <thead>
                 <tr>
@@ -612,7 +612,7 @@ export function BusinessJadual({
                     className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
                   <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
                     className="flex-1 h-11 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase transition-colors disabled:opacity-40">
-                    {saving ? 'Menghantar...' : '🔄 Hantar Request'}
+                    {saving ? 'Menghantar...' : 'Hantar Request'}
                   </button>
                 </div>
               </motion.div>
@@ -685,7 +685,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
       status: 'OPEN',
     });
     if (error) toast.error('Gagal buka kedai: ' + error.message);
-    else { toast.success('Kedai berjaya dibuka! 🏪'); setOpenModal(false); fetchSessions(); }
+    else { toast.success('Kedai berjaya dibuka!'); setOpenModal(false); fetchSessions(); }
     setSaving(false);
   };
 
@@ -702,7 +702,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
       status: 'CLOSED',
     }).eq('id', todaySession.id);
     if (error) toast.error('Gagal tutup kedai: ' + error.message);
-    else { toast.success('Kedai ditutup. Rekod disimpan! ✅'); setCloseModal(false); fetchSessions(); }
+    else { toast.success('Kedai ditutup. Rekod disimpan!'); setCloseModal(false); fetchSessions(); }
     setSaving(false);
   };
 
@@ -805,8 +805,9 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                     )}>
                       {profit == null ? '—' : fmtRM(profit)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {s.status === 'OPEN' ? '🔴 Belum tutup' : '✅ Selesai'}
+                    <p className="text-[10px] text-muted-foreground flex items-center justify-end gap-1.5">
+                      <span className={cn("w-1.5 h-1.5 rounded-full", s.status === 'OPEN' ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
+                      <span>{s.status === 'OPEN' ? 'Belum tutup' : 'Selesai'}</span>
                     </p>
                   </div>
                 </div>
@@ -891,7 +892,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   <button onClick={handleOpen} disabled={!openingCash || !allChecked || saving}
                     className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40 transition-opacity"
                     style={{ background: color, color: getContrastText(color) }}>
-                    {saving ? 'Membuka...' : '🔓 Buka Sekarang'}
+                    {saving ? 'Membuka...' : 'Buka Sekarang'}
                   </button>
                 </div>
               </motion.div>
@@ -971,7 +972,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   <button onClick={handleClose} disabled={!closingCash || !totalSales || saving}
                     className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40"
                     style={{ background: color, color: getContrastText(color) }}>
-                    {saving ? 'Menyimpan...' : '🔒 Tutup & Simpan'}
+                    {saving ? 'Menyimpan...' : 'Tutup & Simpan'}
                   </button>
                 </div>
               </motion.div>
