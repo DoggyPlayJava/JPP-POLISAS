@@ -182,8 +182,8 @@ export function getCampusServicesConfig(params: {
     {
       id: 'polyrent',
       label: 'PolyRent',
-      sublabel: 'Sewa Barangan',
-      description: 'Sewa Barangan',
+      sublabel: 'Sewa Rumah',
+      description: 'Sewa Rumah',
       routeOrAction: '/polyrent',
       color: 'cyan',
     },

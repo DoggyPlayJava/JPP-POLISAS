@@ -167,7 +167,7 @@ describe('superAppHelpers', () => {
       expect(serviceMap.polymaps.sublabel).toBe('Peta Kampus');
 
       expect(serviceMap.polyrent.routeOrAction).toBe('/polyrent');
-      expect(serviceMap.polyrent.sublabel).toBe('Sewa Barangan');
+      expect(serviceMap.polyrent.sublabel).toBe('Sewa Rumah');
 
       expect(serviceMap.kebajikan.routeOrAction).toBe('/kebajikan');
       expect(serviceMap.kebajikan.sublabel).toBe('Aduan & Bantuan');
