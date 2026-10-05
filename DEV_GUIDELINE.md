@@ -2949,19 +2949,25 @@ Laman Portal Utama (`/portal` - `src/pages/PortalPage.tsx`) telah dinaik taraf k
 
 ---
 
-### 29.2 Kawalan Header Tersepadu & Bar Carian Pintar (`SuperAppHeader.tsx`)
+### 29.2 Kawalan Header Kaca Eksekutif & Bar Carian Frosted Glass (`SuperAppHeader.tsx`)
 
-1. **Kawalan Header Tersepadu (Active Integrated Header Controls):**
-   - Mengintegrasikan kawalan penting terus ke bar atas header di sebelah kanan:
-     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif yang diolah dengan gaya butang kaca seragam.
+1. **Duk Kaca Eksekutif Bersepadu (Executive Glass Dock):**
+   - Menggabungkan kesemua tindakan sudut kanan atas ke dalam satu kapsul kaca terapung berasingan (`inline-flex items-center p-1 rounded-2xl bg-white/10 dark:bg-black/30 backdrop-blur-2xl border border-white/15 divide-x divide-white/10 shadow-lg`):
+     - `<ThemeToggle />`: Suis pertukaran mod terang/gelap aktif tanpa sempadan berasingan.
      - `<NotificationBell variant="dark" />`: Lonceng notifikasi masa nyata aktif dengan lencana bilangan notifikasi belum dibaca.
-     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berbingkai putih (`border-2 border-white/30`) yang memicu pembukaan `PortalSidebar` untuk tetapan akaun dan log keluar.
-   - Penggayaan butang kaca seragam (`[&_button]:bg-black/25 [&_button]:hover:bg-white/20 [&_button]:border [&_button]:border-white/15 [&_button]:text-white [&_button]:h-9 sm:[&_button]:h-10 [&_button]:w-9 sm:[&_button]:w-10 [&_button]:rounded-2xl transition-all`) menjamin kontras dan keharmonian visual di atas latar maroon.
+     - **Pencetus Profil Pengguna (`Avatar`):** Avatar profil berkelas (`.tour-navbar-profile`) dengan fallback inisial nama, memicu pembukaan `PortalSidebar`.
+   - Menggantikan butang-butang bulat terapung yang berserakan dengan satu duk kapsul kompak, kemas dan mewah bertaraf eksekutif.
 
-2. **Bar Carian Terapung (Floating Search Bar):**
-   - Kad terapung berlatar belakang kaca kabur 95% (`bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-xl border border-white/30`).
-   - Placeholder interaktif: *"Cari makanan, runner, servis, acara, merit..."*.
-   - Mengintegrasikan fungsi Command Palette global (`triggerCommandPalette(true)`) dengan paparan pintasan papan kekunci `Ctrl+K`.
+2. **Pembersihan Butang Terapung Bantuan & Pemindahan ke Sidebar:**
+   - Butang bantuan terapung canggung (`.tour-help-button` di `fixed top-20 right-4`) telah dibuang sepenuhnya daripada `PortalPage.tsx`.
+   - Pencetus "Panduan Sistem (Tutorial)" kini disepadukan dengan kemas di dalam laci navigasi sisi `PortalSidebar.tsx` melalui prop `onStartTour`.
+
+3. **Bar Carian Kaca Frosted (Frosted Glass Search Bar):**
+   - Menggantikan bar carian putih tebal dengan butang carian kaca berkabus (*frosted glass button*):
+     `bg-white/[0.08] hover:bg-white/[0.12] dark:bg-white/[0.05] dark:hover:bg-white/[0.08] backdrop-blur-2xl border border-white/15 hover:border-emerald-400/40 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]`.
+   - Ikon carian bertempat dalam squircle zamrud lembut (`bg-emerald-500/20 text-emerald-300`).
+   - Placeholder carian berimbang: *"Cari makanan, servis, peta, aduan, merit..."*.
+   - Menyertakan lencana pintasan papan kekunci monokrom `Ctrl+K`.
 
 ---
 
