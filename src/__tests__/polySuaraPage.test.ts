@@ -164,28 +164,37 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('setComposeModalOpen(false)');
     });
 
-    it('renders single-line streamlined feed navigation track with sort pills, divider and category chips', () => {
+    it('renders CampusPulseBar story mood rings track at top of feed', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Unified horizontal navigation track
-      expect(html).toContain('flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none snap-x w-full');
+      // Campus pulse bar items
+      expect(html).toContain('+ Luah');
+      expect(html).toContain('Semua');
+      expect(html).toContain('Hangat');
+      expect(html).toContain('Exam');
+      expect(html).toContain('Kamsis');
+      expect(html).toContain('Kafe');
+      expect(html).toContain('Aduan');
+    });
 
-      // Sort buttons
+    it('renders SocialTabNav animated 3-way feed switcher with Untuk Anda, Terkini, and Hangat tabs', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+
+      expect(html).toContain('role="tablist"');
+      expect(html).toContain('Untuk Anda');
       expect(html).toContain('Terkini');
       expect(html).toContain('Hangat');
+    });
 
-      // Subtle Divider
-      expect(html).toContain('h-6 w-px bg-slate-200 dark:bg-white/10 shrink-0');
+    it('renders FloatingComposeFab and mobile dock spacer h-32 md:hidden', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Filter chips in title case
-      expect(html).toContain('Semua');
-      expect(html).toContain('Akademik');
-      expect(html).toContain('Fasiliti');
-      expect(html).toContain('Kamsis');
-      expect(html).toContain('Kaunseling');
+      // FAB
+      expect(html).toContain('aria-label="Tulis Luahan Rahsia Baharu"');
+      expect(html).toContain('fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2');
 
       // Mobile dock spacer
-      expect(html).toContain('h-28 md:hidden');
+      expect(html).toContain('h-32 md:hidden');
     });
   });
 
@@ -262,7 +271,7 @@ describe('PolySuaraPage Suite', () => {
     });
   });
 
-  describe('Editorial Confession Card & Action Bar Refinement', () => {
+  describe('Elevated Pipel/Dribbble Confession Card & Action Bar', () => {
     const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
     const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
 
@@ -271,33 +280,50 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).not.toContain('<PolySuaraStickerBadge');
     });
 
-    it('renders clean squircle avatar with avatar.bgClass and avatar.emoji', () => {
-      expect(pageContent).toContain('avatar.bgClass');
+    it('renders elevated floating card container with rounded-[2rem] and modern shadows', () => {
+      expect(pageContent).toContain('rounded-[2rem]');
+      expect(pageContent).toContain('shadow-[0_8px_30px_rgb(0,0,0,0.04)]');
+      expect(pageContent).toContain('dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]');
+    });
+
+    it('renders avatar with neon gradient ring container', () => {
+      expect(pageContent).toContain('bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400');
       expect(pageContent).toContain('avatar.emoji');
     });
 
-    it('formats author name and relative time with subtle bullet separator', () => {
-      expect(pageContent).toMatch(/•/);
+    it('renders verified anonymous identity badge (✓) and author name', () => {
+      expect(pageContent).toContain('title="Identiti Anon Sah Disahkan"');
+      expect(pageContent).toContain('✓');
       expect(pageContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
     });
 
-    it('renders subtle rounded-full category badge chip', () => {
-      expect(pageContent).toContain('text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full');
+    it('renders modern uppercase category badge chip', () => {
+      expect(pageContent).toContain('text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 shrink-0');
     });
 
-    it('applies refined editorial typography to confession card content', () => {
-      expect(pageContent).toContain('text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3');
+    it('applies refined editorial typography mb-3.5 to confession card content', () => {
+      expect(pageContent).toContain('text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5');
     });
 
     it('renders JPP official reply with clean quote callout styling', () => {
       expect(pageContent).toContain('border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl');
     });
 
-    it('renders refined action bar with reactions, subtle thumbs down, comments, and share', () => {
+    it('renders full social action row with reactions, dislike, comments, share, and bookmark', () => {
       expect(pageContent).toContain('<PolySuaraReactions');
       expect(pageContent).toContain('ThumbsDown');
       expect(pageContent).toContain('MessageCircle');
       expect(pageContent).toContain('Share2');
+      expect(pageContent).toContain('Bookmark');
+      expect(pageContent).toContain('toggleBookmark');
+    });
+
+    it('manages pulse bubble, social tab and bookmark states in PolySuaraPage', () => {
+      expect(pageContent).toContain('const [activePulseId, setActivePulseId] = useState');
+      expect(pageContent).toContain('const [activeSocialTab, setActiveSocialTab] = useState');
+      expect(pageContent).toContain('const [bookmarkedIds, setBookmarkedIds] = useState');
+      expect(pageContent).toContain('handleSelectPulse');
+      expect(pageContent).toContain('handleSocialTabChange');
     });
   });
 });

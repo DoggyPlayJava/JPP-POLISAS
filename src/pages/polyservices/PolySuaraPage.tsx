@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert, Bookmark } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,9 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import ReactMarkdown from 'react-markdown';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { PolySuaraReactions } from '@/components/polysuara/PolySuaraReactions';
+import { CampusPulseBar } from '@/components/polysuara/CampusPulseBar';
+import { SocialTabNav, SocialTabType } from '@/components/polysuara/SocialTabNav';
+import { FloatingComposeFab } from '@/components/polysuara/FloatingComposeFab';
 import {
   cleanConfessionText,
   getAnimalAvatarFromCodename,
@@ -59,6 +62,47 @@ export function PolySuaraPage() {
   // Filter & sort
   const [activeCategory, setActiveCategory] = useState<string>('SEMUA');
   const [sortBy, setSortBy] = useState<'LATEST'|'TRENDING'>('LATEST');
+  const [activePulseId, setActivePulseId] = useState<string>('all');
+  const [activeSocialTab, setActiveSocialTab] = useState<SocialTabType>('LATEST');
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+
+  const handleSelectPulse = (id: string, categoryFilter?: string) => {
+    setActivePulseId(id);
+    if (id === 'trending') {
+      setSortBy('TRENDING');
+      setActiveCategory('SEMUA');
+      setActiveSocialTab('TRENDING');
+    } else if (categoryFilter) {
+      setActiveCategory(categoryFilter);
+    } else {
+      setActiveCategory('SEMUA');
+    }
+  };
+
+  const handleSocialTabChange = (tab: SocialTabType) => {
+    setActiveSocialTab(tab);
+    if (tab === 'TRENDING') {
+      setSortBy('TRENDING');
+    } else if (tab === 'LATEST') {
+      setSortBy('LATEST');
+    } else if (tab === 'FOR_YOU') {
+      setSortBy('LATEST');
+    }
+  };
+
+  const toggleBookmark = (confessionId: string) => {
+    setBookmarkedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(confessionId)) {
+        next.delete(confessionId);
+        toast.success('Dikeluarkan dari simpanan');
+      } else {
+        next.add(confessionId);
+        toast.success('Disimpan ke penanda buku');
+      }
+      return next;
+    });
+  };
 
   // Compose state
   const [composeModalOpen, setComposeModalOpen] = useState(false);
@@ -1015,6 +1059,15 @@ export function PolySuaraPage() {
           </div>
         ) : (
           <>
+            {/* Top Story-Style Campus Mood Rings Track */}
+            <CampusPulseBar
+              activePulseId={activePulseId}
+              onSelectPulse={handleSelectPulse}
+              onOpenCompose={() => setComposeModalOpen(true)}
+              className="mb-4"
+            />
+
+            {/* Quick-compose capsule */}
             <div
               onClick={() => setComposeModalOpen(true)}
               onKeyDown={(e) => {
@@ -1023,7 +1076,7 @@ export function PolySuaraPage() {
                   setComposeModalOpen(true);
                 }
               }}
-              className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-6 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
+              className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
               role="button"
               tabIndex={0}
               aria-label="Tulis luahan kampus baharu"
@@ -1042,6 +1095,13 @@ export function PolySuaraPage() {
                 </span>
               </div>
             </div>
+
+            {/* Animated 3-Way Social Tab Navigation */}
+            <SocialTabNav
+              activeTab={activeSocialTab}
+              onChangeTab={handleSocialTabChange}
+              className="mb-6"
+            />
 
             {/* Compose Modal */}
             <AnimatePresence>
@@ -1209,71 +1269,6 @@ export function PolySuaraPage() {
               )}
             </AnimatePresence>
 
-            {/* Streamlined Single-Line Feed Navigation */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none snap-x w-full">
-              {/* Sort Segmented Pills */}
-              <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSortBy('LATEST')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
-                    sortBy === 'LATEST'
-                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
-                  )}
-                >
-                  <Ghost className="w-3.5 h-3.5" /> Terkini
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSortBy('TRENDING')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
-                    sortBy === 'TRENDING'
-                      ? "bg-rose-500 text-white shadow-xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
-                  )}
-                >
-                  <Flame className="w-3.5 h-3.5" /> Hangat
-                </button>
-              </div>
-
-              {/* Subtle Divider */}
-              <div className="h-6 w-px bg-slate-200 dark:bg-white/10 shrink-0" aria-hidden="true" />
-
-              {/* Category Filter Chips */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('SEMUA')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
-                    activeCategory === 'SEMUA'
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
-                      : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
-                  )}
-                >
-                  Semua
-                </button>
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCategory(cat)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
-                      activeCategory === cat
-                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
-                        : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
-                    )}
-                  >
-                    {cat.charAt(0) + cat.slice(1).toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {trendingTags.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 py-1.5 flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-rose-500"/> Trending:</span>
@@ -1313,7 +1308,7 @@ export function PolySuaraPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={cn(
-                          "bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl p-5 relative overflow-hidden transition-all duration-200",
+                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-100 dark:border-white/[0.07] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.07)] rounded-[2rem] p-5 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
                           isTrending && "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
                         )}
                       >
@@ -1322,23 +1317,28 @@ export function PolySuaraPage() {
                         )}
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-xl shadow-xs", avatar.bgClass)}>
-                              <span>{avatar.emoji}</span>
+                            <div className="p-[2px] rounded-full bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 shrink-0">
+                              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-lg bg-white dark:bg-slate-900 shadow-inner", isMine ? "text-rose-500" : "")}>
+                                {isMine ? <UserCircle2 className="w-5 h-5 text-rose-500" /> : avatar.emoji}
+                              </div>
                             </div>
                             <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{confession.codename || 'Pelajar Anon'}</h4>
-                                {isMine && <span className="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase shrink-0" data-html2canvas-ignore>Milik Anda</span>}
-                                <span className="text-slate-300 dark:text-slate-600 text-xs select-none">•</span>
-                                <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">
-                                  {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
+                                <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
+                                  {confession.codename || 'Pelajar Anon'}
+                                </h4>
+                                <span className="w-4 h-4 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-[10px] font-black shrink-0" title="Identiti Anon Sah Disahkan">
+                                  ✓
                                 </span>
+                                {isMine && (
+                                  <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider" data-html2canvas-ignore>
+                                    Anda
+                                  </span>
+                                )}
                               </div>
-                              <div className="mt-1">
-                                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2.5 py-0.5 rounded-full inline-block">
-                                  {confession.category}
-                                </span>
-                              </div>
+                              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
+                              </p>
                             </div>
                           </div>
 
@@ -1349,6 +1349,9 @@ export function PolySuaraPage() {
                             {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
                             {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
                             {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
+                            <span className="text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 shrink-0">
+                              {confession.category}
+                            </span>
                             <button 
                               onClick={() => {
                                 setReportTargetId(confession.id);
@@ -1362,7 +1365,7 @@ export function PolySuaraPage() {
                           </div>
                         </div>
 
-                        <p className="text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3">
+                        <p className="text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5">
                           {cleanConfessionText(confession.content)}
                         </p>
 
@@ -1373,8 +1376,8 @@ export function PolySuaraPage() {
                         )}
 
                         {confession.image_url && (
-                          <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40">
-                            <img src={confession.image_url} alt="Attachment" className="w-full max-h-[300px] object-contain" />
+                          <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-black/40 group/media">
+                            <img src={confession.image_url} alt="Attachment" className="w-full max-h-[350px] object-cover transition-transform duration-300 group-hover/media:scale-105" />
                           </div>
                         )}
 
@@ -1477,6 +1480,19 @@ export function PolySuaraPage() {
                               {shareLoadingId === confession.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Share2 className="w-4 h-4" />}
                             </button>
 
+                            <button
+                              onClick={() => toggleBookmark(confession.id)}
+                              className={cn(
+                                "p-2 rounded-full transition-colors flex items-center justify-center",
+                                bookmarkedIds.has(confession.id)
+                                  ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10"
+                                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                              )}
+                              title={bookmarkedIds.has(confession.id) ? "Padam Penanda Buku" : "Simpan Penanda Buku"}
+                            >
+                              <Bookmark className={cn("w-4 h-4", bookmarkedIds.has(confession.id) && "fill-rose-500")} />
+                            </button>
+
                             {isMine && confession.official_reply && !confession.author_reply && (
                               <button
                                 onClick={() => {
@@ -1523,7 +1539,7 @@ export function PolySuaraPage() {
               )}
 
               {/* Mobile dock spacer at bottom of main feed */}
-              <div className="h-28 md:hidden" aria-hidden="true" />
+              <div className="h-32 md:hidden" aria-hidden="true" />
 
               {/* Infinite scroll trigger */}
               {!loading && hasMore && (
@@ -2176,6 +2192,7 @@ export function PolySuaraPage() {
         )}
       </AnimatePresence>
 
+      <FloatingComposeFab onClick={() => setComposeModalOpen(true)} />
       <BottomNav />
       <FloatingAiChat />
     </div>
