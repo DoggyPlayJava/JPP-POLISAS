@@ -3118,11 +3118,11 @@ Laman Tetapan (`src/pages/SettingsPage.tsx`) telah dirombak daripada reka bentuk
 
 ---
 
-## 30. Modul PolySuara Super App: Suapan Media Sosial Generasi Baharu (Pipel / Dribbble UI)
+## 30. Modul PolySuara Super App: Suapan Media Sosial Bersih & Moden (Clean Modern Social Architecture)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
 
-Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mahasiswa** bertaraf tinggi yang diinspirasikan secara langsung oleh konsep reka bentuk moden Pipel dan Dribbble. Reka bentuk ini membawakan bar cerita *Campus Pulse* dengan cincin gradien neon di bahagian atas, navigasi suapan 3-tab beranimasi (*Untuk Anda*, *Terkini*, *Hangat*), kad luahan terapung mewah bersudut melengkung `rounded-[2rem]`, baris tindakan sosial bersepadu (Reaksi WhatsApp, Komen, Dislike, Simpanan, dan Kongsi), serta butang tindakan terapung bercahaya (*Radiant Floating Action Button — FAB `+`*).
+Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mahasiswa** bertaraf tinggi dengan seni bina bersih dan moden (*anti-slop clean social architecture*). Elemen visual berlebihan seperti bar cerita bertingkat (*story pulse bar*) dan butang FAB terapung bertindih telah dimansuhkan. Sebaliknya, suapan kini menampilkan bar navigasi atas lekat (*sticky header*) dwi-mod, kapsul penggubah pantas (*quick-compose capsule*), trek navigasi suapan tunggal eksekutif (*Executive Single-Line Track*), kad luahan terapung mewah bersudut melengkung `rounded-[2rem]`, baris tindakan sosial bersepadu dengan corak *One-Tap Heart + WhatsApp Reactions*, laci ulasan moden gaya Threads (*Threads-Style Comments Drawer*), serta kepatuhan mutlak terhadap peraturan pelepasan selamat kerangka navigasi (*Z-[999] Safe Clearance Rule*).
 
 ---
 
@@ -3139,33 +3139,41 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 30.2 Bar "Campus Pulse" (Story Rings Bertaraf Instagram/Pipel — `CampusPulseBar.tsx`)
+### 30.2 Pemansuhan Komponen Berlebihan & Anti-Slop (Deprecation of `CampusPulseBar` & `FloatingComposeFab`)
 
-1. **Jalur Suapan Cerita Mendatar (*Story Bubble Track*):**
-   - Ditempatkan di bahagian teratas suapan dengan tatalan melintang lancar (*horizontal snap scroll*):
-     - `+ Luah`: Gelembung pertama dengan cincin gradien ros dan lencana `+` di penjuru bulatan. Mengetuknya membuka modal penggubah luahan rahsia.
-     - `Semua`: Paparan luahan penuh tanpa tapisan kategori.
-     - `⚡ Hangat`: Luahan trending dengan reaksi tertinggi.
-     - `📚 Exam`: Luahan akademik, sesi ulangkaji, dan kuiz.
-     - `🏠 Kamsis`: Hal ehwal asrama dan kolej kediaman.
-     - `🍔 Kafe`: Cerita makanan dan lepak di food court Semambu.
-     - `💬 Aduan`: Saluran kaunseling dan aduan kebajikan.
-2. **Cincin Gradien Neon & Animasi Haptik:**
-   - Setiap bulatan mempunyai cincin gradien tebal dwi-warna (`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] active:scale-95`).
-   - Gelembung yang aktif diserlahkan dengan bayang bersinar (`shadow-[0_0_15px_rgba(244,63,94,0.35)] ring-2 ring-rose-500/50`).
+1. **Penyingkiran `CampusPulseBar` (Anti-Slop):**
+   - Bar bulatan cerita gaya Instagram (*story pulse rings*) telah dimansuhkan sepenuhnya daripada sistem (`src/components/polysuara/CampusPulseBar.tsx` dipadamkan).
+   - **Rasional Seni Bina:** Bar cerita tersebut mencetuskan kesesakan visual (*AI-slop visual clutter*), memakan ruang vertikal skrin peranti mudah alih secara berlebihan, dan menduplikasi fungsi penapisan kategori suapan. Penapisan kategori kini disatukan secara elegan ke dalam *Executive Single-Line Track*.
+
+2. **Penyingkiran `FloatingComposeFab` (Mengelakkan Pertembungan FAB):**
+   - Butang tindakan terapung merah jambu berasingan (`src/components/polysuara/FloatingComposeFab.tsx`) telah dipadamkan sepenuhnya.
+   - **Rasional Seni Bina:** Butang FAB terapung tersebut bertembung (*overlapping collision*) dan bersaing ruang secara langsung dengan butang bulat `+` emas rasmi milik `BottomNav` (`z-[120]`) serta butang pembantu AI (`FloatingAiChat`).
+
+3. **Kapsul Penggubah Luahan Pantas (*Quick-Compose Capsule*):**
+   - Penulisan luahan kampus kini diakses melalui kapsul sentuh sebaris yang ditempatkan secara kemas di atas suapan utama (`✍️ Ada luahan atau rahsia kampus? Kongsi secara rahsia... [Luahkan]`).
+   - Mengetik kapsul ini mencetuskan pembukaan **Modal Penggubah Bebas Gangguan (*Compose Modal*)** berserta papan kekunci tanpa sebarang gangguan elemen terapung lain.
+
+4. **Pembersihan Navigasi Berganda (*Deduplicated Chrome*):**
+   - Memastikan hanya satu komponen `<BottomNav />` dirender di bahagian bawah `PolySuaraPage.tsx` dan mengelakkan sebarang penduaan komponen navigasi global sistem.
 
 ---
 
 ### 30.3 Trek Navigasi Suapan Tunggal Eksekutif (Executive Single-Line Track)
 
 1. **Susun Atur Sebaris Padat & Kemas (*Single-Line Consolidated Navigation Track*):**
-   - **Togol Segmen Isih (Kiri):** Butang dwipil untuk `🕒 Terkini` (`sortBy === 'LATEST'`) dan `🔥 Hangat` (`sortBy === 'TRENDING'`).
-   - **Garis Pemisah Halus (Tengah):** Penanda sempadan menegak halus (`w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0`).
-   - **Cip Penapis Kategori (Kanan):** Trek leret mendatar (*horizontal snap track* `overflow-x-auto scrollbar-none snap-x flex items-center gap-1.5 shrink-0`) merangkumi cip `Semua`, `Akademik`, `Fasiliti`, `Kamsis`, dan `Kaunseling`.
+   - Menyatukan kawalan susunan suapan dan penapisan kategori ke dalam satu baris mendatar yang anggun (`flex items-center gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none snap-x w-full`):
+   - **Togol Segmen Isih (Kiri):**
+     - Butang dwipil padat untuk `🕒 Terkini` (`sortBy === 'LATEST'`) dan `🔥 Hangat` (`sortBy === 'TRENDING'`).
+     - Menyediakan peralihan pantas antara kronologi masa nyata dan luahan hangat bervolum tinggi dengan maklum balas aktif bersinar.
+   - **Garis Pemisah Halus (Tengah):**
+     - Penanda sempadan menegak mikro (*hairline divider* `w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0`) yang memisahkan segmen isih dan kategori secara diskret tanpa kekusutan visual.
+   - **Cip Penapis Kategori Leret (Kanan):**
+     - Trek leret mendatar (*horizontal snap track* `overflow-x-auto scrollbar-none snap-x flex items-center gap-1.5 shrink-0`) merangkumi cip kategori: `Semua`, `Akademik`, `Fasiliti`, `Kamsis`, dan `Kaunseling`.
+     - Menggunakan reka bentuk pil moden bersudut `rounded-xl` yang bertukar kepada kontras tinggi apabila aktif.
 
 ---
 
-### 30.4 Kad Luahan Terapung Mewah (`rounded-[2rem]` Floating Cards)
+### 30.4 Kad Luahan Terapung Mewah & Corak Reaksi "One-Tap Heart + WhatsApp Reactions" (`PolySuaraReactions.tsx`)
 
 1. **Struktur Kad Lapang & Berkarisma:**
    - Sudut melengkung eksekutif `rounded-[2rem]` dengan bayang terapung moden.
@@ -3179,12 +3187,24 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
      - Teks luahan editorial luas: `text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5`.
      - Lampiran imej dengan nisbah aspek penuh, sempadan `rounded-2xl`, dan animasi zum pada sentuhan.
      - Maklum balas rasmi JPP direka sebagai kad petikan verifikasi eksklusif dengan sempadan sisi hijau firus (`border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-4 rounded-r-2xl`).
-2. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
+
+2. **Corak Reaksi "One-Tap Heart + WhatsApp Reactions" (`PolySuaraReactions.tsx`):**
+   - **Butang Suka Sekali Sentuh (*One-Tap Heart*):**
+     - Butang utama memaparkan ikon Hati (❤️) bersama angka bilangan suka secara terus (`tabular-nums font-mono text-[11px] leading-none shrink-0`).
+     - Sekali sentuhan serta-merta menogol status Suka (*instant toggle*) tanpa memerlukan interaksi dua langkah.
+     - Format kontena `inline-flex flex-nowrap shrink-0` memastikan teks bilangan suka tidak sekali-kali terputus atau terbalut ke baris baharu (*non-wrapping inline count*).
+   - **Pencetus Popover 6 Emoji WhatsApp:**
+     - Butang `+` halus di sebelah butang Hati membuka popover terapung berisi 6 emoji WhatsApp (❤️, 😂, 🔥, 😢, 😮, 💯).
+     - Dilengkapi backdrop telus skrin penuh (`fixed inset-0 z-20`) dan pengesanan klik di luar (*outside tap dismiss*) untuk memudahkan penutupan.
+   - **Pil Reaksi Aktif Sebaris (*Inline Reaction Chips*):**
+     - Reaksi bukan-hati yang aktif (kiraan > 0) dipaparkan secara kemas dalam barisan mendatar sebaris tanpa limpahan (*zero-wrap horizontal row*).
+
+3. **Baris Tindakan Sosial Bebas Balutan (*Clean Single-Row Action Bar*):**
    - Bekas kontena: `flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none`.
    - **Kiri (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
-     - Butang Suka Sekali Sentuh & Menu Popover WhatsApp `<PolySuaraReactions />` bersama pil reaksi aktif.
+     - Kluster Reaksi & Suka Sekali Sentuh `<PolySuaraReactions />`.
      - Butang Dislike (👎) komuniti untuk semakan auto-moderasi dengan bilangan undian.
-     - Butang Ulasan (💬) dengan bilangan komen membuka laci komen pelajar.
+     - Butang Ulasan (💬) dengan bilangan komen untuk membuka laci ulasan.
    - **Kanan (`flex items-center gap-1.5 shrink-0 flex-nowrap`):**
      - Butang Perkongsian grafik pantas (`Share2`).
      - Butang Simpanan / Bookmark (`Bookmark`).
@@ -3192,12 +3212,29 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 30.5 Butang Tindakan Terapung Bercahaya (`FloatingComposeFab.tsx` FAB `+`)
+### 30.5 Laci Ulasan Moden Gaya Threads & Peraturan Pelepasan Selamat "Z-[999] Safe Clearance Rule"
 
-1. **Butang Bulat Bergradien Neon Terapung:**
-   - Ditempatkan secara tetap di bahagian tengah bawah skrin (`fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2 z-40`).
-   - Butang bulat besar `w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-rose-400 text-white` dengan bayang merah jambu bersinar (`shadow-[0_8px_25px_rgba(244,63,94,0.45)]`) dan aura ambien berdenyut.
-   - Mengetik butang ini mencetuskan pembukaan **Modal Penggubah Bebas Gangguan (*Compose Modal*)** dari mana-mana bahagian suapan dengan sentuhan haptik `active:scale-90`.
+1. **Laci Ulasan Moden Gaya Threads (*Threads-Style Comments Drawer*):**
+   - **Reka Bentuk Berpusatkan Pembacaan:**
+     - Pemegang seret atas (*drag pill indicator*) untuk gerak isyarat tutup pantas pada peranti mudah alih.
+     - Pratonton ringkas teks luahan asal di bawah tajuk laci untuk mengekalkan konteks perbincangan.
+     - Pemisah garis halus (*hairline dividers* `border-b border-slate-100 dark:border-white/5 py-3.5 px-4`) antara ulasan Tier-1 dan jawapan bersarang, menggantikan kad berkotak yang sempit dengan gaya editorial lapang.
+   - **Lencana Pengenalan Khusus:**
+     - **Lencana OP (*Original Poster*):** Ditandakan secara automatik (`bg-rose-500/10 text-rose-500 border border-rose-500/20`) apabila penulis luahan asal membalas sebarang komen.
+     - **Lencana Rasmi JPP:** Ditandakan dengan lencana zamrud (`bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20`) berserta ikon perisai bagi maklum balas rasmi kepimpinan pelajar.
+   - **Set Tindakan Diskret (*Discrete Action Set*):**
+     - Suka ulasan (❤️) dan Tidak suka (👎) dengan butang pil halus.
+     - Butang Balas pantas untuk memulakan respon ulasan anak bertingkat (Tier-2).
+     - Butang eskalasi krisis sulit terus ke Exco Kebajikan (`ShieldAlert`) serta butang laporan ulasan melanggar etika (`AlertTriangle`).
+   - **Togol Isih Ulasan Dwipil:**
+     - Pilihan isihan `Terkini` (kronologi) vs `Terbaik` (berdasarkan undian bersih ulasan).
+
+2. **Peraturan Pelepasan Selamat Z-[999] (*Z-[999] Safe Clearance Rule*):**
+   - **Hierarki Lapisan Z-Index:** Kerangka terapung `BottomNav` berada pada `z-[120]` dengan menu tindakan pantas pada `z-[111]`. Oleh itu, semua modal terapung (Compose Modal, Comments Drawer, Report Modal) dan latar belakangnya WAJIB menggunakan `z-[990]` bagi backdrop dan `z-[999]` bagi panel modal utama. Ini memastikan tiada konflik z-index atau elemen UI lain mencelah di atas borang input pengguna.
+   - **Penjarakan Selamat Bahagian Bawah (*Bottom Safe Clearance*):**
+     - Modal penggubah luahan: `pb-28 sm:pb-6` bagi memastikan butang hantar tidak terlindung oleh dock navigasi.
+     - Laci ulasan: `pb-8 sm:pb-4` untuk input baris balas ulasan.
+     - Halaman utama suapan: `pb-32` berserta `<div className="h-32 md:hidden" aria-hidden="true" />` menjamin kad luahan paling akhir boleh ditatal sepenuhnya melepasi `BottomNav` tanpa halangan visual.
 
 ---
 
@@ -3209,4 +3246,4 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 2. **Eskalasi Krisis & Kebajikan Rahsia:**
    - Butang *"Bantuan"* pada ulasan dan butang laporan perisai pada kad luahan membolehkan pelajar menghantar isyarat kecemasan terus kepada barisan pimpinan kebajikan secara 100% sulit.
 3. **Ergonomik Mudah Alih & Ruang Bawah:**
-   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` dan FAB tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah.
+   - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah.
