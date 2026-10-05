@@ -2925,18 +2925,18 @@ Untuk mengekalkan konsistensi tipografi antarabangsa dan mengelakkan isu pengeko
 
 Laman Portal Utama (`/portal` - `src/pages/PortalPage.tsx`) telah dinaik taraf kepada pengalaman **Campus Super App** berorientasikan mudah alih (*mobile-first hybrid experience*). Transformasi ini menggabungkan utiliti harian kampus, suapan perkhidmatan langsung, dan integrasi modul rasmi Exco JPP dalam satu hab sehenti yang intuitif dan responsif.
 
-### 29.1 Palet Warna Rasmi Maroon Eksekutif POLISAS & Pemasangan Logo JPP
+### 29.1 Palet Kecerunan Header Kampus & Pemasangan Logo JPP
 
-1. **Palet Warna Rasmi Maroon Eksekutif POLISAS:**
-   - Kecerunan rasmi portal (`getHeaderGradientClass`) kini menggunakan tona Maroon Eksekutif POLISAS:
+1. **Palet Warna Kecerunan Header Kampus:**
+   - Kecerunan rasmi portal (`getHeaderGradientClass`) menggunakan tona Obsidian Emerald moden yang selesa pada mata:
      ```css
-     from-[#4A0E17] via-[#6B141E] to-[#1C0508] text-white border-b border-amber-500/20
+     from-emerald-950 via-slate-900 to-slate-950 text-white border-b border-emerald-500/20
      ```
-   - Menggantikan tema hijau zamrud terdahulu dengan identiti korporat dan prestij institusi POLISAS, diperkasakan dengan garisan sempadan halus keemasan (`border-b border-amber-500/20`) serta pencahayaan ambien gelap (*ambient decorative glows*).
+   - Menyediakan latar belakang gelap berprestij dengan biasan hijau zamrud halus yang mematuhi kontras WCAG AA tanpa keletihan visual.
    - Kecerunan beralih secara kontekstual sekiranya musim sukan atau karnival kampus sedang aktif:
      - **Karnival Aktif:** Kecerunan Violet/Purple (`from-violet-950 via-purple-900 to-indigo-950`).
      - **SUPSAS Aktif:** Kecerunan Amber/Navy (`from-amber-950 via-slate-900 to-sky-950`).
-     - **Lalai (Maroon Eksekutif POLISAS):** `from-[#4A0E17] via-[#6B141E] to-[#1C0508]`.
+     - **Lalai (Obsidian Emerald):** `from-emerald-950 via-slate-900 to-slate-950`.
 
 2. **Pemasangan Logo Rasmi JPP (`/jpp-logo.png`):**
    - Logo rasmi JPP dipasang secara menonjol dalam kapsul kaca gelap (`bg-black/25 backdrop-blur-md border border-white/15 shadow-sm`) di sebelah kiri atas header.

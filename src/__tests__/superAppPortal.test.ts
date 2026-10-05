@@ -62,11 +62,10 @@ describe('superAppHelpers', () => {
       const supsasGrad = getHeaderGradientClass(false, true);
       expect(supsasGrad).toContain('amber');
 
-      // Default portal state (Executive Maroon)
+      // Default portal state (Obsidian Emerald)
       const defaultGrad = getHeaderGradientClass(false, false);
-      expect(defaultGrad).toContain('#4A0E17');
-      expect(defaultGrad).toContain('#6B141E');
-      expect(defaultGrad).toContain('#1C0508');
+      expect(defaultGrad).toContain('emerald');
+      expect(defaultGrad).toContain('slate');
     });
 
     it('exports SuperAppHeader component correctly', async () => {
