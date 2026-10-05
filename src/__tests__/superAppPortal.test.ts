@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
 import {
   formatGreeting,
@@ -68,10 +69,44 @@ describe('superAppHelpers', () => {
       expect(defaultGrad).toContain('slate');
     });
 
-    it('exports SuperAppHeader component correctly', async () => {
+    it('exports SuperAppHeader component correctly as named and default exports', async () => {
+      const headerModule = await import('@/components/portal/SuperAppHeader');
+      expect(headerModule.SuperAppHeader).toBeDefined();
+      expect(typeof headerModule.SuperAppHeader).toBe('function');
+      expect(headerModule.default).toBeDefined();
+      expect(typeof headerModule.default).toBe('function');
+      expect(headerModule.SuperAppHeader).toBe(headerModule.default);
+    });
+
+    it('verifies SuperAppHeader accepts executive glass header props structure', async () => {
       const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
-      expect(SuperAppHeader).toBeDefined();
-      expect(typeof SuperAppHeader).toBe('function');
+      const mockSidebarHandler = () => {};
+      const mockProfile = {
+        id: 'usr-123',
+        full_name: 'Ahmad Faiz',
+        role: 'SUPERADMIN',
+        avatar_url: '/test-avatar.jpg',
+      };
+
+      const element = React.createElement(SuperAppHeader, {
+        profile: mockProfile,
+        displayName: 'Faiz',
+        karnivalActive: false,
+        supsasActive: false,
+        onOpenSidebar: mockSidebarHandler,
+        unreadCount: 3,
+        className: 'custom-glass-header',
+      });
+
+      expect(React.isValidElement(element)).toBe(true);
+      expect(element.type).toBe(SuperAppHeader);
+      expect(element.props.displayName).toBe('Faiz');
+      expect(element.props.profile).toEqual(mockProfile);
+      expect(element.props.karnivalActive).toBe(false);
+      expect(element.props.supsasActive).toBe(false);
+      expect(element.props.unreadCount).toBe(3);
+      expect(element.props.onOpenSidebar).toBe(mockSidebarHandler);
+      expect(element.props.className).toBe('custom-glass-header');
     });
   });
 
