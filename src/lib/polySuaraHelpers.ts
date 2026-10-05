@@ -151,6 +151,14 @@ export function embedStickerToken(content: string, stickerId: string): string {
   return `[sticker:${stickerId}] ${cleanContent}`;
 }
 
+/**
+ * Strips legacy sticker tokens from confession or comment content.
+ */
+export function cleanConfessionText(content: string): string {
+  if (!content) return '';
+  return content.replace(/\[sticker:[a-zA-Z0-9_-]+\]\s*/g, '').trim();
+}
+
 const ANIMAL_AVATAR_MAP: Record<string, AnimalAvatar> = {
   kucing: {
     emoji: '🐱',

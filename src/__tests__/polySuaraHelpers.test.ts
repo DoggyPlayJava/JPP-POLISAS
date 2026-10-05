@@ -6,6 +6,7 @@ import {
   embedStickerToken,
   getAnimalAvatarFromCodename,
   aggregateReactions,
+  cleanConfessionText,
 } from '../lib/polySuaraHelpers';
 
 describe('polySuaraHelpers', () => {
@@ -203,6 +204,26 @@ describe('polySuaraHelpers', () => {
     it('returns an empty array when no reactions are provided', () => {
       expect(aggregateReactions([])).toEqual([]);
       expect(aggregateReactions(null as unknown as [])).toEqual([]);
+    });
+  });
+
+  describe('cleanConfessionText', () => {
+    it('strips single sticker token', () => {
+      expect(cleanConfessionText('[sticker:otak_jem] Luahan saya')).toBe('Luahan saya');
+    });
+
+    it('strips sticker token with no space', () => {
+      expect(cleanConfessionText('[sticker:exam_mood]Exam esok')).toBe('Exam esok');
+    });
+
+    it('leaves text without stickers untouched', () => {
+      expect(cleanConfessionText('Luahan biasa sahaja')).toBe('Luahan biasa sahaja');
+    });
+
+    it('handles empty or falsy strings safely', () => {
+      expect(cleanConfessionText('')).toBe('');
+      expect(cleanConfessionText(undefined as unknown as string)).toBe('');
+      expect(cleanConfessionText(null as unknown as string)).toBe('');
     });
   });
 });
