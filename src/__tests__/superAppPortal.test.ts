@@ -108,6 +108,54 @@ describe('superAppHelpers', () => {
       expect(element.props.onOpenSidebar).toBe(mockSidebarHandler);
       expect(element.props.className).toBe('custom-glass-header');
     });
+
+    it('renders pure white stadium search capsule and ultra-clear frosted dock', async () => {
+      if (typeof globalThis.localStorage === 'undefined') {
+        globalThis.localStorage = {
+          getItem: () => 'light',
+          setItem: () => {},
+          removeItem: () => {},
+          clear: () => {},
+          key: () => null,
+          length: 0,
+        };
+      }
+      const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { ThemeProvider } = await import('@/contexts/ThemeContext');
+      const { renderToString } = await import('react-dom/server');
+
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(
+            ThemeProvider,
+            null,
+            React.createElement(SuperAppHeader, {
+              displayName: 'Aiman',
+            })
+          )
+        )
+      );
+
+      // Header container bottom border and shadow
+      expect(html).toContain('border-b');
+      expect(html).toContain('border-emerald-500/20');
+      expect(html).toContain('shadow-[0_12px_32px_rgba(0,0,0,0.35)]');
+
+      // Pure white stadium search capsule
+      expect(html).toContain('bg-white');
+      expect(html).toContain('rounded-full');
+      expect(html).toContain('shadow-[0_8px_30px_rgba(0,0,0,0.18)]');
+      expect(html).toContain('Cari makanan, runner, servis, acara, merit...');
+
+      // Dock capsule & Profile avatar
+      expect(html).toContain('bg-white/[0.08]');
+      expect(html).toContain('backdrop-blur-xl');
+      expect(html).toContain('ring-2 ring-emerald-400/50');
+      expect(html).toContain('from-emerald-600 to-teal-500');
+    });
   });
 
   describe('getCampusServicesConfig & CampusServicesGrid', () => {

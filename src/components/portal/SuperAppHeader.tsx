@@ -39,7 +39,7 @@ export function SuperAppHeader({
   return (
     <header
       className={cn(
-        'relative overflow-hidden rounded-b-[2.5rem] shadow-2xl transition-all duration-700',
+        'relative overflow-hidden rounded-b-[2.5rem] border-b border-emerald-500/20 shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-all duration-700',
         'bg-gradient-to-br',
         gradientClass,
         className
@@ -79,7 +79,7 @@ export function SuperAppHeader({
           </div>
 
           {/* Right Side: Consolidated Unified Glass Dock Capsule */}
-          <div className="inline-flex items-center p-1 rounded-2xl bg-white/10 dark:bg-black/30 backdrop-blur-2xl border border-white/15 divide-x divide-white/10 shadow-lg shrink-0">
+          <div className="inline-flex items-center p-1 rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/15 divide-x divide-white/10 shadow-lg shrink-0">
             <div className="px-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!bg-transparent [&_button]:hover:!bg-white/10 [&_button]:!text-white [&_button]:!rounded-xl">
               <ThemeToggle />
             </div>
@@ -90,14 +90,14 @@ export function SuperAppHeader({
               <button
                 type="button"
                 onClick={onOpenSidebar}
-                className="tour-navbar-profile relative w-8 h-8 rounded-xl overflow-hidden border border-white/20 active:scale-95 transition-all shadow-sm focus:outline-none cursor-pointer shrink-0"
+                className="tour-navbar-profile relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-emerald-400/50 hover:ring-emerald-400/80 active:scale-95 transition-all shadow-sm focus:outline-none cursor-pointer shrink-0"
                 aria-label="Buka profil dan tetapan"
               >
                 <Avatar className="w-full h-full rounded-none">
                   {profile?.avatar_url ? (
                     <AvatarImage src={profile.avatar_url} className="object-cover" alt="Profil" />
                   ) : null}
-                  <AvatarFallback className="bg-white/20 text-white text-[11px] font-black">
+                  <AvatarFallback className="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full">
                     {profile?.full_name?.[0]?.toUpperCase() || displayName?.[0]?.toUpperCase() || 'P'}
                   </AvatarFallback>
                 </Avatar>
@@ -141,23 +141,23 @@ export function SuperAppHeader({
           </p>
         </div>
 
-        {/* Frosted Glass Search Button */}
+        {/* Pure White Stadium Capsule Search Button */}
         <div className="pt-1">
           <button
             type="button"
             onClick={() => triggerCommandPalette(true)}
-            className="w-full h-12 px-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] dark:bg-white/[0.05] dark:hover:bg-white/[0.08] backdrop-blur-2xl border border-white/15 hover:border-emerald-400/40 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] group cursor-pointer"
-            aria-label="Cari makanan, servis, peta, aduan, merit..."
+            className="w-full h-12 px-4 rounded-full bg-white hover:bg-slate-50 text-slate-800 shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-white/40 flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] group cursor-pointer"
+            aria-label="Cari makanan, runner, servis, acara, merit..."
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Search className="w-3.5 h-3.5" />
               </div>
-              <span className="text-xs sm:text-sm text-white/70 group-hover:text-white font-medium truncate">
-                Cari makanan, servis, peta, aduan, merit...
+              <span className="text-xs sm:text-sm text-slate-500 group-hover:text-slate-700 font-medium truncate">
+                Cari makanan, runner, servis, acara, merit...
               </span>
             </div>
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-white/50 bg-white/10 rounded-md border border-white/10">
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 rounded-full border border-slate-200/80">
               <span>Ctrl</span>+<span>K</span>
             </kbd>
           </button>
