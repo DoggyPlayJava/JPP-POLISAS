@@ -6,6 +6,7 @@ import {
   getRoleBadgeTitle,
   getHeaderGradientClass,
   getCampusServicesConfig,
+  getCampaignVariantClasses,
 } from '@/lib/superAppHelpers';
 
 describe('superAppHelpers', () => {
@@ -120,6 +121,39 @@ describe('superAppHelpers', () => {
       const { CampusServicesGrid } = await import('@/components/portal/CampusServicesGrid');
       expect(CampusServicesGrid).toBeDefined();
       expect(typeof CampusServicesGrid).toBe('function');
+    });
+  });
+
+  describe('CampusCampaignCarousel & campaign helpers', () => {
+    it('returns correct gradient and border classes for each campaign variant', () => {
+      const goldClasses = getCampaignVariantClasses('gold');
+      expect(goldClasses).toContain('amber');
+      expect(goldClasses).toContain('border');
+
+      const emeraldClasses = getCampaignVariantClasses('emerald');
+      expect(emeraldClasses).toContain('emerald');
+      expect(emeraldClasses).toContain('border');
+
+      const violetClasses = getCampaignVariantClasses('violet');
+      expect(violetClasses).toContain('violet');
+      expect(violetClasses).toContain('border');
+
+      const amberClasses = getCampaignVariantClasses('amber');
+      expect(amberClasses).toContain('amber');
+      expect(amberClasses).toContain('border');
+
+      const roseClasses = getCampaignVariantClasses('rose');
+      expect(roseClasses).toContain('rose');
+      expect(roseClasses).toContain('border');
+
+      const defaultClasses = getCampaignVariantClasses(undefined as any);
+      expect(defaultClasses).toContain('border');
+    });
+
+    it('exports CampusCampaignCarousel component correctly', async () => {
+      const { CampusCampaignCarousel } = await import('@/components/portal/CampusCampaignCarousel');
+      expect(CampusCampaignCarousel).toBeDefined();
+      expect(typeof CampusCampaignCarousel).toBe('function');
     });
   });
 });

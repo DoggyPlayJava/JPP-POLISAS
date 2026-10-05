@@ -196,3 +196,20 @@ export function getCampusServicesConfig(params: {
   ];
 }
 
+export function getCampaignVariantClasses(variant: CampaignSlide['variant']): string {
+  switch (variant) {
+    case 'gold':
+      return 'from-amber-500/20 via-yellow-500/10 to-amber-950/30 border-amber-500/30 text-amber-300';
+    case 'emerald':
+      return 'from-emerald-500/20 via-teal-500/10 to-emerald-950/30 border-emerald-500/30 text-emerald-300';
+    case 'violet':
+      return 'from-violet-500/20 via-purple-500/10 to-indigo-950/30 border-violet-500/30 text-violet-300';
+    case 'amber':
+      return 'from-amber-500/20 via-orange-500/10 to-amber-950/30 border-amber-500/30 text-amber-300';
+    case 'rose':
+      return 'from-rose-500/20 via-pink-500/10 to-rose-950/30 border-rose-500/30 text-rose-300';
+    default:
+      return 'from-slate-800/40 via-slate-900/30 to-slate-950/40 border-slate-700/30 text-slate-300';
+  }
+}
+
