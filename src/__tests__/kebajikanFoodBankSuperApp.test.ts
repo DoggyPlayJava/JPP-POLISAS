@@ -201,14 +201,14 @@ describe('Task 1: KebajikanLiveTrackerCard Component & Integration', () => {
     expect(BANNED_EMOJI_REGEX.test(hubContent)).toBe(false);
   });
 
-  it('integrates KebajikanLiveTrackerCard into PortalPage.tsx', () => {
-    // Check both potential locations
-    const portalCandidatePath1 = path.resolve(__dirname, '../pages/portal/PortalPage.tsx');
-    const portalCandidatePath2 = path.resolve(__dirname, '../pages/PortalPage.tsx');
+  it('integrates KebajikanLiveTrackerCard into PortalPage.tsx directly', () => {
+    const portalPath = path.resolve(__dirname, '../pages/PortalPage.tsx');
+    const portalRedundantPath = path.resolve(__dirname, '../pages/portal/PortalPage.tsx');
 
-    const fileToTest = fs.existsSync(portalCandidatePath1) ? portalCandidatePath1 : portalCandidatePath2;
-    const portalContent = fs.readFileSync(fileToTest, 'utf-8');
+    expect(fs.existsSync(portalRedundantPath)).toBe(false);
+    expect(fs.existsSync(portalPath)).toBe(true);
 
+    const portalContent = fs.readFileSync(portalPath, 'utf-8');
     expect(portalContent).toMatch(/import\s*\{?[^}]*KebajikanLiveTrackerCard[^}]*\}?\s*from/);
     expect(portalContent).toContain('<KebajikanLiveTrackerCard');
   });

@@ -23,6 +23,7 @@ import { EmsEventsFeed } from '@/components/portal/EmsEventsFeed';
 import { PolyMartFeed } from '@/components/portal/PolyMartFeed';
 import { PolymartServiceModal } from '@/components/portal/PolymartServiceModal';
 import { buildCampaignSlides } from '@/lib/superAppHelpers';
+import { KebajikanLiveTrackerCard } from '@/components/kebajikan/KebajikanLiveTrackerCard';
 
 // Lazy-load SystemTour so react-joyride DOM watchers are completely bypassed during normal visits
 const SystemTour = React.lazy(() => import('@/components/ui/SystemTour').then(m => ({ default: m.SystemTour })));
@@ -44,8 +45,10 @@ export function PortalPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { runTour, startTour, closeTour } = useTour('jpp_has_seen_portal_tour', !!profile);
 
-  // Kebajikan live stats
+  // Kebajikan live stats & active items
   const [kbStats, setKbStats] = useState<{ open: number; resolved: number; rating: number | null } | null>(null);
+  const [activeTicket, setActiveTicket] = useState<any | null>(null);
+  const [activeFoodbankApp, setActiveFoodbankApp] = useState<any | null>(null);
 
   // SUPSAS edition data
   const [supsasEdition, setSupsasEdition] = useState<{
@@ -73,12 +76,12 @@ export function PortalPage() {
 
   const supsasActive = isModuleEnabled('supsas');
 
-  // ── Fetch User Specific Data (KAMSIS & MAKMP) in parallel ──
+  // ── Fetch User Specific Data (KAMSIS, MAKMP, Active Kebajikan & FoodBank) in parallel ──
   const fetchUserData = useCallback(async () => {
     if (!profile?.id) return;
 
     try {
-      const [appRes, toggleRes, makmpRes] = await Promise.all([
+      const [appRes, toggleRes, makmpRes, ticketRes, foodbankRes] = await Promise.all([
         supabase.from('kamsis_applications')
           .select('status, extra_data')
           .eq('user_id', profile.id)
@@ -95,6 +98,20 @@ export function PortalPage() {
           .eq('user_id', profile.id)
           .eq('makmp_editions.is_active', true)
           .not('winner_status', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase.from('kebajikan_tickets')
+          .select('id, ticket_no, title, category, status, created_at, sla_deadline')
+          .eq('submitter_id', profile.id)
+          .not('status', 'in', '("RESOLVED","CLOSED","CANCELLED")')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase.from('foodbank_applications')
+          .select('id, application_no, status, pickup_date, pickup_time_slot, location:foodbank_distribution_locations(id, name, room_detail)')
+          .eq('applicant_id', profile.id)
+          .in('status', ['MENUNGGU', 'DALAM_SEMAKAN', 'LULUS', 'PENDING', 'APPROVED'])
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -117,6 +134,18 @@ export function PortalPage() {
         setMakmpStatus(makmpRes.data.winner_status as 'DIJEMPUT' | 'TIDAK_TERPILIH');
       } else {
         setMakmpStatus(null);
+      }
+
+      if (ticketRes?.data) {
+        setActiveTicket(ticketRes.data);
+      } else {
+        setActiveTicket(null);
+      }
+
+      if (foodbankRes?.data) {
+        setActiveFoodbankApp(foodbankRes.data);
+      } else {
+        setActiveFoodbankApp(null);
       }
     } catch (err) {
       console.warn('Error fetching user portal data:', err);
@@ -180,7 +209,7 @@ export function PortalPage() {
 
     } catch (e: any) {
       if (e.name === 'AbortError') {
-        console.warn('⚠️ Portal data fetch timed out (5s). Using defaults.');
+        console.warn('Portal data fetch timed out (5s). Using defaults.');
       } else {
         console.error('Portal data fetch error:', e);
       }
@@ -199,7 +228,7 @@ export function PortalPage() {
     const key = `karnival_toast_${karnivalStatus.name}`;
     if (!sessionStorage.getItem(key)) {
       const t = setTimeout(() => {
-        toast('🎊 Karnival JPP sedang berlangsung! Undi booth kegemaran anda sekarang.', { duration: 5000 });
+        toast('Karnival JPP sedang berlangsung! Undi booth kegemaran anda sekarang.', { duration: 5000 });
         sessionStorage.setItem(key, '1');
       }, 1800);
       return () => clearTimeout(t);
@@ -212,7 +241,7 @@ export function PortalPage() {
     const key = `supsas_toast_${supsasEdition.name}`;
     if (!sessionStorage.getItem(key)) {
       const t = setTimeout(() => {
-        toast('🏆 SUPSAS sedang berlangsung! Pantau keputusan dan jadual sukan terkini.', { duration: 5000 });
+        toast('SUPSAS sedang berlangsung! Pantau keputusan dan jadual sukan terkini.', { duration: 5000 });
         sessionStorage.setItem(key, '1');
       }, 1800);
       return () => clearTimeout(t);
@@ -225,9 +254,8 @@ export function PortalPage() {
     if (missedQr) {
       sessionStorage.removeItem('qr_redirect_missed');
       setTimeout(() => {
-        toast('🔗 Sila scan QR sekali lagi untuk meneruskan ke destinasi asal anda!', {
+        toast('Sila scan QR sekali lagi untuk meneruskan ke destinasi asal anda!', {
           duration: 8000,
-          icon: '📲',
         });
       }, 1500);
     }
@@ -251,31 +279,29 @@ export function PortalPage() {
       .update({ color: newColor, updated_by: profile?.id, updated_at: new Date().toISOString() })
       .eq('exco_module', moduleId);
 
-    if (error) { toast.error('Failed to save color.'); return; }
+    if (error) { toast.error('Failed to update color.'); return; }
 
     setSettings(prev => prev.map(s => s.exco_module === moduleId ? { ...s, color: newColor } : s));
-    toast.success('Theme color updated! 🎨');
+    toast.success('Color saved.');
   };
 
-  // Compute KAMSIS display status and appeal eligibility
-  const { displayStatus, canAppeal } = useMemo(() => {
-    const isAppeal = !!kamsisExtraData?.appeal_reason || kamsisStatus === 'APPEALING' || kamsisStatus === 'APPEAL_REJECTED';
-    const isResultOpen = kamsisToggles['kamsis_result_open'];
-    const isAppealResultOpen = kamsisToggles['kamsis_appeal_result_open'];
-    const isAppealOpen = kamsisToggles['kamsis_appeal_open'];
+  const canAppeal = useMemo(() => {
+    const isRayuanOpen = kamsisToggles['kamsis_rayuan_open'] ?? false;
+    const isEligibleStatus = kamsisStatus === 'DITOLAK' || kamsisStatus === 'SENARAI_MENUNGGU';
+    return isRayuanOpen && isEligibleStatus;
+  }, [kamsisToggles, kamsisStatus]);
 
-    let status = kamsisStatus;
-    if (!isAppeal) {
-      if (!isResultOpen) status = 'PENDING';
-    } else {
-      if (!isAppealResultOpen) status = 'APPEALING';
-    }
+  const displayStatus = useMemo(() => {
+    if (!kamsisStatus) return null;
+    const map: Record<string, string> = {
+      'LULUS': 'Berjaya Ditawarkan',
+      'DITOLAK': 'Tidak Berjaya',
+      'SENARAI_MENUNGGU': 'Senarai Menunggu',
+      'MENUNGGU_SEMAKAN': 'Dalam Semakan',
+    };
+    return map[kamsisStatus] || kamsisStatus;
+  }, [kamsisStatus]);
 
-    const eligible = kamsisStatus === 'REJECTED' && isResultOpen && isAppealOpen && !isAppeal;
-    return { displayStatus: status, canAppeal: eligible };
-  }, [kamsisStatus, kamsisExtraData, kamsisToggles]);
-
-  // Dynamic campaign slides based on user state & campus events
   const campaignSlides = useMemo(() => {
     return buildCampaignSlides({
       kamsisStatus,
@@ -286,81 +312,60 @@ export function PortalPage() {
   }, [kamsisStatus, makmpStatus, karnivalActive, supsasActive]);
 
   return (
-    <div className={cn(
-      'min-h-screen font-sans overflow-x-hidden w-full max-w-full transition-colors duration-700 relative isolate flex flex-col',
-      karnivalActive
-        ? 'bg-[#060010] text-white selection:bg-violet-500/20'
-        : supsasActive
-          ? 'bg-[#030d1a] text-white selection:bg-amber-500/20'
-          : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
-    )}>
-
-      {/* SystemTour loaded lazily ONLY if runTour is true */}
+    <div className="relative min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-300">
+      {/* Joyride Tour */}
       {runTour && (
         <React.Suspense fallback={null}>
-          <SystemTour 
+          <SystemTour
             run={runTour}
             onClose={closeTour}
             steps={[
               {
-                target: 'body',
-                content: 'Selamat Datang ke Ekosistem Digital JPP-POLISAS! Mari luangkan masa 1 minit untuk mengenali setiap butang dan fungsi supaya anda tidak keliru.',
-                title: 'Selamat Datang! 👋',
-                placement: 'center',
-                disableBeacon: true,
-              },
-              {
-                target: '.tour-navbar-profile',
-                content: 'Klik di sini untuk buka menu Profil. Anda boleh tukar nama, gambar profil, kata laluan, atau log keluar dari sistem di sini.',
-                title: 'Menu Profil ⚙️',
+                target: '.tour-superapp-header',
+                content: 'Selamat datang ke Portal Rasmi JPP POLISAS Super App. Akses profil, tetapan tema, dan notifikasi anda di sini.',
+                title: 'Portal Pelajar',
                 placement: 'bottom',
               },
               {
-                target: '.tour-qa-polyservices',
-                content: 'Ini adalah PolyServices. Di dalam ini terdapat pelbagai perkhidmatan pantas seperti tempahan dan perkhidmatan luar.',
-                title: 'PolyServices ⚡',
-                placement: 'top',
+                target: '.tour-services-grid',
+                content: 'Grid Servis Kampus pintar. Akses pantas ke Aduan Kebajikan, Semakan Asrama KAMSIS, dan PolyMart.',
+                title: 'Servis Kampus',
+                placement: 'bottom',
               },
               {
-                target: '.tour-qa-kebajikan',
-                content: 'Perlu lapor kerosakan bilik kuliah? Atau mohon bantuan tabung siswa? Tekan butang E-Kebajikan ini untuk membuat aduan rasmi.',
-                title: 'E-Kebajikan ❤️',
-                placement: 'top',
+                target: '.tour-campaign-carousel',
+                content: 'Kapsul status mahasiswa masa nyata! Semak keputusan asrama, jemputan anugerah MAKMP, dan kempen aktif.',
+                title: 'Kempen & Status Anda',
+                placement: 'bottom',
               },
               {
-                target: '.tour-qa-qr',
-                content: 'Semasa menghadiri program atau aktiviti, tekan butang ini untuk imbas Kod QR dan secara automatik kumpul mata merit ke dalam akaun anda.',
-                title: 'Imbas QR Merit 📸',
-                placement: 'top',
-              },
-              {
-                target: '.tour-qa-takwim',
-                content: 'Takwim Rasmi JPP dan POLISAS. Anda boleh semak senarai cuti, tarikh penting, dan program yang akan datang di sini.',
-                title: 'Takwim & Jadual 🗓️',
+                target: '.tour-exco-modules',
+                content: 'Modul Rasmi Exco JPP. Terokai perkhidmatan khusus setiap portfolio Majlis Perwakilan Pelajar.',
+                title: 'Modul Rasmi Exco',
                 placement: 'top',
               },
               {
                 target: '.tour-mod-ekpp',
                 content: 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.',
-                title: 'Sistem Kelab 🏛️',
+                title: 'Sistem Kelab',
                 placement: 'top',
               },
               {
                 target: '.tour-mod-keusahawanan',
                 content: 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.',
-                title: 'e-Keusahawanan 💡',
+                title: 'e-Keusahawanan',
                 placement: 'top',
               },
               {
                 target: '.tour-mod-akademik',
                 content: 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.',
-                title: 'e-Akademik 🎓',
+                title: 'e-Akademik',
                 placement: 'top',
               },
               {
                 target: '.tour-bottomnav-fab',
                 content: 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.',
-                title: 'Navigasi Pintar (FAB) 🧭',
+                title: 'Navigasi Pintar (FAB)',
                 placement: 'top',
               }
             ]}
@@ -410,6 +415,12 @@ export function PortalPage() {
           kbStats={kbStats}
         />
 
+        {/* 1.5 Kebajikan & FoodBank Live Status Tracker Card */}
+        <KebajikanLiveTrackerCard
+          ticket={activeTicket}
+          foodbankApp={activeFoodbankApp}
+        />
+
         {/* 2. Campus Campaign Carousel */}
         <CampusCampaignCarousel
           slides={campaignSlides}
@@ -443,9 +454,9 @@ export function PortalPage() {
               if (mod.id === 'kebajikan' && kbStats?.open) {
                 notificationCount = kbStats.open;
               } else if (mod.id === 'karnival' && karnivalActive) {
-                badgeText = "🎪 BERLANGSUNG";
+                badgeText = "BERLANGSUNG";
               } else if (mod.id === 'supsas' && supsasActive) {
-                badgeText = "🏆 BERLANGSUNG";
+                badgeText = "BERLANGSUNG";
               } else if (mod.id === 'akademik') {
                 badgeText = "NEW";
               }
