@@ -26,6 +26,11 @@ export function KebajikanLayout() {
   const location = useLocation();
   const { runTour, startTour, closeTour } = useTour('kebajikan_module_tour', false);
 
+  const isSubmitOrChatPage =
+    location.pathname.includes('/kebajikan/buat-aduan') ||
+    location.pathname.includes('/kebajikan/aduan/') ||
+    location.pathname.includes('/kebajikan/foodbank');
+
   // Tutup sidebar automatik bila tukar page di mobile
   useEffect(() => {
     setSidebarOpen(false);
@@ -141,13 +146,18 @@ export function KebajikanLayout() {
         <div className="flex-1 overflow-y-auto after:content-[''] after:block after:h-40 after:shrink-0">
           <Outlet />
         </div>
-        <FloatingAiChat />
 
-        {/* QR Code FAB — untuk Exco Kebajikan */}
-        <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
-        <div className="tour-kebajikan-mobile-nav">
-          <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
-        </div>
+        {/* Floating Controls & Navigation — disembunyikan semasa isi aduan & sembang tiket supaya tidak bertindih */}
+        {!isSubmitOrChatPage && (
+          <>
+            <FloatingAiChat />
+            {/* QR Code FAB — untuk Exco Kebajikan */}
+            <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
+            <div className="tour-kebajikan-mobile-nav">
+              <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

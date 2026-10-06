@@ -402,7 +402,18 @@ export function PortalPage() {
 
       {/* Main Content Experience */}
       <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-8 pt-6 pb-36 sm:pb-32 flex-1 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden w-full max-w-full">
-        {/* 1. Campus Services Grid */}
+        {/* 1. Live Notifications & Campaign Trackers (MAKMP, Kamsis, e-Kebajikan & FoodBank) */}
+        <CampusCampaignCarousel
+          slides={campaignSlides}
+          onOpenAppealModal={() => setShowAppealModal(true)}
+        />
+
+        <KebajikanLiveTrackerCard
+          ticket={activeTicket}
+          foodbankApp={activeFoodbankApp}
+        />
+
+        {/* 2. Campus Services Grid (8 Core Micro-Apps) */}
         <CampusServicesGrid
           isModuleEnabled={isModuleEnabled}
           isSuperAdmin={isSuperAdmin}
@@ -413,18 +424,6 @@ export function PortalPage() {
           }}
           kamsisStatus={kamsisStatus}
           kbStats={kbStats}
-        />
-
-        {/* 1.5 Kebajikan & FoodBank Live Status Tracker Card */}
-        <KebajikanLiveTrackerCard
-          ticket={activeTicket}
-          foodbankApp={activeFoodbankApp}
-        />
-
-        {/* 2. Campus Campaign Carousel */}
-        <CampusCampaignCarousel
-          slides={campaignSlides}
-          onOpenAppealModal={() => setShowAppealModal(true)}
         />
 
         {/* 3. EMS Events Feed */}

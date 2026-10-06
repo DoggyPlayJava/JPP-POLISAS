@@ -765,7 +765,57 @@ describe('superAppHelpers', () => {
       expect(html).toContain('>A<');
     });
   });
+
+  describe('Portal Notifications & Live Trackers Layout Reordering', () => {
+    it('places CampusCampaignCarousel and KebajikanLiveTrackerCard above CampusServicesGrid in PortalPage', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const portalPath = path.resolve(__dirname, '../pages/PortalPage.tsx');
+      const content = fs.readFileSync(portalPath, 'utf-8');
+
+      const carouselIndex = content.indexOf('<CampusCampaignCarousel');
+      const trackerIndex = content.indexOf('<KebajikanLiveTrackerCard');
+      const gridIndex = content.indexOf('<CampusServicesGrid');
+
+      expect(carouselIndex).toBeGreaterThan(-1);
+      expect(trackerIndex).toBeGreaterThan(-1);
+      expect(gridIndex).toBeGreaterThan(-1);
+
+      // Both carousel and tracker should appear before the 8 service buttons grid in JSX
+      expect(carouselIndex).toBeLessThan(gridIndex);
+      expect(trackerIndex).toBeLessThan(gridIndex);
+    });
+  });
+
+  describe('KebajikanLayout BottomNav Suppression', () => {
+    it('suppresses BottomNav, QrCodeFab, and FloatingAiChat on complaint submission, chat, and foodbank subpages', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const layoutPath = path.resolve(__dirname, '../pages/kebajikan/KebajikanLayout.tsx');
+      const content = fs.readFileSync(layoutPath, 'utf-8');
+
+      expect(content).toContain('isSubmitOrChatPage');
+      expect(content).toContain('/kebajikan/buat-aduan');
+      expect(content).toContain('/kebajikan/aduan/');
+      expect(content).toContain('/kebajikan/foodbank');
+      expect(content).toContain('!isSubmitOrChatPage');
+    });
+  });
+
+  describe('Hab Tetapan (SettingsPage) Hero Profile Card Overflow Resilience', () => {
+    it('uses break-words and responsive width bounds to prevent name cut out and horizontal overflow', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const settingsPath = path.resolve(__dirname, '../pages/SettingsPage.tsx');
+      const content = fs.readFileSync(settingsPath, 'utf-8');
+
+      expect(content).toContain('break-words leading-tight');
+      expect(content).toContain('w-full max-w-full');
+      expect(content).toContain('grid grid-cols-3 gap-1.5 sm:gap-2');
+    });
+  });
 });
+
 
 
 

@@ -861,20 +861,20 @@ export function SettingsPage() {
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1 text-center sm:text-left min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground truncate">
+            <div className="flex-1 text-center sm:text-left min-w-0 w-full max-w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between w-full min-w-0">
+                <div className="min-w-0 w-full">
+                  <h2 className="text-base sm:text-xl md:text-2xl font-black tracking-tight text-foreground break-words leading-tight sm:leading-snug max-w-full">
                     {displayName}
                   </h2>
-                  <p className="text-xs sm:text-sm font-mono font-bold text-muted-foreground mt-0.5">
+                  <p className="text-xs sm:text-sm font-mono font-bold text-muted-foreground mt-0.5 truncate">
                     {profile?.matric_no ? `Matrik: ${profile.matric_no}` : 'No. Matrik Belum Ditetapkan'}
                   </p>
                 </div>
 
                 <Badge
                   className={cn(
-                    "font-black text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border self-center sm:self-start mt-1 sm:mt-0",
+                    "font-black text-[10px] tracking-wider uppercase px-3 py-1 rounded-full border self-center sm:self-start mt-1 sm:mt-0 shrink-0",
                     roleTitle === 'PENTADBIR UTAMA'
                       ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                       : roleTitle === 'MAJLIS JPP'
@@ -887,33 +887,33 @@ export function SettingsPage() {
               </div>
 
               {/* Quick Status Strip (3 micro-badges) */}
-              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/40 dark:border-white/[0.08] mt-4">
-                <div className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center">
-                  <div className="flex items-center gap-1 text-muted-foreground text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Semester</span>
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-4 border-t border-border/40 dark:border-white/[0.08] mt-4 w-full max-w-full">
+                <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-1 text-muted-foreground text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
+                    <GraduationCap className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span className="truncate">Semester</span>
                   </div>
-                  <span className="text-xs sm:text-sm font-black text-foreground">
+                  <span className="text-[11px] sm:text-xs md:text-sm font-black text-foreground truncate max-w-full">
                     {semInfo.semester > 0 ? `Semester ${semInfo.semester}` : 'Semester 1'}
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center">
-                  <div className="flex items-center gap-1 text-muted-foreground text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Merit</span>
+                <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-1 text-muted-foreground text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="truncate">Merit</span>
                   </div>
-                  <span className="text-xs sm:text-sm font-black text-foreground">
+                  <span className="text-[11px] sm:text-xs md:text-sm font-black text-foreground truncate max-w-full">
                     {profile?.merit_points ?? 0} Merit
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center">
-                  <div className="flex items-center gap-1 text-muted-foreground text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                    <Home className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Kediaman</span>
+                <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06] text-center min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-1 text-muted-foreground text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
+                    <Home className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <span className="truncate">Kediaman</span>
                   </div>
-                  <span className="text-xs sm:text-sm font-black text-foreground truncate max-w-full">
+                  <span className="text-[11px] sm:text-xs md:text-sm font-black text-foreground truncate max-w-full">
                     {profile?.residence_type === 'KAMSIS' ? 'Asrama Kamsis' : 'Rumah Sewa'}
                   </span>
                 </div>
