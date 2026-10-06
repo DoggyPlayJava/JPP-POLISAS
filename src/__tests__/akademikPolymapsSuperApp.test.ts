@@ -176,6 +176,61 @@ describe('Task 3: AkademikFolderPage In-App Quick Document Previewer Revamp', ()
   });
 });
 
+describe('Task 4: PolyMaps Draggable Gesture Bottom Sheet & Live Event Overlays', () => {
+  const polyPath = path.resolve(__dirname, '../pages/polymaps/PolyMapsPage.tsx');
+  const source = fs.readFileSync(polyPath, 'utf-8');
+
+  it('contains 100% zero raw emojis across PolyMapsPage.tsx', () => {
+    const emojiMatches = source.match(EMOJI_REGEX) || [];
+    expect(emojiMatches).toEqual([]);
+    expect(source).not.toContain('📍 Lihat lokasi');
+    expect(source).not.toContain('📍 Anda Telah Sampai!');
+  });
+
+  it('implements draggable gesture bottom sheet with Framer Motion drag and handle bar', () => {
+    expect(source).toContain('drag={isLowEnd ? false : "y"}');
+    expect(source).toContain('w-12 h-1.5 bg-slate-400/40 dark:bg-slate-600/50 rounded-full mx-auto my-2 cursor-grab active:cursor-grabbing');
+    expect(source).toContain('sheetSnap');
+    expect(source).toContain("'PEEK'");
+    expect(source).toContain("'HALF'");
+    expect(source).toContain("'FULL'");
+  });
+
+  it('implements activeOverlayFilter supporting ALL, BUILDINGS, EMS, and POLYMART options with filter pills', () => {
+    expect(source).toContain("activeOverlayFilter, setActiveOverlayFilter");
+    expect(source).toContain("'ALL' | 'BUILDINGS' | 'EMS' | 'POLYMART'");
+    expect(source).toContain("Acara EMS");
+    expect(source).toContain("PolyMart Hub");
+    expect(source).toContain("Trophy");
+    expect(source).toContain("ShoppingBag");
+  });
+
+  it('queries ems_events and renders interactive live pins for EMS and PolyMart hubs with deep links', () => {
+    expect(source).toContain("from('ems_events')");
+    expect(source).toContain("POLYMART_HUBS");
+    expect(source).toContain("getEmsMarkerIcon");
+    expect(source).toContain("getPolyMartMarkerIcon");
+    expect(source).toContain("navigate('/ems/hub')");
+    expect(source).toContain("navigate('/polymart')");
+    expect(source).toContain("Buka EMS");
+    expect(source).toContain("Buka PolyMart");
+  });
+
+  it('respects isLowEnd device performance optimization for drag physics and ping animations', () => {
+    expect(source).toContain('isLowEnd');
+    expect(source).toContain('drag={isLowEnd ? false : "y"}');
+    expect(source).toContain("const pingEffect = lowEnd ? '' :");
+  });
+
+  it('preserves all existing core features (walkways, 360 viewer, GPS tracking, and directories)', () => {
+    expect(source).toContain('findShortestPath');
+    expect(source).toContain('Pannellum360Viewer');
+    expect(source).toContain('MapFollower');
+    expect(source).toContain('imaps_walkways');
+    expect(source).toContain('imaps_missing_reports');
+  });
+});
+
 describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsPage', () => {
   const cgpaPath = path.resolve(__dirname, '../pages/akademik/AkademikCgpa.tsx');
   const folderPath = path.resolve(__dirname, '../pages/akademik/AkademikFolderPage.tsx');
@@ -197,18 +252,16 @@ describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsP
     expect(source).toContain('fetchAsBytes');
     expect(source).toContain('FOLDER_PRESETS');
 
-    // Scaffolding: Task 2 will introduce previewFile for in-app preview
     const hasPreviewOrDownload = source.includes('previewFile') || source.includes('fetchAsBytes');
     expect(hasPreviewOrDownload).toBe(true);
   });
 
-  it('verifies baseline for PolyMapsPage and scaffolds drag interactions, overlay filter, and event integrations for Task 3', () => {
+  it('verifies baseline for PolyMapsPage and scaffolds drag interactions, overlay filter, and event integrations for Task 4', () => {
     expect(fs.existsSync(polyPath)).toBe(true);
     const source = fs.readFileSync(polyPath, 'utf-8');
     expect(source).toContain('isLowEnd');
 
-    // Scaffolding: Task 3 will introduce drag="y", activeOverlayFilter, ems_events
-    const hasDragSupport = source.includes('drag="y"') || source.includes('MapDragDetector');
+    const hasDragSupport = source.includes('drag="y"') || source.includes('drag={isLowEnd ? false : "y"}');
     expect(hasDragSupport).toBe(true);
 
     const hasOverlayOrLayers = source.includes('activeOverlayFilter') || source.includes('Layers');
