@@ -3345,6 +3345,62 @@ Seni bina hab peniaga PolyMart telah dirombak sepenuhnya daripada fail monolitik
 
 ---
 
+### 29.13 Portal Juri Penilai Pantas & Papan Audit Juri Eksekutif (/ems/juri & /ems/leaderboard/:id?tab=audit)
+
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/ems/EmsJuryPortalPage.tsx`, `src/components/ems/EmsJuryAuditMatrix.tsx`, `src/lib/emsJuryHelpers.ts`
+
+Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperApp** bertaraf tinggi yang memfokuskan kepada kelancaran sentuhan mudah alih (*touch ergonomics*), responsiviti masa nyata, dan kawalan integriti audit pemarkahan:
+
+1. **Portal Juri Pantas (`EmsJuryPortalPage.tsx` - `/ems/juri`):**
+   - **Navigasi Kategori Segmented Sticky:**
+     - Menggantikan skrin Gateway kaku dan membuang butang pendua `⏩ Penilaian Kategori Seterusnya`.
+     - Bar pil mendatar dengan penunjuk kemajuan dinamik (`[Semua (24)]`, `[Poster • 12/12 Selesai]`) yang melekat di bahagian atas (`sticky top-14 sm:top-16 z-20`). Juri boleh menukar kategori dengan sekali sentuhan pantas tanpa perlu keluar ke menu utama.
+   - **Aliran Skrol Pantas Terkawal (Seamless Touch Feed):**
+     - Semua kriteria rubrik dikelompokkan mengikut seksyen dalam satu helaian skrol sentuh laju tanpa perlu klik tab bertingkat yang melambatkan penjurian.
+     - Butang skala Likert 1-5 sentuh pantas dengan sasaran sentuh sekurang-kurangnya 48px (`min-h-[48px] touch-manipulation`) diselaraskan dengan kod warna haptik intuitif:
+       - Skor 1: Rose (`bg-rose-500/20 text-rose-300 border-rose-500/50`) & ikon `XCircle`
+       - Skor 2: Orange (`bg-orange-500/20 text-orange-300 border-orange-500/50`) & ikon `AlertCircle`
+       - Skor 3: Amber (`bg-amber-500/20 text-amber-300 border-amber-500/50`) & ikon `MinusCircle`
+       - Skor 4: Blue (`bg-blue-500/20 text-blue-300 border-blue-500/50`) & ikon `ThumbsUp`
+       - Skor 5: Emerald (`bg-emerald-500/20 text-emerald-300 border-emerald-500/50`) & ikon `Sparkles`
+   - **Bar Tindakan Bawah Lekat (Sticky Bottom Bar):**
+     - Memaparkan kemajuan kriteria dinilai (cth. `7/7 Kriteria`), pengiraan skor wajaran langsung dalam peratusan (`%`), dan butang utama tindakan pantas `[Sahkan & Hantar Markah]` dengan perlindungan cegah hantaran berulang (*debounce/disabled during submit*).
+   - **Laci Peralihan Pintar Booth Seterusnya:**
+     - Selepas pengesahan dan hantaran markah berjaya, modal perayaan mini dibuka secara lancar.
+     - Menyediakan cadangan pintar booth seterusnya yang belum dinilai menerusi utiliti pembantu `findNextUnscoredParticipant`, membolehkan juri terus bergerak ke booth berikutnya dengan satu klik atau memilih untuk kembali ke senarai utama.
+   - **Ketahanan Luar Talian & Pemulihan Draf (Offline Resilience):**
+     - Penyimpanan draf pemarkahan automatik ke `localStorage` secara masa nyata (`ems_draft_jury_scores_${eventId}_${juryCode}`) dengan penunjuk status lencana visual `[Draf Disimpan]`, mengelakkan kehilangan data semasa sambungan internet kampus terputus atau tidak stabil.
+
+2. **Papan Audit Juri Eksekutif (`EmsJuryAuditMatrix.tsx`):**
+   - **4 Kad Telemetri Anomali KPI:**
+     - Kad telemetri eksekutif interaktif di bahagian atas audit matrix:
+       1. *Liputan Booth*: Mengukur peratusan penyelesaian keseluruhan booth/peserta yang telah dinilai.
+       2. *Status Juri*: Memaparkan bilangan juri aktif berbanding jumlah panel yang dilantik.
+       3. *Anomali Terkurang Juri (< Purata)*: Mengesan booth yang menerima markah sisihan piawai ketara di bawah purata penilaian panel juri.
+       4. *Anomali Terlebih Juri (> Purata)*: Mengesan markah yang mencurigakan atau sisihan melampau melebihi purata panel juri.
+     - Setiap kad telemetri berfungsi sebagai penapis interaktif satu klik (*click-to-filter*) yang menapis jadual matriks audit serta-merta.
+   - **Tindakan Kelompok Anomali (Bulk Anomaly Controls):**
+     - Dilengkapi butang tindakan pantas `[Abaikan Semua Amaran]` dan `[Set Semula Semua Amaran]`.
+     - Status amaran yang diabaikan disimpan secara kekal dalam `localStorage` berpandukan `eventId` (`ems_dismissed_audit_anomalies_${eventId}`) bagi memastikan integriti sesi semakan pengarah tidak terganggu oleh amaran palsu yang telah diverifikasi.
+   - **Matriks Responsif Booth × Juri (Responsive Matrix Grid):**
+     - Lajur beku No. Booth & Nama Peserta (`sticky left-0 z-10 bg-slate-900/95 backdrop-blur-md border-r border-white/10`) menghapuskan ralat tergelincir (*horizontal slip*) semasa tatalan mendatar pada peranti tablet mahupun komputer riba.
+     - Sel status pemarkahan berkod warna berkualiti tinggi:
+       - *Emerald*: Penilaian selesai sepenuhnya dengan markah rasmi dipaparkan.
+       - *Amber*: Penilaian separa / kriteria belum lengkap.
+       - *Rose*: Belum dinilai oleh juri yang ditugaskan.
+       - *Slate*: Tiada tugasan penjurian untuk booth tersebut.
+     - Setiap sel boleh diklik terus oleh Pengarah Acara untuk membuka modal semakan terperinci dan pindaan.
+   - **Modal Pindaan Markah Pengarah Program (Executive Override Sheet):**
+     - Antaramuka kaca gelap Obsidian (`bg-slate-950/95 border-white/10 backdrop-blur-2xl`) bertaraf eksekutif.
+     - Kawalan gelangsar (*slider*) kriteria rubrik dengan ketepatan langkah 0.5 (`step={0.5}`), berserta pratonton pengiraan skor wajaran langsung (*live weighted score preview*).
+     - Medan wajib Catatan Audit Pengarah (*Director's Audit Note*) bagi menjamin kebertanggungjawaban (*accountability*) sebelum transaksi pindaan disahkan dan disimpan melalui fungsi pangkalan data RPC `overrideJuryScore`.
+
+3. **Polisi Sifar Raw Emoji (Zero Raw Emoji Standard):**
+   - Penyingkiran 100% emoji mentah daripada antaramuka portal juri dan papan audit eksekutif.
+   - Semua status indikator, lencana anomali, butang skala Likert, dan templat mesej jemputan pautan WhatsApp telah digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`CheckCircle2`, `XCircle`, `AlertTriangle`, `TrendingUp`, `TrendingDown`, `Layers`, `Filter`, `Sparkles`, `Share2`, dll.).
+
+---
+
 ## 30. Modul PolySuara Super App: Suapan Media Sosial Bersih & Moden (Clean Modern Social Architecture)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
