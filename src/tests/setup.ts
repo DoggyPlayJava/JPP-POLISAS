@@ -22,4 +22,16 @@ vi.mock('@react-pdf/renderer', () => ({
   pdf: vi.fn(() => ({
     toBlob: vi.fn().mockResolvedValue(new Blob()),
   })),
+  StyleSheet: {
+    create: vi.fn((styles) => styles),
+  },
+  Document: vi.fn(({ children }) => children),
+  Page: vi.fn(({ children }) => children),
+  View: vi.fn(({ children }) => children),
+  Text: vi.fn(({ children }) => children),
+  Image: vi.fn(() => null),
+  Font: {
+    register: vi.fn(),
+  },
 }));
+

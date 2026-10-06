@@ -314,3 +314,73 @@ describe('Task 2: Borang Aduan Fasiliti Ekspres Revamp (KebajikanSubmitPage.tsx)
     expect(content).toContain('sendEmail');
   });
 });
+
+describe('Task 3: FoodBank Siswa Revamp — Smart Pantry, Sticky Capsule & QR Pass (KebajikanFoodBankPage.tsx)', () => {
+  const foodbankPagePath = path.resolve(__dirname, '../pages/kebajikan/KebajikanFoodBankPage.tsx');
+
+  it('verifies KebajikanFoodBankPage.tsx file exists and exports KebajikanFoodBankPage', async () => {
+    expect(fs.existsSync(foodbankPagePath)).toBe(true);
+    const mod = await import('@/pages/kebajikan/KebajikanFoodBankPage');
+    expect(mod.KebajikanFoodBankPage).toBeDefined();
+    expect(typeof mod.KebajikanFoodBankPage).toBe('function');
+    expect(mod.default).toBeDefined();
+    expect(typeof mod.default).toBe('function');
+  });
+
+  it('implements dual-mode package selection: Ready Care Box and Smart Pantry Basket', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    expect(content).toContain('Ready Care Box');
+    expect(content).toContain('Smart Pantry Basket');
+    expect(content).toContain("'READY_BOX'");
+    expect(content).toContain("'SMART_PANTRY'");
+    expect(content).toContain('handleSelectReadyCareBox');
+    expect(content).toContain('READY_CARE_BOX_PRESETS');
+  });
+
+  it('implements mobile Sticky Pantry Bottom Capsule with required tokens and text', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    const expectedCapsuleTokens =
+      'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10';
+    expect(content).toContain(expectedCapsuleTokens);
+    expect(content).toContain('Item Dipilih');
+    expect(content).toContain('Baki Kuota');
+    expect(content).toContain('Semak Bakul');
+  });
+
+  it('implements Slide-Up Pantry Bottom Sheet with quota tracking and quick action CTA', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    expect(content).toContain('showBasketSheet');
+    expect(content).toContain('Teruskan ke Pengesahan Slot');
+    expect(content).toContain('remainingQuota');
+    expect(content).toContain('totalQuota');
+    expect(content).toContain('usedQuota');
+    expect(content).toContain('Smart Pantry Basket');
+  });
+
+  it('upgrades active application view into a stylish Digital QR Boarding Pass', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    expect(content).toContain('Pas Pengambilan Digital');
+    expect(content).toContain('QRCodeSVG');
+    expect(content).toContain('Muat Turun / Tangkap Layar Pas');
+    expect(content).toContain('polymaps');
+    expect(content).toContain('pickup_qr_code');
+    expect(content).toContain('pickup_time_slot');
+    expect(content).toContain('Lokasi Pengagihan');
+  });
+
+  it('strictly contains zero raw banned emojis in KebajikanFoodBankPage.tsx', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    const hasEmoji = BANNED_EMOJI_REGEX.test(content);
+    expect(hasEmoji).toBe(false);
+  });
+
+  it('preserves database mutations, notifications, housemate calculations, and email integration', () => {
+    const content = fs.readFileSync(foodbankPagePath, 'utf-8');
+    expect(content).toMatch(/from\(['"]foodbank_applications['"]\)\s*\.insert/);
+    expect(content).toContain('sendNotificationToKebajikanExco');
+    expect(content).toContain('buildFoodBankEmail');
+    expect(content).toContain('sendEmail');
+    expect(content).toContain('maxAllowedItems');
+    expect(content).toContain('itemsPerPerson');
+  });
+});
