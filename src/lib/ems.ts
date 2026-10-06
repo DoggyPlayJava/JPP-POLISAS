@@ -983,3 +983,477 @@ export async function fetchUserCertificates(email?: string, matrixNo?: string): 
   }));
 }
 
+// ============================================================
+// EMS Stage Presentation & Jury Draft State Helpers
+// ============================================================
+
+export type StageRevealStep = 'HIDDEN' | 'BRONZE' | 'SILVER' | 'CHAMPION' | 'ALL';
+
+export function getNextRevealStep(current: StageRevealStep): StageRevealStep {
+  switch (current) {
+    case 'HIDDEN':
+      return 'BRONZE';
+    case 'BRONZE':
+      return 'SILVER';
+    case 'SILVER':
+      return 'CHAMPION';
+    case 'CHAMPION':
+      return 'ALL';
+    case 'ALL':
+      return 'ALL';
+    default:
+      return 'HIDDEN';
+  }
+}
+
+export function getPrevRevealStep(current: StageRevealStep): StageRevealStep {
+  switch (current) {
+    case 'ALL':
+      return 'CHAMPION';
+    case 'CHAMPION':
+      return 'SILVER';
+    case 'SILVER':
+      return 'BRONZE';
+    case 'BRONZE':
+      return 'HIDDEN';
+    case 'HIDDEN':
+      return 'HIDDEN';
+    default:
+      return 'HIDDEN';
+  }
+}
+
+export function isPodiumCardRevealed(rank: 1 | 2 | 3, step: StageRevealStep): boolean {
+  if (step === 'ALL') return true;
+  if (step === 'HIDDEN') return false;
+  if (step === 'BRONZE') return rank === 3;
+  if (step === 'SILVER') return rank === 3 || rank === 2;
+  if (step === 'CHAMPION') return rank === 3 || rank === 2 || rank === 1;
+  return false;
+}
+
+export function createJuryDraftKey(eventId: string, juryCode: string, participantId: string): string {
+  return `ems_jury_draft_${eventId}_${juryCode}_${participantId}`;
+}
+
+export function serializeJuryDraft(scores: Record<string, number>, comments: string): string {
+  return JSON.stringify({
+    scores,
+    comments: comments.trim(),
+    savedAt: new Date().toISOString(),
+  });
+}
+
+export function deserializeJuryDraft(raw: string | null): { scores: Record<string, number>; comments: string } | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.scores === 'object') {
+      return {
+        scores: parsed.scores,
+        comments: typeof parsed.comments === 'string' ? parsed.comments : '',
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+// ============================================================
+// EMS Rapid Scoring & Booth Audit Helpers
+// ============================================================
+
+export interface EmsLikertOption {
+  value: number;
+  label: string;
+  shortText: string;
+  badgeColor: string;
+  activeBg: string;
+  defaultDescriptor: string;
+  iconName: string;
+}
+
+export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
+  {
+    value: 5,
+    label: '5 - Excellent',
+    shortText: 'Excellent (5/5)',
+    iconName: 'Sparkles',
+    badgeColor: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50',
+    activeBg: 'bg-emerald-600 text-white border-emerald-400 ring-2 ring-emerald-500/60 shadow-lg shadow-emerald-600/30',
+    defaultDescriptor: 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.',
+  },
+  {
+    value: 4,
+    label: '4 - Good',
+    shortText: 'Good (4/5)',
+    iconName: 'ThumbsUp',
+    badgeColor: 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-500/50 hover:bg-blue-100 dark:hover:bg-blue-900/50',
+    activeBg: 'bg-blue-600 text-white border-blue-400 ring-2 ring-blue-500/60 shadow-lg shadow-blue-600/30',
+    defaultDescriptor: 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
+  },
+  {
+    value: 3,
+    label: '3 - Satisfactory',
+    shortText: 'Satisfactory (3/5)',
+    iconName: 'MinusCircle',
+    badgeColor: 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/50 hover:bg-amber-100 dark:hover:bg-amber-900/50',
+    activeBg: 'bg-amber-600 text-white border-amber-400 ring-2 ring-amber-500/60 shadow-lg shadow-amber-600/30',
+    defaultDescriptor: 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
+  },
+  {
+    value: 2,
+    label: '2 - Fair',
+    shortText: 'Fair (2/5)',
+    iconName: 'AlertCircle',
+    badgeColor: 'bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-500/50 hover:bg-orange-100 dark:hover:bg-orange-900/50',
+    activeBg: 'bg-orange-600 text-white border-orange-400 ring-2 ring-orange-500/60 shadow-lg shadow-orange-600/30',
+    defaultDescriptor: 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.',
+  },
+  {
+    value: 1,
+    label: '1 - Poor',
+    shortText: 'Poor (1/5)',
+    iconName: 'XCircle',
+    badgeColor: 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/50 hover:bg-rose-100 dark:hover:bg-rose-900/50',
+    activeBg: 'bg-rose-600 text-white border-rose-400 ring-2 ring-rose-500/60 shadow-lg shadow-rose-600/30',
+    defaultDescriptor: 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.',
+  },
+];
+
+export const getParticipantCategory = (p: EmsParticipant): string => {
+  return (
+    p.category_name?.trim() ||
+    (p.custom_responses as Record<string, any>)?.category?.toString().trim() ||
+    (p.custom_responses as Record<string, any>)?.category_name?.toString().trim() ||
+    (p.custom_responses as Record<string, any>)?.kategori?.toString().trim() ||
+    ''
+  );
+};
+
+export function isParticipantAssignedToJury(
+  participant: EmsParticipant,
+  jury: EmsJuryCode,
+  rubrics: EmsRubricCriteria[]
+): boolean {
+  const assignedCats = jury.assigned_categories;
+  const assignedBooths = jury.assigned_booths;
+
+  const rubricCatNames = new Set(
+    rubrics
+      .map((r) => r.category_name?.trim().toLowerCase())
+      .filter((n): n is string => Boolean(n && n !== 'umum'))
+  );
+
+  let matchCat = true;
+  if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
+    const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
+    const isRubricScope = catSet.some((c) => rubricCatNames.has(c));
+
+    const pCat = getParticipantCategory(participant).toLowerCase();
+
+    if (isRubricScope) {
+      if (pCat && rubricCatNames.has(pCat)) {
+        matchCat = catSet.includes(pCat);
+      }
+    } else {
+      matchCat = catSet.some((c) => c === pCat);
+    }
+  }
+
+  let matchBooth = true;
+  if (assignedBooths && assignedBooths.length > 0 && !assignedBooths.includes('ALL')) {
+    const pBooth = participant.booth_no || '';
+    matchBooth = assignedBooths.some((b) => b.toLowerCase() === pBooth.toLowerCase());
+  }
+
+  return matchCat && matchBooth;
+}
+
+export function getApplicableRubrics(
+  participant: EmsParticipant,
+  jury: EmsJuryCode,
+  rubrics: EmsRubricCriteria[]
+): EmsRubricCriteria[] {
+  const rubricCatNames = new Set(
+    rubrics
+      .map((r) => r.category_name?.trim().toLowerCase())
+      .filter((n): n is string => Boolean(n && n !== 'umum'))
+  );
+
+  const pCat = getParticipantCategory(participant).toLowerCase();
+
+  // 1. Participant category matches one of the event rubric categories
+  if (pCat && rubricCatNames.has(pCat)) {
+    const filtered = rubrics.filter((r) => {
+      const rCat = r.category_name?.trim().toLowerCase();
+      return !rCat || rCat === 'umum' || rCat === pCat;
+    });
+    return filtered.length > 0 ? filtered : rubrics;
+  }
+
+  // 2. Participant category is not rubric category, but jury is assigned specific rubric scope
+  const assignedCats = jury.assigned_categories;
+  if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
+    const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
+    const rubricScope = catSet.filter((c) => rubricCatNames.has(c));
+    if (rubricScope.length > 0) {
+      const scoped = rubrics.filter((r) => {
+        const rCat = r.category_name?.trim().toLowerCase();
+        return !rCat || rCat === 'umum' || rubricScope.includes(rCat);
+      });
+      return scoped.length > 0 ? scoped : rubrics;
+    }
+  }
+
+  // 3. Fallback by participant category (if exists)
+  if (pCat) {
+    const filtered = rubrics.filter((r) => {
+      const rCat = r.category_name?.trim().toLowerCase();
+      return !rCat || rCat === 'umum' || rCat === pCat;
+    });
+    return filtered.length > 0 ? filtered : rubrics;
+  }
+
+  return rubrics;
+}
+
+export function getJuryParticipantScoreInfo(
+  participant: EmsParticipant,
+  jury: EmsJuryCode,
+  rubrics: EmsRubricCriteria[],
+  scores: EmsScore[]
+): {
+  status: 'COMPLETED' | 'PARTIAL' | 'NOT_STARTED';
+  submittedCount: number;
+  totalRequired: number;
+  percentage: number;
+} {
+  const applicableRubrics = getApplicableRubrics(participant, jury, rubrics);
+  const pJuryScores = scores.filter(
+    (s) => s.participant_id === participant.id && s.jury_code_id === jury.id
+  );
+
+  if (applicableRubrics.length === 0) {
+    if (pJuryScores.length > 0) {
+      return {
+        status: 'COMPLETED',
+        submittedCount: pJuryScores.length,
+        totalRequired: pJuryScores.length,
+        percentage: 100,
+      };
+    }
+    return {
+      status: 'NOT_STARTED',
+      submittedCount: 0,
+      totalRequired: 0,
+      percentage: 0,
+    };
+  }
+
+  const submittedApplicableScores = pJuryScores.filter((s) =>
+    applicableRubrics.some((r) => r.id === s.rubric_id)
+  );
+
+  const submittedCount = submittedApplicableScores.length;
+  const totalRequired = applicableRubrics.length;
+
+  if (submittedCount === 0) {
+    return {
+      status: 'NOT_STARTED',
+      submittedCount: 0,
+      totalRequired,
+      percentage: 0,
+    };
+  }
+
+  const totalWeightSum = applicableRubrics.reduce(
+    (acc, r) => acc + (Number(r.weight) || 0),
+    0
+  );
+
+  const rawWeighted = applicableRubrics.reduce((acc, r) => {
+    const s = submittedApplicableScores.find((sc) => sc.rubric_id === r.id);
+    const scoreVal = s ? Number(s.score) : 0;
+    const maxVal = Number(r.max_score) || 5;
+    const weightVal = Number(r.weight) || 0;
+    return acc + (maxVal > 0 ? (scoreVal / maxVal) * weightVal : 0);
+  }, 0);
+
+  let percentage = 0;
+  if (totalWeightSum > 0 && Math.abs(totalWeightSum - 100) > 0.01) {
+    percentage = (rawWeighted / totalWeightSum) * 100;
+  } else {
+    percentage = rawWeighted;
+  }
+
+  const isCompleted = totalRequired > 0 && submittedCount >= totalRequired;
+
+  return {
+    status: isCompleted ? 'COMPLETED' : 'PARTIAL',
+    submittedCount,
+    totalRequired,
+    percentage: Number(percentage.toFixed(1)),
+  };
+}
+
+/**
+ * Finds the next unscored participant in the given participant list.
+ * Respects category filtering (if specified and not 'ALL').
+ * Looks forward from currentParticipantId, wrapping around to earlier entries if needed.
+ * Returns null if all participants are scored or none found.
+ */
+export function findNextUnscoredParticipant(
+  participants: EmsParticipant[],
+  scores: EmsScore[],
+  currentParticipantId: string,
+  category?: string | null
+): EmsParticipant | null {
+  if (!participants || participants.length === 0) return null;
+
+  // Filter participants by category (if specified and not 'ALL')
+  let list = participants;
+  if (category && category.trim() !== '' && category.trim().toUpperCase() !== 'ALL') {
+    const targetCat = category.trim().toLowerCase();
+    list = participants.filter((p) => {
+      const pCat = getParticipantCategory(p).trim().toLowerCase();
+      return pCat === targetCat;
+    });
+  }
+
+  if (list.length === 0) return null;
+
+  const scoredSet = new Set((scores || []).map((s) => s.participant_id));
+  const currentIndex = list.findIndex((p) => p.id === currentParticipantId);
+
+  if (currentIndex !== -1) {
+    // 1. Search after currentIndex
+    for (let i = currentIndex + 1; i < list.length; i++) {
+      const p = list[i];
+      if (p.id !== currentParticipantId && !scoredSet.has(p.id)) {
+        return p;
+      }
+    }
+    // 2. Wrap around to search before currentIndex
+    for (let i = 0; i < currentIndex; i++) {
+      const p = list[i];
+      if (p.id !== currentParticipantId && !scoredSet.has(p.id)) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  // If currentParticipantId is not in list (or empty), find first unscored
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    if (p.id !== currentParticipantId && !scoredSet.has(p.id)) {
+      return p;
+    }
+  }
+
+  return null;
+}
+
+export interface BoothAuditSummary {
+  totalBooths: number;
+  scoredBooths: number;
+  unscoredBooths: number;
+  deficitCount: number;
+  surplusCount: number;
+  balancedCount: number;
+  avgJuriesCount: number;
+  activeJuriesCount: number;
+}
+
+/**
+ * Calculates executive telemetry and balance anomaly summary across all booths.
+ * Considers active juries and completed evaluations per booth against average.
+ */
+export function calculateBoothAuditSummary(
+  participants: EmsParticipant[],
+  activeJuries: EmsJuryCode[],
+  rubrics: EmsRubricCriteria[],
+  scores: EmsScore[],
+  ignoredFlags?: Record<string, boolean>
+): BoothAuditSummary {
+  const safeParticipants = participants || [];
+  const safeActiveJuries = (activeJuries || []).filter((j) => j.is_active !== false);
+  const safeRubrics = rubrics || [];
+  const safeScores = scores || [];
+  const safeIgnoredFlags = ignoredFlags || {};
+
+  const totalBooths = safeParticipants.length;
+  const activeJuriesCount = safeActiveJuries.length;
+
+  if (totalBooths === 0) {
+    return {
+      totalBooths: 0,
+      scoredBooths: 0,
+      unscoredBooths: 0,
+      deficitCount: 0,
+      surplusCount: 0,
+      balancedCount: 0,
+      avgJuriesCount: 0,
+      activeJuriesCount,
+    };
+  }
+
+  // Pre-calculate completed juries count per participant
+  const participantJuryCounts = safeParticipants.map((p) => {
+    let completedCount = 0;
+    for (const j of safeActiveJuries) {
+      const info = getJuryParticipantScoreInfo(p, j, safeRubrics, safeScores);
+      if (info.status === 'COMPLETED') {
+        completedCount++;
+      }
+    }
+    return completedCount;
+  });
+
+  const totalCompletedJuryEvaluations = participantJuryCounts.reduce((acc, count) => acc + count, 0);
+  const avgJuriesCount = Math.round(totalCompletedJuryEvaluations / totalBooths);
+
+  let scoredBooths = 0;
+  let unscoredBooths = 0;
+  let deficitCount = 0;
+  let surplusCount = 0;
+  let balancedCount = 0;
+
+  safeParticipants.forEach((p, idx) => {
+    const scoredJuriesCount = participantJuryCounts[idx];
+    const hasAnyScore = scoredJuriesCount > 0 || safeScores.some((s) => s.participant_id === p.id);
+
+    if (hasAnyScore) {
+      scoredBooths++;
+    } else {
+      unscoredBooths++;
+    }
+
+    const isIgnored = Boolean(safeIgnoredFlags[p.id]);
+
+    if (isIgnored) {
+      balancedCount++;
+    } else if (scoredJuriesCount < avgJuriesCount) {
+      deficitCount++;
+    } else if (scoredJuriesCount > avgJuriesCount) {
+      surplusCount++;
+    } else {
+      balancedCount++;
+    }
+  });
+
+  return {
+    totalBooths,
+    scoredBooths,
+    unscoredBooths,
+    deficitCount,
+    surplusCount,
+    balancedCount,
+    avgJuriesCount,
+    activeJuriesCount,
+  };
+}
+
+
