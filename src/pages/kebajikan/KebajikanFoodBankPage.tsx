@@ -1261,9 +1261,6 @@ export function KebajikanFoodBankPage() {
                     <Package className="w-4 h-4 text-amber-400" />
                     <span>Senarai Barangan / Pakej yang Layak Diambil:</span>
                   </span>
-                  <span className="text-[11px] text-amber-400 font-mono font-bold">
-                    RM {(Number(activeApplication.total_estimated_value) || 0).toFixed(2)} Anggaran
-                  </span>
                 </div>
 
                 {activeApplication.selected_items && activeApplication.selected_items.length > 0 ? (
@@ -2217,11 +2214,6 @@ export function KebajikanFoodBankPage() {
                                 {item.description}
                               </p>
                             )}
-                            <p className="text-[10px] text-slate-400">
-                              Anggaran: RM {(Number(item.estimated_cost) || 0).toFixed(2)} /{' '}
-                              {item.unit}
-                            </p>
-
                             {isOutOfStock && altLocName && (
                               <div className="pt-1">
                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[9px] font-semibold leading-tight">
@@ -2302,11 +2294,7 @@ export function KebajikanFoodBankPage() {
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-800">
               <div className="text-xs text-slate-400">
-                <span>Nilai Anggaran Pakej: </span>
-                <span className="font-extrabold text-amber-400 text-sm">
-                  RM {totalEstimatedCost.toFixed(2)}
-                </span>
-                <span className="ml-2 font-mono">({totalSelectedCount} unit barangan dipilih)</span>
+                <span className="font-mono">({totalSelectedCount} unit barangan dipilih)</span>
               </div>
 
               <Button
@@ -2356,7 +2344,7 @@ export function KebajikanFoodBankPage() {
                 {totalSelectedCount} Item Dipilih • Baki Kuota: {remainingQuota}
               </p>
               <p className="text-[10px] text-slate-400 font-mono">
-                RM {totalEstimatedCost.toFixed(2)} • {usedQuota}/{totalQuota} unit
+                {usedQuota}/{totalQuota} unit
               </p>
             </div>
           </div>
@@ -2469,9 +2457,6 @@ export function KebajikanFoodBankPage() {
                             <p className="font-extrabold text-slate-900 dark:text-white truncate">
                               {item.name}
                             </p>
-                            <p className="text-[10px] text-slate-400">
-                              RM {(Number(item.estimated_cost) || 0).toFixed(2)} / {item.unit}
-                            </p>
                           </div>
                         </div>
 
@@ -2516,12 +2501,6 @@ export function KebajikanFoodBankPage() {
 
               {/* Sheet Footer & CTA */}
               <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Anggaran Nilai Pakej:</span>
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 font-mono text-sm">
-                    RM {totalEstimatedCost.toFixed(2)}
-                  </span>
-                </div>
 
                 <Button
                   type="button"
@@ -2579,8 +2558,7 @@ export function KebajikanFoodBankPage() {
                       ? new Date(app.created_at).toLocaleDateString('ms-MY')
                       : '-'}
                     {' • '}
-                    {app.selected_items?.length || 0} unit barangan (RM{' '}
-                    {(Number(app.total_estimated_value) || 0).toFixed(2)})
+                    {app.selected_items?.length || 0} unit barangan
                   </p>
                 </div>
 
