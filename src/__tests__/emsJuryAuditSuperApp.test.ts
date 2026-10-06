@@ -458,3 +458,76 @@ describe('EMS Jury Portal SuperApp Revamp — EmsJuryPortalPage.tsx Compliance',
   });
 });
 
+describe('EMS Jury Audit Control Board — EmsJuryAuditMatrix.tsx Compliance', () => {
+  const matrixPath = path.resolve(__dirname, '../components/ems/EmsJuryAuditMatrix.tsx');
+  const matrixContent = fs.readFileSync(matrixPath, 'utf-8');
+
+  it('contains zero banned Unicode emojis in EmsJuryAuditMatrix.tsx', () => {
+    const hasBannedEmoji = BANNED_EMOJI_REGEX.test(matrixContent);
+    expect(hasBannedEmoji).toBe(false);
+  });
+
+  it('implements 4 Executive Telemetry KPI Cards with calculateBoothAuditSummary', () => {
+    expect(matrixContent).toContain('Liputan Penjurian Booth');
+    expect(matrixContent).toContain('Status Kemajuan Juri');
+    expect(matrixContent).toContain('Anomali Terkurang Juri');
+    expect(matrixContent).toContain('Anomali Terlebih Juri');
+    expect(matrixContent).toContain('calculateBoothAuditSummary');
+  });
+
+  it('supports interactive quick-filtering from telemetry KPI cards', () => {
+    expect(matrixContent).toContain('anomalyFilter');
+    expect(matrixContent).toContain('setAnomalyFilter');
+    expect(matrixContent).toContain('DEFICIT');
+    expect(matrixContent).toContain('SURPLUS');
+    expect(matrixContent).toContain('UNSCORED');
+  });
+
+  it('implements Bulk Anomaly Actions with localStorage persistence', () => {
+    expect(matrixContent).toContain('Abaikan Semua Amaran');
+    expect(matrixContent).toContain('Set Semula Semua Amaran');
+    expect(matrixContent).toContain('ems_audit_ignored_flags_');
+    expect(matrixContent).toContain('localStorage.getItem');
+    expect(matrixContent).toContain('localStorage.setItem');
+  });
+
+  it('implements responsive matrix grid with sticky left columns and standardized cell badges', () => {
+    expect(matrixContent).toContain('sticky left-0');
+    expect(matrixContent).toContain('border-r');
+    expect(matrixContent).toContain('Separuh');
+    expect(matrixContent).toContain('Belum');
+    expect(matrixContent).toContain('Edit3');
+    expect(matrixContent).toContain('bg-emerald-50');
+    expect(matrixContent).toContain('bg-amber-50');
+    expect(matrixContent).toContain('bg-rose-50');
+  });
+
+  it('implements Director Score Override Modal with Obsidian styling and required audit comments', () => {
+    expect(matrixContent).toContain('Pindaan Markah Juri (Pengarah Program)');
+    expect(matrixContent).toContain('Catatan Audit Pengarah');
+    expect(matrixContent).toContain('modalLivePercentage');
+    expect(matrixContent).toContain('overrideJuryScore');
+    expect(matrixContent).toContain('Sliders');
+    expect(matrixContent).toContain('Simpan Pindaan Markah');
+  });
+
+  it('uses Lucide vector icons for anomaly badges and status indicators instead of raw emojis', () => {
+    expect(matrixContent).toContain('ShieldCheck');
+    expect(matrixContent).toContain('AlertTriangle');
+    expect(matrixContent).toContain('ShieldAlert');
+    expect(matrixContent).toContain('EyeOff');
+    expect(matrixContent).toContain('Eye');
+    expect(matrixContent).toContain('Scale');
+    expect(matrixContent).toContain('RotateCcw');
+    expect(matrixContent).toContain('CheckCircle2');
+  });
+
+  it('re-exports helper functions for backward compatibility', () => {
+    expect(matrixContent).toContain('export {');
+    expect(matrixContent).toContain('getParticipantCategory,');
+    expect(matrixContent).toContain('isParticipantAssignedToJury,');
+    expect(matrixContent).toContain('getApplicableRubrics,');
+    expect(matrixContent).toContain('getJuryParticipantScoreInfo,');
+  });
+});
+
