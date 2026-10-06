@@ -3685,3 +3685,76 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 3. **Ergonomik Mudah Alih & Ruang Bawah:**
    - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah semasa suapan ditatal.
 
+---
+
+## 31. Flagship Landing Page SuperApp & E-Akademik Light Mode Parity (with PolyMaps Refinements)
+
+> **Tarikh Dilaksanakan:** Oktober 2026  
+> **Modul Terlibat:** `src/pages/LandingPage.tsx`, `src/pages/akademik/*`, `src/pages/polymaps/PolyMapsPage.tsx`
+
+---
+
+### 31.1 Landing Page Flagship Squarespace-Inspired (Dual-Tone Forest & Sage)
+
+1. **Falsafah Reka Bentuk & Disiplin Anti-Slop:**
+   - **Pemansuhan Kecerunan AI & Maroon:** Menghapuskan skim warna maroon usang (`#831010`) dan kecerunan ungu/magenta generik AI. Laman utama dirombak sepenuhnya berteraskan inspirasi visual editorial gelap Squarespace yang mewah dan bersih.
+   - **Palet Warna Dwi-Ton Hutan & Sage (*Dual-Tone Forest & Sage*):**
+     - Kanvas Utama: `#08140E` (*Deep Pine Forest Canvas*)
+     - Permukaan Kad & Bar: `#0E2218` (*Obsidian Forest Surface*)
+     - Sempadan Garis Halus: `#52796F` pada ketelusan 25% (*Hairline Structural Border*)
+     - Aksen Hijau Abadi: `#2D6A4F` (*Deep Evergreen*)
+     - Aksen Hijau Sage Muted: `#84A98C` (*Muted Sage Green*)
+     - Sorotan Pudina: `#74C69D` (*Luminous Mint Highlight*)
+     - Tipografi Paparan: Putih Tulen `#FFFFFF`
+     - Teks Badan: Slate-Sage `#94A3B8`
+   - **100% Sifar Emoji Mentah:** Semua indikator visual menggunakan ikon vektor Lucide React secara eksklusif.
+
+2. **10 Seksyen Struktur Utama (`src/pages/LandingPage.tsx`):**
+   - **`<Navbar />`:** Bilah navigasi pil terapung kaca gelap (`bg-[#08140E]/80 backdrop-blur-xl border border-[#52796F]/25`) berserta status pil "PORTAL RASMI" dan pautan terus ke `/portal`.
+   - **`<Hero />`:** Tipografi paparan H1 editorial *"Masa Depan Kampus Digital Bermula Di Sini"*, subteks ringkas (< 20 patah perkataan), butang CTA berganda, dek paparan 3D isometrik SuperApp bertindan (*Portal Cockpit*, *PolyMart Hub*, *PolyMaps 360°*), dan riben statistik langsung (15,000+ Mahasiswa, 120+ Kelab, 12 Modul, 100% Digital).
+   - **`<InteractiveShowcase />`:** Pemilih kategori cip pil interaktif (`Semua`, `Kebajikan`, `PolyMart`, `Akademik`, `Sukan & EMS`) dengan pratonton komponen antara muka sebenar (kupon FoodBank QR, produk PolyMart, kad merit CGPA, braket sukan EMS).
+   - **`<PlatformCapabilitiesBento />`:** Grid bento asimetri 4 teras utama (Tadbir Urus Kelab, Pasaran Siswa, Bantuan Kebajikan, Kampus Pintar & Peta).
+   - **`<NexusAiSpotlight />`:** Kad berkembar menonjolkan AI Semakan Kertas Kerja automatik dan Pembantu Pelajar Pintar 24/7.
+   - **`<InteractiveSearchBar />`:** Bar carian pantas berbentuk kapsul editorial dengan cip cadangan interaktif yang menghubungkan pelajar terus ke perkhidmatan portal.
+   - **`<CuratedCampusGallery />`:** Galeri lengkung 3D memaparkan pencapaian, inovasi pelajar, dan aktiviti kampus POLISAS Kuantan.
+   - **`<FaqAccordion />`:** Baris soalan lazim bergaris halus minimalis dengan animasi kembang/kucup lancar.
+   - **`<FinalSphereCta />`:** Seksyen penutup berimpak tinggi berbingkaikan lingkaran cahaya partikel konsentrik menuju portal pelajar.
+   - **`<EditorialFooter />`:** Pengaki pelbagai lajur formal dengan maklumat hak cipta rasmi, pautan ekosistem, dan metrik ketersediaan sistem (99.98%).
+
+3. **Penyesuaian Perkakasan Pengguna (`useDevicePerformance`):**
+   - Mengesan peranti spesifikasi rendah (`isLowEnd`) untuk melumpuhkan efek kabur berlapis tebal (*multi-layered backdrop-blur*) dan animasi putaran berulang pada telefon pintar bajet bagi menjamin kelancaran 60fps.
+
+---
+
+### 31.2 E-Akademik Light Mode Parity (Apple Porcelain Light & Obsidian Dark)
+
+1. **Kesetaraan Tema Dwi-Mod:**
+   - Memastikan modul `/akademik/*` tidak lagi terkunci pada mod gelap semata-mata, sebaliknya menyokong peralihan tema dwi-mod **Apple Porcelain Light & Obsidian Dark** yang harmoni:
+     - Mod Cerah: Kanvas `bg-slate-50`, permukaan kad `bg-white`, sempadan `border-slate-200/80`, dan teks kontras tinggi `text-slate-900`.
+     - Mod Gelap: Kanvas `dark:bg-slate-950`, permukaan `dark:bg-white/[0.02]`, sempadan `dark:border-white/[0.07]`, dan teks `dark:text-white`.
+
+2. **Komponen yang Dikemas Kini:**
+   - **`AkademikLayout.tsx`:** Mengintegrasikan komponen `<ThemeToggle />` pada pengepala atas di sebelah avatar pelajar, serta menyesuaikan bar sisi mudah alih dan desktop dengan latar porselin cerah/obsidian gelap.
+   - **`AkademikDashboard.tsx`:** Menukarkan kad statistik (`StatCard`), butang tindakan pantas (`QuickAction`), dan Pengepala Kokpit Pelajar kepada token dwi-mod kontras tinggi yang melepasi piawaian WCAG AA.
+   - **`AkademikCgpa.tsx`:** Carta kawasan Recharts AreaChart kini menyokong grid adaptif (`CartesianGrid stroke="currentColor" className="text-slate-200 dark:text-white/[0.04]"`), tooltip berkontras tinggi (`CustomTooltip`), serta kad rekod semester dan zon muat naik slip keputusan dwimod.
+   - **`AkademikFolderPage.tsx`:** Kad folder (`FolderCard`), kad dokumen fail (`FileCard`), dan kotak modal pratonton dokumen dalam aplikasi (`InAppDocumentPreviewer`) diselaraskan sepenuhnya kepada tema porselin dan obsidian.
+
+---
+
+### 31.3 PolyMaps Touch Gesture Isolation & Kawalan Pelapik Snap
+
+1. **Penebatan Gerak Isyarat Sentuhan (`touch-none`):**
+   - Mengatasi isu pertembungan sentuhan pada pelayar mudah alih di mana leretan pada kad bawah (*bottom sheet*) mencetuskan tatalan halaman atau *pull-to-refresh* pelayar.
+   - Menggunakan utiliti `touch-none` (`touch-action: none;`) pada bekas pemegang seret dan bar pill di `PolyMapsPage.tsx`.
+
+2. **Butang Togol Segmen 1-Sentuhan (*1-Tap Segmented Snap Buttons*):**
+   - Menyediakan butang togol segmen fizikal `[ Ringkas ] [ Separuh ] [ Penuh ]` di bahagian bar pemegang kad bawah.
+   - Pengguna peranti mudah alih boleh mengubah saiz paparan kad peta serta-merta tanpa perlu bergantung pada seretan jari sahaja.
+   - Menggunakan `e.stopPropagation()` untuk menghalang klik butang daripada mencetuskan klik pada bar induk.
+
+3. **Pengawalan Lapisan Penindih Peta (*Overlay Guarding*):**
+   - Lapisan pin penanda Leaflet bagi acara langsung EMS dan hab PolyMart ditutup sementara waktu melalui penanda komen bersyarat:
+     `{/* EMS and PolyMart overlays temporarily disabled pending venue data audit */}`.
+   - Pil penapis carian pantas di bahagian atas dikembalikan kepada fasiliti kampus yang sah: `[ Semua ]`, `[ Kafe ]`, `[ Surau ]`, `[ Tandas ]`.
+
+

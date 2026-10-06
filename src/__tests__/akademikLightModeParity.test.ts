@@ -98,7 +98,7 @@ describe('E-Akademik Light Mode Parity — AkademikCgpa.tsx', () => {
 
   it('implements responsive CartesianGrid and CustomTooltip for Recharts', () => {
     expect(source).toContain('CartesianGrid stroke="currentColor" className="text-slate-200 dark:text-white/[0.04]"');
-    expect(source).toContain('bg-white/95 dark:bg-[#0F1629]/95 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl');
+    expect(source).toContain('bg-white/95 dark:bg-[#0F1629]/95 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl');
   });
 
   it('styles semester history cards with porcelain and obsidian dual-mode classes', () => {
