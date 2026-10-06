@@ -290,6 +290,50 @@ describe('Task 1 Pembaikan PolyMart Bugfixes & SuperApp Modernization', () => {
     expect(source).toContain('salesMap');
     expect(source).toContain('salesB - salesA');
   });
+
+  it('renders ProductVariationBottomSheet with active sale without ReferenceError', async () => {
+    const { ProductVariationBottomSheet } = await import('@/pages/polymart/PolyMartProductDetail');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { renderToString } = await import('react-dom/server');
+
+    const mockProduct: any = {
+      id: 'prod-test-sale',
+      name: 'Nasi Ambeng Special',
+      price: 12.0,
+      sale_price: 10.0,
+      sale_start_at: new Date(Date.now() - 3600000).toISOString(),
+      sale_end_at: new Date(Date.now() + 3600000).toISOString(),
+      stock_quantity: 10,
+      reserved_stock: 0,
+      category: 'Makanan',
+      image_url: null,
+      variations: [],
+      keusahawanan_businesses: {
+        id: 'biz-1',
+        name: 'Dapur Mak Teh',
+        online_payment_enabled: true,
+        cod_enabled: true,
+      },
+    };
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(ProductVariationBottomSheet, {
+          product: mockProduct,
+          isOpen: true,
+          mode: 'BUY',
+          onClose: () => {},
+        })
+      )
+    );
+
+    expect(html).toContain('Nasi Ambeng Special');
+    expect(html).toContain('10.00');
+    expect(html).toContain('12.00');
+  });
 });
+
 
 

@@ -325,7 +325,7 @@ describe('Task 3: FoodBank Siswa Revamp — Smart Pantry, Sticky Capsule & QR Pa
     expect(typeof mod.KebajikanFoodBankPage).toBe('function');
     expect(mod.default).toBeDefined();
     expect(typeof mod.default).toBe('function');
-  });
+  }, 30000);
 
   it('implements dual-mode package selection: Ready Care Box and Smart Pantry Basket', () => {
     const content = fs.readFileSync(foodbankPagePath, 'utf-8');

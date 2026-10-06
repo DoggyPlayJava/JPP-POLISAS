@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { MapPin, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getMalaysianNickname } from '@/lib/utils';
 import { triggerCommandPalette } from '@/lib/commandPalette';
 import { formatGreeting, getRoleBadgeTitle, getHeaderGradientClass } from '@/lib/superAppHelpers';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -27,7 +27,10 @@ export function SuperAppHeader({
   className,
 }: SuperAppHeaderProps) {
   const currentHour = useMemo(() => new Date().getHours(), []);
-  const nameToDisplay = displayName || profile?.full_name?.split(' ')[0] || 'Pelajar';
+  const nameToDisplay = useMemo(() => {
+    if (displayName) return displayName;
+    return getMalaysianNickname(profile?.full_name, 'Pelajar');
+  }, [displayName, profile?.full_name]);
   const greeting = useMemo(() => formatGreeting(currentHour, nameToDisplay), [currentHour, nameToDisplay]);
 
   const roleTitle = useMemo(() => getRoleBadgeTitle(profile?.role), [profile?.role]);
@@ -102,7 +105,7 @@ export function SuperAppHeader({
                   <AvatarImage src={profile.avatar_url} className="object-cover" alt="Profil" />
                 ) : null}
                 <AvatarFallback className="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white text-[11px] font-black rounded-full">
-                  {profile?.full_name?.[0]?.toUpperCase() || displayName?.[0]?.toUpperCase() || 'P'}
+                  {nameToDisplay?.[0]?.toUpperCase() || 'P'}
                 </AvatarFallback>
               </Avatar>
             </button>
@@ -132,7 +135,7 @@ export function SuperAppHeader({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-            {displayName || nameToDisplay}
+            {nameToDisplay}
           </h1>
 
           <p className="text-xs sm:text-sm text-white/80 font-medium max-w-2xl leading-relaxed">

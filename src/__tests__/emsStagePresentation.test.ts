@@ -1,77 +1,23 @@
 import { describe, it, expect } from 'vitest';
+import {
+  type StageRevealStep,
+  getNextRevealStep,
+  getPrevRevealStep,
+  isPodiumCardRevealed,
+  createJuryDraftKey,
+  serializeJuryDraft,
+  deserializeJuryDraft,
+} from '@/lib/ems';
 
-export type StageRevealStep = 'HIDDEN' | 'BRONZE' | 'SILVER' | 'CHAMPION' | 'ALL';
-
-export function getNextRevealStep(current: StageRevealStep): StageRevealStep {
-  switch (current) {
-    case 'HIDDEN':
-      return 'BRONZE';
-    case 'BRONZE':
-      return 'SILVER';
-    case 'SILVER':
-      return 'CHAMPION';
-    case 'CHAMPION':
-      return 'ALL';
-    case 'ALL':
-      return 'ALL';
-    default:
-      return 'HIDDEN';
-  }
-}
-
-export function getPrevRevealStep(current: StageRevealStep): StageRevealStep {
-  switch (current) {
-    case 'ALL':
-      return 'CHAMPION';
-    case 'CHAMPION':
-      return 'SILVER';
-    case 'SILVER':
-      return 'BRONZE';
-    case 'BRONZE':
-      return 'HIDDEN';
-    case 'HIDDEN':
-      return 'HIDDEN';
-    default:
-      return 'HIDDEN';
-  }
-}
-
-export function isPodiumCardRevealed(rank: 1 | 2 | 3, step: StageRevealStep): boolean {
-  if (step === 'ALL') return true;
-  if (step === 'HIDDEN') return false;
-  if (step === 'BRONZE') return rank === 3;
-  if (step === 'SILVER') return rank === 3 || rank === 2;
-  if (step === 'CHAMPION') return rank === 3 || rank === 2 || rank === 1;
-  return false;
-}
-
-export function createJuryDraftKey(eventId: string, juryCode: string, participantId: string): string {
-  return `ems_jury_draft_${eventId}_${juryCode}_${participantId}`;
-}
-
-export function serializeJuryDraft(scores: Record<string, number>, comments: string): string {
-  return JSON.stringify({
-    scores,
-    comments: comments.trim(),
-    savedAt: new Date().toISOString(),
-  });
-}
-
-export function deserializeJuryDraft(raw: string | null): { scores: Record<string, number>; comments: string } | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.scores === 'object') {
-      return {
-        scores: parsed.scores,
-        comments: typeof parsed.comments === 'string' ? parsed.comments : '',
-      };
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
+export {
+  type StageRevealStep,
+  getNextRevealStep,
+  getPrevRevealStep,
+  isPodiumCardRevealed,
+  createJuryDraftKey,
+  serializeJuryDraft,
+  deserializeJuryDraft,
+};
 
 describe('EMS Stage Presentation Mode Stepped Reveal Controller', () => {
   it('initializes in HIDDEN state where no podium cards are revealed', () => {

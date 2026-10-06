@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Tag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatProductPrice } from '@/lib/superAppHelpers';
+import { formatProductPrice, isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 import { cn } from '@/lib/utils';
 
 export interface PolyMartFeedProps {
@@ -34,6 +34,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             name,
             price,
             sale_price,
+            sale_start_at,
+            sale_end_at,
             image_url,
             category,
             publish_to_polymart,
@@ -86,8 +88,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               const salesA = salesMap[a.id] || 0;
               const salesB = salesMap[b.id] || 0;
               if (salesB !== salesA) return salesB - salesA;
-              const aHasSale = a.sale_price !== null && a.sale_price !== undefined && a.sale_price < a.price ? 1 : 0;
-              const bHasSale = b.sale_price !== null && b.sale_price !== undefined && b.sale_price < b.price ? 1 : 0;
+              const aHasSale = isProductOnSale(a) ? 1 : 0;
+              const bHasSale = isProductOnSale(b) ? 1 : 0;
               if (bHasSale !== aHasSale) return bHasSale - aHasSale;
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
             });
@@ -201,8 +203,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
       ) : (
         <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {products.map((item) => {
-            const hasSale = item.sale_price !== null && item.sale_price !== undefined && item.sale_price < item.price;
-            const displayPrice = hasSale ? item.sale_price : item.price;
+            const hasSale = isProductOnSale(item);
+            const displayPrice = getProductEffectivePrice(item);
 
             return (
               <div

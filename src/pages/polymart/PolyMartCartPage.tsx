@@ -7,6 +7,7 @@ import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from '.
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight } from 'lucide-react';
+import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 interface CartItem {
   id: string;
@@ -16,6 +17,9 @@ interface CartItem {
     id: string;
     name: string;
     price: number;
+    sale_price?: number | null;
+    sale_start_at?: string | null;
+    sale_end_at?: string | null;
     image_url: string | null;
     category: string;
     stock_quantity: number;
@@ -61,7 +65,7 @@ export function PolyMartCartPage() {
       .select(`
         id, quantity, selected_variation,
         product:business_products (
-          id, name, price, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled, variations,
+          id, name, price, sale_price, sale_start_at, sale_end_at, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled, variations,
           keusahawanan_businesses (id, name, logo_url, online_payment_enabled, cod_enabled, payment_deadline_value, payment_deadline_unit, is_active)
         )
       `)
@@ -141,7 +145,7 @@ export function PolyMartCartPage() {
           business_id: businessId,
           buyer_id: user.id,
           quantity: item.quantity,
-          unit_price: item.product.price,
+          unit_price: getProductEffectivePrice(item.product),
           pickup_time: time,
           share_phone: true,
           status: 'PENDING',
@@ -242,7 +246,7 @@ export function PolyMartCartPage() {
         <AnimatePresence>
           {Object.entries(vendorGroups).map(([bizId, groupItems]) => {
             const business = groupItems[0].product.keusahawanan_businesses;
-            const subtotal = groupItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const subtotal = groupItems.reduce((sum, item) => sum + (getProductEffectivePrice(item.product) * item.quantity), 0);
             
             const qrEnabled = groupItems.some(item => (item.product.online_payment_enabled ?? business?.online_payment_enabled) === true);
             const codEnabled = business?.cod_enabled !== false;
@@ -303,7 +307,22 @@ export function PolyMartCartPage() {
                                 </span>
                               </div>
                             )}
-                            <p className="text-sm font-black mt-1" style={{ color: PM_ACCENT }}>RM {item.product.price.toFixed(2)}</p>
+                            {(() => {
+                              const onSale = isProductOnSale(item.product);
+                              const effPrice = getProductEffectivePrice(item.product);
+                              return (
+                                <div className="flex items-baseline gap-1.5 mt-1">
+                                  <span className="text-sm font-black" style={{ color: onSale ? '#f43f5e' : PM_ACCENT }}>
+                                    RM {effPrice.toFixed(2)}
+                                  </span>
+                                  {onSale && (
+                                    <span className="text-[11px] text-muted-foreground/60 line-through">
+                                      RM {item.product.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                           
                           <div className="flex items-center justify-between mt-2">

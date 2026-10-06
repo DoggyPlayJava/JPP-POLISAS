@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, CATEGORY_ICON_MAP, PM_ACCENT } from './PolyMartLayout';
 import toast from 'react-hot-toast';
+import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 import {
   Store, Star, ShoppingBag, ShoppingCart, MessageCircle, Phone, Share2,
   Package, Search, ChevronRight, CheckCircle2, Award, Clock, ArrowLeft,
@@ -673,12 +674,8 @@ export function PolyMartVendorStorefront() {
                   const isOut = p.stock_quantity === 0;
                   const isWishlisted = wishlistIds.has(p.id);
 
-                  const isOnSale =
-                    p.sale_price &&
-                    p.sale_start_at &&
-                    p.sale_end_at &&
-                    new Date() >= new Date(p.sale_start_at) &&
-                    new Date() <= new Date(p.sale_end_at);
+                  const isOnSale = isProductOnSale(p);
+                  const effPrice = getProductEffectivePrice(p);
 
                   return (
                     <motion.div
@@ -772,7 +769,7 @@ export function PolyMartVendorStorefront() {
                           {isOnSale ? (
                             <div className="flex items-baseline gap-1">
                               <span className="text-xs sm:text-sm font-black text-rose-500">
-                                RM {p.sale_price!.toFixed(2)}
+                                RM {effPrice.toFixed(2)}
                               </span>
                               <span className="text-[10px] text-muted-foreground/50 line-through">
                                 RM {p.price.toFixed(2)}

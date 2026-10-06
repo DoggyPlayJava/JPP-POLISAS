@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { cn, getMalaysianNickname } from '@/lib/utils';
 
 export interface PortalNavbarProps {
   isScrolled: boolean;
@@ -16,6 +16,7 @@ export interface PortalNavbarProps {
 }
 
 export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile, setIsSidebarOpen }: PortalNavbarProps) {
+  const displayName = getMalaysianNickname(profile?.full_name, 'Pelajar');
   // Determine merit tier for Dynamic Avatar Aura
   const meritPoints = profile?.merit_points || profile?.merit || 0;
   let auraClass = "";
@@ -108,7 +109,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
               karnivalActive ? "text-pink-100 group-hover:text-pink-400 drop-shadow-[0_0_2px_rgba(236,72,153,0.8)]" :
               supsasActive ? "text-amber-100 group-hover:text-amber-400 drop-shadow-[0_0_2px_rgba(245,158,11,0.8)]" :
               "text-slate-800 dark:text-white group-hover:text-emerald-500"
-            )}>{profile?.full_name?.split(' ')[0]}</p>
+            )}>{displayName}</p>
             <div className="flex items-center justify-end gap-1.5 opacity-60">
               <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", karnivalActive ? "bg-pink-500" : supsasActive ? "bg-amber-500" : "bg-emerald-500")} />
               <span className={cn(
@@ -133,7 +134,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
               <Avatar className="w-full h-full rounded-none">
                 <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
                 <AvatarFallback className="bg-transparent text-slate-400 dark:text-white/50 text-xs font-black">
-                  {profile?.full_name?.[0]}
+                  {displayName?.[0]?.toUpperCase() || 'P'}
                 </AvatarFallback>
               </Avatar>
             </div>

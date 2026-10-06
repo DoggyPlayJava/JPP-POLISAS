@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
 import toast from 'react-hot-toast';
 import { Heart, Store, Star, ArrowLeft, Trash2, ShoppingCart, Package } from 'lucide-react';
+import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 interface WishlistItem {
   id: string;
@@ -107,8 +108,8 @@ export function PolyMartWishlist() {
               if (!p) return null;
               const emoji = CATEGORY_EMOJI[p.category] ?? '📦';
               const isOut = p.stock_quantity <= 0 || !p.is_available;
-              const isOnSale = p.sale_price && p.sale_start_at && p.sale_end_at &&
-                new Date() >= new Date(p.sale_start_at) && new Date() <= new Date(p.sale_end_at);
+              const isOnSale = isProductOnSale(p);
+              const effPrice = getProductEffectivePrice(p);
 
               return (
                 <motion.div
@@ -144,7 +145,7 @@ export function PolyMartWishlist() {
                       <div className="flex items-center gap-2 mt-1">
                         {isOnSale ? (
                           <>
-                            <span className="text-sm font-black text-rose-500">RM {p.sale_price!.toFixed(2)}</span>
+                            <span className="text-sm font-black text-rose-500">RM {effPrice.toFixed(2)}</span>
                             <span className="text-[10px] text-muted-foreground/50 line-through">RM {p.price.toFixed(2)}</span>
                           </>
                         ) : (

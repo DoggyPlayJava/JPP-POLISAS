@@ -1,3 +1,7 @@
+import { getMalaysianNickname } from './utils';
+
+export { getMalaysianNickname };
+
 export interface CampaignSlide {
   id: 'makmp' | 'kamsis' | 'karnival' | 'supsas';
   title: string;
@@ -15,9 +19,11 @@ export function formatGreeting(hour: number, name: string): { title: string; sub
   else if (hour >= 19 && hour < 24) title = 'Selamat Malam,';
   else title = 'Masih Berjaga,';
 
+  const formattedName = name && name.includes(' ') ? getMalaysianNickname(name, name) : (name || 'Pelajar POLISAS');
+
   return {
     title,
-    subtitle: name || 'Pelajar POLISAS',
+    subtitle: formattedName,
   };
 }
 
@@ -259,5 +265,56 @@ export function formatProductPrice(price: number | string | null | undefined): s
   }
 
   return `RM ${num.toFixed(2)}`;
+}
+
+/**
+ * Determines whether a product has an active discount / promotion.
+ * A product is only considered on sale if:
+ * 1. sale_price is provided, strictly positive, and less than regular price.
+ * 2. sale_start_at and sale_end_at are valid dates and current time falls strictly within that window.
+ */
+export function isProductOnSale(product?: {
+  price?: number | null;
+  sale_price?: number | null;
+  sale_start_at?: string | null;
+  sale_end_at?: string | null;
+} | null): boolean {
+  if (!product || product.price == null || product.sale_price == null) {
+    return false;
+  }
+  const price = typeof product.price === 'number' ? product.price : parseFloat(String(product.price));
+  const salePrice = typeof product.sale_price === 'number' ? product.sale_price : parseFloat(String(product.sale_price));
+
+  if (isNaN(price) || isNaN(salePrice) || salePrice <= 0 || salePrice >= price) {
+    return false;
+  }
+  if (!product.sale_start_at || !product.sale_end_at) {
+    return false;
+  }
+
+  const startTime = new Date(product.sale_start_at).getTime();
+  const endTime = new Date(product.sale_end_at).getTime();
+  if (isNaN(startTime) || isNaN(endTime)) {
+    return false;
+  }
+
+  const now = Date.now();
+  return now >= startTime && now <= endTime;
+}
+
+/**
+ * Returns the effective price for a product (discounted sale_price if active, otherwise regular price).
+ */
+export function getProductEffectivePrice(product: {
+  price: number;
+  sale_price?: number | null;
+  sale_start_at?: string | null;
+  sale_end_at?: string | null;
+}): number {
+  if (isProductOnSale(product)) {
+    const sale = typeof product.sale_price === 'number' ? product.sale_price : parseFloat(String(product.sale_price));
+    return isNaN(sale) ? product.price : sale;
+  }
+  return product.price;
 }
 

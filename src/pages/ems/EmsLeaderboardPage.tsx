@@ -36,13 +36,11 @@ import {
   fetchEmsLeaderboard,
   resolveTieWinner,
   EmsLeaderboardItem,
-} from '@/lib/ems';
-import {
   StageRevealStep,
   getNextRevealStep,
   getPrevRevealStep,
   isPodiumCardRevealed,
-} from '@/__tests__/emsStagePresentation.test';
+} from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
 import type { EmsEvent, EmsScore, EmsJuryCode, EmsRubricCriteria, EmsParticipant } from '@/types';
 

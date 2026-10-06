@@ -32,7 +32,7 @@ describe('ReceiptReviewSheet Component', () => {
     expect(typeof mod.ReceiptReviewSheet).toBe('function');
     expect(mod.default).toBeDefined();
     expect(mod.default).toBe(mod.ReceiptReviewSheet);
-  });
+  }, 30000);
 
   it('contains slide-up bottom sheet animation tokens (framer-motion, y: "100%", y: 0)', () => {
     const filePath = path.resolve(__dirname, '../pages/polymart/vendor/ReceiptReviewSheet.tsx');

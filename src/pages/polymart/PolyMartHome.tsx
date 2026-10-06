@@ -13,6 +13,7 @@ import {
   CheckCircle2, X, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PolyProduct {
@@ -109,11 +110,10 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
           </div>
         )}
         {/* Flash sale badge */}
-        {product.sale_price && product.sale_start_at && product.sale_end_at &&
-          new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at) && (
+        {isProductOnSale(product) && (
           <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 animate-pulse z-10">
             <Zap className="w-2.5 h-2.5 fill-current" />
-            <span>-{Math.round((1 - product.sale_price / product.price) * 100)}%</span>
+            <span>-{Math.round((1 - product.sale_price! / product.price) * 100)}%</span>
           </div>
         )}
         {/* Pre-order badge */}
@@ -150,11 +150,11 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         {/* Price + rating */}
         <div className="flex items-center justify-between pt-1 mt-auto">
           {(() => {
-            const isOnSale = product.sale_price && product.sale_start_at && product.sale_end_at &&
-              new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at);
+            const isOnSale = isProductOnSale(product);
+            const effPrice = getProductEffectivePrice(product);
             return isOnSale ? (
               <div className="flex items-baseline gap-1">
-                <span className="text-xs sm:text-sm font-black text-rose-500">RM {product.sale_price!.toFixed(2)}</span>
+                <span className="text-xs sm:text-sm font-black text-rose-500">RM {effPrice.toFixed(2)}</span>
                 <span className="text-[10px] text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
               </div>
             ) : (

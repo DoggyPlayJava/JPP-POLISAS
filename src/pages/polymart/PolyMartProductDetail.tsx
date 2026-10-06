@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 import {
   ArrowLeft, Star, Store, Clock, Package, Phone, MessageCircle,
   Minus, Plus, CheckCircle2, AlertCircle, User, ChevronRight,
@@ -172,9 +173,8 @@ export function ProductVariationBottomSheet({
     : Math.max(0, product.stock_quantity - (product.reserved_stock || 0));
   const maxQty = Math.min(availableStock, 10);
 
-  const isOnSale = product.sale_price && product.sale_start_at && product.sale_end_at &&
-    new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at);
-  const effectivePrice = isOnSale ? product.sale_price! : product.price;
+  const isOnSale = isProductOnSale(product);
+  const effectivePrice = getProductEffectivePrice(product);
   const total = (effectivePrice * qty).toFixed(2);
 
   const FallbackIcon = CATEGORY_ICON_MAP[product.category] || Package;
@@ -922,6 +922,8 @@ export function PolyMartProductDetail() {
   const availableStock = Math.max(0, product.stock_quantity - (product.reserved_stock || 0));
   const isOut = availableStock <= 0;
   const business = product.keusahawanan_businesses;
+  const isOnSale = isProductOnSale(product);
+  const effectivePrice = getProductEffectivePrice(product);
 
   const allImages = [...(product.image_urls ?? []), ...(product.image_url ? [product.image_url] : [])]
     .filter((v, i, a) => a.indexOf(v) === i);
@@ -1022,11 +1024,10 @@ export function PolyMartProductDetail() {
             </div>
 
             {/* Flash Sale Badge */}
-            {product.sale_price && product.sale_start_at && product.sale_end_at &&
-              new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at) && (
+            {isOnSale && (
               <div className="absolute top-3 right-3 bg-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-rose-500/25">
                 <Zap className="w-3 h-3 fill-white" />
-                <span>Promosi -{Math.round((1 - product.sale_price / product.price) * 100)}%</span>
+                <span>Promosi -{Math.round((1 - product.sale_price! / product.price) * 100)}%</span>
               </div>
             )}
 
@@ -1073,18 +1074,14 @@ export function PolyMartProductDetail() {
           {/* Price + Rating */}
           <div className="flex items-center justify-between pt-1">
             <div>
-              {(() => {
-                const isOnSale = product.sale_price && product.sale_start_at && product.sale_end_at &&
-                  new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at);
-                return isOnSale ? (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-rose-500">RM {product.sale_price!.toFixed(2)}</span>
-                    <span className="text-base text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
-                  </div>
-                ) : (
-                  <span className="text-2xl sm:text-3xl font-black" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
-                );
-              })()}
+              {isOnSale ? (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-black text-rose-500">RM {effectivePrice.toFixed(2)}</span>
+                  <span className="text-base text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
+                </div>
+              ) : (
+                <span className="text-2xl sm:text-3xl font-black" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
+              )}
               {product.is_preorder && product.preorder_deadline && new Date(product.preorder_deadline) > new Date() && (
                 <p className="text-[10px] font-bold text-indigo-500 mt-1 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -1319,7 +1316,18 @@ export function PolyMartProductDetail() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground line-clamp-1">{rel.name}</p>
-                      <p className="text-xs font-black text-amber-500 mt-1">RM {Number(rel.sale_price ?? rel.price).toFixed(2)}</p>
+                      {(() => {
+                        const isRelSale = isProductOnSale(rel);
+                        const relPrice = getProductEffectivePrice(rel);
+                        return isRelSale ? (
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <span className="text-xs font-black text-rose-500">RM {relPrice.toFixed(2)}</span>
+                            <span className="text-[10px] text-muted-foreground/50 line-through">RM {rel.price.toFixed(2)}</span>
+                          </div>
+                        ) : (
+                          <p className="text-xs font-black text-amber-500 mt-1">RM {rel.price.toFixed(2)}</p>
+                        );
+                      })()}
                     </div>
                   </div>
                 );

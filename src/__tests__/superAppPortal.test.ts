@@ -17,6 +17,8 @@ import {
   getCampusServicesConfig,
   getCampaignVariantClasses,
   formatProductPrice,
+  isProductOnSale,
+  getProductEffectivePrice,
 } from '@/lib/superAppHelpers';
 
 describe('superAppHelpers', () => {
@@ -355,6 +357,63 @@ describe('superAppHelpers', () => {
     });
   });
 
+  describe('isProductOnSale & getProductEffectivePrice', () => {
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const oneHourLater = new Date(Date.now() + 3600000).toISOString();
+    const twoDaysAgo = new Date(Date.now() - 86400000 * 2).toISOString();
+    const tenDaysAgo = new Date(Date.now() - 86400000 * 10).toISOString();
+    const twoDaysLater = new Date(Date.now() + 86400000 * 2).toISOString();
+    const tenDaysLater = new Date(Date.now() + 86400000 * 10).toISOString();
+
+    it('returns true when sale is actively within date range and cheaper than price', () => {
+      const product = {
+        price: 10,
+        sale_price: 8,
+        sale_start_at: oneHourAgo,
+        sale_end_at: oneHourLater,
+      };
+      expect(isProductOnSale(product)).toBe(true);
+      expect(getProductEffectivePrice(product)).toBe(8);
+    });
+
+    it('returns false when sale has expired', () => {
+      const expiredProduct = {
+        price: 9,
+        sale_price: 7.5,
+        sale_start_at: tenDaysAgo,
+        sale_end_at: twoDaysAgo,
+      };
+      expect(isProductOnSale(expiredProduct)).toBe(false);
+      expect(getProductEffectivePrice(expiredProduct)).toBe(9);
+    });
+
+    it('returns false when sale has not started yet', () => {
+      const futureProduct = {
+        price: 20,
+        sale_price: 15,
+        sale_start_at: twoDaysLater,
+        sale_end_at: tenDaysLater,
+      };
+      expect(isProductOnSale(futureProduct)).toBe(false);
+      expect(getProductEffectivePrice(futureProduct)).toBe(20);
+    });
+
+    it('returns false if sale_price is zero, negative, or greater/equal to regular price', () => {
+      expect(isProductOnSale({ price: 10, sale_price: 0, sale_start_at: oneHourAgo, sale_end_at: oneHourLater })).toBe(false);
+      expect(isProductOnSale({ price: 10, sale_price: -5, sale_start_at: oneHourAgo, sale_end_at: oneHourLater })).toBe(false);
+      expect(isProductOnSale({ price: 10, sale_price: 10, sale_start_at: oneHourAgo, sale_end_at: oneHourLater })).toBe(false);
+      expect(isProductOnSale({ price: 10, sale_price: 15, sale_start_at: oneHourAgo, sale_end_at: oneHourLater })).toBe(false);
+    });
+
+    it('returns false if sale dates are missing or invalid', () => {
+      expect(isProductOnSale({ price: 10, sale_price: 8, sale_start_at: null, sale_end_at: null })).toBe(false);
+      expect(isProductOnSale({ price: 10, sale_price: 8, sale_start_at: oneHourAgo, sale_end_at: null })).toBe(false);
+      expect(isProductOnSale({ price: 10, sale_price: 8, sale_start_at: 'invalid-date', sale_end_at: 'invalid-date' })).toBe(false);
+      expect(isProductOnSale(null)).toBe(false);
+      expect(isProductOnSale(undefined)).toBe(false);
+    });
+  });
+
   describe('EmsEventsFeed & PolyMartFeed component exports', () => {
     it('exports EmsEventsFeed component correctly', async () => {
       const module = await import('@/components/portal/EmsEventsFeed');
@@ -375,6 +434,8 @@ describe('superAppHelpers', () => {
           name: 'Pencuci Kasut Siswa',
           price: 15.0,
           sale_price: 12.0,
+          sale_start_at: new Date(Date.now() - 3600000).toISOString(),
+          sale_end_at: new Date(Date.now() + 3600000).toISOString(),
           image_url: null,
           category: 'Servis',
           publish_to_polymart: true,
@@ -393,7 +454,7 @@ describe('superAppHelpers', () => {
       expect(element.props.className).toBe('test-feed-class');
     });
 
-    it('mounts PolyMartFeed with initial products and renders chip tabs cleanly', async () => {
+    it('mounts PolyMartFeed with initial products, renders active sales, and hides expired sales', async () => {
       const { PolyMartFeed } = await import('@/components/portal/PolyMartFeed');
       const { MemoryRouter } = await import('react-router-dom');
       const { renderToString } = await import('react-dom/server');
@@ -404,6 +465,8 @@ describe('superAppHelpers', () => {
           name: 'Nasi Lemak Ayam Berempah',
           price: 7.5,
           sale_price: 6.0,
+          sale_start_at: new Date(Date.now() - 3600000).toISOString(),
+          sale_end_at: new Date(Date.now() + 3600000).toISOString(),
           image_url: 'https://example.com/nasi-lemak.jpg',
           category: 'Makanan',
           publish_to_polymart: true,
@@ -416,6 +479,18 @@ describe('superAppHelpers', () => {
           sale_price: null,
           image_url: null,
           category: 'Pakaian',
+          publish_to_polymart: true,
+          is_available: true,
+        },
+        {
+          id: 'prod-expired',
+          name: 'Chicken Popcorn Rangup',
+          price: 9.0,
+          sale_price: 7.5,
+          sale_start_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+          sale_end_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+          image_url: null,
+          category: 'Makanan',
           publish_to_polymart: true,
           is_available: true,
         },
@@ -436,11 +511,16 @@ describe('superAppHelpers', () => {
       expect(html).toContain('Terhangat');
       expect(html).toContain('Terkini');
       expect(html).toContain('Buka Mart');
+      // Active sale item renders sale price and strikethrough original price
       expect(html).toContain('Nasi Lemak Ayam Berempah');
       expect(html).toContain('RM 6.00');
       expect(html).toContain('RM 7.50');
+      // Non-sale item renders regular price
       expect(html).toContain('Kemeja Korporat POLISAS');
       expect(html).toContain('RM 45.00');
+      // Expired sale item renders original price RM 9.00 and does NOT render expired sale price RM 7.50
+      expect(html).toContain('Chicken Popcorn Rangup');
+      expect(html).toContain('RM 9.00');
     });
   });
 
@@ -603,7 +683,90 @@ describe('superAppHelpers', () => {
       expect(html).toContain('MARKETPLACE');
     }, 30000);
   });
+
+  describe('Malaysian Nickname & Greeting Logic (Portal Page)', () => {
+    it('correctly filters out patronymics and prefixes to extract true Malaysian nicknames', async () => {
+      const { getMalaysianNickname } = await import('@/lib/utils');
+
+      // Common prefix filtering
+      expect(getMalaysianNickname('MUHAMMAD AMIRUL BIN ROSLI')).toBe('Amirul');
+      expect(getMalaysianNickname('NUR AISYAH BINTI ZAMRI')).toBe('Aisyah');
+      expect(getMalaysianNickname('SITI NUR AISYAH BINTI ZAMRI')).toBe('Aisyah');
+      expect(getMalaysianNickname('MOHD DANIAL BIN AHMAD')).toBe('Danial');
+      expect(getMalaysianNickname('WAN MUHAMMAD SYAFIQ BIN WAN ZULKIFLI')).toBe('Syafiq');
+      expect(getMalaysianNickname('NIK NUR LIYANA BTE NIK HASSAN')).toBe('Liyana');
+      expect(getMalaysianNickname('MEGAT AMIRUL BIN MEGAT HARUN')).toBe('Amirul');
+      expect(getMalaysianNickname('SYED FARHAN BIN SYED ALI')).toBe('Farhan');
+      expect(getMalaysianNickname('SHARIFAH BALQIS BT SYED OTHMAN')).toBe('Balqis');
+
+      // Patronymic variations for Indian and other Malaysian students
+      expect(getMalaysianNickname('KAVIARASAN A/L SUBRAMANIAM')).toBe('Kaviarasan');
+      expect(getMalaysianNickname('THIVYA A/P MOHAN')).toBe('Thivya');
+      expect(getMalaysianNickname('PRAVEEN S/O RAMESH')).toBe('Praveen');
+      expect(getMalaysianNickname('ANBARASAN ANAK LELAKI GOVINDAN')).toBe('Anbarasan');
+      expect(getMalaysianNickname('SARANYA ANAK PEREMPUAN VELU')).toBe('Saranya');
+
+      // Chinese / Other names without patronymics
+      expect(getMalaysianNickname('LEE WEI KANG')).toBe('Lee');
+
+      // Edge cases: only prefixes before patronymic
+      expect(getMalaysianNickname('Muhammad Bin Abdullah')).toBe('Muhammad');
+      expect(getMalaysianNickname('Mohd Ahmad Bin Ismail')).toBe('Ahmad');
+
+      // Clean brackets and alias
+      expect(getMalaysianNickname('Aiman @ Bob')).toBe('Aiman');
+      expect(getMalaysianNickname('Amirul (JPP POLISAS)')).toBe('Amirul');
+
+      // Empty / Fallback
+      expect(getMalaysianNickname('')).toBe('Pelajar');
+      expect(getMalaysianNickname(null)).toBe('Pelajar');
+      expect(getMalaysianNickname(undefined, 'Siswa')).toBe('Siswa');
+    });
+
+    it('formats greeting using Malaysian nickname when multi-word name is passed', () => {
+      const morning = formatGreeting(9, 'MUHAMMAD AMIRUL BIN ROSLI');
+      expect(morning.title).toBe('Selamat Pagi,');
+      expect(morning.subtitle).toBe('Amirul');
+
+      const evening = formatGreeting(15, 'NUR AISYAH BINTI ZAMRI');
+      expect(evening.title).toBe('Selamat Petang,');
+      expect(evening.subtitle).toBe('Aisyah');
+    });
+
+    it('renders SuperAppHeader displaying the student Malaysian nickname and avatar initial', async () => {
+      const { SuperAppHeader } = await import('@/components/portal/SuperAppHeader');
+      const { MemoryRouter } = await import('react-router-dom');
+      const { ThemeProvider } = await import('@/contexts/ThemeContext');
+      const { renderToString } = await import('react-dom/server');
+
+      const html = renderToString(
+        React.createElement(
+          MemoryRouter,
+          null,
+          React.createElement(
+            ThemeProvider,
+            null,
+            React.createElement(SuperAppHeader, {
+              profile: {
+                id: 'stu-1',
+                full_name: 'MUHAMMAD AMIRUL BIN ROSLI',
+                role: 'STUDENT',
+              },
+            })
+          )
+        )
+      );
+
+      // Main h1 heading should display "Amirul"
+      expect(html).toContain('Amirul');
+      // Should NOT display raw first word "MUHAMMAD" as the heading
+      expect(html).not.toContain('<h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">MUHAMMAD</h1>');
+      // Avatar fallback should be "A" (initial of Amirul)
+      expect(html).toContain('>A<');
+    });
+  });
 });
+
 
 
 

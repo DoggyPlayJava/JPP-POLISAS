@@ -54,26 +54,65 @@ export function hexToRgba(hex: string, alpha: number): string {
 
 /**
  * Ekstrak 'Nama Panggilan' (Nickname) yang sesuai untuk konteks Malaysia.
- * Mengabaikan imbuhan awal yang terlalu umum (Muhammad, Nur, Siti, dll.).
+ * 1. Menapis nama ayah/keluarga selepas perkataan patronimik (Bin, Binti, A/L, A/P, dll.)
+ * 2. Mengabaikan imbuhan/gelaran awalan umum (Muhammad, Mohd, Nur, Siti, Wan, Syed, dll.)
+ * 3. Mengambil nama sebenar (second name/given name) dan memformatkannya ke Title Case.
  */
-export function getMalaysianNickname(fullName?: string | null): string {
-  if (!fullName) return 'Pengguna';
-  
-  const ignoreList = [
-    'muhammad', 'mohamad', 'mohd', 'muhd', 'ahmad', 'abdul',
-    'nur', 'nurul', 'siti', 'puteri', 'putera', 'wan', 'megat',
-    'syed', 'sharifah', 'tengku', 'raja', 'nik'
-  ];
+export function getMalaysianNickname(fullName?: string | null, fallback: string = 'Pelajar'): string {
+  if (!fullName || typeof fullName !== 'string') return fallback;
 
-  const words = fullName.trim().split(/\s+/);
-  if (words.length <= 1) return words[0] || 'Pengguna';
+  // 1. Bersihkan teks kurungan (cth: "Amirul (JPP)") dan alias @ (cth: "Aiman @ Bob")
+  let cleanName = fullName
+    .replace(/\(.*?\)/g, '')
+    .replace(/\[.*?\]/g, '')
+    .split('@')[0]
+    .trim();
 
-  // Cari perkataan pertama yang TIDAK ada dalam senarai abaikan
-  const nickname = words.find(w => !ignoreList.includes(w.toLowerCase()));
-  
-  // Jika entah bagaimana semua perkataan ada dalam ignoreList (contoh: "Mohd Ahmad"), 
-  // ambil perkataan terakhir sebagai fallback.
-  return nickname || words[words.length - 1];
+  if (!cleanName) return fallback;
+
+  // 2. Potong bahagian nama ayah selepas pemisah patronimik (case-insensitive)
+  // Menyokong: bin, binti, bt, bte, b., a/l, a/p, a.l., a.p., al, ap, s/o, d/o, anak lelaki, anak perempuan
+  const patronymicRegex = /\s+(?:bin|binti|bte|bte\.|bt|bt\.|b\.|a\/l|a\/p|a\.l\.|a\.p\.|al|ap|s\/o|d\/o|anak\s+lelaki|anak\s+perempuan)\b.*$/i;
+  const personalPart = cleanName.replace(patronymicRegex, '').trim();
+
+  const targetName = personalPart || cleanName;
+
+  // 3. Senarai awalan/imbuhan nama Melayu & gelaran warisan yang biasanya bukan nama panggilan harian
+  const ignorePrefixes = new Set([
+    'muhammad', 'mohamad', 'mohd', 'muhd', 'mohamed', 'md',
+    'ahmad', 'ahmed',
+    'abdul', 'abd',
+    'nur', 'nurul', 'noor', 'nor',
+    'siti',
+    'puteri', 'putera',
+    'wan', 'nik', 'che', 'meor',
+    'syed', 'syarifah', 'sharifah', 'sayed',
+    'tengku', 'raja', 'megat', 'tuan',
+    'dayang', 'awang', 'abg', 'abang'
+  ]);
+
+  // Pecahkan kepada perkataan
+  const words = targetName.split(/[\s_-]+/).filter(Boolean);
+  if (words.length === 0) return fallback;
+
+  // Cari perkataan pertama yang BUKAN dalam senarai awalan
+  const foundWord = words.find(w => {
+    const normalized = w.toLowerCase().replace(/[^a-z]/gi, '');
+    return normalized && !ignorePrefixes.has(normalized);
+  });
+
+  // Jika semua perkataan adalah awalan (cth: "Muhammad" atau "Mohd Ahmad"), 
+  // ambil perkataan terakhir jika lebih dari 1 perkataan, atau perkataan pertama.
+  const chosen = foundWord || (words.length > 1 ? words[words.length - 1] : words[0]);
+
+  return toTitleCase(chosen);
+}
+
+function toTitleCase(str: string): string {
+  if (!str) return '';
+  const cleaned = str.replace(/[^a-zA-Z0-9']/g, '');
+  if (!cleaned) return str;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
 }
 
 /**
