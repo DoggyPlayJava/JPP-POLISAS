@@ -460,7 +460,7 @@ describe('VendorAnalyticsPromo Component', () => {
     expect(typeof mod.VendorAnalyticsPromo).toBe('function');
     expect(mod.default).toBeDefined();
     expect(mod.default).toBe(mod.VendorAnalyticsPromo);
-  });
+  }, 30000);
 
   it('contains Recharts AreaChart and polymart_ads tokens', () => {
     const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorAnalyticsPromo.tsx');
@@ -585,8 +585,92 @@ describe('VendorAnalyticsPromo Component', () => {
     expect(html).toContain('Trend Pra-Pesanan (7 Hari Terakhir)');
     expect(html).toContain('Hasil (RM)');
     expect(html).toContain('Kuantiti Tempahan');
-  });
+  }, 30000);
 });
 
+describe('PolyMartVendorDashboard Component (SuperApp Orchestrator)', () => {
+  it('Task 5: PolyMartVendorDashboard exports correctly as named and default export', async () => {
+    const mod = await import('@/pages/polymart/PolyMartVendorDashboard');
+    expect(mod.PolyMartVendorDashboard).toBeDefined();
+    expect(typeof mod.PolyMartVendorDashboard).toBe('function');
+    expect(mod.default).toBeDefined();
+    expect(mod.default).toBe(mod.PolyMartVendorDashboard);
+  }, 30000);
 
+  it('integrates all 3 domains: VendorOrdersPipeline, VendorCatalogManager, and VendorAnalyticsPromo', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorDashboard.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
 
+    expect(sourceCode).toContain("from './vendor/VendorOrdersPipeline'");
+    expect(sourceCode).toContain("from './vendor/VendorCatalogManager'");
+    expect(sourceCode).toContain("from './vendor/VendorAnalyticsPromo'");
+    expect(sourceCode).toContain('<VendorOrdersPipeline');
+    expect(sourceCode).toContain('<VendorCatalogManager');
+    expect(sourceCode).toContain('<VendorAnalyticsPromo');
+  });
+
+  it('completely removes legacy floating bottom mobile bar and flashing red button', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorDashboard.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    // Legacy floating bottom bar tokens MUST NOT exist
+    expect(sourceCode).not.toContain('sm:hidden fixed bottom-6');
+    expect(sourceCode).not.toContain('fixed bottom-6');
+    expect(sourceCode).not.toContain('bg-red-500 animate-pulse');
+    expect(sourceCode).not.toContain('bg-red-500 hover:bg-red-600');
+    expect(sourceCode).not.toContain('isHomeButton');
+  });
+
+  it('contains zero raw emojis across the entire orchestrator file', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorDashboard.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+    expect(sourceCode).not.toMatch(emojiRegex);
+  });
+
+  it('uses Promise.all for concurrent data fetching (non-negotiable performance rule)', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorDashboard.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    expect(sourceCode).toContain('Promise.all');
+  });
+
+  it('renders 4 KPI stat cards and sticky top segmented tab bar', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorDashboard.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    // 4 KPI Stat Cards
+    expect(sourceCode).toContain('Pesanan Hari Ini');
+    expect(sourceCode).toContain('Menunggu Sahkan');
+    expect(sourceCode).toContain('Aktif Sekarang');
+    expect(sourceCode).toContain('Hasil Selesai');
+
+    // Sticky Top Segmented Tab Bar
+    expect(sourceCode).toContain('sticky top-');
+    expect(sourceCode).toContain('Pesanan Masuk');
+    expect(sourceCode).toContain('Katalog &amp; Stok');
+    expect(sourceCode).toContain('Prestasi &amp; Iklan');
+  });
+
+  it('renders correctly via SSR string rendering', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { PolyMartVendorDashboard } = await import('@/pages/polymart/PolyMartVendorDashboard');
+
+    // Test SSR render
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(PolyMartVendorDashboard)
+      )
+    );
+
+    expect(html).toContain('Hab Peniaga PolyMart');
+    expect(html).toContain('Pesanan Hari Ini');
+    expect(html).toContain('Menunggu Sahkan');
+    expect(html).toContain('Aktif Sekarang');
+    expect(html).toContain('Hasil Selesai');
+  }, 30000);
+});

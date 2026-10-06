@@ -3305,6 +3305,46 @@ Seni bina integrasi antara modul e-Keusahawanan dan pasaran terbuka PolyMart tel
 
 ---
 
+### 29.12 Hab Peniaga PolyMart SuperApp (/polymart/vendor)
+
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/polymart/PolyMartVendorDashboard.tsx`, `src/pages/polymart/vendor/VendorOrdersPipeline.tsx`, `src/pages/polymart/vendor/VendorCatalogManager.tsx`, `src/pages/polymart/vendor/VendorAnalyticsPromo.tsx`, `src/pages/polymart/vendor/ReceiptReviewSheet.tsx`
+
+Seni bina hab peniaga PolyMart telah dirombak sepenuhnya daripada fail monolitik legasi 3,550 baris kepada sistem orkestrator teragih 3 domain berprestasi tinggi (*High-Performance SuperApp Merchant Hub*). Pengubahsuaian ini memansuhkan komponen terapung lapuk, mengukuhkan pematuhan prestasi `Promise.all`, dan menyatukan aliran operasi vendor secara menyeluruh:
+
+1. **Seni Bina 3 Domain Operasi Peniaga (3-Domain Architecture):**
+   - **Domain 1: Urus Pesanan (`VendorOrdersPipeline.tsx`):**
+     - Menguruskan aliran pesanan masuk berorientasikan tindakan (*Action-First Pipeline*) melalui 3 peringkat terselaras:
+       1. *Tindakan Diperlukan (`actions`)*: Menapis pesanan belum bayar, pesanan COD menunggu pengesahan, dan pesanan QR DuitNow dengan resit sedia disemak.
+       2. *Sedang Disediakan (`processing`)*: Pesanan disahkan (`CONFIRMED`) dan sedia diambil (`READY`) dengan kawalan kelompok (*batch actions*).
+       3. *Selesai & Arkib (`completed`)*: Arkib rekod pesanan selesai (`COMPLETED`) dan pembatalan pesanan (`CANCELLED`) berserta log audit pulangan wang (*refund*).
+   - **Domain 2: Pengurusan Katalog & Kawalan Stok Pantas (`VendorCatalogManager.tsx`):**
+     - Pemantauan inventori masa nyata dengan pengubahsuaian pantas stok variasi dan kuantiti asas tanpa borang modal berlapis.
+     - Penukaran status ketersediaan produk (*available/unavailable*) satu sentuhan.
+     - Integrasi terus dengan pengurusan inventori menyeluruh e-Keusahawanan POS melalui pautan navigasi `[+ Urus Penuh / Tambah Produk di POS]` (`/keusahawanan/pos/products`).
+   - **Domain 3: Prestasi Jualan, Amaran Inventori & Iklan Promosi (`VendorAnalyticsPromo.tsx`):**
+     - Carta trend pra-pesanan 7-hari menggunakan Recharts `AreaChart` dengan data hasil (RM) dan volum kuantiti harian.
+     - Amaran inventori stok kritikal (`available <= 5`) dengan lencana amaran segera.
+     - Sub-domain iklan promosi PolyMart (`polymart_ads`) untuk peniaga memohon kempen sepanduk promosi pasaran PolyMart dengan sokongan mampatan imej automatik (`compressImage`).
+     - Butang tindakan pantas ke modul analitik POS fizikal `[Lihat Analitik Penuh di POS]` (`/keusahawanan/pos/stats`).
+
+2. **Slide-Up Bottom Sheet Semakan Resit Pembayaran (`ReceiptReviewSheet.tsx`):**
+   - Menggantikan modal resit lapuk dengan helaian bawah tatal moden (*Modern Slide-Up Bottom Sheet*) berasaskan animasi `framer-motion` (`y: '100%' -> y: 0`).
+   - Paparan imej resit DuitNow QR resolusi penuh dengan sokongan zum dan pembukaan tetingkap luaran.
+   - Tindakan dwi-pilihan jelas: *Sahkan Bayaran* (`bg-emerald-500`) yang mengemas kini `payment_verified_at` dan status pesanan kepada `CONFIRMED`, atau *Tolak Resit* (`bg-rose-500/10 text-rose-500`) yang menandakan `payment_receipt_rejected: true` dan menghantar notifikasi segera kepada pembeli.
+   - Mengasingkan logik pengesahan daripada kad pesanan utama untuk menjamin kelancaran interaksi sentuhan mudah alih (*touch ergonomics*).
+
+3. **Penghapusan Bar Terapung Bawah & Penerapan Sticky Top Segmented Navigation:**
+   - **Pemansuhan Mutlak Bar Bawah Legasi:** Bar bawah mudah alih terapung lama (`sm:hidden fixed bottom-6`) dan butang merah rumah berdenyut (`bg-red-500 animate-pulse`) telah disingkirkan sepenuhnya daripada pangkalan kod bagi mengelakkan pertindihan (*z-index conflict*) dengan `BottomNav` utama aplikasi kampus.
+   - **Sticky Top Segmented Tab Bar:** Digantikan dengan bar tab bersegmen lekat di bahagian atas skrin (`sticky top-14 sm:top-16 z-30`) yang memaparkan ketiga-tiga domain (`Pesanan Masuk`, `Katalog & Stok`, `Prestasi & Iklan`) berserta lencana kiraan dinamik masa nyata (*real-time action badges*).
+   - **Header Kawalan Kedai Pintar:** Menampilkan kapsul penukar kedai pintar (*store switcher capsule*) sekiranya vendor memiliki lebih daripada 1 premis perniagaan, suis buka/tutup operasi kedai (`BUKA` emerald vs `TUTUP` rose), dan suis kemas kini automatik 30 saat (*Auto-Refresh Poller*).
+
+4. **Integrasi POS e-Keusahawanan & Peraturan Prestasi Tegas:**
+   - **Peraturan Wajib `Promise.all`:** Pemuatan data awal perniagaan, pesanan aktif, dan produk katalog dijalankan serentak (*concurrently*) menggunakan `Promise.all`, menghapuskan rantaian `await` berurutan.
+   - **Sifar Emoji Mentah:** 100% ikon grafik menggunakan ikon vektor Lucide (`ShoppingBag`, `Clock`, `Package`, `TrendingUp`, `Store`, `ChevronDown`, `AlertTriangle`, `Tag`, dll.) demi keseragaman reka bentuk Obsidian-Amber mewah PolyMart SuperApp.
+   - **Sokongan Mod Pembangunan Tempatan:** Menyokong penuh mod mock (`use_mock_auth`) dengan sandaran data tempatan (`localStorage`) untuk pengujian tanpa sambungan pangkalan data langsung.
+
+---
+
 ## 30. Modul PolySuara Super App: Suapan Media Sosial Bersih & Moden (Clean Modern Social Architecture)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)
