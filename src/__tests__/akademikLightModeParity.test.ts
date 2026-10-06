@@ -202,3 +202,25 @@ describe('E-Akademik Light Mode Parity — AkademikQrPage.tsx', () => {
   });
 });
 
+describe('E-Akademik Light Mode Parity — Runtime Robustness & Exports', () => {
+  it('Leaderboard and Pencapaian properly import cn and export both named and default', () => {
+    const lbSource = fs.readFileSync(path.resolve(__dirname, '../pages/akademik/AkademikLeaderboard.tsx'), 'utf-8');
+    const pencSource = fs.readFileSync(path.resolve(__dirname, '../pages/akademik/AkademikPencapaian.tsx'), 'utf-8');
+    const landingSource = fs.readFileSync(path.resolve(__dirname, '../pages/LandingPage.tsx'), 'utf-8');
+
+    // cn import assertions
+    expect(lbSource).toMatch(/import.*\{[^}]*\bcn\b[^}]*\}\s*from\s*['"]@\/lib\/utils['"]/);
+    expect(pencSource).toMatch(/import.*\{[^}]*\bcn\b[^}]*\}\s*from\s*['"]@\/lib\/utils['"]/);
+
+    // Named & default export assertions (preventing "Lazy element type must resolve to a class or function")
+    expect(lbSource).toContain('export function AkademikLeaderboard');
+    expect(lbSource).toContain('export default AkademikLeaderboard');
+
+    expect(pencSource).toContain('export function AkademikPencapaian');
+    expect(pencSource).toContain('export default AkademikPencapaian');
+
+    expect(landingSource).toContain('export const LandingPage');
+    expect(landingSource).toContain('export default LandingPage');
+  });
+});
+

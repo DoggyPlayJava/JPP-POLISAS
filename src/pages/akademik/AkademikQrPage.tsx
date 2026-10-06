@@ -483,3 +483,5 @@ export function AkademikQrPage() {
     </>
   );
 }
+
+export default AkademikQrPage;

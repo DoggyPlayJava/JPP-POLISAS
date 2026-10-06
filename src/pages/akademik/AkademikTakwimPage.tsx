@@ -249,3 +249,5 @@ function StudentTable({ items }: { items: TakwimItem[] }) {
     </div>
   );
 }
+
+export default AkademikTakwimPage;

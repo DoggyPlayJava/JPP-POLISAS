@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import {
   Trophy, Star, TrendingUp, Crown, Medal, Award,
   Loader2, Users, BookOpen, BarChart3,
@@ -317,3 +317,5 @@ export function AkademikLeaderboard() {
     </div>
   );
 }
+
+export default AkademikLeaderboard;

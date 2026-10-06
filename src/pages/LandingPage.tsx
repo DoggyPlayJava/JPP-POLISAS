@@ -1477,7 +1477,7 @@ export const EditorialFooter: React.FC = () => {
 };
 
 // --- Flagship Landing Page Main Entry Component ---
-const LandingPage: React.FC = () => {
+export const LandingPage: React.FC = () => {
   const { isLowPerf: isLowEnd } = useDevicePerformance();
 
   return (

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   Plus, Trophy, Clock, CheckCircle, XCircle, Upload,
@@ -703,3 +703,5 @@ export function AkademikPencapaian() {
     </div>
   );
 }
+
+export default AkademikPencapaian;
