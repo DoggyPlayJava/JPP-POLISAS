@@ -331,3 +331,126 @@ describe('VendorOrdersPipeline Component', () => {
     expect(html).toContain('Sahkan Pesanan');
   });
 });
+
+describe('VendorCatalogManager Component', () => {
+  it('Task 3: VendorCatalogManager auto-handles single stores and links to POS products', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorCatalogManager.tsx');
+    expect(fs.existsSync(filePath)).toBe(true);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('export function VendorCatalogManager');
+    expect(content).toContain('/keusahawanan/pos/products');
+    expect(content).not.toContain('Pilih Kedai Terlebih Dahulu');
+    expect(content).not.toMatch(/[🛍️🛒📦⚡⚠️✅❌]/);
+  });
+
+  it('exports VendorCatalogManager correctly as named and default export', async () => {
+    const mod = await import('@/pages/polymart/vendor/VendorCatalogManager');
+    expect(mod.VendorCatalogManager).toBeDefined();
+    expect(typeof mod.VendorCatalogManager).toBe('function');
+    expect(mod.default).toBeDefined();
+    expect(mod.default).toBe(mod.VendorCatalogManager);
+  });
+
+  it('contains zero raw emojis across the entire file', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorCatalogManager.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+    expect(sourceCode).not.toMatch(emojiRegex);
+  });
+
+  it('preserves core business logic: business_products and use_mock_auth', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorCatalogManager.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+    expect(sourceCode).toContain('business_products');
+    expect(sourceCode).toContain('use_mock_auth');
+    expect(sourceCode).toContain('mock_vendor_products');
+  });
+
+  it('contains prominent button linking to POS products with exact label', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorCatalogManager.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+    expect(sourceCode).toContain('+ Urus Penuh / Tambah Produk di POS');
+    expect(sourceCode).toContain('/keusahawanan/pos/products');
+  });
+
+  it('renders products and auto-handles single store without blocking screen', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { VendorCatalogManager } = await import('@/pages/polymart/vendor/VendorCatalogManager');
+
+    const mockBiz = [{ id: 'biz-1', name: 'Kafe Siswa' }];
+    const onBizChange = vi.fn();
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(VendorCatalogManager, {
+          myBusinesses: mockBiz,
+          selectedBizId: 'all',
+          onBizChange,
+          onUpdate: vi.fn(),
+        })
+      )
+    );
+
+    // Blocker message must NEVER be present
+    expect(html).not.toContain('Pilih Kedai Terlebih Dahulu');
+    // POS product link must be present
+    expect(html).toContain('/keusahawanan/pos/products');
+    expect(html).toContain('Urus Penuh / Tambah Produk di POS');
+  });
+
+  it('renders store switcher pills when multiple businesses exist', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { VendorCatalogManager } = await import('@/pages/polymart/vendor/VendorCatalogManager');
+
+    const mockBusinesses = [
+      { id: 'biz-1', name: 'Kafe Siswa Alpha' },
+      { id: 'biz-2', name: 'Kiosk Celup Tepung' },
+    ];
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(VendorCatalogManager, {
+          myBusinesses: mockBusinesses,
+          selectedBizId: 'biz-1',
+          onBizChange: vi.fn(),
+          onUpdate: vi.fn(),
+        })
+      )
+    );
+
+    expect(html).toContain('Pilih Kedai:');
+    expect(html).toContain('Kafe Siswa Alpha');
+    expect(html).toContain('Kiosk Celup Tepung');
+  });
+
+  it('renders empty store state when no businesses are registered', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { VendorCatalogManager } = await import('@/pages/polymart/vendor/VendorCatalogManager');
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(VendorCatalogManager, {
+          myBusinesses: [],
+          selectedBizId: 'all',
+          onBizChange: vi.fn(),
+          onUpdate: vi.fn(),
+        })
+      )
+    );
+
+    expect(html).toContain('Tiada Kedai Didaftarkan');
+    expect(html).toContain('Daftar Kedai di e-Keusahawanan');
+    expect(html).not.toContain('Pilih Kedai Terlebih Dahulu');
+  });
+});
+
+
