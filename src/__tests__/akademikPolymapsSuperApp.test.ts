@@ -187,22 +187,23 @@ describe('Task 4: PolyMaps Draggable Gesture Bottom Sheet & Live Event Overlays'
     expect(source).not.toContain('📍 Anda Telah Sampai!');
   });
 
-  it('implements draggable gesture bottom sheet with Framer Motion drag and handle bar', () => {
+  it('implements draggable gesture bottom sheet with Framer Motion drag, touch-none handle, and 1-tap snap buttons', () => {
     expect(source).toContain('drag={isLowEnd ? false : "y"}');
-    expect(source).toContain('w-12 h-1.5 bg-slate-400/40 dark:bg-slate-600/50 rounded-full mx-auto my-2 cursor-grab active:cursor-grabbing');
+    expect(source).toContain('touch-none');
+    expect(source).toContain('Ringkas');
+    expect(source).toContain('Separuh');
+    expect(source).toContain('Penuh');
     expect(source).toContain('sheetSnap');
     expect(source).toContain("'PEEK'");
     expect(source).toContain("'HALF'");
     expect(source).toContain("'FULL'");
   });
 
-  it('implements activeOverlayFilter supporting ALL, BUILDINGS, EMS, and POLYMART options with filter pills', () => {
-    expect(source).toContain("activeOverlayFilter, setActiveOverlayFilter");
-    expect(source).toContain("'ALL' | 'BUILDINGS' | 'EMS' | 'POLYMART'");
-    expect(source).toContain("Acara EMS");
-    expect(source).toContain("PolyMart Hub");
-    expect(source).toContain("Trophy");
-    expect(source).toContain("ShoppingBag");
+  it('reverts quick filter pills to clean campus amenities and guards EMS/PolyMart overlays', () => {
+    expect(source).toContain('Kafe');
+    expect(source).toContain('Surau');
+    expect(source).toContain('Tandas');
+    expect(source).toContain('{/* EMS and PolyMart overlays temporarily disabled pending venue data audit */}');
   });
 
   it('queries ems_events and renders interactive live pins for EMS and PolyMart hubs with deep links', () => {

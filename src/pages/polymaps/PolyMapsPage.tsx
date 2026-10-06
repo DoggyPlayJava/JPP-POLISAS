@@ -1547,67 +1547,24 @@ export function PolyMapsPage() {
           <div className="tour-polymaps-quick flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => {
-                setActiveOverlayFilter('ALL');
                 setActiveFilter(null);
               }}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm",
-                activeOverlayFilter === 'ALL' && !activeFilter
+                !activeFilter
                   ? "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900"
                   : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
               )}
             >
               Semua
             </button>
-            <button
-              onClick={() => {
-                setActiveOverlayFilter('BUILDINGS');
-                setActiveFilter(null);
-              }}
-              className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
-                activeOverlayFilter === 'BUILDINGS' && !activeFilter
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-              )}
-            >
-              <Building2 className="w-3.5 h-3.5" /> Bangunan
-            </button>
-            <button
-              onClick={() => {
-                setActiveOverlayFilter(prev => prev === 'EMS' ? 'ALL' : 'EMS');
-                setActiveFilter(null);
-              }}
-              className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
-                activeOverlayFilter === 'EMS'
-                  ? "bg-amber-500 text-white border-amber-500"
-                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-              )}
-            >
-              <Trophy className="w-3.5 h-3.5" /> Acara EMS
-            </button>
-            <button
-              onClick={() => {
-                setActiveOverlayFilter(prev => prev === 'POLYMART' ? 'ALL' : 'POLYMART');
-                setActiveFilter(null);
-              }}
-              className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
-                activeOverlayFilter === 'POLYMART'
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-              )}
-            >
-              <ShoppingBag className="w-3.5 h-3.5" /> PolyMart Hub
-            </button>
-            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('cafe'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'cafe' ? "bg-amber-500 text-white border-amber-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button onClick={() => handleFilterClick('cafe')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'cafe' ? "bg-amber-500 text-white border-amber-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Coffee className="w-3.5 h-3.5" /> Kafe
             </button>
-            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('surau'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'surau' ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button onClick={() => handleFilterClick('surau')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'surau' ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Moon className="w-3.5 h-3.5" /> Surau
             </button>
-            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('toilet'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'toilet' ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button onClick={() => handleFilterClick('toilet')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'toilet' ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Droplets className="w-3.5 h-3.5" /> Tandas
             </button>
           </div>
@@ -1830,7 +1787,8 @@ export function PolyMapsPage() {
             );
           })}
 
-          {/* Render Live EMS Event Overlays */}
+          {/* EMS and PolyMart overlays temporarily disabled pending venue data audit */}
+          {/*
           {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'EMS') && emsEvents.map(evt => {
             const isSelected = selectedEmsEvent?.id === evt.id;
             return (
@@ -1845,7 +1803,6 @@ export function PolyMapsPage() {
             );
           })}
 
-          {/* Render PolyMart Pickup Hubs Overlays */}
           {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'POLYMART') && POLYMART_HUBS.map(hub => {
             const isSelected = selectedPolyMartHub?.id === hub.id;
             return (
@@ -1859,6 +1816,7 @@ export function PolyMapsPage() {
               />
             );
           })}
+          */}
 
           {isNavigating && userLocation && activeBuilding && activeBuilding.center_lat && (
             <Polyline 
@@ -2439,20 +2397,71 @@ export function PolyMapsPage() {
                 className={cn(
                   "rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative flex flex-col",
                   isLowEnd ? "bg-white dark:bg-slate-900" : "bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl",
-                  sheetSnap === 'PEEK' && "max-h-[96px]",
+                  sheetSnap === 'PEEK' && "max-h-[116px]",
                   sheetSnap === 'HALF' && "max-h-[48vh] overflow-y-auto no-scrollbar",
                   sheetSnap === 'FULL' && "max-h-[85vh] overflow-y-auto"
                 )}
               >
-                {/* Drag Handle Bar */}
+                {/* Drag Handle Bar & Tactile Snap Controls */}
                 <div 
-                  onClick={() => {
-                    setSheetSnap(prev => prev === 'PEEK' ? 'HALF' : prev === 'HALF' ? 'FULL' : 'PEEK');
-                  }}
-                  className="w-full pt-2 pb-1 flex justify-center cursor-pointer select-none shrink-0"
+                  className="w-full pt-2 pb-1.5 flex flex-col items-center justify-center select-none shrink-0 touch-none"
                   title="Tarik atau tekan untuk tukar saiz paparan"
                 >
-                  <div className="w-12 h-1.5 bg-slate-400/40 dark:bg-slate-600/50 rounded-full mx-auto my-2 cursor-grab active:cursor-grabbing" />
+                  <div 
+                    onClick={() => {
+                      setSheetSnap(prev => prev === 'PEEK' ? 'HALF' : prev === 'HALF' ? 'FULL' : 'PEEK');
+                    }}
+                    className="w-12 h-1.5 bg-slate-400/40 dark:bg-slate-600/50 rounded-full mx-auto my-1 cursor-grab active:cursor-grabbing touch-none" 
+                  />
+
+                  {/* 1-Tap Tactile Snap Buttons */}
+                  <div className="flex items-center gap-1 p-0.5 mt-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-full border border-slate-200/80 dark:border-slate-700/80 touch-none">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSheetSnap('PEEK');
+                      }}
+                      className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                        sheetSnap === 'PEEK'
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      )}
+                    >
+                      Ringkas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSheetSnap('HALF');
+                      }}
+                      className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                        sheetSnap === 'HALF'
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      )}
+                    >
+                      Separuh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSheetSnap('FULL');
+                      }}
+                      className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                        sheetSnap === 'FULL'
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      )}
+                    >
+                      Penuh
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── EMS EVENT PREVIEW ── */}
