@@ -203,11 +203,12 @@ export function JppFoodBankAdmin() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 
-  // Kaunter Imbasan Segera (QR / No Matrik)
+  // Kaunter Imbasan Segera (QR / No Matrik) & Obsidian Emerald Scanner HUD
   const [counterInput, setCounterInput] = useState('');
   const [isVerifyingCounter, setIsVerifyingCounter] = useState(false);
   const [isCameraScanning, setIsCameraScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [activeScanStudent, setActiveScanStudent] = useState<FoodBankApplication | null>(null);
   const [recentVerifiedRecord, setRecentVerifiedRecord] = useState<{
     appNo: string;
     studentName: string;
@@ -222,6 +223,7 @@ export function JppFoodBankAdmin() {
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('SEMUA');
   const [selectedInventoryLocationId, setSelectedInventoryLocationId] = useState<string>('SEMUA');
   const [locationStocks, setLocationStocks] = useState<FoodBankLocationStock[]>([]);
+  const [inventoryViewMode, setInventoryViewMode] = useState<'grid' | 'table'>('grid');
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodBankItem | null>(null);
   const [itemFormData, setItemFormData] = useState({
@@ -554,9 +556,9 @@ export function JppFoodBankAdmin() {
     saveLocalFoodBankSettings({ is_application_open: newStatus });
     setSettings(prev => prev ? ({ ...prev, is_application_open: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_application_open: newStatus } as FoodBankSettings));
     if (newStatus) {
-      toast.success('Pintu permohonan Food Bank dibuka kepada mahasiswa! 🟢');
+      toast.success('Pintu permohonan Food Bank dibuka kepada mahasiswa!');
     } else {
-      toast('Permohonan Food Bank ditutup buat sementara waktu.', { icon: '🔒' });
+      toast('Permohonan Food Bank ditutup buat sementara waktu.');
     }
   };
 
@@ -587,9 +589,9 @@ export function JppFoodBankAdmin() {
     saveLocalFoodBankSettings({ is_module_active: newStatus });
     setSettings(prev => prev ? ({ ...prev, is_module_active: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_module_active: newStatus } as FoodBankSettings));
     if (newStatus) {
-      toast.success('Modul Food Bank kini RASMI DIBUKA & aktif di portal Kebajikan mahasiswa! 🟢');
+      toast.success('Modul Food Bank kini RASMI DIBUKA & aktif di portal Kebajikan mahasiswa!');
     } else {
-      toast('Modul Food Bank kini DALAM PERSEDIAAN (Tutup untuk permohonan mahasiswa).', { icon: '🛡️' });
+      toast('Modul Food Bank kini DALAM PERSEDIAAN (Tutup untuk permohonan mahasiswa).');
     }
   };
 
@@ -641,9 +643,12 @@ export function JppFoodBankAdmin() {
               const v = u.searchParams.get('verify');
               if (v) token = v;
             } catch { /* bukan URL, anggap token mentah */ }
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              navigator.vibrate(100);
+            }
             stopCameraScan();
             setCounterInput(token);
-            handleVerifyCounterPickup(token);
+            handleLookupOrVerify(token);
           },
           () => { /* abaikan ralat bingkai biasa */ }
         );
@@ -803,6 +808,10 @@ export function JppFoodBankAdmin() {
         });
 
         setCounterInput('');
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+        setActiveScanStudent(prev => prev ? ({ ...prev, status: 'SELESAI' } as FoodBankApplication) : null);
         if (matched?.applicant?.id) {
           notifyStudent({ ...matched, status: 'SELESAI' }, 'SELESAI').catch(() => {});
         }
@@ -817,6 +826,65 @@ export function JppFoodBankAdmin() {
     } finally {
       setIsVerifyingCounter(false);
     }
+  };
+
+  // ── 4b. Carian Pelajar Pantas (Kamera / Manual No Matrik) & Serahan ──
+  const handleLookupOrVerify = async (queryStr: string) => {
+    const query = queryStr.trim();
+    if (!query) {
+      toast.error('Sila imbas kod QR atau masukkan No. Matrik / No. Permohonan.');
+      return;
+    }
+
+    // 1. Cari dalam senarai permohonan sedia ada
+    let matched = applications.find(
+      a =>
+        a.pickup_qr_code?.toLowerCase() === query.toLowerCase() ||
+        a.id.toLowerCase() === query.toLowerCase() ||
+        a.application_no?.toLowerCase() === query.toLowerCase() ||
+        a.applicant?.matric_no?.toLowerCase() === query.toLowerCase() ||
+        a.applicant?.full_name?.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // 2. Jika tiada dalam senarai setempat, cuba carian langsung di pangkalan data
+    if (!matched) {
+      try {
+        const { data } = await supabase
+          .from('foodbank_applications')
+          .select(`
+            *,
+            applicant:applicant_id (id, full_name, matric_no, email, phone, avatar_url, class, department),
+            location:distribution_location_id (id, name, room_detail)
+          `)
+          .or(`pickup_qr_code.eq.${query},application_no.eq.${query},id.eq.${query}`)
+          .maybeSingle();
+
+        if (data) {
+          matched = data as FoodBankApplication;
+        }
+      } catch (e) {
+        console.warn('DB lookup error:', e);
+      }
+    }
+
+    if (matched) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+      setActiveScanStudent(matched);
+      toast.success(`Rekod pelajar ditemui: ${effectiveName(matched)}`);
+    } else {
+      // Jika tidak dijumpai dalam rekod permohonan biasa, terus cuba panggil pengesahan kaunter
+      handleVerifyCounterPickup(query);
+    }
+  };
+
+  const handleExecuteFulfillment = async (app: FoodBankApplication) => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(100);
+    }
+    await handleVerifyCounterPickup(app.id || app.pickup_qr_code || app.application_no);
+    setActiveScanStudent(prev => (prev ? ({ ...prev, status: 'SELESAI' } as FoodBankApplication) : null));
   };
 
   // ── 5. Tindakan Pegawai: Luluskan & Tolak Permohonan ───────────────────────
@@ -1421,7 +1489,7 @@ export function JppFoodBankAdmin() {
 
     saveLocalFoodBankSettings(updatedPayload);
     setSettings(prev => prev ? ({ ...prev, ...updatedPayload } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), ...updatedPayload } as FoodBankSettings));
-    toast.success('Tetapan sesi & formula kuota berjaya disimpan! ⚙️');
+    toast.success('Tetapan sesi & formula kuota berjaya disimpan!');
     setIsSavingSettings(false);
   };
 
@@ -1625,7 +1693,7 @@ export function JppFoodBankAdmin() {
         console.warn('Audit log insert note:', auditErr);
       }
 
-      toast.success(`Berjaya melantik ${selectedCandidate.full_name} sebagai ${officerRoleTitle.trim()}! 🎉`);
+      toast.success(`Berjaya melantik ${selectedCandidate.full_name} sebagai ${officerRoleTitle.trim()}!`);
       handleClearCandidate();
       setOfficerAssignLocationId('');
       setOfficerRoleTitle('Petugas Kaunter Food Bank');
@@ -1672,7 +1740,7 @@ export function JppFoodBankAdmin() {
         // silent
       }
 
-      toast.success(`(Mod Tempatan) Berjaya melantik ${selectedCandidate.full_name}! 🎉`);
+      toast.success(`(Mod Tempatan) Berjaya melantik ${selectedCandidate.full_name}!`);
       handleClearCandidate();
       setOfficerAssignLocationId('');
       setOfficerRoleTitle('Petugas Kaunter Food Bank');
@@ -2027,7 +2095,7 @@ export function JppFoodBankAdmin() {
       },
     ]);
 
-    toast.success(`Berjaya mengeksport ${rows.length} nama. 📄`);
+    toast.success(`Berjaya mengeksport ${rows.length} nama.`);
   };
 
   const handleExportCsv = async (logsToExport: FoodBankAuditLog[]) => {
@@ -2079,7 +2147,7 @@ export function JppFoodBankAdmin() {
       { name: 'Audit Log', columns, rows },
     ]);
 
-    toast.success(`Berjaya mengeksport ${logsToExport.length} rekod audit JHEP! 📄`);
+    toast.success(`Berjaya mengeksport ${logsToExport.length} rekod audit JHEP!`);
   };
 
   return (
@@ -2400,93 +2468,278 @@ export function JppFoodBankAdmin() {
               exit={{ opacity: 0, y: -8 }}
               className="space-y-6"
             >
-              {/* Kotak Pengesahan Kaunter Segera (QR / Matrik) */}
-              <div className="p-5 rounded-3xl bg-gradient-to-r from-rose-900 to-slate-900 text-white shadow-lg border border-rose-800/40 relative overflow-hidden">
-                <div className="absolute right-0 top-0 w-80 h-full bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+              {/* ════════════════════════════════════════════════════════════════════
+                  HIGH-CONTRAST OBSIDIAN EMERALD SCANNER HUD (KAUNTER AGIHAN PANTAS)
+                 ════════════════════════════════════════════════════════════════════ */}
+              <div className="p-5 sm:p-7 rounded-3xl bg-slate-950 text-white shadow-2xl border border-emerald-500/30 relative overflow-hidden">
+                {/* Obsidian Emerald Ambient Glow */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* HUD Header Bar */}
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-rose-300 text-xs font-black uppercase tracking-wider">
-                      <QrCode className="w-4 h-4 text-rose-400" />
-                      Kaunter Agihan Pantas
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-widest">
+                      <QrCode className="w-4 h-4 text-emerald-400" />
+                      <span>Kaunter Agihan Pantas &bull; HUD Pengimbas Obsidian Emerald</span>
                     </div>
-                    <h2 className="text-xl font-black tracking-tight text-white">
-                      Imbas Pas Pengambilan Mahasiswa
+                    <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                      <span>Pengesahan Pas Pengambilan Mahasiswa</span>
                     </h2>
-                    <p className="text-xs text-rose-100/70 max-w-lg">
-                      Masukkan atau imbas Kod QR (FB-...), No. Matrik, atau No. Permohonan pelajar untuk mengesahkan pengambilan dan menolak inventori secara atomik.
+                    <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                      Imbas kod QR pas digital pelajar atau buat carian No. Matrik secara pantas. Pengesahan 1-tap akan mengemas kini status dan menolak inventori secara atomik.
                     </p>
                   </div>
 
-                  {/* Input Carian & Butang Pengesahan */}
-                  <div className="flex items-center gap-2 sm:w-auto w-full">
-                    <div className="relative flex-1 sm:w-72">
-                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="text"
-                        value={counterInput}
-                        onChange={e => setCounterInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleVerifyCounterPickup()}
-                        placeholder="Imbas Kod QR / No Matrik..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
+                  {/* Location & Status HUD Badges */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Kaunter Aktif</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => (isCameraScanning ? stopCameraScan() : startCameraScan())}
-                      disabled={isVerifyingCounter}
-                      className="px-3.5 py-2.5 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 text-white font-black text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
-                      title="Imbas QR pas pelajar menggunakan kamera"
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 border shadow-sm cursor-pointer",
+                        isCameraScanning
+                          ? "bg-rose-600/90 border-rose-500 text-white hover:bg-rose-500"
+                          : "bg-emerald-600 border-emerald-500 hover:bg-emerald-500 text-white"
+                      )}
                     >
                       {isCameraScanning ? (
                         <>
-                          <ScanLine className="w-4 h-4 animate-pulse text-rose-300" />
-                          Berhenti
+                          <ScanLine className="w-4 h-4 animate-pulse" />
+                          <span>Tutup Pengimbas</span>
                         </>
                       ) : (
                         <>
                           <Camera className="w-4 h-4" />
-                          Imbas
-                        </>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleVerifyCounterPickup()}
-                      disabled={isVerifyingCounter || !counterInput.trim()}
-                      className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center gap-1.5 whitespace-nowrap"
-                    >
-                      {isVerifyingCounter ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          Mengesahkan...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Sahkan Ambilan
+                          <span>Buka Kamera Imbasan</span>
                         </>
                       )}
                     </button>
                   </div>
                 </div>
 
-                {/* Paparan Kamera Imbasan QR (hidden bila tidak aktif) */}
-                {isCameraScanning && (
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-white/20 bg-black/40">
-                    <div id="foodbank-counter-qr-reader" className="w-full [&_video]:w-full [&_video]:rounded-2xl" />
-                    <p className="px-3 py-2 text-[11px] text-rose-100/80 font-semibold text-center">
-                      Halakan kamera ke kod QR pas pengambilan pelajar — pengesahan akan berlaku secara automatik.
+                {/* HUD Body Grid: Centered Viewfinder + Fallback Manual Search & Student Card */}
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
+                  {/* Left Column: Large Centered Camera Viewfinder Container */}
+                  <div className="lg:col-span-6 flex flex-col items-center justify-center">
+                    <div className="w-full max-w-md border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.25)] rounded-3xl overflow-hidden bg-black/90 relative aspect-square flex flex-col items-center justify-center">
+                      {/* Reticle HUD corner accents */}
+                      <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-lg pointer-events-none z-20" />
+                      <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg pointer-events-none z-20" />
+                      <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg pointer-events-none z-20" />
+                      <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-lg pointer-events-none z-20" />
+
+                      {/* Animated Neon-Green Laser Sweep Line */}
+                      <motion.div
+                        animate={{ y: ['-120px', '120px', '-120px'] }}
+                        transition={{ repeat: Infinity, duration: 2.4, ease: 'easeInOut' }}
+                        className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#10b981] z-20 pointer-events-none"
+                      />
+
+                      {/* Scanning Indicator with Animated Pulse */}
+                      <div className="absolute top-4 inset-x-0 mx-auto w-fit z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <ScanLine className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{isCameraScanning ? 'HUD Laser Aktif — Menghala ke Kod QR' : 'Pengimbas Bersedia'}</span>
+                      </div>
+
+                      {/* Camera Feed or Placeholder Viewfinder */}
+                      {isCameraScanning ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center relative">
+                          <div id="foodbank-counter-qr-reader" className="w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover" />
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center space-y-3 z-10 flex flex-col items-center">
+                          <div className="w-16 h-16 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                            <QrCode className="w-8 h-8" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">Viewfinder Kamera Digital</p>
+                            <p className="text-xs text-slate-400 max-w-xs mt-1">
+                              Kamera dalam keadaan siap sedia. Tekan butang di bawah untuk mengaktifkan imbasan langsung.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={startCameraScan}
+                            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                          >
+                            <Camera className="w-4 h-4" />
+                            <span>Aktifkan Kamera Imbasan</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 font-semibold mt-3 text-center">
+                      Halakan kamera pada kod QR Pas Pengambilan Digital pelajar (FB-...).
                     </p>
                   </div>
-                )}
+
+                  {/* Right Column: Fallback Manual Search & High-Contrast Student Identification Card */}
+                  <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
+                    {/* Fallback Manual Matric Search Input */}
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-2">
+                      <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Search className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Carian Alternatif / Manual Pelajar</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            value={counterInput}
+                            onChange={e => setCounterInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleLookupOrVerify(counterInput)}
+                            placeholder="Cari No. Matrik secara manual..."
+                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/50 border border-emerald-500/30 text-white placeholder-slate-500 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleLookupOrVerify(counterInput)}
+                          disabled={isVerifyingCounter || !counterInput.trim()}
+                          className="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                        >
+                          {isVerifyingCounter ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Search className="w-4 h-4" />
+                          )}
+                          <span>Cari</span>
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        Masukkan No. Matrik (cth: 06DKA23F1001), No. Permohonan (FB-2026-...), atau Kod Pas QR.
+                      </p>
+                    </div>
+
+                    {/* High-Contrast Student Identification Card in obsidian glass */}
+                    {activeScanStudent ? (
+                      <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/90 border-2 border-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.2)] backdrop-blur-xl relative space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5" /> Kad Pengenalan Mahasiswa (Disahkan)
+                            </span>
+                            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                              {effectiveName(activeScanStudent)}
+                            </h3>
+                            <div className="flex items-center gap-2 pt-0.5">
+                              <span className="font-mono font-black text-emerald-400 text-sm tracking-wider bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                                {effectiveMatric(activeScanStudent)}
+                              </span>
+                              <span className="text-xs text-slate-300 font-semibold">
+                                {activeScanStudent.application_no}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveScanStudent(null)}
+                            className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                            title="Tutup kad"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Student Meta: Phone & Department/Class */}
+                        <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-white/10">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">No. Telefon</span>
+                            <span className="text-slate-200 font-semibold">{activeScanStudent.applicant?.phone || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">Jabatan / Kelas</span>
+                            <span className="text-slate-200 font-semibold">
+                              {activeScanStudent.applicant?.department || activeScanStudent.applicant?.class || '-'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Entitled Package & Selected Items */}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                            Pakej & Barangan Diluluskan:
+                          </span>
+                          <div className="p-3 rounded-xl bg-black/40 border border-white/10 max-h-32 overflow-y-auto space-y-1 text-xs">
+                            {activeScanStudent.selected_items && activeScanStudent.selected_items.length > 0 ? (
+                              activeScanStudent.selected_items.map((it, idx) => (
+                                <div key={idx} className="flex items-center justify-between text-slate-300">
+                                  <span className="font-medium">{it.item_name}</span>
+                                  <span className="font-bold text-emerald-400">{it.quantity} {it.unit}</span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-slate-400 font-medium">{activeScanStudent.items_summary || 'Pakej Bantuan Makanan Asas'}</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Distribution Location & Slot Match Badge */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                          <div className="flex items-center gap-1.5 text-slate-300">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>{(activeScanStudent.location as any)?.name || 'Pusat Edaran JPP'}</span>
+                          </div>
+                          <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-emerald-400" />
+                            <span>{activeScanStudent.pickup_time_slot || 'Slot Bebas'}</span>
+                          </div>
+                        </div>
+
+                        {/* Giant 56px+ green thumb button [ SAHKAN SERAHAN MAKANAN ] */}
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteFulfillment(activeScanStudent)}
+                          disabled={isVerifyingCounter || activeScanStudent.status === 'SELESAI'}
+                          className="w-full min-h-[56px] py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-black text-base md:text-lg tracking-wider uppercase transition-all shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          {isVerifyingCounter ? (
+                            <>
+                              <RefreshCw className="w-5 h-5 animate-spin" />
+                              <span>Mengesahkan Penyerahan...</span>
+                            </>
+                          ) : activeScanStudent.status === 'SELESAI' ? (
+                            <>
+                              <CheckCircle2 className="w-6 h-6 text-white" />
+                              <span>MAKANAN TELAH DISERAHKAN</span>
+                            </>
+                          ) : (
+                            <>
+                              <Package className="w-6 h-6 text-white" />
+                              <span>SAHKAN SERAHAN MAKANAN</span>
+                              <CheckCircle2 className="w-6 h-6 text-white" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-8 rounded-3xl bg-slate-900/50 border border-dashed border-emerald-500/20 text-center flex flex-col items-center justify-center space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400">
+                          <User className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-300">Menunggu Imbasan Pas Mahasiswa</p>
+                        <p className="text-xs text-slate-400 max-w-xs">
+                          Halakan kod QR ke viewfinder atau buat carian No. Matrik secara manual untuk memaparkan maklumat pelajar dan butang serahan makanan.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Banner Pengesahan Terkini Berjaya */}
                 {recentVerifiedRecord && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-3 text-xs"
+                    className="mt-6 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-center gap-2 text-emerald-300 font-bold">
                       <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
@@ -2498,7 +2751,7 @@ export function JppFoodBankAdmin() {
                         — {recentVerifiedRecord.itemsCount} barangan (RM {recentVerifiedRecord.totalValue.toFixed(2)})
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-300 font-semibold">
+                    <span className="text-[10px] text-slate-400 font-semibold">
                       Masa: {recentVerifiedRecord.timestamp}
                     </span>
                   </motion.div>
@@ -2571,8 +2824,8 @@ export function JppFoodBankAdmin() {
 
               {/* Jadual Senarai Permohonan */}
               <div className="rounded-3xl bg-white dark:bg-white/[0.03] border border-rose-200/70 dark:border-white/10 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                  <table className="w-full text-left text-xs min-w-[750px]">
                     <thead>
                       <tr className="bg-rose-50/50 dark:bg-white/[0.02] border-b border-rose-200/60 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
                         <th className="py-3.5 px-4">No. Permohonan</th>
@@ -2881,6 +3134,38 @@ export function JppFoodBankAdmin() {
                     Pindah Stok
                   </button>
 
+                  {/* Pilihan Paparan Grid / Jadual */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setInventoryViewMode('grid')}
+                      className={cn(
+                        'px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1',
+                        inventoryViewMode === 'grid'
+                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                      title="Paparan Grid Kad"
+                    >
+                      <Boxes className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Grid</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInventoryViewMode('table')}
+                      className={cn(
+                        'px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1',
+                        inventoryViewMode === 'table'
+                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                      title="Paparan Jadual Inventori"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Jadual</span>
+                    </button>
+                  </div>
+
                   {/* Butang Tambah Item */}
                   <button
                     type="button"
@@ -2893,51 +3178,53 @@ export function JppFoodBankAdmin() {
                 </div>
               </div>
 
-              {/* Grid Barangan Inventori */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredItems.map(item => {
-                  const catConfig = FOODBANK_CATEGORY_CONFIG[item.category] || {
-                    label: item.category,
-                    badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
-                    icon: '📦',
-                  };
-                  const displayStock = getItemStockForLocation(item.id, selectedInventoryLocationId);
-                  const stockBadge = getFoodBankStockBadge(displayStock, item.unit);
+              {/* Grid / Jadual Barangan Inventori */}
+              {inventoryViewMode === 'grid' ? (
+                <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredItems.map(item => {
+                      const catConfig = FOODBANK_CATEGORY_CONFIG[item.category] || {
+                        label: item.category,
+                        badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
+                        icon: '',
+                      };
+                      const displayStock = getItemStockForLocation(item.id, selectedInventoryLocationId);
+                      const stockBadge = getFoodBankStockBadge(displayStock, item.unit);
 
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'p-4 rounded-3xl bg-white dark:bg-white/[0.03] border transition-all duration-200 flex flex-col justify-between shadow-sm relative',
-                        item.is_active
-                          ? 'border-rose-200/70 dark:border-white/10'
-                          : 'border-slate-200/60 dark:border-white/5 opacity-60'
-                      )}
-                    >
-                      <div>
-                        {/* Gambar Item */}
-                        <div className="w-full h-32 rounded-2xl bg-rose-50/50 dark:bg-white/5 overflow-hidden mb-3 relative flex items-center justify-center border border-rose-100 dark:border-white/5">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={e => {
-                                (e.target as HTMLElement).style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            <Package className="w-10 h-10 text-rose-300 dark:text-slate-600" />
+                      return (
+                        <div
+                          key={item.id}
+                          className={cn(
+                            'p-4 rounded-3xl bg-white dark:bg-white/[0.03] border transition-all duration-200 flex flex-col justify-between shadow-sm relative',
+                            item.is_active
+                              ? 'border-rose-200/70 dark:border-white/10'
+                              : 'border-slate-200/60 dark:border-white/5 opacity-60'
                           )}
-                          <span
-                            className={cn(
-                              'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider backdrop-blur-md border flex items-center gap-1 shadow-sm',
-                              catConfig.badge
-                            )}
-                          >
-                            <span>{catConfig.icon}</span>
-                            <span>{catConfig.label}</span>
-                          </span>
+                        >
+                          <div>
+                            {/* Gambar Item */}
+                            <div className="w-full h-32 rounded-2xl bg-rose-50/50 dark:bg-white/5 overflow-hidden mb-3 relative flex items-center justify-center border border-rose-100 dark:border-white/5">
+                              {item.image_url ? (
+                                <img
+                                  src={item.image_url}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={e => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <Package className="w-10 h-10 text-rose-300 dark:text-slate-600" />
+                              )}
+                              <span
+                                className={cn(
+                                  'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider backdrop-blur-md border flex items-center gap-1 shadow-sm',
+                                  catConfig.badge
+                                )}
+                              >
+                                <Package className="w-3 h-3" />
+                                <span>{catConfig.label}</span>
+                              </span>
                           {!item.is_active && (
                             <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white">
                               Tidak Aktif
@@ -3114,8 +3401,109 @@ export function JppFoodBankAdmin() {
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
+          ) : (
+            /* Jadual Inventori & Stok Barangan */
+            <div className="rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/70 dark:border-white/10 shadow-sm overflow-hidden">
+              <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                <table className="w-full text-left text-xs min-w-[750px]">
+                  <thead>
+                    <tr className="bg-amber-50/50 dark:bg-white/[0.02] border-b border-amber-200/60 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
+                      <th className="py-3 px-4">Barangan</th>
+                      <th className="py-3 px-4">Kategori</th>
+                      <th className="py-3 px-4">Anggaran Seunit</th>
+                      <th className="py-3 px-4">Baki Stok</th>
+                      <th className="py-3 px-4">Pusat Agihan Terpilih</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                      <th className="py-3 px-4 text-right">Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {filteredItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                          Tiada barangan inventori ditemui.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredItems.map(item => {
+                        const displayStock = getItemStockForLocation(item.id, selectedInventoryLocationId);
+                        const stockBadge = getFoodBankStockBadge(displayStock, item.unit);
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                {item.image_url ? (
+                                  <img src={item.image_url} alt={item.name} className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-white/10" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-white/5 flex items-center justify-center text-slate-400 border border-slate-200 dark:border-white/10">
+                                    <Package className="w-4 h-4" />
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-bold text-slate-900 dark:text-white">{item.name}</p>
+                                  {item.description && <p className="text-[10px] text-slate-400 line-clamp-1">{item.description}</p>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300">
+                                {item.category}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
+                              RM {Number(item.estimated_cost).toFixed(2)} /{item.unit}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={cn('px-2 py-0.5 rounded-md text-[10px] font-black uppercase', stockBadge.badgeClass)}>
+                                {stockBadge.label}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex flex-wrap items-center gap-1">
+                                {locations.slice(0, 3).map(loc => (
+                                  <span key={loc.id} className="text-[10px] font-semibold text-slate-500 bg-slate-50 dark:bg-white/5 px-1.5 py-0.5 rounded">
+                                    {loc.name.split(' ')[0]}: {getItemStockForLocation(item.id, loc.id)}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={cn('px-2 py-0.5 rounded-md text-[9px] font-black uppercase', item.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400')}>
+                                {item.is_active ? 'Aktif' : 'Nyahaktif'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditItemModal(item)}
+                                  className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 cursor-pointer"
+                                  title="Edit Item"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteItem(item)}
+                                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 cursor-pointer"
+                                  title="Padam Item"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
+        </motion.div>
+      )}
 
           {/* ════════════════════════════════════════════════════════════════════
               TAB 3: PENJEJAKAN BAJET & LEJAR AUDIT (RM70,000)
@@ -3215,8 +3603,8 @@ export function JppFoodBankAdmin() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                  <table className="w-full text-left text-xs min-w-[650px]">
                     <thead>
                       <tr className="bg-rose-50/50 dark:bg-white/[0.02] border-b border-rose-200/60 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
                         <th className="py-3 px-4">Tarikh & Masa</th>
@@ -3721,10 +4109,10 @@ export function JppFoodBankAdmin() {
                         onChange={e => setOfficerAssignLocationId(e.target.value)}
                         className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm cursor-pointer"
                       >
-                        <option value="">🌐 Semua Pusat Edaran (Floating / Merentas Lokasi)</option>
+                        <option value="">Semua Pusat Edaran (Floating / Merentas Lokasi)</option>
                         {locations.map(loc => (
                           <option key={loc.id} value={loc.id}>
-                            📍 {loc.name}
+                            {loc.name}
                           </option>
                         ))}
                       </select>
@@ -4346,8 +4734,18 @@ export function JppFoodBankAdmin() {
               {selectedAppForDetail.requires_counter_verification && (
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-bold">Pengesahan Kaunter</span>
-                  <p className={cn('font-bold text-xs', selectedAppForDetail.counter_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
-                    {selectedAppForDetail.counter_verified ? '✓ Disahkan (kad matrik disemak)' : '⚠️ Perlu sahkan kad matrik'}
+                  <p className={cn('font-bold text-xs flex items-center gap-1.5', selectedAppForDetail.counter_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
+                    {selectedAppForDetail.counter_verified ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Disahkan (kad matrik disemak)</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>Perlu sahkan kad matrik</span>
+                      </>
+                    )}
                   </p>
                 </div>
               )}
@@ -4403,32 +4801,34 @@ export function JppFoodBankAdmin() {
             <div className="text-xs">
               <span className="text-[10px] text-slate-400 uppercase font-bold">Barangan Yang Dipohon:</span>
               <div className="mt-1 border border-slate-100 dark:border-white/10 rounded-2xl overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="py-2 px-3">Item</th>
-                      <th className="py-2 px-3">Kuantiti</th>
-                      <th className="py-2 px-3 text-right">Kos Anggaran (RM)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                    {selectedAppForDetail.selected_items?.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2 px-3 font-semibold text-slate-800 dark:text-white">{it.item_name}</td>
-                        <td className="py-2 px-3">{it.quantity} {it.unit}</td>
-                        <td className="py-2 px-3 text-right font-mono font-bold">
-                          {(it.estimated_cost * it.quantity).toFixed(2)}
+                <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                  <table className="w-full text-left text-xs min-w-[320px]">
+                    <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 font-bold uppercase text-[10px]">
+                      <tr>
+                        <th className="py-2 px-3">Item</th>
+                        <th className="py-2 px-3">Kuantiti</th>
+                        <th className="py-2 px-3 text-right">Kos Anggaran (RM)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                      {selectedAppForDetail.selected_items?.map((it, idx) => (
+                        <tr key={idx}>
+                          <td className="py-2 px-3 font-semibold text-slate-800 dark:text-white">{it.item_name}</td>
+                          <td className="py-2 px-3">{it.quantity} {it.unit}</td>
+                          <td className="py-2 px-3 text-right font-mono font-bold">
+                            {(it.estimated_cost * it.quantity).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-rose-50/50 dark:bg-white/5 font-black text-rose-700 dark:text-rose-300">
+                        <td colSpan={2} className="py-2.5 px-3">Jumlah Nilai Anggaran</td>
+                        <td className="py-2.5 px-3 text-right font-mono">
+                          RM {Number(selectedAppForDetail.total_estimated_value || 0).toFixed(2)}
                         </td>
                       </tr>
-                    ))}
-                    <tr className="bg-rose-50/50 dark:bg-white/5 font-black text-rose-700 dark:text-rose-300">
-                      <td colSpan={2} className="py-2.5 px-3">Jumlah Nilai Anggaran</td>
-                      <td className="py-2.5 px-3 text-right font-mono">
-                        RM {Number(selectedAppForDetail.total_estimated_value || 0).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 

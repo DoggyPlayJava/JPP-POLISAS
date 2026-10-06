@@ -384,3 +384,63 @@ describe('Task 3: FoodBank Siswa Revamp — Smart Pantry, Sticky Capsule & QR Pa
     expect(content).toContain('itemsPerPerson');
   });
 });
+
+describe('Task 4: High-Contrast Obsidian Emerald Scanner HUD & Zero-Overflow Admin Tables (JppFoodBankAdmin.tsx)', () => {
+  const adminPagePath = path.resolve(__dirname, '../pages/jpp/JppFoodBankAdmin.tsx');
+
+  it('verifies JppFoodBankAdmin.tsx file exists and exports JppFoodBankAdmin', async () => {
+    expect(fs.existsSync(adminPagePath)).toBe(true);
+    const mod = await import('@/pages/jpp/JppFoodBankAdmin');
+    expect(mod.JppFoodBankAdmin).toBeDefined();
+    expect(typeof mod.JppFoodBankAdmin).toBe('function');
+  });
+
+  it('implements High-Contrast Obsidian Emerald Scanner HUD with viewfinder, laser sweep, and neon tokens', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    // Viewfinder border & shadow token
+    expect(content).toContain('border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.25)]');
+    // Giant thumb button token
+    expect(content).toContain('SAHKAN SERAHAN MAKANAN');
+    // Haptic vibration
+    expect(content).toContain('vibrate');
+    // Scanner container & laser HUD
+    expect(content).toContain('foodbank-counter-qr-reader');
+    expect(content).toMatch(/Laser/i);
+  });
+
+  it('implements fallback manual matric search input with required placeholder and instant lookup', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    expect(content).toContain('Cari No. Matrik secara manual...');
+    expect(content).toContain('handleLookupOrVerify');
+  });
+
+  it('renders High-Contrast Student Identification Card in obsidian glass with bold details and 1-tap fulfillment', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    expect(content).toContain('effectiveName');
+    expect(content).toContain('effectiveMatric');
+    expect(content).toContain('selected_items');
+    expect(content).toContain('handleExecuteFulfillment');
+    expect(content).toContain('verify_and_complete_foodbank_pickup');
+  });
+
+  it('wraps inventory table, applications table, and budget transaction ledger in w-full max-w-full overflow-x-auto scrollbar-hide', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    expect(content).toContain('w-full max-w-full overflow-x-auto scrollbar-hide');
+  });
+
+  it('strictly contains zero raw banned emojis across JppFoodBankAdmin.tsx source', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    const hasEmoji = BANNED_EMOJI_REGEX.test(content);
+    expect(hasEmoji).toBe(false);
+  });
+
+  it('preserves backend RPCs, RBAC gating, budget calculations, and export functions', () => {
+    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    expect(content).toContain('verify_and_complete_foodbank_pickup');
+    expect(content).toContain('foodbank_budget_transactions');
+    expect(content).toContain('OFFICIAL_BASELINE_BUDGET');
+    expect(content).toContain('exportXlsx');
+    expect(content).toContain('isExecutiveAdmin');
+  });
+});
+
