@@ -2,12 +2,12 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   Folder, FolderOpen, File, Download, Upload, Plus, Loader2,
   FileText, Image, Archive, ChevronRight, ChevronDown, Sparkles, PackageOpen,
-  FolderArchive, AlertTriangle,
+  FolderArchive, AlertTriangle, X, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
@@ -16,6 +16,12 @@ import { ms } from 'date-fns/locale';
 import { zipSync, strToU8 } from 'fflate';
 
 const THEME = '#818CF8';
+
+// Device performance check (avoids heavy blur loops on low-tier mobile)
+const isLowEnd = typeof navigator !== 'undefined' && (
+  (('deviceMemory' in navigator) && (navigator as any).deviceMemory <= 4) ||
+  (navigator.hardwareConcurrency != null && navigator.hardwareConcurrency <= 4)
+);
 
 const FOLDER_PRESETS = [
   { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },
@@ -37,6 +43,41 @@ function isSupabaseUrl(url: string): boolean {
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.cipher-node.org';
+
+function getDocumentPreviewUrl(url: string): string {
+  if (!url) return '';
+  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+  }
+  try {
+    const parsed = new URL(url);
+    const idParam = parsed.searchParams.get('id');
+    if (parsed.hostname.includes('drive.google.com') && idParam) {
+      return `https://drive.google.com/file/d/${idParam}/preview`;
+    }
+  } catch {}
+  if (url.includes('/view')) {
+    return url.replace(/\/view(\?.*)?$/, '/preview');
+  }
+  return url;
+}
+
+function getImageUrl(url: string): string {
+  if (!url) return '';
+  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1600`;
+  }
+  try {
+    const parsed = new URL(url);
+    const idParam = parsed.searchParams.get('id');
+    if (parsed.hostname.includes('drive.google.com') && idParam) {
+      return `https://drive.google.com/thumbnail?id=${idParam}&sz=w1600`;
+    }
+  } catch {}
+  return url;
+}
 
 /** Fetch a file as Uint8Array — Supabase Storage (direct) or Google Drive (via no-auth proxy) */
 async function fetchAsBytes(
@@ -134,38 +175,191 @@ function FileIcon({ name }: { name: string }) {
   return <File className="w-4 h-4" />;
 }
 
+// ─── In-App Document Previewer Component ─────────────────────
+export function InAppDocumentPreviewer({
+  file,
+  onClose,
+}: {
+  file: any;
+  onClose: () => void;
+}) {
+  if (!file) return null;
+
+  const displayName = file.file_name || file.name || 'Dokumen';
+  const ext = displayName.split('.').pop()?.toLowerCase() || '';
+  const rawSize = file.file_size_bytes || file.file_size || 0;
+  const size = rawSize ? `${(rawSize / 1024).toFixed(0)} KB` : '';
+  const color = ext === 'pdf' ? '#EF4444' : ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? '#10B981' : '#818CF8';
+  const isPdf = ext === 'pdf';
+  const isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+
+  const rawUrl = file.drive_view_url || file.drive_download_url || '';
+  const downloadUrl = file.drive_download_url || file.drive_view_url || '';
+  const externalUrl = file.drive_view_url || file.drive_download_url || '';
+  const previewUrl = getDocumentPreviewUrl(rawUrl);
+  const imageUrl = getImageUrl(rawUrl);
+  const formattedDate = file.created_at ? format(parseISO(file.created_at), 'd MMM yyyy', { locale: ms }) : '';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className={cn(
+        "fixed inset-0 z-50 flex justify-center",
+        "items-end sm:items-center",
+        "p-0 sm:p-4 md:p-6",
+        isLowEnd ? "bg-black/90" : "bg-black/80 backdrop-blur-md"
+      )}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 40, scale: 0.96 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-3xl md:max-w-4xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-[2rem] sm:rounded-3xl border border-white/10 bg-[#0F172A] shadow-2xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.08] bg-white/[0.02] shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: hexToRgba(color, 0.15), color }}
+            >
+              <FileIcon name={displayName} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-black text-white truncate">{displayName}</h3>
+              <p className="text-[10px] text-white/40 font-bold mt-0.5">
+                {isPdf ? 'Dokumen PDF' : isImage ? 'Imej' : 'Fail'}
+                {size && ` · ${size}`}
+                {formattedDate && ` · ${formattedDate}`}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all min-h-[44px] min-w-[44px] shrink-0"
+            title="Tutup Pratonton"
+            aria-label="Tutup Pratonton"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Viewport */}
+        <div className="flex-1 overflow-auto bg-slate-950 flex flex-col min-h-0">
+          {isPdf ? (
+            <div className="flex-1 w-full p-2 sm:p-4 min-h-[50vh] flex flex-col">
+              <iframe
+                src={previewUrl}
+                title={displayName}
+                className="w-full h-[55vh] sm:h-[62vh] rounded-xl border border-white/10 bg-slate-900"
+                allow="autoplay"
+              />
+            </div>
+          ) : isImage ? (
+            <div className="flex-1 w-full p-4 min-h-[40vh] flex items-center justify-center overflow-auto">
+              <img
+                src={imageUrl}
+                alt={displayName}
+                className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border border-white/5"
+              />
+            </div>
+          ) : (
+            <div className="flex-1 w-full p-8 min-h-[40vh] flex flex-col items-center justify-center text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white/5 text-white/40">
+                <FileIcon name={displayName} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">{displayName}</p>
+                <p className="text-xs text-white/40 mt-1 max-w-sm">
+                  Pratonton terus tidak disokong untuk format fail ini. Sila muat turun fail atau buka tab luaran.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sticky Action Footer Capsule */}
+        <div className="p-4 border-t border-white/[0.08] bg-slate-900/90 backdrop-blur-sm flex items-center justify-end gap-3 flex-wrap shrink-0">
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={displayName}
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all min-h-[44px] flex-1 sm:flex-initial"
+            style={{
+              background: hexToRgba(THEME, 0.15),
+              color: THEME,
+              border: `1px solid ${hexToRgba(THEME, 0.3)}`,
+            }}
+          >
+            <Download className="w-4 h-4" />
+            Muat Turun Fail
+          </a>
+          {externalUrl && (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/15 text-white transition-all min-h-[44px] flex-1 sm:flex-initial border border-white/10"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Buka Tab Luaran
+            </a>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── File card ────────────────────────────────────────────────
-function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; onDelete: () => void }) {
+function FileCard({
+  file,
+  isAdmin,
+  onDelete,
+  onPreview,
+}: {
+  file: any;
+  isAdmin: boolean;
+  onDelete: () => void;
+  onPreview?: (file: any) => void;
+}) {
   const displayName = file.file_name || file.name || '';
   const ext   = displayName.split('.').pop()?.toLowerCase() || '';
   const rawSize = file.file_size_bytes || file.file_size || 0;
   const size  = rawSize ? `${(rawSize / 1024).toFixed(0)} KB` : '';
-  const color = ext === 'pdf' ? '#EF4444' : ['jpg', 'png', 'webp'].includes(ext) ? '#10B981' : '#818CF8';
+  const color = ext === 'pdf' ? '#EF4444' : ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? '#10B981' : '#818CF8';
   const isPdf = ext === 'pdf';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group"
+      onClick={() => onPreview?.(file)}
+      className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group cursor-pointer"
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: hexToRgba(color, 0.15), color }}>
         <FileIcon name={displayName} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white line-clamp-1">{displayName}</p>
+        <p className="text-xs font-black text-white line-clamp-1 group-hover:text-indigo-300 transition-colors">{displayName}</p>
         <p className="text-[9px] text-white/30 font-bold mt-0.5">
           {isPdf && <span className="text-amber-400/60 mr-2">PDF · Google Drive</span>}
           {size}{size && ' · '}{file.created_at && format(parseISO(file.created_at), 'd MMM yyyy', { locale: ms })}
         </p>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
         <a
           href={file.drive_download_url || file.drive_view_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 min-h-[36px]"
           style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
           title="Muat turun fail ini"
         >
@@ -173,8 +367,14 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
           Muat Turun
         </a>
         {isAdmin && (
-          <button onClick={onDelete}
-            className="p-1.5 rounded-xl text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-1.5 rounded-xl text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
+            title="Padam fail"
+          >
             ×
           </button>
         )}
@@ -184,7 +384,9 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
         href={file.drive_download_url || file.drive_view_url}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 text-white/30 hover:text-white/60 transition-colors md:hidden"
+        onClick={e => e.stopPropagation()}
+        className="shrink-0 text-white/30 hover:text-white/60 transition-colors md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+        title="Muat turun fail"
       >
         <Download className="w-4 h-4" />
       </a>
@@ -236,6 +438,7 @@ export function AkademikFolderPage() {
   const [showCreate,     setShowCreate]     = useState(false);
   const [newFolder,      setNewFolder]      = useState({ name: '', description: '' });
   const [showPresets,    setShowPresets]    = useState(false);
+  const [previewFile,    setPreviewFile]    = useState<any | null>(null);
 
   // ZIP download state
   const [zipping,        setZipping]        = useState<'folder' | 'all' | null>(null);
@@ -356,7 +559,7 @@ export function AkademikFolderPage() {
           { id: toastId, duration: 7000 }
         );
       } else {
-        toast.success(`ZIP "${folder.name}" berjaya! Semua fail termasuk. ✅`, { id: toastId });
+        toast.success(`ZIP "${folder.name}" berjaya! Semua fail termasuk.`, { id: toastId });
       }
     } catch (e: any) {
       toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
@@ -414,7 +617,7 @@ export function AkademikFolderPage() {
           { id: toastId, duration: 8000 }
         );
       } else {
-        toast.success('ZIP keseluruhan berjaya! Semua fail termasuk. ✅', { id: toastId });
+        toast.success('ZIP keseluruhan berjaya! Semua fail termasuk.', { id: toastId });
       }
     } catch (e: any) {
       toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
@@ -653,6 +856,7 @@ export function AkademikFolderPage() {
                                 file={file}
                                 isAdmin={isAdmin}
                                 onDelete={() => handleDeleteFile(file.id, folder.id)}
+                                onPreview={(f) => setPreviewFile(f)}
                               />
                             ))}
                           </div>
@@ -666,6 +870,16 @@ export function AkademikFolderPage() {
           })}
         </div>
       )}
+
+      {/* In-App Quick Document Previewer Modal */}
+      <AnimatePresence>
+        {previewFile && (
+          <InAppDocumentPreviewer
+            file={previewFile}
+            onClose={() => setPreviewFile(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

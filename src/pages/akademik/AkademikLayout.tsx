@@ -71,26 +71,26 @@ export function AkademikLayout() {
     {
       target: 'body',
       content: 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.',
-      title: 'Modul e-Akademik 🎓',
+      title: 'Modul e-Akademik',
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-akademik-sidebar',
       content: isMobile ? 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.' : 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.',
-      title: 'Navigasi Menu 📑',
+      title: 'Navigasi Menu',
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-akademik-cgpa',
       content: 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.',
-      title: 'Prestasi Akademik 📈',
+      title: 'Prestasi Akademik',
       placement: 'bottom' as const,
     },
     {
       target: '.tour-akademik-merit',
       content: 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.',
-      title: 'Status Merit ⭐',
+      title: 'Status Merit',
       placement: 'bottom' as const,
     }
   ];

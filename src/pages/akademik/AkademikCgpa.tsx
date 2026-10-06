@@ -7,7 +7,7 @@ import { uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   BookOpen, Upload, AlertCircle, CheckCircle, Loader2,
   FileText, Sparkles, Trash2, TrendingUp, TrendingDown, Minus,
-  XCircle, MessageCircle,
+  XCircle, MessageCircle, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
@@ -249,10 +249,22 @@ export function AkademikCgpa() {
     const isPdf = file.type === 'application/pdf' ||
       file.type === '' ||
       file.name?.toLowerCase().endsWith('.pdf');
-    if (!isPdf) { toast.error('PDF sahaja.'); return; }
+    const isImg = file.type.startsWith('image/') ||
+      /\.(jpe?g|png|webp|heic)$/i.test(file.name || '');
+
+    if (!isPdf && !isImg) { toast.error('PDF atau imej sahaja.'); return; }
     setScanning(true);
     setScanOk(null);
     setPendingFile(file);
+
+    if (isImg && !isPdf) {
+      // Slip image captured from mobile camera
+      setScanOk(false);
+      setDraftMode('SCAN');
+      toast('Slip imej diterima. Sila isi HPNM secara manual di bawah.', { duration: 5000 });
+      setScanning(false);
+      return;
+    }
 
     try {
       let result: any = null;
@@ -298,19 +310,19 @@ export function AkademikCgpa() {
         if (result.hpnm) {
           toast.success(`HPNM ${Number(result.hpnm).toFixed(2)} berjaya dikesan!`);
         } else {
-          toast('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { icon: '⚠️', duration: 4000 });
+          toast.error('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { duration: 4000 });
         }
       } else {
         // Both strategies failed
         setScanOk(false);
         setDraftMode('SCAN');
-        toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
+        toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { duration: 5000 });
       }
     } catch (e: any) {
       console.error('[cgpa-scan] PDF error:', e);
       setScanOk(false);
       setDraftMode('SCAN');
-      toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
+      toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { duration: 5000 });
     } finally {
       setScanning(false);
     }
@@ -328,15 +340,25 @@ export function AkademikCgpa() {
 
     setSaving(true);
     try {
-      // Try upload PDF (non-blocking)
+      // Try upload PDF / image (non-blocking)
       let driveFileId: string | null  = null;
       let driveViewUrl: string | null = null;
       if (pendingFile) {
         try {
-          const url = await uploadPdfToDrive(
-            pendingFile, 'akademik',
-            `transcript_${profile?.id}_${Date.now()}`
-          );
+          const isPdf = pendingFile.type === 'application/pdf' || pendingFile.name?.toLowerCase().endsWith('.pdf');
+          let url: string;
+          if (isPdf) {
+            url = await uploadPdfToDrive(
+              pendingFile, 'akademik',
+              `transcript_${profile?.id}_${Date.now()}`
+            );
+          } else {
+            const { uploadFileToDrive } = await import('@/lib/driveUpload');
+            url = await uploadFileToDrive(
+              pendingFile, 'akademik',
+              `transcript_${profile?.id}_${Date.now()}`
+            );
+          }
           driveViewUrl = url;
         } catch (uploadErr: any) {
           console.warn('[cgpa] upload non-critical:', uploadErr.message);
@@ -497,7 +519,7 @@ export function AkademikCgpa() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 12, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id="gradHpnm" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor={HPNM_COLOR} stopOpacity={0.35} />
@@ -575,7 +597,8 @@ export function AkademikCgpa() {
           ref={fileRef}
           id="cgpa-pdf-upload"
           type="file"
-          accept="*/*"
+          accept="application/pdf,image/*"
+          capture="environment"
           style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
           onChange={e => {
             const f = e.target.files?.[0];
@@ -762,49 +785,58 @@ export function AkademikCgpa() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group"
+                  className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group"
                 >
                   <div
-                    className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center shrink-0"
                     style={{ background: g.bg, border: `1px solid ${hexToRgba(g.color, 0.2)}` }}
                   >
-                    <span className="text-base font-black" style={{ color: g.color }}>{hpnm.toFixed(2)}</span>
+                    <span className="text-sm sm:text-base font-black" style={{ color: g.color }}>{hpnm.toFixed(2)}</span>
                     <span className="text-[7px] font-black text-white/20 uppercase">HPNM</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-black text-white">
+                      <p className="text-xs sm:text-sm font-black text-white truncate">
                         {r.semester ? `Semester ${r.semester}` : 'Sem —'}
                       </p>
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full"
+                      <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full"
                         style={{ background: hexToRgba(g.color, 0.12), color: g.color }}>
                         {g.label}
                       </span>
                     </div>
-                    <p className="text-[10px] text-white/30 font-bold mt-0.5">
+                    <p className="text-[10px] text-white/30 font-bold mt-0.5 truncate">
                       {r.tahun || '—'}
                       {pnm !== null && (
                         <> · PNM: <span style={{ color: PNM_COLOR }}>{pnm.toFixed(2)}</span></>
                       )}
                       {diff !== null && (
-                        <span className={`ml-3 ${diff > 0.001 ? 'text-emerald-400' : diff < -0.001 ? 'text-rose-400' : 'text-white/20'}`}>
+                        <span className={`ml-2 sm:ml-3 ${diff > 0.001 ? 'text-emerald-400' : diff < -0.001 ? 'text-rose-400' : 'text-white/20'}`}>
                           {diff > 0 ? '↑' : diff < 0 ? '↓' : '='}{Math.abs(diff).toFixed(2)}
                         </span>
                       )}
                     </p>
                   </div>
-                  {r.drive_view_url && (
-                    <a href={r.drive_view_url} target="_blank" rel="noopener noreferrer"
-                      className="text-[9px] font-black text-white/20 hover:text-white/50 underline shrink-0 opacity-0 group-hover:opacity-100 transition-all">
-                      Transkrip
-                    </a>
-                  )}
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="p-2 rounded-xl text-white/15 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {r.drive_view_url && (
+                      <a
+                        href={r.drive_view_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Lihat Transkrip"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[10px] font-black text-indigo-400/80 hover:text-indigo-300 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 gap-1 px-2.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Transkrip</span>
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      aria-label="Padam rekod"
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </motion.div>
               );
             })}

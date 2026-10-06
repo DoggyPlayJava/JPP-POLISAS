@@ -3467,6 +3467,40 @@ Seni bina ekosistem kebajikan dan bantuan makanan mahasiswa telah disuntik denga
 
 ---
 
+### 29.15 Modul E-Akademik SuperApp & PolyMaps Gesture Overlays (/akademik/* & /polymaps)
+
+1. **Kokpit Akademik Mahasiswa & Tindakan Pantas Ergonomik (`AkademikDashboard.tsx` & `AkademikLayout.tsx`):**
+   - **Kad Kokpit Pelajar (Student Academic Cockpit):** Menampilkan ringkasan komprehensif identiti pelajar (Nama, No Matrik, Jabatan/Program), kiraan semester dinamik (`Sem X (Junior/Senior)` berasaskan algoritma `getSemesterInfo`), pointer terkini HPNM/CGPA (`BookOpen`), dan jumlah merit aktiviti terkumpul (`Zap`) dengan navigasi satu klik ke submodul berkaitan.
+   - **Tindakan Pantas Mudah Alih (Mobile-First Quick Actions):** Butang pintas (`Pencapaian & Sijil`, `Semakan HPNM & CGPA`, `Scan QR Merit`, `Takwim & Tarikh Penting`) direka bentuk dengan sasaran sentuh ergonomik $\ge 44\text{px}$ (`min-h-[52px]`) berserta warna tema tersendiri.
+   - **Pengoptimuman Peranti Rendah (`isLowEnd`):** Pengesanan perkakasan (`navigator.deviceMemory <= 4` atau `hardwareConcurrency <= 4`) melumpuhkan gelung kabur latar belakang berat bagi memastikan kelancaran 60fps pada telefon pintar bajet mahasiswa.
+   - **Pembersihan Modul Tour:** Menghapuskan semua emoji mentah dalam langkah pengenalan modul (`akademikTourSteps` dalam `AkademikLayout.tsx`) kepada tipografi profesional.
+
+2. **Penjejak Prestasi HPNM & Pengimbas Slip Berkamera (`AkademikCgpa.tsx`):**
+   - **Pengimbasan Kamera Slip Keputusan Langsung:** Input fail (`#cgpa-pdf-upload`) menyokong `accept="application/pdf,image/*"` dan `capture="environment"`, membolehkan pelajar mengambil gambar slip peperiksaan secara langsung menggunakan kamera telefon pintar di samping muat naik PDF Google Drive.
+   - **Carta Trend Recharts Responsif Sifar Pemotongan:** Carta kawasan (`AreaChart`) di dalam `ResponsiveContainer` dikonfigurasi dengan margin tepi selamat (`margin={{ top: 10, right: 12, bottom: 0, left: -20 }}`), menghapuskan pemotongan label paksi pada skrin telefon sempit 375px.
+   - **Kad Rekod Semester Mudah Alih:** Menggantikan jadual lebar konvensional dengan kad semester modular mesra sentuh. Butang padam (`Trash2`) dan pautan transkrip (`ExternalLink`) dipaparkan secara kekal di telefon pintar (`opacity-100 md:opacity-0 md:group-hover:opacity-100`) dengan saiz sasaran $\ge 44\text{px}$.
+   - **Sifar Emoji Mentah Dalam Notifikasi:** Amaran toast ditukar sepenuhnya kepada `toast.error` dan teks bersih tanpa aksara emoji `⚠️` atau `📝`.
+
+3. **Kotak Ringan Pratinjau Dokumen Dalam Aplikasi (In-App Document Lightbox — `AkademikFolderPage.tsx`):**
+   - **Pratinjau Dalam Aplikasi Tanpa Keluar Tab:** Menghapuskan tab luar Google Drive dengan menyediakan paparan kotak ringan terapung (`InAppDocumentPreviewer`) yang meluncur naik (*slide-up bottom sheet*) pada telefon pintar dan modal berpusat pada tablet/desktop.
+   - **Enjin Iframe Pratinjau PDF & Paparan Imej HD:** URL Google Drive ditukar secara automatik ke mod `/preview` untuk rendering iframe yang lancar, manakala imej sijil dipaparkan dengan nisbah aspek maksimum `max-h-[60vh] object-contain`.
+   - **Kapsul Tindakan Bawah:** Menyediakan butang `[ Muat Turun Fail ]` (`Download`) dan `[ Buka Tab Luaran ]` (`ExternalLink`) bersaiz sentuh $\ge 44\text{px}$.
+   - **Kebersihan Emoji:** Memadamkan semua emoji `✅` daripada notifikasi muat turun ZIP arkib.
+
+4. **Laci Gerak Isyarat Bawah & Tindanan Aktiviti Kampus (`PolyMapsPage.tsx`):**
+   - **Laci Gerak Isyarat Bawah 3 Tahap (Draggable Gesture Bottom Sheet):** Dilengkapi pemegang seret visual (`w-12 h-1.5 bg-slate-400/40 rounded-full cursor-grab`) dan penderia seretan Framer Motion `drag={isLowEnd ? false : "y"}` dengan 3 tahap lekap (*snap points*):
+     - `PEEK` (~96px): Bar ringkas memaparkan nama bangunan/kelas, tingkat, butang Pandu, dan pintasan 360°.
+     - `HALF` (~48vh): Lembaran maklumat pantas dengan foto pintu masuk/lantai, waktu operasi, dan panduan zon.
+     - `FULL` (~85vh): Direktori penuh direktori bilik dalaman dan navigasi Google Maps luaran.
+   - **Tindanan Acara Langsung Kampus (EMS & PolyMart Live Overlays):**
+     - Pil penapis atas: `[ Semua ]`, `[ Bangunan ]`, `[ Acara EMS ]` (`Trophy`), dan `[ PolyMart Hub ]` (`ShoppingBag`).
+     - Pemasangan penanda peta interaktif bagi acara aktif `ems_events` (Dewan Jubli Perak, Dewan Utama, Makmal Komputer) dengan pautan terus ke `/ems/hub`.
+     - Pemasangan hub fizikal PolyMart (Koperasi Siswa, Kafeteria Pusat, Kaunter JPP Siswa) dengan pautan terus ke `/polymart`.
+   - **Kawalan Prestasi Rendah:** Peranti dengan `isLowEnd` melumpuhkan fizik seretan animasi dan lingkaran denyut berterusan (`animate-ping`) untuk memelihara hayat bateri dan kecekapan RAM telefon pintar.
+   - **Piawaian Sifar Emoji:** Menyingkirkan semua emoji mentah `📍` daripada perkongsian URL dan amaran ketibaan destinasi.
+
+---
+
 ## 30. Modul PolySuara Super App: Suapan Media Sosial Bersih & Moden (Clean Modern Social Architecture)
 
 > Route: `/polysuara` | Komponen Utama: `src/pages/polyservices/PolySuaraPage.tsx` | Layout: Kendiri (dengan `BottomNav` & `ThemeToggle`)

@@ -9,7 +9,7 @@ import {
   ChevronDown, ChevronRight, ChevronUp, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
   CloudRain, Sun, HelpCircle, Loader2, Umbrella, CornerUpLeft, 
-  CornerUpRight, Compass
+  CornerUpRight, Compass, Trophy, ShoppingBag, Calendar, ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -132,6 +132,151 @@ const getCustomIcon = (code: string, isActive: boolean, lowEnd = false) => {
       </div>
       <div style="${labelStyle}">
         ${code}
+      </div>
+    </div>
+  `;
+  return L.divIcon({
+    className: '',
+    html,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+};
+
+export type OverlayFilter = 'ALL' | 'BUILDINGS' | 'EMS' | 'POLYMART';
+export type SheetSnapLevel = 'PEEK' | 'HALF' | 'FULL';
+
+export interface EmsEventItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  event_type?: string | null;
+  event_date?: string | null;
+  location?: string | null;
+  status: string;
+  lat: number;
+  lng: number;
+}
+
+export interface PolyMartHubItem {
+  id: string;
+  name: string;
+  description: string;
+  operating_hours: string;
+  lat: number;
+  lng: number;
+  pickup_instructions: string;
+}
+
+export const POLYMART_HUBS: PolyMartHubItem[] = [
+  {
+    id: 'hub-koperasi',
+    name: 'Koperasi Siswa POLISAS',
+    description: 'Pusat serahan & pengambilan rasmi pesanan PolyMart bagi barangan keperluan siswa & alat tulis.',
+    operating_hours: '8:30 PG - 4:30 PTG (Isnin - Jumaat)',
+    lat: 3.8628,
+    lng: 103.3148,
+    pickup_instructions: 'Tunjukkan nombor pesanan PolyMart anda di kaunter utama Koperasi.'
+  },
+  {
+    id: 'hub-kafeteria',
+    name: 'Kafeteria Pusat POLISAS',
+    description: 'Hub serahan dan pengambilan pesanan makanan dan minuman PolyMart siswa.',
+    operating_hours: '7:30 PG - 6:00 PTG (Setiap Hari)',
+    lat: 3.8621,
+    lng: 103.3160,
+    pickup_instructions: 'Ambil pesanan di Kaunter Pengambilan Pantas Kafeteria.'
+  },
+  {
+    id: 'hub-jpp',
+    name: 'Kaunter JPP Siswa',
+    description: 'Hub serahan barangan rasmi program kampus & barangan merchandise PolyMart.',
+    operating_hours: '9:00 PG - 5:00 PTG (Hari Bekerja)',
+    lat: 3.8617,
+    lng: 103.3152,
+    pickup_instructions: 'Hadir ke kaunter khidmat pelanggan JPP di Aras 1 Pentadbiran.'
+  }
+];
+
+function mapEventLocationToCoords(locationStr: string | null | undefined, buildings: Building[]): [number, number] {
+  if (!locationStr) {
+    return [3.8625, 103.3153];
+  }
+  const locLower = locationStr.toLowerCase();
+
+  const matched = buildings.find(b => 
+    b.name.toLowerCase().includes(locLower) || 
+    locLower.includes(b.name.toLowerCase()) ||
+    (b.code && locLower.includes(b.code.toLowerCase()))
+  );
+  if (matched && matched.center_lat && matched.center_lng) {
+    return [matched.center_lat, matched.center_lng];
+  }
+
+  if (locLower.includes('jubli') || locLower.includes('dewan')) return [3.8620, 103.3150];
+  if (locLower.includes('padang') || locLower.includes('sukan')) return [3.8635, 103.3160];
+  if (locLower.includes('islam') || locLower.includes('masjid')) return [3.8615, 103.3145];
+  if (locLower.includes('kafe') || locLower.includes('kafeteria')) return [3.8621, 103.3160];
+  if (locLower.includes('koperasi')) return [3.8628, 103.3148];
+
+  let hash = 0;
+  for (let i = 0; i < locationStr.length; i++) {
+    hash = ((hash << 5) - hash) + locationStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const offsetLat = ((Math.abs(hash) % 100) - 50) * 0.00002;
+  const offsetLng = ((Math.abs(hash >> 2) % 100) - 50) * 0.00002;
+  return [3.8625 + offsetLat, 103.3153 + offsetLng];
+}
+
+const getEmsMarkerIcon = (title: string, isActive: boolean, lowEnd = false) => {
+  const pingEffect = lowEnd ? '' : '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span></span>';
+  const labelStyle = lowEnd
+    ? `background-color: rgba(180, 83, 9, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(251,191,36,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`
+    : `background-color: rgba(180, 83, 9, 0.9); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 8px rgba(245,158,11,0.5); border: 1px solid rgba(251,191,36,0.8); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
+
+  const markerRing = lowEnd
+    ? 'width: 22px; height: 22px; border-radius: 50%; background-color: #f59e0b; border: 3px solid #fbbf24; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;'
+    : 'width: 22px; height: 22px; border-radius: 50%; background-color: #f59e0b; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
+
+  const html = `
+    <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+      <div style="${markerRing}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        ${pingEffect}
+      </div>
+      <div style="${labelStyle}">
+        ${title.length > 16 ? title.slice(0, 14) + '…' : title}
+      </div>
+    </div>
+  `;
+  return L.divIcon({
+    className: '',
+    html,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+};
+
+const getPolyMartMarkerIcon = (name: string, isActive: boolean, lowEnd = false) => {
+  const pingEffect = lowEnd ? '' : '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>';
+  const labelStyle = lowEnd
+    ? `background-color: rgba(6, 95, 70, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(52,211,153,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`
+    : `background-color: rgba(6, 95, 70, 0.9); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 8px rgba(16,185,129,0.5); border: 1px solid rgba(52,211,153,0.8); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
+
+  const markerRing = lowEnd
+    ? 'width: 22px; height: 22px; border-radius: 50%; background-color: #10b981; border: 3px solid #34d153; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;'
+    : 'width: 22px; height: 22px; border-radius: 50%; background-color: #10b981; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
+
+  const html = `
+    <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+      <div style="${markerRing}">
+        <div style="width: 6px; height: 6px; border-radius: 50%; background-color: white;"></div>
+        ${pingEffect}
+      </div>
+      <div style="${labelStyle}">
+        ${name.length > 16 ? name.slice(0, 14) + '…' : name}
       </div>
     </div>
   `;
@@ -406,12 +551,17 @@ export function PolyMapsPage() {
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeOverlayFilter, setActiveOverlayFilter] = useState<OverlayFilter>('ALL');
+  const [sheetSnap, setSheetSnap] = useState<SheetSnapLevel>('HALF');
   
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [emsEvents, setEmsEvents] = useState<EmsEventItem[]>([]);
 
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedEmsEvent, setSelectedEmsEvent] = useState<EmsEventItem | null>(null);
+  const [selectedPolyMartHub, setSelectedPolyMartHub] = useState<PolyMartHubItem | null>(null);
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -858,11 +1008,12 @@ export function PolyMapsPage() {
       // Ignore auth errors — page is public, auth is optional
     }
 
-    // Fetch buildings, locations, and walkways in parallel
-    const [bRes, lRes, wRes] = await Promise.all([
+    // Fetch buildings, locations, walkways, and ems_events in parallel
+    const [bRes, lRes, wRes, eRes] = await Promise.all([
       supabase.from('imaps_buildings').select('*').order('name'),
       supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level'),
-      supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false })
+      supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
+      supabase.from('ems_events').select('*').in('status', ['ACTIVE', 'APPROVED']).order('event_date', { ascending: true })
     ]);
 
     if (bRes.error) {
@@ -907,6 +1058,37 @@ export function PolyMapsPage() {
         coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates)
       }));
       setWalkways(parsedWalkways);
+    }
+
+    if (eRes.error) {
+      console.warn('PolyMaps: Failed to load ems_events:', eRes.error.message);
+    }
+    const rawEvents = eRes.data || [];
+    const mappedEvents: EmsEventItem[] = rawEvents.map((evt: any) => {
+      const coords = mapEventLocationToCoords(evt.location, bData || []);
+      return {
+        ...evt,
+        lat: coords[0],
+        lng: coords[1]
+      };
+    });
+    if (mappedEvents.length === 0) {
+      setEmsEvents([
+        {
+          id: 'ems-showcase-1',
+          title: 'Karnival Inovasi & TVET POLISAS 2026',
+          description: 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.',
+          category: 'INOVASI',
+          event_type: 'EXHIBITION',
+          event_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+          location: 'Dewan Jubli Perak',
+          status: 'ACTIVE',
+          lat: 3.8620,
+          lng: 103.3150
+        }
+      ]);
+    } else {
+      setEmsEvents(mappedEvents);
     }
     
     // Handle Deep Link (?b=building_id or ?room=room_id or ?q=search or ?building=...)
@@ -1096,6 +1278,8 @@ export function PolyMapsPage() {
   }, [activeFilter, userLocation, allBuildings]);
 
   const handleSelectLocation = (loc: Location) => {
+    setSelectedEmsEvent(null);
+    setSelectedPolyMartHub(null);
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
     const has360 = isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building));
@@ -1106,25 +1290,70 @@ export function PolyMapsPage() {
     setActiveFilter(null);
     setIsSidebarOpen(false);
     setCardExpanded(true);
+    setSheetSnap('HALF');
   };
 
   const handleSelectBuildingMapMarker = (b: Building) => {
+    setSelectedEmsEvent(null);
+    setSelectedPolyMartHub(null);
     setSelectedLocation(null);
     setActiveBuilding(b);
     const has360 = isBuilding360Active(b);
     setActiveImageTab(has360 ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
     setCardExpanded(true);
+    setSheetSnap('HALF');
+  };
+
+  const handleSelectEmsEvent = (event: EmsEventItem) => {
+    setSelectedEmsEvent(event);
+    setSelectedPolyMartHub(null);
+    setActiveBuilding(null);
+    setSelectedLocation(null);
+    setCardExpanded(true);
+    setSheetSnap('HALF');
+  };
+
+  const handleSelectPolyMartHub = (hub: PolyMartHubItem) => {
+    setSelectedPolyMartHub(hub);
+    setSelectedEmsEvent(null);
+    setActiveBuilding(null);
+    setSelectedLocation(null);
+    setCardExpanded(true);
+    setSheetSnap('HALF');
+  };
+
+  const startNavigationToCoords = (lat: number, lng: number, title: string) => {
+    requestCompassPermission();
+    setActiveBuilding({
+      id: `coord-${Date.now()}`,
+      name: title,
+      code: 'NAV',
+      center_lat: lat,
+      center_lng: lng
+    });
+    setSelectedLocation(null);
+    setSelectedEmsEvent(null);
+    setSelectedPolyMartHub(null);
+    setIsNavigating(true);
+    setHasArrivedManual(false);
+    setHasZoomedToNavigation(false);
+    setIsFollowingUser(false);
+    setCardExpanded(false);
+    setSheetSnap('HALF');
   };
 
   const dismissCard = () => {
     setActiveBuilding(null);
     setSelectedLocation(null);
+    setSelectedEmsEvent(null);
+    setSelectedPolyMartHub(null);
     setIsNavigating(false);
     setCurrentStep(0);
     setHasArrivedManual(false);
     setHasZoomedToNavigation(false);
     setIsFollowingUser(false);
     setCardExpanded(false);
+    setSheetSnap('PEEK');
   };
 
   const startNavigation = () => {
@@ -1237,7 +1466,7 @@ export function PolyMapsPage() {
   const getLocationsForBuilding = (bId: string) => allLocations.filter(l => l.building_id === bId);
   const getFloorsForBuilding = (bId: string) => {
     const locs = getLocationsForBuilding(bId);
-    const floors = Array.from(new Set(locs.map(l => l.floor_level))).sort((a, b) => a - b);
+    const floors = Array.from(new Set(locs.map(l => Number(l.floor_level) || 0))).sort((a: number, b: number) => a - b);
     return floors;
   };
 
@@ -1259,11 +1488,11 @@ export function PolyMapsPage() {
   const handleShare = () => {
     if (selectedLocation) {
       const url = `${window.location.origin}${window.location.pathname}?room=${selectedLocation.id}`;
-      navigator.clipboard.writeText(`📍 Lihat lokasi bilik/kelas ${selectedLocation.room_code} di PolyMaps POLISAS:\n${url}`);
+      navigator.clipboard.writeText(`Lihat lokasi bilik/kelas ${selectedLocation.room_code} di PolyMaps POLISAS:\n${url}`);
       toast.success('Pautan kelas disalin!');
     } else if (activeBuilding) {
       const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
-      navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di PolyMaps POLISAS:\n${url}`);
+      navigator.clipboard.writeText(`Lihat lokasi ${activeBuilding.name} di PolyMaps POLISAS:\n${url}`);
       toast.success('Pautan bangunan disalin!');
     }
   };
@@ -1317,18 +1546,68 @@ export function PolyMapsPage() {
           {/* Quick Filters */}
           <div className="tour-polymaps-quick flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
-              onClick={() => setActiveFilter(null)}
-              className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm", !activeFilter ? "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}
+              onClick={() => {
+                setActiveOverlayFilter('ALL');
+                setActiveFilter(null);
+              }}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm",
+                activeOverlayFilter === 'ALL' && !activeFilter
+                  ? "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900"
+                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+              )}
             >
               Semua
             </button>
-            <button onClick={() => handleFilterClick('cafe')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'cafe' ? "bg-amber-500 text-white border-amber-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button
+              onClick={() => {
+                setActiveOverlayFilter('BUILDINGS');
+                setActiveFilter(null);
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
+                activeOverlayFilter === 'BUILDINGS' && !activeFilter
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+              )}
+            >
+              <Building2 className="w-3.5 h-3.5" /> Bangunan
+            </button>
+            <button
+              onClick={() => {
+                setActiveOverlayFilter(prev => prev === 'EMS' ? 'ALL' : 'EMS');
+                setActiveFilter(null);
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
+                activeOverlayFilter === 'EMS'
+                  ? "bg-amber-500 text-white border-amber-500"
+                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+              )}
+            >
+              <Trophy className="w-3.5 h-3.5" /> Acara EMS
+            </button>
+            <button
+              onClick={() => {
+                setActiveOverlayFilter(prev => prev === 'POLYMART' ? 'ALL' : 'POLYMART');
+                setActiveFilter(null);
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm",
+                activeOverlayFilter === 'POLYMART'
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+              )}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" /> PolyMart Hub
+            </button>
+            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('cafe'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'cafe' ? "bg-amber-500 text-white border-amber-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Coffee className="w-3.5 h-3.5" /> Kafe
             </button>
-            <button onClick={() => handleFilterClick('surau')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'surau' ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('surau'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'surau' ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Moon className="w-3.5 h-3.5" /> Surau
             </button>
-            <button onClick={() => handleFilterClick('toilet')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'toilet' ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+            <button onClick={() => { setActiveOverlayFilter('BUILDINGS'); handleFilterClick('toilet'); }} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'toilet' ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
               <Droplets className="w-3.5 h-3.5" /> Tandas
             </button>
           </div>
@@ -1493,7 +1772,7 @@ export function PolyMapsPage() {
           )}
 
           {/* Render Zones when zoomed out */}
-          {mapZoom < 18 && zones.map(z => (
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'BUILDINGS') && mapZoom < 18 && zones.map(z => (
             <Marker 
               key={`zone-${z.zone_name}`}
               position={[z.lat, z.lng]}
@@ -1511,7 +1790,7 @@ export function PolyMapsPage() {
             />
           ))}
 
-          {allBuildings.map(b => {
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'BUILDINGS') && allBuildings.map(b => {
             if (!b.center_lat) return null;
             const isActive = activeBuilding?.id === b.id;
             
@@ -1548,6 +1827,36 @@ export function PolyMapsPage() {
                 }}
               >
               </Marker>
+            );
+          })}
+
+          {/* Render Live EMS Event Overlays */}
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'EMS') && emsEvents.map(evt => {
+            const isSelected = selectedEmsEvent?.id === evt.id;
+            return (
+              <Marker
+                key={`ems-${evt.id}`}
+                position={[evt.lat, evt.lng]}
+                icon={getEmsMarkerIcon(evt.title, isSelected, isLowEnd)}
+                eventHandlers={{
+                  click: () => handleSelectEmsEvent(evt)
+                }}
+              />
+            );
+          })}
+
+          {/* Render PolyMart Pickup Hubs Overlays */}
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'POLYMART') && POLYMART_HUBS.map(hub => {
+            const isSelected = selectedPolyMartHub?.id === hub.id;
+            return (
+              <Marker
+                key={`hub-${hub.id}`}
+                position={[hub.lat, hub.lng]}
+                icon={getPolyMartMarkerIcon(hub.name, isSelected, isLowEnd)}
+                eventHandlers={{
+                  click: () => handleSelectPolyMartHub(hub)
+                }}
+              />
             );
           })}
 
@@ -1820,7 +2129,7 @@ export function PolyMapsPage() {
                               <DoorOpen className="w-4 h-4 text-emerald-300" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-black text-emerald-300">📍 Anda Telah Sampai!</p>
+                              <p className="text-xs font-black text-emerald-300">Anda Telah Sampai!</p>
                               <p className="text-[11px] font-bold text-emerald-200/80">Buka Panduan Dalaman →</p>
                             </div>
                             <div className="w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center group-hover:bg-emerald-500/50 transition-colors">
@@ -2107,291 +2416,605 @@ export function PolyMapsPage() {
             </div>
           )}
 
-          {/* Info Card / Drone View — Collapsible Mini Bar + Expand */}
+          {/* ── DRAGGABLE GESTURE BOTTOM SHEET (BUILDING, EMS EVENT, POLYMART HUB) ── */}
           <AnimatePresence>
-            {activeBuilding && !isNavigating && (
+            {(activeBuilding || selectedEmsEvent || selectedPolyMartHub) && !isNavigating && (
               <motion.div
                 layout
+                drag={isLowEnd ? false : "y"}
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={isLowEnd ? 0 : 0.2}
+                onDragEnd={(_e, info) => {
+                  if (isLowEnd) return;
+                  if (info.offset.y < -35 || info.velocity.y < -250) {
+                    setSheetSnap(prev => (prev === 'PEEK' ? 'HALF' : 'FULL'));
+                  } else if (info.offset.y > 35 || info.velocity.y > 250) {
+                    setSheetSnap(prev => (prev === 'FULL' ? 'HALF' : 'PEEK'));
+                  }
+                }}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-                className={`rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative ${isLowEnd ? 'bg-white dark:bg-slate-900' : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl'}`}
+                transition={isLowEnd ? { duration: 0.15 } : { type: 'spring', damping: 25, stiffness: 250 }}
+                className={cn(
+                  "rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative flex flex-col",
+                  isLowEnd ? "bg-white dark:bg-slate-900" : "bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl",
+                  sheetSnap === 'PEEK' && "max-h-[96px]",
+                  sheetSnap === 'HALF' && "max-h-[48vh] overflow-y-auto no-scrollbar",
+                  sheetSnap === 'FULL' && "max-h-[85vh] overflow-y-auto"
+                )}
               >
-                {/* ── COLLAPSED: Mini Bar ── */}
-                {!cardExpanded && (
-                  <div 
-                    onClick={() => setCardExpanded(true)}
-                    className="flex items-center justify-between px-5 py-3 cursor-pointer active:scale-[0.99] transition-transform"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {/* Mini building icon */}
-                      <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                        <MapPin className="w-4 h-4" />
+                {/* Drag Handle Bar */}
+                <div 
+                  onClick={() => {
+                    setSheetSnap(prev => prev === 'PEEK' ? 'HALF' : prev === 'HALF' ? 'FULL' : 'PEEK');
+                  }}
+                  className="w-full pt-2 pb-1 flex justify-center cursor-pointer select-none shrink-0"
+                  title="Tarik atau tekan untuk tukar saiz paparan"
+                >
+                  <div className="w-12 h-1.5 bg-slate-400/40 dark:bg-slate-600/50 rounded-full mx-auto my-2 cursor-grab active:cursor-grabbing" />
+                </div>
+
+                {/* ── EMS EVENT PREVIEW ── */}
+                {selectedEmsEvent && (
+                  <>
+                    {sheetSnap === 'PEEK' ? (
+                      <div 
+                        onClick={() => setSheetSnap('HALF')}
+                        className="flex items-center justify-between px-5 pb-3 cursor-pointer active:scale-[0.99] transition-transform"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <Trophy className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-slate-900 dark:text-white truncate leading-tight">
+                              {selectedEmsEvent.title}
+                            </p>
+                            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 truncate">
+                              {selectedEmsEvent.category || 'Acara EMS'} · {selectedEmsEvent.event_date ? new Date(selectedEmsEvent.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' }) : 'Akan Datang'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate('/ems/hub'); }}
+                            className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-amber-500/30 active:scale-95"
+                          >
+                            <span>Buka EMS</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSheetSnap('HALF'); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-black text-slate-900 dark:text-white truncate leading-tight">
-                          {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
-                        </p>
-                        {selectedLocation && (
-                          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
-                            <Building2 className="w-3 h-3 shrink-0" />
-                            <span className="truncate">{activeBuilding.name} · T{selectedLocation.floor_level}</span>
+                    ) : (
+                      <div className="px-5 pb-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 mb-1.5">
+                              <Trophy className="w-3 h-3" /> Acara EMS
+                            </div>
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                              {selectedEmsEvent.title}
+                            </h2>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                              {selectedEmsEvent.category && (
+                                <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                                  {selectedEmsEvent.category}
+                                </span>
+                              )}
+                              {selectedEmsEvent.event_date && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(selectedEmsEvent.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              )}
+                              {selectedEmsEvent.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" /> {selectedEmsEvent.location}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={dismissCard}
+                            className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {selectedEmsEvent.description && (
+                          <p className={cn("text-xs text-slate-600 dark:text-slate-300 mb-4", sheetSnap === 'HALF' && "line-clamp-3")}>
+                            {selectedEmsEvent.description}
                           </p>
                         )}
-                        {!selectedLocation && (
-                          <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400 truncate">
-                            Kod: {activeBuilding.code}
-                          </p>
+
+                        {sheetSnap === 'HALF' ? (
+                          <button
+                            onClick={() => setSheetSnap('FULL')}
+                            className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                            <span>Keterangan Lanjut</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setSheetSnap('HALF')}
+                            className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                            <span>Lipat Paparan</span>
+                          </button>
                         )}
+
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => navigate('/ems/hub')}
+                            className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-amber-500/30 active:scale-[0.98]"
+                          >
+                            <span>Buka EMS</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => startNavigationToCoords(selectedEmsEvent.lat, selectedEmsEvent.lng, selectedEmsEvent.title)}
+                            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-blue-500/20 active:scale-[0.98]"
+                          >
+                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Lokasi
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-3">
-                      {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
-                        <button
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
-                            if (pano) {
-                              setFullscreen360Url(pano);
-                              setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                            }
-                          }}
-                          className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3 py-2 rounded-xl font-black text-xs transition-all shadow-lg shadow-emerald-500/25 active:scale-95 animate-pulse"
-                          title="Buka 360° Street View"
-                        >
-                          <Compass className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">360° Street View</span>
-                          <span className="sm:hidden">360°</span>
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); startNavigation(); }}
-                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-blue-500/30 active:scale-95"
-                      >
-                        <Navigation className="w-3.5 h-3.5" />
-                        <span>Pandu</span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); dismissCard(); }}
-                        className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
 
-                {/* ── EXPANDED: Full Card ── */}
-                {cardExpanded && (
+                {/* ── POLYMART HUB PREVIEW ── */}
+                {selectedPolyMartHub && (
                   <>
-                    {/* Close Button */}
-                    <button 
-                      onClick={() => setCardExpanded(false)}
-                      className={`absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors ${!isLowEnd && 'backdrop-blur-md'}`}
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-
-                    {/* Media Area */}
-                    {(() => {
-                      const is360Permitted = selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding);
-                      const activePanoUrl = is360Permitted ? (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) : null;
-                      const hasMultipleMedia = ((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0) + (activePanoUrl ? 1 : 0)) > 1;
-
-                      return (
-                        <div className="w-full h-36 sm:h-52 bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
-                          {/* Media Content */}
-                          {activeImageTab === '360' && activePanoUrl && (
-                            <div className="w-full h-full relative">
-                              <Pannellum360Viewer
-                                imageUrl={activePanoUrl}
-                                title={selectedLocation ? selectedLocation.room_code : activeBuilding.name}
-                                height="100%"
-                                className="w-full h-full"
-                                onToggleFullscreen={() => {
-                                  setFullscreen360Url(activePanoUrl);
-                                  setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                                }}
-                              />
-                            </div>
-                          )}
-                          {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
-                            <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                          )}
-                          {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
-                            <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
-                              <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
-                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
-                              </div>
-                            </div>
-                          )}
-                          {activeImageTab === 'room' && selectedLocation?.image_url && (
-                            <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
-                              <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Empty state fallback */}
-                          {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
-                            (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
-                            (activeImageTab === 'room' && !selectedLocation?.image_url) ||
-                            (activeImageTab === '360' && !activePanoUrl)) && (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                              {activeImageTab === 'floorplan' ? (
-                                <MapIcon className="w-10 h-10 mb-2 opacity-50" />
-                              ) : activeImageTab === '360' ? (
-                                <Compass className="w-10 h-10 mb-2 opacity-50 text-emerald-400" />
-                              ) : (
-                                <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-                              )}
-                              <span className="text-[10px] font-black uppercase tracking-widest">
-                                Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === '360' ? 'Panorama 360°' : 'Bilik'}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {selectedLocation && (
-                            <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
-                              LOKASI JUMPA
-                            </div>
-                          )}
-
-                          {/* Media Tabs */}
-                          {hasMultipleMedia && (
-                            <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
-                              {activePanoUrl && (
-                                <button 
-                                  onClick={() => setActiveImageTab('360')} 
-                                  className={cn(
-                                    "flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", 
-                                    activeImageTab === '360' ? "bg-emerald-500 text-white shadow-sm" : "text-white hover:bg-white/20"
-                                  )}
-                                >
-                                  <Compass className="w-3 h-3" />
-                                  360° View
-                                </button>
-                              )}
-                              {activeBuilding.entrance_image_url && (
-                                <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
-                              )}
-                              {activeBuilding.floorplan_image_url && (
-                                <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
-                              )}
-                              {selectedLocation && selectedLocation.image_url && (
-                                <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {/* Details Area */}
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
-                              {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
-                            </h2>
+                    {sheetSnap === 'PEEK' ? (
+                      <div 
+                        onClick={() => setSheetSnap('HALF')}
+                        className="flex items-center justify-between px-5 pb-3 cursor-pointer active:scale-[0.99] transition-transform"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <ShoppingBag className="w-4 h-4" />
                           </div>
-                          
-                          {/* Facility Live Status */}
-                          {activeBuilding.is_facility && activeBuilding.op_start && activeBuilding.op_end && !selectedLocation && (
-                            <div className="mt-1 mb-2 flex items-center gap-1.5">
-                              {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
-                                <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          {selectedLocation && (
-                            <p className="text-sm font-bold text-slate-500 flex items-center gap-1.5 mt-1">
-                              <Building2 className="w-4 h-4" /> {activeBuilding.name}
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-slate-900 dark:text-white truncate leading-tight">
+                              {selectedPolyMartHub.name}
                             </p>
-                          )}
-                          {!selectedLocation && (
-                            <p className="text-sm font-bold text-sky-500 flex items-center gap-1.5 mt-1">
-                              Kod: {activeBuilding.code}
+                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1">
+                              <Clock className="w-3 h-3 shrink-0" />
+                              <span>{selectedPolyMartHub.operating_hours}</span>
                             </p>
-                          )}
+                          </div>
                         </div>
-                        <div className="flex flex-col gap-2 items-end">
-                          {selectedLocation && (
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
-                              <Layers className="w-4 h-4" />
-                              <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
-                            </div>
-                          )}
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                            title="Kongsi Lokasi"
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate('/polymart'); }}
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-emerald-600/30 active:scale-95"
                           >
-                            <Share2 className="w-4 h-4" />
+                            <span>Buka PolyMart</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSheetSnap('HALF'); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
-
-                      {/* Collapse hint */}
-                      <button
-                        onClick={() => setCardExpanded(false)}
-                        className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors active:scale-95"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                        <span>Lipat Kad</span>
-                      </button>
-
-                      {/* Action Buttons */}
-                      <div className="flex flex-col gap-2">
-                        {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
-                          <button
-                            onClick={() => {
-                              const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
-                              if (pano) {
-                                setFullscreen360Url(pano);
-                                setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                              }
-                            }}
-                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98]"
+                    ) : (
+                      <div className="px-5 pb-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 mb-1.5">
+                              <ShoppingBag className="w-3 h-3" /> PolyMart Hub
+                            </div>
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                              {selectedPolyMartHub.name}
+                            </h2>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                              <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              {selectedPolyMartHub.operating_hours}
+                            </p>
+                          </div>
+                          <button 
+                            onClick={dismissCard}
+                            className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                           >
-                            <Compass className="w-4 h-4" /> Buka 360° Street View Penuh
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                          {selectedPolyMartHub.description}
+                        </p>
+
+                        <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-3 mb-4 text-xs text-emerald-900 dark:text-emerald-200 font-medium leading-relaxed">
+                          <span className="font-bold block text-emerald-800 dark:text-emerald-300 mb-0.5">Panduan Pengambilan:</span>
+                          {selectedPolyMartHub.pickup_instructions}
+                        </div>
+
+                        {sheetSnap === 'HALF' ? (
+                          <button
+                            onClick={() => setSheetSnap('FULL')}
+                            className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                            <span>Maklumat Lanjut Hub</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setSheetSnap('HALF')}
+                            className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                            <span>Lipat Paparan</span>
                           </button>
                         )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); startNavigation(); }}
-                          className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30 active:scale-[0.98]"
+
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => navigate('/polymart')}
+                            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-emerald-600/30 active:scale-[0.98]"
+                          >
+                            <span>Buka PolyMart</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => startNavigationToCoords(selectedPolyMartHub.lat, selectedPolyMartHub.lng, selectedPolyMartHub.name)}
+                            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-blue-500/20 active:scale-[0.98]"
+                          >
+                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Hub
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── BUILDING / ROOM PREVIEW ── */}
+                {activeBuilding && !selectedEmsEvent && !selectedPolyMartHub && (
+                  <>
+                    {/* PEEK Snap Level */}
+                    {sheetSnap === 'PEEK' && (
+                      <div 
+                        onClick={() => setSheetSnap('HALF')}
+                        className="flex items-center justify-between px-5 pb-3 cursor-pointer active:scale-[0.99] transition-transform"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-slate-900 dark:text-white truncate leading-tight">
+                              {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                            </p>
+                            {selectedLocation && (
+                              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                                <Building2 className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{activeBuilding.name} · T{selectedLocation.floor_level}</span>
+                              </p>
+                            )}
+                            {!selectedLocation && (
+                              <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400 truncate">
+                                Kod: {activeBuilding.code}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
+                            <button
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                                if (pano) {
+                                  setFullscreen360Url(pano);
+                                  setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                }
+                              }}
+                              className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3 py-2 rounded-xl font-black text-xs transition-all shadow-lg shadow-emerald-500/25 active:scale-95 animate-pulse"
+                              title="Buka 360° Street View"
+                            >
+                              <Compass className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">360°</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); startNavigation(); }}
+                            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-blue-500/30 active:scale-95"
+                          >
+                            <Navigation className="w-3.5 h-3.5" />
+                            <span>Pandu</span>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSheetSnap('HALF'); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                            className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HALF & FULL Snap Levels */}
+                    {(sheetSnap === 'HALF' || sheetSnap === 'FULL') && (
+                      <>
+                        {/* Close Button */}
+                        <button 
+                          onClick={() => setSheetSnap('PEEK')}
+                          className={`absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors ${!isLowEnd && 'backdrop-blur-md'}`}
                         >
-                          <Navigation className="w-4 h-4" /> Mula Pandu Arah
-                        </button>
-                        
-                        <button
-                          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
-                          className="w-full text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold transition-colors mt-1 underline underline-offset-2"
-                        >
-                          Memandu dari luar kampus? Buka Google Maps
+                          <ChevronDown className="w-4 h-4" />
                         </button>
 
-                        {/* Dismiss card */}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); dismissCard(); }}
-                          className="w-full text-center text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 text-[10px] font-bold transition-colors mt-1"
-                        >
-                          Tutup
-                        </button>
-                      </div>
-                    </div>
+                        {/* Media Area */}
+                        {(() => {
+                          const is360Permitted = selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding);
+                          const activePanoUrl = is360Permitted ? (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) : null;
+                          const hasMultipleMedia = ((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0) + (activePanoUrl ? 1 : 0)) > 1;
+
+                          return (
+                            <div className="w-full h-36 sm:h-52 bg-slate-100 dark:bg-slate-800 relative overflow-hidden shrink-0">
+                              {/* Media Content */}
+                              {activeImageTab === '360' && activePanoUrl && (
+                                <div className="w-full h-full relative">
+                                  <Pannellum360Viewer
+                                    imageUrl={activePanoUrl}
+                                    title={selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                                    height="100%"
+                                    className="w-full h-full"
+                                    onToggleFullscreen={() => {
+                                      setFullscreen360Url(activePanoUrl);
+                                      setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
+                                <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                              )}
+                              {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
+                                <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
+                                  <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
+                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                                  </div>
+                                </div>
+                              )}
+                              {activeImageTab === 'room' && selectedLocation?.image_url && (
+                                <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
+                                  <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Empty state fallback */}
+                              {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
+                                (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
+                                (activeImageTab === 'room' && !selectedLocation?.image_url) ||
+                                (activeImageTab === '360' && !activePanoUrl)) && (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                  {activeImageTab === 'floorplan' ? (
+                                    <MapIcon className="w-10 h-10 mb-2 opacity-50" />
+                                  ) : activeImageTab === '360' ? (
+                                    <Compass className="w-10 h-10 mb-2 opacity-50 text-emerald-400" />
+                                  ) : (
+                                    <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                                  )}
+                                  <span className="text-[10px] font-black uppercase tracking-widest">
+                                    Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === '360' ? 'Panorama 360°' : 'Bilik'}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {selectedLocation && (
+                                <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                                  LOKASI JUMPA
+                                </div>
+                              )}
+
+                              {/* Media Tabs */}
+                              {hasMultipleMedia && (
+                                <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                                  {activePanoUrl && (
+                                    <button 
+                                      onClick={() => setActiveImageTab('360')} 
+                                      className={cn(
+                                        "flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", 
+                                        activeImageTab === '360' ? "bg-emerald-500 text-white shadow-sm" : "text-white hover:bg-white/20"
+                                      )}
+                                    >
+                                      <Compass className="w-3 h-3" />
+                                      360° View
+                                    </button>
+                                  )}
+                                  {activeBuilding.entrance_image_url && (
+                                    <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                                  )}
+                                  {activeBuilding.floorplan_image_url && (
+                                    <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                                  )}
+                                  {selectedLocation && selectedLocation.image_url && (
+                                    <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Details Area */}
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                                  {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                                </h2>
+                              </div>
+                              
+                              {/* Facility Live Status */}
+                              {activeBuilding.is_facility && activeBuilding.op_start && activeBuilding.op_end && !selectedLocation && (
+                                <div className="mt-1 mb-2 flex items-center gap-1.5">
+                                  {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
+                                    <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {selectedLocation && (
+                                <p className="text-sm font-bold text-slate-500 flex items-center gap-1.5 mt-1">
+                                  <Building2 className="w-4 h-4" /> {activeBuilding.name}
+                                </p>
+                              )}
+                              {!selectedLocation && (
+                                <p className="text-sm font-bold text-sky-500 flex items-center gap-1.5 mt-1">
+                                  Kod: {activeBuilding.code}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 items-end">
+                              {selectedLocation && (
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
+                                  <Layers className="w-4 h-4" />
+                                  <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                                </div>
+                              )}
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                title="Kongsi Lokasi"
+                              >
+                                <Share2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Snap Toggle Button */}
+                          {sheetSnap === 'HALF' ? (
+                            <button
+                              onClick={() => setSheetSnap('FULL')}
+                              className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors active:scale-95"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                              <span>Papar Direktori Penuh & Arah Luaran</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setSheetSnap('HALF')}
+                              className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors active:scale-95"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                              <span>Lipat Kad</span>
+                            </button>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col gap-2">
+                            {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
+                              <button
+                                onClick={() => {
+                                  const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                                  if (pano) {
+                                    setFullscreen360Url(pano);
+                                    setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                  }
+                                }}
+                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98]"
+                              >
+                                <Compass className="w-4 h-4" /> Buka 360° Street View Penuh
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startNavigation(); }}
+                              className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30 active:scale-[0.98]"
+                            >
+                              <Navigation className="w-4 h-4" /> Mula Pandu Arah
+                            </button>
+                            
+                            <button
+                              onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
+                              className="w-full text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold transition-colors mt-1 underline underline-offset-2"
+                            >
+                              Memandu dari luar kampus? Buka Google Maps
+                            </button>
+
+                            {/* FULL Snap Level: Full Building Directory */}
+                            {sheetSnap === 'FULL' && (
+                              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                  Direktori Bilik & Ruang ({getLocationsForBuilding(activeBuilding.id).length})
+                                </p>
+                                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                                  {getLocationsForBuilding(activeBuilding.id).map(room => (
+                                    <button
+                                      key={room.id}
+                                      onClick={() => handleSelectLocation(room)}
+                                      className={cn(
+                                        "w-full text-left p-2 rounded-xl text-xs flex items-center justify-between transition-colors",
+                                        selectedLocation?.id === room.id
+                                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black border border-blue-500/20"
+                                          : "hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold"
+                                      )}
+                                    >
+                                      <span className="truncate">{room.room_code}</span>
+                                      <span className="text-[10px] text-slate-400 shrink-0 ml-2">T{room.floor_level}</span>
+                                    </button>
+                                  ))}
+                                  {getLocationsForBuilding(activeBuilding.id).length === 0 && (
+                                    <p className="text-xs text-slate-400 italic py-1">Tiada data bilik terperinci direkodkan.</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Dismiss card */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                              className="w-full text-center text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 text-[10px] font-bold transition-colors mt-1"
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </motion.div>
