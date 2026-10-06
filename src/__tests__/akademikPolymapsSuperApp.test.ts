@@ -129,6 +129,53 @@ describe('Task 2: AkademikCgpa Tracker & Slip Uploader Revamp', () => {
   });
 });
 
+describe('Task 3: AkademikFolderPage In-App Quick Document Previewer Revamp', () => {
+  const folderPath = path.resolve(__dirname, '../pages/akademik/AkademikFolderPage.tsx');
+  const source = fs.readFileSync(folderPath, 'utf-8');
+
+  it('contains 100% zero raw emojis across AkademikFolderPage.tsx', () => {
+    const emojiMatches = source.match(EMOJI_REGEX) || [];
+    expect(emojiMatches).toEqual([]);
+  });
+
+  it('contains previewFile state, onPreview callback, and InAppDocumentPreviewer component', () => {
+    expect(source).toContain('previewFile');
+    expect(source).toContain('setPreviewFile');
+    expect(source).toContain('onPreview');
+    expect(source).toContain('InAppDocumentPreviewer');
+  });
+
+  it('supports PDF iframe preview with /preview conversion and image lightbox preview', () => {
+    expect(source).toContain('getDocumentPreviewUrl');
+    expect(source).toContain('/preview');
+    expect(source).toContain('<iframe');
+    expect(source).toContain('max-h-[60vh]');
+    expect(source).toContain('object-contain');
+  });
+
+  it('provides accessible mobile touch targets and action buttons (Download, ExternalLink, and close X)', () => {
+    expect(source).toContain('Download');
+    expect(source).toContain('ExternalLink');
+    expect(source).toContain('Muat Turun Fail');
+    expect(source).toContain('Buka Tab Luaran');
+    expect(source).toContain('min-h-[44px]');
+    expect(source).toContain('min-w-[44px]');
+  });
+
+  it('respects isLowEnd device optimization for overlay backdrop blur', () => {
+    expect(source).toContain('isLowEnd');
+    expect(source).toContain('isLowEnd ?');
+  });
+
+  it('preserves existing folder presets, zip generation, file deletion, and drive uploads', () => {
+    expect(source).toContain('FOLDER_PRESETS');
+    expect(source).toContain('buildAndDownloadZip');
+    expect(source).toContain('handleDeleteFile');
+    expect(source).toContain('uploadPdfToDrive');
+    expect(source).toContain('uploadFileToDrive');
+  });
+});
+
 describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsPage', () => {
   const cgpaPath = path.resolve(__dirname, '../pages/akademik/AkademikCgpa.tsx');
   const folderPath = path.resolve(__dirname, '../pages/akademik/AkademikFolderPage.tsx');
