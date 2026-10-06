@@ -1294,7 +1294,7 @@ export const CuratedCampusGallery: React.FC = () => {
               </div>
 
               <div className="mt-6 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-[11px] text-[#84A98C]">
-                <span>POLISAS Kuatan</span>
+                <span>POLISAS Kuantan</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#74C69D] group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
