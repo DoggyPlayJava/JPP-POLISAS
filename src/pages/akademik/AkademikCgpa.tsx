@@ -39,8 +39,8 @@ function CustomTooltip({ active, payload, label }: any) {
   const hpnm = payload.find((p: any) => p.dataKey === 'hpnm')?.value;
   const pnm  = payload.find((p: any) => p.dataKey === 'pnm')?.value;
   return (
-    <div className="px-4 py-3 rounded-2xl border border-white/10 bg-[#0F1629]/95 backdrop-blur-xl shadow-2xl">
-      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">{label}</p>
+    <div className="px-4 py-3 rounded-2xl bg-white/95 dark:bg-[#0F1629]/95 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl backdrop-blur-xl">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2">{label}</p>
       {hpnm != null && (
         <p className="text-sm font-black" style={{ color: HPNM_COLOR }}>
           HPNM <span className="text-base">{Number(hpnm).toFixed(2)}</span>
@@ -441,9 +441,9 @@ export function AkademikCgpa() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Akademik</p>
-        <h1 className="text-2xl font-black text-white">HPNM / CGPA</h1>
-        <p className="text-xs text-white/40 font-medium mt-1">
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">HPNM / CGPA</h1>
+        <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
           Rekod dan pantau prestasi akademik anda dari semester ke semester
         </p>
       </div>
@@ -453,23 +453,22 @@ export function AkademikCgpa() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-[2rem] p-6 border border-white/[0.06]"
-          style={{ background: `linear-gradient(135deg, ${grade.bg}, rgba(15,22,41,0.8))` }}
+          className="relative overflow-hidden rounded-[2rem] p-6 bg-gradient-to-br from-indigo-50/80 to-white dark:from-slate-900/80 dark:to-slate-950 border border-slate-200/80 dark:border-white/[0.06] shadow-xs"
         >
           <div className="flex items-center gap-5">
             <div
-              className="w-20 h-20 rounded-3xl flex flex-col items-center justify-center shrink-0"
+              className="w-20 h-20 rounded-3xl flex flex-col items-center justify-center shrink-0 shadow-sm"
               style={{ background: hexToRgba(grade.color, 0.15), border: `1px solid ${hexToRgba(grade.color, 0.3)}` }}
             >
               <span className="text-xl font-black" style={{ color: grade.color }}>
                 {latestHpnm.toFixed(2)}
               </span>
-              <span className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">HPNM</span>
+              <span className="text-[8px] font-black text-slate-500 dark:text-white/30 uppercase tracking-widest mt-0.5">HPNM</span>
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-0.5">Terkini</p>
-              <p className="text-xl font-black text-white">{grade.label}</p>
-              <p className="text-[10px] font-bold text-white/40 mt-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Terkini</p>
+              <p className="text-xl font-black text-slate-900 dark:text-white">{grade.label}</p>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-white/40 mt-1">
                 {semLabel(latestRecord.semester, latestRecord.tahun)}
               </p>
             </div>
@@ -478,17 +477,17 @@ export function AkademikCgpa() {
               <div className="text-right shrink-0">
                 <div className="flex items-center gap-1 justify-end">
                   {trend > 0.001
-                    ? <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    ? <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                     : trend < -0.001
-                    ? <TrendingDown className="w-4 h-4 text-rose-400" />
-                    : <Minus className="w-4 h-4 text-white/30" />
+                    ? <TrendingDown className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                    : <Minus className="w-4 h-4 text-slate-400 dark:text-white/30" />
                   }
-                  <span className={`text-sm font-black ${trend > 0.001 ? 'text-emerald-400' : trend < -0.001 ? 'text-rose-400' : 'text-white/30'}`}>
+                  <span className={`text-sm font-black ${trend > 0.001 ? 'text-emerald-600 dark:text-emerald-400' : trend < -0.001 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-white/30'}`}>
                     {trend > 0 ? '+' : ''}{trend.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-[9px] text-white/25 font-medium mt-0.5">vs semester lepas</p>
-                <p className="text-xs font-black text-white/50 mt-1">
+                <p className="text-[9px] text-slate-400 dark:text-white/25 font-medium mt-0.5">vs semester lepas</p>
+                <p className="text-xs font-black text-slate-600 dark:text-white/50 mt-1">
                   PNM: <span style={{ color: PNM_COLOR }}>{latestRecord.pnm ? Number(latestRecord.pnm).toFixed(2) : '—'}</span>
                 </p>
               </div>
@@ -503,18 +502,18 @@ export function AkademikCgpa() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-[2rem] border border-white/[0.05] bg-white/[0.02] p-5"
+          className="bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] text-slate-900 dark:text-white rounded-[2rem] p-5 shadow-xs"
         >
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Trend HPNM</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Trend HPNM</p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-1.5 rounded-full" style={{ background: HPNM_COLOR }} />
-                <span className="text-[9px] font-black text-white/30">HPNM</span>
+                <span className="text-[9px] font-black text-slate-500 dark:text-white/30">HPNM</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-1.5 rounded-full" style={{ background: PNM_COLOR }} />
-                <span className="text-[9px] font-black text-white/30">PNM</span>
+                <span className="text-[9px] font-black text-slate-500 dark:text-white/30">PNM</span>
               </div>
             </div>
           </div>
@@ -530,25 +529,29 @@ export function AkademikCgpa() {
                   <stop offset="95%" stopColor={PNM_COLOR} stopOpacity={0}    />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <CartesianGrid stroke="currentColor" className="text-slate-200 dark:text-white/[0.04]" strokeDasharray="3 3" />
               <XAxis
                 dataKey="name"
-                tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontWeight: 700 }}
+                stroke="currentColor"
+                className="text-slate-500 dark:text-white/40"
+                tick={{ fontSize: 9, fontWeight: 700 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 4]}
-                tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 9, fontWeight: 700 }}
+                stroke="currentColor"
+                className="text-slate-400 dark:text-white/30"
+                tick={{ fontSize: 9, fontWeight: 700 }}
                 axisLine={false}
                 tickLine={false}
                 tickCount={5}
               />
               {/* Reference lines for grade boundaries */}
-              <ReferenceLine y={3.5} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.3} />
-              <ReferenceLine y={3.0} stroke={THEME}    strokeDasharray="4 4" strokeOpacity={0.25} />
-              <ReferenceLine y={2.0} stroke="#F59E0B"  strokeDasharray="4 4" strokeOpacity={0.25} />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }} />
+              <ReferenceLine y={3.5} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.4} />
+              <ReferenceLine y={3.0} stroke={THEME}    strokeDasharray="4 4" strokeOpacity={0.35} />
+              <ReferenceLine y={2.0} stroke="#F59E0B"  strokeDasharray="4 4" strokeOpacity={0.35} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, className: 'text-slate-300 dark:text-white/10' }} />
               <Area
                 type="monotone"
                 dataKey="pnm"
@@ -580,7 +583,7 @@ export function AkademikCgpa() {
             ].map(b => (
               <div key={b.label} className="flex items-center gap-1">
                 <div className="w-6 border-t border-dashed" style={{ borderColor: b.color, opacity: 0.5 }} />
-                <span className="text-[8px] font-black" style={{ color: b.color, opacity: 0.6 }}>{b.label}</span>
+                <span className="text-[8px] font-black" style={{ color: b.color, opacity: 0.8 }}>{b.label}</span>
               </div>
             ))}
           </div>
@@ -588,8 +591,8 @@ export function AkademikCgpa() {
       )}
 
       {/* ── INPUT FORM ──────────────────────────────────────── */}
-      <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-4">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+      <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] text-slate-900 dark:text-white p-5 space-y-4 shadow-xs">
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
           <Upload className="w-3.5 h-3.5" /> Tambah Rekod HPNM
         </h3>
 
@@ -613,7 +616,7 @@ export function AkademikCgpa() {
             {/* Use <label> instead of <button onClick={.click()}> — iOS Safari blocks programmatic file input clicks */}
             <label
               htmlFor={scanning ? undefined : "cgpa-pdf-upload"}
-              className={`w-full py-8 rounded-2xl border-2 border-dashed border-white/[0.08] hover:border-white/[0.15] text-white/30 hover:text-white/50 transition-all flex flex-col items-center gap-3 cursor-pointer ${scanning ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`w-full py-8 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/50 transition-all flex flex-col items-center gap-3 cursor-pointer ${scanning ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {scanning ? (
                 <>
@@ -624,15 +627,15 @@ export function AkademikCgpa() {
                 <>
                   <FileText className="w-8 h-8" />
                   <div className="text-center">
-                    <p className="text-xs font-black uppercase tracking-widest">Muat Naik Transkrip PDF</p>
-                    <p className="text-[9px] text-white/20 mt-1">Slip peperiksaan / transkrip POLISAS — HPNM dikesan automatik</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white/80">Muat Naik Transkrip PDF</p>
+                    <p className="text-[9px] text-slate-500 dark:text-white/20 mt-1">Slip peperiksaan / transkrip POLISAS — HPNM dikesan automatik</p>
                   </div>
                 </>
               )}
             </label>
             <button
               onClick={() => setDraftMode('MANUAL')}
-              className="flex items-center gap-1.5 mx-auto text-[10px] font-black text-white/25 hover:text-white/50 transition-colors uppercase tracking-widest"
+              className="flex items-center gap-1.5 mx-auto text-[10px] font-black text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 transition-colors uppercase tracking-widest"
             >
               <Sparkles className="w-3 h-3" />
               Isi secara manual (tanpa PDF)
@@ -644,27 +647,27 @@ export function AkademikCgpa() {
             {draftMode === 'SCAN' && scanOk !== null && (
               scanOk ? (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <p className="text-xs font-black text-emerald-300">HPNM berjaya dikesan daripada PDF. Semak dan sahkan di bawah.</p>
+                  <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <p className="text-xs font-black text-emerald-600 dark:text-emerald-300">HPNM berjaya dikesan daripada PDF. Semak dan sahkan di bawah.</p>
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 space-y-2.5">
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/25 space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <p className="text-xs font-black text-rose-300">Gagal dimuatnaik — format PDF tidak dikenali.</p>
+                    <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                    <p className="text-xs font-black text-rose-600 dark:text-rose-300">Gagal dimuatnaik — format PDF tidak dikenali.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <a
                       href="https://wa.me/601139413699?text=Salam%2C%20saya%20ada%20masalah%20muat%20naik%20slip%20HPNM%20di%20portal%20JPP."
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/25 transition-all uppercase tracking-widest"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-black text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/25 transition-all uppercase tracking-widest"
                     >
                       <MessageCircle className="w-3 h-3" /> Hubungi JPP
                     </a>
                     <button
                       onClick={() => setDraftMode('MANUAL')}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-[10px] font-black text-white/40 hover:text-white/60 transition-all uppercase tracking-widest"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-[10px] font-black text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60 transition-all uppercase tracking-widest"
                     >
                       <Sparkles className="w-3 h-3" /> Isi Manual
                     </button>
@@ -676,42 +679,42 @@ export function AkademikCgpa() {
             {/* Form fields */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">HPNM (Kumulatif) *</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">HPNM (Kumulatif) *</label>
                 <input
                   type="number" step="0.01" min="0" max="4"
                   value={fHpnm}
                   onChange={e => setFHpnm(e.target.value)}
                   placeholder="0.00 – 4.00"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20 font-black"
+                  className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20 font-black"
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">PNM (Semester ini)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">PNM (Semester ini)</label>
                 <input
                   type="number" step="0.01" min="0" max="4"
                   value={fPnm}
                   onChange={e => setFPnm(e.target.value)}
                   placeholder="0.00 – 4.00"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
+                  className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20"
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Semester (1–9)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">Semester (1–9)</label>
                 <input
                   type="number" min="1" max="9" step="1"
                   value={fSem}
                   onChange={e => setFSem(e.target.value)}
                   placeholder="cth: 2"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
+                  className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20"
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Sesi Tahun</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">Sesi Tahun</label>
                 <input
                   value={fTahun}
                   onChange={e => setFTahun(e.target.value)}
                   placeholder="cth: 2024/2025"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
+                  className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20"
                 />
               </div>
             </div>
@@ -738,7 +741,7 @@ export function AkademikCgpa() {
               </button>
               <button
                 onClick={resetDraft}
-                className="px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-white/30 hover:text-white/60 bg-white/[0.04]"
+                className="px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60 bg-slate-100 dark:bg-white/[0.04]"
               >
                 Batal
               </button>
@@ -748,8 +751,8 @@ export function AkademikCgpa() {
       </div>
 
       {/* ── GRADE SCALE ─────────────────────────────────────── */}
-      <div className="rounded-2xl border border-white/[0.05] bg-white/[0.01] p-4">
-        <p className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-3">Skala HPNM</p>
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.05] bg-white dark:bg-white/[0.01] p-4 shadow-xs">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 mb-3">Skala HPNM</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             { range: '3.50 – 4.00', label: 'Cemerlang', color: '#10B981' },
@@ -759,7 +762,7 @@ export function AkademikCgpa() {
           ].map(item => (
             <div key={item.range} className="p-2.5 rounded-xl" style={{ background: hexToRgba(item.color, 0.08) }}>
               <p className="text-xs font-black" style={{ color: item.color }}>{item.label}</p>
-              <p className="text-[9px] text-white/30 font-medium mt-0.5">{item.range}</p>
+              <p className="text-[9px] text-slate-500 dark:text-white/30 font-medium mt-0.5">{item.range}</p>
             </div>
           ))}
         </div>
@@ -768,7 +771,7 @@ export function AkademikCgpa() {
       {/* ── SEMESTER HISTORY ─────────────────────────────────── */}
       {records.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
             Rekod Semester ({records.length})
           </h3>
           <div className="space-y-2.5">
@@ -785,18 +788,18 @@ export function AkademikCgpa() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group"
+                  className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.06] text-slate-900 dark:text-white border hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all group shadow-xs"
                 >
                   <div
                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center shrink-0"
                     style={{ background: g.bg, border: `1px solid ${hexToRgba(g.color, 0.2)}` }}
                   >
                     <span className="text-sm sm:text-base font-black" style={{ color: g.color }}>{hpnm.toFixed(2)}</span>
-                    <span className="text-[7px] font-black text-white/20 uppercase">HPNM</span>
+                    <span className="text-[7px] font-black text-slate-400 dark:text-white/20 uppercase">HPNM</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-xs sm:text-sm font-black text-white truncate">
+                      <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
                         {r.semester ? `Semester ${r.semester}` : 'Sem —'}
                       </p>
                       <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full"
@@ -804,13 +807,13 @@ export function AkademikCgpa() {
                         {g.label}
                       </span>
                     </div>
-                    <p className="text-[10px] text-white/30 font-bold mt-0.5 truncate">
+                    <p className="text-[10px] text-slate-500 dark:text-white/30 font-bold mt-0.5 truncate">
                       {r.tahun || '—'}
                       {pnm !== null && (
                         <> · PNM: <span style={{ color: PNM_COLOR }}>{pnm.toFixed(2)}</span></>
                       )}
                       {diff !== null && (
-                        <span className={`ml-2 sm:ml-3 ${diff > 0.001 ? 'text-emerald-400' : diff < -0.001 ? 'text-rose-400' : 'text-white/20'}`}>
+                        <span className={`ml-2 sm:ml-3 ${diff > 0.001 ? 'text-emerald-500 dark:text-emerald-400' : diff < -0.001 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400 dark:text-white/20'}`}>
                           {diff > 0 ? '↑' : diff < 0 ? '↓' : '='}{Math.abs(diff).toFixed(2)}
                         </span>
                       )}
@@ -823,7 +826,7 @@ export function AkademikCgpa() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Lihat Transkrip"
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[10px] font-black text-indigo-400/80 hover:text-indigo-300 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 gap-1 px-2.5"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[10px] font-black text-indigo-600 dark:text-indigo-400/80 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-xl bg-slate-100 dark:bg-white/[0.03] hover:bg-slate-200/70 dark:hover:bg-white/[0.08] transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 gap-1 px-2.5"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Transkrip</span>
@@ -832,7 +835,7 @@ export function AkademikCgpa() {
                     <button
                       onClick={() => handleDelete(r.id)}
                       aria-label="Padam rekod"
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 dark:text-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -847,9 +850,9 @@ export function AkademikCgpa() {
       {/* Empty state */}
       {records.length === 0 && !inDraft && (
         <div className="py-16 text-center space-y-3">
-          <BookOpen className="w-10 h-10 mx-auto text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada rekod HPNM lagi</p>
-          <p className="text-[9px] text-white/15">Muat naik transkrip atau isi manual untuk mulakan</p>
+          <BookOpen className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada rekod HPNM lagi</p>
+          <p className="text-[9px] text-slate-400 dark:text-white/15">Muat naik transkrip atau isi manual untuk mulakan</p>
         </div>
       )}
     </div>

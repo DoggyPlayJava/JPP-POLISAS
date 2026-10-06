@@ -210,7 +210,7 @@ export function InAppDocumentPreviewer({
         "fixed inset-0 z-50 flex justify-center",
         "items-end sm:items-center",
         "p-0 sm:p-4 md:p-6",
-        isLowEnd ? "bg-black/90" : "bg-black/80 backdrop-blur-md"
+        isLowEnd ? "bg-black/80" : "bg-black/60 dark:bg-black/80 backdrop-blur-md"
       )}
     >
       <motion.div
@@ -219,10 +219,10 @@ export function InAppDocumentPreviewer({
         exit={{ opacity: 0, y: 40, scale: 0.96 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-3xl md:max-w-4xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-[2rem] sm:rounded-3xl border border-white/10 bg-[#0F172A] shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-3xl md:max-w-4xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-[2rem] sm:rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0F172A] shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.08] bg-white/[0.02] shrink-0">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div
               className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -231,8 +231,8 @@ export function InAppDocumentPreviewer({
               <FileIcon name={displayName} />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm font-black text-white truncate">{displayName}</h3>
-              <p className="text-[10px] text-white/40 font-bold mt-0.5">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white truncate">{displayName}</h3>
+              <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold mt-0.5">
                 {isPdf ? 'Dokumen PDF' : isImage ? 'Imej' : 'Fail'}
                 {size && ` · ${size}`}
                 {formattedDate && ` · ${formattedDate}`}
@@ -241,7 +241,7 @@ export function InAppDocumentPreviewer({
           </div>
           <button
             onClick={onClose}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all min-h-[44px] min-w-[44px] shrink-0"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-400 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all min-h-[44px] min-w-[44px] shrink-0"
             title="Tutup Pratonton"
             aria-label="Tutup Pratonton"
           >
@@ -250,13 +250,13 @@ export function InAppDocumentPreviewer({
         </div>
 
         {/* Viewport */}
-        <div className="flex-1 overflow-auto bg-slate-950 flex flex-col min-h-0">
+        <div className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950 flex flex-col min-h-0">
           {isPdf ? (
             <div className="flex-1 w-full p-2 sm:p-4 min-h-[50vh] flex flex-col">
               <iframe
                 src={previewUrl}
                 title={displayName}
-                className="w-full h-[55vh] sm:h-[62vh] rounded-xl border border-white/10 bg-slate-900"
+                className="w-full h-[55vh] sm:h-[62vh] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
                 allow="autoplay"
               />
             </div>
@@ -265,17 +265,17 @@ export function InAppDocumentPreviewer({
               <img
                 src={imageUrl}
                 alt={displayName}
-                className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border border-white/5"
+                className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border border-slate-200 dark:border-white/5"
               />
             </div>
           ) : (
             <div className="flex-1 w-full p-8 min-h-[40vh] flex flex-col items-center justify-center text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white/5 text-white/40">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-slate-200/50 dark:bg-white/5 text-slate-400 dark:text-white/40">
                 <FileIcon name={displayName} />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{displayName}</p>
-                <p className="text-xs text-white/40 mt-1 max-w-sm">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{displayName}</p>
+                <p className="text-xs text-slate-500 dark:text-white/40 mt-1 max-w-sm">
                   Pratonton terus tidak disokong untuk format fail ini. Sila muat turun fail atau buka tab luaran.
                 </p>
               </div>
@@ -284,7 +284,7 @@ export function InAppDocumentPreviewer({
         </div>
 
         {/* Sticky Action Footer Capsule */}
-        <div className="p-4 border-t border-white/[0.08] bg-slate-900/90 backdrop-blur-sm flex items-center justify-end gap-3 flex-wrap shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-white/[0.08] bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-end gap-3 flex-wrap shrink-0">
           <a
             href={downloadUrl}
             target="_blank"
@@ -305,7 +305,7 @@ export function InAppDocumentPreviewer({
               href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/15 text-white transition-all min-h-[44px] flex-1 sm:flex-initial border border-white/10"
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-white transition-all min-h-[44px] flex-1 sm:flex-initial border border-slate-200 dark:border-white/10"
             >
               <ExternalLink className="w-4 h-4" />
               Buka Tab Luaran
@@ -341,16 +341,16 @@ function FileCard({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onPreview?.(file)}
-      className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all group cursor-pointer"
+      className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200/70 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.04] text-slate-900 dark:text-white transition-all group cursor-pointer shadow-xs"
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: hexToRgba(color, 0.15), color }}>
         <FileIcon name={displayName} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white line-clamp-1 group-hover:text-indigo-300 transition-colors">{displayName}</p>
-        <p className="text-[9px] text-white/30 font-bold mt-0.5">
-          {isPdf && <span className="text-amber-400/60 mr-2">PDF · Google Drive</span>}
+        <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">{displayName}</p>
+        <p className="text-[9px] text-slate-500 dark:text-white/30 font-bold mt-0.5">
+          {isPdf && <span className="text-amber-500 dark:text-amber-400/60 mr-2">PDF · Google Drive</span>}
           {size}{size && ' · '}{file.created_at && format(parseISO(file.created_at), 'd MMM yyyy', { locale: ms })}
         </p>
       </div>
@@ -372,7 +372,7 @@ function FileCard({
               e.stopPropagation();
               onDelete();
             }}
-            className="p-1.5 rounded-xl text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
+            className="p-1.5 rounded-xl text-slate-400 dark:text-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
             title="Padam fail"
           >
             ×
@@ -385,7 +385,7 @@ function FileCard({
         target="_blank"
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
-        className="shrink-0 text-white/30 hover:text-white/60 transition-colors md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="shrink-0 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-colors md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
         title="Muat turun fail"
       >
         <Download className="w-4 h-4" />
@@ -399,11 +399,10 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
   return (
     <button
       onClick={onClick}
-      className="w-full p-4 rounded-2xl border transition-all text-left hover:scale-[1.01] active:scale-[0.99]"
-      style={isOpen
-        ? { borderColor: hexToRgba(THEME, 0.4), background: hexToRgba(THEME, 0.08) }
-        : { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }
-      }
+      className={cn(
+        "w-full p-4 rounded-2xl border transition-all text-left hover:scale-[1.01] active:scale-[0.99] border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-slate-900 dark:text-white shadow-xs",
+        isOpen && "border-indigo-400/80 dark:border-indigo-500/40 bg-indigo-50/70 dark:bg-indigo-950/20"
+      )}
     >
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -411,13 +410,13 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
           {isOpen ? <FolderOpen className="w-5 h-5" /> : <Folder className="w-5 h-5" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-black text-white text-left">{folder.name}</p>
+          <p className="text-sm font-black text-slate-900 dark:text-white text-left">{folder.name}</p>
           {folder.description && (
-            <p className="text-[10px] text-white/30 font-medium mt-0.5 line-clamp-1 text-left">{folder.description}</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/30 font-medium mt-0.5 line-clamp-1 text-left">{folder.description}</p>
           )}
-          <p className="text-[9px] text-white/20 font-bold mt-1 text-left">{fileCount} fail</p>
+          <p className="text-[9px] text-slate-400 dark:text-white/20 font-bold mt-1 text-left">{fileCount} fail</p>
         </div>
-        <ChevronRight className={`w-4 h-4 text-white/20 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+        <ChevronRight className={`w-4 h-4 text-slate-400 dark:text-white/20 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
       </div>
     </button>
   );
@@ -642,9 +641,9 @@ export function AkademikFolderPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Akademik</p>
-          <h1 className="text-2xl font-black text-white">Dokumen Peribadi</h1>
-          <p className="text-xs text-white/40 font-medium mt-1">Muat naik dan simpan sijil serta dokumen akademik anda</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Dokumen Peribadi</h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Muat naik dan simpan sijil serta dokumen akademik anda</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Download All ZIP */}
@@ -679,10 +678,10 @@ export function AkademikFolderPage() {
       </div>
 
       {/* PDF notice */}
-      <div className="flex items-start gap-2 px-4 py-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.06]">
-        <AlertTriangle className="w-3.5 h-3.5 text-amber-400/70 shrink-0 mt-0.5" />
-        <p className="text-[10px] text-amber-300/60 font-medium leading-relaxed">
-          <span className="font-black text-amber-300/80">Nota:</span> Fail PDF disimpan di Google Drive (jimat storan) — muat turun terus via butang atau link. Gambar boleh disertakan dalam ZIP.
+      <div className="flex items-start gap-2 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-500/15 bg-amber-50 dark:bg-amber-500/[0.06]">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400/70 shrink-0 mt-0.5" />
+        <p className="text-[10px] text-amber-700 dark:text-amber-300/60 font-medium leading-relaxed">
+          <span className="font-black text-amber-800 dark:text-amber-300/80">Nota:</span> Fail PDF disimpan di Google Drive (jimat storan) — muat turun terus via butang atau link. Gambar boleh disertakan dalam ZIP.
         </p>
       </div>
 
@@ -695,19 +694,19 @@ export function AkademikFolderPage() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Folder Baru</p>
+            <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] space-y-4 shadow-xs">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Folder Baru</p>
 
               <div>
                 <button
                   onClick={() => setShowPresets(p => !p)}
-                  className="flex items-center justify-between w-full bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-white/70 transition-all mb-3 font-medium group"
+                  className="flex items-center justify-between w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-slate-700 dark:text-white/70 transition-all mb-3 font-medium group"
                 >
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <Sparkles className="w-4 h-4 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
                     <span>Pilih cadangan folder...</span>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${showPresets ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-white/30 transition-transform ${showPresets ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
                   {showPresets && (
@@ -725,10 +724,10 @@ export function AkademikFolderPage() {
                               setNewFolder({ name: p.name, description: p.description });
                               setShowPresets(false);
                             }}
-                            className="flex flex-col gap-0.5 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] text-left hover:bg-white/[0.06] hover:border-white/[0.12] transition-all"
+                            className="flex flex-col gap-0.5 p-3 rounded-xl border border-slate-200/60 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02] text-left hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.12] transition-all"
                           >
-                            <span className="text-[11px] font-black text-white/70">{p.name}</span>
-                            <span className="text-[9px] text-white/30 font-medium">{p.description}</span>
+                            <span className="text-[11px] font-black text-slate-800 dark:text-white/70">{p.name}</span>
+                            <span className="text-[9px] text-slate-500 dark:text-white/30 font-medium">{p.description}</span>
                           </button>
                         ))}
                       </div>
@@ -741,13 +740,13 @@ export function AkademikFolderPage() {
                 value={newFolder.name}
                 onChange={e => setNewFolder(p => ({ ...p, name: e.target.value }))}
                 placeholder="Nama folder *"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20 font-bold"
+                className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20 font-bold"
               />
               <input
                 value={newFolder.description}
                 onChange={e => setNewFolder(p => ({ ...p, description: e.target.value }))}
                 placeholder="Penerangan folder (optional)"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
+                className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20"
               />
               <div className="flex gap-2">
                 <button
@@ -759,7 +758,7 @@ export function AkademikFolderPage() {
                 </button>
                 <button
                   onClick={() => { setShowCreate(false); setShowPresets(false); }}
-                  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest text-white/30 bg-white/[0.04]"
+                  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]"
                 >
                   Batal
                 </button>
@@ -772,13 +771,13 @@ export function AkademikFolderPage() {
       {/* Folder list */}
       {loading ? (
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-white/[0.03] animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-slate-200/60 dark:bg-white/[0.03] animate-pulse" />)}
         </div>
       ) : folders.length === 0 ? (
         <div className="py-20 text-center space-y-3">
-          <Folder className="w-10 h-10 mx-auto text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada folder peribadi</p>
-          <p className="text-[10px] text-white/15">Klik "Folder Baru" untuk mula simpan dokumen anda</p>
+          <Folder className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada folder peribadi</p>
+          <p className="text-[10px] text-slate-400 dark:text-white/15">Klik "Folder Baru" untuk mula simpan dokumen anda</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -804,7 +803,7 @@ export function AkademikFolderPage() {
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="ml-4 mt-2 space-y-2 pl-4 border-l border-white/[0.06]">
+                      <div className="ml-4 mt-2 space-y-2 pl-4 border-l border-slate-200/80 dark:border-white/[0.06]">
                         {/* Folder action bar */}
                         <div className="flex items-center gap-2 flex-wrap">
                           {isAdmin && (
@@ -845,8 +844,8 @@ export function AkademikFolderPage() {
 
                         {files.length === 0 ? (
                           <div className="py-6 text-center">
-                            <p className="text-[10px] text-white/20 font-medium">Tiada fail dalam folder ini</p>
-                            {isAdmin && <p className="text-[9px] text-white/10 mt-1">Klik "Muat Naik Fail" untuk tambah dokumen</p>}
+                            <p className="text-[10px] text-slate-400 dark:text-white/20 font-medium">Tiada fail dalam folder ini</p>
+                            {isAdmin && <p className="text-[9px] text-slate-400 dark:text-white/10 mt-1">Klik "Muat Naik Fail" untuk tambah dokumen</p>}
                           </div>
                         ) : (
                           <div className="space-y-2">
