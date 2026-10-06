@@ -10,6 +10,12 @@ describe('E-Akademik Light Mode Parity — Zero Raw Emojis', () => {
     '../pages/akademik/AkademikDashboard.tsx',
     '../pages/akademik/AkademikCgpa.tsx',
     '../pages/akademik/AkademikFolderPage.tsx',
+    '../pages/akademik/AkademikTakwimPage.tsx',
+    '../pages/akademik/AkademikLeaderboard.tsx',
+    '../pages/akademik/AkademikPencapaian.tsx',
+    '../pages/akademik/AkademikQrPage.tsx',
+    '../pages/akademik/AkademikMeritPage.tsx',
+    '../components/takwim/DayDetailSheet.tsx',
   ];
 
   filePaths.forEach((relPath) => {
@@ -129,3 +135,70 @@ describe('E-Akademik Light Mode Parity — AkademikFolderPage.tsx', () => {
     expect(source).toContain('border-slate-200 dark:border-white/10');
   });
 });
+
+describe('E-Akademik Light Mode Parity — AkademikTakwimPage.tsx & DayDetailSheet.tsx', () => {
+  const takwimPath = path.resolve(__dirname, '../pages/akademik/AkademikTakwimPage.tsx');
+  const sheetPath = path.resolve(__dirname, '../components/takwim/DayDetailSheet.tsx');
+  const takwimSource = fs.readFileSync(takwimPath, 'utf-8');
+  const sheetSource = fs.readFileSync(sheetPath, 'utf-8');
+
+  it('Takwim headers and selectors use dual-mode tokens', () => {
+    expect(takwimSource).toContain('text-slate-900 dark:text-white');
+    expect(takwimSource).toContain('text-slate-500 dark:text-white/40');
+    expect(takwimSource).toContain('bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white');
+  });
+
+  it('Takwim calendar view provides high contrast month title and day numbers', () => {
+    expect(takwimSource).toContain('border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]');
+    expect(takwimSource).toContain('bg-slate-50/80 dark:bg-white/[0.03]');
+    expect(takwimSource).toContain('text-slate-900 dark:text-white uppercase tracking-widest');
+    expect(takwimSource).toContain('text-slate-500 dark:text-white/40');
+  });
+
+  it('DayDetailSheet adapts cleanly to light and dark modes', () => {
+    expect(sheetSource).toContain('bg-white dark:bg-[#0f1117]');
+    expect(sheetSource).toContain('border-slate-200 dark:border-white/10');
+    expect(sheetSource).toContain('text-slate-900 dark:text-white');
+  });
+});
+
+describe('E-Akademik Light Mode Parity — AkademikLeaderboard.tsx', () => {
+  const lbPath = path.resolve(__dirname, '../pages/akademik/AkademikLeaderboard.tsx');
+  const source = fs.readFileSync(lbPath, 'utf-8');
+
+  it('Leaderboard header, tabs, and empty state are visible in light mode', () => {
+    expect(source).toContain('text-slate-900 dark:text-white');
+    expect(source).toContain('text-slate-500 dark:text-white/40');
+    expect(source).toContain('text-slate-400 dark:text-white/20');
+    expect(source).toContain('text-slate-300 dark:text-white/10');
+    expect(source).toContain('border-slate-200 dark:border-white/[0.08]');
+  });
+});
+
+describe('E-Akademik Light Mode Parity — AkademikPencapaian.tsx', () => {
+  const pencPath = path.resolve(__dirname, '../pages/akademik/AkademikPencapaian.tsx');
+  const source = fs.readFileSync(pencPath, 'utf-8');
+
+  it('Pencapaian headers, filter tabs, cards, and empty state are visible in light mode', () => {
+    expect(source).toContain('text-slate-900 dark:text-white');
+    expect(source).toContain('text-slate-500 dark:text-white/40');
+    expect(source).toContain('text-slate-400 dark:text-white/20');
+    expect(source).toContain('text-slate-300 dark:text-white/10');
+    expect(source).toContain('bg-white dark:bg-white/[0.02]');
+    expect(source).toContain('border-slate-200/80 dark:border-white/[0.06]');
+  });
+});
+
+describe('E-Akademik Light Mode Parity — AkademikQrPage.tsx', () => {
+  const qrPath = path.resolve(__dirname, '../pages/akademik/AkademikQrPage.tsx');
+  const source = fs.readFileSync(qrPath, 'utf-8');
+
+  it('QR scan header, cards, and scan history have porcelain light parity', () => {
+    expect(source).toContain('text-slate-900 dark:text-white');
+    expect(source).toContain('text-slate-500 dark:text-white/40');
+    expect(source).toContain('bg-white dark:bg-white/[0.02]');
+    expect(source).toContain('border-slate-200/80 dark:border-white/[0.05]');
+    expect(source).toContain('text-slate-400 dark:text-white/20');
+  });
+});
+

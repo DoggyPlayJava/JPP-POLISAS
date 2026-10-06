@@ -59,11 +59,11 @@ export function AkademikTakwimPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center">
-            <CalendarDays className="w-5 h-5 text-indigo-400" />
+            <CalendarDays className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight">Takwim POLISAS</h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{INSTITUSI_LABEL} · Berpusat · {sesi}</p>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Takwim POLISAS</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{INSTITUSI_LABEL} · Berpusat · {sesi}</p>
           </div>
         </div>
       </motion.div>
@@ -71,8 +71,8 @@ export function AkademikTakwimPage() {
       {/* ── Controls ── */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={filter} onValueChange={v => { setFilter(v); if (v !== 'KELAB_SAYA') setSelectedClubFilter('ALL'); }}>
-          <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white">
-            <Filter className="w-3 h-3 mr-2 text-white/40" /><SelectValue />
+          <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs">
+            <Filter className="w-3 h-3 mr-2 text-slate-500 dark:text-white/40" /><SelectValue />
           </SelectTrigger>
           <SelectContent>{STUDENT_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
@@ -80,8 +80,8 @@ export function AkademikTakwimPage() {
         {/* Club sub-picker — only visible when "Kelab Saya" is selected */}
         {filter === 'KELAB_SAYA' && myClubs.length > 0 && (
           <Select value={selectedClubFilter} onValueChange={setSelectedClubFilter}>
-            <SelectTrigger className="w-[200px] h-10 rounded-xl bg-emerald-500/5 border-emerald-500/15 text-xs font-bold text-emerald-400">
-              <Users className="w-3 h-3 mr-2 text-emerald-400/50" /><SelectValue />
+            <SelectTrigger className="w-[200px] h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-400 shadow-xs">
+              <Users className="w-3 h-3 mr-2 text-emerald-600 dark:text-emerald-400/50" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Semua Kelab Saya ({myClubs.length})</SelectItem>
@@ -91,23 +91,23 @@ export function AkademikTakwimPage() {
         )}
 
         <Select value={sesi} onValueChange={setSesi}>
-          <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs"><SelectValue /></SelectTrigger>
           <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
 
         {/* Sesi Toggle */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs">
           {(['ALL', 'I', 'II'] as const).map(s => (
-            <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-indigo-500/20 text-indigo-400' : 'text-white/40 hover:text-white/60')}>
+            <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60')}>
               {s === 'ALL' ? 'Semua' : `Sesi ${s}`}
             </button>
           ))}
         </div>
 
         {/* View Mode */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10 ml-auto">
-          <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white/10 text-white' : 'text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
-          <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white/10 text-white' : 'text-white/40')}><Table className="w-4 h-4" /></button>
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 ml-auto shadow-xs">
+          <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
+          <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><Table className="w-4 h-4" /></button>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ export function AkademikTakwimPage() {
 
       {/* ── Content ── */}
       {loading ? (
-        <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-white/30" /></div>
+        <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
       ) : viewMode === 'calendar' ? (
         <StudentCalendar items={filteredItems} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
       ) : (
@@ -155,17 +155,17 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
   const getEvents = (day: Date) => items.filter(i => { const s = parseISO(i.tarikh_mula); const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s; return day >= s && day <= e; });
 
   return (
-    <div className="rounded-2xl border border-white/10 overflow-hidden">
-      <div className="flex items-center justify-between p-4 bg-white/[0.03]">
-        <button onClick={onPrev} className="p-2 rounded-lg hover:bg-white/10 text-white/50"><ChevronLeft className="w-4 h-4" /></button>
-        <h3 className="text-sm font-black text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
-        <button onClick={onNext} className="p-2 rounded-lg hover:bg-white/10 text-white/50"><ChevronRight className="w-4 h-4" /></button>
+    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-xs overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-200/80 dark:border-white/10">
+        <button onClick={onPrev} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
+        <button onClick={onNext} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 transition-colors"><ChevronRight className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-7">
         {['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'].map(d => (
-          <div key={d} className="p-2 text-center text-[9px] font-black uppercase tracking-widest text-white/25 border-b border-white/5">{d}</div>
+          <div key={d} className="p-2 text-center text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 border-b border-slate-200 dark:border-white/5">{d}</div>
         ))}
-        {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} className="p-2 min-h-[80px] border-b border-r border-white/[0.03]" />)}
+        {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} className="p-2 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03]" />)}
         {days.map(day => {
           const evts = getEvents(day);
           const isToday = isSameDay(day, new Date());
@@ -175,21 +175,21 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
               key={day.toISOString()}
               onClick={() => onDayClick(day)}
               className={cn(
-                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
-                isToday && 'bg-indigo-500/5',
-                hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
+                'p-1.5 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
+                isToday && 'bg-indigo-50/60 dark:bg-indigo-500/5',
+                hasEvents ? 'hover:bg-slate-50 dark:hover:bg-white/[0.04] active:bg-slate-100 dark:active:bg-white/[0.07]' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
               )}
             >
-              <span className={cn('text-[10px] font-black inline-flex items-center justify-center', isToday ? 'text-indigo-400 bg-indigo-500/20 w-6 h-6 rounded-full' : 'text-white/40')}>
+              <span className={cn('text-[10px] font-black inline-flex items-center justify-center', isToday ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 w-6 h-6 rounded-full' : 'text-slate-700 dark:text-white/60')}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 space-y-0.5">
                 {evts.slice(0, 3).map(e => {
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
-                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
+                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full shadow-2xs" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                  <div className="text-[8px] font-black text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full bg-slate-100 dark:bg-white/[0.06]">+{evts.length - 3} lagi</div>
                 )}
               </div>
             </div>
@@ -204,42 +204,42 @@ function StudentTable({ items }: { items: TakwimItem[] }) {
   const fmtDate = (d: string) => { try { return format(parseISO(d), 'd MMM yyyy', { locale: ms }); } catch { return d; } };
   if (items.length === 0) return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <CalendarDays className="w-10 h-10 text-white/10 mb-3" />
-      <p className="text-xs font-black text-white/20 uppercase tracking-widest">Tiada entri takwim</p>
+      <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
+      <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada entri takwim</p>
     </div>
   );
 
   return (
-    <div className="rounded-2xl border border-white/10 overflow-hidden">
+    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-white/[0.04]">
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Jenis</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tajuk / Aktiviti</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tarikh</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Minggu</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Catatan</th>
+            <tr className="bg-slate-50 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/5">
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Jenis</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tajuk / Aktiviti</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tarikh</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Minggu</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Catatan</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
             {items.map(item => {
               const cfg = TAKWIM_JENIS[item.jenis];
               const color = item.warna_custom || cfg?.color || '#94A3B8';
               return (
-                <tr key={`${item.type}-${item.id}`} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={`${item.type}-${item.id}`} className="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="px-4 py-3">
                     <Badge className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-xs font-black text-white/90">{item.tajuk}</p>
-                    {item.club_name && <p className="text-[10px] text-white/30 mt-0.5">{item.club_name}</p>}
+                    <p className="text-xs font-black text-slate-900 dark:text-white/90">{item.tajuk}</p>
+                    {item.club_name && <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
                   </td>
-                  <td className="px-4 py-3 text-[11px] font-bold text-white/60 whitespace-nowrap">
+                  <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
                     {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}
                   </td>
-                  <td className="px-4 py-3 text-xs font-black text-white/40 text-center">{item.bil_minggu || '—'}</td>
-                  <td className="px-4 py-3 text-[10px] text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
+                  <td className="px-4 py-3 text-xs font-black text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
                 </tr>
               );
             })}

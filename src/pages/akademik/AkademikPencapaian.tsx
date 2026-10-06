@@ -108,15 +108,15 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-slate-900 rounded-[2rem] border border-white/[0.08] overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] overflow-hidden max-h-[90vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-slate-900 border-b border-white/[0.06]">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-white/[0.06]">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-0.5">Baharu</p>
-            <h2 className="text-lg font-black text-white">Tambah Pencapaian</h2>
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/30 mb-0.5">Baharu</p>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Tambah Pencapaian</h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
+          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.06] transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -124,16 +124,21 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
         <div className="p-6 space-y-4 pb-8">
           {/* Kategori */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Kategori Sijil</label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Kategori Sijil</label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat: any) => (
                 <button
                   key={cat.id}
                   onClick={() => field('category_id', form.category_id === cat.id ? '' : cat.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black border transition-all"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black border transition-all",
+                    form.category_id === cat.id
+                      ? "shadow-2xs"
+                      : "bg-slate-50 dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40"
+                  )}
                   style={form.category_id === cat.id
                     ? { background: `${cat.color}25`, borderColor: cat.color, color: cat.color }
-                    : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }
+                    : undefined
                   }
                 >
                   <span>{cat.icon}</span> {cat.name}
@@ -144,16 +149,21 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Jenis */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Jenis <span className="text-rose-400">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Jenis <span className="text-rose-500">*</span></label>
             <div className="grid grid-cols-3 gap-2">
               {JENIS_OPTIONS.map(j => (
                 <button
                   key={j}
                   onClick={() => field('jenis', j)}
-                  className="py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all"
+                  className={cn(
+                    "py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all",
+                    form.jenis === j
+                      ? "shadow-2xs"
+                      : "bg-slate-50 dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40"
+                  )}
                   style={form.jenis === j
                     ? { background: `${THEME}25`, borderColor: THEME, color: THEME }
-                    : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }
+                    : undefined
                   }
                 >
                   {j}
@@ -164,16 +174,21 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Peringkat */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Peringkat <span className="text-rose-400">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Peringkat <span className="text-rose-500">*</span></label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PERINGKAT_OPTIONS.map(p => (
                 <button
                   key={p}
                   onClick={() => field('peringkat', p)}
-                  className="py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all"
+                  className={cn(
+                    "py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all",
+                    form.peringkat === p
+                      ? "shadow-2xs"
+                      : "bg-slate-50 dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40"
+                  )}
                   style={form.peringkat === p
                     ? { background: `${THEME}25`, borderColor: THEME, color: THEME }
-                    : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }
+                    : undefined
                   }
                 >
                   {p === 'ANTARABANGSA' ? 'Antarabangsa' : p === 'KEBANGSAAN' ? 'Kebangsaan' : p === 'NEGERI' ? 'Negeri' : p === 'DAERAH' ? 'Daerah' : 'Dalaman'}
@@ -184,63 +199,63 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Merit Preview */}
           {form.jenis && form.peringkat && (
-            <div className="flex items-center gap-3 p-3 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02]">
               <Trophy className="w-4 h-4 shrink-0" style={{ color: THEME }} />
-              <p className="text-xs font-black text-white/60">
+              <p className="text-xs font-black text-slate-700 dark:text-white/60">
                 Merit dijangka: <span className="font-black" style={{ color: THEME }}>+{meritPreview} merit</span>
-                <span className="text-white/30 font-medium ml-1">(selepas disahkan exco)</span>
+                <span className="text-slate-400 dark:text-white/30 font-medium ml-1">(selepas disahkan exco)</span>
               </p>
             </div>
           )}
 
           {/* Nama */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Nama Pencapaian <span className="text-rose-400">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Nama Pencapaian <span className="text-rose-500">*</span></label>
             <input
               value={form.nama_pencapaian}
               onChange={e => field('nama_pencapaian', e.target.value)}
               placeholder="Contoh: Johan Pertandingan Debat Kebangsaan 2025"
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-white/20 font-medium outline-none focus:border-white/20 transition-all"
+              className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs"
             />
           </div>
 
           {/* Grid: Penganjur + Tarikh */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Penganjur</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Penganjur</label>
               <input
                 value={form.penganjur}
                 onChange={e => field('penganjur', e.target.value)}
                 placeholder="Nama penganjur"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-white/20 font-medium outline-none focus:border-white/20 transition-all"
+                className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Tarikh</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Tarikh</label>
               <input
                 type="date"
                 value={form.tarikh}
                 onChange={e => field('tarikh', e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-white/20 transition-all [color-scheme:dark]"
+                className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
           </div>
 
           {/* Upload Sijil PDF */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Upload Sijil (PDF)</label>
-            <label className="flex items-center gap-3 p-4 rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:border-white/20 transition-all group">
-              <Upload className="w-4 h-4 text-white/30 group-hover:text-white/50 transition-colors" />
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Upload Sijil (PDF)</label>
+            <label className="flex items-center gap-3 p-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.02] cursor-pointer hover:bg-slate-100/70 dark:hover:bg-white/[0.04] hover:border-slate-400 dark:hover:border-white/20 transition-all group">
+              <Upload className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:text-white/30 dark:group-hover:text-white/50 transition-colors" />
               <div className="flex-1 min-w-0">
                 {file
-                  ? <p className="text-xs font-black text-white/70 truncate">{file.name}</p>
-                  : <p className="text-xs font-black text-white/30">Klik untuk pilih PDF (maks 30MB)</p>
+                  ? <p className="text-xs font-black text-slate-900 dark:text-white/70 truncate">{file.name}</p>
+                  : <p className="text-xs font-black text-slate-500 dark:text-white/30">Klik untuk pilih PDF (maks 30MB)</p>
                 }
               </div>
               {file && (
                 <button
                   onClick={e => { e.preventDefault(); setFile(null); }}
-                  className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/[0.08]"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-200/60 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.08]"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -427,24 +442,24 @@ export function AkademikPencapaian() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setUnlockTarget(null)} />
-            <div className="relative w-full max-w-md bg-slate-900 rounded-[2rem] border border-white/[0.08] p-6 space-y-4">
+            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] p-6 space-y-4 shadow-2xl">
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${THEME}20`, color: THEME }}>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
                   <UnlockKeyhole className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Permohonan</p>
-                  <h3 className="text-sm font-black text-white">Buka Kunci Pencapaian</h3>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">Permohonan</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Buka Kunci Pencapaian</h3>
                 </div>
-                <button onClick={() => setUnlockTarget(null)} className="ml-auto p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"><X className="w-4 h-4" /></button>
+                <button onClick={() => setUnlockTarget(null)} className="ml-auto p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.06] transition-all"><X className="w-4 h-4" /></button>
               </div>
-              <p className="text-xs text-white/40">Pencapaian <strong className="text-white/70">{unlockTarget.nama_pencapaian}</strong> telah disahkan. Nyatakan sebab permohonan buka kunci untuk edit/padam.</p>
+              <p className="text-xs text-slate-600 dark:text-white/40">Pencapaian <strong className="text-slate-900 dark:text-white/70">{unlockTarget.nama_pencapaian}</strong> telah disahkan. Nyatakan sebab permohonan buka kunci untuk edit/padam.</p>
               <textarea
                 value={unlockReason}
                 onChange={e => setUnlockReason(e.target.value)}
                 placeholder="Nyatakan sebab permohonan..."
                 rows={3}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-white/20 resize-none"
+                className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 outline-none focus:border-indigo-500/50 dark:focus:border-white/20 resize-none shadow-2xs"
               />
               <div className="flex gap-2">
                 <button
@@ -456,7 +471,7 @@ export function AkademikPencapaian() {
                   {unlockSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UnlockKeyhole className="w-3.5 h-3.5" />}
                   {unlockSaving ? 'Menghantar...' : 'Hantar Permohonan'}
                 </button>
-                <button onClick={() => setUnlockTarget(null)} className="px-4 py-3 rounded-xl text-xs font-black uppercase text-white/30 bg-white/[0.04]">Batal</button>
+                <button onClick={() => setUnlockTarget(null)} className="px-4 py-3 rounded-xl text-xs font-black uppercase text-slate-500 hover:text-slate-900 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]">Batal</button>
               </div>
             </div>
           </motion.div>
@@ -466,15 +481,15 @@ export function AkademikPencapaian() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Rekod</p>
-          <h1 className="text-2xl font-black text-white">Pencapaian Saya</h1>
-          <p className="text-xs text-white/40 font-medium mt-1">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Rekod</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Pencapaian Saya</h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
             Rekod anugerah, sijil & pertandingan — merit dikira automatik
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xs"
           style={{ background: THEME, color: '#fff', boxShadow: `0 8px 24px ${hexToRgba(THEME, 0.25)}` }}
         >
           <Plus className="w-4 h-4" />
@@ -488,11 +503,12 @@ export function AkademikPencapaian() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all"
-            style={filter === f
-              ? { background: `${THEME}20`, borderColor: THEME, color: THEME }
-              : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
-            }
+            className={cn(
+              "flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all shadow-2xs",
+              filter === f
+                ? "bg-indigo-50 dark:bg-indigo-500/20 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold"
+                : "bg-white dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
+            )}
           >
             {f} <span className="opacity-60">({counts[f]})</span>
           </button>
@@ -503,13 +519,13 @@ export function AkademikPencapaian() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 rounded-[1.5rem] bg-white/[0.03] animate-pulse border border-white/[0.04]" />
+            <div key={i} className="h-24 rounded-[1.5rem] bg-slate-100 dark:bg-white/[0.03] animate-pulse border border-slate-200/60 dark:border-white/[0.04]" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-20 text-center space-y-4">
-          <Trophy className="w-10 h-10 mx-auto text-white/10" />
-          <p className="text-[11px] font-black uppercase tracking-widest text-white/20">
+          <Trophy className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
+          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
             {filter === 'SEMUA' ? 'Belum ada pencapaian' : `Tiada pencapaian ${filter.toLowerCase()}`}
           </p>
           {filter === 'SEMUA' && (
@@ -535,47 +551,47 @@ export function AkademikPencapaian() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="flex items-start gap-4 p-4 rounded-[1.5rem] border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all"
+                className="flex items-start gap-4 p-4 rounded-[1.5rem] border border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all shadow-xs"
               >
                 {/* Cat icon */}
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0"
                   style={{ background: cat ? `${cat.color}20` : `${THEME}15` }}
                 >
-                  {cat?.icon || '🏆'}
+                  {cat?.icon ? <span>{cat.icon}</span> : <Trophy className="w-5 h-5 text-indigo-500" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-white line-clamp-1">{p.nama_pencapaian}</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">{p.nama_pencapaian}</p>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
-                    <span className="text-[10px] font-bold text-white/30">{p.jenis}</span>
-                    <span className="text-[10px] font-bold text-white/20">·</span>
-                    <span className="text-[10px] font-bold text-white/30">{p.peringkat}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-white/30">{p.jenis}</span>
+                    <span className="text-[10px] font-bold text-slate-300 dark:text-white/20">·</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-white/30">{p.peringkat}</span>
                     {p.penganjur && (
                       <>
-                        <span className="text-[10px] font-bold text-white/20">·</span>
-                        <span className="text-[10px] font-bold text-white/30">{p.penganjur}</span>
+                        <span className="text-[10px] font-bold text-slate-300 dark:text-white/20">·</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-white/30">{p.penganjur}</span>
                       </>
                     )}
                     {p.tarikh && (
                       <>
-                        <span className="text-[10px] font-bold text-white/20">·</span>
-                        <span className="text-[10px] font-bold text-white/30">
+                        <span className="text-[10px] font-bold text-slate-300 dark:text-white/20">·</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-white/30">
                           {format(new Date(p.tarikh), 'd MMM yyyy', { locale: ms })}
                         </span>
                       </>
                     )}
                   </div>
                   {p.status === 'DITOLAK' && p.rejection_reason && (
-                    <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-rose-500/10 border border-rose-500/15">
-                      <AlertCircle className="w-3 h-3 text-rose-400 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-rose-400/80 font-medium">{p.rejection_reason}</p>
+                    <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/15">
+                      <AlertCircle className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-rose-700 dark:text-rose-400/80 font-medium">{p.rejection_reason}</p>
                     </div>
                   )}
                   {p.status === 'DISAHKAN' && p.merit_override !== null && p.merit_override < p.merit_auto && p.rejection_reason && (
-                    <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/15">
-                      <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-amber-400/80 font-medium">Sebab Pengurangan: {p.rejection_reason}</p>
+                    <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/15">
+                      <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400/80 font-medium">Sebab Pengurangan: {p.rejection_reason}</p>
                     </div>
                   )}
                 </div>
@@ -589,7 +605,7 @@ export function AkademikPencapaian() {
                     <div className="flex flex-col items-end">
                       {p.merit_override !== null && p.merit_override !== p.merit_auto ? (
                         <>
-                          <span className="text-[8px] font-bold text-white/30 line-through">+{p.merit_auto} asal</span>
+                          <span className="text-[8px] font-bold text-slate-400 dark:text-white/30 line-through">+{p.merit_auto} asal</span>
                           <span className="text-[10px] font-black" style={{ color: THEME }}>+{p.merit_override} merit</span>
                         </>
                       ) : (
@@ -602,7 +618,7 @@ export function AkademikPencapaian() {
                       href={p.drive_view_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[9px] font-black text-white/25 hover:text-white/60 flex items-center gap-1 transition-colors"
+                      className="text-[9px] font-black text-slate-500 hover:text-slate-900 dark:text-white/25 dark:hover:text-white/60 flex items-center gap-1 transition-colors"
                     >
                       <FileText className="w-2.5 h-2.5" /> Sijil
                     </a>
@@ -611,7 +627,7 @@ export function AkademikPencapaian() {
                   {(p.status === 'MENUNGGU' || p.status === 'DITOLAK') && (
                     <button
                       onClick={() => handleDelete(p.id)}
-                      className="p-1.5 rounded-lg text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:text-white/20 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-all"
                       title="Padam pencapaian"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -629,12 +645,12 @@ export function AkademikPencapaian() {
                       const hoursLeft = Math.max(0, Math.ceil((new Date(unlock.unlocked_until).getTime() - Date.now()) / 3600000));
                       return (
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            🔓 Diluluskan ({hoursLeft}j lagi)
+                          <span className="text-[8px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/20 flex items-center gap-1">
+                            <UnlockKeyhole className="w-2.5 h-2.5 inline" /> Diluluskan ({hoursLeft}j lagi)
                           </span>
                           <button
                             onClick={() => handleDelete(p.id)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-rose-500/20"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400/70 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-all border border-rose-200 dark:border-rose-500/20"
                           >
                             <Trash2 className="w-2.5 h-2.5" /> Padam
                           </button>
@@ -643,23 +659,23 @@ export function AkademikPencapaian() {
                     }
                     if (isPending) {
                       return (
-                        <span className="text-[8px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                          ⏳ Menunggu Kelulusan
+                        <span className="text-[8px] font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/20 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5 inline" /> Menunggu Kelulusan
                         </span>
                       );
                     }
                     if (isRejected) {
                       return (
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[8px] font-black text-rose-400/80 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/15">
-                            ✕ Ditolak
+                          <span className="text-[8px] font-black text-rose-700 dark:text-rose-400/80 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/15 flex items-center gap-1">
+                            <X className="w-2.5 h-2.5 inline" /> Ditolak
                           </span>
                           {unlock?.reviewer_note && (
-                            <p className="text-[8px] text-white/25 max-w-[120px] text-right">{unlock.reviewer_note}</p>
+                            <p className="text-[8px] text-slate-500 dark:text-white/25 max-w-[120px] text-right">{unlock.reviewer_note}</p>
                           )}
                           <button
                             onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-amber-400/60 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06]"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-amber-700 hover:text-amber-800 hover:bg-amber-100 dark:text-amber-400/60 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 transition-all border border-amber-300 dark:border-white/[0.06]"
                           >
                             <UnlockKeyhole className="w-2.5 h-2.5" /> Cuba Lagi
                           </button>
@@ -671,7 +687,7 @@ export function AkademikPencapaian() {
                     return (
                       <button
                         onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-white/20 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06] hover:border-amber-500/20"
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-amber-700 hover:bg-amber-50 dark:text-white/20 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 transition-all border border-slate-200 hover:border-amber-300 dark:border-white/[0.06] dark:hover:border-amber-500/20"
                         title={isReduced ? "Rayuan Markah / Buka Kunci" : "Minta buka kunci"}
                       >
                         <UnlockKeyhole className="w-2.5 h-2.5" /> {isReduced ? 'Rayuan Markah' : 'Buka Kunci'}

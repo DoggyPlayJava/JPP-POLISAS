@@ -328,9 +328,9 @@ export function AkademikQrPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Merit</p>
-          <h1 className="text-2xl font-black text-white">Scan QR Merit</h1>
-          <p className="text-xs text-white/40 font-medium mt-1">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Merit</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Scan QR Merit</h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
             Scan kod QR aktiviti untuk kumpul merit secara terus
           </p>
         </div>
@@ -339,7 +339,7 @@ export function AkademikQrPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-[2rem] p-6 border border-white/[0.06] text-center"
+          className="relative overflow-hidden rounded-[2rem] p-6 border border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-transparent text-center shadow-xs"
           style={{ background: `linear-gradient(135deg, ${hexToRgba(THEME, 0.12)}, ${hexToRgba('#818CF8', 0.06)})` }}
         >
           <div className="absolute inset-0 opacity-5" style={{ background: `radial-gradient(circle at 50% 30%, ${THEME}, transparent 60%)` }} />
@@ -352,52 +352,52 @@ export function AkademikQrPage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-black text-white">Kumpul Merit Aktiviti</h2>
-              <p className="text-[11px] text-white/40 font-medium mt-1">
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Kumpul Merit Aktiviti</h2>
+              <p className="text-[11px] text-slate-600 dark:text-white/40 font-medium mt-1">
                 Scan QR kod yang disediakan oleh Exco KK atau JPP untuk claim merit aktiviti anda
               </p>
             </div>
 
             {/* Total QR merit */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-white/[0.08] bg-white/[0.04]">
-              <Star className="w-3.5 h-3.5 fill-current text-amber-400" />
-              <span className="text-sm font-black text-white">{totalQrMerit}</span>
-              <span className="text-[10px] font-black text-white/30 uppercase tracking-wider">merit dari QR</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.04]">
+              <Star className="w-3.5 h-3.5 fill-current text-amber-500 dark:text-amber-400" />
+              <span className="text-sm font-black text-slate-900 dark:text-white">{totalQrMerit}</span>
+              <span className="text-[10px] font-black text-slate-500 dark:text-white/30 uppercase tracking-wider">merit dari QR</span>
             </div>
 
             {/* Scan Button */}
             <div className="flex flex-col items-center gap-2">
               <button
                 onClick={() => setShowCamera(true)}
-                className="flex items-center gap-3 px-8 py-4 rounded-2xl mx-auto font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-3 px-8 py-4 rounded-2xl mx-auto font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-md"
                 style={{ background: THEME, color: '#064E3B', boxShadow: `0 12px 32px ${hexToRgba(THEME, 0.35)}` }}
               >
                 <Camera className="w-4 h-4" />
                 Buka Kamera & Scan
               </button>
               {isIOS() && (
-                <p className="text-[10px] text-amber-400/70 font-bold mt-1">
-                  📱 iOS: Jika kamera tidak mengesan QR, guna app Kamera iPhone terus
+                <p className="text-[10px] text-amber-700 dark:text-amber-400/80 font-bold mt-1 flex items-center justify-center gap-1">
+                  <Smartphone className="w-3.5 h-3.5 inline" /> iOS: Jika kamera tidak mengesan QR, guna app Kamera iPhone terus
                 </p>
               )}
             </div>
 
-            <p className="text-[10px] text-white/25 font-medium">
+            <p className="text-[10px] text-slate-400 dark:text-white/25 font-medium">
               atau buka kamera telefon anda dan scan QR terus dari papan notis
             </p>
           </div>
         </motion.div>
 
         {/* How it works */}
-        <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+        <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 flex items-center gap-2">
             <Info className="w-3.5 h-3.5" />
             Cara Kerja QR Merit
           </h3>
           <div className="space-y-3">
             {[
               { step: '01', text: 'Pergi ke aktiviti atau program yang disediakan QR', icon: Smartphone },
-              { step: '02', text: 'Scan QR код menggunakan kamera di atas atau kamera telefon', icon: QrCode },
+              { step: '02', text: 'Scan QR kod menggunakan kamera di atas atau kamera telefon', icon: QrCode },
               { step: '03', text: 'Merit akan dikreditkan terus ke akaun anda', icon: Zap },
               { step: '04', text: 'Boleh scan semula selepas tempoh cooldown tamat', icon: Clock },
             ].map(({ step, text, icon: Icon }) => (
@@ -408,30 +408,30 @@ export function AkademikQrPage() {
                 >
                   {step}
                 </div>
-                <p className="text-xs font-medium text-white/50">{text}</p>
+                <p className="text-xs font-medium text-slate-600 dark:text-white/50">{text}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Scan History */}
-        <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">
+        <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">
             Sejarah Scan QR
           </h3>
           {loading ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-14 rounded-2xl bg-white/[0.03] animate-pulse" />
+                <div key={i} className="h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.03] animate-pulse" />
               ))}
             </div>
           ) : scans.length === 0 ? (
             <div className="py-10 text-center space-y-3">
-              <QrCode className="w-8 h-8 mx-auto text-white/10" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
+              <QrCode className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
                 Belum ada scan QR
               </p>
-              <p className="text-[10px] text-white/15 font-medium">
+              <p className="text-[10px] text-slate-400 dark:text-white/15 font-medium">
                 Scan QR kod aktiviti pertama anda untuk mula kumpul merit
               </p>
             </div>
@@ -447,7 +447,7 @@ export function AkademikQrPage() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-all"
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/70 dark:border-white/[0.04] hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all shadow-2xs"
                   >
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -456,14 +456,14 @@ export function AkademikQrPage() {
                       <CheckCircle className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-white line-clamp-1">
+                      <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
                         {scan._title || 'Aktiviti QR'}
                       </p>
-                      <p className="text-[9px] text-white/30 font-bold mt-0.5">{date}</p>
+                      <p className="text-[9px] text-slate-500 dark:text-white/30 font-bold mt-0.5">{date}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <Star className="w-3 h-3 fill-current text-amber-400" />
-                      <span className="text-sm font-black text-amber-300">+{scan.merit_awarded}</span>
+                      <Star className="w-3 h-3 fill-current text-amber-500 dark:text-amber-400" />
+                      <span className="text-sm font-black text-amber-600 dark:text-amber-300">+{scan.merit_awarded}</span>
                     </div>
                   </motion.div>
                 );
@@ -473,10 +473,10 @@ export function AkademikQrPage() {
         </div>
 
         {/* Note for Exco KK */}
-        <div className="flex items-start gap-3 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-          <Info className="w-4 h-4 text-white/20 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-white/25 font-medium leading-relaxed">
-            QR kod disediakan oleh <strong className="text-white/40">Exco KK (Kediaman & Kerohanian)</strong> untuk aktiviti asrama seperti solat berjemaah, gotong-royong, dsbnya. Hubungi Exco KK untuk maklumat lanjut.
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] shadow-xs">
+          <Info className="w-4 h-4 text-slate-400 dark:text-white/20 shrink-0 mt-0.5" />
+          <p className="text-[10px] text-slate-500 dark:text-white/25 font-medium leading-relaxed">
+            QR kod disediakan oleh <strong className="text-slate-700 dark:text-white/40">Exco KK (Kediaman & Kerohanian)</strong> untuk aktiviti asrama seperti solat berjemaah, gotong-royong, dsbnya. Hubungi Exco KK untuk maklumat lanjut.
           </p>
         </div>
       </div>
