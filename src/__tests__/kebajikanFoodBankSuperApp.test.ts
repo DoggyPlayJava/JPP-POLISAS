@@ -213,3 +213,104 @@ describe('Task 1: KebajikanLiveTrackerCard Component & Integration', () => {
     expect(portalContent).toContain('<KebajikanLiveTrackerCard');
   });
 });
+
+describe('Task 2: Borang Aduan Fasiliti Ekspres Revamp (KebajikanSubmitPage.tsx)', () => {
+  const submitPagePath = path.resolve(__dirname, '../pages/kebajikan/KebajikanSubmitPage.tsx');
+
+  it('verifies KebajikanSubmitPage.tsx file exists', () => {
+    expect(fs.existsSync(submitPagePath)).toBe(true);
+  });
+
+  it('auto-fills profile details (full_name, matric_no, phone, class, gender, jabatan) from auth profile', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Auto profile mapping logic from profile and user
+    expect(content).toMatch(/useAuth/);
+    expect(content).toMatch(/getInitialProfileData/);
+    expect(content).toMatch(/full_name/);
+    expect(content).toMatch(/matric_no/);
+    expect(content).toMatch(/phone/);
+    expect(content).toMatch(/class/);
+    expect(content).toMatch(/gender/);
+    expect(content).toMatch(/jabatan/);
+
+    // Dynamic re-sync on profile or user update
+    expect(content).toMatch(/useEffect\(\s*\(\)\s*=>\s*\{[\s\S]*profile[\s\S]*user[\s\S]*\}\s*,\s*\[profile,\s*user\]\)/);
+  });
+
+  it('implements direct camera capture with capture="environment" and accept="image/*"', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Must have camera capture input attribute
+    expect(content).toContain('capture="environment"');
+    expect(content).toContain('accept="image/*"');
+    expect(content).toMatch(/<input[^>]*capture="environment"/);
+  });
+
+  it('imports and invokes compressImage for fast client-side compression', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Must import compressImage from imageCompression
+    expect(content).toMatch(/import\s*\{[^}]*compressImage[^}]*\}\s*from\s*['"]@\/lib\/imageCompression['"]/);
+    // Must call compressImage
+    expect(content).toMatch(/await\s+compressImage/);
+  });
+
+  it('implements mobile sticky bottom summary capsule with required tokens and Semak & Hantar CTA', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    const expectedCapsuleTokens = 'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10';
+    expect(content).toContain(expectedCapsuleTokens);
+    expect(content).toContain('Semak & Hantar');
+  });
+
+  it('implements slide-up bottom sheet / review modal with Sahkan & Hantar Aduan CTA', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Slide-up sheet presence
+    expect(content).toContain('showReviewModal');
+    expect(content).toContain('Semak & Sahkan Aduan');
+    expect(content).toContain('Sahkan & Hantar Aduan');
+    expect(content).toContain('Kembali Edit');
+  });
+
+  it('strictly contains zero raw banned emojis in KebajikanSubmitPage.tsx', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+    const hasEmoji = BANNED_EMOJI_REGEX.test(content);
+    expect(hasEmoji).toBe(false);
+  });
+
+  it('uses high-contrast visual category cards with 100% Lucide vector icons', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Category Lucide icons
+    expect(content).toContain('Building2');
+    expect(content).toContain('Dumbbell');
+    expect(content).toContain('Coffee');
+    expect(content).toContain('Wifi');
+    expect(content).toContain('MoreHorizontal');
+
+    // Categories array
+    expect(content).toContain('FASILITI_JABATAN');
+    expect(content).toContain('FASILITI_SUKAN');
+    expect(content).toContain('KAFETERIA');
+    expect(content).toContain('WIFI_KAMSIS');
+    expect(content).toContain('LAIN_LAIN');
+  });
+
+  it('preserves database inserts, notifications, and email integration', () => {
+    const content = fs.readFileSync(submitPagePath, 'utf-8');
+
+    // Database ticket creation
+    expect(content).toContain("supabase.from('kebajikan_tickets').insert");
+    expect(content).toContain("supabase.from('kebajikan_ticket_comments').insert");
+
+    // Notifications
+    expect(content).toContain('sendNotificationToUser');
+    expect(content).toContain('sendNotificationToKebajikanExco');
+    expect(content).toContain('sendNotificationToKKExco');
+
+    // Email
+    expect(content).toContain('sendEmail');
+  });
+});
