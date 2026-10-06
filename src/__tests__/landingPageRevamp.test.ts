@@ -32,6 +32,16 @@ describe('Task 3: LandingPage Flagship Revamp', () => {
       expect(source).toContain('#74C69D');
     });
 
+    it('strictly contains ZERO em-dashes (— or –) complying with design-taste-frontend Section 9.G', () => {
+      expect(source).not.toContain('—');
+      expect(source).not.toContain('–');
+    });
+
+    it('enforces eyebrow restraint (max 1 eyebrow per 3 sections, count <= 4)', () => {
+      const eyebrowMatches = source.match(/uppercase tracking-\[[^\]]+\]/g) || [];
+      expect(eyebrowMatches.length).toBeLessThanOrEqual(4);
+    });
+
     it('respects low-tier device performance via useDevicePerformance hook', () => {
       expect(source).toContain('useDevicePerformance');
       expect(source).toMatch(/isLowPerf|isLowEnd/);
@@ -54,7 +64,7 @@ describe('Task 3: LandingPage Flagship Revamp', () => {
       // H1 Heading
       expect(source).toContain('Masa Depan Kampus Digital Bermula Di Sini');
       // Subtext
-      expect(source).toContain('Ekosistem digital berpusat mahasiswa POLISAS — daripada tadbir urus aktiviti hingga pasaran siswa dan navigasi pintar.');
+      expect(source).toContain('Ekosistem digital berpusat mahasiswa POLISAS: tadbir urus aktiviti, pasaran siswa dan navigasi pintar.');
       // CTA buttons
       expect(source).toContain('Masuk Portal Pelajar');
       expect(source).toContain('Terokai Ekosistem');

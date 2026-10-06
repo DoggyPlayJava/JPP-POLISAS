@@ -3738,6 +3738,9 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **`AkademikDashboard.tsx`:** Menukarkan kad statistik (`StatCard`), butang tindakan pantas (`QuickAction`), dan Pengepala Kokpit Pelajar kepada token dwi-mod kontras tinggi yang melepasi piawaian WCAG AA.
    - **`AkademikCgpa.tsx`:** Carta kawasan Recharts AreaChart kini menyokong grid adaptif (`CartesianGrid stroke="currentColor" className="text-slate-200 dark:text-white/[0.04]"`), tooltip berkontras tinggi (`CustomTooltip`), serta kad rekod semester dan zon muat naik slip keputusan dwimod.
    - **`AkademikFolderPage.tsx`:** Kad folder (`FolderCard`), kad dokumen fail (`FileCard`), dan kotak modal pratonton dokumen dalam aplikasi (`InAppDocumentPreviewer`) diselaraskan sepenuhnya kepada tema porselin dan obsidian.
+   - **`AkademikTakwimPage.tsx` & `DayDetailSheet.tsx`:** Penapis sesi, mod kalendar grid bulanan, jadual takwim, dan helaian perincian tarikh dilengkapi token dwimod (`bg-white dark:bg-white/[0.02]`, `border-slate-200/80 dark:border-white/10`, `text-slate-900 dark:text-white`) dengan sifar emoji mentah (ikon `Building2` & `FileText`).
+   - **`AkademikLeaderboard.tsx`:** Lencana kedudukan (RankBadge), kad status pelajar saya, tab penapis fakulti, podium 3 teratas, dan senarai ranking pelajar menggunakan token porselin berkontras tinggi untuk menyelesaikan masalah keterlihatan teks putih di atas latar cerah.
+   - **`AkademikPencapaian.tsx` & `AkademikQrPage.tsx`:** Modal tambah pencapaian, sasaran unjuran, pengimbas QR merit mahasiswa, kad arahan imbasan, dan sejarah imbasan merit beroperasi sepenuhnya dengan dwi-mod porcelain light dan obsidian dark.
 
 ---
 
