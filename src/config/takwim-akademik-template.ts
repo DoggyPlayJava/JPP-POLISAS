@@ -1,7 +1,8 @@
 // ============================================================
-// Kalendar Akademik 2026/2027 — Institusi B (Auto-Fill Template)
+// Kalendar Akademik 2026/2027 - Institusi B (Auto-Fill Template)
 // Sumber: Kementerian Pendidikan Tinggi (KPT)
 // Program Diploma dan Sijil Politeknik dan Kolej Komuniti
+// Zon: Institusi B (Pahang, dsb.)
 // ============================================================
 
 export interface KalendarAkademikEntry {
@@ -21,7 +22,7 @@ const SESI_I: KalendarAkademikEntry[] = [
     tarikhMula: '2026-06-22',
     tarikhTamat: '2026-06-28',
     bilMinggu: 1,
-    aktiviti: 'Pendaftaran Pelajar Baharu / Aktiviti Suai Kenal',
+    aktiviti: 'Pendaftaran Pelajar Baharu / Minggu Transformasi Siswa (MTS)',
   },
   {
     sesi: 'I',
@@ -35,7 +36,7 @@ const SESI_I: KalendarAkademikEntry[] = [
     sesi: 'I',
     tarikhMula: '2026-08-31',
     tarikhTamat: '2026-09-06',
-    bilMinggu: null,
+    bilMinggu: 1,
     aktiviti: 'Cuti Pertengahan Semester',
     catatan: 'Hari Kebangsaan: 31/08/2026 (Isnin)',
     isCuti: true,
@@ -51,17 +52,17 @@ const SESI_I: KalendarAkademikEntry[] = [
   {
     sesi: 'I',
     tarikhMula: '2026-10-12',
-    tarikhTamat: '2026-10-18',
-    bilMinggu: null,
+    tarikhTamat: '2026-10-16',
+    bilMinggu: 1,
     aktiviti: 'Minggu Ulang Kaji',
   },
   {
     sesi: 'I',
-    tarikhMula: '2026-10-19',
+    tarikhMula: '2026-10-17',
     tarikhTamat: '2026-11-08',
     bilMinggu: 3,
     aktiviti: 'Peperiksaan Akhir Semester (kecuali STE)',
-    catatan: 'Hari Deepavali — kecuali Negeri Sarawak: 08/11/2026 (Ahad)',
+    catatan: 'Hari Deepavali - kecuali Negeri Sarawak: 08/11/2026 (Ahad)',
   },
   {
     sesi: 'I',
@@ -77,37 +78,37 @@ const SESI_I: KalendarAkademikEntry[] = [
 const SESI_II: KalendarAkademikEntry[] = [
   {
     sesi: 'II',
-    tarikhMula: '2026-11-22',
-    tarikhTamat: '2026-11-28',
-    bilMinggu: null,
-    aktiviti: 'Pendaftaran Pelajar Baharu / Aktiviti Suai Kenal',
+    tarikhMula: '2026-11-23',
+    tarikhTamat: '2026-11-29',
+    bilMinggu: 1,
+    aktiviti: 'Pendaftaran Pelajar Baharu / Minggu Transformasi Siswa (MTS)',
   },
   {
     sesi: 'II',
-    tarikhMula: '2026-11-29',
+    tarikhMula: '2026-11-30',
     tarikhTamat: '2027-02-07',
     bilMinggu: 10,
     aktiviti: 'Kuliah',
-    catatan: 'Hari Krismas: 25/12/2026 (Jumaat) · Tahun Baru: 01/01/2027 · Tahun Baru Cina: 06&07/02/2027 (Sabtu & Ahad)',
+    catatan: 'Hari Krismas: 25/12/2026 (Jumaat) · Tahun Baru: 01/01/2027 (Jumaat) · Tahun Baru Cina: 06&07/02/2027 (Sabtu & Ahad)',
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-02-07',
+    tarikhMula: '2027-02-08',
     tarikhTamat: '2027-02-14',
-    bilMinggu: null,
+    bilMinggu: 1,
     aktiviti: 'Cuti Pertengahan Semester',
     isCuti: true,
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-02-14',
+    tarikhMula: '2027-02-15',
     tarikhTamat: '2027-03-07',
-    bilMinggu: null,
+    bilMinggu: 3,
     aktiviti: 'Kuliah',
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-03-07',
+    tarikhMula: '2027-03-08',
     tarikhTamat: '2027-03-14',
     bilMinggu: 1,
     aktiviti: 'Cuti Perayaan',
@@ -116,16 +117,16 @@ const SESI_II: KalendarAkademikEntry[] = [
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-03-14',
+    tarikhMula: '2027-03-15',
     tarikhTamat: '2027-03-21',
-    bilMinggu: null,
+    bilMinggu: 1,
     aktiviti: 'Kuliah',
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-03-21',
-    tarikhTamat: '2027-03-27',
-    bilMinggu: null,
+    tarikhMula: '2027-03-22',
+    tarikhTamat: '2027-03-26',
+    bilMinggu: 1,
     aktiviti: 'Minggu Ulang Kaji',
   },
   {
@@ -137,20 +138,12 @@ const SESI_II: KalendarAkademikEntry[] = [
   },
   {
     sesi: 'II',
-    tarikhMula: '2027-04-18',
-    tarikhTamat: '2027-04-18',
-    bilMinggu: null,
-    aktiviti: 'Cuti Akhir Semester / Semester Pendek',
-    catatan: 'Hari Pekerja: 01/05/2027 · Hari Raya Aidiadha: 17/05/2027 · Hari Vesak: 20/05/2027 · Awal Muharram: 06/06/2027 · Hari Keputeraan YDP Agong: 07/06/2027',
-    isCuti: true,
-  },
-  {
-    sesi: 'II',
     tarikhMula: '2027-04-19',
     tarikhTamat: '2027-06-20',
     bilMinggu: 9,
-    aktiviti: 'Pelaksanaan Semester Pendek (bergantung kepada institusi)',
-    catatan: 'Kuliah Semester Pendek bermula pada 19 April 2027',
+    aktiviti: 'Cuti Akhir Semester / Semester Pendek',
+    catatan: 'Hari Pekerja: 01/05/2027 (Sabtu) · Hari Raya Aidiladha: 17/05/2027 (Isnin) · Hari Wesak: 20/05/2027 (Khamis) · Awal Muharram: 06/06/2027 (Ahad) · Hari Keputeraan YDP Agong: 07/06/2027 (Isnin). Kuliah Semester Pendek bermula pada 19 April 2027.',
+    isCuti: true,
   },
 ];
 
@@ -160,8 +153,8 @@ const SESI_I_2027_2028: KalendarAkademikEntry[] = [
     sesi: 'I',
     tarikhMula: '2027-06-14',
     tarikhTamat: '2027-06-20',
-    bilMinggu: null,
-    aktiviti: 'Pendaftaran Pelajar Baharu / Aktiviti Suai Kenal',
+    bilMinggu: 1,
+    aktiviti: 'Pendaftaran Pelajar Baharu / Minggu Transformasi Siswa (MTS)',
   },
 ];
 

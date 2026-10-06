@@ -1,5 +1,5 @@
 // ============================================================
-// useTakwimPusat — Centralized Takwim Data Hook
+// useTakwimPusat - Centralized Takwim Data Hook
 // Merges data from: takwim_pusat + programs (non-DRAFT) + takwim_holidays
 // ============================================================
 import { useState, useEffect, useCallback } from 'react';
@@ -11,7 +11,7 @@ import { ALL_CLUBS } from '@/types';
 interface UseTakwimPusatOptions {
   filter?: string;       // 'KESELURUHAN' | 'AKADEMIK' | 'JPP_ALL' | 'KELAB_SAYA' | 'KELAB' | unit code
   sesi?: string;         // '2026/2027'
-  clubId?: string;       // Single club (backward compat — fallback)
+  clubId?: string;       // Single club (backward compat - fallback)
   clubIds?: string[];    // Multi-club for "Kelab Saya" filter
   excludeJenis?: string[]; // Hide specific jenis from results (e.g. ['KELAB_KEDIAMAN'] for students)
   enabled?: boolean;     // Disable auto-fetch
@@ -63,7 +63,7 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         tpQuery = tpQuery.not('jenis', 'in', `(${excludeJenis.join(',')})`);
       }
 
-      // ── 2. Fetch programs (kelab rasmi) — status bukan DRAFT ──
+      // ── 2. Fetch programs (kelab rasmi) - status bukan DRAFT ──
       let progQuery = supabase
         .from('programs')
         .select('*')
@@ -71,7 +71,7 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         .or('is_archived.is.null,is_archived.eq.false')
         .order('tarikh_mula', { ascending: true });
 
-      // For "Kelab Saya" filter — multi-club support
+      // For "Kelab Saya" filter - multi-club support
       if (filter === 'KELAB_SAYA' && effectiveClubIds.length > 0) {
         progQuery = progQuery.in('club_id', effectiveClubIds);
       }

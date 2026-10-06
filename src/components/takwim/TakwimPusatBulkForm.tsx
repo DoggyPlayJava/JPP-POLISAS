@@ -33,7 +33,7 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
   const detectSesi = (tarikhMula: string): 'I' | 'II' => {
     if (!tarikhMula) return 'I';
     const month = new Date(tarikhMula).getMonth(); // 0-indexed
-    return (month >= 5 && month <= 10) ? 'I' : 'II'; // Jun(5)–Nov(10) = Sesi I
+    return (month >= 5 && month <= 10) ? 'I' : 'II'; // Jun(5)-Nov(10) = Sesi I
   };
 
   const updateRow = (id: number, field: keyof KalendarAkademikEntry, value: any) =>
@@ -57,7 +57,7 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
     }]);
   };
 
-  // Auto-sort by tarikh — baris baru auto-rearrange ikut tarikh
+  // Auto-sort by tarikh - baris baru auto-rearrange ikut tarikh
   const sortedRows = React.useMemo(() =>
     [...rows].sort((a, b) => {
       if (!a.tarikhMula && !b.tarikhMula) return 0;
