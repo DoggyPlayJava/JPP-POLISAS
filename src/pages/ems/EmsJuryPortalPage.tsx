@@ -1001,7 +1001,7 @@ export function EmsJuryPortalPage() {
       {/* Main Participant Dashboard */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Sticky Segmented Category Pills Navigation */}
-        <div className="sticky top-18 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md py-3 -my-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="sticky top-[72px] sm:top-[76px] z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md py-3 -my-2 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
             {/* Pill [Semua] */}
             <button

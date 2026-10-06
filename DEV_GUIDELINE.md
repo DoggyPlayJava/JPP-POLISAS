@@ -3347,14 +3347,14 @@ Seni bina hab peniaga PolyMart telah dirombak sepenuhnya daripada fail monolitik
 
 ### 29.13 Portal Juri Penilai Pantas & Papan Audit Juri Eksekutif (/ems/juri & /ems/leaderboard/:id?tab=audit)
 
-> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/ems/EmsJuryPortalPage.tsx`, `src/components/ems/EmsJuryAuditMatrix.tsx`, `src/lib/emsJuryHelpers.ts`
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/ems/EmsJuryPortalPage.tsx`, `src/components/ems/EmsJuryAuditMatrix.tsx`, `src/lib/ems.ts`
 
 Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperApp** bertaraf tinggi yang memfokuskan kepada kelancaran sentuhan mudah alih (*touch ergonomics*), responsiviti masa nyata, dan kawalan integriti audit pemarkahan:
 
 1. **Portal Juri Pantas (`EmsJuryPortalPage.tsx` - `/ems/juri`):**
    - **Navigasi Kategori Segmented Sticky:**
      - Menggantikan skrin Gateway kaku dan membuang butang pendua `⏩ Penilaian Kategori Seterusnya`.
-     - Bar pil mendatar dengan penunjuk kemajuan dinamik (`[Semua (24)]`, `[Poster • 12/12 Selesai]`) yang melekat di bahagian atas (`sticky top-14 sm:top-16 z-20`). Juri boleh menukar kategori dengan sekali sentuhan pantas tanpa perlu keluar ke menu utama.
+     - Bar pil mendatar dengan penunjuk kemajuan dinamik (`[Semua (24)]`, `[Poster • 12/12 Selesai]`) yang melekat di bahagian atas (`sticky top-[72px] sm:top-[76px] z-20`). Juri boleh menukar kategori dengan sekali sentuhan pantas tanpa perlu keluar ke menu utama.
    - **Aliran Skrol Pantas Terkawal (Seamless Touch Feed):**
      - Semua kriteria rubrik dikelompokkan mengikut seksyen dalam satu helaian skrol sentuh laju tanpa perlu klik tab bertingkat yang melambatkan penjurian.
      - Butang skala Likert 1-5 sentuh pantas dengan sasaran sentuh sekurang-kurangnya 48px (`min-h-[48px] touch-manipulation`) diselaraskan dengan kod warna haptik intuitif:
@@ -3369,7 +3369,7 @@ Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperAp
      - Selepas pengesahan dan hantaran markah berjaya, modal perayaan mini dibuka secara lancar.
      - Menyediakan cadangan pintar booth seterusnya yang belum dinilai menerusi utiliti pembantu `findNextUnscoredParticipant`, membolehkan juri terus bergerak ke booth berikutnya dengan satu klik atau memilih untuk kembali ke senarai utama.
    - **Ketahanan Luar Talian & Pemulihan Draf (Offline Resilience):**
-     - Penyimpanan draf pemarkahan automatik ke `localStorage` secara masa nyata (`ems_draft_jury_scores_${eventId}_${juryCode}`) dengan penunjuk status lencana visual `[Draf Disimpan]`, mengelakkan kehilangan data semasa sambungan internet kampus terputus atau tidak stabil.
+     - Penyimpanan draf pemarkahan automatik ke `localStorage` secara masa nyata (`ems_jury_draft_${eventId}_${juryCode}_${participantId}`) dengan penunjuk status lencana visual `[Draf Disimpan]`, mengelakkan kehilangan data semasa sambungan internet kampus terputus atau tidak stabil.
 
 2. **Papan Audit Juri Eksekutif (`EmsJuryAuditMatrix.tsx`):**
    - **4 Kad Telemetri Anomali KPI:**
@@ -3381,7 +3381,7 @@ Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperAp
      - Setiap kad telemetri berfungsi sebagai penapis interaktif satu klik (*click-to-filter*) yang menapis jadual matriks audit serta-merta.
    - **Tindakan Kelompok Anomali (Bulk Anomaly Controls):**
      - Dilengkapi butang tindakan pantas `[Abaikan Semua Amaran]` dan `[Set Semula Semua Amaran]`.
-     - Status amaran yang diabaikan disimpan secara kekal dalam `localStorage` berpandukan `eventId` (`ems_dismissed_audit_anomalies_${eventId}`) bagi memastikan integriti sesi semakan pengarah tidak terganggu oleh amaran palsu yang telah diverifikasi.
+     - Status amaran yang diabaikan disimpan secara kekal dalam `localStorage` berpandukan `eventId` (`ems_audit_ignored_flags_${eventId}`) bagi memastikan integriti sesi semakan pengarah tidak terganggu oleh amaran palsu yang telah diverifikasi.
    - **Matriks Responsif Booth × Juri (Responsive Matrix Grid):**
      - Lajur beku No. Booth & Nama Peserta (`sticky left-0 z-10 bg-slate-900/95 backdrop-blur-md border-r border-white/10`) menghapuskan ralat tergelincir (*horizontal slip*) semasa tatalan mendatar pada peranti tablet mahupun komputer riba.
      - Sel status pemarkahan berkod warna berkualiti tinggi:
