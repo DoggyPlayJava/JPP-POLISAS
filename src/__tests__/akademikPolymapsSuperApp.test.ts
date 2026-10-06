@@ -95,6 +95,40 @@ describe('Task 1: AkademikDashboard Cockpit & Quick Actions Revamp', () => {
   });
 });
 
+describe('Task 2: AkademikCgpa Tracker & Slip Uploader Revamp', () => {
+  const cgpaPath = path.resolve(__dirname, '../pages/akademik/AkademikCgpa.tsx');
+  const source = fs.readFileSync(cgpaPath, 'utf-8');
+
+  it('contains 100% zero raw emojis across AkademikCgpa.tsx', () => {
+    const emojiMatches = source.match(EMOJI_REGEX) || [];
+    expect(emojiMatches).toEqual([]);
+  });
+
+  it('contains mobile camera capture attribute and pdf/image mime acceptance', () => {
+    expect(source).toContain('capture="environment"');
+    expect(source).toContain('accept="application/pdf,image/*"');
+  });
+
+  it('ensures action buttons on semester cards have mobile-accessible touch sizing without hover requirement', () => {
+    // Action buttons must be accessible on mobile (opacity-100 md:opacity-0 md:group-hover:opacity-100)
+    expect(source).toContain('opacity-100 md:opacity-0 md:group-hover:opacity-100');
+    // Touch targets >= 44px
+    expect(source).toContain('min-h-[44px]');
+    expect(source).toContain('min-w-[44px]');
+  });
+
+  it('ensures Recharts AreaChart has non-zero right margin to prevent 375px edge clipping', () => {
+    expect(source).toContain('margin={{ top: 10, right: 12, bottom: 0, left: -20 }}');
+  });
+
+  it('preserves PDF extraction, hybrid Drive upload, and Supabase database operations', () => {
+    expect(source).toContain('extractCgpaFromPdf');
+    expect(source).toContain('uploadPdfToDrive');
+    expect(source).toContain('akademik_cgpa_records');
+    expect(source).toContain('useAuth');
+  });
+});
+
 describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsPage', () => {
   const cgpaPath = path.resolve(__dirname, '../pages/akademik/AkademikCgpa.tsx');
   const folderPath = path.resolve(__dirname, '../pages/akademik/AkademikFolderPage.tsx');
@@ -106,10 +140,8 @@ describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsP
     expect(source).toContain('uploadPdfToDrive');
     expect(source).toContain('gradeInfo');
 
-    // Scaffolding: Task 2 will clean remaining raw emojis to exactly 0
     const emojis = source.match(EMOJI_REGEX) || [];
-    // Currently <= 3 emojis before Task 2 cleanup
-    expect(emojis.length).toBeLessThanOrEqual(3);
+    expect(emojis.length).toBe(0);
   });
 
   it('verifies baseline for AkademikFolderPage and scaffolds in-app document previewing for Task 2', () => {
