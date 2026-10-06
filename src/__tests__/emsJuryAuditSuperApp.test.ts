@@ -10,6 +10,22 @@ import {
   type BoothAuditSummary,
   type EmsLikertOption,
 } from '@/lib/ems';
+import fs from 'fs';
+import path from 'path';
+import {
+  Mic,
+  Package,
+  Image as ImageIcon,
+  Video,
+  Rocket,
+  Award,
+  XCircle,
+  AlertCircle,
+  MinusCircle,
+  ThumbsUp,
+  Sparkles,
+} from 'lucide-react';
+import { LIKERT_OPTIONS, getCategoryIcon } from '@/pages/ems/EmsJuryPortalPage';
 import type {
   EmsParticipant,
   EmsJuryCode,
@@ -361,3 +377,84 @@ describe('EMS Helper Re-exports & Category Utilities', () => {
     expect(typeof getJuryParticipantScoreInfo).toBe('function');
   });
 });
+
+describe('EMS Jury Portal SuperApp Revamp — EmsJuryPortalPage.tsx Compliance', () => {
+  const portalPath = path.resolve(__dirname, '../pages/ems/EmsJuryPortalPage.tsx');
+  const portalContent = fs.readFileSync(portalPath, 'utf-8');
+
+  it('contains zero banned Unicode emojis in EmsJuryPortalPage.tsx', () => {
+    const hasBannedEmoji = BANNED_EMOJI_REGEX.test(portalContent);
+    expect(hasBannedEmoji).toBe(false);
+  });
+
+  it('imports and uses findNextUnscoredParticipant from @/lib/ems', () => {
+    expect(portalContent).toContain('findNextUnscoredParticipant');
+    expect(portalContent).toMatch(/import\s*\{[^}]*findNextUnscoredParticipant[^}]*\}\s*from\s*['"]@\/lib\/ems['"]/);
+    expect(portalContent).toContain('findNextUnscoredParticipant(');
+  });
+
+  it('integrates draft persistence helpers createJuryDraftKey, serializeJuryDraft, deserializeJuryDraft', () => {
+    expect(portalContent).toContain('createJuryDraftKey');
+    expect(portalContent).toContain('serializeJuryDraft');
+    expect(portalContent).toContain('deserializeJuryDraft');
+    expect(portalContent).toContain('Draf Disimpan');
+  });
+
+  it('includes Sticky Bottom Action Bar tokens and Sahkan & Hantar Markah button', () => {
+    expect(portalContent).toContain('fixed bottom-0 left-0 right-0 z-40');
+    expect(portalContent).toContain('Sahkan & Hantar Markah');
+    expect(portalContent).toContain('Batal / Tutup');
+    expect(portalContent).toContain('Kriteria Dilengkapkan');
+  });
+
+  it('has removed the old gateway screen and duplicate next-category buttons', () => {
+    expect(portalContent).not.toContain('Hub Pemilihan Kategori Penilaian Juri');
+    expect(portalContent).not.toContain('Penilaian Kategori Seterusnya:');
+    expect(portalContent).not.toContain('Tukar Kategori Cepat:');
+  });
+
+  it('uses Lucide vector icons for LIKERT_OPTIONS and getCategoryIcon instead of raw emojis', () => {
+    // Vector Likert scale icons
+    expect(portalContent).toContain('XCircle');
+    expect(portalContent).toContain('AlertCircle');
+    expect(portalContent).toContain('MinusCircle');
+    expect(portalContent).toContain('ThumbsUp');
+    expect(portalContent).toContain('Sparkles');
+
+    // Vector category icons
+    expect(portalContent).toContain('Mic');
+    expect(portalContent).toContain('Package');
+    expect(portalContent).toContain('ImageIcon');
+    expect(portalContent).toContain('Video');
+    expect(portalContent).toContain('Rocket');
+    expect(portalContent).toContain('Award');
+  });
+
+  it('provides getCategoryIcon returning Lucide icon components', () => {
+    expect(getCategoryIcon('Pitching')).toBe(Mic);
+    expect(getCategoryIcon('Persembahan')).toBe(Mic);
+    expect(getCategoryIcon('Showcase')).toBe(Package);
+    expect(getCategoryIcon('Poster Grafik')).toBe(ImageIcon);
+    expect(getCategoryIcon('Video Media')).toBe(Video);
+    expect(getCategoryIcon('Inovasi Produk')).toBe(Rocket);
+    expect(getCategoryIcon('Umum')).toBe(Award);
+  });
+
+  it('exports clean LIKERT_OPTIONS without raw emoji characters', () => {
+    expect(LIKERT_OPTIONS).toHaveLength(5);
+    LIKERT_OPTIONS.forEach((opt) => {
+      expect(opt.label).not.toMatch(BANNED_EMOJI_REGEX);
+      expect(opt.shortText).not.toMatch(BANNED_EMOJI_REGEX);
+      expect(opt.defaultDescriptor).not.toMatch(BANNED_EMOJI_REGEX);
+      expect(typeof opt.icon).toBe('object'); // React component (ForwardRef / component object)
+    });
+  });
+
+  it('implements post-scoring celebration and next booth transition drawer', () => {
+    expect(portalContent).toContain('Tahniah & Terima Kasih!');
+    expect(portalContent).toContain('Tahniah! Semua booth dalam kategori ini telah selesai dinilai.');
+    expect(portalContent).toContain('Nilai Booth Seterusnya:');
+    expect(portalContent).toContain('Kembali ke Senarai');
+  });
+});
+
