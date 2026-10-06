@@ -453,4 +453,140 @@ describe('VendorCatalogManager Component', () => {
   });
 });
 
+describe('VendorAnalyticsPromo Component', () => {
+  it('Task 4: VendorAnalyticsPromo exports correctly as named and default export', async () => {
+    const mod = await import('@/pages/polymart/vendor/VendorAnalyticsPromo');
+    expect(mod.VendorAnalyticsPromo).toBeDefined();
+    expect(typeof mod.VendorAnalyticsPromo).toBe('function');
+    expect(mod.default).toBeDefined();
+    expect(mod.default).toBe(mod.VendorAnalyticsPromo);
+  });
+
+  it('contains Recharts AreaChart and polymart_ads tokens', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorAnalyticsPromo.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    expect(sourceCode).toContain('AreaChart');
+    expect(sourceCode).toContain('polymart_ads');
+    expect(sourceCode).toContain('ResponsiveContainer');
+    expect(sourceCode).toContain('compressImage');
+  });
+
+  it('contains prominent button linking to /keusahawanan/pos/stats', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorAnalyticsPromo.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    expect(sourceCode).toContain('/keusahawanan/pos/stats');
+    expect(sourceCode).toContain('Lihat Analitik Penuh di POS');
+  });
+
+  it('contains zero raw emojis across the entire file', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorAnalyticsPromo.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+    expect(sourceCode).not.toMatch(emojiRegex);
+  });
+
+  it('contains the two sub-domain pill tabs and low stock inventory alerts', () => {
+    const filePath = path.resolve(__dirname, '../pages/polymart/vendor/VendorAnalyticsPromo.tsx');
+    const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+    expect(sourceCode).toContain("'analytics'");
+    expect(sourceCode).toContain("'ads'");
+    expect(sourceCode).toContain('Prestasi Jualan & Inventori');
+    expect(sourceCode).toContain('Iklan Promo PolyMart');
+    expect(sourceCode).toContain('+ Mohon Iklan Baru');
+    expect(sourceCode).toContain('Amaran Inventori');
+  });
+
+  it('renders correctly via SSR with sample orders, low-stock alerts, and POS link', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const { MemoryRouter } = await import('react-router-dom');
+    const { VendorAnalyticsPromo } = await import('@/pages/polymart/vendor/VendorAnalyticsPromo');
+
+    const sampleOrders = [
+      {
+        id: 'ord-analytics-001',
+        buyer: { id: 'b1', full_name: 'Siti Aminah', matric_no: '03DEP22F1010', phone: '0123456789' },
+        business_id: 'biz-1',
+        payment_method: 'COD' as const,
+        payment_receipt_url: null,
+        payment_receipt_rejected: false,
+        payment_verified_at: null,
+        payment_verified_by: null,
+        payment_deadline_at: null,
+        pickup_time: '12:00 PM',
+        share_phone: true,
+        status: 'COMPLETED' as const,
+        created_at: new Date().toISOString(),
+        cancellation_requested_at: null,
+        cancellation_reason: null,
+        items: [
+          {
+            order_id: 'ord-analytics-001',
+            product_id: 'prod-1',
+            name: 'Roti Canai Special',
+            image_url: null,
+            category: 'Makanan',
+            quantity: 3,
+            unit_price: 2.0,
+            total_price: 6.0,
+            selected_variation: null,
+            note: null,
+          },
+        ],
+      },
+    ];
+
+    const sampleProducts = [
+      {
+        id: 'prod-low-1',
+        name: 'Sambal Tumis Botol',
+        stock_quantity: 4,
+        reserved_stock: 1,
+        business_id: 'biz-1',
+      },
+      {
+        id: 'prod-ok-2',
+        name: 'Kari Ayam Beku',
+        stock_quantity: 20,
+        reserved_stock: 0,
+        business_id: 'biz-1',
+      },
+    ];
+
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(VendorAnalyticsPromo, {
+          orders: sampleOrders,
+          products: sampleProducts,
+          myBusinesses: [{ id: 'biz-1', name: 'Kafe Siswa' }],
+          selectedBizId: 'biz-1',
+          onUpdate: vi.fn(),
+        })
+      )
+    );
+
+    // Verify sub-domain pill tabs
+    expect(html).toContain('Prestasi Jualan &amp; Inventori');
+    expect(html).toContain('Iklan Promo PolyMart');
+
+    // Verify POS stats button
+    expect(html).toContain('Lihat Analitik Penuh di POS');
+
+    // Verify low stock alert is displayed
+    expect(html).toContain('Sambal Tumis Botol');
+    expect(html).toContain('Sisa: 3 unit');
+
+    // Verify Recharts AreaChart legend / data labels exist
+    expect(html).toContain('Trend Pra-Pesanan (7 Hari Terakhir)');
+    expect(html).toContain('Hasil (RM)');
+    expect(html).toContain('Kuantiti Tempahan');
+  });
+});
+
+
 
