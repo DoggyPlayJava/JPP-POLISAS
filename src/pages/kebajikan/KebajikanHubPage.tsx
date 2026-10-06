@@ -32,35 +32,72 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { loadLocalFoodBankSettings } from '@/lib/foodbankDefaults';
 import { cn } from '@/lib/utils';
+import { KebajikanLiveTrackerCard } from '@/components/kebajikan/KebajikanLiveTrackerCard';
 
 export function KebajikanHubPage() {
-  const { isKebajikanExco, isKediamanExco, isSuperAdmin, isYdp } = useAuth();
+  const { user, isKebajikanExco, isKediamanExco, isSuperAdmin, isYdp } = useAuth();
   const isExcoOrStaff = isKebajikanExco || isKediamanExco || isSuperAdmin || isYdp;
 
   const [isFoodBankActive, setIsFoodBankActive] = useState<boolean>(false);
+  const [activeTicket, setActiveTicket] = useState<any | null>(null);
+  const [activeFoodbankApp, setActiveFoodbankApp] = useState<any | null>(null);
 
   useEffect(() => {
-    async function checkFoodBankStatus() {
+    async function loadHubData() {
       try {
-        const { data, error } = await supabase
-          .from('foodbank_settings')
-          .select('is_module_active, is_application_open')
-          .limit(1)
-          .maybeSingle();
+        const promises: Promise<any>[] = [
+          supabase
+            .from('foodbank_settings')
+            .select('is_module_active, is_application_open')
+            .limit(1)
+            .maybeSingle(),
+        ];
 
-        if (error || !data) {
+        if (user?.id) {
+          promises.push(
+            supabase
+              .from('kebajikan_tickets')
+              .select('id, ticket_no, title, category, status, created_at, sla_deadline')
+              .eq('submitter_id', user.id)
+              .not('status', 'in', '("RESOLVED","CLOSED","CANCELLED")')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          );
+          promises.push(
+            supabase
+              .from('foodbank_applications')
+              .select('id, application_no, status, pickup_date, pickup_time_slot, location:foodbank_distribution_locations(id, name, room_detail)')
+              .eq('applicant_id', user.id)
+              .in('status', ['MENUNGGU', 'DALAM_SEMAKAN', 'LULUS', 'PENDING', 'APPROVED'])
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          );
+        }
+
+        const [settingsRes, ticketRes, foodbankRes] = await Promise.all(promises);
+
+        if (settingsRes?.error || !settingsRes?.data) {
           const local = loadLocalFoodBankSettings();
           setIsFoodBankActive(local.is_module_active ?? false);
         } else {
-          setIsFoodBankActive(data.is_module_active ?? false);
+          setIsFoodBankActive(settingsRes.data.is_module_active ?? false);
+        }
+
+        if (ticketRes?.data) {
+          setActiveTicket(ticketRes.data);
+        }
+        if (foodbankRes?.data) {
+          setActiveFoodbankApp(foodbankRes.data);
         }
       } catch {
         const local = loadLocalFoodBankSettings();
         setIsFoodBankActive(local.is_module_active ?? false);
       }
     }
-    checkFoodBankStatus();
-  }, []);
+    loadHubData();
+  }, [user?.id]);
 
   return (
     <div className="w-full min-h-full px-4 sm:px-6 lg:px-8 py-8 md:py-12 max-w-6xl mx-auto transition-colors">
@@ -84,6 +121,11 @@ export function KebajikanHubPage() {
           Penyelesaian aduan prasarana kampus dan permohonan pakej bantuan makanan Food Bank JPP secara telus dan pantas.
         </p>
       </motion.div>
+
+      {/* ── Active Status Live Tracker Card (Parcel Stepper) ── */}
+      <div className="mb-10">
+        <KebajikanLiveTrackerCard ticket={activeTicket} foodbankApp={activeFoodbankApp} />
+      </div>
 
       {/* ── 2 Primary Pillar Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-12">
