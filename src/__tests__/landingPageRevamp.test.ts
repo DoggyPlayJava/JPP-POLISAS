@@ -4,7 +4,7 @@ import path from 'path';
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
 
-describe('Task 3: LandingPage Flagship Revamp', () => {
+describe('Task 3: LandingPage Flagship SuperApp Revamp', () => {
   const landingPagePath = path.resolve(__dirname, '../pages/LandingPage.tsx');
   const source = fs.readFileSync(landingPagePath, 'utf-8');
 
@@ -46,35 +46,78 @@ describe('Task 3: LandingPage Flagship Revamp', () => {
       expect(source).toContain('useDevicePerformance');
       expect(source).toMatch(/isLowPerf|isLowEnd/);
     });
+
+    it('exports both named LandingPage and default export to ensure lazy loading compatibility', () => {
+      expect(source).toContain('export const LandingPage');
+      expect(source).toContain('export default LandingPage');
+    });
   });
 
-  describe('10 Core Structural Sections', () => {
+  describe('8 Core Structural SuperApp Sections (SkyGoo SuperApp Inspired)', () => {
     it('1. Floating Glassmorphic Pill Navbar (<Navbar />)', () => {
       expect(source).toContain('PORTAL RASMI');
       expect(source).toContain('JPP POLISAS');
       expect(source).toContain('#ekosistem');
-      expect(source).toContain('#keupayaan');
+      expect(source).toContain('#modul');
+      expect(source).toContain('#statistik');
       expect(source).toContain('#faq');
       expect(source).toMatch(/Masuk Portal/);
     });
 
-    it('2. Asymmetric Hero Section (<Hero />) with Perspective Floating SuperApp Deck & Live Ticker', () => {
+    it('2. Handheld SuperApp Hero (<Hero />) with Central Phone Mockup & Peripheral Floating Cards', () => {
       // Eyebrow badge
-      expect(source).toContain('JPP POLISAS · Sistem Kampus Pintar');
+      expect(source).toContain('POLISAS SuperApp 2026/2027');
       // H1 Heading
-      expect(source).toContain('Masa Depan Kampus Digital Bermula Di Sini');
+      expect(source).toContain('Menghubungkan Setiap Detik Kehidupan Kampus.');
       // Subtext
-      expect(source).toContain('Ekosistem digital berpusat mahasiswa POLISAS: tadbir urus aktiviti, pasaran siswa dan navigasi pintar.');
+      expect(source).toContain('Akses e-Akademik, aktiviti kelab, pasaran PolyMart, dan navigasi pintar dalam satu sentuhan mudah alih.');
       // CTA buttons
       expect(source).toContain('Masuk Portal Pelajar');
       expect(source).toContain('Terokai Ekosistem');
 
-      // Perspective Floating SuperApp Deck cards
+      // Phone screen micro-grid
+      expect(source).toContain('e-Akademik');
+      expect(source).toContain('PolyMart');
+      expect(source).toContain('PolyMaps');
+      expect(source).toContain('FoodBank');
+      expect(source).toContain('Kelab EKPP');
+      expect(source).toContain('SUPSAS');
+
+      // Peripheral floating cards
       expect(source).toContain('Portal Cockpit');
       expect(source).toContain('PolyMart Hub');
-      expect(source).toContain('PolyMaps 360');
+      expect(source).toContain('Kupon FoodBank');
+    });
 
-      // Metrics Ticker Ribbon
+    it('3. Micro-App Showcase Triad (<MicroAppTriad />)', () => {
+      expect(source).toContain('Rancang Perjalanan Harian Kampus Anda');
+      expect(source).toContain('PolyMaps 360');
+      expect(source).toContain('Navigasi Kampus & Peta Teduh');
+      expect(source).toContain('e-Akademik & Takwim');
+      expect(source).toContain('Jadual Sesi & Unjuran Merit');
+      expect(source).toContain('PolyRent & KAMSIS');
+      expect(source).toContain('Penempatan & Rumah Sewa');
+    });
+
+    it('4. 2x2 Bento Feature Grid (<CommerceBentoGrid />)', () => {
+      expect(source).toContain('Pesanan Pantas. Penjejakan Masa Nyata.');
+      expect(source).toContain('Katalog Produk PolyMart');
+      expect(source).toContain('JPP Pay & Resit Digital');
+      expect(source).toContain('Kupon FoodBank Siswa');
+      expect(source).toContain('Pesanan Pantas Mudah Alih');
+    });
+
+    it('5. Lifestyle Photo Split + FAQ Accordion (<FaqSplitSection />)', () => {
+      expect(source).toContain('Kehidupan Kampus POLISAS');
+      expect(source).toContain('Soalan Lazim');
+      expect(source).toContain('Siapa yang layak mengakses Portal JPP POLISAS?');
+      expect(source).toContain('Bagaimana kelab menghantar kertas kerja aktiviti?');
+      expect(source).toContain('Adakah PolyMart dibuka untuk semua pelajar berniaga?');
+      expect(source).toContain('Bagaimana merit akademik dan merit aktiviti dikira?');
+    });
+
+    it('6. Campus Scale & 3D Globe Metric (<CampusGlobeScale />)', () => {
+      expect(source).toContain('Satu Kampus. Dihubungkan Sepenuhnya.');
       expect(source).toContain('15,000+');
       expect(source).toContain('Mahasiswa');
       expect(source).toContain('120+');
@@ -85,53 +128,25 @@ describe('Task 3: LandingPage Flagship Revamp', () => {
       expect(source).toContain('Digital & Telus');
     });
 
-    it('3. Interactive Showcase Tabs (<InteractiveShowcase />)', () => {
-      expect(source).toContain('Semua');
-      expect(source).toContain('Kebajikan');
-      expect(source).toContain('PolyMart');
-      expect(source).toContain('Akademik');
-      expect(source).toContain('Sukan & EMS');
+    it('7. Student Community Voice (<StudentCommunityVoice />)', () => {
+      expect(source).toContain('Suara Mahasiswa POLISAS');
+      expect(source).toContain('Nur Aisyah');
+      expect(source).toContain('Muhammad Farhan');
+      expect(source).toContain('Sarah Tan');
+      expect(source).toContain('Hafizuddin');
+      expect(source).toContain('Politeknik KPT');
+      expect(source).toContain('Majlis Perwakilan Pelajar');
+      expect(source).toContain('Hal Ehwal Pelajar');
     });
 
-    it('4. Platform Capabilities Bento Grid (<PlatformCapabilitiesBento />)', () => {
-      expect(source).toContain('Tadbir Urus Kelab (e-Aktiviti)');
-      expect(source).toContain('Automasi kertas kerja dan pelaporan digital kelab.');
-      expect(source).toContain('Pasaran Siswa (PolyMart)');
-      expect(source).toContain('Ekosistem jual beli barangan dan servis pelajar dengan JPP Pay.');
-      expect(source).toContain('Bantuan Kebajikan (e-Kebajikan & FoodBank)');
-      expect(source).toContain('Permohonan bantuan kecemasan dan kupon makanan digital.');
-      expect(source).toContain('Kampus Pintar & Peta (PolyMaps 360');
-      expect(source).toContain('Navigasi pejalan kaki berbumbung dan lawatan 360');
-    });
-
-    it('5. Nexus AI Spotlight (<NexusAiSpotlight />)', () => {
-      expect(source).toContain('AI Semakan Kertas Kerja');
-      expect(source).toContain('Pembantu Pelajar Pintar');
-    });
-
-    it('6. Interactive Quick Search Bar (<InteractiveSearchBar />)', () => {
-      expect(source).toContain('Cari kod kursus, dewan, makmal, atau kelab (Cth: DSK, Dewan Sri Mahkota)...');
-    });
-
-    it('7. Curated Campus Gallery (<CuratedCampusGallery />)', () => {
-      expect(source).toContain('Galeri Ekosistem');
-    });
-
-    it('8. Hairline FAQ Accordion (<FaqAccordion />)', () => {
-      expect(source).toContain('Siapa yang layak mengakses Portal JPP POLISAS?');
-      expect(source).toContain('Bagaimana kelab menghantar kertas kerja aktiviti?');
-      expect(source).toContain('Adakah PolyMart dibuka untuk semua pelajar berniaga?');
-      expect(source).toContain('Bagaimana merit akademik dan merit aktiviti dikira?');
-    });
-
-    it('9. Particle Halo / Sphere Final CTA (<FinalSphereCta />)', () => {
-      expect(source).toContain('Sedia Untuk Mula? Sertai ribuan mahasiswa POLISAS hari ini.');
-    });
-
-    it('10. Editorial Clean Footer (<EditorialFooter />)', () => {
+    it('8. Final Perspective Handheld CTA & Grand Watermark Footer (<FinalHandheldCtaAndFooter />)', () => {
+      expect(source).toContain('Bersedia Memulakan Pengalaman Kampus Pintar Anda?');
+      expect(source).toContain('Sertai ribuan penuntut POLISAS hari ini dalam ekosistem digital yang serba lengkap dan pantas.');
       expect(source).toContain('Servis Pelajar');
       expect(source).toContain('Pautan Rasmi');
       expect(source).toContain('Bantuan & Hubungi');
+      // Giant Watermark
+      expect(source).toContain('POLISAS');
     });
   });
 
@@ -141,6 +156,7 @@ describe('Task 3: LandingPage Flagship Revamp', () => {
       expect(source).toContain("'/polymart'");
       expect(source).toContain("'/polymaps'");
       expect(source).toContain("'/akademik'");
+      expect(source).toContain("'/kebajikan'");
     });
   });
 });

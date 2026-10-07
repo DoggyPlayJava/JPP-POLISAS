@@ -3694,35 +3694,34 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ---
 
-### 31.1 Landing Page Flagship Squarespace-Inspired (Dual-Tone Forest & Sage)
+### 31.1 Rombakan Ekosistem Laman Utama SuperApp (Inspirasi SkyGoo SuperApp)
 
-1. **Falsafah Reka Bentuk & Disiplin Anti-Slop:**
-   - **Pemansuhan Kecerunan AI & Maroon:** Menghapuskan skim warna maroon usang (`#831010`) dan kecerunan ungu/magenta generik AI. Laman utama dirombak sepenuhnya berteraskan inspirasi visual editorial gelap Squarespace yang mewah dan bersih.
-   - **Palet Warna Dwi-Ton Hutan & Sage (*Dual-Tone Forest & Sage*):**
-     - Kanvas Utama: `#08140E` (*Deep Pine Forest Canvas*)
-     - Permukaan Kad & Bar: `#0E2218` (*Obsidian Forest Surface*)
-     - Sempadan Garis Halus: `#52796F` pada ketelusan 25% (*Hairline Structural Border*)
-     - Aksen Hijau Abadi: `#2D6A4F` (*Deep Evergreen*)
-     - Aksen Hijau Sage Muted: `#84A98C` (*Muted Sage Green*)
-     - Sorotan Pudina: `#74C69D` (*Luminous Mint Highlight*)
-     - Tipografi Paparan: Putih Tulen `#FFFFFF`
-     - Teks Badan: Slate-Sage `#94A3B8`
-   - **100% Sifar Emoji Mentah:** Semua indikator visual menggunakan ikon vektor Lucide React secara eksklusif.
+1. **Prinsip Reka Bentuk & Identiti Visual:**
+   - **Estetika Flagship SuperApp Bersih:** Rombakan menyeluruh berteraskan inspirasi susun atur antaramuka SkyGoo SuperApp, menampilkan kanvas sutera & porselin cerah yang mewah (`bg-white` / `bg-slate-50`) berserta mod malam obsidian rimba (`dark:bg-[#08140E]`).
+   - **Palet Warna Hijau Zamrud Tandatangan POLISAS (*Emerald Signature Palette*):**
+     - Kanvas Cerah: Porselin Sutera `#FFFFFF` & `#F8FAFC`
+     - Kanvas Gelap: Obsidian Forest `#08140E`
+     - Permukaan Kad: Sutera Putih `#FFFFFF` / Obsidian Rimba `#0E2218`
+     - Aksen Zamrud Polisas: `#059669` (*Emerald Primary*) & `#10B981` (*Vibrant Emerald*)
+     - Sorotan Pudina Menyinari: `#74C69D` (*Mint Accent*)
+     - Sempadan Garis Halus: Slate Halus `border-slate-200/80` / Rimba Gelap `dark:border-[#52796F]/25`
+     - Teks Utama: Slate Gelap `#0F172A` / Putih Murni `#FFFFFF`
+     - Teks Sekunder: Slate Kelabu `#64748B` / Sage Muted `#84A98C`
+   - **100% Sifar Emoji Mentah & Sifar Em-Dash:** Semua simbol visual mematuhi standard ketat Lucide vector icons dan tiada sengkang em-dash (`—` / `–`).
+   - **Kesesuaian Muatan Malas (*Lazy Loading*):** `src/pages/LandingPage.tsx` mengeksport kedua-dua `export const LandingPage` dan `export default LandingPage` bagi menyokong pemuatan dinamik `App.tsx` tanpa sebarang ralat runtime 'undefined'.
 
-2. **10 Seksyen Struktur Utama (`src/pages/LandingPage.tsx`):**
-   - **`<Navbar />`:** Bilah navigasi pil terapung kaca gelap (`bg-[#08140E]/80 backdrop-blur-xl border border-[#52796F]/25`) berserta status pil "PORTAL RASMI" dan pautan terus ke `/portal`.
-   - **`<Hero />`:** Tipografi paparan H1 editorial *"Masa Depan Kampus Digital Bermula Di Sini"*, subteks ringkas (< 20 patah perkataan), butang CTA berganda, dek paparan 3D isometrik SuperApp bertindan (*Portal Cockpit*, *PolyMart Hub*, *PolyMaps 360°*), dan riben statistik langsung (15,000+ Mahasiswa, 120+ Kelab, 12 Modul, 100% Digital).
-   - **`<InteractiveShowcase />`:** Pemilih kategori cip pil interaktif (`Semua`, `Kebajikan`, `PolyMart`, `Akademik`, `Sukan & EMS`) dengan pratonton komponen antara muka sebenar (kupon FoodBank QR, produk PolyMart, kad merit CGPA, braket sukan EMS).
-   - **`<PlatformCapabilitiesBento />`:** Grid bento asimetri 4 teras utama (Tadbir Urus Kelab, Pasaran Siswa, Bantuan Kebajikan, Kampus Pintar & Peta).
-   - **`<NexusAiSpotlight />`:** Kad berkembar menonjolkan AI Semakan Kertas Kerja automatik dan Pembantu Pelajar Pintar 24/7.
-   - **`<InteractiveSearchBar />`:** Bar carian pantas berbentuk kapsul editorial dengan cip cadangan interaktif yang menghubungkan pelajar terus ke perkhidmatan portal.
-   - **`<CuratedCampusGallery />`:** Galeri lengkung 3D memaparkan pencapaian, inovasi pelajar, dan aktiviti kampus POLISAS Kuantan.
-   - **`<FaqAccordion />`:** Baris soalan lazim bergaris halus minimalis dengan animasi kembang/kucup lancar.
-   - **`<FinalSphereCta />`:** Seksyen penutup berimpak tinggi berbingkaikan lingkaran cahaya partikel konsentrik menuju portal pelajar.
-   - **`<EditorialFooter />`:** Pengaki pelbagai lajur formal dengan maklumat hak cipta rasmi, pautan ekosistem, dan metrik ketersediaan sistem (99.98%).
+2. **8 Seksyen Teras Struktur SuperApp (`src/pages/LandingPage.tsx`):**
+   - **`<Navbar />`:** Bilah pil kaca terapung berkontur langsing (`backdrop-blur-xl rounded-full border`) dengan lencana "PORTAL RASMI", navigasi segmen ke `#ekosistem`, `#modul`, `#statistik`, `#faq`, dan butang tindakan pantas ke `/portal`.
+   - **`<Hero />`:** Tajuk utama paparan *"Menghubungkan Setiap Detik Kehidupan Kampus"*, subteks ringkas bernas (< 20 patah perkataan), dan bingkai telefon pintar genggam 3D (*handheld smartphone frame*) yang memaparkan 6 jubin mikro-aplikasi aktif (e-Akademik, PolyMart, PolyMaps, FoodBank, Kelab EKPP, SUPSAS) bersama 3 kad terapung persisian (*Portal Cockpit CGPA 3.82*, *PolyMart Hub RM 39.00*, *Kupon FoodBank RM 15.00*).
+   - **`<MicroAppTriad />`:** Triad 3 kad perancangan harian kampus berilustrasi bersih: *PolyMaps 360* (Navigasi Kampus & Peta Teduh), *e-Akademik & Takwim* (Jadual Sesi & Unjuran Merit), dan *PolyRent & KAMSIS* (Penempatan & Rumah Sewa).
+   - **`<CommerceBentoGrid />`:** Grid Bento 2x2 pasaran dan kebajikan siswa: *Katalog Produk PolyMart*, *JPP Pay & Resit Digital*, *Kupon Digital FoodBank Siswa*, dan *Pesanan Pantas Mudah Alih*.
+   - **`<FaqSplitSection />`:** Susun atur dwi-lajur: fotografi gaya hidup autentik kampus POLISAS di sebelah kiri, dan akordion Soalan Lazim (FAQ) bergaris halus minimalis di sebelah kanan.
+   - **`<CampusGlobeScale />`:** Visual sfera 3D bumi kampus bersinar lembut dikelilingi riben metrik 4 pengira institusi (15,000+ Mahasiswa, 120+ Kelab Aktif, 12 Modul Bersepadu, 100% Digital & Telus).
+   - **`<StudentCommunityVoice />`:** Triad lencana pengesahan institusi (Politeknik KPT, Majlis Perwakilan Pelajar, Hal Ehwal Pelajar) diikuti 4 kad testimoni asli suara mahasiswa pelbagai jabatan.
+   - **`<FinalHandheldCtaAndFooter />`:** Sepanduk perspektif ajakan bertindak (CTA) *"Bersedia Memulakan Pengalaman Kampus Pintar Anda?"* dan pengaki editorial lengkap dengan 4 lajur maklumat serta tera air gergasi *"POLISAS"* berskala monumen di bahagian latar belakang.
 
 3. **Penyesuaian Perkakasan Pengguna (`useDevicePerformance`):**
-   - Mengesan peranti spesifikasi rendah (`isLowEnd`) untuk melumpuhkan efek kabur berlapis tebal (*multi-layered backdrop-blur*) dan animasi putaran berulang pada telefon pintar bajet bagi menjamin kelancaran 60fps.
+   - Melumpuhkan animasi terapung berulang dan mengurangkan kesan kabur pada perkakasan berspesifikasi rendah (`isLowEnd`) bagi memelihara kadar bingkai 60fps yang lancar.
 
 ---
 
