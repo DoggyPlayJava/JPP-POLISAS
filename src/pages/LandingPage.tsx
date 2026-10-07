@@ -1,42 +1,168 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
 import {
-  ArrowRight,
-  ArrowUpRight,
-  Shield,
-  Zap,
-  GraduationCap,
-  Sparkles,
-  Search,
-  Compass,
-  MapPin,
-  Store,
-  HeartHandshake,
-  Menu,
-  X,
-  ChevronDown,
-  Bot,
-  Trophy,
-  FileCheck,
-  QrCode,
-  Coffee,
-  CheckCircle2,
-  ChevronRight
+  ArrowRight, Shield, Zap, Users,
+  BarChart3, GraduationCap,
+  BrainCircuit, ArrowUpRight,
+  Menu, X, BookOpen, Activity, PlayCircle, FileText, CheckCircle,
+  ShoppingCart, HeartHandshake
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
-// Design Read:
-// Reading this as: University digital campus portal landing page for 12,000+ students and staff,
-// with a Squarespace-inspired luxury editorial dark language, leaning toward deep pine forest and emerald tokens,
-// generous whitespace, authentic photography, and zero AI-slop.
-// Dials: DESIGN_VARIANCE: 7, MOTION_INTENSITY: 6, VISUAL_DENSITY: 3.
+// --- Types & Config ---
+const MAROON = '#831010';
 
-// Smooth scroll helper
-const scrollToSection = (id: string, offset = 80) => {
-  const cleanId = id.replace('#', '');
-  const element = document.getElementById(cleanId);
+const MODULES = [
+  {
+    id: 'ekpp',
+    title: 'e-Aktiviti',
+    subtitle: 'Nadi Organisasi',
+    desc: 'Sistem tadbir urus kelab dan persatuan yang telus. Automasi kertas kerja dan pelaporan bulanan secara digital.',
+    icon: Shield,
+    color: '#831010',
+    path: '/portal',
+    stats: ['120+ Kelab Aktif', '98% Kelulusan Digital'],
+    preview: (
+      <div className="flex flex-col gap-2 p-3.5 h-full justify-center">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-bold text-white/90">Kertas Kerja DSK</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Diluluskan</span>
+        </div>
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-bold text-white/90">Bengkel AI Siswa</span>
+          </div>
+          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Semakan</span>
+        </div>
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-xs font-bold text-white/90">Minit AGM Kelab</span>
+          </div>
+          <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">Disahkan</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'keusahawanan',
+    title: 'e-Keusahawanan',
+    subtitle: 'Ekonomi Pintar',
+    desc: 'Memperkasakan usahawan siswa dengan sistem POS digital terpadu dan analitik jualan masa nyata.',
+    icon: BarChart3,
+    color: '#059669',
+    path: '/keusahawanan',
+    stats: ['RM 45k+ Jualan', '85+ Vendor Aktif'],
+    preview: (
+      <div className="flex flex-col justify-center h-full p-4 gap-3">
+        <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Jualan Hari Ini</span>
+            <p className="text-lg font-black text-white font-mono">RM 3,420.50</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] text-white/40">Transaksi</span>
+            <p className="text-xs font-bold text-white/80">142 Pesanan</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-[9px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-semibold border border-emerald-500/20">POS Pintar</span>
+          <span className="text-[9px] px-2.5 py-1 rounded-md bg-white/[0.04] text-white/70 font-semibold border border-white/10">Katalog Digital</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'akademik',
+    title: 'e-Akademik',
+    subtitle: 'Kecemerlangan Holistik',
+    desc: 'Semakan maklumat dan pengurusan rekod merit pelajar secara bersepadu untuk jaminan kualiti.',
+    icon: GraduationCap,
+    color: '#2563eb',
+    path: '/akademik',
+    stats: ['12k+ Rekod', 'Sistem Merit QR'],
+    preview: (
+      <div className="flex flex-col justify-center h-full p-4 gap-2.5">
+        <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">Imbasan QR Merit</p>
+              <p className="text-[9px] text-blue-300/80">Disahkan Serta-Merta</p>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-bold text-blue-400">+15 Merit</span>
+        </div>
+        <div className="flex items-center justify-between px-2 text-[10px] text-white/50 font-medium">
+          <span>Rekod Terkumpul Siswa</span>
+          <span className="text-white font-bold">12,450 Transaksi</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'polymart',
+    title: 'PolyMart',
+    subtitle: 'Ekosistem Niaga',
+    desc: 'Platform e-dagang berpusat khas buat siswa POLISAS. Jom sokong produk dan servis pelajar kita.',
+    icon: ShoppingCart,
+    color: '#f59e0b',
+    path: '/polymart',
+    stats: ['Produk Tempatan', 'JPP Pay Secure'],
+    colSpan: 'lg:col-span-2',
+    preview: (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 h-full items-center">
+        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">Barangan Rasmi</span>
+          <p className="text-xs font-bold text-white truncate">Baju Korporat JPP</p>
+          <span className="text-xs font-mono font-black text-amber-300">RM 45.00</span>
+        </div>
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Perkhidmatan</span>
+          <p className="text-xs font-bold text-white truncate">Pakej Foto Konvo</p>
+          <span className="text-xs font-mono font-black text-white/90">RM 15.00</span>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'kebajikan',
+    title: 'e-Kebajikan',
+    subtitle: 'Semak & Prihatin',
+    desc: 'Sistem pelaporan dan penjejakan aduan telus. Salurkan isu kebajikan mahasiswa secara terus kepada JPP.',
+    icon: HeartHandshake,
+    color: '#14b8a6',
+    path: '/kebajikan',
+    stats: ['Tindakan Pantas', 'Jejak Aduan'],
+    preview: (
+      <div className="flex flex-col justify-center h-full p-4 gap-2.5">
+        <div className="p-3.5 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
+              <HeartHandshake className="w-4 h-4 text-teal-400" />
+            </div>
+            <span className="text-xs font-bold text-white">Aduan KAMSIS & Fasiliti</span>
+          </div>
+          <span className="text-[9px] font-bold text-teal-400 bg-teal-500/20 px-2 py-0.5 rounded-full border border-teal-500/30">Selesai 24j</span>
+        </div>
+        <div className="flex items-center justify-between px-2 text-[10px] text-white/50">
+          <span>Kadar Penyelesaian Isu</span>
+          <span className="text-teal-400 font-bold">98.2%</span>
+        </div>
+      </div>
+    )
+  }
+];
+
+const scrollTo = (id: string, offset = 100) => {
+  const element = document.getElementById(id);
   if (element) {
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - offset;
@@ -47,8 +173,42 @@ const scrollToSection = (id: string, offset = 80) => {
   }
 };
 
-// --- Section 1: Minimalist Editorial Header (<Navbar />) ---
-export const Navbar: React.FC = () => {
+// --- Sub-Components ---
+
+function SpotlightCard({ children, className, onClick }: any) {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <div
+      className={cn("group relative overflow-hidden rounded-[2.5rem] bg-white/[0.02] border border-white/5 cursor-pointer shadow-lg transform-gpu", className)}
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+    >
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-500 md:group-hover:opacity-100"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              600px circle at ${mouseX}px ${mouseY}px,
+              rgba(131, 16, 16, 0.15),
+              transparent 80%
+            )
+          `,
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -69,130 +229,112 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { label: 'Ekosistem', href: '#ekosistem' },
-    { label: 'Keupayaan', href: '#keupayaan' },
-    { label: 'Soalan Lazim', href: '#faq' }
+    { label: 'Ekosistem', id: 'ekosistem' },
+    { label: 'Modul Utama', id: 'modul' },
+    { label: 'Nexus AI', id: 'nexus' }
   ];
 
   return (
     <>
-      <header
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 flex justify-center px-4 sm:px-6",
-          isScrolled ? "py-3" : "py-5"
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-500 flex justify-center px-4 md:px-6",
+          isScrolled ? "py-4 md:py-2" : "py-6 mt-2"
         )}
       >
-        <div
-          className={cn(
-            "flex items-center justify-between w-full max-w-6xl px-4 sm:px-6 py-2.5 rounded-full border transition-all duration-300 shadow-xl",
-            "bg-[#08140E]/85 backdrop-blur-xl border-[#52796F]/25 shadow-[0_12px_40px_rgba(8,20,14,0.6)]"
-          )}
-        >
-          {/* Logo & Brand Identity */}
-          <div
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#0E2218] border border-[#52796F]/30 p-1.5 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
-              <img
-                src="/jpp-logo.png"
-                alt="JPP Logo"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
+        <div className={cn(
+          "flex items-center justify-between w-full max-w-6xl px-4 md:px-6 py-3 md:py-2.5 rounded-full border transition-all duration-500",
+          isScrolled
+            ? "bg-[#0A0202]/80 backdrop-blur-2xl border-white/10 shadow-[0_10px_40px_-10px_rgba(131,16,16,0.3)]"
+            : "bg-black/20 backdrop-blur-md border-white/5"
+        )}>
+          {/* Logo Section */}
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center p-1.5 rounded-xl bg-white/[0.05] border border-white/10 overflow-hidden relative">
+              {/* Fallback styling just in case image doesn't load instantly */}
+              <div className="absolute inset-0 bg-maroon/20 blur-md" />
+              <img src="/jpp-logo.png" alt="JPP Logo" className="w-full h-full object-contain relative z-10" />
             </div>
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold tracking-tight text-white text-sm sm:text-base leading-none">
-                  JPP POLISAS
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest text-[#74C69D] bg-[#2D6A4F]/25 border border-[#74C69D]/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D] animate-pulse" />
-                  PORTAL RASMI
-                </span>
-              </div>
-              <span className="text-[10px] text-[#84A98C] font-medium tracking-wide">
-                Politeknik Sultan Haji Ahmad Shah
-              </span>
+              <span className="font-black tracking-tight text-white text-sm md:text-base leading-none">JPP POLISAS</span>
+              <span className="text-[8px] md:text-[9px] font-bold text-red-500 uppercase tracking-widest leading-none mt-1">Sistem Pintar</span>
             </div>
           </div>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-7">
-            {navLinks.map((link) => (
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((item) => (
               <button
-                key={link.href}
-                onClick={() => scrollToSection(link.href)}
-                className="text-xs font-semibold text-[#84A98C] hover:text-white transition-colors cursor-pointer tracking-wide"
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                className="text-[11px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors"
               >
-                {link.label}
+                {item.label}
               </button>
             ))}
-          </nav>
+          </div>
 
-          {/* Action Button & Mobile Toggle */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/portal')}
-              className="px-4 sm:px-5 py-2 rounded-full text-xs font-bold text-[#08140E] bg-[#74C69D] hover:bg-[#84A98C] transition-all flex items-center gap-1.5 shadow-[0_0_20px_rgba(116,198,157,0.3)] active:scale-[0.98] cursor-pointer"
+              onClick={() => navigate('/login')}
+              className="hidden md:flex px-6 py-2.5 rounded-full bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-maroon hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(131,16,16,0.5)]"
             >
-              <span>Masuk Portal</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              Daftar Masuk
             </button>
 
             <button
-              className="md:hidden w-9 h-9 rounded-full bg-[#0E2218] border border-[#52796F]/30 flex items-center justify-center text-[#84A98C] hover:text-white transition-colors"
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/[0.05] border border-white/10 text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle navigation menu"
             >
-              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              <AnimatePresence mode="wait">
+                {isMobileMenuOpen ? (
+                  <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <X className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Menu className="w-5 h-5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
-      </header>
+      </motion.nav>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-4 top-20 z-40 p-5 rounded-3xl bg-[#0E2218]/95 backdrop-blur-2xl border border-[#52796F]/30 md:hidden shadow-2xl"
+            className="fixed inset-x-0 top-24 z-40 mx-4 rounded-[2rem] bg-[#0A0202]/95 backdrop-blur-3xl border border-white/10 p-6 flex flex-col gap-2 md:hidden shadow-[0_20px_60px_-15px_rgba(131,16,16,0.3)]"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[#52796F]/20 mb-3">
-              <span className="text-xs font-bold text-[#74C69D] tracking-wider uppercase">
-                PORTAL RASMI
-              </span>
-              <span className="text-[10px] text-[#84A98C]">Sesi 2026/2027</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => {
-                    scrollToSection(link.href);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-3 px-3 rounded-xl text-sm font-semibold text-[#84A98C] hover:text-white hover:bg-[#2D6A4F]/20 transition-all flex items-center justify-between"
-                >
-                  <span>{link.label}</span>
-                  <ChevronRight className="w-4 h-4 text-[#52796F]" />
-                </button>
-              ))}
-            </div>
+            {navLinks.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  scrollTo(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-left text-sm font-black uppercase tracking-widest text-white/50 hover:text-white py-4 border-b border-white/5 transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
             <button
               onClick={() => {
+                navigate('/login');
                 setIsMobileMenuOpen(false);
-                navigate('/portal');
               }}
-              className="mt-4 w-full py-3 rounded-xl bg-[#74C69D] text-[#08140E] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+              className="mt-6 w-full py-4 rounded-xl bg-maroon text-white text-xs font-black uppercase tracking-widest text-center shadow-[0_0_30px_rgba(131,16,16,0.4)]"
             >
-              <span>Masuk Portal Pelajar</span>
-              <ArrowRight className="w-4 h-4" />
+              Log Masuk Portal
             </button>
           </motion.div>
         )}
@@ -201,1320 +343,695 @@ export const Navbar: React.FC = () => {
   );
 };
 
-// --- Section 2: Squarespace-Inspired Asymmetric Hero Section (<Hero />) ---
-export const Hero: React.FC<{ isLowEnd: boolean }> = ({ isLowEnd }) => {
+const TickerTape = () => (
+  <div className="w-full bg-[#0A0202] border-y border-white/5 py-3 md:py-3.5 overflow-hidden flex items-center relative z-20 shadow-[0_0_50px_rgba(131,16,16,0.1)]">
+    <motion.div
+      animate={{ x: ["0%", "-50%"] }}
+      transition={{ ease: "linear", duration: 35, repeat: Infinity }}
+      className="flex whitespace-nowrap gap-8 md:gap-14 items-center transform-gpu will-change-transform"
+    >
+      {[...Array(2)].map((_, loopIdx) => (
+        <React.Fragment key={loopIdx}>
+          <div className="flex items-center gap-2.5">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">Nexus AI: Semakan Kertas Kerja Pintar Beroperasi</span>
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-3.5 h-3.5 text-red-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Aktiviti: 120+ Kelab & Persatuan Berdaftar</span>
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Akademik: Pengesahan Merit QR Masa Nyata</span>
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">PolyMart: Platform Niaga Mahasiswa POLISAS</span>
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          <div className="flex items-center gap-2.5">
+            <HeartHandshake className="w-3.5 h-3.5 text-teal-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">e-Kebajikan: Tindakan Aduan & Food Bank Prihatin</span>
+          </div>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+        </React.Fragment>
+      ))}
+    </motion.div>
+  </div>
+);
+
+const Hero = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-[92dvh] flex flex-col justify-between pt-24 sm:pt-32 pb-12 overflow-hidden bg-[#08140E]">
-      {/* Editorial Ambient Background Tone */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className={cn(
-            "absolute top-[-10%] right-[-5%] w-[45vw] h-[45vw] rounded-full bg-[#2D6A4F]/15 blur-[120px]",
-            isLowEnd && "blur-[60px] opacity-30"
-          )}
+    <section className="relative min-h-[92dvh] flex items-center justify-center pt-24 md:pt-28 pb-16 overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#0a0202]">
+        <motion.div
+          animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[70vw] max-w-4xl aspect-square bg-maroon/25 blur-[120px] rounded-full transform-gpu will-change-transform"
         />
-        <div
-          className={cn(
-            "absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#0E2218] blur-[100px]",
-            isLowEnd && "blur-[50px] opacity-25"
-          )}
-        />
+        <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-amber-500/5 blur-[100px] rounded-full" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          {/* Left Editorial Text Column (7 cols) */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left">
-            {/* Eyebrow Badge (1 of 3 allowed on page) */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0E2218] border border-[#52796F]/30 backdrop-blur-md mb-6 shadow-xs"
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        {/* Left Editorial Content */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl mb-6 shadow-sm"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+              Jawatankuasa Perwakilan Pelajar POLISAS
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[1.0] text-left"
+          >
+            Masa Depan <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-400 to-amber-200">
+              Tadbir Urus Kampus.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-base md:text-lg text-white/60 font-medium leading-relaxed my-6 max-w-xl text-left"
+          >
+            Platform digital rasmi memacu kepimpinan mahasiswa, automasi kelab, dan ekosistem kampus terpadu POLISAS.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-wrap items-center gap-4 text-left pt-2"
+          >
+            <button
+              onClick={() => navigate('/portal')}
+              className="px-8 py-3.5 rounded-xl bg-white text-black font-black uppercase text-xs tracking-wider hover:bg-maroon hover:text-white transition-all duration-300 flex items-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.15)] active:scale-[0.98]"
             >
-              <span className="w-2 h-2 rounded-full bg-[#74C69D] animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#74C69D]">
-                JPP POLISAS · Sistem Kampus Pintar
-              </span>
-            </motion.div>
+              <span>Masuk Portal Pelajar</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
 
-            {/* Display H1 Heading */}
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.15rem] font-black tracking-[-0.035em] text-[#FFFFFF] leading-[1.06]"
+            <button
+              onClick={() => scrollTo('ekosistem')}
+              className="px-6 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-white/80 font-bold uppercase text-xs tracking-wider hover:bg-white/10 hover:text-white transition-all backdrop-blur-md active:scale-[0.98]"
             >
-              Masa Depan Kampus Digital Bermula Di Sini
-            </motion.h1>
-
-            {/* Subtext (strictly <= 20 words, no em-dashes) */}
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base sm:text-lg text-[#94A3B8] font-medium leading-relaxed my-6 max-w-xl"
-            >
-              Ekosistem digital berpusat mahasiswa POLISAS: tadbir urus aktiviti, pasaran siswa dan navigasi pintar.
-            </motion.p>
-
-            {/* CTA Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap items-center gap-4 pt-2"
-            >
-              <button
-                onClick={() => navigate('/portal')}
-                className="px-7 py-3.5 rounded-full bg-[#74C69D] hover:bg-[#84A98C] text-[#08140E] font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 shadow-[0_0_30px_rgba(116,198,157,0.35)] active:scale-[0.98] cursor-pointer"
-              >
-                <span>Masuk Portal Pelajar</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => scrollToSection('#ekosistem')}
-                className="px-6 py-3.5 rounded-full bg-[#0E2218] border border-[#52796F]/30 text-[#84A98C] hover:text-white hover:border-[#74C69D] font-bold text-xs uppercase tracking-wider transition-all backdrop-blur-md active:scale-[0.98] cursor-pointer"
-              >
-                <span>Terokai Ekosistem</span>
-              </button>
-            </motion.div>
-          </div>
-
-          {/* Right Editorial Showcase Frame with Authentic Visuals (5 cols) */}
-          <div className="lg:col-span-5 w-full relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.25 }}
-              className="relative w-full max-w-md mx-auto rounded-3xl overflow-hidden border border-[#52796F]/30 bg-[#0E2218] shadow-[0_24px_60px_rgba(8,20,14,0.9)] group"
-            >
-              {/* Minimal Browser / Device Header */}
-              <div className="px-5 py-3 border-b border-[#52796F]/25 bg-[#08140E]/80 backdrop-blur-md flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                </div>
-                <div className="text-[10px] font-mono font-bold text-[#84A98C] flex items-center gap-1">
-                  <span>jpp-polisas.edu.my</span>
-                </div>
-                <span className="text-[9px] font-mono text-[#74C69D] bg-[#2D6A4F]/25 px-2 py-0.5 rounded-full border border-[#74C69D]/20">
-                  LIVE
-                </span>
-              </div>
-
-              {/* Authentic Visual Image Showcase */}
-              <div className="relative h-60 w-full overflow-hidden">
-                <img
-                  src="https://picsum.photos/seed/polisas-campus-modern/800/500"
-                  alt="POLISAS Digital Campus"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-                  loading="eager"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-[#0E2218]/40 to-transparent" />
-                
-                {/* Floating Module Badges */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-[#08140E]/90 backdrop-blur-md border border-[#52796F]/30 text-[10px] font-bold text-white flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D] animate-ping" />
-                    Portal Cockpit
-                  </span>
-                  <span className="px-2.5 py-1 rounded-full bg-[#2D6A4F]/80 backdrop-blur-md border border-[#74C69D]/30 text-[9px] font-mono font-bold text-[#74C69D]">
-                    SESI 2026/2027
-                  </span>
-                </div>
-
-                <div className="absolute bottom-3 left-4 right-4">
-                  <p className="text-sm font-black text-white">Hub Integrasi Siswa</p>
-                  <p className="text-[11px] text-[#84A98C]">12 Modul Bersepadu dalam satu gerbang tunggal.</p>
-                </div>
-              </div>
-
-              {/* Lower Perspective Deck Strip with Real Module Accents */}
-              <div className="p-4 space-y-2.5 bg-[#0E2218]">
-                {/* Module Pill 1: PolyMart Hub */}
-                <div
-                  onClick={() => navigate('/polymart')}
-                  className="p-3 rounded-2xl bg-[#08140E] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#2D6A4F]/25 flex items-center justify-center text-[#74C69D]">
-                      <Store className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">PolyMart Hub</p>
-                      <p className="text-[10px] text-[#84A98C]">Pasaran rasmi mahasiswa & JPP Pay</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-[#74C69D] bg-[#2D6A4F]/20 px-2 py-0.5 rounded-md">
-                    Aktif
-                  </span>
-                </div>
-
-                {/* Module Pill 2: PolyMaps 360 */}
-                <div
-                  onClick={() => navigate('/polymaps')}
-                  className="p-3 rounded-2xl bg-[#08140E] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#2D6A4F]/25 flex items-center justify-center text-[#74C69D]">
-                      <Compass className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">PolyMaps 360</p>
-                      <p className="text-[10px] text-[#84A98C]">Navigasi kampus & zon berbumbung</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-[#84A98C] bg-[#0E2218] px-2 py-0.5 rounded-md border border-[#52796F]/20">
-                    360° Peta
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              Lihat Ekosistem
+            </button>
+          </motion.div>
         </div>
 
-        {/* Squarespace-Style Live Metrics Ribbon */}
-        <div className="mt-16 pt-8 border-t border-[#52796F]/20 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">15,000+</p>
-            <p className="text-xs text-[#84A98C] font-semibold mt-1">Mahasiswa Berdaftar</p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">120+</p>
-            <p className="text-xs text-[#84A98C] font-semibold mt-1">Kelab Aktif</p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-black text-[#74C69D] font-mono tracking-tight">12</p>
-            <p className="text-xs text-[#84A98C] font-semibold mt-1">Modul Bersepadu</p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">100%</p>
-            <p className="text-xs text-[#84A98C] font-semibold mt-1">Digital & Telus</p>
-          </div>
+        {/* Right Executive Preview Widget */}
+        <div className="lg:col-span-5 w-full">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            className="w-full rounded-[2rem] bg-gradient-to-b from-[#160505] to-[#0A0202] border border-white/10 p-6 md:p-8 shadow-2xl relative overflow-hidden"
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-white/90 uppercase tracking-wider">Pusat Operasi Eksekutif</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                Sesi 2026/2027
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3.5 mb-6">
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Kelab Berdaftar</span>
+                <p className="text-3xl font-black text-white mt-1">120+</p>
+                <span className="text-[11px] font-semibold text-emerald-400 mt-1 inline-block">100% Aktif</span>
+              </div>
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Kelulusan Kertas</span>
+                <p className="text-3xl font-black text-white mt-1">98.4%</p>
+                <span className="text-[11px] font-semibold text-emerald-400 mt-1 inline-block">Digital & Pantas</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  <div>
+                    <p className="text-xs font-bold text-white/90">Anugerah MAKMP 2026</p>
+                    <p className="text-[10px] text-white/40">Fasa Penjurian Calon</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Aktif</span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <div>
+                    <p className="text-xs font-bold text-white/90">Food Bank & Kebajikan</p>
+                    <p className="text-[10px] text-white/40">Pengagihan Berkala Siswa</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Beroperasi</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
   );
 };
 
-// --- Section 3: Interactive Showcase Tabs (<InteractiveShowcase />) ---
-export const InteractiveShowcase: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'semua' | 'kebajikan' | 'polymart' | 'akademik' | 'sukan'>('semua');
+const SystemShowcase = () => {
+  const [activeTab, setActiveTab] = useState<'aktiviti' | 'services' | 'makmp'>('aktiviti');
   const navigate = useNavigate();
 
-  const tabs = [
-    { id: 'semua', label: 'Semua' },
-    { id: 'kebajikan', label: 'Kebajikan' },
-    { id: 'polymart', label: 'PolyMart' },
-    { id: 'akademik', label: 'Akademik' },
-    { id: 'sukan', label: 'Sukan & EMS' }
-  ];
-
   return (
-    <section id="ekosistem" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20 border-t border-[#52796F]/20">
-      <div className="max-w-7xl mx-auto">
-        {/* Editorial Heading without Eyebrow */}
-        <div className="max-w-3xl mb-12">
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Semua Keperluan Kampus Dalam Satu Sentuhan
-          </h2>
-          <p className="text-sm sm:text-base text-[#94A3B8] font-medium mt-4 leading-relaxed">
-            Terokai modul digital yang menghubungkan aktiviti kebajikan, ekonomi keusahawanan siswa, pemantauan merit akademik, dan pengurusan kelab.
-          </p>
-        </div>
+    <section id="ekosistem" className="relative pb-20 pt-16 md:pt-24 z-10 flex flex-col items-center justify-center px-4 overflow-hidden">
+      {/* Decorative Blur behind showcase */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-48 md:h-64 bg-red-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-        {/* Minimalist Editorial Tabs */}
-        <div className="flex flex-wrap items-center gap-2 mb-10 pb-4 border-b border-[#52796F]/20">
-          {tabs.map((tab) => (
+      <div className="relative w-full max-w-6xl rounded-[2rem] md:rounded-[2.5rem] border border-white/10 bg-[#0A0202]/95 backdrop-blur-3xl shadow-[0_20px_70px_-20px_rgba(131,16,16,0.35)] overflow-hidden">
+        {/* Authentic Executive Header Deck */}
+        <div className="border-b border-white/10 px-5 md:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-maroon/30 border border-maroon/50 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-red-400" />
+            </div>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-white">Sistem Eksekutif Siswa POLISAS</span>
+              <p className="text-[10px] text-white/40">Pratonton Langsung Kawalan Kampus</p>
+            </div>
+          </div>
+
+          {/* Interactive Showcase Tabs */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab('aktiviti')}
               className={cn(
-                "px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all cursor-pointer",
-                activeTab === tab.id
-                  ? "bg-[#74C69D] text-[#08140E] shadow-[0_0_20px_rgba(116,198,157,0.3)]"
-                  : "bg-[#0E2218] text-[#84A98C] hover:text-white border border-[#52796F]/25"
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'aktiviti'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
               )}
             >
-              {tab.label}
+              e-Aktiviti (e-KPP)
             </button>
-          ))}
-        </div>
-
-        {/* Showcase Content Panel */}
-        <div>
-          <AnimatePresence mode="wait">
-            {activeTab === 'semua' && (
-              <motion.div
-                key="semua"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-              >
-                {/* Card 1: Kebajikan */}
-                <div
-                  onClick={() => navigate('/kebajikan')}
-                  className="rounded-3xl overflow-hidden bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-                >
-                  <div className="h-44 w-full overflow-hidden relative">
-                    <img
-                      src="https://picsum.photos/seed/polisas-foodbank-campus/600/400"
-                      alt="FoodBank & Kebajikan"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-transparent to-transparent" />
-                  </div>
-                  <div className="p-6">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#74C69D]">
-                      Kebajikan Siswa
-                    </span>
-                    <h3 className="text-lg font-bold text-white mt-1">FoodBank & Bantuan</h3>
-                    <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
-                      Kupon makanan digital percuma dan permohonan bantuan kebajikan kecemasan pantas.
-                    </p>
-                    <div className="mt-5 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs font-bold text-[#74C69D]">
-                      <span>Ketahui Lanjut</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 2: PolyMart */}
-                <div
-                  onClick={() => navigate('/polymart')}
-                  className="rounded-3xl overflow-hidden bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-                >
-                  <div className="h-44 w-full overflow-hidden relative">
-                    <img
-                      src="https://picsum.photos/seed/polisas-student-market/600/400"
-                      alt="PolyMart Student Market"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-transparent to-transparent" />
-                  </div>
-                  <div className="p-6">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#74C69D]">
-                      PolyMart
-                    </span>
-                    <h3 className="text-lg font-bold text-white mt-1">Pasaran Siswa</h3>
-                    <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
-                      Jual beli produk pelajar dan servis cetakan selamat melalui integrasi JPP Pay.
-                    </p>
-                    <div className="mt-5 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs font-bold text-[#74C69D]">
-                      <span>Buka Katalog</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 3: Akademik */}
-                <div
-                  onClick={() => navigate('/akademik')}
-                  className="rounded-3xl overflow-hidden bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-                >
-                  <div className="h-44 w-full overflow-hidden relative">
-                    <img
-                      src="https://picsum.photos/seed/polisas-academic-hall/600/400"
-                      alt="Akademik & Merit"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-transparent to-transparent" />
-                  </div>
-                  <div className="p-6">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#74C69D]">
-                      Akademik
-                    </span>
-                    <h3 className="text-lg font-bold text-white mt-1">Merit & Keputusan</h3>
-                    <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
-                      Penjejakan CGPA dan pengesahan imbasan kod QR merit program secara langsung.
-                    </p>
-                    <div className="mt-5 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs font-bold text-[#74C69D]">
-                      <span>Semak Rekod</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 4: Sukan & EMS */}
-                <div
-                  onClick={() => navigate('/portal')}
-                  className="rounded-3xl overflow-hidden bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-                >
-                  <div className="h-44 w-full overflow-hidden relative">
-                    <img
-                      src="https://picsum.photos/seed/polisas-sports-complex/600/400"
-                      alt="Sukan & SUPSAS"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-transparent to-transparent" />
-                  </div>
-                  <div className="p-6">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#74C69D]">
-                      Sukan & EMS
-                    </span>
-                    <h3 className="text-lg font-bold text-white mt-1">Kejohanan Kampus</h3>
-                    <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
-                      Jadual perlawanan SUPSAS, skor langsung, dan pengurusan pasukan antara jabatan.
-                    </p>
-                    <div className="mt-5 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs font-bold text-[#74C69D]">
-                      <span>Lihat Jadual</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'kebajikan' && (
-              <motion.div
-                key="kebajikan"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#0E2218] border border-[#52796F]/25 rounded-3xl p-6 sm:p-10 shadow-2xl"
-              >
-                <div className="lg:col-span-6 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#74C69D]">
-                    Modul Kebajikan Pelajar
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white">
-                    Bantuan Makanan FoodBank & Aduan Fasiliti Pantas
-                  </h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">
-                    Sistem baucar makanan berkupon QR memberi jaminan tiada mahasiswa kelaparan di POLISAS. Saluran aduan terus dipantau Exco Kebajikan dengan masa tindak balas 24 jam.
-                  </p>
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Kupon digital QR ditebus terus di Kafeteria Pusat & Asrama</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Bantuan kecemasan kewangan dan logistik kebajikan</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate('/kebajikan')}
-                    className="mt-4 px-6 py-3 rounded-full bg-[#74C69D] text-[#08140E] text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Akses e-Kebajikan</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="lg:col-span-6">
-                  <div className="p-6 rounded-2xl bg-[#08140E] border border-[#52796F]/30 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#52796F]/20">
-                      <div className="flex items-center gap-2">
-                        <Coffee className="w-4 h-4 text-[#74C69D]" />
-                        <span className="text-xs font-bold text-white">Kupon FoodBank Siswa</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-[#74C69D] bg-[#2D6A4F]/25 px-2 py-0.5 rounded-full">
-                        Aktif
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] text-[#84A98C] uppercase">Nilai Bantuan</span>
-                        <p className="text-2xl font-black text-white font-mono">RM 15.00</p>
-                      </div>
-                      <div className="w-16 h-16 rounded-xl bg-white p-1.5 flex items-center justify-center">
-                        <QrCode className="w-full h-full text-black" />
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#0E2218] border border-[#52796F]/20 text-[11px] text-[#94A3B8]">
-                      Tebus di: Kafeteria Kolej Kediaman Siswa sebelum 10:00 Malam
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'polymart' && (
-              <motion.div
-                key="polymart"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#0E2218] border border-[#52796F]/25 rounded-3xl p-6 sm:p-10 shadow-2xl"
-              >
-                <div className="lg:col-span-6 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#74C69D]">
-                    Pasaran Komuniti Mahasiswa
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white">
-                    PolyMart: Platform Niaga Siswa dengan JPP Pay
-                  </h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">
-                    Sokong usahawan mahasiswa tempatan. Daripada barangan rasmi fakulti dan pakaian korporat hingga servis baik pulih komputer dan makanan sedia santap.
-                  </p>
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Sistem POS digital khusus untuk vendor pelajar berdaftar</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Pengecasan transaksi sifar caj untuk memperkasa ekonomi siswa</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate('/polymart')}
-                    className="mt-4 px-6 py-3 rounded-full bg-[#74C69D] text-[#08140E] text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Masuk PolyMart</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#08140E] border border-[#52796F]/25 space-y-2">
-                    <span className="text-[10px] font-bold text-[#74C69D] uppercase">Barangan Rasmi</span>
-                    <p className="text-xs font-bold text-white truncate">Lanyard & Kad Matrik JPP</p>
-                    <p className="text-lg font-black text-[#74C69D] font-mono">RM 12.00</p>
-                    <span className="text-[10px] text-[#84A98C] block">Stok Sedia Ada (POLISAS)</span>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-[#08140E] border border-[#52796F]/25 space-y-2">
-                    <span className="text-[10px] font-bold text-[#74C69D] uppercase">Servis Pelajar</span>
-                    <p className="text-xs font-bold text-white truncate">Cetak Kertas Kerja / Laporan</p>
-                    <p className="text-lg font-black text-[#74C69D] font-mono">RM 0.10 / ms</p>
-                    <span className="text-[10px] text-[#84A98C] block">Siap 15 Minit (KAMSIS)</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'akademik' && (
-              <motion.div
-                key="akademik"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#0E2218] border border-[#52796F]/25 rounded-3xl p-6 sm:p-10 shadow-2xl"
-              >
-                <div className="lg:col-span-6 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#74C69D]">
-                    Kecemerlangan Holistik
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white">
-                    e-Akademik & Pengesahan Merit QR Masa Nyata
-                  </h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">
-                    Pantau unjuran CGPA dan merit penglibatan kokurikulum secara berpusat. Setiap kehadiran program diiktiraf terus ke dalam rekod transkrip aktiviti siswa.
-                  </p>
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Pengimbas QR rasmi merit dengan pengesahan kriptografi segera</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-white">
-                      <CheckCircle2 className="w-4 h-4 text-[#74C69D]" />
-                      <span>Kalkulator gred semester dan analisis pencapaian bersasar</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate('/akademik')}
-                    className="mt-4 px-6 py-3 rounded-full bg-[#74C69D] text-[#08140E] text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Masuk e-Akademik</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="lg:col-span-6">
-                  <div className="p-6 rounded-2xl bg-[#08140E] border border-[#52796F]/25 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#52796F]/20">
-                      <span className="text-xs font-bold text-white">Transkrip Merit Siswa</span>
-                      <span className="text-[10px] font-mono text-[#74C69D]">Sesi Semasa</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl bg-[#0E2218] border border-[#52796F]/20">
-                        <span className="text-[10px] text-[#84A98C]">Unjuran CGPA</span>
-                        <p className="text-2xl font-black text-white font-mono mt-1">3.82</p>
-                      </div>
-                      <div className="p-4 rounded-xl bg-[#0E2218] border border-[#52796F]/20">
-                        <span className="text-[10px] text-[#84A98C]">Mata Merit</span>
-                        <p className="text-2xl font-black text-[#74C69D] font-mono mt-1">190 pts</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'sukan' && (
-              <motion.div
-                key="sukan"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#0E2218] border border-[#52796F]/25 rounded-3xl p-6 sm:p-10 shadow-2xl"
-              >
-                <div className="lg:col-span-6 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#74C69D]">
-                    Sukan & EMS
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white">
-                    Sistem Pengurusan Kejohanan Sukan Berpusat
-                  </h3>
-                  <p className="text-sm text-[#94A3B8] leading-relaxed">
-                    Sistem EMS sukan mengautomasikan jadual perlawanan, pendaftaran atlet antara jabatan, dan paparan papan mata SUPSAS langsung untuk peminat sukan kampus.
-                  </p>
-                  <button
-                    onClick={() => navigate('/portal')}
-                    className="mt-4 px-6 py-3 rounded-full bg-[#74C69D] text-[#08140E] text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Lihat Portal Sukan</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="lg:col-span-6">
-                  <div className="p-6 rounded-2xl bg-[#08140E] border border-[#52796F]/25 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#52796F]/20">
-                      <span className="text-xs font-bold text-white">Perlawanan Terkini</span>
-                      <span className="text-[10px] font-mono text-[#74C69D]">SUPSAS Futsal</span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#0E2218] border border-[#52796F]/20 flex items-center justify-between text-xs">
-                      <span className="font-bold text-white">Jabatan Perdagangan</span>
-                      <span className="font-mono font-black text-amber-400">Live 1 - 1</span>
-                      <span className="text-[#84A98C]">Jabatan Kejuruteraan Awam</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 4: Platform Capabilities Bento Grid (<PlatformCapabilitiesBento />) ---
-export const PlatformCapabilitiesBento: React.FC = () => {
-  const navigate = useNavigate();
-
-  return (
-    <section id="keupayaan" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20">
-      <div className="max-w-7xl mx-auto">
-        {/* Editorial Heading with Eyebrow (2 of 3 allowed on page) */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E2218] border border-[#52796F]/30">
-              <Zap className="w-3.5 h-3.5 text-[#74C69D]" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#74C69D]">
-                Keupayaan Platform
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              Empat Tiang Teras SuperApp POLISAS
-            </h2>
-          </div>
-          <p className="max-w-md text-sm text-[#94A3B8] font-medium leading-relaxed">
-            Struktur teknologi bersepadu yang dirangka untuk memacu kecekapan, keusahawanan siswa, kebajikan berkesan, dan kebolehcapaian kampus.
-          </p>
-        </div>
-
-        {/* 4 Asymmetric Bento Cards with Rich Visual Rhythms */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
-          {/* Card 1: Tadbir Urus Kelab (e-Aktiviti) (7 cols) */}
-          <div
-            onClick={() => navigate('/portal')}
-            className="lg:col-span-7 rounded-3xl p-8 sm:p-10 bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/25 border border-[#52796F]/30 flex items-center justify-center text-[#74C69D] group-hover:scale-105 transition-transform">
-                  <Shield className="w-6 h-6" />
-                </div>
-                <div className="w-10 h-10 rounded-full border border-[#52796F]/20 flex items-center justify-center bg-[#08140E] group-hover:bg-[#2D6A4F]/20 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-[#84A98C] group-hover:text-white transition-colors" />
-                </div>
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#74C69D]">
-                Tadbir Urus Kelab (e-Aktiviti)
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
-                Automasi kertas kerja dan pelaporan digital kelab.
-              </h3>
-              <p className="text-sm text-[#94A3B8] mt-3 leading-relaxed">
-                Urus permohonan kertas kerja tanpa mencetak sehelai kertas pun. Sistem penjejakan kelulusan digital menghubungkan penasihat, JPP, dan pengurusan HEP secara telus.
-              </p>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-[#52796F]/20 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div>
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Kelab Berdaftar</span>
-                <p className="text-lg font-black text-white font-mono mt-0.5">120+ Kelab</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Kadar Kelulusan</span>
-                <p className="text-lg font-black text-[#74C69D] font-mono mt-0.5">98.4% Digital</p>
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Masa Tindak Balas</span>
-                <p className="text-lg font-black text-white font-mono mt-0.5">&lt; 48 Jam</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Pasaran Siswa (PolyMart) (5 cols) */}
-          <div
-            onClick={() => navigate('/polymart')}
-            className="lg:col-span-5 rounded-3xl p-8 sm:p-10 bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/25 border border-[#52796F]/30 flex items-center justify-center text-[#74C69D] group-hover:scale-105 transition-transform">
-                  <Store className="w-6 h-6" />
-                </div>
-                <div className="w-10 h-10 rounded-full border border-[#52796F]/20 flex items-center justify-center bg-[#08140E] group-hover:bg-[#2D6A4F]/20 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-[#84A98C] group-hover:text-white transition-colors" />
-                </div>
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#74C69D]">
-                Pasaran Siswa (PolyMart)
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
-                Ekosistem jual beli barangan dan servis pelajar dengan JPP Pay.
-              </h3>
-              <p className="text-sm text-[#94A3B8] mt-3 leading-relaxed">
-                Pusat perniagaan khusus buat usahawan siswa POLISAS menjual produk kraf, pakaian rasmi, buku rujukan, dan servis dengan jaminan transaksi selamat.
-              </p>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-[#52796F]/20 flex items-center justify-between">
-              <span className="text-xs font-bold text-[#74C69D] bg-[#2D6A4F]/20 px-3 py-1 rounded-full border border-[#74C69D]/30">
-                Pendaftaran Percuma
-              </span>
-              <span className="text-xs text-[#84A98C]">JPP Pay Terbina</span>
-            </div>
-          </div>
-
-          {/* Card 3: Bantuan Kebajikan (e-Kebajikan & FoodBank) (5 cols) */}
-          <div
-            onClick={() => navigate('/kebajikan')}
-            className="lg:col-span-5 rounded-3xl p-8 sm:p-10 bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/25 border border-[#52796F]/30 flex items-center justify-center text-[#74C69D] group-hover:scale-105 transition-transform">
-                  <HeartHandshake className="w-6 h-6" />
-                </div>
-                <div className="w-10 h-10 rounded-full border border-[#52796F]/20 flex items-center justify-center bg-[#08140E] group-hover:bg-[#2D6A4F]/20 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-[#84A98C] group-hover:text-white transition-colors" />
-                </div>
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#74C69D]">
-                Bantuan Kebajikan (e-Kebajikan & FoodBank)
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
-                Permohonan bantuan kecemasan dan kupon makanan digital.
-              </h3>
-              <p className="text-sm text-[#94A3B8] mt-3 leading-relaxed">
-                Saluran bantuan kebajikan segera untuk meringankan beban sara hidup siswa serta aduan kerosakan fasiliti kamsis yang telus dan pantas.
-              </p>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-[#52796F]/20 flex items-center justify-between">
-              <span className="text-xs font-bold text-white font-mono">1,500+ Kupon Ditebus</span>
-              <span className="text-xs text-[#74C69D]">Aduan 24 Jam Selesai</span>
-            </div>
-          </div>
-
-          {/* Card 4: Kampus Pintar & Peta (PolyMaps 360°) (7 cols) */}
-          <div
-            onClick={() => navigate('/polymaps')}
-            className="lg:col-span-7 rounded-3xl p-8 sm:p-10 bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all cursor-pointer group flex flex-col justify-between shadow-xl"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#2D6A4F]/25 border border-[#52796F]/30 flex items-center justify-center text-[#74C69D] group-hover:scale-105 transition-transform">
-                  <Compass className="w-6 h-6" />
-                </div>
-                <div className="w-10 h-10 rounded-full border border-[#52796F]/20 flex items-center justify-center bg-[#08140E] group-hover:bg-[#2D6A4F]/20 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-[#84A98C] group-hover:text-white transition-colors" />
-                </div>
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#74C69D]">
-                Kampus Pintar & Peta (PolyMaps 360°)
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
-                Navigasi pejalan kaki berbumbung dan lawatan 360° makmal serta dewan.
-              </h3>
-              <p className="text-sm text-[#94A3B8] mt-3 leading-relaxed">
-                Cari dewan kuliah, makmal komputer, atau surau dengan mudah. PolyMaps memetakan laluan pejalan kaki berbumbung khas sewaktu hujan dan pemandangan interaktif 360°.
-              </p>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-[#52796F]/20 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div>
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Laluan Terbina</span>
-                <p className="text-lg font-black text-white font-mono mt-0.5">38 Lokasi</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Lawatan Maya</span>
-                <p className="text-lg font-black text-[#74C69D] font-mono mt-0.5">360° Panorama</p>
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-[10px] text-[#84A98C] uppercase font-bold">Mod Cuaca</span>
-                <p className="text-lg font-black text-white font-mono mt-0.5">Laluan Teduh</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 5: Nexus AI Spotlight (<NexusAiSpotlight />) ---
-export const NexusAiSpotlight: React.FC = () => {
-  return (
-    <section id="nexus" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20 border-t border-[#52796F]/20">
-      <div className="max-w-7xl mx-auto">
-        {/* Header without Eyebrow */}
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Nexus AI: Kuasa Kepintaran Berpusat
-          </h2>
-          <p className="text-sm sm:text-base text-[#94A3B8] font-medium mt-4">
-            Menggabungkan model bahasa canggih bagi membantu exco menyemak pematuhan dokumen rasmi dan menjawab sebarang persoalan mahasiswa secara serta-merta.
-          </p>
-        </div>
-
-        {/* Dual Split Spotlight Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Card: AI Semakan Kertas Kerja */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#0E2218] border border-[#52796F]/30 relative overflow-hidden flex flex-col justify-between shadow-2xl">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b border-[#52796F]/20">
-                <div className="flex items-center gap-2.5">
-                  <FileCheck className="w-5 h-5 text-[#74C69D]" />
-                  <h3 className="text-lg font-bold text-white">AI Semakan Kertas Kerja</h3>
-                </div>
-                <span className="text-[10px] font-mono text-[#74C69D] bg-[#2D6A4F]/25 px-2.5 py-1 rounded-full border border-[#74C69D]/30">
-                  Automasi HEP 2026
-                </span>
-              </div>
-              <p className="text-sm text-[#94A3B8] leading-relaxed">
-                Enjin pengesahan automatik yang menganalisis format kertas kerja, keselarasan belanjawan, dan kelayakan peruntukan sebelum dihantar ke meja penasihat kelab.
-              </p>
-
-              {/* Live Preview Box */}
-              <div className="p-4 rounded-2xl bg-[#08140E] border border-[#52796F]/20 space-y-3 mt-4">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-white font-semibold truncate">
-                    Kertas Kerja: Bengkel AI Siswa 2026
-                  </span>
-                  <span className="text-[#74C69D] font-mono font-bold">Skor: 98%</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2 text-xs text-[#74C69D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    <span>Format 8 Seksyen Wajib HEP dipatuhi sepenuhnya.</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs text-[#74C69D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    <span>Aritmetik perbelanjaan RM 2,450.00 seimbang tanpa ralat.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs text-[#84A98C]">
-              <span>Masa Pemprosesan: 0.8s</span>
-              <span className="font-semibold text-white">Kelulusan Lebih Cepat</span>
-            </div>
-          </div>
-
-          {/* Right Card: Pembantu Pelajar Pintar */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#0E2218] border border-[#52796F]/30 relative overflow-hidden flex flex-col justify-between shadow-2xl">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b border-[#52796F]/20">
-                <div className="flex items-center gap-2.5">
-                  <Bot className="w-5 h-5 text-[#74C69D]" />
-                  <h3 className="text-lg font-bold text-white">Pembantu Pelajar Pintar</h3>
-                </div>
-                <span className="text-[10px] font-mono text-[#74C69D] bg-[#2D6A4F]/25 px-2.5 py-1 rounded-full border border-[#74C69D]/30">
-                  Respon 24/7
-                </span>
-              </div>
-              <p className="text-sm text-[#94A3B8] leading-relaxed">
-                Rakan digital mahasiswa yang sedia menjawab sebarang soalan mengenai peraturan kamsis, pengiraan merit kokurikulum, dan direktori fasiliti kampus.
-              </p>
-
-              {/* Chat Demo Box */}
-              <div className="p-4 rounded-2xl bg-[#08140E] border border-[#52796F]/20 space-y-3 mt-4">
-                <div className="p-2.5 rounded-xl bg-[#0E2218] text-xs text-white/90">
-                  <span className="text-[10px] text-[#84A98C] block">Soalan Siswa:</span>
-                  &quot;Berapa mata merit minimum untuk kekal di asrama kamsis semester depan?&quot;
-                </div>
-                <div className="p-2.5 rounded-xl bg-[#2D6A4F]/20 border border-[#74C69D]/20 text-xs text-[#74C69D]">
-                  <span className="text-[10px] text-[#74C69D]/70 block font-bold">Nexus AI:</span>
-                  Syarat minimum kamsis ialah 60 mata merit aktiviti atau penglibatan jawatankuasa kelab yang disahkan.
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-xs text-[#84A98C]">
-              <span>Ketersediaan: 100% Pantas</span>
-              <span className="font-semibold text-white">Bahasa Melayu & Inggeris</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 6: Interactive Quick Search Bar (<InteractiveSearchBar />) ---
-export const InteractiveSearchBar: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const navigate = useNavigate();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      navigate(`/portal?search=${encodeURIComponent(query.trim())}`);
-    } else {
-      navigate('/portal');
-    }
-  };
-
-  const chips = ['DSK', 'Dewan Sri Mahkota', 'PolyMart', 'FoodBank', 'Bilik Seminar', 'Merit Aktiviti'];
-
-  return (
-    <section id="carian" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-          Cari Apa Sahaja Dalam Ekosistem POLISAS
-        </h2>
-        <p className="text-sm text-[#94A3B8] font-medium mt-3 mb-8">
-          Akses pantas ke lokasi bangunan, semakan kod kursus, persatuan, mahupun maklumat bantuan pelajar.
-        </p>
-
-        {/* Editorial Search Form */}
-        <form onSubmit={handleSearch} className="relative w-full max-w-2xl mx-auto">
-          <div className="relative flex items-center">
-            <Search className="absolute left-5 w-5 h-5 text-[#84A98C] pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari kod kursus, dewan, makmal, atau kelab (Cth: DSK, Dewan Sri Mahkota)..."
-              className="w-full pl-14 pr-32 py-4 rounded-full bg-[#0E2218] border border-[#52796F]/30 text-white placeholder-[#84A98C]/60 text-xs sm:text-sm focus:outline-none focus:border-[#74C69D] focus:ring-2 focus:ring-[#74C69D]/20 transition-all shadow-xl"
-            />
             <button
-              type="submit"
-              className="absolute right-2.5 px-5 py-2.5 rounded-full bg-[#74C69D] hover:bg-[#84A98C] text-[#08140E] font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setActiveTab('services')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'services'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
             >
-              <span>Cari</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              PolyServices
             </button>
-          </div>
-        </form>
-
-        {/* Clickable Quick Filter Chips */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-          <span className="text-xs text-[#84A98C] mr-1">Cadangan:</span>
-          {chips.map((chip) => (
             <button
-              key={chip}
-              onClick={() => {
-                setQuery(chip);
-                navigate(`/portal?search=${encodeURIComponent(chip)}`);
-              }}
-              className="px-3.5 py-1.5 rounded-full bg-[#0E2218] border border-[#52796F]/20 text-[#84A98C] hover:text-white hover:border-[#74C69D] text-xs font-medium transition-all cursor-pointer"
+              onClick={() => setActiveTab('makmp')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                activeTab === 'makmp'
+                  ? "bg-maroon text-white shadow-sm"
+                  : "text-white/60 hover:text-white"
+              )}
             >
-              {chip}
+              Penjurian MAKMP
             </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 7: Curated Campus Gallery (<CuratedCampusGallery />) ---
-export const CuratedCampusGallery: React.FC = () => {
-  const galleryItems = [
-    {
-      title: 'Karnival Inovasi & Keusahawanan',
-      category: 'PolyMart Expo',
-      desc: 'Pameran 60+ gerai siswa POLISAS menggunakan sistem transaksi bersepadu JPP Pay.',
-      tag: 'Ekonomi Kampus',
-      image: 'https://picsum.photos/seed/polisas-expo-innovate/600/400'
-    },
-    {
-      title: 'Kejohanan Sukan Tahunan (SUPSAS)',
-      category: 'EMS Sukan',
-      desc: 'Pertandingan 14 acara sukan melibatkan 1,200 atlet antara jabatan akademik.',
-      tag: 'Kecergasan',
-      image: 'https://picsum.photos/seed/polisas-sports-field/600/400'
-    },
-    {
-      title: 'Bengkel Kepimpinan & Tadbir Urus',
-      category: 'e-Aktiviti',
-      desc: 'Latihan pengurusan kertas kerja digital dan audit kewangan kelab bersama Exco JPP.',
-      tag: 'Kepimpinan',
-      image: 'https://picsum.photos/seed/polisas-leadership-hall/600/400'
-    },
-    {
-      title: 'Agihan Bantuan FoodBank Siswa',
-      category: 'e-Kebajikan',
-      desc: 'Inisiatif berkala menyalurkan kupon makanan bernutrisi kepada mahasiswa berkeperluan.',
-      tag: 'Prihatin',
-      image: 'https://picsum.photos/seed/polisas-food-distribution/600/400'
-    }
-  ];
-
-  return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20 border-t border-[#52796F]/20">
-      <div className="max-w-7xl mx-auto">
-        {/* Editorial Heading without Eyebrow */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-          <div className="space-y-3">
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              Galeri Ekosistem
-            </h2>
-            <p className="text-sm text-[#94A3B8] font-medium leading-relaxed max-w-lg">
-              Rentak kehidupan dinamik mahasiswa: sorotan inisiatif kepimpinan, kecemerlangan sukan, dan jaringan komuniti POLISAS.
-            </p>
           </div>
-        </div>
 
-        {/* Gallery Grid with Real Photographic Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {galleryItems.map((item, idx) => (
-            <div
-              key={idx}
-              className="rounded-3xl overflow-hidden bg-[#0E2218] border border-[#52796F]/25 hover:border-[#74C69D]/40 transition-all flex flex-col justify-between group shadow-lg"
-            >
-              <div className="h-44 w-full overflow-hidden relative">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0E2218] via-transparent to-transparent" />
-                <span className="absolute top-3 left-3 text-[10px] font-mono text-[#74C69D] bg-[#08140E]/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-[#74C69D]/30">
-                  {item.tag}
-                </span>
-              </div>
-
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="text-xs text-[#84A98C] font-semibold block mb-1">{item.category}</span>
-                  <h3 className="text-base font-bold text-white group-hover:text-[#74C69D] transition-colors leading-snug">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-
-                <div className="mt-5 pt-4 border-t border-[#52796F]/20 flex items-center justify-between text-[11px] text-[#84A98C]">
-                  <span>POLISAS Kuantan</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#74C69D] group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 8: Hairline FAQ Accordion (<FaqAccordion />) ---
-export const FaqAccordion: React.FC = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
-  const faqs = [
-    {
-      q: 'Siapa yang layak mengakses Portal JPP POLISAS?',
-      a: 'Semua pelajar berdaftar, staf akademik, dan barisan pimpinan exco POLISAS mempunyai akses penuh mengikut peranan akaun masing-masing dengan menggunakan emel siswa atau kredensial kampus rasmi.'
-    },
-    {
-      q: 'Bagaimana kelab menghantar kertas kerja aktiviti?',
-      a: 'Melalui modul e-Aktiviti secara paperless sepenuhnya. Sistem dilengkapi semakan automatik format HEP dan penjejakan status kelulusan masa nyata daripada penasihat hingga pengurusan HEP.'
-    },
-    {
-      q: 'Adakah PolyMart dibuka untuk semua pelajar berniaga?',
-      a: 'Ya, vendor siswa boleh mendaftar perniagaan secara percuma. PolyMart menyediakan platform katalog produk, pengesahan tempahan segera, dan transaksi selamat yang dikuasakan oleh JPP Pay.'
-    },
-    {
-      q: 'Bagaimana merit akademik dan merit aktiviti dikira?',
-      a: 'Merit aktiviti dikreditkan secara automatik melalui imbasan kod QR rasmi semasa menghadiri program, manakala pemantauan HPNM dan rekod transkrip aktiviti boleh disemak melalui modul e-Akademik.'
-    }
-  ];
-
-  return (
-    <section id="faq" className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20 border-t border-[#52796F]/20">
-      <div className="max-w-4xl mx-auto">
-        {/* Header with Eyebrow (3 of 3 allowed on page) */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E2218] border border-[#52796F]/30 mb-4">
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#74C69D]">
-              Soalan Lazim
-            </span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Segala Jawapan Yang Anda Perlukan
-          </h2>
-          <p className="text-sm text-[#94A3B8] font-medium mt-3">
-            Ketahui lebih lanjut mengenai operasi sistem, pendaftaran modul, dan hak akses anda.
-          </p>
-        </div>
-
-        {/* Minimalist Hairline-Divided Disclosure Rows */}
-        <div className="divide-y divide-[#52796F]/25 border-y border-[#52796F]/25">
-          {faqs.map((faq, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div key={index} className="py-5 sm:py-6">
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full flex items-center justify-between text-left gap-4 focus:outline-none group cursor-pointer"
-                >
-                  <span className="text-base sm:text-lg font-bold text-white group-hover:text-[#74C69D] transition-colors">
-                    {faq.q}
-                  </span>
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-full border border-[#52796F]/30 flex items-center justify-center shrink-0 transition-transform duration-300",
-                      isOpen ? "bg-[#74C69D] text-[#08140E] rotate-180" : "bg-[#0E2218] text-[#84A98C]"
-                    )}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </button>
-
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="text-sm text-[#94A3B8] leading-relaxed pt-3 pr-8">
-                        {faq.a}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- Section 9: Bold High-Contrast Final CTA (<FinalSphereCta />) ---
-export const FinalSphereCta: React.FC<{ isLowEnd: boolean }> = ({ isLowEnd }) => {
-  const navigate = useNavigate();
-
-  return (
-    <section className="py-24 sm:py-36 px-4 sm:px-6 lg:px-8 bg-[#08140E] relative z-20 overflow-hidden flex justify-center border-t border-[#52796F]/20">
-      {/* Subtle Ambient Depth */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <div
-          className={cn(
-            "w-[400px] sm:w-[600px] aspect-square rounded-full bg-[#2D6A4F]/10 blur-[100px]",
-            isLowEnd && "blur-[50px] opacity-20"
-          )}
-        />
-      </div>
-
-      <div className="relative z-10 w-full max-w-4xl text-center p-8 sm:p-16 rounded-[2.5rem] bg-[#0E2218] border border-[#52796F]/30 backdrop-blur-xl shadow-2xl">
-        <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
-          Sedia Untuk Mula? Sertai ribuan mahasiswa POLISAS hari ini.
-        </h2>
-
-        <p className="text-sm sm:text-base text-[#94A3B8] font-medium max-w-xl mx-auto my-6 leading-relaxed">
-          Urus kelab anda, tebus baucar kebajikan, nikmati pasaran PolyMart, dan akses segala kemudahan kampus dalam satu ekosistem moden.
-        </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <button
             onClick={() => navigate('/portal')}
-            className="px-8 py-4 rounded-full bg-[#74C69D] hover:bg-[#84A98C] text-[#08140E] font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-3 shadow-[0_0_35px_rgba(116,198,157,0.4)] active:scale-[0.98] cursor-pointer"
+            className="hidden md:flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors"
           >
-            <span>Masuk Portal Pelajar</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Buka Portal Penuh</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        {/* Tab Showcase Deck Content */}
+        <div className="p-6 md:p-8 min-h-[360px]">
+          {activeTab === 'aktiviti' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+              <div className="lg:col-span-2 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-bold text-white/80 uppercase tracking-wider">Saluran Kelulusan Kertas Kerja Terkini</h4>
+                  <span className="text-[10px] font-mono text-emerald-400">Status Semasa</span>
+                </div>
+
+                {[
+                  { title: "Karnival Keusahawanan Siswa 2026", club: "Kelab Keusahawanan", budget: "RM 3,500", status: "Diluluskan", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                  { title: "Bengkel Robotik & AI Industri", club: "Persatuan Sains Komputer", budget: "RM 1,200", status: "Diluluskan", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                  { title: "Sukan Antara Jabatan (SUPSAS)", club: "Majlis Sukan POLISAS", budget: "RM 5,800", status: "Pelaksanaan", statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
+                ].map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between hover:bg-white/[0.05] transition-colors">
+                    <div>
+                      <h5 className="text-sm font-bold text-white">{item.title}</h5>
+                      <p className="text-xs text-white/50">{item.club} • Peruntukan: <span className="font-mono text-white/80">{item.budget}</span></p>
+                    </div>
+                    <span className={cn("text-[10px] font-bold px-2.5 py-1 rounded-full border", item.statusColor)}>
+                      {item.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-2">Metrik Tadbir Urus</h4>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Kertas Kerja Disahkan</span>
+                    <p className="text-2xl font-black text-white font-mono">128 Dokumen</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Peruntukan Dipantau</span>
+                    <p className="text-2xl font-black text-amber-400 font-mono">RM 45,200</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-white/40">Penyertaan Pelajar</span>
+                    <p className="text-2xl font-black text-white font-mono">2,450 Mahasiswa</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'services' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    <h5 className="text-sm font-bold text-white">PolyRider Kampus</h5>
+                  </div>
+                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Masa Nyata</span>
+                </div>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Perkhidmatan penghantaran dan mobiliti sesama pelajar di dalam kawasan POLISAS dan persekitaran Semambu.
+                </p>
+                <div className="space-y-2 pt-2">
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Penunggang Aktif Bertugas</span>
+                    <span className="font-mono font-bold text-emerald-400">8 Rider</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Kadar Tambang Selamat</span>
+                    <span className="font-mono font-bold text-white">Bermula RM 2.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                    <h5 className="text-sm font-bold text-white">PolyRent Peralatan</h5>
+                  </div>
+                  <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">Automasi</span>
+                </div>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Tempahan peralatan audio, khemah persatuan, dan fasiliti sukan JPP tanpa borang manual yang rumit.
+                </p>
+                <div className="space-y-2 pt-2">
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Peralatan Tersedia</span>
+                    <span className="font-mono font-bold text-emerald-400">24 Kategori</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between text-xs">
+                    <span className="text-white/80">Pengambilan Pantas</span>
+                    <span className="font-mono font-bold text-white">Imbas Kod Pengesahan</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'makmp' && (
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Portal Penjurian MAKMP 2026</h4>
+                  <p className="text-xs text-white/50">Sistem penilaian anugerah kepimpinan & kecemerlangan siswa berasaskan rubrik rasmi.</p>
+                </div>
+                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                  Rubrik Automatik
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Anugerah Kepimpinan JPP</span>
+                  <p className="text-sm font-bold text-white mt-1">Calon Berpotensi Tertinggi</p>
+                  <p className="text-[11px] text-emerald-400 mt-2">Merit Maksimum 10 Pts / Dokumen</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Anugerah Usahawan Siswa</span>
+                  <p className="text-sm font-bold text-white mt-1">Penilaian Prestasi & Hasil Jualan</p>
+                  <p className="text-[11px] text-blue-400 mt-2">Penyelarasan Data POS PolyMart</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <span className="text-[10px] uppercase font-bold text-white/40">Audit Ketelusan Juri</span>
+                  <p className="text-sm font-bold text-white mt-1">Penyegerakan Skor Bersepadu</p>
+                  <p className="text-[11px] text-amber-400 mt-2">Jejak Log Audit Lengkap</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
 
-// --- Section 10: Editorial Clean Minimalist Footer (<EditorialFooter />) ---
-export const EditorialFooter: React.FC = () => {
+const BentoSection = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#08140E] text-white border-t border-[#52796F]/25 relative z-20">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-16 border-b border-[#52796F]/20">
-          {/* Col 1 & 2: Institutional Brand */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#0E2218] border border-[#52796F]/30 p-1 flex items-center justify-center">
-                <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
+    <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-16 md:mb-20">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="w-1.5 md:w-2 h-6 md:h-8 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
+            <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] md:tracking-[0.5em] text-white/50">Ekosistem Teras</h2>
+          </div>
+          <h3 className="text-4xl sm:text-6xl md:text-[5rem] font-black tracking-[-0.02em] text-white leading-[0.9]">
+            Satu Ekosistem. <br />
+            <span className="text-white/30 italic font-light">Kawal Sepenuhnya.</span>
+          </h3>
+        </div>
+        <p className="max-w-md text-sm md:text-base text-white/40 font-medium leading-relaxed pb-2">
+          Struktur modular yang direka khas untuk logik tadbir urus. Organisasikan keperluan kampus dalam kepantasan milisaat.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        {MODULES.map((m: any, i) => (
+          <SpotlightCard
+            key={m.id}
+            onClick={() => navigate(m.path)}
+            className={cn("p-8 md:p-10 flex flex-col h-full bg-[#0A0202] border border-white/10 hover:border-white/20 transition-colors", m.colSpan)}
+          >
+            {/* Top Row: Icon & Action */}
+            <div className="flex items-start justify-between mb-10">
+              <div
+                className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3"
+                style={{ background: `${m.color}15`, color: m.color, border: `1px solid ${m.color}30` }}
+              >
+                <m.icon className="w-7 h-7 md:w-8 md:h-8" />
               </div>
-              <div>
-                <span className="text-base font-black tracking-tight text-white block">
-                  JPP POLISAS
-                </span>
-                <span className="text-[10px] text-[#84A98C]">
-                  Jawatankuasa Perwakilan Pelajar
-                </span>
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.01] group-hover:bg-white/10 transition-colors">
+                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-white/30 group-hover:text-white transition-colors" />
               </div>
             </div>
-            <p className="text-xs text-[#94A3B8] leading-relaxed max-w-sm">
-              Inisiatif digital rasmi JPP Politeknik Sultan Haji Ahmad Shah. Menghubungkan kebajikan, pengurusan aktiviti, pasaran siswa, dan kejohanan kampus dalam satu sistem pintar.
-            </p>
+
+            {/* Content */}
+            <div className="flex-1 mb-10 md:mb-12">
+              <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: m.color }}>{m.subtitle}</p>
+              <h4 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{m.title}</h4>
+              <p className="text-sm md:text-base text-white/50 font-medium leading-relaxed group-hover:text-white/70 transition-colors">
+                {m.desc}
+              </p>
+            </div>
+
+            {/* Bottom Row: Previews/Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-2xl bg-[#050101] border border-white/5 aspect-[4/3] sm:aspect-square overflow-hidden relative group-hover:border-white/10 transition-colors">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0202] z-10 pointer-events-none" />
+                {m.preview}
+              </div>
+              <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-4 py-4 sm:py-0 sm:pl-4">
+                {m.stats.map((s, idx) => (
+                  <div key={idx} className="flex flex-col">
+                    <span className="text-lg md:text-xl font-black text-white tracking-tighter">{s.split(' ')[0]}</span>
+                    <span className="text-[8px] md:text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mt-1">{s.split(' ').slice(1).join(' ')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SpotlightCard>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const NexusAISection = () => {
+  return (
+    <section id="nexus" className="py-24 md:py-36 relative overflow-hidden bg-gradient-to-b from-[#0A0202] via-[#140202] to-[#0A0202] border-y border-white/5">
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] mix-blend-screen" />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
+
+        {/* Text Editorial Content */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="lg:col-span-5 space-y-6"
+        >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 backdrop-blur-md">
+            <BrainCircuit className="w-4 h-4 text-red-500" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-300">Enjin Kepintaran Nexus</span>
           </div>
 
-          {/* Col 3: Servis Pelajar */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              Servis Pelajar
-            </h4>
-            <ul className="space-y-2 text-xs text-[#84A98C]">
-              <li>
-                <button onClick={() => navigate('/portal')} className="hover:text-[#74C69D] transition-colors cursor-pointer">
-                  Portal Utama
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/akademik')} className="hover:text-[#74C69D] transition-colors cursor-pointer">
-                  e-Akademik & Merit
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/polymart')} className="hover:text-[#74C69D] transition-colors cursor-pointer">
-                  PolyMart Siswa
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/kebajikan')} className="hover:text-[#74C69D] transition-colors cursor-pointer">
-                  FoodBank Siswa
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/polymaps')} className="hover:text-[#74C69D] transition-colors cursor-pointer">
-                  PolyMaps 360
-                </button>
-              </li>
-            </ul>
+          <h3 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.0]">
+            Kepintaran <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-white">Nexus.</span>
+          </h3>
+
+          <p className="text-sm md:text-base text-white/60 font-medium leading-relaxed">
+            Sistem analisis berbantu AI yang menyemak struktur kertas kerja, pengiraan belanjawan, dan pematuhan format HEP sebelum dihantar kepada penasihat kelab.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+            {[
+              { label: 'Analisis Minit', desc: 'Sintaks Kewangan', icon: Activity },
+              { label: 'Semakan Format', desc: 'Piawaian HEP 2026', icon: BookOpen },
+              { label: 'Audit Bajet', desc: 'Pengesahan Jumlah', icon: Shield },
+              { label: 'Bantuan 24/7', desc: 'Resolusi Isu Siswa', icon: Zap }
+            ].map((f, i) => (
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                <f.icon className="w-4 h-4 text-red-400" />
+                <div>
+                  <h4 className="text-xs font-bold text-white">{f.label}</h4>
+                  <p className="text-[10px] text-white/40">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* High-Fidelity Document Audit Workbench Preview */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="lg:col-span-7 w-full rounded-[2.5rem] border border-white/10 bg-[#070101] p-6 md:p-8 shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-4 h-4 text-red-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Nexus AI Document Audit Workbench</span>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              Skor Pematuhan: 98%
+            </span>
           </div>
 
-          {/* Col 4: Pautan Rasmi */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              Pautan Rasmi
-            </h4>
-            <ul className="space-y-2 text-xs text-[#84A98C]">
-              <li>
-                <a href="https://polisas.mypolycc.edu.my" target="_blank" rel="noreferrer" className="hover:text-[#74C69D] transition-colors">
-                  Laman Web POLISAS
-                </a>
-              </li>
-              <li>
-                <a href="https://spmp.polisas.edu.my" target="_blank" rel="noreferrer" className="hover:text-[#74C69D] transition-colors">
-                  Portal SPMP POLISAS
-                </a>
-              </li>
-              <li>
-                <a href="https://www.mypolycc.edu.my" target="_blank" rel="noreferrer" className="hover:text-[#74C69D] transition-colors">
-                  Jabatan Pendidikan Politeknik (JPPKK)
-                </a>
-              </li>
-            </ul>
-          </div>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+              <span className="text-[9px] font-mono uppercase text-white/40 tracking-wider">Kertas Kerja Disemak</span>
+              <p className="text-sm font-bold text-white">KERTAS KERJA: BENGKEL KEMAHIRAN AI & ROBOTIK SISWA 2026</p>
+              <p className="text-xs text-white/50">Pemohon: Persatuan Teknologi Maklumat POLISAS</p>
+            </div>
 
-          {/* Col 5: Bantuan & Hubungi */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              Bantuan & Hubungi
-            </h4>
-            <div className="space-y-2 text-xs text-[#84A98C]">
-              <p>Aras 1, Bangunan HEP, POLISAS, Semambu, 25350 Kuantan, Pahang</p>
-              <p className="text-[#74C69D] font-mono">jpp@polisas.edu.my</p>
+            <div className="space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-emerald-300">Format Template HEP: Sempurna</span>
+                  <p className="text-white/60 mt-0.5">Semua 8 seksyen wajib merangkumi objektif, hasil pembelajaran, dan tentatif lengkap.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-emerald-300">Semakan Bajet: RM 1,500.00 Sah</span>
+                  <p className="text-white/60 mt-0.5">Pengiraan item jamuan, penceramah, dan cenderahati seimbang tanpa ralat aritmetik.</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="text-xs">
+                  <span className="font-bold text-amber-300">Cadangan Penambahbaikan</span>
+                  <p className="text-white/60 mt-0.5">Tambahkan pemetaan SDG 4 (Pendidikan Berkualiti) untuk meningkatkan skor penilaian aktiviti.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between text-[11px] text-white/40 border-t border-white/5">
+              <span>Masa Pemprosesan: 1.2s</span>
+              <span className="font-mono text-emerald-400">Integriti Data: Disahkan</span>
             </div>
           </div>
+        </motion.div>
+
+      </div>
+    </section>
+  );
+};
+
+const StatsSection = () => {
+  return (
+    <section className="py-24 md:py-32 bg-[#050101] border-b border-white/5 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 md:divide-x divide-white/5">
+        {[
+          { label: 'Kelab Pemimpin', val: '120+' },
+          { label: 'Kertas Diluluskan', val: '10k+' },
+          { label: 'Ekonomi Kampus', val: 'RM 50k' },
+          { label: 'Merit Disahkan', val: '250k' }
+        ].map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className={`text-center space-y-2 md:space-y-4 ${i !== 0 && "md:pl-12"}`}
+          >
+            <p className="text-4xl md:text-6xl font-black text-white tracking-[-0.04em]">{s.val}</p>
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/30">{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const Footer = () => {
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  return (
+    <footer id="manual" className="py-20 md:py-24 px-4 md:px-6 bg-[#0A0202] relative overflow-hidden">
+      {/* Decorative footer glow */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-32 bg-red-900/10 blur-[100px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-16 relative z-10">
+
+        <div className="space-y-6 md:space-y-8 max-w-xs">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={scrollToTop}>
+            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center p-1.5 rounded-xl bg-white/[0.03] border border-white/5">
+              <img src="/jpp-logo.png" alt="JPP Logo" className="w-full h-full object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black tracking-tight text-white/60 text-base md:text-lg leading-none">JPP POLISAS</span>
+              <span className="text-[8px] md:text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] leading-none mt-1.5">Sistem Pintar v2</span>
+            </div>
+          </div>
+          <p className="text-xs text-white/30 font-medium leading-relaxed">
+            Exco Kelab, Persatuan dan Perpaduan POLISAS.<br />
+            Menyediakan ekosistem data bersepadu bagi melancarkan proses tadbir urus Polisas.
+          </p>
         </div>
 
-        {/* Bottom Legal Notice */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#84A98C]">
-          <p>© 2026 JPP POLISAS. Hak Cipta Terpelihara.</p>
-          <p className="text-[11px] text-[#52796F]">
-            Dibangunkan oleh Majlis Perwakilan Pelajar POLISAS
-          </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-24 w-full md:w-auto">
+          {[
+            { title: 'Aplikasi', links: [{ label: 'Portal Kelab', to: '/portal' }, { label: 'POS e-Keusahawanan', to: '/keusahawanan' }, { label: 'Scanner e-Akademik', to: '/akademik' }] },
+            { title: 'Rujukan', links: [{ label: 'Manual Standard', to: '#' }, { label: 'Garis Panduan', to: '#' }, { label: 'Dasar Integriti', to: '#' }] },
+            { title: 'Sokongan', links: [{ label: 'Pusat Bantuan', to: '#' }, { label: 'Hubungi Kami', to: '#' }] }
+          ].map((g, i) => (
+            <div key={i} className="space-y-6 md:space-y-8">
+              <h5 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-white/80">{g.title}</h5>
+              <ul className="space-y-4">
+                {g.links.map((l, idx) => (
+                  <li key={idx}>
+                    <a href={l.to} className="text-xs font-semibold text-white/30 hover:text-white transition-colors">{l.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6 relative z-10">
+        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20">© 2026 Hak Cipta Terpelihara JPP POLISAS.</p>
+        <div className="flex items-center gap-6 md:gap-8">
+          {['Privasi', 'Terma Syarat', 'Keselamatan'].map(s => (
+            <a key={s} href="#" className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white/20 hover:text-white transition-colors">{s}</a>
+          ))}
         </div>
       </div>
     </footer>
   );
 };
 
-// --- Flagship Landing Page Main Entry Component ---
-export const LandingPage: React.FC = () => {
-  const { isLowPerf: isLowEnd } = useDevicePerformance();
+export function LandingPage() {
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#08140E] text-white font-sans selection:bg-[#74C69D] selection:text-[#08140E] overflow-x-hidden">
-      {/* 1. Header */}
+    <div className="bg-[#0A0202] min-h-screen text-white font-sans selection:bg-red-500/30 selection:text-white overflow-x-hidden">
       <Navbar />
 
       <main>
-        {/* 2. Hero */}
-        <Hero isLowEnd={isLowEnd} />
+        <Hero />
+        <TickerTape />
+        <SystemShowcase />
+        <BentoSection />
+        <NexusAISection />
+        <StatsSection />
 
-        {/* 3. Showcase Tabs */}
-        <InteractiveShowcase />
+        {/* Final CTA Section */}
+        <section className="py-24 md:py-40 px-4 md:px-6 relative flex justify-center z-20">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
-        {/* 4. Bento Grid */}
-        <PlatformCapabilitiesBento />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="w-full max-w-5xl rounded-[2.5rem] md:rounded-[4rem] bg-gradient-to-br from-red-600/10 via-[#0A0202] to-transparent border border-red-500/10 p-10 md:p-24 text-center space-y-8 md:space-y-12 relative overflow-hidden backdrop-blur-2xl"
+          >
+            {/* CTA Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full md:w-[600px] md:h-[600px] bg-red-600/10 blur-[60px] md:blur-[150px] rounded-full pointer-events-none transform-gpu will-change-transform" />
 
-        {/* 5. Nexus AI */}
-        <NexusAiSpotlight />
+            <h3 className="text-4xl md:text-7xl lg:text-[6rem] font-black tracking-[-0.02em] text-white leading-[0.9] relative z-10">
+              Gerakan <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-white">Bermula Di Sini.</span>
+            </h3>
+            <p className="text-sm md:text-lg text-white/50 font-medium max-w-xl mx-auto leading-relaxed relative z-10 px-4">
+              Adakah urusan kelab anda sedia ditingkatkan ke tahap pengurusan eksekutif? Mohon kelulusan dan nikmati akses sekarang.
+            </p>
 
-        {/* 6. Quick Search */}
-        <InteractiveSearchBar />
-
-        {/* 7. Gallery */}
-        <CuratedCampusGallery />
-
-        {/* 8. FAQ */}
-        <FaqAccordion />
-
-        {/* 9. Final CTA */}
-        <FinalSphereCta isLowEnd={isLowEnd} />
+            <button
+              onClick={() => navigate('/portal')}
+              className="relative z-10 px-8 py-4 md:px-12 md:py-6 rounded-2xl md:rounded-3xl bg-white text-black font-black uppercase text-xs md:text-sm tracking-[0.2em] hover:bg-maroon hover:text-white hover:scale-105 transition-all duration-500 flex items-center gap-3 md:gap-4 mx-auto shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(131,16,16,0.5)]"
+            >
+              Mohon Akses Sistem
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </motion.div>
+        </section>
       </main>
 
-      {/* 10. Footer */}
-      <EditorialFooter />
+      <Footer />
     </div>
   );
-};
-
-export default LandingPage;
+}
