@@ -103,6 +103,46 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
     : null;
 
 // ==========================================
+// Error Tracker: rekod error/crash ke system_error_events (in-app observability)
+// ==========================================
+async function recordError({ error_type, message, stack, endpoint, method, status_code, severity, user_agent, ip }) {
+    try {
+        if (!supabaseAdmin) return;
+        await supabaseAdmin.from('system_error_events').insert({
+            error_type,
+            message: (message || '').slice(0, 2000),
+            stack: (stack || '').slice(0, 5000),
+            endpoint: endpoint || null,
+            method: method || null,
+            status_code: status_code || null,
+            user_agent: user_agent || null,
+            ip: ip || null,
+            severity: severity || 'ERROR',
+        });
+    } catch (e) {
+        // Jangan biar error tracker sendiri jadi punca crash
+        console.error('[ErrorTracker] Failed to record:', e.message);
+    }
+
+    // Notify JPP admin bila CRITICAL error (in-app notification, bukan email luar)
+    if (severity === 'CRITICAL') {
+        try {
+            await supabaseAdmin.from('notifications').insert({
+                title: '🚨 Critical Error Dikesan',
+                message: (message || '').slice(0, 500),
+                type: 'system_critical_error',
+                module: 'SYSTEM',
+                target_role: 'JPP',
+                link: '/admin/telemetry',
+            });
+        } catch (e) {
+            console.error('[ErrorTracker] Failed to notify:', e.message);
+        }
+    }
+}
+
+
+// ==========================================
 // Middleware: Verify Supabase JWT
 // ==========================================
 const requireAuth = async (req, res, next) => {
@@ -2612,6 +2652,54 @@ app.post('/api/klk-csv-import', requireAuth, upload.single('csv'), async (req, r
 // 11. System Telemetry (SUPER_ADMIN_JPP Only)
 // Returns Node.js runtime metrics + module row counts
 // ==========================================
+// Error Tracker: senarai error/crash terbaru untuk dashboard telemetry
+app.get('/api/system-errors', requireAuth, async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+        const { data, error } = await supabaseAdmin
+            .from('system_error_events')
+            .select('*')
+            .order('occurred_at', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+        res.json({ errors: data || [] });
+    } catch (err) {
+        console.error('[system-errors] Error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Error Tracker: terima error dari browser (client-side) — window.onerror / unhandledrejection
+app.post('/api/system-errors', async (req, res) => {
+    try {
+        const { message, stack, url, line, column, user_agent, error_type } = req.body || {};
+        if (!message) return res.status(400).json({ error: 'message required' });
+
+        // Rate-limit ringan: elak banjir dari satu client
+        const key = req.ip + '|' + (message || '').slice(0, 60);
+        if (!global._errTrack) global._errTrack = new Map();
+        const now = Date.now();
+        const last = global._errTrack.get(key) || 0;
+        if (now - last < 10000) return res.status(200).json({ deduped: true });
+        global._errTrack.set(key, now);
+        if (global._errTrack.size > 500) global._errTrack.clear();
+
+        await recordError({
+            error_type: error_type || 'client_error',
+            message,
+            stack,
+            endpoint: url || null,
+            severity: 'ERROR',
+            user_agent: user_agent || req.headers['user-agent'] || null,
+            ip: req.ip,
+        });
+        res.status(200).json({ ok: true });
+    } catch (err) {
+        console.error('[system-errors] POST error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/system-telemetry', requireAuth, async (req, res) => {
     try {
         if (!supabaseAdmin) throw new Error('Supabase Admin not initialized.');
@@ -2989,6 +3077,22 @@ cron.schedule('0 3 * * *', async () => {
     }
 });
 
+// ── Error Tracker: Cleanup error events > 30 hari (setiap hari 4am) ──
+cron.schedule('0 4 * * *', async () => {
+    try {
+        if (!supabaseAdmin) return;
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { error, count } = await supabaseAdmin
+            .from('system_error_events')
+            .delete({ count: 'exact' })
+            .lt('created_at', cutoff);
+        if (error) console.error('[CRON] Error cleanup failed:', error.message);
+        else if (count > 0) console.log('[CRON] Cleaned ' + count + ' old error events (>30 hari).');
+    } catch (err) {
+        console.error('[CRON] Error cleanup failed:', err.message);
+    }
+});
+
 // ── PolyMart: Auto-Cancel Expired Orders & Payment Reminders (Every 15 Min) ──
 cron.schedule('*/15 * * * *', async () => {
     try {
@@ -3357,12 +3461,16 @@ app.use((req, res, next) => {
 process.on('uncaughtException', (err) => {
     console.error('\n🚨 [FATAL] Uncaught Exception:', err.message);
     console.error(err.stack);
+    recordError({ error_type: 'uncaughtException', message: err.message, stack: err.stack, severity: 'CRITICAL' });
     // Beri masa untuk log ditulis sebelum exit
     setTimeout(() => process.exit(1), 1000);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('\n⚠️ [WARNING] Unhandled Promise Rejection:', reason);
+    const msg = reason instanceof Error ? reason.message : String(reason);
+    const st = reason instanceof Error ? reason.stack : null;
+    recordError({ error_type: 'unhandledRejection', message: msg, stack: st, severity: 'ERROR' });
     // Jangan exit — biarkan server terus berjalan untuk rejection yang tidak kritikal
 });
 
@@ -3379,6 +3487,26 @@ const gracefulShutdown = (signal) => {
         process.exit(1);
     }, 10000);
 };
+
+
+// ==========================================
+// Error Tracker: Express error middleware (capture HTTP 5xx & uncaught route errors)
+// ==========================================
+app.use((err, req, res, next) => {
+    recordError({
+        error_type: 'http_error',
+        message: err.message || 'Unknown error',
+        stack: err.stack,
+        endpoint: req.originalUrl,
+        method: req.method,
+        status_code: err.status || 500,
+        user_agent: req.headers['user-agent'],
+        ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        severity: (err.status >= 500 || !err.status) ? 'CRITICAL' : 'ERROR',
+    });
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message || 'Internal Server Error' });
+});
 
 const server = app.listen(port, () => {
     console.log(`[JPP-POLISAS] Server is running on port ${port}`);

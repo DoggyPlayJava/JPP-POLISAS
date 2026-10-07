@@ -7,7 +7,7 @@ import {
   Users, Flag, Heart, ShoppingBag, Bike, Briefcase, Trophy, Tent,
   Home, CalendarDays, Bell, BrainCircuit, FileText, GraduationCap,
   Award, FolderOpen, MessageCircle, Star, AlertTriangle, ShieldCheck,
-  Database, CheckCircle2, XCircle, TrendingUp, Zap,
+  Database, CheckCircle2, XCircle, TrendingUp, Zap, Bug,
 } from 'lucide-react';
 import { hexToRgba, cn, API_BASE_URL } from '@/lib/utils';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
@@ -150,6 +150,8 @@ export function JppTelemetryPage() {
   const [error, setError] = useState('');
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [errorEvents, setErrorEvents] = useState<any[]>([]);
+  const [errorsLoading, setErrorsLoading] = useState(false);
 
   // Fetch theme
   useEffect(() => {
@@ -175,6 +177,11 @@ export function JppTelemetryPage() {
       const json = await res.json();
       setData(json);
       setLastRefresh(new Date());
+      // fetch recent errors (crash tracker)
+      setErrorsLoading(true);
+      fetch(`${API_URL}/api/system-errors?limit=20`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      }).then(r => r.json()).then(j => setErrorEvents(j.errors || [])).catch(() => {}).finally(() => setErrorsLoading(false));
     } catch (e: any) {
       setError(e.message || 'Gagal memuatkan data telemetri.');
     } finally {
@@ -704,6 +711,42 @@ export function JppTelemetryPage() {
                 </motion.div>
               )}
             </div>
+
+            {/* ═══ SECTION E: Crash & Error Tracker ═══ */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+              className="lg:col-span-2 rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bug className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                  <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-600 dark:text-white/40">Crash & Error Tracker</h2>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400 dark:text-white/20">{errorEvents.length} rekod terkini</span>
+              </div>
+              {errorEvents.length === 0 ? (
+                <div className="text-center py-10">
+                  <ShieldCheck className="w-8 h-8 text-emerald-400 dark:text-emerald-500/50 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Tiada error dikesan</p>
+                  <p className="text-[11px] text-slate-400 dark:text-white/20 mt-1">Sistem berjalan lancar.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {errorEvents.map((ev, i) => (
+                    <div key={ev.id || i} className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-white/[0.02] p-3">
+                      <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${ev.severity === 'CRITICAL' ? 'bg-rose-500' : ev.severity === 'WARNING' ? 'bg-amber-400' : 'bg-orange-400'}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-white/50">{ev.error_type}</span>
+                          {ev.endpoint && <span className="text-[10px] font-mono text-slate-400 dark:text-white/30 truncate">{ev.method} {ev.endpoint}</span>}
+                        </div>
+                        <p className="text-xs font-semibold text-slate-700 dark:text-white/80 truncate">{ev.message}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{new Date(ev.occurred_at).toLocaleString('ms-MY')}</p>
+                      </div>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${ev.severity === 'CRITICAL' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400'}`}>{ev.severity}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
 
             {/* ═══ SECTION D: Timestamp Footer ═══ */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}

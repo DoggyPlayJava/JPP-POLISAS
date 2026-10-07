@@ -48,6 +48,46 @@ import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './index.css'
 
+// ==========================================
+// Error Tracker (client-side): hantar error browser ke /api/system-errors
+// Tangkap: runtime JS error (undefined var, tak declare, etc) + unhandled Promise rejection
+// ==========================================
+(function installErrorTracker() {
+  const send = (payload) => {
+    try {
+      fetch('/api/system-errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => { /* jangan buat loop error */ });
+    } catch (_) { /* ignore */ }
+  };
+
+  window.addEventListener('error', (e) => {
+    // Hanya tangkap runtime error, bukan resource load error (tiada e.message utk resource)
+    if (!e.message) return;
+    send({
+      message: e.message,
+      stack: e.error && e.error.stack ? e.error.stack : null,
+      url: location.href,
+      line: e.lineno,
+      column: e.colno,
+      error_type: 'client_error',
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    const r = e.reason;
+    send({
+      message: (r && r.message) ? r.message : String(r),
+      stack: (r && r.stack) ? r.stack : null,
+      url: location.href,
+      error_type: 'client_promise_rejection',
+    });
+  });
+})();
+
 console.log('Dependencies imported, grabbing root...');
 const rootElement = document.getElementById('root');
 console.log('Root element:', rootElement);
