@@ -345,6 +345,7 @@ interface Building {
   entrance_image_url?: string;
   drone_image_url?: string | null;
   panorama_360_url?: string | null;
+  is_360_enabled?: boolean;
 }
 
 interface GraphNode {
@@ -533,6 +534,7 @@ interface Location {
   panorama_360_url?: string | null;
   building: Building;
   building_id: string;
+  is_360_enabled?: boolean;
   op_start?: string;
   op_end?: string;
 }

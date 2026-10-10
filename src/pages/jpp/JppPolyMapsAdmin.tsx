@@ -258,6 +258,7 @@ interface Building {
   op_end?: string;
   floorplan_image_url?: string;
   entrance_image_url?: string;
+  is_360_enabled?: boolean;
 }
 
 interface Location {
@@ -271,6 +272,7 @@ interface Location {
   panorama_360_url?: string | null;
   op_start?: string | null;
   op_end?: string | null;
+  is_360_enabled?: boolean;
 }
 
 interface MissingReport {
@@ -1157,8 +1159,8 @@ export function JppPolyMapsAdmin() {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          const nextState = toggleBuilding360(b);
+                        onClick={async () => {
+                          const nextState = await toggleBuilding360(b);
                           setToggleRevision(r => r + 1);
                           toast.success(nextState ? `360° untuk ${b.name} telah DIAKTIFKAN (Hijau)` : `360° untuk ${b.name} telah DINYAHAKTIFKAN (Biru)`);
                         }}
@@ -1314,8 +1316,8 @@ export function JppPolyMapsAdmin() {
 
                           <button
                             type="button"
-                            onClick={() => {
-                              const nextState = toggleLocation360(l);
+                            onClick={async () => {
+                              const nextState = await toggleLocation360(l);
                               setToggleRevision(r => r + 1);
                               toast.success(nextState ? `360° untuk ${l.room_code} telah DIAKTIFKAN (Hijau)` : `360° untuk ${l.room_code} telah DINYAHAKTIFKAN (Biru)`);
                             }}
@@ -1430,8 +1432,8 @@ export function JppPolyMapsAdmin() {
                                     <button
                                       type="button"
                                       title={is360Active ? "Nyahaktifkan 360°" : "Aktifkan 360°"}
-                                      onClick={() => {
-                                        const nextState = toggleLocation360(l);
+                                      onClick={async () => {
+                                        const nextState = await toggleLocation360(l);
                                         setToggleRevision(r => r + 1);
                                         toast.success(nextState ? `360° untuk ${l.room_code} telah DIAKTIFKAN` : `360° untuk ${l.room_code} telah DINYAHAKTIFKAN`);
                                       }}

@@ -7,6 +7,8 @@
  * Berfungsi sebagai fallback pintar dan pelengkap kepada data pangkalan data Supabase.
  */
 
+import { supabase } from '@/lib/supabase';
+
 export interface PolyMaps360Building {
   name: string;
   code: string;
@@ -371,148 +373,70 @@ export function hasBuilding360(building?: {
   return Boolean(getBuilding360Url(building));
 }
 
-// ─── PENGURUSAN STATUS TOOGLE 360 PENTADBIR ──────────────────────────────────
-const STORAGE_KEY_BUILDINGS = 'polymaps_enabled_360_buildings';
-const STORAGE_KEY_LOCATIONS = 'polymaps_enabled_360_locations';
+// ─── PENGURUSAN STATUS 360 PENTADBIR (DB-BACKED) ─────────────────────────────
+// Status 360 disimpan dalam kolum is_360_enabled di pangkalan data (imaps_buildings /
+// imaps_locations), BUKAN localStorage. Ini memastikan toggle pentadbir kelihatan
+// pada SEMUA peranti (elak bug "phone A nampak 360, phone B tak nampak").
 
 /**
- * Mendapatkan senarai ID/Kod bangunan yang diaktifkan 360 oleh pentadbir (Lalai: Kosong / Semua OFF)
- */
-export function getEnabled360BuildingIds(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_BUILDINGS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Mendapatkan senarai ID lokasi/bilik yang diaktifkan 360 oleh pentadbir (Lalai: Kosong / Semua OFF)
- */
-export function getEnabled360LocationIds(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_LOCATIONS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Semak sama ada 360 bagi sesebuah bangunan AKTIF (toggled ON oleh pentadbir)
+ * Semak sama ada 360 bagi sesebuah bangunan AKTIF (berdasarkan kolum DB is_360_enabled)
  */
 export function isBuilding360Active(building?: any): boolean {
   if (!building) return false;
   if (!hasBuilding360(building)) return false;
-
-  // Jika pangkalan data mempunyai nilai eksplisit
-  if (building.is_360_enabled === true) return true;
-
-  const enabledList = getEnabled360BuildingIds();
-  const idStr = String(building.id || '').trim();
-  const codeStr = String(building.code || '').trim().toLowerCase();
-  const nameStr = String(building.name || '').trim().toLowerCase();
-
-  return enabledList.some((item) => {
-    const it = String(item).toLowerCase();
-    return it === idStr.toLowerCase() || (codeStr && it === codeStr) || (nameStr && it === nameStr);
-  });
+  return building.is_360_enabled === true;
 }
 
 /**
- * Semak sama ada 360 bagi bilik/lokasi AKTIF (toggled ON oleh pentadbir)
+ * Semak sama ada 360 bagi bilik/lokasi AKTIF (berdasarkan kolum DB is_360_enabled)
  */
 export function isLocation360Active(location?: any): boolean {
   if (!location) return false;
   const url = getLocation360Url(location);
   if (!url) return false;
-
-  if (location.is_360_enabled === true) return true;
-
-  const enabledList = getEnabled360LocationIds();
-  const idStr = String(location.id || '').trim();
-  const roomCode = String(location.room_code || '').trim().toLowerCase();
-
-  return enabledList.some((item) => {
-    const it = String(item).toLowerCase();
-    return it === idStr.toLowerCase() || (roomCode && it === roomCode);
-  });
+  return location.is_360_enabled === true;
 }
 
 /**
- * Togol status 360 bangunan (Lalai: OFF -> ON atau sebaliknya)
+ * Togol status 360 bangunan — tulis ke DB supaya semua peranti nampak perubahan.
  */
-export function toggleBuilding360(building: any, forceState?: boolean): boolean {
-  if (!building) return false;
-  const identifier = String(building.id || building.code || building.name || '').trim();
-  if (!identifier) return false;
-
+export async function toggleBuilding360(building: any, forceState?: boolean): Promise<boolean> {
+  if (!building?.id) return false;
   const current = isBuilding360Active(building);
   const next = forceState !== undefined ? forceState : !current;
 
-  try {
-    const list = getEnabled360BuildingIds();
-    let updated: string[];
+  const { error } = await supabase
+    .from('imaps_buildings')
+    .update({ is_360_enabled: next })
+    .eq('id', building.id);
 
-    if (next) {
-      if (!list.includes(identifier)) {
-        updated = [...list, identifier];
-      } else {
-        updated = list;
-      }
-    } else {
-      const matchLowers = [
-        String(building.id || '').toLowerCase(),
-        String(building.code || '').toLowerCase(),
-        String(building.name || '').toLowerCase(),
-      ].filter(Boolean);
-      updated = list.filter((item) => !matchLowers.includes(String(item).toLowerCase()));
-    }
-
-    localStorage.setItem(STORAGE_KEY_BUILDINGS, JSON.stringify(updated));
-    return next;
-  } catch (err) {
-    console.error('Failed to toggle building 360 in localStorage:', err);
-    return next;
+  if (error) {
+    console.error('Failed to toggle building 360 in DB:', error.message);
+    return current; // kekalkan status sedia ada jika gagal
   }
+  building.is_360_enabled = next; // mutasi objek lokal supaya UI refresh serta-merta
+  return next;
 }
 
 /**
- * Togol status 360 bilik/lokasi
+ * Togol status 360 bilik/lokasi — tulis ke DB supaya semua peranti nampak perubahan.
  */
-export function toggleLocation360(location: any, forceState?: boolean): boolean {
-  if (!location) return false;
-  const identifier = String(location.id || location.room_code || '').trim();
-  if (!identifier) return false;
-
+export async function toggleLocation360(location: any, forceState?: boolean): Promise<boolean> {
+  if (!location?.id) return false;
   const current = isLocation360Active(location);
   const next = forceState !== undefined ? forceState : !current;
 
-  try {
-    const list = getEnabled360LocationIds();
-    let updated: string[];
+  const { error } = await supabase
+    .from('imaps_locations')
+    .update({ is_360_enabled: next })
+    .eq('id', location.id);
 
-    if (next) {
-      if (!list.includes(identifier)) {
-        updated = [...list, identifier];
-      } else {
-        updated = list;
-      }
-    } else {
-      const matchLowers = [
-        String(location.id || '').toLowerCase(),
-        String(location.room_code || '').toLowerCase(),
-      ].filter(Boolean);
-      updated = list.filter((item) => !matchLowers.includes(String(item).toLowerCase()));
-    }
-
-    localStorage.setItem(STORAGE_KEY_LOCATIONS, JSON.stringify(updated));
-    return next;
-  } catch (err) {
-    console.error('Failed to toggle location 360 in localStorage:', err);
-    return next;
+  if (error) {
+    console.error('Failed to toggle location 360 in DB:', error.message);
+    return current;
   }
+  location.is_360_enabled = next;
+  return next;
 }
 
 /**
