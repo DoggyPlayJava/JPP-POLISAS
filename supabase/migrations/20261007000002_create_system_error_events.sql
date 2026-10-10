@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.system_error_events (
     status_code integer,
     user_agent text,
     ip text,
+    filename text,                       -- asal script error (client-side, untuk debug cross-origin)
     severity text NOT NULL DEFAULT 'ERROR' CHECK (severity IN ('WARNING','ERROR','CRITICAL')),
     occurred_at timestamptz NOT NULL DEFAULT now(),
     created_at timestamptz NOT NULL DEFAULT now()

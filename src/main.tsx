@@ -67,6 +67,8 @@ import './index.css'
   window.addEventListener('error', (e) => {
     // Hanya tangkap runtime error, bukan resource load error (tiada e.message utk resource)
     if (!e.message) return;
+    // filename = asal script. Kalau cross-origin tanpa crossorigin, browser bagi 'Script error.'
+    // tanpa detail. Log filename supaya kita tahu script mana yang throw.
     send({
       message: e.message,
       stack: e.error && e.error.stack ? e.error.stack : null,
@@ -74,6 +76,7 @@ import './index.css'
       line: e.lineno,
       column: e.colno,
       error_type: 'client_error',
+      filename: e.filename || null,
     });
   });
 

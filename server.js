@@ -105,7 +105,7 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
 // ==========================================
 // Error Tracker: rekod error/crash ke system_error_events (in-app observability)
 // ==========================================
-async function recordError({ error_type, message, stack, endpoint, method, status_code, severity, user_agent, ip }) {
+async function recordError({ error_type, message, stack, endpoint, method, status_code, severity, user_agent, ip, filename }) {
     try {
         if (!supabaseAdmin) return;
         await supabaseAdmin.from('system_error_events').insert({
@@ -118,6 +118,7 @@ async function recordError({ error_type, message, stack, endpoint, method, statu
             user_agent: user_agent || null,
             ip: ip || null,
             severity: severity || 'ERROR',
+            filename: filename || null,
         });
     } catch (e) {
         // Jangan biar error tracker sendiri jadi punca crash
@@ -2672,7 +2673,7 @@ app.get('/api/system-errors', requireAuth, async (req, res) => {
 // Error Tracker: terima error dari browser (client-side) — window.onerror / unhandledrejection
 app.post('/api/system-errors', async (req, res) => {
     try {
-        const { message, stack, url, line, column, user_agent, error_type } = req.body || {};
+        const { message, stack, url, line, column, user_agent, error_type, filename } = req.body || {};
         if (!message) return res.status(400).json({ error: 'message required' });
 
         // Rate-limit ringan: elak banjir dari satu client
@@ -2692,6 +2693,7 @@ app.post('/api/system-errors', async (req, res) => {
             severity: 'ERROR',
             user_agent: user_agent || req.headers['user-agent'] || null,
             ip: req.ip,
+            filename: filename || null,
         });
         res.status(200).json({ ok: true });
     } catch (err) {
