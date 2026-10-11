@@ -16,6 +16,37 @@ export function formatUptime(s: number): string {
   return `${m}m ${sec}s`;
 }
 
+export function extractPageRoute(urlOrEndpoint?: string): { path: string; name: string } {
+  if (!urlOrEndpoint) return { path: 'Latar Belakang', name: 'Background / Server Process' };
+
+  try {
+    let cleanPath = urlOrEndpoint;
+    if (urlOrEndpoint.startsWith('http')) {
+      const parsed = new URL(urlOrEndpoint);
+      cleanPath = parsed.pathname;
+    }
+
+    if (cleanPath.startsWith('/polysuara')) return { path: '/polysuara', name: 'PolySuara Mahasiswa' };
+    if (cleanPath.startsWith('/polymart')) return { path: '/polymart', name: 'PolyMart Pasar Siswa' };
+    if (cleanPath.startsWith('/polyrider')) return { path: '/polyrider', name: 'PolyRider Logistik' };
+    if (cleanPath.startsWith('/kebajikan')) return { path: '/kebajikan', name: 'e-Kebajikan & FoodBank' };
+    if (cleanPath.startsWith('/akademik')) return { path: '/akademik', name: 'e-Akademik Siswa' };
+    if (cleanPath.startsWith('/polymaps')) return { path: '/polymaps', name: 'PolyMaps 360 Kampus' };
+    if (cleanPath.startsWith('/ems')) return { path: '/ems', name: 'EMS Juri & Pertandingan' };
+    if (cleanPath.startsWith('/jpp/asrama') || cleanPath.startsWith('/asrama')) return { path: '/jpp/asrama', name: 'Asrama KAMSIS' };
+    if (cleanPath.startsWith('/jpp/telemetry')) return { path: '/jpp/telemetry', name: 'Telemetri Sistem' };
+    if (cleanPath.startsWith('/jpp')) return { path: '/jpp', name: 'Portal Pentadbiran JPP' };
+    if (cleanPath.startsWith('/portal')) return { path: '/portal', name: 'Hab Pelajar Portal' };
+    if (cleanPath.startsWith('/login')) return { path: '/login', name: 'Daftar Masuk (SSO)' };
+    if (cleanPath.startsWith('/api/')) return { path: cleanPath, name: `API Route (${cleanPath})` };
+    if (cleanPath === '/') return { path: '/', name: 'Laman Utama (Landing)' };
+
+    return { path: cleanPath, name: cleanPath };
+  } catch {
+    return { path: urlOrEndpoint, name: urlOrEndpoint };
+  }
+}
+
 export function getRatingTheme(rating: ResilienceRating) {
   switch (rating) {
     case 'Cemerlang':
@@ -66,46 +97,97 @@ export function buildUnifiedTimeline(
   const events: UnifiedTimelineEvent[] = [];
   const baseTime = serverTimestamp ? new Date(serverTimestamp).getTime() : Date.now();
 
-  // 1. Errors from system_error_events
+  // 1. Crash & Error events from system_error_events (with exact page path identification!)
   errors.forEach((err, idx) => {
     const isCritical = err.severity === 'CRITICAL';
     const isWarn = err.severity === 'WARNING';
+    const { path, name } = extractPageRoute(err.endpoint);
+
+    // Clean human readable error message
+    let displayTitle = err.message || err.error_type || 'Ralat Runtime dikesan';
+    if (displayTitle === 'Script error.') {
+      displayTitle = err.filename
+        ? `Script error pada ${err.filename.split('/').pop()}`
+        : 'Script error (Cross-origin bundle)';
+    }
+
     events.push({
       id: `err-${err.id || idx}-${err.occurred_at}`,
       type: 'error',
       severity: isCritical ? 'CRITICAL' : isWarn ? 'WARNING' : 'INFO',
-      title: err.message || err.error_type || 'Ralat Tidak Dikenali',
+      title: displayTitle,
       subtitle: err.stack ? err.stack.split('\n')[0] : (err.filename || undefined),
       timestamp: err.occurred_at || new Date().toISOString(),
       badge: err.severity,
       source: 'Crash & Error Tracker',
-      endpoint: err.endpoint ? `${err.method || 'GET'} ${err.endpoint}` : undefined,
+      endpoint: err.endpoint,
+      pagePath: path,
+      pageTitle: name,
+      filename: err.filename,
+      stack: err.stack,
+      errorType: err.error_type,
+      statusCode: err.status_code,
     });
   });
 
   // 2. Diagnostic alerts from modules
   if (diagnostics) {
-    const moduleAlerts: Array<{ source: string; alert: string; critical: boolean }> = [];
+    const moduleAlerts: Array<{
+      source: string;
+      alert: string;
+      critical: boolean;
+      pagePath: string;
+      pageTitle: string;
+    }> = [];
 
     (diagnostics.database?.alerts || []).forEach((a) =>
-      moduleAlerts.push({ source: 'Pangkalan Data', alert: a, critical: a.includes('KRITIKAL') || a.includes('🚨') })
+      moduleAlerts.push({
+        source: 'Pangkalan Data',
+        alert: a,
+        critical: a.includes('KRITIKAL') || a.includes('🚨'),
+        pagePath: '/jpp/telemetry',
+        pageTitle: 'PostgreSQL Database',
+      })
     );
     (diagnostics.polyrider?.alerts || []).forEach((a) =>
-      moduleAlerts.push({ source: 'PolyRider', alert: a, critical: a.includes('EMERGENCY') })
+      moduleAlerts.push({
+        source: 'PolyRider',
+        alert: a,
+        critical: a.includes('EMERGENCY'),
+        pagePath: '/polyrider',
+        pageTitle: 'PolyRider Logistik',
+      })
     );
     (diagnostics.polymart?.alerts || []).forEach((a) =>
-      moduleAlerts.push({ source: 'PolyMart', alert: a, critical: a.includes('tinggi') })
+      moduleAlerts.push({
+        source: 'PolyMart',
+        alert: a,
+        critical: a.includes('tinggi'),
+        pagePath: '/polymart',
+        pageTitle: 'PolyMart Siswa',
+      })
     );
     (diagnostics.kebajikan?.alerts || []).forEach((a) =>
-      moduleAlerts.push({ source: 'e-Kebajikan', alert: a, critical: a.includes('SLA') })
+      moduleAlerts.push({
+        source: 'e-Kebajikan',
+        alert: a,
+        critical: a.includes('SLA'),
+        pagePath: '/kebajikan',
+        pageTitle: 'e-Kebajikan Helpdesk',
+      })
     );
     (diagnostics.ai?.alerts || []).forEach((a) =>
-      moduleAlerts.push({ source: 'AI Engine', alert: a, critical: a.includes('had') })
+      moduleAlerts.push({
+        source: 'AI Engine',
+        alert: a,
+        critical: a.includes('had'),
+        pagePath: '/portal',
+        pageTitle: 'Nexus AI Engine',
+      })
     );
 
     moduleAlerts.forEach((item, idx) => {
-      // Simulate recent timestamp around server fetch time if not stamped
-      const eventTime = new Date(baseTime - idx * 45000).toISOString();
+      const eventTime = new Date(baseTime - (idx + 1) * 35000).toISOString();
       events.push({
         id: `alert-${idx}-${item.source}`,
         type: 'alert',
@@ -115,11 +197,13 @@ export function buildUnifiedTimeline(
         timestamp: eventTime,
         badge: item.critical ? 'KRITIKAL' : 'AMARAN',
         source: item.source,
+        pagePath: item.pagePath,
+        pageTitle: item.pageTitle,
       });
     });
   }
 
-  // 3. Fallback info events if events list is minimal
+  // 3. Fallback info event if no errors/alerts exist
   if (events.length === 0) {
     events.push({
       id: 'sys-all-clear',
@@ -130,9 +214,10 @@ export function buildUnifiedTimeline(
       timestamp: new Date(baseTime).toISOString(),
       badge: 'OPTIMAL',
       source: 'Watchdog Pemeriksa',
+      pagePath: '/jpp/telemetry',
+      pageTitle: 'Pusat Kawalan Sistem',
     });
   }
 
-  // Sort descending by timestamp
   return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }

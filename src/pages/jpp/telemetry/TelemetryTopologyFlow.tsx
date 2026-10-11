@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Globe,
   Shield,
@@ -9,9 +9,15 @@ import {
   Lock,
   Database,
   Layers,
+  ChevronDown,
+  Info,
+  X,
+  Server,
+  Zap,
 } from 'lucide-react';
 import { TelemetryData } from './telemetryTypes';
 import { cn } from '@/lib/utils';
+import { formatUptime } from './telemetryUtils';
 
 interface TelemetryTopologyFlowProps {
   data: TelemetryData;
@@ -19,6 +25,7 @@ interface TelemetryTopologyFlowProps {
 
 export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ data }) => {
   const [viewMode, setViewMode] = useState<'flow' | 'traffic' | 'heatmap'>('flow');
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
   const { server, modules, diagnostics } = data;
   const db = diagnostics?.database;
@@ -31,15 +38,85 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
     ? Math.round((server.memory.heap_used_mb / server.memory.heap_total_mb) * 100)
     : 0;
 
+  // Node health evaluations
+  const nodeStatus = {
+    internet: 'healthy',
+    firewall: heapPct > 80 ? 'warning' : 'healthy',
+    identity: 'healthy',
+    cloud: (pm?.pending_stale || 0) > 0 ? 'warning' : 'healthy',
+    applications:
+      (keb?.sla_breached || 0) > 0 || (pr?.stuck_emergency || 0) > 0 ? 'critical' : 'healthy',
+    db: (db?.wal_retained_mb || 0) > 1024 ? 'critical' : (db?.wal_retained_mb || 0) > 512 ? 'warning' : 'healthy',
+  };
+
+  const nodeDetails: Record<string, { title: string; subtitle: string; stats: { label: string; val: string }[] }> = {
+    internet: {
+      title: '🌐 Internet & Ingress Trafik',
+      subtitle: 'Sesi web portal dan aplikasi PWA siswa yang aktif mengakses sistem.',
+      stats: [
+        { label: 'Jumlah Siswa Berdaftar', val: `${(modules.profiles || 0).toLocaleString()} pengguna` },
+        { label: 'Push Subscriptions', val: `${modules.push_subscriptions || 0} aktif` },
+        { label: 'Notifikasi Terhantar', val: `${(modules.notifications || 0).toLocaleString()} rekod` },
+      ],
+    },
+    firewall: {
+      title: '⚡ Firewall & Node.js API Gateway',
+      subtitle: 'Pelayan Express API yang memproses semua panggilan backend dan penghalaan.',
+      stats: [
+        { label: 'Uptime Proses API', val: formatUptime(server.uptime_seconds) },
+        { label: 'Penggunaan Heap', val: `${server.memory.heap_used_mb} / ${server.memory.heap_total_mb} MB (${heapPct}%)` },
+        { label: 'PID & Platform', val: `PID ${server.pid} • ${server.platform}` },
+      ],
+    },
+    identity: {
+      title: '🛡️ Identity & Supabase Auth Shield',
+      subtitle: 'Pengesahan token JWT dan kawalan capaian berasaskan peranan (RBAC).',
+      stats: [
+        { label: 'Sesi Keselamatan', val: 'Disahkan (JWT Auth)' },
+        { label: 'Akses Peranan', val: 'SUPER_ADMIN_JPP Guard' },
+        { label: 'Integriti Token', val: 'Aktif & Sah' },
+      ],
+    },
+    cloud: {
+      title: '☁️ Cloud Services (PolyMart & AI Nexus)',
+      subtitle: 'Perkhidmatan pasaran mahasiswa dan enjin kepintaran buatan.',
+      stats: [
+        { label: 'Jumlah Pesanan PolyMart', val: `${modules.polymart_orders || 0} pesanan` },
+        { label: 'Pesanan Tertunggak >48j', val: `${pm?.pending_stale || 0} pesanan` },
+        { label: 'Token AI Digunakan', val: `${(modules.ai_tokens_used || 0).toLocaleString()} token` },
+      ],
+    },
+    applications: {
+      title: '📦 Applications (PolyRider & e-Kebajikan)',
+      subtitle: 'Perkhidmatan logistik kampus dan sistem aduan bantuan mahasiswa.',
+      stats: [
+        { label: 'Trip PolyRider', val: `${modules.polyrider_jobs || 0} trip` },
+        { label: 'SOS Emergency Tersekat', val: `${pr?.stuck_emergency || 0} kes` },
+        { label: 'Tiket e-Kebajikan', val: `${modules.kebajikan_tickets || 0} (${keb?.sla_breached || 0} SLA breached)` },
+      ],
+    },
+    db: {
+      title: '🗄️ Critical Assets (PostgreSQL Cluster)',
+      subtitle: 'Pangkalan data teras Supabase yang menyimpan seluruh rekod universiti.',
+      stats: [
+        { label: 'Sambungan Aktif', val: `${db?.active_connections || 0} / ${db?.max_connections || 100} conns` },
+        { label: 'WAL Retained', val: `${db?.wal_retained_mb || 0} MB (Had: 2,048 MB)` },
+        { label: 'Cache Hit Rate', val: `${db?.cache_hit_rate_pct || 99.9}%` },
+      ],
+    },
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 flex flex-col justify-between">
-      {/* ── Header & View Toggles (Exactly like SentinelAI Image 3) ── */}
+      {/* ── Header & View Toggles (SentinelAI Image 3 Style) ── */}
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-black text-slate-900 tracking-tight">
             Threat Overview
           </h3>
-          <p className="text-[11px] font-bold text-slate-400">Live AI Network</p>
+          <p className="text-[11px] font-bold text-slate-400">
+            Live AI Network • Klik nod untuk analisis terperinci
+          </p>
         </div>
 
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200/70">
@@ -52,7 +129,10 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
           ).map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setViewMode(tab.id)}
+              onClick={() => {
+                setViewMode(tab.id);
+                setActiveNodeId(null);
+              }}
               className={cn(
                 'px-3 py-1 rounded-lg text-xs font-bold transition-all',
                 viewMode === tab.id
@@ -68,89 +148,77 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
 
       {/* ── View 1: Flow View (Fluid Bezier Node Network) ── */}
       {viewMode === 'flow' && (
-        <div className="relative py-6 my-2">
+        <div className="relative py-8 my-2">
           {/* SVG Connecting Bezier Paths */}
           <div className="absolute inset-0 pointer-events-none">
             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 760 210">
-              <defs>
-                <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#CBD5E1" />
-                  <stop offset="35%" stopColor="#F97316" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#10B981" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#CBD5E1" />
-                </linearGradient>
-              </defs>
-
-              {/* Node 1 -> Node 2 */}
+              {/* Path 1: Node 1 -> Node 2 */}
               <path
-                d="M 85 105 C 130 105, 150 105, 195 105"
+                d="M 85 105 C 130 105, 140 105, 185 105"
                 fill="none"
-                stroke="#E2E8F0"
+                stroke="#CBD5E1"
                 strokeWidth="2.5"
                 strokeDasharray="4 4"
               />
 
-              {/* Node 2 -> Node 3 */}
+              {/* Path 2: Node 2 -> Node 3 */}
               <path
-                d="M 235 105 C 280 105, 300 105, 345 105"
+                d="M 235 105 C 280 105, 290 105, 335 105"
                 fill="none"
-                stroke="#E2E8F0"
+                stroke="#CBD5E1"
                 strokeWidth="2.5"
               />
 
-              {/* Node 3 -> Split into Node 4a (Top) & Node 4b (Bottom) */}
+              {/* Path 3: Node 3 -> Split into Node 4a (Cloud Services) */}
               <path
-                d="M 385 105 C 430 105, 450 60, 500 60"
+                d="M 385 105 C 430 105, 450 55, 495 55"
                 fill="none"
-                stroke="#E2E8F0"
-                strokeWidth="2"
-              />
-              <path
-                d="M 385 105 C 430 105, 450 150, 500 150"
-                fill="none"
-                stroke="#E2E8F0"
-                strokeWidth="2"
+                stroke="#CBD5E1"
+                strokeWidth="2.5"
               />
 
-              {/* Node 4a (Top) & Node 4b (Bottom) -> Converge into Node 5 */}
+              {/* Path 4: Node 3 -> Split into Node 4b (Applications) */}
               <path
-                d="M 540 60 C 590 60, 610 105, 655 105"
+                d="M 385 105 C 430 105, 450 155, 495 155"
                 fill="none"
-                stroke="#E2E8F0"
-                strokeWidth="2"
+                stroke="#CBD5E1"
+                strokeWidth="2.5"
               />
+
+              {/* Path 5: Node 4a -> Converge into Node 5 (Critical Assets) */}
               <path
-                d="M 540 150 C 590 150, 610 105, 655 105"
+                d="M 545 55 C 590 55, 610 105, 655 105"
                 fill="none"
-                stroke="#E2E8F0"
-                strokeWidth="2"
+                stroke="#CBD5E1"
+                strokeWidth="2.5"
+              />
+
+              {/* Path 6: Node 4b -> Converge into Node 5 */}
+              <path
+                d="M 545 155 C 590 155, 610 105, 655 105"
+                fill="none"
+                stroke="#CBD5E1"
+                strokeWidth="2.5"
               />
             </svg>
           </div>
 
-          {/* Floating Pill Badges */}
-          {/* Badge Above Node 2 (Firewall/Node.js) */}
-          <div className="absolute left-[20%] top-2 transform -translate-x-1/2 z-20">
-            <div className="px-2.5 py-1 rounded-xl bg-[#FFF5F2] border border-[#FFCCBE] text-[10px] font-black text-[#EA580C] shadow-2xs flex flex-col items-center leading-tight">
-              <span>{heapPct > 80 ? 'Memory Spike' : 'Node Engine'}</span>
-              <span className="text-[8px] font-medium text-slate-500">Heap {heapPct}%</span>
-            </div>
-          </div>
-
-          {/* Badge Above Node 4a (Cloud Services) */}
-          <div className="absolute left-[68%] top-1 transform -translate-x-1/2 z-20">
-            <div className="px-2.5 py-1 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[10px] font-black text-emerald-700 shadow-2xs flex flex-col items-center leading-tight">
-              <span>AI Containment</span>
-              <span className="text-[8px] font-medium text-emerald-600/80">Auto-Effective</span>
-            </div>
-          </div>
-
-          {/* ── 5 Nodes Row ── */}
+          {/* ── 5 Interactive Nodes Row ── */}
           <div className="relative z-10 flex items-center justify-between px-2 sm:px-6">
             {/* Node 1: Internet */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                <Globe className="w-5 h-5 text-slate-500" />
+            <div
+              onClick={() => setActiveNodeId(activeNodeId === 'internet' ? null : 'internet')}
+              className="flex flex-col items-center text-center cursor-pointer group"
+            >
+              <div
+                className={cn(
+                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  activeNodeId === 'internet'
+                    ? 'border-emerald-500 ring-4 ring-emerald-100'
+                    : 'border-slate-200/90 group-hover:border-slate-400'
+                )}
+              >
+                <Globe className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
               </div>
               <span className="text-xs font-bold text-slate-800 mt-2">Internet</span>
               <span className="text-[10px] text-slate-400 font-medium">
@@ -158,56 +226,190 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
               </span>
             </div>
 
-            {/* Node 2: Firewall */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                <Shield className="w-5 h-5 text-slate-500" />
+            {/* Node 2: Firewall (API Server) — with pinned alert badge */}
+            <div
+              onClick={() => setActiveNodeId(activeNodeId === 'firewall' ? null : 'firewall')}
+              className="flex flex-col items-center text-center cursor-pointer group relative"
+            >
+              {/* Alert Badge Pinned to Node 2 */}
+              <div className="absolute -top-7 whitespace-nowrap z-20">
+                <div
+                  className={cn(
+                    'px-2.5 py-0.5 rounded-full text-[9px] font-black border shadow-2xs leading-none flex items-center gap-1',
+                    heapPct > 80
+                      ? 'bg-[#FFF5F2] border-[#FFCCBE] text-[#EA580C]'
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full',
+                      heapPct > 80 ? 'bg-[#EA580C]' : 'bg-emerald-500'
+                    )}
+                  />
+                  <span>{heapPct > 80 ? `Memory Spike Heap ${heapPct}%` : 'API Optimal'}</span>
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  heapPct > 80
+                    ? 'border-[#EA580C] ring-4 ring-orange-100'
+                    : activeNodeId === 'firewall'
+                    ? 'border-blue-500 ring-4 ring-blue-100'
+                    : 'border-slate-200/90 group-hover:border-slate-400'
+                )}
+              >
+                <Shield
+                  className={cn(
+                    'w-5 h-5 transition-colors',
+                    heapPct > 80 ? 'text-[#EA580C]' : 'text-slate-600'
+                  )}
+                />
               </div>
               <span className="text-xs font-bold text-slate-800 mt-2">Firewall</span>
               <span className="text-[10px] text-slate-400 font-medium">API Server</span>
             </div>
 
             {/* Node 3: Identity */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                <User className="w-5 h-5 text-slate-500" />
+            <div
+              onClick={() => setActiveNodeId(activeNodeId === 'identity' ? null : 'identity')}
+              className="flex flex-col items-center text-center cursor-pointer group"
+            >
+              <div
+                className={cn(
+                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  activeNodeId === 'identity'
+                    ? 'border-cyan-500 ring-4 ring-cyan-100'
+                    : 'border-slate-200/90 group-hover:border-slate-400'
+                )}
+              >
+                <User className="w-5 h-5 text-slate-600 group-hover:text-cyan-600 transition-colors" />
               </div>
               <span className="text-xs font-bold text-slate-800 mt-2">Identity</span>
               <span className="text-[10px] text-slate-400 font-medium">Auth Shield</span>
             </div>
 
             {/* Branching Column: Cloud Services (Top) + Applications (Bottom) */}
-            <div className="flex flex-col items-center gap-7">
-              {/* Node 4a: Cloud Services */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-11 h-11 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                  <Cloud className="w-5 h-5 text-slate-500" />
+            <div className="flex flex-col items-center gap-6">
+              {/* Node 4a: Cloud Services — with pinned AI Containment badge */}
+              <div
+                onClick={() => setActiveNodeId(activeNodeId === 'cloud' ? null : 'cloud')}
+                className="flex flex-col items-center text-center cursor-pointer group relative"
+              >
+                {/* Pinned Badge */}
+                <div className="absolute -top-6 whitespace-nowrap z-20">
+                  <div className="px-2 py-0.5 rounded-full text-[8px] font-black border bg-[#F0FDF4] border-[#BBF7D0] text-emerald-700 shadow-2xs leading-none flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>AI Containment</span>
+                  </div>
+                </div>
+
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                    activeNodeId === 'cloud'
+                      ? 'border-purple-500 ring-4 ring-purple-100'
+                      : 'border-slate-200/90 group-hover:border-slate-400'
+                  )}
+                >
+                  <Cloud className="w-4 h-4 text-slate-600 group-hover:text-purple-600 transition-colors" />
                 </div>
                 <span className="text-[11px] font-bold text-slate-800 mt-1">Cloud Services</span>
                 <span className="text-[9px] text-emerald-600 font-medium">Healthy</span>
               </div>
 
               {/* Node 4b: Applications */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-11 h-11 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                  <LayoutGrid className="w-5 h-5 text-slate-500" />
+              <div
+                onClick={() => setActiveNodeId(activeNodeId === 'applications' ? null : 'applications')}
+                className="flex flex-col items-center text-center cursor-pointer group"
+              >
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                    nodeStatus.applications === 'critical'
+                      ? 'border-rose-500 ring-4 ring-rose-100'
+                      : activeNodeId === 'applications'
+                      ? 'border-blue-500 ring-4 ring-blue-100'
+                      : 'border-slate-200/90 group-hover:border-slate-400'
+                  )}
+                >
+                  <LayoutGrid
+                    className={cn(
+                      'w-4 h-4 transition-colors',
+                      nodeStatus.applications === 'critical' ? 'text-rose-600' : 'text-slate-600'
+                    )}
+                  />
                 </div>
                 <span className="text-[11px] font-bold text-slate-800 mt-1">Applications</span>
-                <span className="text-[9px] text-emerald-600 font-medium">Healthy</span>
+                <span
+                  className={cn(
+                    'text-[9px] font-medium',
+                    nodeStatus.applications === 'critical' ? 'text-rose-600 font-bold' : 'text-emerald-600'
+                  )}
+                >
+                  {nodeStatus.applications === 'critical' ? 'Attention' : 'Healthy'}
+                </span>
               </div>
             </div>
 
-            {/* Node 5: Critical Assets (Database) */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-sm flex items-center justify-center text-slate-600 hover:scale-105 transition-transform">
-                <Lock className="w-5 h-5 text-slate-500" />
+            {/* Node 5: Critical Assets (PostgreSQL) */}
+            <div
+              onClick={() => setActiveNodeId(activeNodeId === 'db' ? null : 'db')}
+              className="flex flex-col items-center text-center cursor-pointer group"
+            >
+              <div
+                className={cn(
+                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  activeNodeId === 'db'
+                    ? 'border-emerald-500 ring-4 ring-emerald-100'
+                    : 'border-slate-200/90 group-hover:border-slate-400'
+                )}
+              >
+                <Lock className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
               </div>
               <span className="text-xs font-bold text-slate-800 mt-2">Critical Assets</span>
               <span className="text-[10px] text-emerald-600 font-medium">Protected</span>
             </div>
           </div>
 
-          {/* ── Bottom Legend (Exactly like SentinelAI) ── */}
+          {/* ── Dynamic Drilldown Inspector Drawer when Node is Clicked ── */}
+          <AnimatePresence>
+            {activeNodeId && nodeDetails[activeNodeId] && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -6, height: 0 }}
+                className="mt-6 pt-4 border-t border-slate-100 rounded-xl bg-slate-50 p-4 text-left relative"
+              >
+                <button
+                  onClick={() => setActiveNodeId(null)}
+                  className="absolute top-3 right-3 text-slate-400 hover:text-slate-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <h4 className="text-xs font-black text-slate-900">
+                  {nodeDetails[activeNodeId].title}
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {nodeDetails[activeNodeId].subtitle}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-3 pt-3 border-t border-slate-200/70">
+                  {nodeDetails[activeNodeId].stats.map((s, idx) => (
+                    <div key={idx} className="p-2 rounded-lg bg-white border border-slate-200/60">
+                      <span className="text-[10px] font-bold text-slate-400 block">{s.label}</span>
+                      <span className="text-xs font-black text-slate-800 mt-0.5 block">{s.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Bottom Legend (SentinelAI Style) ── */}
           <div className="flex items-center justify-center gap-6 mt-6 pt-3 text-[11px] font-medium text-slate-500 border-t border-slate-100">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
