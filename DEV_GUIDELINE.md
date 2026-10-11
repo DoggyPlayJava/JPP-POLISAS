@@ -426,6 +426,11 @@ npm run lint:css     # Stylelint sahaja
 | `src/pages/PortalPage.tsx` | Entry portal utama. Mengintegrasikan Campus Super App dan modul rasmi Exco |
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
 | `src/components/portal/SuperAppHeader.tsx` | Header pintar Super App berorientasikan gaya hidup pelajar kampus |
+| `src/lib/timetableParser.ts` | Enjin parser PDF jadual waktu berasaskan koordinat grid client-side (`pdfjs-dist`) |
+| `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya dengan countdown masa nyata client-side (tanpa DB polling) dan deep link PolyMaps |
+| `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
+| `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
+| `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 
@@ -784,6 +789,22 @@ CREATE POLICY "profiles_update" ON profiles FOR UPDATE
 #### ✅ Untuk jadual yang kerap dibaca, tambah `WITH CHECK` yang ketat
 
 Jadual seperti `notifications`, `profiles`, `portal_settings` dibaca pada SETIAP page load. Policy INSERT/UPDATE mesti mempunyai `WITH CHECK` yang mengehadkan akses — jangan `WITH CHECK (true)`.
+
+#### ✅ Polisi Keselamatan Jadual Dedup & Background Worker (`student_timetable_notification_logs`)
+
+Untuk jadual penjejakan atau dedup log yang melibatkan cron dan notifikasi automatik:
+1. **Pelajar hanya boleh membaca rekod sendiri:**
+   ```sql
+   CREATE POLICY "Users can view own notification logs"
+     ON public.student_timetable_notification_logs FOR SELECT
+     USING (user_id = (SELECT auth.uid()));
+   ```
+2. **Tiada akses tulis (INSERT/UPDATE/DELETE) untuk pelajar biasa:**
+   - JANGAN sekali-kali meletakkan `FOR ALL USING (true) WITH CHECK (true)`.
+   - Penulisan log dedup dibuat melalui background worker yang menggunakan `SUPABASE_SERVICE_ROLE_KEY` (bypass RLS secara sah) atau fungsi berpagar `SECURITY DEFINER` dengan kekangan `UNIQUE (timetable_id, notified_date)`.
+   - Ini menghalang pelajar daripada memadam rekod dedup (menyebabkan spam notifikasi) atau memasukkan rekod palsu (menyebabkan kelas terlepas tanpa peringatan).
+3. **Zon Masa Wajib Asia/Kuala_Lumpur (UTC+8):**
+   - Sebarang pemprosesan tarikh, hari mingguan, dan semakan masa dalam pangkalan data dan pelayan mestilah mengguna pakai `NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'` dan `EXTRACT(ISODOW FROM ...)`.
 
 ---
 
@@ -3842,6 +3863,103 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Pencegahan Beban Peranti:** Logik `isLowEnd` memelihara kelancaran 60 FPS pada peranti berkapasiti terhad.
    - **Ujian Automatik Sepenuhnya:** Disahkan melalui suite ujian TDD baharu (`settingsEarthyMinimal.test.ts`, `polymapsEarthyMinimal.test.ts`, `jppCockpitEarthyMinimal.test.ts`) dengan 100% lulus merentasi 29 suite ujian (480 ujian).
 
+---
 
+## 32. Sistem Jadual Waktu Kuliah Digital, Takwim Peribadi Siswa & Integrasi PolyMaps
 
+> **Pautan Modul:** `/akademik/takwim` (Tab: "Jadual Kuliah Saya"), Bento Widget Portal Pelajar (`NextClassBentoCard`), dan Integrasi Navigasi PolyMaps (`/polymaps?room=<UUID>`).
 
+Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi berformat PDF (daripada portal akademik politeknik), mengekstrak slot masa secara automatik di sisi klien (*client-side parsing*), menyemak dan mengesahkan data sebelum disimpan, melihat takwim mingguan & harian terselaras, menjejaki kelas seterusnya secara langsung pada dashboard portal, dan menerima notifikasi peringatan pintar 30 minit sebelum kuliah bermula dengan dedup atomik kalis *race condition*.
+
+### 32.1 Aliran Kerja & Senibina Pengguna
+
+```
+[Fail PDF Jadual Kuliah]
+         │
+         ▼
+[TimetableUploadModal] ─── (pdfjs-dist di pelayar) ───► [Pengimbas Nama Kelas]
+         │                                                        │
+         ▼                                                        ▼
+[TimetablePreviewModal] ◄─── (Pengekstrakan Matriks X/Y) ◄────────┘
+         │
+         ├── Peringatan penafian jadual kuliah biasa mandatori
+         ├── Semakan manusia (pengeditan kursus, pensyarah, bilik, masa)
+         └── Pilihan tarikh semester (diselaraskan dengan takwim institusi)
+         │
+         ▼
+[Pangkalan Data Supabase]
+ (student_timetables + student_timetable_metadata + student_timetable_settings)
+         │
+         ├────────────────────────────────┬────────────────────────────────┐
+         ▼                                ▼                                ▼
+[e-Akademik /takwim]           [Bento Card Portal Pelajar]       [Worker Cron server.js]
+• Tab Jadual Kuliah Saya        • Kiraan detik 30s setempat       • Semakan setiap 5 minit
+• Grid Mingguan (Desktop)       • 4 Keadaan Paparan               • Zon masa Asia/Kuala_Lumpur
+• Agenda Harian (Mobile)        • Modality Branching:             • Log dedup atomik (UNIQUE)
+• Pautan PolyMaps Bilik          - Online: Teams link             • Web Push & In-App Alerts
+• Tetapan Peringatan             - Fizikal: /polymaps?room=UUID
+```
+
+### 32.2 Jadual Pangkalan Data & Model Keselamatan (RLS)
+
+1. **`student_timetables`:**
+   - Menyimpan setiap slot kuliah mingguan individu pelajar.
+   - **Skema Normalisasi:** Kolum `location_id` merujuk terus kepada `public.imaps_locations(id)` secara *Foreign Key* (kolum `building_id` digugurkan bagi mengelakkan pertindihan data; data bangunan diperoleh melalui *JOIN* `location_id → imaps_locations.building_id → imaps_buildings`).
+   - Kolum `is_online` menandakan kuliah dalam talian (cth. Microsoft Teams) dan mengawal tingkah laku navigasi.
+   - **RLS:** Pelajar memiliki akses penuh pada baris milik sendiri (`user_id = (SELECT auth.uid())`). Pentadbir `SUPER_ADMIN_JPP` mempunyai akses penuh.
+
+2. **`student_timetable_metadata`:**
+   - Menyimpan konteks sesi akademik, kod kelas (cth. DEE2A), jabatan, dan tarikh mula/tamat semester (`semester_start_date` & `semester_end_date`).
+   - Tarikh semester diambil terus daripada templat rasmi Takwim Institusi (`takwim-akademik-template.ts`) atau anggaran 18 minggu daripada tarikh kuat kuasa PDF.
+   - Mengelakkan peringatan kelas ditembak semasa musim cuti semester.
+
+3. **`student_timetable_settings`:**
+   - Tetapan keutamaan notifikasi per-pelajar: `notifications_enabled` (lalai `true`) dan `reminder_minutes` (pilihan fleksibel: 15, 30, atau 45 minit; lalai 30 minit).
+
+4. **`imaps_room_mappings`:**
+   - Kamus dinamik yang memetakan teks kod bilik jadual (cth. `EA303`, `EMSTEAM`) kepada UUID `location_id` PolyMaps dan penanda `is_online`.
+   - Menghapuskan hardcoding kod bilik dalam fail kod sumber.
+
+5. **`student_timetable_notification_logs`:**
+   - Menguatkuasakan kekangan integriti unik `CONSTRAINT uq_timetable_notified_per_day UNIQUE (timetable_id, notified_date)`.
+   - **Polisi RLS Khusus:** Pelajar hanya diberikan akses `SELECT` untuk rekod sendiri. Penulisan (`INSERT`) dikunci sepenuhnya kepada `service_role` (cron worker) untuk mengelakkan manipulasi log dedup.
+
+### 32.3 Enjin Penghurai PDF Tempatan (`src/lib/timetableParser.ts`)
+
+- **Teknologi:** Digerakkan oleh pustaka sedia ada `pdfjs-dist` tanpa sebarang panggilan API luar atau muat naik fail ke pelayan (100% privasi pelajar).
+- **Pengesanan Berstruktur:**
+  - Menghimpunkan teks ke dalam jalur mendatar baris (*row clustering*) mengikut koordinat Y.
+  - Memetakan lajur waktu Isnin-Jumaat daripada koordinat X teks jam.
+  - Indeks hari mingguan kanonikal berformat ISO (`1 = Isnin ... 5 = Jumaat`).
+- **Pencantuman Slot Pintar (`mergeConsecutiveSlots`):**
+  - Menggabungkan sel waktu berturutan bagi kursus, bilik, pensyarah, dan jenis kelas yang sama (cth. 08:00-09:00 dan 09:00-10:00 digabungkan menjadi blok 08:00-10:00).
+- **Semakan Manusia Mandatori (*Human-in-the-Loop*):**
+  - Data yang diekstrak daripada PDF tidak dimasukkan terus ke DB. Pelajar wajib melalui `TimetablePreviewModal.tsx` untuk mengesahkan kod kursus, nama mata pelajaran, bilik, pensyarah, dan julat waktu.
+  - Banner penafian dipaparkan secara mandatori bagi memaklumkan bahawa jadual adalah untuk minggu kuliah biasa dan takwim peperiksaan/amali khas tertakluk kepada arahan rasmi.
+
+### 32.4 Kad Bento Kelas Seterusnya Portal Pelajar (`src/components/portal/NextClassBentoCard.tsx`)
+
+- **Sifar Beban DB (Zero DB Polling):** Membaca data jadual melalui satu tarikan selari `Promise.all` semasa muat turun awal portal (`PortalPage.tsx`). Kiraan detik seterusnya dikira secara tempatan di dalam memori pelayar menggunakan `setInterval(..., 30000)`.
+- **Zon Masa Tegas:** Pengiraan masa dan penentuan hari semasa menggunakan piawaian `Asia/Kuala_Lumpur` (UTC+8).
+- **4 Keadaan Paparan Adaptif:**
+  1. *Kelas Akan Datang / Sedang Berlangsung Hari Ini:* Lencana masa nyata ("Sedang berlangsung · Berbaki X min" atau "Dalam X minit"), butiran kursus, jenis kelas, pensyarah, dan butang tindakan.
+  2. *Semua Kelas Selesai Hari Ini:* Mesej tahniah dan kad pratonton kelas pertama esok / hari kelas berikutnya.
+  3. *Hujung Minggu / Tiada Kelas Hari Ini:* Mesej rehat dengan paparan pra-semak kelas Isnin minggu hadapan.
+  4. *Belum Muat Naik Jadual:* Kad jemputan mesra berserta butang pantas "Muat Naik Jadual" terus ke `/akademik/takwim`.
+- **Cawangan Modaliti Kuliah & Integrasi PolyMaps:**
+  - Sekiranya `is_online = true`: Memaparkan lencana `DALAM TALIAN (TEAMS)` dan butang "Sertai Kelas Dalam Talian". Butang PolyMaps disembunyikan sepenuhnya.
+  - Sekiranya `is_online = false`: Memaparkan lencana bilik fizikal dan butang "Panduan PolyMaps" yang memaut terus ke `/polymaps?room=<UUID>` (dengan sandaran `?q=<kod_bilik>` jika UUID belum dipetakan).
+
+### 32.5 Enjin Peringatan Automatik & Deduplikasi Bebas Race Condition (`server.js`)
+
+- **Penjadualan:** Dijalankan secara berkala setiap 5 minit (`*/5 * * * *`).
+- **Integriti Zon Masa:** Menilai hari ISO dan masa semasa mengikut `NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'`.
+- **Jendela Masa Dinamik:** Menapis kelas yang bermula dalam lingkungan masa pilihan pelajar (`COALESCE(s.reminder_minutes, 30)` ±3 minit buffer) untuk memastikan liputan 100% pada selang 5 minit cron.
+- **Kunci Sesi Semester:** Memastikan tarikh semasa berada dalam julat `semester_start_date` dan `semester_end_date` metadata jadual aktif pelajar.
+- **Deduplikasi Atomik Multi-Worker:**
+  - Menggunakan fungsi RPC PostgreSQL `log_timetable_notification` dengan `ON CONFLICT (timetable_id, notified_date) DO NOTHING RETURNING id`.
+  - Sekiranya pelayan dijalankan dalam kluster berbilang pekerja (cth. PM2 4-workers), hanya SATU pekerja yang berjaya mendaftar rekod (mengembalikan `true`), manakala pekerja lain ditolak secara atomik (mengembalikan `false`).
+  - Menghapuskan masalah duplikasi notifikasi sepenuhnya.
+- **Penghantaran Saluran Dwi-Pemberitahuan:**
+  - Menulis rekod notifikasi ke dalam jadual `notifications` (`module: 'AKADEMIK'`, `type: 'timetable_reminder'`).
+  - Menghantar Web Push Notification ke peranti berdaftar melalui `webpush.sendNotification` berserta pembersihan langganan mati (HTTP 410/404).
