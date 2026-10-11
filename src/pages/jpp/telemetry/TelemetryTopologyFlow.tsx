@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Globe,
-  Shield,
-  User,
-  Cloud,
-  LayoutGrid,
-  Lock,
-  Database,
-  Layers,
-  ChevronDown,
-  Info,
-  X,
   Server,
+  Shield,
+  ShoppingBag,
+  Bike,
+  Heart,
+  Database,
+  Lock,
+  Layers,
+  BrainCircuit,
+  AlertTriangle,
+  CheckCircle2,
+  X,
+  ExternalLink,
   Zap,
+  Activity,
 } from 'lucide-react';
 import { TelemetryData } from './telemetryTypes';
 import { cn } from '@/lib/utils';
@@ -21,9 +24,13 @@ import { formatUptime } from './telemetryUtils';
 
 interface TelemetryTopologyFlowProps {
   data: TelemetryData;
+  onFilterTimelineByRoute?: (route: string) => void;
 }
 
-export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ data }) => {
+export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
+  data,
+  onFilterTimelineByRoute,
+}) => {
   const [viewMode, setViewMode] = useState<'flow' | 'traffic' | 'heatmap'>('flow');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
@@ -38,57 +45,143 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
     ? Math.round((server.memory.heap_used_mb / server.memory.heap_total_mb) * 100)
     : 0;
 
-  // Node health evaluations
+  const dbConnPct = db?.max_connections
+    ? Math.round(((db.active_connections || 0) / db.max_connections) * 100)
+    : 0;
+
+  const aiPct = Math.round(ai?.usage_pct || 0);
+
+  // ── 1. REAL Data-Driven Health States per Node ──
   const nodeStatus = {
-    internet: 'healthy',
-    firewall: heapPct > 80 ? 'warning' : 'healthy',
-    identity: 'healthy',
-    cloud: (pm?.pending_stale || 0) > 0 ? 'warning' : 'healthy',
-    applications:
-      (keb?.sla_breached || 0) > 0 || (pr?.stuck_emergency || 0) > 0 ? 'critical' : 'healthy',
-    db: (db?.wal_retained_mb || 0) > 1024 ? 'critical' : (db?.wal_retained_mb || 0) > 512 ? 'warning' : 'healthy',
+    ingress: 'healthy',
+    api: heapPct > 80 ? 'warning' : 'healthy',
+    auth: 'healthy',
+    commercial:
+      (pm?.cancel_rate_pct || 0) > 60 || aiPct > 90
+        ? 'critical'
+        : (pm?.pending_stale || 0) > 0 || aiPct > 70
+        ? 'warning'
+        : 'healthy',
+    operations:
+      (keb?.sla_breached || 0) > 0 || (pr?.stuck_emergency || 0) > 0
+        ? 'critical'
+        : (keb?.unassigned || 0) > 3 || (pr?.cancel_rate_pct || 0) > 35
+        ? 'warning'
+        : 'healthy',
+    db:
+      (db?.wal_retained_mb || 0) > 1024 || dbConnPct > 85
+        ? 'critical'
+        : (db?.wal_retained_mb || 0) > 512 || (db?.cache_hit_rate_pct || 99) < 85
+        ? 'warning'
+        : 'healthy',
   };
 
-  const nodeDetails: Record<string, { title: string; subtitle: string; stats: { label: string; val: string }[] }> = {
-    internet: {
-      title: '🌐 Internet & Ingress Trafik',
+  // Node health styling
+  const getNodeVisual = (st: string, isSelected: boolean) => {
+    if (st === 'critical') {
+      return {
+        border: 'border-rose-500 bg-rose-50/80 text-rose-600',
+        ring: 'ring-4 ring-rose-200 animate-pulse',
+        badgeColor: 'bg-rose-500',
+        dot: 'bg-rose-500 animate-ping',
+      };
+    }
+    if (st === 'warning') {
+      return {
+        border: 'border-[#F97316] bg-orange-50/80 text-[#EA580C]',
+        ring: 'ring-4 ring-orange-200',
+        badgeColor: 'bg-[#F97316]',
+        dot: 'bg-[#F97316]',
+      };
+    }
+    return {
+      border: isSelected
+        ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+        : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-400',
+      ring: isSelected ? 'ring-4 ring-emerald-100' : '',
+      badgeColor: 'bg-emerald-500',
+      dot: 'bg-emerald-500',
+    };
+  };
+
+  // ── 2. REAL Conditional Alert Badges (HANYA MUNCUL JIKA ADA AMARAN SEBENAR!) ──
+  // Node 2 (API Gateway)
+  const apiBadge =
+    heapPct > 80 ? { text: `Heap Spike ${heapPct}%`, color: 'bg-rose-50 border-rose-300 text-rose-700' } : null;
+
+  // Node 4a (Commercial: PolyMart & AI)
+  const commercialBadge =
+    (pm?.pending_stale || 0) > 0
+      ? { text: `${pm.pending_stale} Pesanan Basi >48j`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      : aiPct > 85
+      ? { text: `AI Kuota ${aiPct}%`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      : null;
+
+  // Node 4b (Operations: PolyRider & Kebajikan)
+  const operationsBadge =
+    (keb?.sla_breached || 0) > 0
+      ? { text: `${keb.sla_breached} SLA Tiket Pecah!`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      : (pr?.stuck_emergency || 0) > 0
+      ? { text: `${pr.stuck_emergency} SOS Tersekat!`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      : null;
+
+  // Node 5 (PostgreSQL Cluster & WAL)
+  const dbBadge =
+    (db?.wal_retained_mb || 0) > 512
+      ? { text: `WAL ${db.wal_retained_mb}MB / 2GB`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      : dbConnPct > 80
+      ? { text: `Pool ${db.active_connections}/${db.max_connections}`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      : null;
+
+  // ── 3. Real Subsystem Inspector Data ──
+  const nodeDetails: Record<
+    string,
+    { title: string; subtitle: string; route?: string; stats: { label: string; val: string }[] }
+  > = {
+    ingress: {
+      title: '🌐 Siswa & Ingress Trafik',
       subtitle: 'Sesi web portal dan aplikasi PWA siswa yang aktif mengakses sistem.',
+      route: '/portal',
       stats: [
-        { label: 'Jumlah Siswa Berdaftar', val: `${(modules.profiles || 0).toLocaleString()} pengguna` },
+        { label: 'Jumlah Siswa Berdaftar', val: `${(modules.profiles || 0).toLocaleString()} rekod` },
         { label: 'Push Subscriptions', val: `${modules.push_subscriptions || 0} aktif` },
-        { label: 'Notifikasi Terhantar', val: `${(modules.notifications || 0).toLocaleString()} rekod` },
+        { label: 'Notifikasi Terhantar', val: `${(modules.notifications || 0).toLocaleString()} notif` },
       ],
     },
-    firewall: {
-      title: '⚡ Firewall & Node.js API Gateway',
-      subtitle: 'Pelayan Express API yang memproses semua panggilan backend dan penghalaan.',
+    api: {
+      title: '⚡ Node.js API Gateway (Express)',
+      subtitle: 'Pelayan API backend yang memproses laluan, middleware keselamatan, dan soket.',
+      route: '/jpp/telemetry',
       stats: [
         { label: 'Uptime Proses API', val: formatUptime(server.uptime_seconds) },
-        { label: 'Penggunaan Heap', val: `${server.memory.heap_used_mb} / ${server.memory.heap_total_mb} MB (${heapPct}%)` },
-        { label: 'PID & Platform', val: `PID ${server.pid} • ${server.platform}` },
+        { label: 'Memori Heap V8', val: `${server.memory.heap_used_mb} / ${server.memory.heap_total_mb} MB (${heapPct}%)` },
+        { label: 'ID Proses (PID)', val: `PID ${server.pid} • v${server.node_version}` },
       ],
     },
-    identity: {
-      title: '🛡️ Identity & Supabase Auth Shield',
-      subtitle: 'Pengesahan token JWT dan kawalan capaian berasaskan peranan (RBAC).',
+    auth: {
+      title: '🛡️ Supabase Auth & RBAC Guard',
+      subtitle: 'Pengesahan token JWT sesi login pelajar dan kebenaran SUPER_ADMIN_JPP.',
+      route: '/login',
       stats: [
-        { label: 'Sesi Keselamatan', val: 'Disahkan (JWT Auth)' },
-        { label: 'Akses Peranan', val: 'SUPER_ADMIN_JPP Guard' },
-        { label: 'Integriti Token', val: 'Aktif & Sah' },
+        { label: 'Sesi Keselamatan', val: 'JWT Bearer Active' },
+        { label: 'Akses Peranan', val: 'SuperAdmin RBAC Enforced' },
+        { label: 'Akaun Menunggu', val: `${diagnostics?.accounts?.pending || 0} akaun` },
       ],
     },
-    cloud: {
-      title: '☁️ Cloud Services (PolyMart & AI Nexus)',
-      subtitle: 'Perkhidmatan pasaran mahasiswa dan enjin kepintaran buatan.',
+    commercial: {
+      title: '🛒 PolyMart & AI Nexus',
+      subtitle: 'Ekosistem e-dagang siswa dan enjin kecerdasan buatan kampus.',
+      route: '/polymart',
       stats: [
-        { label: 'Jumlah Pesanan PolyMart', val: `${modules.polymart_orders || 0} pesanan` },
+        { label: 'Pesanan PolyMart', val: `${modules.polymart_orders || 0} pesanan` },
         { label: 'Pesanan Tertunggak >48j', val: `${pm?.pending_stale || 0} pesanan` },
-        { label: 'Token AI Digunakan', val: `${(modules.ai_tokens_used || 0).toLocaleString()} token` },
+        { label: 'Token AI Digunakan', val: `${(modules.ai_tokens_used || 0).toLocaleString()} / ${(modules.ai_token_limit || 1000000).toLocaleString()}` },
       ],
     },
-    applications: {
-      title: '📦 Applications (PolyRider & e-Kebajikan)',
-      subtitle: 'Perkhidmatan logistik kampus dan sistem aduan bantuan mahasiswa.',
+    operations: {
+      title: '📦 PolyRider & e-Kebajikan',
+      subtitle: 'Logistik penghantaran makanan kampus dan hab aduan bantuan siswa.',
+      route: '/kebajikan',
       stats: [
         { label: 'Trip PolyRider', val: `${modules.polyrider_jobs || 0} trip` },
         { label: 'SOS Emergency Tersekat', val: `${pr?.stuck_emergency || 0} kes` },
@@ -96,8 +189,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
       ],
     },
     db: {
-      title: '🗄️ Critical Assets (PostgreSQL Cluster)',
-      subtitle: 'Pangkalan data teras Supabase yang menyimpan seluruh rekod universiti.',
+      title: '🗄️ PostgreSQL Cluster & WAL Watchdog',
+      subtitle: 'Pangkalan data utama Supabase dengan pemantauan had WAL 2GB.',
+      route: '/jpp/telemetry',
       stats: [
         { label: 'Sambungan Aktif', val: `${db?.active_connections || 0} / ${db?.max_connections || 100} conns` },
         { label: 'WAL Retained', val: `${db?.wal_retained_mb || 0} MB (Had: 2,048 MB)` },
@@ -106,16 +200,36 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
     },
   };
 
+  // Color determination for connection paths
+  const getPathColor = (fromStatus: string, toStatus: string) => {
+    if (toStatus === 'critical') return '#EF4444'; // Red broken link
+    if (toStatus === 'warning') return '#F97316'; // Orange warning link
+    return '#10B981'; // Green healthy flow
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 flex flex-col justify-between">
-      {/* ── Header & View Toggles (SentinelAI Image 3 Style) ── */}
+      {/* ── Custom CSS for Animated SVG Lines ── */}
+      <style>{`
+        @keyframes flowDash {
+          to {
+            stroke-dashoffset: -20;
+          }
+        }
+        .flow-line-animated {
+          stroke-dasharray: 6 6;
+          animation: flowDash 1s linear infinite;
+        }
+      `}</style>
+
+      {/* ── Header & View Toggles ── */}
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-black text-slate-900 tracking-tight">
-            Threat Overview
+            Threat & Architecture Overview
           </h3>
           <p className="text-[11px] font-bold text-slate-400">
-            Live AI Network • Klik nod untuk analisis terperinci
+            Arkitektur Langsung JPP-POLISAS • Klik mana-mana nod untuk analisis
           </p>
         </div>
 
@@ -146,231 +260,254 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
         </div>
       </div>
 
-      {/* ── View 1: Flow View (Fluid Bezier Node Network) ── */}
+      {/* ── View 1: REAL Animated Data-Driven Flow View ── */}
       {viewMode === 'flow' && (
         <div className="relative py-8 my-2">
-          {/* SVG Connecting Bezier Paths */}
+          {/* Animated SVG Bezier Flow Paths */}
           <div className="absolute inset-0 pointer-events-none">
             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 760 210">
-              {/* Path 1: Node 1 -> Node 2 */}
+              {/* Path 1: Ingress -> API Gateway */}
               <path
                 d="M 85 105 C 130 105, 140 105, 185 105"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.ingress, nodeStatus.api)}
                 strokeWidth="2.5"
-                strokeDasharray="4 4"
+                className="flow-line-animated"
               />
 
-              {/* Path 2: Node 2 -> Node 3 */}
+              {/* Path 2: API Gateway -> Auth Shield */}
               <path
                 d="M 235 105 C 280 105, 290 105, 335 105"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.api, nodeStatus.auth)}
                 strokeWidth="2.5"
+                className="flow-line-animated"
               />
 
-              {/* Path 3: Node 3 -> Split into Node 4a (Cloud Services) */}
+              {/* Path 3: Auth Shield -> Branch to PolyMart & AI (4a) */}
               <path
                 d="M 385 105 C 430 105, 450 55, 495 55"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.auth, nodeStatus.commercial)}
                 strokeWidth="2.5"
+                className="flow-line-animated"
               />
 
-              {/* Path 4: Node 3 -> Split into Node 4b (Applications) */}
+              {/* Path 4: Auth Shield -> Branch to PolyRider & Kebajikan (4b) */}
               <path
                 d="M 385 105 C 430 105, 450 155, 495 155"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.auth, nodeStatus.operations)}
                 strokeWidth="2.5"
+                className="flow-line-animated"
               />
 
-              {/* Path 5: Node 4a -> Converge into Node 5 (Critical Assets) */}
+              {/* Path 5: PolyMart & AI -> Converge into PostgreSQL Cluster (5) */}
               <path
                 d="M 545 55 C 590 55, 610 105, 655 105"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.commercial, nodeStatus.db)}
                 strokeWidth="2.5"
+                className="flow-line-animated"
               />
 
-              {/* Path 6: Node 4b -> Converge into Node 5 */}
+              {/* Path 6: PolyRider & Kebajikan -> Converge into PostgreSQL Cluster (5) */}
               <path
                 d="M 545 155 C 590 155, 610 105, 655 105"
                 fill="none"
-                stroke="#CBD5E1"
+                stroke={getPathColor(nodeStatus.operations, nodeStatus.db)}
                 strokeWidth="2.5"
+                className="flow-line-animated"
               />
             </svg>
           </div>
 
-          {/* ── 5 Interactive Nodes Row ── */}
+          {/* ── 5 Interactive Real JPP Nodes ── */}
           <div className="relative z-10 flex items-center justify-between px-2 sm:px-6">
-            {/* Node 1: Internet */}
+            {/* ── Node 1: Siswa Ingress ── */}
             <div
-              onClick={() => setActiveNodeId(activeNodeId === 'internet' ? null : 'internet')}
+              onClick={() => setActiveNodeId(activeNodeId === 'ingress' ? null : 'ingress')}
               className="flex flex-col items-center text-center cursor-pointer group"
             >
               <div
                 className={cn(
-                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                  activeNodeId === 'internet'
-                    ? 'border-emerald-500 ring-4 ring-emerald-100'
-                    : 'border-slate-200/90 group-hover:border-slate-400'
+                  'w-13 h-13 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  getNodeVisual(nodeStatus.ingress, activeNodeId === 'ingress').border,
+                  getNodeVisual(nodeStatus.ingress, activeNodeId === 'ingress').ring
                 )}
               >
-                <Globe className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                <Globe className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Internet</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">Siswa Ingress</span>
               <span className="text-[10px] text-slate-400 font-medium">
-                {(modules.profiles || 0).toLocaleString()} events
+                {(modules.profiles || 0).toLocaleString()} sesi
               </span>
             </div>
 
-            {/* Node 2: Firewall (API Server) — with pinned alert badge */}
+            {/* ── Node 2: Node.js API Gateway (With Conditional Badge) ── */}
             <div
-              onClick={() => setActiveNodeId(activeNodeId === 'firewall' ? null : 'firewall')}
+              onClick={() => setActiveNodeId(activeNodeId === 'api' ? null : 'api')}
               className="flex flex-col items-center text-center cursor-pointer group relative"
             >
-              {/* Alert Badge Pinned to Node 2 */}
-              <div className="absolute -top-7 whitespace-nowrap z-20">
-                <div
-                  className={cn(
-                    'px-2.5 py-0.5 rounded-full text-[9px] font-black border shadow-2xs leading-none flex items-center gap-1',
-                    heapPct > 80
-                      ? 'bg-[#FFF5F2] border-[#FFCCBE] text-[#EA580C]'
-                      : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                  )}
-                >
-                  <span
+              {/* Conditional Alert Badge */}
+              {apiBadge && (
+                <div className="absolute -top-7 whitespace-nowrap z-20">
+                  <div
                     className={cn(
-                      'w-1.5 h-1.5 rounded-full',
-                      heapPct > 80 ? 'bg-[#EA580C]' : 'bg-emerald-500'
+                      'px-2.5 py-0.5 rounded-full text-[9px] font-black border shadow-2xs leading-none flex items-center gap-1',
+                      apiBadge.color
                     )}
-                  />
-                  <span>{heapPct > 80 ? `Memory Spike Heap ${heapPct}%` : 'API Optimal'}</span>
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                    <span>{apiBadge.text}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div
                 className={cn(
-                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                  heapPct > 80
-                    ? 'border-[#EA580C] ring-4 ring-orange-100'
-                    : activeNodeId === 'firewall'
-                    ? 'border-blue-500 ring-4 ring-blue-100'
-                    : 'border-slate-200/90 group-hover:border-slate-400'
+                  'w-13 h-13 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  getNodeVisual(nodeStatus.api, activeNodeId === 'api').border,
+                  getNodeVisual(nodeStatus.api, activeNodeId === 'api').ring
                 )}
               >
-                <Shield
-                  className={cn(
-                    'w-5 h-5 transition-colors',
-                    heapPct > 80 ? 'text-[#EA580C]' : 'text-slate-600'
-                  )}
-                />
+                <Server className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Firewall</span>
-              <span className="text-[10px] text-slate-400 font-medium">API Server</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">Node.js API</span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                Heap {heapPct}%
+              </span>
             </div>
 
-            {/* Node 3: Identity */}
+            {/* ── Node 3: Auth & RBAC Shield ── */}
             <div
-              onClick={() => setActiveNodeId(activeNodeId === 'identity' ? null : 'identity')}
+              onClick={() => setActiveNodeId(activeNodeId === 'auth' ? null : 'auth')}
               className="flex flex-col items-center text-center cursor-pointer group"
             >
               <div
                 className={cn(
-                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                  activeNodeId === 'identity'
-                    ? 'border-cyan-500 ring-4 ring-cyan-100'
-                    : 'border-slate-200/90 group-hover:border-slate-400'
+                  'w-13 h-13 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  getNodeVisual(nodeStatus.auth, activeNodeId === 'auth').border,
+                  getNodeVisual(nodeStatus.auth, activeNodeId === 'auth').ring
                 )}
               >
-                <User className="w-5 h-5 text-slate-600 group-hover:text-cyan-600 transition-colors" />
+                <Shield className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Identity</span>
-              <span className="text-[10px] text-slate-400 font-medium">Auth Shield</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">Supabase Auth</span>
+              <span className="text-[10px] text-slate-400 font-medium">RBAC Guard</span>
             </div>
 
-            {/* Branching Column: Cloud Services (Top) + Applications (Bottom) */}
+            {/* ── Branching Column: PolyMart & AI (4a) + PolyRider & Kebajikan (4b) ── */}
             <div className="flex flex-col items-center gap-6">
-              {/* Node 4a: Cloud Services — with pinned AI Containment badge */}
+              {/* ── Node 4a: PolyMart & AI (With Conditional Badge) ── */}
               <div
-                onClick={() => setActiveNodeId(activeNodeId === 'cloud' ? null : 'cloud')}
+                onClick={() => setActiveNodeId(activeNodeId === 'commercial' ? null : 'commercial')}
                 className="flex flex-col items-center text-center cursor-pointer group relative"
               >
-                {/* Pinned Badge */}
-                <div className="absolute -top-6 whitespace-nowrap z-20">
-                  <div className="px-2 py-0.5 rounded-full text-[8px] font-black border bg-[#F0FDF4] border-[#BBF7D0] text-emerald-700 shadow-2xs leading-none flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>AI Containment</span>
+                {/* Conditional Badge */}
+                {commercialBadge && (
+                  <div className="absolute -top-6 whitespace-nowrap z-20">
+                    <div
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-[8px] font-black border shadow-2xs leading-none flex items-center gap-1',
+                        commercialBadge.color
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>{commercialBadge.text}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div
                   className={cn(
-                    'w-12 h-12 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                    activeNodeId === 'cloud'
-                      ? 'border-purple-500 ring-4 ring-purple-100'
-                      : 'border-slate-200/90 group-hover:border-slate-400'
+                    'w-12 h-12 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                    getNodeVisual(nodeStatus.commercial, activeNodeId === 'commercial').border,
+                    getNodeVisual(nodeStatus.commercial, activeNodeId === 'commercial').ring
                   )}
                 >
-                  <Cloud className="w-4 h-4 text-slate-600 group-hover:text-purple-600 transition-colors" />
+                  <ShoppingBag className="w-4 h-4 transition-colors" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-800 mt-1">Cloud Services</span>
-                <span className="text-[9px] text-emerald-600 font-medium">Healthy</span>
+                <span className="text-[11px] font-bold text-slate-800 mt-1">PolyMart & AI</span>
+                <span className="text-[9px] text-slate-400 font-medium">
+                  {modules.polymart_orders || 0} pesanan
+                </span>
               </div>
 
-              {/* Node 4b: Applications */}
+              {/* ── Node 4b: PolyRider & Kebajikan (With Conditional Badge) ── */}
               <div
-                onClick={() => setActiveNodeId(activeNodeId === 'applications' ? null : 'applications')}
-                className="flex flex-col items-center text-center cursor-pointer group"
+                onClick={() => setActiveNodeId(activeNodeId === 'operations' ? null : 'operations')}
+                className="flex flex-col items-center text-center cursor-pointer group relative"
               >
+                {/* Conditional Badge */}
+                {operationsBadge && (
+                  <div className="absolute -top-6 whitespace-nowrap z-20">
+                    <div
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-[8px] font-black border shadow-2xs leading-none flex items-center gap-1',
+                        operationsBadge.color
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                      <span>{operationsBadge.text}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div
                   className={cn(
-                    'w-12 h-12 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                    nodeStatus.applications === 'critical'
-                      ? 'border-rose-500 ring-4 ring-rose-100'
-                      : activeNodeId === 'applications'
-                      ? 'border-blue-500 ring-4 ring-blue-100'
-                      : 'border-slate-200/90 group-hover:border-slate-400'
+                    'w-12 h-12 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                    getNodeVisual(nodeStatus.operations, activeNodeId === 'operations').border,
+                    getNodeVisual(nodeStatus.operations, activeNodeId === 'operations').ring
                   )}
                 >
-                  <LayoutGrid
-                    className={cn(
-                      'w-4 h-4 transition-colors',
-                      nodeStatus.applications === 'critical' ? 'text-rose-600' : 'text-slate-600'
-                    )}
-                  />
+                  <Bike className="w-4 h-4 transition-colors" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-800 mt-1">Applications</span>
+                <span className="text-[11px] font-bold text-slate-800 mt-1">Rider & Kebajikan</span>
                 <span
                   className={cn(
                     'text-[9px] font-medium',
-                    nodeStatus.applications === 'critical' ? 'text-rose-600 font-bold' : 'text-emerald-600'
+                    nodeStatus.operations === 'critical' ? 'text-rose-600 font-black' : 'text-slate-400'
                   )}
                 >
-                  {nodeStatus.applications === 'critical' ? 'Attention' : 'Healthy'}
+                  {nodeStatus.operations === 'critical' ? 'Perhatian Diperlukan' : `${modules.polyrider_jobs || 0} trip`}
                 </span>
               </div>
             </div>
 
-            {/* Node 5: Critical Assets (PostgreSQL) */}
+            {/* ── Node 5: PostgreSQL Cluster & WAL (With Conditional Badge) ── */}
             <div
               onClick={() => setActiveNodeId(activeNodeId === 'db' ? null : 'db')}
-              className="flex flex-col items-center text-center cursor-pointer group"
+              className="flex flex-col items-center text-center cursor-pointer group relative"
             >
+              {/* Conditional Badge */}
+              {dbBadge && (
+                <div className="absolute -top-7 whitespace-nowrap z-20">
+                  <div
+                    className={cn(
+                      'px-2.5 py-0.5 rounded-full text-[9px] font-black border shadow-2xs leading-none flex items-center gap-1',
+                      dbBadge.color
+                    )}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                    <span>{dbBadge.text}</span>
+                  </div>
+                </div>
+              )}
+
               <div
                 className={cn(
-                  'w-13 h-13 rounded-full bg-white border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
-                  activeNodeId === 'db'
-                    ? 'border-emerald-500 ring-4 ring-emerald-100'
-                    : 'border-slate-200/90 group-hover:border-slate-400'
+                  'w-13 h-13 rounded-full border shadow-sm flex items-center justify-center transition-all group-hover:scale-110',
+                  getNodeVisual(nodeStatus.db, activeNodeId === 'db').border,
+                  getNodeVisual(nodeStatus.db, activeNodeId === 'db').ring
                 )}
               >
-                <Lock className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                <Database className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Critical Assets</span>
-              <span className="text-[10px] text-emerald-600 font-medium">Protected</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">PostgreSQL DB</span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {db?.active_connections || 0}/{db?.max_connections || 100} conns
+              </span>
             </div>
           </div>
 
@@ -381,7 +518,7 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
                 initial={{ opacity: 0, y: -6, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: -6, height: 0 }}
-                className="mt-6 pt-4 border-t border-slate-100 rounded-xl bg-slate-50 p-4 text-left relative"
+                className="mt-6 pt-4 border-t border-slate-100 rounded-xl bg-slate-50/90 p-4 text-left relative"
               >
                 <button
                   onClick={() => setActiveNodeId(null)}
@@ -390,12 +527,26 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
                   <X className="w-4 h-4" />
                 </button>
 
-                <h4 className="text-xs font-black text-slate-900">
-                  {nodeDetails[activeNodeId].title}
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {nodeDetails[activeNodeId].subtitle}
-                </p>
+                <div className="flex items-center justify-between pr-8">
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900">
+                      {nodeDetails[activeNodeId].title}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {nodeDetails[activeNodeId].subtitle}
+                    </p>
+                  </div>
+
+                  {nodeDetails[activeNodeId].route && onFilterTimelineByRoute && (
+                    <button
+                      onClick={() => onFilterTimelineByRoute(nodeDetails[activeNodeId].route!)}
+                      className="text-[10px] font-black text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md border border-blue-200"
+                    >
+                      <span>Tapis Ralat Modul Ini</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-3 pt-3 border-t border-slate-200/70">
                   {nodeDetails[activeNodeId].stats.map((s, idx) => (
@@ -409,23 +560,23 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
             )}
           </AnimatePresence>
 
-          {/* ── Bottom Legend (SentinelAI Style) ── */}
+          {/* ── Real Status Legend ── */}
           <div className="flex items-center justify-center gap-6 mt-6 pt-3 text-[11px] font-medium text-slate-500 border-t border-slate-100">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Healthy
+              Optimal
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
-              Threat Flow
+              Amaran Threshold
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              Critical
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              Kritikal / Broken
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-teal-500" />
-              AI Containment
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Aliran Langsung
             </span>
           </div>
         </div>
@@ -460,16 +611,26 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({ da
       {viewMode === 'heatmap' && (
         <div className="py-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { name: 'Node.js Engine', status: 'Healthy', color: 'text-emerald-600 bg-emerald-50' },
-            { name: 'PostgreSQL Pool', status: 'Healthy', color: 'text-emerald-600 bg-emerald-50' },
-            { name: 'WAL Watchdog', status: 'Optimal', color: 'text-emerald-600 bg-emerald-50' },
-            { name: 'PolyMart Orders', status: (pm?.pending_stale || 0) > 0 ? 'Warning' : 'Healthy', color: (pm?.pending_stale || 0) > 0 ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50' },
-            { name: 'PolyRider SOS', status: (pr?.stuck_emergency || 0) > 0 ? 'Critical' : 'Healthy', color: (pr?.stuck_emergency || 0) > 0 ? 'text-rose-600 bg-rose-50' : 'text-emerald-600 bg-emerald-50' },
-            { name: 'e-Kebajikan SLA', status: (keb?.sla_breached || 0) > 0 ? 'Warning' : 'Healthy', color: (keb?.sla_breached || 0) > 0 ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50' },
+            { name: 'Node.js Engine', status: nodeStatus.api, detail: `${server.memory.heap_used_mb}MB Heap` },
+            { name: 'PostgreSQL Pool', status: nodeStatus.db, detail: `${db?.active_connections || 0}/${db?.max_connections || 100} Conns` },
+            { name: 'WAL Watchdog', status: nodeStatus.db, detail: `${db?.wal_retained_mb || 0}MB / 2GB` },
+            { name: 'PolyMart Orders', status: nodeStatus.commercial, detail: `${pm?.pending_stale || 0} Tertunggak` },
+            { name: 'PolyRider SOS', status: nodeStatus.operations, detail: `${pr?.stuck_emergency || 0} Kecemasan` },
+            { name: 'e-Kebajikan SLA', status: nodeStatus.operations, detail: `${keb?.sla_breached || 0} Melepasi SLA` },
           ].map((item, idx) => (
-            <div key={idx} className={cn('p-3 rounded-xl border border-slate-200/80', item.color)}>
+            <div
+              key={idx}
+              className={cn(
+                'p-3 rounded-xl border',
+                item.status === 'critical'
+                  ? 'border-rose-300 bg-rose-50 text-rose-800'
+                  : item.status === 'warning'
+                  ? 'border-orange-300 bg-orange-50 text-orange-800'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              )}
+            >
               <span className="text-xs font-bold block">{item.name}</span>
-              <span className="text-[10px] font-black uppercase mt-1 block">{item.status}</span>
+              <span className="text-[10px] font-mono mt-0.5 block">{item.detail}</span>
             </div>
           ))}
         </div>
