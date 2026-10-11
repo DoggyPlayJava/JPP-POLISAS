@@ -6,14 +6,16 @@ import { TAKWIM_JENIS, STUDENT_FILTER_OPTIONS, SESI_OPTIONS, INSTITUSI_LABEL, ty
 import { cn, hexToRgba } from '@/lib/utils';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ms } from 'date-fns/locale';
-import { CalendarDays, Filter, Table, LayoutGrid, ChevronLeft, ChevronRight, Loader2, Users } from 'lucide-react';
+import { Calendar, BookOpen, CalendarDays, Filter, Table, LayoutGrid, ChevronLeft, ChevronRight, Loader2, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ALL_CLUBS } from '@/types';
 import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
+import { MyTimetableView } from '@/components/takwim/MyTimetableView';
 
 export function AkademikTakwimPage() {
   const { profile, userClubIds } = useAuth();
+  const [activeMainTab, setActiveMainTab] = useState<'PERSONAL' | 'PUSAT'>('PERSONAL');
   const [filter, setFilter] = useState('KESELURUHAN');
   const [sesi, setSesi] = useState('2026/2027');
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
@@ -68,83 +70,119 @@ export function AkademikTakwimPage() {
         </div>
       </motion.div>
 
-      {/* ── Controls ── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={filter} onValueChange={v => { setFilter(v); if (v !== 'KELAB_SAYA') setSelectedClubFilter('ALL'); }}>
-          <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs">
-            <Filter className="w-3 h-3 mr-2 text-slate-500 dark:text-white/40" /><SelectValue />
-          </SelectTrigger>
-          <SelectContent>{STUDENT_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
-
-        {/* Club sub-picker — only visible when "Kelab Saya" is selected */}
-        {filter === 'KELAB_SAYA' && myClubs.length > 0 && (
-          <Select value={selectedClubFilter} onValueChange={setSelectedClubFilter}>
-            <SelectTrigger className="w-[200px] h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-400 shadow-xs">
-              <Users className="w-3 h-3 mr-2 text-emerald-600 dark:text-emerald-400/50" /><SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Semua Kelab Saya ({myClubs.length})</SelectItem>
-              {myClubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Select value={sesi} onValueChange={setSesi}>
-          <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
-
-        {/* Sesi Toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs">
-          {(['ALL', 'I', 'II'] as const).map(s => (
-            <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60')}>
-              {s === 'ALL' ? 'Semua' : `Sesi ${s}`}
-            </button>
-          ))}
-        </div>
-
-        {/* View Mode */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 ml-auto shadow-xs">
-          <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
-          <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><Table className="w-4 h-4" /></button>
-        </div>
+      {/* ── Main Tab Switcher ── */}
+      <div className="flex items-center p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10 max-w-lg shadow-xs">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('PERSONAL')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
+            activeMainTab === 'PERSONAL'
+              ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs'
+              : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
+          )}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Jadual Kuliah Saya</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('PUSAT')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
+            activeMainTab === 'PUSAT'
+              ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs'
+              : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
+          )}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>Takwim Rasmi POLISAS & Kelab</span>
+        </button>
       </div>
 
-      {/* ── Stats ── */}
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(stats).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
-          const cfg = TAKWIM_JENIS[k];
-          if (!cfg || v === 0) return null;
-          return (
-            <Badge key={k} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border-none cursor-pointer hover:scale-105 transition-transform"
-              style={{ background: cfg.bgColor, color: cfg.color }}
-              onClick={() => setFilter(k)}>
-              {cfg.shortLabel}: {v}
-            </Badge>
-          );
-        })}
-      </div>
-
-      {/* ── Content ── */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
-      ) : viewMode === 'calendar' ? (
-        <StudentCalendar items={filteredItems} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
+      {activeMainTab === 'PERSONAL' ? (
+        <MyTimetableView />
       ) : (
-        <StudentTable items={filteredItems} />
-      )}
+        <>
+          {/* ── Controls ── */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={filter} onValueChange={v => { setFilter(v); if (v !== 'KELAB_SAYA') setSelectedClubFilter('ALL'); }}>
+              <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs">
+                <Filter className="w-3 h-3 mr-2 text-slate-500 dark:text-white/40" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>{STUDENT_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+            </Select>
 
-      {/* ── Day Detail Popup ── */}
-      <DayDetailSheet
-        day={selectedDay}
-        events={selectedDay ? filteredItems.filter(i => {
-          const s = parseISO(i.tarikh_mula);
-          const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s;
-          return selectedDay >= s && selectedDay <= e;
-        }) : []}
-        onClose={() => setSelectedDay(null)}
-      />
+            {/* Club sub-picker — only visible when "Kelab Saya" is selected */}
+            {filter === 'KELAB_SAYA' && myClubs.length > 0 && (
+              <Select value={selectedClubFilter} onValueChange={setSelectedClubFilter}>
+                <SelectTrigger className="w-[200px] h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-400 shadow-xs">
+                  <Users className="w-3 h-3 mr-2 text-emerald-600 dark:text-emerald-400/50" /><SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Kelab Saya ({myClubs.length})</SelectItem>
+                  {myClubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+
+            <Select value={sesi} onValueChange={setSesi}>
+              <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-xs font-bold text-slate-800 dark:text-white shadow-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+            </Select>
+
+            {/* Sesi Toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs">
+              {(['ALL', 'I', 'II'] as const).map(s => (
+                <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60')}>
+                  {s === 'ALL' ? 'Semua' : `Sesi ${s}`}
+                </button>
+              ))}
+            </div>
+
+            {/* View Mode */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 ml-auto shadow-xs">
+              <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-white/40')}><Table className="w-4 h-4" /></button>
+            </div>
+          </div>
+
+          {/* ── Stats ── */}
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(stats).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
+              const cfg = TAKWIM_JENIS[k];
+              if (!cfg || v === 0) return null;
+              return (
+                <Badge key={k} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border-none cursor-pointer hover:scale-105 transition-transform"
+                  style={{ background: cfg.bgColor, color: cfg.color }}
+                  onClick={() => setFilter(k)}>
+                  {cfg.shortLabel}: {v}
+                </Badge>
+              );
+            })}
+          </div>
+
+          {/* ── Content ── */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
+          ) : viewMode === 'calendar' ? (
+            <StudentCalendar items={filteredItems} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
+          ) : (
+            <StudentTable items={filteredItems} />
+          )}
+
+          {/* ── Day Detail Popup ── */}
+          <DayDetailSheet
+            day={selectedDay}
+            events={selectedDay ? filteredItems.filter(i => {
+              const s = parseISO(i.tarikh_mula);
+              const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s;
+              return selectedDay >= s && selectedDay <= e;
+            }) : []}
+            onClose={() => setSelectedDay(null)}
+          />
+        </>
+      )}
     </div>
   );
 }
