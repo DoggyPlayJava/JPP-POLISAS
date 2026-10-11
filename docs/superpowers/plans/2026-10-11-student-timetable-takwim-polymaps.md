@@ -10,6 +10,10 @@
 
 ## Global Constraints
 - **RLS Rules:** ALWAYS use `(SELECT auth.uid())` — NEVER bare `auth.uid()`. One policy per operation per table.
+- **Timezone Integrity (UTC+8):** All DB SQL, cron intervals, and date calculations MUST use `AT TIME ZONE 'Asia/Kuala_Lumpur'` and `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'))` to prevent wrong day-of-week and shifted dedup dates.
+- **Dynamic Reminders:** Cron queries MUST join `student_timetable_settings` to read each student's `reminder_minutes` (default 30, or custom 15/45 min) rather than hardcoding 25-35 min.
+- **Online Class Branching:** If `is_online = true`, show "Sertai Kelas Online" (Teams) and HIDE the PolyMaps button (no physical walk). If `is_online = false`, show PolyMaps navigation button (`?room=<UUID>`).
+- **Semester Dates Sourcing:** `semester_start_date` and `semester_end_date` are auto-populated from official institutional academic session (`system_settings` / `takwim-akademik-template.ts`) with fallback to `TARIKH KUATKUASA` + 18 weeks, fully editable by the student in the preview modal.
 - **Normalization:** No redundant `building_id` in `student_timetables` — access building via `location_id → imaps_locations.building_id → imaps_buildings`.
 - **Zero DB Polling:** Client-side live timer/countdown using `setInterval` over locally loaded schedule.
 - **No Hardcoded Rooms:** Data-driven mapping via `imaps_room_mappings` table.
@@ -639,8 +643,10 @@ Expected: FAIL
 - [ ] **Step 3: Implement `NextClassBentoCard.tsx` and embed in `PortalPage.tsx`**
 
 - Create `src/components/portal/NextClassBentoCard.tsx` with:
-  - Client-side countdown using `setInterval` every 30s.
-  - Deep-link button: `navigate(`/polymaps?room=${item.location_id || ''}${!item.location_id ? `q=${encodeURIComponent(item.room_raw)}` : ''}`)`.
+  - Client-side countdown using `setInterval` every 30s calculated with Malaysian Timezone (`Asia/Kuala_Lumpur`).
+  - Class type branching:
+    - If `is_online = true`: displays "Sertai Kelas Online" (Teams badge / external link) and completely hides the PolyMaps navigation button.
+    - If `is_online = false`: displays physical room and button "Panduan PolyMaps" linking to `/polymaps?room=${item.location_id || ''}${!item.location_id ? `q=${encodeURIComponent(item.room_raw)}` : ''}`.
   - State logic for Today's next class, Today's finished classes (skip to Monday), Weekend, and No Timetable.
 - Modify `src/pages/PortalPage.tsx` to include `fetchUserTimetable` in initial `Promise.all` and render `<NextClassBentoCard />` above `CampusServicesGrid`.
 
@@ -667,7 +673,7 @@ git commit -m "feat(portal): add NextClassBentoCard with live client countdown a
 
 **Interfaces:**
 - Consumes: `student_timetables`, `student_timetable_settings`, `student_timetable_metadata`, existing `web-push` infra.
-- Produces: Scheduled runner firing class reminders 30 mins ahead during semester dates, recording unique dedup entries with `ON CONFLICT DO NOTHING`.
+- Produces: Scheduled runner firing class reminders based on student's `reminder_minutes` during semester dates, recording unique dedup entries with `ON CONFLICT DO NOTHING`.
 
 - [ ] **Step 1: Write dedup logic test**
 
@@ -694,16 +700,36 @@ Expected: PASS
 
 Add scheduled job in `server.js`:
 - Executes every 5 minutes (`*/5 * * * *`).
-- Queries `student_timetables` starting between 25 and 35 minutes from `CURRENT_TIME`.
-- Verifies `CURRENT_DATE` is between student's `semester_start_date` and `semester_end_date`.
-- Inserts notification log via `supabaseAdmin` with `ON CONFLICT (timetable_id, notified_date) DO NOTHING`.
+- Uses Malaysian Time (`Asia/Kuala_Lumpur` / UTC+8) for day-of-week and time calculations:
+  ```sql
+  SELECT 
+    t.id, t.user_id, t.course_code, t.course_name, t.room_raw, t.is_online,
+    COALESCE(s.reminder_minutes, 30) AS reminder_mins
+  FROM public.student_timetables t
+  JOIN public.student_timetable_settings s ON s.user_id = t.user_id
+  JOIN public.student_timetable_metadata m ON m.user_id = t.user_id AND m.academic_session = t.academic_session AND m.semester = t.semester
+  WHERE s.notifications_enabled = true
+    AND t.is_archived = false
+    AND (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::date BETWEEN m.semester_start_date AND m.semester_end_date
+    AND t.day_of_week = EXTRACT(ISODOW FROM (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'))
+    AND t.start_time BETWEEN 
+      ((NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::time + (COALESCE(s.reminder_minutes, 30) - 4) * INTERVAL '1 minute')
+      AND 
+      ((NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::time + (COALESCE(s.reminder_minutes, 30) + 4) * INTERVAL '1 minute');
+  ```
+- Inserts notification log via `supabaseAdmin` with:
+  ```sql
+  INSERT INTO public.student_timetable_notification_logs (timetable_id, user_id, notified_date)
+  VALUES ($1, $2, (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::date)
+  ON CONFLICT (timetable_id, notified_date) DO NOTHING;
+  ```
 - Dispatches Web Push (via existing `push_subscriptions`) and In-App notification only when insertion succeeds.
 
 - [ ] **Step 4: Commit notification automation**
 
 ```bash
 git add server.js supabase/migrations/20261011000001_timetable_reminder_cron.sql src/__tests__/timetableNotificationDedup.test.ts
-git commit -m "feat(notifications): add automated 30-minute class reminder with unique dedup"
+git commit -m "feat(notifications): add automated timezone-aware class reminder with unique dedup"
 ```
 
 ---

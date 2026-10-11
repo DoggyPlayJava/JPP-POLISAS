@@ -253,6 +253,10 @@ Pengekstrakan dijalankan sepenuhnya di pihak pelayar (*client-side*) menggunakan
   * Pelajar boleh mengubah suai masa mula/tamat, menukar bilik, atau menukar nama kursus.
   * Butang *"Tambah Slot Manual"* untuk memasukkan kelas tambahan (contohnya subjek mengulang dari kelas lain atau ko-kurikulum).
   * Butang *"Padam Slot"* untuk membuang kelas yang telah digugurkan (*drop course*).
+  * **Penentuan Tarikh Semester (semester_start_date & semester_end_date):**
+    * **Sumber Utama:** Auto-isi secara automatik daripada kalendar akademik rasmi institusi (`system_settings` / `takwim-akademik-template.ts`) berdasarkan Sesi yang dikesan dari header PDF (cth: `S2 2025/2026`).
+    * **Fallback:** Jika tiada padanan, sistem menggunakan `TARIKH KUATKUASA` (cth: `2026-01-12`) sebagai tarikh mula, dan menambah 18 minggu (tempoh standard semester politeknik: 14 minggu kuliah + 1 minggu cuti pertengahan + 1 minggu ulang kaji + 2 minggu peperiksaan) sebagai tarikh tamat lalai.
+    * **Kawalan Pelajar:** Pelajar boleh menyemak dan meminda kedua-dua tarikh ini secara terus di dalam borang modal sebelum menyimpan.
   * **Notis Pendedahan UX (Disclaimer):**
     > ℹ️ *Peringatan: Ini adalah jadual kuliah mingguan biasa. Untuk minggu peperiksaan, cuti umum, atau minggu amali khas, sila rujuk Takwim Rasmi atau arahan pensyarah.*
   * Butang *"Sahkan & Simpan Jadual"*: Menyimpan rekod bersih ke `student_timetables` dan `student_timetable_metadata`.
@@ -266,14 +270,19 @@ Ditempatkan pada `PortalPage.tsx` di bahagian atas (bersebelahan/di bawah `Kebaj
 
 * **Pengiraan Masa Bebas Polling (Zero DB Polling):**
   * Data jadual diambil sekali sahaja semasa portal dibuka (disertakan dalam *parallel fetch* sedia ada `Promise.all`).
-  * Pengiraan kelas seterusnya dan masa baki (*countdown*) dikira sepenuhnya di pihak klien menggunakan `setInterval` (30 saat per tick).
-* **Pautan PolyMaps Berasaskan UUID:**
-  * Butang *"Arah ke Bilik"* membawa pengguna ke `/polymaps?room=${location_id}` (menggunakan UUID rasmi `imaps_locations`).
-  * Jika `location_id` tiada (null), butang membawa ke `/polymaps?q=${encodeURIComponent(room_raw)}`.
+  * Pengiraan kelas seterusnya dan masa baki (*countdown*) dikira sepenuhnya di pihak klien menggunakan `setInterval` (30 saat per tick) mengikut zon masa Malaysia (`Asia/Kuala_Lumpur`).
+* **Pautan Tindakan Berdasarkan Jenis Kelas (`is_online` Branching):**
+  * **Jika Kelas Fizikal (`is_online = false`):**
+    * Papar badge bilik & aras (cth: `EA301 · Blok A JKE`).
+    * Butang tindakan: 🗺️ *"Panduan PolyMaps"* → membawa pengguna terus ke `/polymaps?room=${location_id}` (UUID). Jika `location_id` tiada (null), butang membawa ke `/polymaps?q=${encodeURIComponent(room_raw)}`.
+  * **Jika Kelas Dalam Talian (`is_online = true` cth: EMSTEAM/ONLINE):**
+    * Papar badge maya: 🌐 `ONLINE (MICROSOFT TEAMS)`.
+    * Butang tindakan: 💻 *"Sertai Kelas Dalam Talian"* (atau panduan Teams).
+    * ⚠️ **Butang PolyMaps disembunyikan sepenuhnya** kerana tiada pergerakan fizikal di kampus diperlukan.
 * **Pengendalian Hari & Hujung Minggu:**
   * Pada petang Jumaat atau hujung minggu, kad secara automatik memaparkan kelas pertama pada hari Isnin minggu berikutnya (mengelakkan paparan "kelas esok = TIADA").
 * **4 Status Paparan:**
-  1. *Ada Kelas Hari Ini:* Menunjukkan countdown ("Dalam 25 minit" / "Sedang berlangsung"), subjek, bilik/blok, pensyarah, dan butang PolyMaps.
+  1. *Ada Kelas Hari Ini:* Menunjukkan countdown ("Dalam 25 minit" / "Sedang berlangsung"), subjek, bilik/blok (atau Teams), pensyarah, dan butang tindakan khusus.
   2. *Semua Kelas Selesai:* Mesej tahniah + pratonton kelas pertama hari persekolahan seterusnya.
   3. *Cuti / Tiada Kelas:* Status tiada kelas dijadualkan.
   4. *Belum Muat Naik:* Kad gesaan mesra untuk memuat naik jadual PDF.
@@ -285,7 +294,7 @@ Ditempatkan pada `PortalPage.tsx` di bahagian atas (bersebelahan/di bawah `Kebaj
     * Mod Paparan Senarai Agenda Harian (Mesra telefon pintar / Mobile view).
     * Butang *"Muat Naik Jadual PDF"*.
     * Butang *"Tambah Kelas Manual"*.
-    * Suis *Toggle* Notifikasi Peringatan (30 minit sebelum kelas).
+    * Suis *Toggle* Notifikasi Peringatan (ikut minit pilihan pelajar).
   * **Tab 2: "Takwim Rasmi Politeknik & Kelab"**
     * Mengekalkan takwim berpusat sedia ada (`useTakwimPusat`) tanpa sebarang regresi.
 
@@ -293,15 +302,28 @@ Ditempatkan pada `PortalPage.tsx` di bahagian atas (bersebelahan/di bawah `Kebaj
 
 ## 5. Enjin Notifikasi & Automasi (Notification Engine)
 
+* **Zon Masa Malaysia Wajib (Timezone Integrity - UTC+8):**
+  * Memandangkan pangkalan data dan pelayan beroperasi secara default pada UTC, semua fungsi SQL, cron, dan perbandingan masa **WAJIB** ditukar kepada zon masa Malaysia:
+    * `(NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')`
+    * `(CURRENT_DATE AT TIME ZONE 'Asia/Kuala_Lumpur')`
+    * `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'))` (1=Isnin .. 7=Ahad)
+  * Ini menghalang ralat kritikal di mana kelas 8:00 PG Isnin waktu Malaysia dikira sebagai hari Ahad jam 00:00 UTC, yang boleh menyebabkan kegagalan penghantaran dan ralat tarikh dedup.
+* **Masa Peringatan Dinamik Mengikut Tetapan Pelajar (`reminder_minutes`):**
+  * Cron **TIDAK** menghardcode tetingkap 25-35 minit.
+  * Sebaliknya, kueri menyambung (`JOIN`) jadual `student_timetable_settings` untuk membaca `reminder_minutes` pelajar (default 30 minit, atau 15/45 minit jika diubah pelajar).
+  * Kueri memadankan:
+    ```sql
+    t.start_time BETWEEN 
+      ((NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::time + (COALESCE(s.reminder_minutes, 30) - 4) * INTERVAL '1 minute')
+      AND 
+      ((NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::time + (COALESCE(s.reminder_minutes, 30) + 4) * INTERVAL '1 minute')
+    ```
 * **Penggunaan Semula Sistem Sedia Ada (Reuse Existing Push Infra):**
   * Menggunakan sistem Web Push sedia ada (`push_subscriptions` + VAPID) dan jadual `notifications` dalam pangkalan data. Tiada pembinaan enjin push baharu.
-* **Kueri Dinamik Berasaskan Data (No Hardcoded Hours):**
-  * Kueri mencari slot kelas aktif pada hari semasa yang bermula dalam lingkungan **25 hingga 35 minit dari sekarang** (menyokong kedua-dua kelas siang dan kelas malam pelajar separuh masa).
-  * Memastikan tarikh semasa berada dalam julat `semester_start_date` dan `semester_end_date`.
 * **Kalis Pertindihan (Race-Condition-Proof Dedup):**
   * Setiap notifikasi yang dihantar merekodkan rekod ke `student_timetable_notification_logs`.
-  * Menggunakan arahan `INSERT INTO student_timetable_notification_logs ... ON CONFLICT (timetable_id, notified_date) DO NOTHING`.
-  * Sekiranya slot telah direkodkan bagi tarikh hari ini, tiada sebarang notifikasi kedua akan ditembak.
+  * Menggunakan arahan `INSERT INTO student_timetable_notification_logs (timetable_id, user_id, notified_date) VALUES (...) ON CONFLICT (timetable_id, notified_date) DO NOTHING`.
+  * `notified_date` dikira menggunakan `(NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::date`.
 * **Mod Luar Talian (Offline Support):**
   * Data jadual kuliah dicache dalam `localStorage` / `IndexedDB` pelayar melalui PWA Service Worker (`sw.ts`). Pelajar boleh membuka jadual kuliah peribadi walaupun tiada sambungan internet di dalam bilik kuliah.
 
