@@ -718,6 +718,12 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
 | `isMissingPhoneAndCohort` | Ada matric+dept, tiada phone dan kohort | Phone + Jabatan + Program + Tahun + Intake |
 | Full Registration | Tiada matric | Nama IC + Matrik + Phone + Jabatan + Program + Intake |
 
+> **Peraturan Pendaftaran Pelajar Baharu (Full Registration):**
+> 1. **Nama Penuh (Wajib IC):** Tidak lagi default dari Google profil/emel. Ruangan dimulakan kosong dan wajib diisi nama penuh seperti dalam IC (auto-uppercase).
+> 2. **Sanitasi No. Matrik:** Automatik buang ruang kosong/sengkang, uppercase, had 13 aksara alfanumerik.
+> 3. **Format No. Matrik:** Format rasmi `^02[A-Z]{2,4}\d{2}[A-Z]\d{4}$` dengan tahun dinamik `(currentYear - 7)` hingga `(currentYear + 1)` (contoh: 2019–2027 bagi tahun 2026).
+> 4. **Smart Auto-fill (Boleh Edit):** No matrik sah auto-pilih Jabatan, Program, Tahun, dan Sesi (Intake 1/2), namun semua pilihan kekal boleh diedit manual oleh pelajar. Jika tahun dropdown berbeza dari no matrik, amaran mesra dipaparkan.
+
 > **Pelajar sedia ada (85 orang pada April 2026)** terkena senario `isOnlyMissingCohort` apabila log masuk pertama kali selepas kemaskini ini.
 
 ### 14.8 Notifikasi Automatik Intake

@@ -23,6 +23,92 @@ type RegisterMode = 'student' | 'leader' | 'staff';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const PROGRAMME_TO_JABATAN: Record<string, { jabatan: JabatanValue; code: string }> = {};
+(Object.keys(JABATAN_PROGRAMMES) as JabatanValue[]).forEach(j => {
+  JABATAN_PROGRAMMES[j].forEach(p => {
+    PROGRAMME_TO_JABATAN[p.code] = { jabatan: j, code: p.code };
+  });
+});
+PROGRAMME_TO_JABATAN['FTV'] = { jabatan: 'ftv', code: 'FTV' };
+
+interface MatricParseResult {
+  isValidFormat: boolean;
+  cleanMatric: string;
+  progCode?: string;
+  year2Digit?: number;
+  fullYear?: number;
+  isYearValid?: boolean;
+  sessionCode?: string;
+  serial?: string;
+  suggestedPeriod?: 1 | 2;
+  knownProgramme?: { jabatan: JabatanValue; code: string };
+  errorMessage?: string;
+}
+
+function parseAndValidateMatric(rawMatric: string): MatricParseResult {
+  const clean = rawMatric.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
+
+  if (!clean.startsWith('02')) {
+    return {
+      isValidFormat: false,
+      cleanMatric: clean,
+      errorMessage: 'No. Matrik pelajar mestilah bermula dengan "02".',
+    };
+  }
+
+  // Regex: 02 + 2-4 abjad program + 2 digit tahun + 1 abjad sesi + 4 digit siri
+  const match = clean.match(/^02([A-Z]{2,4})(\d{2})([A-Z])(\d{4})$/);
+  if (!match) {
+    return {
+      isValidFormat: false,
+      cleanMatric: clean,
+      errorMessage: 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037',
+    };
+  }
+
+  const [, progCode, rawYear, sessionCode, serial] = match;
+  const year2Digit = parseInt(rawYear, 10);
+  const fullYear = 2000 + year2Digit;
+
+  // Tahun dinamik: (currentYear - 7) hingga (currentYear + 1)
+  const currentYear = new Date().getFullYear();
+  const minYear = currentYear - 7;
+  const maxYear = currentYear + 1;
+  const isYearValid = fullYear >= minYear && fullYear <= maxYear;
+
+  if (!isYearValid) {
+    return {
+      isValidFormat: false,
+      cleanMatric: clean,
+      progCode,
+      year2Digit,
+      fullYear,
+      isYearValid: false,
+      errorMessage: `Tahun kemasukan pada no. matrik (${fullYear}) tidak sah (julat sah: ${minYear} - ${maxYear}).`,
+    };
+  }
+
+  // Sesi daripada digit pertama nombor siri: 1xxx -> Intake 1, 2xxx -> Intake 2
+  let suggestedPeriod: 1 | 2 | undefined;
+  if (serial.startsWith('1')) suggestedPeriod = 1;
+  else if (serial.startsWith('2')) suggestedPeriod = 2;
+
+  const knownProgramme = PROGRAMME_TO_JABATAN[progCode];
+
+  return {
+    isValidFormat: true,
+    cleanMatric: clean,
+    progCode,
+    year2Digit,
+    fullYear,
+    isYearValid: true,
+    sessionCode,
+    serial,
+    suggestedPeriod,
+    knownProgramme,
+  };
+}
+
 /** Compute estimated semester string from intake values + system_settings */
 function computeSemDisplay(
   intakeYear: number, intakePeriod: 1 | 2, isFtv: boolean,
@@ -43,7 +129,8 @@ export function CompleteProfileModal() {
   const { profile, user, refetchProfile } = useAuth();
 
   // ── Form state ──────────────────────────────────────────────────────────
-  const [fullName,         setFullName]         = useState(profile?.full_name || '');
+  // PENTING: Untuk pendaftaran baharu, fullName dimulakan kosong (tidak ambil nama Google)
+  const [fullName,         setFullName]         = useState('');
   const [phone,            setPhone]            = useState(profile?.phone || '');
   const [matricNo,         setMatricNo]         = useState(profile?.matric_no || '');
   const [registerMode,     setRegisterMode]     = useState<RegisterMode>('student');
@@ -59,6 +146,40 @@ export function CompleteProfileModal() {
   const [passcode,         setPasscode]         = useState('');
   const [loading,          setLoading]          = useState(false);
   const [showWarning,      setShowWarning]      = useState(false);
+
+  // Semakan matric parsing & live mismatch
+  const matricParsed = registerMode !== 'staff' && matricNo.trim() ? parseAndValidateMatric(matricNo.trim()) : null;
+  const yearMismatch = !!(
+    matricParsed?.isValidFormat &&
+    matricParsed.fullYear &&
+    intakeYear &&
+    matricParsed.fullYear !== Number(intakeYear)
+  );
+
+  const handleMatricChange = (raw: string) => {
+    if (registerMode === 'staff') {
+      setMatricNo(raw.toUpperCase());
+      return;
+    }
+
+    const clean = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
+    setMatricNo(clean);
+
+    // Smart Auto-fill: auto-fill NOT auto-lock
+    const res = parseAndValidateMatric(clean);
+    if (res.isValidFormat) {
+      if (res.knownProgramme) {
+        setJabatan(res.knownProgramme.jabatan);
+        setProgrammeCode(res.knownProgramme.code);
+      }
+      if (res.fullYear) {
+        setIntakeYear(res.fullYear);
+      }
+      if (res.suggestedPeriod) {
+        setIntakePeriod(res.suggestedPeriod);
+      }
+    }
+  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -261,11 +382,27 @@ export function CompleteProfileModal() {
     }
 
     // ── D: Full registration ──────────────────────────────────────────────
+    if (registerMode !== 'staff') {
+      if (!fullName.trim()) {
+        toast.error('Sila masukkan nama penuh seperti dalam IC.');
+        return;
+      }
+      if (fullName.trim().length < 3) {
+        toast.error('Nama penuh terlalu pendek. Sila masukkan nama penuh seperti dalam IC.');
+        return;
+      }
+    }
+
     if (!matricNo.trim() || !phone.trim()) {
       toast.error('Sila lengkapkan No Matrik dan No Telefon.'); return;
     }
-    if (registerMode !== 'staff' && !matricNo.trim().startsWith('02')) {
-      toast.error('No. Matrik pelajar mestilah bermula dengan "02".'); return;
+
+    if (registerMode !== 'staff') {
+      const matricValidation = parseAndValidateMatric(matricNo.trim());
+      if (!matricValidation.isValidFormat) {
+        toast.error(matricValidation.errorMessage || 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037');
+        return;
+      }
     }
 
     // ── Semakan duplikat matric_no ────────────────────────────────────────
@@ -316,11 +453,10 @@ export function CompleteProfileModal() {
       const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue, programmeCode);
       const roleToAssign   = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
       const initialStatus  = (isLeader || isAdvisor) ? 'PENDING' : 'APPROVED';
-      // PENTING: Sentiasa gunakan nama yang dimasukkan pengguna. Jika kosong, guna
-      // nama dari profil Google. Jangan hantar undefined supaya DB tak reject.
+      // PENTING: Sentiasa gunakan nama yang dimasukkan pengguna. Tiada fallback ke Google untuk pelajar.
       const nameToSave     = isStaff
         ? (fullName.trim().toUpperCase() || profile?.full_name || '')
-        : (fullName.trim().toUpperCase() || profile?.full_name?.toUpperCase() || '');
+        : fullName.trim().toUpperCase();
 
       // 1. Update profile
       const { error: profileError } = await supabase.from('profiles').update({
@@ -514,6 +650,13 @@ export function CompleteProfileModal() {
         </div>
       </div>
 
+      {yearMismatch && (
+        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+          <span>Tahun intake ({intakeYear}) berbeza daripada tahun pada No. Matrik ({matricParsed?.fullYear}).</span>
+        </div>
+      )}
+
       {/* Semester estimate + override */}
       {computedSem && (
         <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 space-y-2">
@@ -686,17 +829,47 @@ export function CompleteProfileModal() {
 
                   {/* Matric / Staff ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                      {registerMode === 'staff' ? 'No Pekerja / Staf ID' : 'No Matrik'}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                        {registerMode === 'staff' ? 'No Pekerja / Staf ID' : 'No Matrik'}
+                      </Label>
+                      {registerMode !== 'staff' && matricParsed?.isValidFormat && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                          ✓ Format Sah
+                        </span>
+                      )}
+                    </div>
                     <div className="relative group">
                       <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
-                        placeholder={registerMode === 'staff' ? 'S123456' : '02DXX1234'} required
-                        value={matricNo} onChange={e => setMatricNo(e.target.value.toUpperCase())}
+                        placeholder={registerMode === 'staff' ? 'S123456' : '02DTK25F1037'} required
+                        value={matricNo} onChange={e => handleMatricChange(e.target.value)}
                         className="h-12 pl-11 rounded-xl bg-slate-100 dark:bg-slate-800/50 uppercase font-bold tracking-wide border-slate-200 dark:border-white/10"
                       />
                     </div>
+                    {registerMode !== 'staff' && (
+                      <div className="space-y-1 px-1">
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          Contoh format POLISAS: 02DTK25F1037 (02 + Kursus + Tahun + Sesi + Siri)
+                        </p>
+                        {matricParsed && !matricParsed.isValidFormat && matricNo.length >= 4 && (
+                          <p className="text-[10px] text-rose-500 font-medium">
+                            {matricParsed.errorMessage}
+                          </p>
+                        )}
+                        {matricParsed?.isValidFormat && !matricParsed.knownProgramme && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            ℹ️ Kod program &quot;{matricParsed.progCode}&quot; tidak dalam senarai semasa. Sila pilih Jabatan dan Program secara manual di bawah.
+                          </p>
+                        )}
+                        {yearMismatch && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            Tahun pengambilan yang dipilih ({intakeYear}) berbeza daripada tahun pada No. Matrik ({matricParsed?.fullYear}).
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Phone */}

@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data: { user: authUser } } = await supabase.auth.getUser();
           if (authUser) {
             const meta = authUser.user_metadata || {};
-            const fallbackName = (meta.full_name || meta.name || authUser.email?.split('@')[0] || 'User').toUpperCase();
+            const fallbackName = (meta.full_name || meta.name || '').trim().toUpperCase();
             const { data: newProfile, error: insertErr } = await supabase.from('profiles').upsert({
               id: userId,
               email: authUser.email,
