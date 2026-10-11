@@ -4,7 +4,7 @@ import path from 'path';
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
 
-describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme)', () => {
+describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme & Real Data)', () => {
   const landingPagePath = path.resolve(__dirname, '../pages/LandingPage.tsx');
   const source = fs.readFileSync(landingPagePath, 'utf-8');
 
@@ -53,7 +53,7 @@ describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme)', () => {
     });
   });
 
-  describe('Core Structural Sections & Authentic Copywriting', () => {
+  describe('Core Structural Sections & Real POLISAS Production Data', () => {
     it('1. Floating Glassmorphic Pill Navbar (<Navbar />)', () => {
       expect(source).toContain('JPP POLISAS');
       expect(source).toContain('#ekosistem');
@@ -63,7 +63,7 @@ describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme)', () => {
       expect(source).toMatch(/Masuk Portal/);
     });
 
-    it('2. Editorial Asymmetric Hero (<Hero />) with Official Headline', () => {
+    it('2. Editorial Asymmetric Hero (<Hero />) with Official Headline & Real Executive Metrics', () => {
       // Official user-approved headline
       expect(source).toContain('Perpaduan Progresif');
       expect(source).toContain('Demi Mahasiswa');
@@ -73,27 +73,31 @@ describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme)', () => {
       expect(source).toContain('Masuk Portal Pelajar');
       expect(source).toContain('Jelajah Ekosistem');
 
-      // Executive Showcase Card
+      // Executive Showcase Card with verified POLISAS real data baseline
       expect(source).toContain('Pusat Operasi Eksekutif');
-      expect(source).toContain('120+');
       expect(source).toContain('Kelab Berdaftar');
-      expect(source).toContain('98.4%');
-      expect(source).toContain('Kelulusan Kertas');
+      expect(source).toContain('Aktiviti & Kertas Kerja');
+      expect(source).toContain('Pelajar Berdaftar');
     });
 
-    it('3. Campus Pulse Ticker Tape (<TickerTape />)', () => {
-      expect(source).toContain('e-Akademik: Pengesahan Merit QR');
-      expect(source).toContain('e-Aktiviti: 120+ Kelab');
+    it('3. Campus Pulse Ticker Tape (<TickerTape />) with Live Feed', () => {
+      expect(source).toContain('e-Akademik');
+      expect(source).toContain('e-Aktiviti');
       expect(source).toContain('PolyMart: Pasaran Siswa');
-      expect(source).toContain('e-Kebajikan: Tindakan Pantas');
+      expect(source).toContain('e-Kebajikan');
     });
 
-    it('4. Bento Feature Grid for 5 Campus Ecosystems (<BentoSection />)', () => {
+    it('4. Bento Feature Grid with PolyMart Mobile App Mockup (<BentoSection />)', () => {
       expect(source).toContain('e-Aktiviti');
       expect(source).toContain('e-Keusahawanan');
       expect(source).toContain('e-Akademik');
       expect(source).toContain('PolyMart');
       expect(source).toContain('e-Kebajikan');
+
+      // Real POLISAS product parity in mobile mockup
+      expect(source).toContain('Rojak Buah Special');
+      expect(source).toContain('Lanyard JPP POLISAS');
+      expect(source).toContain('Pesanan Disahkan');
     });
 
     it('5. Nexus AI Core Engine (<NexusSection />)', () => {
@@ -102,9 +106,10 @@ describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme)', () => {
     });
 
     it('6. Campus Scale & Impact Metrics (<StatsSection />)', () => {
-      expect(source).toContain('120+');
-      expect(source).toContain('15,000+');
-      expect(source).toContain('98%');
+      expect(source).toContain('Kelab Pemimpin Berdaftar');
+      expect(source).toContain('Mahasiswa Berdaftar Semasa');
+      expect(source).toContain('Aktiviti & Kertas Kerja Dipantau');
+      expect(source).toContain('Produk Siswa di PolyMart');
     });
 
     it('7. Final Call-to-Action Banner (<CtaSection />)', () => {
