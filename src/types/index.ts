@@ -1511,6 +1511,82 @@ export interface FoodBankAuditLog {
   location?: FoodBankDistributionLocation | null;
 }
 
+// ─── Student Timetable & PolyMaps Navigation Types ────────────────────────────
+
+export type ClassType = 'KULIAH' | 'AMALI' | 'TUTORIAL' | 'LAIN_LAIN';
+
+export const CLASS_TYPES: ClassType[] = ['KULIAH', 'AMALI', 'TUTORIAL', 'LAIN_LAIN'];
+
+export interface StudentTimetableEntry {
+  id: string;
+  user_id: string;
+  academic_session: string;
+  semester: string;
+  class_name: string;
+  day_of_week: number; // 1=Isnin .. 5=Jumaat
+  start_time: string; // HH:mm:ss
+  end_time: string;   // HH:mm:ss
+  course_code: string;
+  course_name: string;
+  class_type: ClassType;
+  lecturer_code?: string | null;
+  room_raw: string;
+  location_id?: string | null;
+  is_online: boolean;
+  color: string;
+  is_archived: boolean;
+  created_at?: string;
+  updated_at?: string;
+  location?: {
+    id: string;
+    room_code: string;
+    floor_level?: number | null;
+    building?: {
+      id: string;
+      name: string;
+      code: string;
+    } | null;
+  } | null;
+}
+
+export interface StudentTimetableMetadata {
+  id: string;
+  user_id: string;
+  academic_session: string;
+  semester: string;
+  class_name: string;
+  semester_start_date: string;
+  semester_end_date: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StudentTimetableSettings {
+  user_id: string;
+  notifications_enabled: boolean;
+  reminder_minutes: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ImapsRoomMapping {
+  id: string;
+  room_code_pattern: string;
+  location_id?: string | null;
+  is_online: boolean;
+  notes?: string | null;
+}
+
+export interface StudentTimetableNotificationLog {
+  id: string;
+  timetable_id: string;
+  user_id: string;
+  notified_date: string;
+  created_at?: string;
+}
+
+
 
 
 
