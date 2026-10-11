@@ -15,12 +15,19 @@ import {
   Activity,
   FileText,
   CheckCircle,
+  CheckCircle2,
   ShoppingCart,
-  HeartHandshake
+  HeartHandshake,
+  Smartphone,
+  Star,
+  Search,
+  ShoppingBag,
+  Bell
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+import { supabase } from '@/lib/supabase';
 
 // ── Palette Tokens (05 Earthy Minimal) ────────────────────────
 // #2E3A2F: Primary (Deep Forest Moss Green)
@@ -28,6 +35,59 @@ import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 // #D9C9B2: Tertiary (Warm Sand / Oatmeal Beige)
 // #C96F4F: Accent (Terracotta Clay Orange)
 // #F8F6EE: Background (Warm Milk Porcelain)
+
+export interface CampusStats {
+  clubsCount: number;
+  activitiesCount: number;
+  studentsCount: number;
+  productsCount: number;
+  ordersCount: number;
+}
+
+// ── Hook Data Masa Nyata Kampus (Real Production Data) ───────
+export function useCampusStats(): CampusStats {
+  const [stats, setStats] = useState<CampusStats>({
+    clubsCount: 21,
+    activitiesCount: 41,
+    studentsCount: 1083,
+    productsCount: 277,
+    ordersCount: 344,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchLiveStats() {
+      try {
+        const [clubsRes, actsRes, prodsRes, ordersRes, klkRes] = await Promise.all([
+          supabase.from('clubs').select('*', { count: 'exact', head: true }),
+          supabase.from('club_activities').select('*', { count: 'exact', head: true }),
+          supabase.from('business_products').select('*', { count: 'exact', head: true }),
+          supabase.from('polymart_orders').select('*', { count: 'exact', head: true }),
+          supabase.from('klk_student_residency').select('*', { count: 'exact', head: true }),
+        ]);
+
+        if (isMounted) {
+          setStats({
+            clubsCount: clubsRes.count ?? 21,
+            activitiesCount: actsRes.count ?? 41,
+            studentsCount: klkRes.count ?? 1083,
+            productsCount: prodsRes.count ?? 277,
+            ordersCount: ordersRes.count ?? 344,
+          });
+        }
+      } catch {
+        // Fallback selamat kepada nombor data sebenar pangkalan data POLISAS
+      }
+    }
+
+    fetchLiveStats();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return stats;
+}
 
 // Smooth scroll helper
 const scrollToSection = (id: string, offset = 80) => {
@@ -43,185 +103,39 @@ const scrollToSection = (id: string, offset = 80) => {
   }
 };
 
-// ── Modul Teras Kampus ─────────────────────────────────────────
-const MODULES = [
+// ── Data Produk Sebenar PolyMart (Real POLISAS Products) ──────
+const REAL_PRODUCTS_SHOWCASE = [
   {
-    id: 'ekpp',
-    title: 'e-Aktiviti',
-    subtitle: 'Nadi Organisasi',
-    desc: 'Sistem tadbir urus telus untuk 120+ kelab dan persatuan. Automasi kertas kerja dan pelaporan bulanan secara digital.',
-    icon: Shield,
-    color: '#2E3A2F',
-    accentColor: '#6B7F5B',
-    path: '/portal',
-    stats: ['120+ Kelab Aktif', '98% Kelulusan Digital'],
-    preview: (
-      <div className="flex flex-col gap-2 p-4 md:p-6 h-full justify-center">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]/70 shadow-2xs">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#6B7F5B]" />
-            <div className="h-2 w-32 bg-[#2E3A2F]/20 rounded-full" />
-            <div className="ml-auto h-2 w-10 bg-[#C96F4F]/30 rounded-full hidden sm:block" />
-          </div>
-        ))}
-      </div>
-    )
+    name: 'Rojak Buah Special',
+    price: 'RM 5.00',
+    category: 'Makanan',
+    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/f754baf3-3d2a-498d-a43f-5de30815f84d/1786280761431.jpeg',
+    rating: '4.9',
+    sales: '85 ulasan'
   },
   {
-    id: 'keusahawanan',
-    title: 'e-Keusahawanan',
-    subtitle: 'Ekonomi Pintar',
-    desc: 'Memperkasa usahawan siswa dengan sistem POS digital terpadu, pengurusan gerai, dan analitik jualan masa nyata.',
-    icon: BarChart3,
-    color: '#6B7F5B',
-    accentColor: '#C96F4F',
-    path: '/keusahawanan',
-    stats: ['RM 45k+ Jualan', '85+ Vendor Aktif'],
-    preview: (
-      <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
-        <div className="flex items-end justify-between w-full h-full pb-4">
-          {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
-            <motion.div
-              key={i}
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: 0.3 + (i * 0.1), duration: 0.8 }}
-              className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
-            />
-          ))}
-        </div>
-      </div>
-    )
+    name: 'Lanyard JPP POLISAS',
+    price: 'RM 15.00',
+    category: 'Aksesori',
+    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/e489a087-46d2-4030-aeb1-ae7b1ba00ee3/1782179975909.jpeg',
+    rating: '5.0',
+    sales: 'Rasmi JPP'
   },
   {
-    id: 'akademik',
-    title: 'e-Akademik',
-    subtitle: 'Kecemerlangan Holistik',
-    desc: 'Semakan maklumat dan pengurusan rekod merit pelajar serta takwim peperiksaan secara pantas dan bersepadu.',
-    icon: GraduationCap,
-    color: '#2E3A2F',
-    accentColor: '#6B7F5B',
-    path: '/akademik',
-    stats: ['12k+ Rekod', 'Sistem Merit QR'],
-    preview: (
-      <div className="flex items-center justify-center h-full relative">
-        <div className="w-24 h-24 rounded-full border border-[#6B7F5B]/30 flex items-center justify-center bg-[#6B7F5B]/5 shadow-xs">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 rounded-full border-4 border-[#6B7F5B] border-t-transparent border-l-transparent"
-          />
-        </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-black text-[#2E3A2F]">4.00</span>
-          <span className="text-[8px] font-bold text-[#6B7F5B] uppercase tracking-widest">HPNM</span>
-        </div>
-      </div>
-    )
+    name: 'Kek Chocolate Moist',
+    price: 'RM 13.00',
+    category: 'Pencuci Mulut',
+    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/f754baf3-3d2a-498d-a43f-5de30815f84d/1786280409551.jpeg',
+    rating: '4.8',
+    sales: 'Vendor Siswa'
   },
   {
-    id: 'polymart',
-    title: 'PolyMart',
-    subtitle: 'Pasaran Mahasiswa',
-    desc: 'Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan terokai produk perniagaan siswa dalam satu hab.',
-    icon: ShoppingCart,
-    color: '#C96F4F',
-    accentColor: '#2E3A2F',
-    path: '/polymart',
-    stats: ['Produk Tempatan', 'JPP Pay Secure'],
-    colSpan: 'lg:col-span-2',
-    preview: (
-      <div className="flex w-full h-full p-4 items-center justify-between overflow-hidden relative">
-        {/* Bahagian Kiri: Ikon Utama */}
-        <div className="w-1/3 flex flex-col items-center justify-center relative z-10 pl-2 md:pl-6">
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-[#C96F4F]/15 border border-[#C96F4F]/40 flex items-center justify-center shadow-xs mb-3"
-          >
-            <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-[#C96F4F]" />
-          </motion.div>
-          <div className="h-2 w-16 bg-[#C96F4F]/30 rounded-full" />
-        </div>
-
-        {/* Bahagian Kanan: Aliran Transaksi */}
-        <div className="w-2/3 flex flex-col gap-3 relative pr-2 md:pr-8">
-          <div className="absolute left-0 top-[-20px] bottom-[-20px] w-px bg-gradient-to-b from-transparent via-[#C96F4F]/30 to-transparent" />
-          {[1, 2, 3].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + (i * 0.25), duration: 0.5 }}
-              className="flex items-center gap-4 p-3 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]/80 ml-6 shadow-2xs"
-            >
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[#C96F4F]/15 flex items-center justify-center flex-shrink-0 text-[#C96F4F] font-black text-xs">
-                #{item}
-              </div>
-              <div className="flex-1 flex flex-col gap-1.5">
-                <div className="h-2 w-[80%] bg-[#2E3A2F]/20 rounded-full" />
-                <div className="h-2 w-[50%] bg-[#6B7F5B]/30 rounded-full" />
-              </div>
-              <div className="flex flex-col gap-1 items-end flex-shrink-0 hidden sm:flex">
-                <span className="text-[10px] font-bold text-[#2E3A2F]">Selesai</span>
-                <span className="text-[8px] font-medium text-[#6B7F5B]">JPP Pay</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'kebajikan',
-    title: 'e-Kebajikan',
-    subtitle: 'Prihatin & Responsif',
-    desc: 'Sistem pelaporan aduan telus, bantuan Food Bank siswa, dan penjejakan kebajikan berkala secara terus.',
-    icon: HeartHandshake,
-    color: '#6B7F5B',
-    accentColor: '#2E3A2F',
-    path: '/kebajikan',
-    stats: ['Tindakan Pantas', 'Food Bank Aktif'],
-    preview: (
-      <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
-        {/* Gelombang Radar */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            animate={{ scale: [1, 2.2, 1], opacity: [0.4, 0, 0.4] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute w-24 h-24 md:w-32 md:h-32 border-2 border-[#6B7F5B]/30 rounded-full"
-          />
-          <motion.div
-            animate={{ scale: [1, 3.2, 1], opacity: [0.2, 0, 0.2] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-            className="absolute w-24 h-24 md:w-32 md:h-32 border border-[#6B7F5B]/20 rounded-full"
-          />
-        </div>
-
-        <div className="relative z-10 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white border border-[#6B7F5B]/40 flex items-center justify-center shadow-xs">
-          <HeartHandshake className="w-10 h-10 md:w-14 md:h-14 text-[#6B7F5B]" />
-        </div>
-
-        {/* Nod Status Terapung */}
-        <motion.div
-          animate={{ y: [-10, 10, -10] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[10%] right-[5%] md:right-[15%] w-16 h-12 md:w-20 md:h-16 rounded-xl bg-white border border-[#D9C9B2] flex flex-col items-center justify-center gap-1 shadow-2xs"
-        >
-          <div className="w-6 md:w-10 h-1.5 md:h-2 rounded-full bg-[#6B7F5B]" />
-          <div className="w-10 md:w-14 h-1 md:h-1.5 rounded-full bg-[#D9C9B2]" />
-        </motion.div>
-
-        <motion.div
-          animate={{ y: [10, -10, 10] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[10%] left-[5%] w-20 h-12 md:w-24 md:h-14 rounded-xl bg-white border border-[#D9C9B2] flex items-center justify-center gap-1.5 px-3 shadow-2xs"
-        >
-          <div className="w-2 h-2 rounded-full bg-[#C96F4F]" />
-          <span className="text-[9px] font-bold text-[#2E3A2F]">Prihatin</span>
-        </motion.div>
-      </div>
-    )
+    name: 'Spud Bolognese',
+    price: 'RM 13.00',
+    category: 'Makanan',
+    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/8b53e2a5-7542-4cc0-8634-fbb0dbe7fe6e/1786189757219.jpeg',
+    rating: '4.9',
+    sales: 'Panas & Segar'
   }
 ];
 
@@ -398,67 +312,74 @@ export const Navbar: React.FC = () => {
 };
 
 // ── 2. Ticker Tape Berputar (<TickerTape />) ──────────────────
-export const TickerTape: React.FC = () => (
-  <div className="w-full bg-[#F2EDE4] border-y border-[#D9C9B2] py-3.5 md:py-4 overflow-hidden flex items-center relative z-20">
-    <motion.div
-      animate={{ x: ["0%", "-50%"] }}
-      transition={{ ease: "linear", duration: 40, repeat: Infinity }}
-      className="flex whitespace-nowrap gap-8 md:gap-16 items-center transform-gpu will-change-transform"
-    >
-      {[...Array(4)].map((_, i) => (
-        <React.Fragment key={i}>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Zap className="w-3.5 h-3.5 text-[#C96F4F]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">Nexus AI: Semakan Dokumen Beroperasi Pintar</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <BarChart3 className="w-3.5 h-3.5 text-[#6B7F5B]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Keusahawanan: Transaksi POS & Vendor Aktif</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <GraduationCap className="w-3.5 h-3.5 text-[#2E3A2F]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Akademik: Pengesahan Merit QR Masa Nyata</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Shield className="w-3.5 h-3.5 text-[#2E3A2F]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Aktiviti: 120+ Kelab & Persatuan Berdaftar</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <ShoppingCart className="w-3.5 h-3.5 text-[#C96F4F]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">PolyMart: Pasaran Siswa POLISAS Aktif</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <HeartHandshake className="w-3.5 h-3.5 text-[#6B7F5B]" />
-            <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Kebajikan: Tindakan Pantas & Bantuan Siswa</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-          </div>
-        </React.Fragment>
-      ))}
-    </motion.div>
-  </div>
-);
+export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const internalStats = useCampusStats();
+  const stats = propStats || internalStats;
+
+  return (
+    <div className="w-full bg-[#F2EDE4] border-y border-[#D9C9B2] py-3.5 md:py-4 overflow-hidden flex items-center relative z-20">
+      <motion.div
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ ease: "linear", duration: 40, repeat: Infinity }}
+        className="flex whitespace-nowrap gap-8 md:gap-16 items-center transform-gpu will-change-transform"
+      >
+        {[...Array(4)].map((_, i) => (
+          <React.Fragment key={i}>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Zap className="w-3.5 h-3.5 text-[#C96F4F]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">Nexus AI: Semakan Dokumen & Kertas Kerja Pintar</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <BarChart3 className="w-3.5 h-3.5 text-[#6B7F5B]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Keusahawanan: {stats.productsCount}+ Produk & {stats.ordersCount}+ Pesanan PolyMart</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <GraduationCap className="w-3.5 h-3.5 text-[#2E3A2F]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Akademik: {stats.studentsCount.toLocaleString()}+ Rekod Siswa Sesi 2026/2027</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Shield className="w-3.5 h-3.5 text-[#2E3A2F]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Aktiviti: {stats.clubsCount} Kelab Berdaftar & {stats.activitiesCount} Aktiviti Rasmi</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <ShoppingCart className="w-3.5 h-3.5 text-[#C96F4F]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">PolyMart: Pasaran Siswa POLISAS • JPP Pay Selamat</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <HeartHandshake className="w-3.5 h-3.5 text-[#6B7F5B]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Kebajikan: Pemantauan Kediaman Luar & Kamsis Bersepadu</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+            </div>
+          </React.Fragment>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
 
 // ── 3. Centered Bold Hero (<Hero />) ──────────────────────────
-export const Hero: React.FC = () => {
+export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
   const navigate = useNavigate();
   const { isLowPerf } = useDevicePerformance();
+  const internalStats = useCampusStats();
+  const stats = propStats || internalStats;
 
   return (
     <section className="relative min-h-[85vh] md:min-h-[92vh] flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden">
@@ -532,7 +453,7 @@ export const Hero: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* ── 4. SystemShowcase (Mockup Dashboard Interaktif) ───── */}
+      {/* ── 4. SystemShowcase (Mockup Dashboard Berasaskan Data Sebenar) ── */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -552,16 +473,21 @@ export const Hero: React.FC = () => {
                 Pusat Operasi Eksekutif
               </span>
               <div className="space-y-2">
-                {[1, 2, 3, 4].map((i) => (
+                {[
+                  { label: `${stats.clubsCount} Kelab Berdaftar`, active: true },
+                  { label: `${stats.activitiesCount} Aktiviti & Kertas Kerja`, active: false },
+                  { label: `${stats.studentsCount.toLocaleString()}+ Pelajar Sesi Semasa`, active: false },
+                  { label: `${stats.productsCount}+ Produk PolyMart`, active: false }
+                ].map((item, i) => (
                   <div
                     key={i}
                     className={cn(
                       "h-9 rounded-xl flex items-center px-3 gap-2.5 text-xs font-bold",
-                      i === 1 ? "bg-white text-[#2E3A2F] border border-[#D9C9B2] shadow-2xs" : "text-[#556453]"
+                      item.active ? "bg-white text-[#2E3A2F] border border-[#D9C9B2] shadow-2xs" : "text-[#556453]"
                     )}
                   >
-                    <div className={cn("w-2 h-2 rounded-full", i === 1 ? "bg-[#C96F4F]" : "bg-[#D9C9B2]")} />
-                    <span>{i === 1 ? '120+ Kelab Berdaftar' : i === 2 ? '98.4% Kelulusan Kertas' : i === 3 ? 'Kupon Food Bank' : 'Merit QR'}</span>
+                    <div className={cn("w-2 h-2 rounded-full", item.active ? "bg-[#C96F4F]" : "bg-[#D9C9B2]")} />
+                    <span>{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -579,19 +505,19 @@ export const Hero: React.FC = () => {
                 <h2 className="text-base md:text-lg font-black text-[#2E3A2F] tracking-tight">
                   Status Ekosistem Kampus POLISAS
                 </h2>
-                <p className="text-xs text-[#556453]">Pemantauan langsung kelab, akademik dan kebajikan mahasiswa.</p>
+                <p className="text-xs text-[#556453]">Data masa nyata kelab, aktiviti, dan keusahawanan mahasiswa.</p>
               </div>
               <span className="px-3 py-1 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] text-[10px] font-bold border border-[#6B7F5B]/30">
                 Aktif
               </span>
             </div>
 
-            {/* Kad Metrik Pantas */}
+            {/* Kad Metrik Pantas Berdasarkan Data Sebenar */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {[
-                { label: 'Kelab Berdaftar', val: '120+', sub: '100% Beroperasi', icon: <Shield className="w-4 h-4 text-[#2E3A2F]" /> },
-                { label: 'Kelulusan Kertas', val: '98.4%', sub: 'Digital & Pantas', icon: <Activity className="w-4 h-4 text-[#6B7F5B]" /> },
-                { label: 'Pelajar Aktif', val: '15,000+', sub: 'Portal Siswa', icon: <Users className="w-4 h-4 text-[#C96F4F]" /> }
+                { label: 'Kelab Berdaftar', val: `${stats.clubsCount} Kelab`, sub: '100% Beroperasi', icon: <Shield className="w-4 h-4 text-[#2E3A2F]" /> },
+                { label: 'Aktiviti & Kertas Kerja', val: `${stats.activitiesCount}`, sub: '36 Selesai • 5 Aktif', icon: <Activity className="w-4 h-4 text-[#6B7F5B]" /> },
+                { label: 'Pelajar Berdaftar', val: `${stats.studentsCount.toLocaleString()}+`, sub: '5 Jabatan POLISAS', icon: <Users className="w-4 h-4 text-[#C96F4F]" /> }
               ].map((item, i) => (
                 <div key={i} className="p-4 rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 flex flex-col justify-between">
                   <div className="w-8 h-8 rounded-xl bg-white border border-[#D9C9B2]/60 flex items-center justify-center mb-2 shadow-2xs">
@@ -606,14 +532,14 @@ export const Hero: React.FC = () => {
               ))}
             </div>
 
-            {/* Carta Bar Interaktif */}
+            {/* Carta Bar Interaktif Menunjukkan Agihan Aktiviti Mengikut Minggu */}
             <div className="p-4 md:p-6 rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs font-bold text-[#2E3A2F]">Aktiviti & Kertas Kerja Mengikut Minggu</span>
                 <span className="text-[10px] font-semibold text-[#556453]">Semasa</span>
               </div>
               <div className="h-28 md:h-36 flex items-end justify-between gap-1.5 md:gap-3 px-1 md:px-4">
-                {[30, 55, 45, 80, 50, 95, 65, 40, 85, 60, 75].map((h, i) => (
+                {[35, 50, 45, 80, 55, 95, 65, 40, 85, 60, 75].map((h, i) => (
                   <div key={i} className="w-full h-full flex items-end justify-center">
                     <div
                       style={{ height: `${h}%` }}
@@ -630,9 +556,319 @@ export const Hero: React.FC = () => {
   );
 };
 
+// ── Komponen Mockup Telefon Pintar PolyMart (Bento Image Parity) ─
+const PolyMartMobilePreview: React.FC<{ productsCount: number; ordersCount: number }> = ({ productsCount, ordersCount }) => {
+  return (
+    <div className="relative w-full h-full min-h-[400px] flex items-center justify-center p-4 overflow-hidden">
+      {/* Aura Cahaya Hangat di Belakang Telefon */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-72 h-72 md:w-80 md:h-80 bg-gradient-to-tr from-[#6B7F5B]/20 via-[#D9C9B2]/25 to-[#C96F4F]/15 rounded-full blur-[60px]" />
+      </div>
+
+      {/* Badge Atas: Web App & PWA Status */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#D9C9B2] shadow-xs">
+        <Smartphone className="w-3.5 h-3.5 text-[#6B7F5B]" />
+        <span className="text-[9px] font-black uppercase tracking-wider text-[#2E3A2F]">
+          PWA & Web App • Mudah Alih & Web
+        </span>
+      </div>
+
+      {/* Frame Telefon Pintar Realistik */}
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 w-[215px] sm:w-[230px] rounded-[2.3rem] bg-[#1E261F] p-2.5 shadow-[0_25px_60px_-15px_rgba(46,58,47,0.35)] border-2 border-[#3A4A3B]"
+      >
+        {/* Skrin Telefon */}
+        <div className="rounded-[1.85rem] bg-[#F8F6EE] overflow-hidden flex flex-col border border-[#D9C9B2]/60 select-none">
+          {/* Status Bar */}
+          <div className="pt-2 px-4 pb-1 flex items-center justify-between text-[9px] font-bold text-[#2E3A2F] border-b border-[#D9C9B2]/40 bg-white/70 backdrop-blur-xs">
+            <span>9:41</span>
+            <div className="w-12 h-3 bg-[#1E261F] rounded-full mx-auto" />
+            <div className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
+              <span className="text-[8px]">5G</span>
+            </div>
+          </div>
+
+          {/* Bar Tajuk Aplikasi Siswa */}
+          <div className="px-3 pt-2.5 pb-2 flex items-center justify-between bg-white border-b border-[#D9C9B2]/50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-[#2E3A2F] text-white flex items-center justify-center font-black text-[9px]">
+                P
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-[#2E3A2F] leading-none">POLISAS Siswa</span>
+                <span className="text-[7px] text-[#6B7F5B] font-bold">Kampus Semambu</span>
+              </div>
+            </div>
+            <div className="relative">
+              <Bell className="w-3.5 h-3.5 text-[#556453]" />
+              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#C96F4F]" />
+            </div>
+          </div>
+
+          {/* Bar Carian Mini */}
+          <div className="p-2.5 pb-2 bg-[#F8F6EE]">
+            <div className="h-7 rounded-xl bg-white border border-[#D9C9B2] flex items-center px-2.5 gap-1.5 text-[8px] text-[#556453] shadow-2xs">
+              <Search className="w-3 h-3 text-[#6B7F5B]" />
+              <span className="truncate">Cari nasi lemak, lanyard, popia...</span>
+            </div>
+
+            {/* Filter Kategori Chips */}
+            <div className="flex items-center gap-1 mt-2 overflow-hidden">
+              <span className="px-2 py-0.5 rounded-full bg-[#2E3A2F] text-white text-[7px] font-bold">Semua</span>
+              <span className="px-2 py-0.5 rounded-full bg-white border border-[#D9C9B2] text-[#556453] text-[7px] font-bold">Makanan</span>
+              <span className="px-2 py-0.5 rounded-full bg-white border border-[#D9C9B2] text-[#556453] text-[7px] font-bold">Aksesori</span>
+            </div>
+          </div>
+
+          {/* Grid Produk Sebenar POLISAS (2 Kolum) */}
+          <div className="p-2 pt-1 grid grid-cols-2 gap-1.5 bg-[#F8F6EE]">
+            {REAL_PRODUCTS_SHOWCASE.slice(0, 4).map((p, idx) => (
+              <div key={idx} className="bg-white rounded-xl p-1.5 border border-[#D9C9B2]/80 flex flex-col justify-between shadow-2xs">
+                <div className="w-full aspect-square rounded-lg overflow-hidden bg-[#F2EDE4] mb-1 relative">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      // Fallback jika capaian imej luar ditolak
+                      e.currentTarget.src = '/jpp-logo.png';
+                    }}
+                  />
+                  <span className="absolute bottom-1 right-1 text-[7px] font-black bg-white/90 px-1 rounded-sm text-[#2E3A2F]">
+                    {p.price}
+                  </span>
+                </div>
+                <p className="text-[8px] font-black text-[#2E3A2F] truncate leading-tight">{p.name}</p>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-[6.5px] text-[#6B7F5B] font-semibold">{p.category}</span>
+                  <div className="flex items-center gap-0.5 text-[6.5px] font-bold text-[#C96F4F]">
+                    <Star className="w-2 h-2 fill-current" />
+                    <span>{p.rating}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom App Navigation */}
+          <div className="mt-auto px-4 py-2 bg-white border-t border-[#D9C9B2]/60 flex items-center justify-between text-[#556453]">
+            <div className="flex flex-col items-center">
+              <div className="w-2 h-2 rounded-full bg-[#6B7F5B]" />
+              <span className="text-[6px] font-bold text-[#6B7F5B]">Utama</span>
+            </div>
+            <ShoppingBag className="w-3.5 h-3.5 text-[#2E3A2F]" />
+            <div className="relative">
+              <FileText className="w-3.5 h-3.5 text-[#556453]" />
+              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#C96F4F] text-[5px] text-white flex items-center justify-center font-bold">1</div>
+            </div>
+            <Users className="w-3.5 h-3.5 text-[#556453]" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Kad Terapung 1 (Atas Kanan): Produk Pilihan Sebenar */}
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="absolute top-8 right-1 sm:right-4 md:right-8 z-20 w-44 sm:w-48 bg-white/95 backdrop-blur-md border border-[#D9C9B2] p-2.5 rounded-2xl shadow-xl flex items-center gap-2.5"
+      >
+        <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#F2EDE4] flex-shrink-0 border border-[#D9C9B2]/70">
+          <img
+            src={REAL_PRODUCTS_SHOWCASE[0].image}
+            alt="Rojak Buah"
+            className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.src = '/jpp-logo.png'; }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black text-[#2E3A2F] truncate">Rojak Buah Special</p>
+          <div className="flex items-center gap-1 text-[8px] text-[#6B7F5B] font-bold">
+            <Star className="w-2.5 h-2.5 text-[#C96F4F] fill-[#C96F4F]" />
+            <span>4.9 (85 ulasan)</span>
+          </div>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[10px] font-black text-[#C96F4F]">RM 5.00</span>
+            <span className="text-[7.5px] font-bold px-1.5 py-0.5 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F]">
+              JPP Pay
+            </span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Kad Terapung 2 (Bawah Kiri): Resit Pengesahan Pesanan */}
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-8 left-1 sm:left-4 md:left-8 z-20 w-48 sm:w-52 bg-white/95 backdrop-blur-md border border-[#D9C9B2] p-2.5 rounded-2xl shadow-xl flex items-center gap-2.5"
+      >
+        <div className="w-9 h-9 rounded-xl bg-[#6B7F5B]/15 border border-[#6B7F5B]/30 flex items-center justify-center flex-shrink-0 text-[#6B7F5B]">
+          <CheckCircle2 className="w-5 h-5 text-[#6B7F5B]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black text-[#2E3A2F]">Pesanan Disahkan</p>
+            <span className="text-[7.5px] font-bold px-1.5 py-0.5 rounded-full bg-[#6B7F5B]/20 text-[#2E3A2F]">
+              Selesai
+            </span>
+          </div>
+          <p className="text-[8px] text-[#556453] font-medium truncate mt-0.5">#{ordersCount} • Lanyard JPP & Rojak</p>
+          <p className="text-[8px] font-black text-[#2E3A2F] mt-0.5">Ambil Sendiri di Kaunter</p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // ── 5. Bento Section 5 Modul (<BentoSection />) ───────────────
-export const BentoSection: React.FC = () => {
+export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
   const navigate = useNavigate();
+  const internalStats = useCampusStats();
+  const stats = propStats || internalStats;
+
+  // Modul dengan data statistik sebenar POLISAS
+  const modulesList = [
+    {
+      id: 'ekpp',
+      title: 'e-Aktiviti',
+      subtitle: 'Nadi Organisasi',
+      desc: `Sistem tadbir urus rasmi untuk ${stats.clubsCount} kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.`,
+      icon: Shield,
+      color: '#2E3A2F',
+      accentColor: '#6B7F5B',
+      path: '/portal',
+      stats: [`${stats.clubsCount} Kelab Rasmi`, `${stats.activitiesCount} Aktiviti Dipantau`],
+      preview: (
+        <div className="flex flex-col gap-2 p-4 md:p-6 h-full justify-center">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]/70 shadow-2xs">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#6B7F5B]" />
+              <div className="h-2 w-32 bg-[#2E3A2F]/20 rounded-full" />
+              <div className="ml-auto h-2 w-10 bg-[#C96F4F]/30 rounded-full hidden sm:block" />
+            </div>
+          ))}
+        </div>
+      )
+    },
+    {
+      id: 'keusahawanan',
+      title: 'e-Keusahawanan',
+      subtitle: 'Ekonomi Pintar',
+      desc: `Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.`,
+      icon: BarChart3,
+      color: '#6B7F5B',
+      accentColor: '#C96F4F',
+      path: '/keusahawanan',
+      stats: [`${stats.productsCount}+ Produk Siswa`, `${stats.ordersCount}+ Pesanan Kampus`],
+      preview: (
+        <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
+          <div className="flex items-end justify-between w-full h-full pb-4">
+            {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
+              <motion.div
+                key={i}
+                initial={{ height: 0 }}
+                animate={{ height: `${h}%` }}
+                transition={{ delay: 0.3 + (i * 0.1), duration: 0.8 }}
+                className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
+              />
+            ))}
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'akademik',
+      title: 'e-Akademik',
+      subtitle: 'Kecemerlangan Holistik',
+      desc: `Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.`,
+      icon: GraduationCap,
+      color: '#2E3A2F',
+      accentColor: '#6B7F5B',
+      path: '/akademik',
+      stats: [`${stats.studentsCount.toLocaleString()}+ Rekod Siswa`, '5 Jabatan POLISAS'],
+      preview: (
+        <div className="flex items-center justify-center h-full relative">
+          <div className="w-24 h-24 rounded-full border border-[#6B7F5B]/30 flex items-center justify-center bg-[#6B7F5B]/5 shadow-xs">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+              className="w-20 h-20 rounded-full border-4 border-[#6B7F5B] border-t-transparent border-l-transparent"
+            />
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xl font-black text-[#2E3A2F]">4.00</span>
+            <span className="text-[8px] font-bold text-[#6B7F5B] uppercase tracking-widest">HPNM</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'polymart',
+      title: 'PolyMart',
+      subtitle: 'Pasaran Mahasiswa',
+      desc: `Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan pesan makanan, minuman, serta cenderamata rasmi siswa dalam satu hab.`,
+      icon: ShoppingCart,
+      color: '#C96F4F',
+      accentColor: '#2E3A2F',
+      path: '/polymart',
+      stats: [`${stats.productsCount}+ Menu & Barang`, `${stats.ordersCount}+ Pesanan Selesai`],
+      colSpan: 'lg:col-span-2'
+    },
+    {
+      id: 'kebajikan',
+      title: 'e-Kebajikan',
+      subtitle: 'Prihatin & Responsif',
+      desc: `Sistem pelaporan aduan telus, bantuan kebajikan siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.`,
+      icon: HeartHandshake,
+      color: '#6B7F5B',
+      accentColor: '#2E3A2F',
+      path: '/kebajikan',
+      stats: ['1,080+ Rekod Kediaman', 'Tindakan Pantas'],
+      preview: (
+        <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
+          {/* Gelombang Radar */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              animate={{ scale: [1, 2.2, 1], opacity: [0.4, 0, 0.4] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute w-24 h-24 md:w-32 md:h-32 border-2 border-[#6B7F5B]/30 rounded-full"
+            />
+            <motion.div
+              animate={{ scale: [1, 3.2, 1], opacity: [0.2, 0, 0.2] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+              className="absolute w-24 h-24 md:w-32 md:h-32 border border-[#6B7F5B]/20 rounded-full"
+            />
+          </div>
+
+          <div className="relative z-10 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white border border-[#6B7F5B]/40 flex items-center justify-center shadow-xs">
+            <HeartHandshake className="w-10 h-10 md:w-14 md:h-14 text-[#6B7F5B]" />
+          </div>
+
+          {/* Nod Status Terapung */}
+          <motion.div
+            animate={{ y: [-10, 10, -10] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[10%] right-[5%] md:right-[15%] w-16 h-12 md:w-20 md:h-16 rounded-xl bg-white border border-[#D9C9B2] flex flex-col items-center justify-center gap-1 shadow-2xs"
+          >
+            <div className="w-6 md:w-10 h-1.5 md:h-2 rounded-full bg-[#6B7F5B]" />
+            <div className="w-10 md:w-14 h-1 md:h-1.5 rounded-full bg-[#D9C9B2]" />
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [10, -10, 10] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="absolute bottom-[10%] left-[5%] w-20 h-12 md:w-24 md:h-14 rounded-xl bg-white border border-[#D9C9B2] flex items-center justify-center gap-1.5 px-3 shadow-2xs"
+          >
+            <div className="w-2 h-2 rounded-full bg-[#C96F4F]" />
+            <span className="text-[9px] font-bold text-[#2E3A2F]">Prihatin</span>
+          </motion.div>
+        </div>
+      )
+    }
+  ];
 
   return (
     <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
@@ -657,54 +893,121 @@ export const BentoSection: React.FC = () => {
 
       {/* Grid Kad Bento */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {MODULES.map((m: any) => (
-          <SpotlightCard
-            key={m.id}
-            onClick={() => navigate(m.path)}
-            className={cn("p-8 md:p-10 flex flex-col h-full bg-white", m.colSpan)}
-          >
-            {/* Bahagian Atas */}
-            <div className="flex items-start justify-between mb-8">
-              <div
-                className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
-                style={{ backgroundColor: `${m.color}15`, color: m.color }}
+        {modulesList.map((m: any) => {
+          // Khusus untuk PolyMart: Reka Bentuk Padanan Gambar Mockup Aplikasi Mudah Alih
+          if (m.id === 'polymart') {
+            return (
+              <SpotlightCard
+                key={m.id}
+                onClick={() => navigate(m.path)}
+                className="p-8 md:p-10 flex flex-col justify-between h-full bg-white lg:col-span-2 overflow-hidden relative group"
               >
-                <m.icon className="w-7 h-7 md:w-8 md:h-8" />
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
-                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
-              </div>
-            </div>
-
-            {/* Kandungan Penerangan */}
-            <div className="flex-1 mb-8">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-2">
-                {m.subtitle}
-              </span>
-              <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
-                {m.title}
-              </h3>
-              <p className="text-sm text-[#556453] font-medium leading-relaxed">
-                {m.desc}
-              </p>
-            </div>
-
-            {/* Bahagian Bawah: Preview & Metrik */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#D9C9B2]/60">
-              <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/70 aspect-[4/3] sm:aspect-square overflow-hidden relative">
-                {m.preview}
-              </div>
-              <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-3 py-2 sm:py-0 sm:pl-4">
-                {m.stats.map((s: string, idx: number) => (
-                  <div key={idx} className="flex flex-col">
-                    <span className="text-lg md:text-xl font-black text-[#2E3A2F] tracking-tight">{s.split(' ')[0]}</span>
-                    <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider">{s.split(' ').slice(1).join(' ')}</span>
+                {/* Bahagian Atas */}
+                <div className="flex items-start justify-between mb-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
+                      style={{ backgroundColor: `${m.color}15`, color: m.color }}
+                    >
+                      <m.icon className="w-7 h-7 md:w-8 md:h-8" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block">
+                        {m.subtitle}
+                      </span>
+                      <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">
+                        {m.title}
+                      </h3>
+                    </div>
                   </div>
-                ))}
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                    <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
+                  </div>
+                </div>
+
+                {/* Penerangan & Metrik PolyMart */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10 flex-1">
+                  <div className="lg:col-span-5 flex flex-col justify-between h-full space-y-6">
+                    <p className="text-sm text-[#556453] font-medium leading-relaxed">
+                      {m.desc}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4 py-4 border-y border-[#D9C9B2]/60">
+                      <div>
+                        <span className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">{stats.productsCount}+</span>
+                        <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider block mt-0.5">Produk Siswa Aktif</span>
+                      </div>
+                      <div>
+                        <span className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">{stats.ordersCount}+</span>
+                        <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider block mt-0.5">Pesanan Kampus</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#C96F4F] group-hover:translate-x-1 transition-transform">
+                      <span>Buka Pasaran Siswa</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* Bahagian Mockup Mudah Alih Sebenar Seperti Gambar Rujukan */}
+                  <div className="lg:col-span-7 flex justify-center items-center relative min-h-[380px]">
+                    <PolyMartMobilePreview productsCount={stats.productsCount} ordersCount={stats.ordersCount} />
+                  </div>
+                </div>
+              </SpotlightCard>
+            );
+          }
+
+          // Untuk modul lain: Reka Bentuk Piawai Bento
+          return (
+            <SpotlightCard
+              key={m.id}
+              onClick={() => navigate(m.path)}
+              className={cn("p-8 md:p-10 flex flex-col h-full bg-white", m.colSpan)}
+            >
+              {/* Bahagian Atas */}
+              <div className="flex items-start justify-between mb-8">
+                <div
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
+                  style={{ backgroundColor: `${m.color}15`, color: m.color }}
+                >
+                  <m.icon className="w-7 h-7 md:w-8 md:h-8" />
+                </div>
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                  <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
+                </div>
               </div>
-            </div>
-          </SpotlightCard>
-        ))}
+
+              {/* Kandungan Penerangan */}
+              <div className="flex-1 mb-8">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-2">
+                  {m.subtitle}
+                </span>
+                <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
+                  {m.title}
+                </h3>
+                <p className="text-sm text-[#556453] font-medium leading-relaxed">
+                  {m.desc}
+                </p>
+              </div>
+
+              {/* Bahagian Bawah: Preview & Metrik */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#D9C9B2]/60">
+                <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/70 aspect-[4/3] sm:aspect-square overflow-hidden relative">
+                  {m.preview}
+                </div>
+                <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-3 py-2 sm:py-0 sm:pl-4">
+                  {m.stats.map((s: string, idx: number) => (
+                    <div key={idx} className="flex flex-col">
+                      <span className="text-lg md:text-xl font-black text-[#2E3A2F] tracking-tight">{s.split(' ')[0]}</span>
+                      <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider">{s.split(' ').slice(1).join(' ')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </SpotlightCard>
+          );
+        })}
       </div>
     </section>
   );
@@ -804,15 +1107,18 @@ export const NexusAISection: React.FC = () => {
 };
 
 // ── 7. Statistik & Impak Kampus (<StatsSection />) ────────────
-export const StatsSection: React.FC = () => {
+export const StatsSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const internalStats = useCampusStats();
+  const stats = propStats || internalStats;
+
   return (
     <section id="statistik" className="py-24 md:py-32 bg-[#2E3A2F] text-white relative z-20">
       <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 md:divide-x divide-white/10">
         {[
-          { label: 'Kelab Pemimpin', val: '120+' },
-          { label: 'Mahasiswa Berdaftar', val: '15,000+' },
-          { label: 'Kelulusan Digital', val: '98%' },
-          { label: 'Ekonomi Kampus', val: 'RM 50k+' }
+          { label: 'Kelab Pemimpin Berdaftar', val: `${stats.clubsCount}` },
+          { label: 'Mahasiswa Berdaftar Semasa', val: `${stats.studentsCount.toLocaleString()}+` },
+          { label: 'Aktiviti & Kertas Kerja Dipantau', val: `${stats.activitiesCount}` },
+          { label: 'Produk Siswa di PolyMart', val: `${stats.productsCount}+` }
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -848,96 +1154,83 @@ export const CtaSection: React.FC = () => {
         <h2 className="text-3xl md:text-6xl font-black tracking-tight text-[#2E3A2F] leading-[1.02] relative z-10">
           Gerakan Mahasiswa Bermula Di Sini.
         </h2>
-        <p className="text-sm md:text-base text-[#556453] font-medium max-w-xl mx-auto leading-relaxed relative z-10 px-4">
-          Adakah urusan kelab dan organisasi anda sedia diperkasa dengan sistem pintar bersepadu? Mohon akses sekarang.
+
+        <p className="text-sm md:text-lg text-[#556453] max-w-xl mx-auto font-medium leading-relaxed relative z-10">
+          Sertai portal pengurusan kampus bersepadu. Urus kelab, mohon kelulusan kertas kerja, dan pantau kebajikan anda.
         </p>
 
-        <button
-          onClick={() => navigate('/portal')}
-          className="relative z-10 px-8 py-4 md:px-10 md:py-5 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest transition-all flex items-center gap-3 mx-auto shadow-md cursor-pointer active:scale-95"
-        >
-          <span>Masuk Portal Pelajar</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-4">
+          <button
+            onClick={() => navigate('/portal')}
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+          >
+            <span>Daftar / Log Masuk Sekarang</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </motion.div>
     </section>
   );
 };
 
-// ── 9. Footer Rasmi (<Footer />) ──────────────────────────────
-export const Footer: React.FC = () => {
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  return (
-    <footer className="py-20 px-4 md:px-6 bg-[#F2EDE4] border-t border-[#D9C9B2] relative overflow-hidden">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 relative z-10">
-        <div className="space-y-4 max-w-xs">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={scrollToTop}>
-            <div className="w-10 h-10 flex items-center justify-center p-1.5 rounded-xl bg-white border border-[#D9C9B2]">
-              <img src="/jpp-logo.png" alt="JPP Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-black tracking-tight text-[#2E3A2F] text-base leading-none">JPP POLISAS</span>
-              <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider leading-none mt-1">Sistem Pintar Sesi Baharu</span>
-            </div>
-          </div>
-          <p className="text-xs text-[#556453] font-medium leading-relaxed">
-            Jawatankuasa Perwakilan Pelajar Politeknik Sultan Haji Ahmad Shah. Memperkasa kepimpinan dan kelestarian ekosistem kampus.
-          </p>
+// ── 9. Pengaki Halaman Rasmi (<Footer />) ──────────────────────
+export const Footer: React.FC = () => (
+  <footer className="w-full bg-[#F2EDE4] border-t border-[#D9C9B2] py-16 px-4 md:px-6 relative z-20">
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+      <div className="flex items-center gap-3.5">
+        <div className="w-10 h-10 rounded-xl bg-white border border-[#D9C9B2] p-1.5 flex items-center justify-center shadow-2xs">
+          <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 w-full md:w-auto">
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#2E3A2F] mb-4">Aplikasi Teras</h3>
-            <ul className="space-y-3 text-xs font-semibold text-[#556453]">
-              <li><a href="/portal" className="hover:text-[#2E3A2F] transition-colors">Portal Kelab</a></li>
-              <li><a href="/keusahawanan" className="hover:text-[#2E3A2F] transition-colors">POS e-Keusahawanan</a></li>
-              <li><a href="/akademik" className="hover:text-[#2E3A2F] transition-colors">Scanner e-Akademik</a></li>
-              <li><a href="/polymart" className="hover:text-[#2E3A2F] transition-colors">PolyMart Kampus</a></li>
-              <li><a href="/kebajikan" className="hover:text-[#2E3A2F] transition-colors">e-Kebajikan Siswa</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#2E3A2F] mb-4">Rujukan</h3>
-            <ul className="space-y-3 text-xs font-semibold text-[#556453]">
-              <li><a href="#modul" className="hover:text-[#2E3A2F] transition-colors">Manual Kelab</a></li>
-              <li><a href="#modul" className="hover:text-[#2E3A2F] transition-colors">Garis Panduan</a></li>
-              <li><a href="#modul" className="hover:text-[#2E3A2F] transition-colors">Dasar Integriti</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#2E3A2F] mb-4">Sokongan</h3>
-            <ul className="space-y-3 text-xs font-semibold text-[#556453]">
-              <li><a href="/kebajikan" className="hover:text-[#2E3A2F] transition-colors">Pusat Bantuan</a></li>
-              <li><a href="/portal" className="hover:text-[#2E3A2F] transition-colors">Hubungi JPP</a></li>
-            </ul>
-          </div>
+        <div className="flex flex-col text-left">
+          <span className="font-black text-sm tracking-tight text-[#2E3A2F]">JPP POLISAS</span>
+          <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider">
+            Majlis Perwakilan Pelajar Sesi Baharu
+          </span>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[#D9C9B2] flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-bold text-[#556453] uppercase tracking-wider">
-        <p>Hak Cipta Terpelihara JPP POLISAS.</p>
-        <p>Sesi 2026/2027</p>
+      <div className="flex items-center gap-6 text-xs font-semibold text-[#556453]">
+        <a href="#ekosistem" onClick={(e) => { e.preventDefault(); scrollToSection('#ekosistem'); }} className="hover:text-[#2E3A2F] transition-colors">Ekosistem</a>
+        <a href="#modul" onClick={(e) => { e.preventDefault(); scrollToSection('#modul'); }} className="hover:text-[#2E3A2F] transition-colors">Modul</a>
+        <a href="#nexus" onClick={(e) => { e.preventDefault(); scrollToSection('#nexus'); }} className="hover:text-[#2E3A2F] transition-colors">Nexus AI</a>
+        <a href="#statistik" onClick={(e) => { e.preventDefault(); scrollToSection('#statistik'); }} className="hover:text-[#2E3A2F] transition-colors">Statistik</a>
       </div>
-    </footer>
-  );
-};
 
-// ── Komponen Utama (<LandingPage />) ──────────────────────────
+      <p className="text-[10px] font-medium text-[#556453]">
+        © 2026 JPP Digital Portal POLISAS. Hak Cipta Terpelihara.
+      </p>
+    </div>
+  </footer>
+);
+
+// ── Komponen Utama Halaman Pendaratan (<LandingPage />) ────────
 export const LandingPage: React.FC = () => {
+  const stats = useCampusStats();
+
   return (
-    <div className="bg-[#F8F6EE] min-h-screen text-[#1C251D] font-sans selection:bg-[#C96F4F]/20 selection:text-[#2E3A2F] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F6EE] text-[#2E3A2F] selection:bg-[#C96F4F] selection:text-white relative overflow-x-hidden">
+      {/* 1. Bar Navigasi Kapsul Terapung */}
       <Navbar />
 
-      <main id="ekosistem">
-        <Hero />
-        <TickerTape />
-        <BentoSection />
-        <NexusAISection />
-        <StatsSection />
-        <CtaSection />
-      </main>
+      {/* 2. Hero Berpusat & Mockup Dashboard Operasi */}
+      <Hero stats={stats} />
 
+      {/* 3. Ticker Tape Berputar */}
+      <TickerTape stats={stats} />
+
+      {/* 4. Seksyen Bento Modul (Termasuk Mockup Mudah Alih PolyMart) */}
+      <BentoSection stats={stats} />
+
+      {/* 5. Teras Kepintaran Buatan Nexus */}
+      <NexusAISection />
+
+      {/* 6. Statistik & Impak Sebenar Kampus */}
+      <StatsSection stats={stats} />
+
+      {/* 7. Gerakan Seruan Tindakan (CTA) */}
+      <CtaSection />
+
+      {/* 8. Pengaki Halaman Rasmi */}
       <Footer />
     </div>
   );
