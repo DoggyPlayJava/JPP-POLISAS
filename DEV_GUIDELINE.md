@@ -3759,4 +3759,22 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
      `{/* EMS and PolyMart overlays temporarily disabled pending venue data audit */}`.
    - Pil penapis carian pantas di bahagian atas dikembalikan kepada fasiliti kampus yang sah: `[ Semua ]`, `[ Kafe ]`, `[ Surau ]`, `[ Tandas ]`.
 
+---
+
+### 31.4 Laman Log Masuk SSO-First & Penyelarasan Tema Earthy Minimal (`src/pages/LoginPage.tsx`)
+
+1. **Hierarki SSO-First (Inspirasi Reka Bentuk Moden 1-Sentuhan):**
+   - **Tindakan Hero Utama:** Butang **"Teruskan dengan Google"** diletakkan di bahagian paling atas dan paling menonjol pada borang log masuk bagi menghapuskan geseran menaip manual dan mengurangkan isu pelajar terlupa kata laluan semasa minggu orientasi/pendaftaran.
+   - **Pemisah Halus (*Subtle Divider*):** Garisan pembahagi *"atau log masuk manual"* memisahkan SSO dengan pilihan log masuk tradisional.
+   - **Borang Manual Berkemas:** Medan input bagi Emel/Nama/No Matrik dan Kata Laluan disusun rapi di bawah pembahagi tanpa mendominasi paparan utama. Pilihan "Lupa?" menggunakan aksen terakota `#C96F4F`.
+   - **Pendaftaran Baharu:** Turut mengutamakan "Daftar bersama Google" di bahagian atas sebelum togol pendaftaran manual.
+
+2. **Palet Warna Earthy Minimal (Selaras dengan Landing Page):**
+   - Kanvas Latar Belakang: `#F8F6EE` (*Warm Alabaster / Cream*) & `#151D16` (*Dark Charcoal Green*)
+   - Warna Utama / Butang: `#2E3A2F` (*Deep Forest Moss*)
+   - Warna Sekunder / Lencana: `#6B7F5B` (*Sage Green*)
+   - Sempadan Garisan & Pembahagi: `#D9C9B2` (*Warm Sand / Linen*)
+   - Warna Aksen Hangat: `#C96F4F` (*Terracotta Clay*)
+   - **100% Sifar Emoji Mentah & Sifar Em-Dash:** Menggunakan ikon vektor Lucide React secara eksklusif (`Smartphone`, `Lightbulb`, `CheckCircle2`, `Mail`, `Send`, `PhoneCall`).
+
 

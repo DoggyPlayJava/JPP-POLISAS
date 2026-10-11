@@ -30,10 +30,11 @@ describe('superAppHelpers', () => {
   });
 
   it('filters and sorts upcoming events correctly', () => {
+    const today = new Date().toISOString().slice(0, 10);
     const mockEvents = [
       { id: '1', title: 'Past Event', event_date: '2020-01-01', status: 'COMPLETED' },
-      { id: '2', title: 'Live Event', event_date: '2026-10-10', status: 'PUBLISHED' },
-      { id: '3', title: 'Future Event', event_date: '2026-11-15', status: 'PUBLISHED' },
+      { id: '2', title: 'Live Event', event_date: today, status: 'PUBLISHED' },
+      { id: '3', title: 'Future Event', event_date: '2030-11-15', status: 'PUBLISHED' },
     ];
     const upcoming = filterUpcomingEvents(mockEvents);
     expect(upcoming.length).toBe(2);
