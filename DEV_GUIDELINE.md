@@ -4033,3 +4033,18 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
     - *JP:* `PBK1..9`, `PBL1..3`, `PMK1..3`, `TECC_JP`.
   - Menolak sebarang token dengan panjang kurang daripada 2 aksara (`length < 2`) bagi mengelakkan bunyi bising (*glyph noise*) daripada mencemarkan nama bilik.
 
+### 32.10 Pengoptimuman UX Kad Bento Portal Pelajar (`NextClassBentoCard.tsx`)
+
+- **Keadaan Kompak Sebagai Lalai (*Default Compact State*):**
+  - Kad kini dibuka secara kompak secara lalai (`isCollapsed = true`) bagi mengelakkan maklumat bertindih dan menjimatkan ruang tatalan berharga pada peranti telefon pintar pelajar.
+  - Keseluruhan kawasan kad boleh ditekan (*clickable surface*) untuk mengembangkan atau mengecilkan kad secara lancar.
+- **Aksi Satu Sentuhan Pantas (*One-Tap Quick Action*):**
+  - Butang terus **"Tunjuk Arah"** (PolyMaps) atau **"Sertai"** (Microsoft Teams) disepadukan terus ke dalam bar kompak bersama pengendali `e.stopPropagation()`. Pelajar boleh terus bernavigasi ke bilik kuliah tanpa perlu mengembangkan kad terlebih dahulu.
+- **Penghapusan Maklumat Berulang (*Zero UI Clutter / Redundancy*):**
+  - **Tajuk Pertindihan Dibuang:** Lencana statik *"KELAS SETERUSNYA HARI INI"* digugurkan kerana lencana dinamik masa nyata (*"Dalam 2 jam"* / *"Sedang berlangsung"*) sudah jelas menyatakan status kelas.
+  - **Pautan Gandar Dimansuhkan:** Pautan teks *"Lihat Jadual Penuh"* di penjuru atas dibuang memandangkan butang tindakan penuh sudah tersedia di bahagian bawah kad.
+  - **Kod Kursus Tanpa Duplikasi:** Sistem menyemak `hasDistinctCourseName`. Sekiranya nama kursus tidak wujud atau sama dengan kod kursus (cth: `DEE30163`), kod kursus hanya dipaparkan sekali sahaja bersama lencana jenis kelas.
+- **Bar Kemajuan Kelas Semasa (*Live Elapsed Progress Bar*):**
+  - Apabila kelas sedang berlangsung (`isOngoing = true`), bar kemajuan animasi berwarna zamrud (*emerald*) dipaparkan secara automatik memaparkan nisbah minit yang telah berlalu berbanding baki masa kelas.
+
+
