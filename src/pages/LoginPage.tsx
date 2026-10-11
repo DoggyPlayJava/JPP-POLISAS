@@ -393,7 +393,7 @@ export function LoginPage() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight leading-[1.12] text-white">
-              Membentuk Kepimpinan Kampus Digital POLISAS.
+              Perpaduan Progresif Demi Mahasiswa.
             </h2>
 
             <p className="text-sm sm:text-base text-[#D9C9B2] font-normal leading-relaxed max-w-md">
@@ -1076,25 +1076,27 @@ export function LoginPage() {
                           <span>{isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan' : 'Log Masuk'}</span>
                           {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                         </Button>
-
-                        {/* Dev Mode Bypass Button (Only in development) */}
-                        {import.meta.env.DEV && !isForgotPassword && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              localStorage.setItem('use_mock_auth', 'true');
-                              toast.success('Pintasan Developer diaktifkan!');
-                              setTimeout(() => window.location.href = '/portal', 500);
-                            }}
-                            className="w-full h-9 rounded-xl border border-dashed border-[#6B7F5B]/50 bg-[#6B7F5B]/10 hover:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                            <span>Pintas Log Masuk (Dev Mode)</span>
-                          </button>
-                        )}
                       </form>
                     </motion.div>
                   </AnimatePresence>
+                )}
+
+                {/* Dev Mode Bypass Button (Prominently visible on localhost in development) */}
+                {import.meta.env.DEV && !isForgotPassword && (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.setItem('use_mock_auth', 'true');
+                        toast.success('Pintasan Developer diaktifkan!');
+                        setTimeout(() => window.location.href = '/portal', 500);
+                      }}
+                      className="w-full h-11 rounded-xl border-2 border-dashed border-[#6B7F5B] bg-[#6B7F5B]/15 hover:bg-[#6B7F5B]/25 text-[#2E3A2F] dark:text-[#F8F6EE] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#6B7F5B]" />
+                      <span>Pintas Log Masuk (Dev Mode)</span>
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -1148,7 +1150,7 @@ export function LoginPage() {
           {/* Footer copyright */}
           <div className="mt-5 text-center">
             <p className="text-[10px] font-medium text-[#556453]/70 dark:text-[#A3B39F]/50">
-              © 2026 JPP Digital Portal. Majlis Perwakilan Pelajar POLISAS.
+              © 2026 JPP Digital Portal. Jawatankuasa Perwakilan Pelajar POLISAS.
             </p>
           </div>
         </motion.div>

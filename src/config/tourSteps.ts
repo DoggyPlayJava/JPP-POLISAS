@@ -186,7 +186,7 @@ export const TOUR_STEPS: Record<string, Step[]> = {
     }
   ],
 
-  // 3. Modul EKPP (Kelab & Majlis Perwakilan Pelajar)
+  // 3. Modul EKPP (Kelab & Jawatankuasa Perwakilan Pelajar)
   EKPP_DASHBOARD: [
     {
       target: '.tour-kelab-stats',
@@ -267,7 +267,7 @@ export const TOUR_STEPS: Record<string, Step[]> = {
     {
       target: '.tour-semakan-menunggu',
       title: '📋 Panel Kelulusan',
-      content: 'Bilik kebal Majlis Perwakilan Pelajar (JPP). Segala laporan bulanan yang dihantar oleh kelab perlu disemak ketepatannya sebelum diluluskan.',
+      content: 'Bilik kebal Jawatankuasa Perwakilan Pelajar (JPP). Segala laporan bulanan yang dihantar oleh kelab perlu disemak ketepatannya sebelum diluluskan.',
       placement: 'bottom',
       disableBeacon: true,
     }

@@ -2267,7 +2267,7 @@ Sejajar dengan garis panduan prestasi tinggi dan beban 1,500 pengguna orientasi:
 - **Indeks Kolum FK**: Indeks `idx_polysuara_poll_votes_user_id` and `idx_polysuara_poll_votes_option_id` ditambah untuk mematuhi peraturan indeks asing demi prestasi optimal.
 
 ## 20. Senibina Pindaan Profil Pelajar (profile_edit_requests) 📋
-Modul ini membenarkan pelajar memohon perubahan maklumat kritikal (seperti No. Matrik atau Semester semasa) untuk disemak dan diluluskan secara manual oleh Majlis Perwakilan Pelajar (JPP) / Majlis Tertinggi (MT) demi mengekalkan kualiti data.
+Modul ini membenarkan pelajar memohon perubahan maklumat kritikal (seperti No. Matrik atau Semester semasa) untuk disemak dan diluluskan secara manual oleh Jawatankuasa Perwakilan Pelajar (JPP) / Majlis Tertinggi (MT) demi mengekalkan kualiti data.
 
 ### 20.1 Pangkalan Data & Logik RLS
 - **Jadual `profile_edit_requests`**: Menyimpan perincian permohonan dengan status flow `PENDING` $\rightarrow$ `APPROVED` / `REJECTED`.
@@ -3717,7 +3717,7 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **`<CommerceBentoGrid />`:** Grid Bento 2x2 pasaran dan kebajikan siswa: *Katalog Produk PolyMart*, *JPP Pay & Resit Digital*, *Kupon Digital FoodBank Siswa*, dan *Pesanan Pantas Mudah Alih*.
    - **`<FaqSplitSection />`:** Susun atur dwi-lajur: fotografi gaya hidup autentik kampus POLISAS di sebelah kiri, dan akordion Soalan Lazim (FAQ) bergaris halus minimalis di sebelah kanan.
    - **`<CampusGlobeScale />`:** Visual sfera 3D bumi kampus bersinar lembut dikelilingi riben metrik 4 pengira institusi (15,000+ Mahasiswa, 120+ Kelab Aktif, 12 Modul Bersepadu, 100% Digital & Telus).
-   - **`<StudentCommunityVoice />`:** Triad lencana pengesahan institusi (Politeknik KPT, Majlis Perwakilan Pelajar, Hal Ehwal Pelajar) diikuti 4 kad testimoni asli suara mahasiswa pelbagai jabatan.
+   - **`<StudentCommunityVoice />`:** Triad lencana pengesahan institusi (Politeknik KPT, Jawatankuasa Perwakilan Pelajar, Hal Ehwal Pelajar) diikuti 4 kad testimoni asli suara mahasiswa pelbagai jabatan.
    - **`<FinalHandheldCtaAndFooter />`:** Sepanduk perspektif ajakan bertindak (CTA) *"Bersedia Memulakan Pengalaman Kampus Pintar Anda?"* dan pengaki editorial lengkap dengan 4 lajur maklumat serta tera air gergasi *"POLISAS"* berskala monumen di bahagian latar belakang.
 
 3. **Penyesuaian Perkakasan Pengguna (`useDevicePerformance`):**
@@ -3766,16 +3766,21 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 1. **Hierarki SSO-First Tanpa Keserabutan (*Frictionless & Uncluttered*):**
    - **Tindakan Hero Utama:** Butang **"Teruskan dengan Google"** (`h-14`, rounded-2xl) diletakkan di bahagian paling atas dan paling menonjol pada borang log masuk bagi menghapuskan geseran menaip manual dan mengurangkan isu pelajar terlupa kata laluan.
    - **Borang Manual Tersembunyi Secara Default (*Collapsible Manual Form*):** Borang log masuk manual disembunyikan secara lalai di sebalik butang togol minimalis *"Log masuk menggunakan Emel / No Matrik"*. Hanya apabila pelajar menekannya, borang manual akan mengembang secara lancar dengan animasi Framer Motion. Ini memastikan fokus visual 100% tertumpu pada Google SSO.
+   - **Pintasan Log Masuk Developer (Dev Mode):** Butang pintasan pembangunan (`Pintas Log Masuk (Dev Mode)`) dipaparkan secara langsung di kad utama semasa sesi pembangunan tempatan (`import.meta.env.DEV`), tanpa memerlukan pembukaan borang log masuk manual terlebih dahulu.
    - **Pendaftaran Baharu:** Turut mendahulukan kad "Daftar bersama Google" di bahagian atas sebelum togol pendaftaran manual.
 
 2. **Statistik Tulen Institusi POLISAS (*Authentic Institutional Data*):**
    - Menggantikan angka rekaan seperti "15,000+ Mahasiswa" dan "120+ Kelab" kepada metrik institusi sebenar POLISAS:
      - **Kelab Berdaftar:** Disemak dan dikira secara langsung (live) dari pangkalan data Supabase jadual `clubs` (`realStats.clubCount`).
-     - **Unit Exco JPP:** 9 Portfolio Eksekutif Rasmi MPP POLISAS.
+     - **Unit Exco JPP:** 9 Portfolio Eksekutif Rasmi JPP POLISAS.
      - **Jabatan Akademik:** 5 Jabatan Utama (JP, JKM, JTM, JKE, JKA).
      - **Sesi Semasa:** Sesi 2026/2027.
 
-3. **Palet Warna Earthy Minimal (Selaras dengan Landing Page):**
+3. **Penamaan Entiti & Slogan Rasmi Institusi:**
+   - **Nama Entiti:** **Jawatankuasa Perwakilan Pelajar (JPP)** POLISAS (bukan Majlis Perwakilan Pelajar).
+   - **Slogan Rasmi:** **"Perpaduan Progresif Demi Mahasiswa"** dipaparkan secara berani di panel penjenamaan portal (menggantikan "Membentuk Kepimpinan Kampus Digital POLISAS").
+
+4. **Palet Warna Earthy Minimal (Selaras dengan Landing Page):**
    - Kanvas Latar Belakang: `#F8F6EE` (*Warm Alabaster / Cream*) & `#151D16` (*Dark Charcoal Green*)
    - Warna Utama / Butang: `#2E3A2F` (*Deep Forest Moss*)
    - Warna Sekunder / Lencana: `#6B7F5B` (*Sage Green*)

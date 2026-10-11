@@ -39,6 +39,15 @@ describe('LoginPage Google SSO-First & Earthy Minimal Redesign', () => {
       expect(source).toContain('Unit Exco JPP');
       expect(source).toContain('Jabatan Akademik');
     });
+    it('displays the official slogan "Perpaduan Progresif Demi Mahasiswa" and bans old slogan', () => {
+      expect(source).toContain('Perpaduan Progresif Demi Mahasiswa');
+      expect(source).not.toContain('Membentuk Kepimpinan Kampus Digital POLISAS');
+    });
+
+    it('uses official institutional name "Jawatankuasa Perwakilan Pelajar" and bans "Majlis Perwakilan Pelajar"', () => {
+      expect(source).toContain('Jawatankuasa Perwakilan Pelajar');
+      expect(source).not.toContain('Majlis Perwakilan Pelajar');
+    });
   });
 
   describe('Google SSO-First Clean Hierarchy (Uncluttered)', () => {
@@ -50,6 +59,15 @@ describe('LoginPage Google SSO-First & Earthy Minimal Redesign', () => {
     it('hides manual login by default behind a clean toggle (showManualLogin)', () => {
       expect(source).toContain('showManualLogin');
       expect(source).toContain('setShowManualLogin');
+    });
+
+    it('renders the Developer Bypass prominently on localhost outside the manual form toggle', () => {
+      expect(source).toContain('Pintas Log Masuk (Dev Mode)');
+      expect(source).toContain('import.meta.env.DEV');
+      const manualFormClosing = source.indexOf('</motion.div>\n                  </AnimatePresence>\n                )}');
+      const devBypassIndex = source.indexOf('Pintas Log Masuk (Dev Mode)');
+      // Must be outside the collapsible motion.div
+      expect(devBypassIndex).toBeGreaterThan(manualFormClosing);
     });
 
     it('preserves core authentication handlers and security guards', () => {

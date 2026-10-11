@@ -43,7 +43,7 @@ The platform provides different capabilities depending on your role:
 ## Panduan Pengguna (Bahasa Melayu)
 
 ### 1. Pengenalan
-Selamat datang ke sistem JPP-POLISAS! Aplikasi ini direka bentuk untuk membantu pelajar, ahli jawatankuasa kelab, penasihat kelab, serta Majlis Perwakilan Pelajar (JPP) menguruskan aktiviti kelab, keahlian, pelaporan, dan sistem Takwim (kalendar berpusat) di Politeknik Sultan Haji Ahmad Shah (POLISAS).
+Selamat datang ke sistem JPP-POLISAS! Aplikasi ini direka bentuk untuk membantu pelajar, ahli jawatankuasa kelab, penasihat kelab, serta Jawatankuasa Perwakilan Pelajar (JPP) menguruskan aktiviti kelab, keahlian, pelaporan, dan sistem Takwim (kalendar berpusat) di Politeknik Sultan Haji Ahmad Shah (POLISAS).
 
 ### 2. Jenis Peranan & Akses Jawatankuasa
 Platform ini menyediakan fungsi mengikut jenis peranan:

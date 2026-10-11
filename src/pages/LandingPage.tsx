@@ -22,7 +22,17 @@ import {
   Star,
   Search,
   ShoppingBag,
-  Bell
+  Bell,
+  Store,
+  QrCode,
+  Utensils,
+  Coffee,
+  Sparkles,
+  Heart,
+  Plus,
+  MessageCircle,
+  TrendingUp,
+  FileCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -102,42 +112,6 @@ const scrollToSection = (id: string, offset = 80) => {
     });
   }
 };
-
-// ── Data Produk Sebenar PolyMart (Real POLISAS Products) ──────
-const REAL_PRODUCTS_SHOWCASE = [
-  {
-    name: 'Rojak Buah Special',
-    price: 'RM 5.00',
-    category: 'Makanan',
-    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/f754baf3-3d2a-498d-a43f-5de30815f84d/1786280761431.jpeg',
-    rating: '4.9',
-    sales: '85 ulasan'
-  },
-  {
-    name: 'Lanyard JPP POLISAS',
-    price: 'RM 15.00',
-    category: 'Aksesori',
-    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/e489a087-46d2-4030-aeb1-ae7b1ba00ee3/1782179975909.jpeg',
-    rating: '5.0',
-    sales: 'Rasmi JPP'
-  },
-  {
-    name: 'Kek Chocolate Moist',
-    price: 'RM 13.00',
-    category: 'Pencuci Mulut',
-    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/f754baf3-3d2a-498d-a43f-5de30815f84d/1786280409551.jpeg',
-    rating: '4.8',
-    sales: 'Vendor Siswa'
-  },
-  {
-    name: 'Spud Bolognese',
-    price: 'RM 13.00',
-    category: 'Makanan',
-    image: 'https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/8b53e2a5-7542-4cc0-8634-fbb0dbe7fe6e/1786189757219.jpeg',
-    rating: '4.9',
-    sales: 'Panas & Segar'
-  }
-];
 
 // ── Sub-Komponen SpotlightCard ────────────────────────────────
 function SpotlightCard({ children, className, onClick }: any) {
@@ -556,319 +530,231 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
   );
 };
 
-// ── Komponen Mockup Telefon Pintar PolyMart (Bento Image Parity) ─
-const PolyMartMobilePreview: React.FC<{ productsCount: number; ordersCount: number }> = ({ productsCount, ordersCount }) => {
+// ── Showcase PolyMart Tulen Sepadan UI Sebenar (1:1 Screenshot Parity) ──
+const RealPolyMartDeviceShowcase: React.FC = () => {
   return (
-    <div className="relative w-full h-full min-h-[400px] flex items-center justify-center p-4 overflow-hidden">
-      {/* Aura Cahaya Hangat di Belakang Telefon */}
+    <div className="relative w-full flex items-center justify-center py-6 px-2 overflow-hidden">
+      {/* Halo Pencahayaan Estetik */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-72 h-72 md:w-80 md:h-80 bg-gradient-to-tr from-[#6B7F5B]/20 via-[#D9C9B2]/25 to-[#C96F4F]/15 rounded-full blur-[60px]" />
+        <div className="w-[320px] h-[320px] bg-gradient-to-tr from-[#6B7F5B]/15 via-[#D9C9B2]/20 to-[#C96F4F]/10 rounded-full blur-[70px]" />
       </div>
 
-      {/* Badge Atas: Web App & PWA Status */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#D9C9B2] shadow-xs">
-        <Smartphone className="w-3.5 h-3.5 text-[#6B7F5B]" />
-        <span className="text-[9px] font-black uppercase tracking-wider text-[#2E3A2F]">
-          PWA & Web App • Mudah Alih & Web
-        </span>
-      </div>
-
-      {/* Frame Telefon Pintar Realistik */}
+      {/* Rangka Telefon Pintar Bersih & Megah (Tanpa Kad Bertindih) */}
       <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="relative z-10 w-[215px] sm:w-[230px] rounded-[2.3rem] bg-[#1E261F] p-2.5 shadow-[0_25px_60px_-15px_rgba(46,58,47,0.35)] border-2 border-[#3A4A3B]"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 w-full max-w-[285px] sm:max-w-[305px] rounded-[2.6rem] bg-[#1E261F] p-3 shadow-[0_30px_70px_-15px_rgba(46,58,47,0.35)] border-2 border-[#3A4A3B]"
       >
-        {/* Skrin Telefon */}
-        <div className="rounded-[1.85rem] bg-[#F8F6EE] overflow-hidden flex flex-col border border-[#D9C9B2]/60 select-none">
+        {/* Skrin Telefon Tulen PolyMart */}
+        <div className="rounded-[2.1rem] bg-[#FAFAF8] overflow-hidden flex flex-col border border-[#E5E7EB] text-[#1E261F] select-none text-left">
+          
           {/* Status Bar */}
-          <div className="pt-2 px-4 pb-1 flex items-center justify-between text-[9px] font-bold text-[#2E3A2F] border-b border-[#D9C9B2]/40 bg-white/70 backdrop-blur-xs">
+          <div className="pt-2 px-4 pb-1 flex items-center justify-between text-[10px] font-bold text-[#1E261F] bg-white border-b border-[#F0F0EE]">
             <span>9:41</span>
-            <div className="w-12 h-3 bg-[#1E261F] rounded-full mx-auto" />
+            <div className="w-14 h-3.5 bg-black rounded-full mx-auto" />
             <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
-              <span className="text-[8px]">5G</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+              <span className="text-[8px] font-semibold">5G</span>
             </div>
           </div>
 
-          {/* Bar Tajuk Aplikasi Siswa */}
-          <div className="px-3 pt-2.5 pb-2 flex items-center justify-between bg-white border-b border-[#D9C9B2]/50">
+          {/* Bar Carian & Ikon Navigasi Pantas (Sepadan Gambar Sebenar) */}
+          <div className="p-3 bg-white border-b border-[#F0F0EE] space-y-2.5">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-[#2E3A2F] text-white flex items-center justify-center font-black text-[9px]">
-                P
+              <div className="w-8 h-8 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#556453]">
+                <ArrowRight className="w-3.5 h-3.5 rotate-180" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-[#2E3A2F] leading-none">POLISAS Siswa</span>
-                <span className="text-[7px] text-[#6B7F5B] font-bold">Kampus Semambu</span>
+              <div className="w-8 h-8 rounded-full bg-[#EA580C] text-white flex items-center justify-center shadow-xs">
+                <ShoppingBag className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 h-8 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] flex items-center px-3 gap-1.5 text-[8.5px] text-[#9CA3AF]">
+                <Search className="w-3 h-3 text-[#9CA3AF]" />
+                <span className="truncate">Cari makanan, servis, pakaian...</span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] flex items-center justify-center">
+                <Store className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="relative">
-              <Bell className="w-3.5 h-3.5 text-[#556453]" />
-              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#C96F4F]" />
+
+            {/* Kategori Tab (Semua, Makanan, Minuman, Aksesori) */}
+            <div className="flex items-center gap-1.5 overflow-hidden text-[9px] font-bold">
+              <div className="px-2.5 py-1 rounded-full bg-[#F59E0B] text-white flex items-center gap-1 shadow-xs">
+                <div className="grid grid-cols-2 gap-0.5 w-2 h-2">
+                  <div className="bg-white rounded-2xs" />
+                  <div className="bg-white rounded-2xs" />
+                  <div className="bg-white rounded-2xs" />
+                  <div className="bg-white rounded-2xs" />
+                </div>
+                <span>Semua</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-full bg-[#F3F4F6] text-[#4B5563] flex items-center gap-1 border border-[#E5E7EB]">
+                <Utensils className="w-2.5 h-2.5" />
+                <span>Makanan</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-full bg-[#F3F4F6] text-[#4B5563] flex items-center gap-1 border border-[#E5E7EB]">
+                <Coffee className="w-2.5 h-2.5" />
+                <span>Minuman</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-full bg-[#F3F4F6] text-[#4B5563] flex items-center gap-1 border border-[#E5E7EB]">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>Aksesori</span>
+              </div>
             </div>
           </div>
 
-          {/* Bar Carian Mini */}
-          <div className="p-2.5 pb-2 bg-[#F8F6EE]">
-            <div className="h-7 rounded-xl bg-white border border-[#D9C9B2] flex items-center px-2.5 gap-1.5 text-[8px] text-[#556453] shadow-2xs">
-              <Search className="w-3 h-3 text-[#6B7F5B]" />
-              <span className="truncate">Cari nasi lemak, lanyard, popia...</span>
-            </div>
-
-            {/* Filter Kategori Chips */}
-            <div className="flex items-center gap-1 mt-2 overflow-hidden">
-              <span className="px-2 py-0.5 rounded-full bg-[#2E3A2F] text-white text-[7px] font-bold">Semua</span>
-              <span className="px-2 py-0.5 rounded-full bg-white border border-[#D9C9B2] text-[#556453] text-[7px] font-bold">Makanan</span>
-              <span className="px-2 py-0.5 rounded-full bg-white border border-[#D9C9B2] text-[#556453] text-[7px] font-bold">Aksesori</span>
+          {/* Banner Kempen Rasmi PolyMart (Sepadan Gambar Sebenar) */}
+          <div className="p-3 pb-2">
+            <div className="rounded-2xl bg-gradient-to-br from-[#2E1D13] via-[#523420] to-[#7E5234] p-3 text-white shadow-xs relative overflow-hidden">
+              <div className="flex items-center gap-1 text-[7.5px] font-black text-[#FDE68A] uppercase tracking-wider mb-1">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>Pasar Mahasiswa POLISAS</span>
+              </div>
+              <h4 className="text-[12px] font-black leading-tight tracking-tight">
+                Jelajah & Tempah Produk <span className="text-[#F59E0B]">Kampus Anda</span>
+              </h4>
+              <p className="text-[7.5px] text-[#D1D5DB] mt-1 line-clamp-1">
+                Tempah produk terus dari usahawan mahasiswa POLISAS.
+              </p>
+              <div className="flex items-center gap-2 mt-2.5">
+                <span className="px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-xs text-[7.5px] font-bold border border-white/10">
+                  39 Produk
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-xs text-[7.5px] font-bold border border-white/10">
+                  9 Peniaga
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Grid Produk Sebenar POLISAS (2 Kolum) */}
-          <div className="p-2 pt-1 grid grid-cols-2 gap-1.5 bg-[#F8F6EE]">
-            {REAL_PRODUCTS_SHOWCASE.slice(0, 4).map((p, idx) => (
-              <div key={idx} className="bg-white rounded-xl p-1.5 border border-[#D9C9B2]/80 flex flex-col justify-between shadow-2xs">
-                <div className="w-full aspect-square rounded-lg overflow-hidden bg-[#F2EDE4] mb-1 relative">
+          {/* Bahagian Peniaga Aktif (Sepadan Gambar Sebenar) */}
+          <div className="px-3 py-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1 text-[9.5px] font-black text-[#1E261F]">
+                <div className="w-3.5 h-3.5 rounded-full bg-[#EA580C] text-white flex items-center justify-center">
+                  <TrendingUp className="w-2 h-2" />
+                </div>
+                <span>Peniaga Aktif</span>
+              </div>
+              <span className="text-[8px] font-bold text-[#EA580C]">Lihat Semua &gt;</span>
+            </div>
+
+            <div className="flex items-center gap-2 overflow-hidden py-1">
+              {[
+                { name: 'QUADRA H', isLogo: true },
+                { name: 'AL-FRIES', isLogo: false },
+                { name: 'DTM3B', isLogo: false },
+                { name: 'DBS3C', isLogo: false },
+                { name: 'DAC4A', isLogo: false },
+              ].map((v, i) => (
+                <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center border text-[8px] font-black shadow-2xs",
+                    v.isLogo ? "bg-black text-[#D4AF37] border-black" : "bg-white text-[#EA580C] border-[#FDE68A]"
+                  )}>
+                    {v.isLogo ? 'QH' : <Store className="w-3.5 h-3.5" />}
+                  </div>
+                  <span className="text-[7px] font-bold text-[#4B5563] truncate max-w-[36px]">{v.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid Produk Sebenar PolyMart (CHICKEN POPCORN & Loaded Fries) */}
+          <div className="px-3 pt-1 pb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1 text-[9.5px] font-black text-[#1E261F]">
+                <Sparkles className="w-3 h-3 text-[#F59E0B]" />
+                <span>Semua Produk (39)</span>
+              </div>
+              <span className="text-[8px] font-bold text-[#6B7280]">Terbaru ▾</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* Kad Produk 1: CHICKEN POPCORN (QUADRA H) */}
+              <div className="bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-2xs flex flex-col justify-between">
+                <div className="aspect-[4/3] bg-[#F3F4F6] relative overflow-hidden">
                   <img
-                    src={p.image}
-                    alt={p.name}
+                    src="https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/b6eeabeb-7ce0-4f9a-becf-56eb30805139/1787944599182.jpeg"
+                    alt="CHICKEN POPCORN"
                     className="w-full h-full object-cover"
                     loading="lazy"
-                    onError={(e) => {
-                      // Fallback jika capaian imej luar ditolak
-                      e.currentTarget.src = '/jpp-logo.png';
-                    }}
                   />
-                  <span className="absolute bottom-1 right-1 text-[7px] font-black bg-white/90 px-1 rounded-sm text-[#2E3A2F]">
-                    {p.price}
+                  <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-sm bg-black/60 backdrop-blur-xs text-white text-[6.5px] font-bold">
+                    Makanan
                   </span>
-                </div>
-                <p className="text-[8px] font-black text-[#2E3A2F] truncate leading-tight">{p.name}</p>
-                <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-[6.5px] text-[#6B7F5B] font-semibold">{p.category}</span>
-                  <div className="flex items-center gap-0.5 text-[6.5px] font-bold text-[#C96F4F]">
-                    <Star className="w-2 h-2 fill-current" />
-                    <span>{p.rating}</span>
+                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#9CA3AF]">
+                    <Heart className="w-2.5 h-2.5" />
                   </div>
                 </div>
+                <div className="p-1.5">
+                  <div className="flex items-center gap-1 text-[6.5px] text-[#6B7280]">
+                    <Store className="w-2 h-2 text-[#EA580C]" />
+                    <span>QUADRA H</span>
+                  </div>
+                  <h5 className="text-[8.5px] font-black text-[#1E261F] truncate mt-0.5">CHICKEN POPCORN</h5>
+                  <p className="text-[9.5px] font-black text-[#EA580C] mt-1">RM 9.00</p>
+                </div>
               </div>
-            ))}
+
+              {/* Kad Produk 2: loaded fries original (AL-FRIES) */}
+              <div className="bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-2xs flex flex-col justify-between">
+                <div className="aspect-[4/3] bg-[#F3F4F6] relative overflow-hidden">
+                  <img
+                    src="https://api.cipher-node.org/storage/v1/object/public/keusahawanan-products/0d898ba3-1458-40c6-acb0-5db5c365986b/1786332337392.jpeg"
+                    alt="loaded fries original"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-sm bg-black/60 backdrop-blur-xs text-white text-[6.5px] font-bold">
+                    Makanan
+                  </span>
+                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center text-[#9CA3AF]">
+                    <Heart className="w-2.5 h-2.5" />
+                  </div>
+                </div>
+                <div className="p-1.5">
+                  <div className="flex items-center gap-1 text-[6.5px] text-[#6B7280]">
+                    <Store className="w-2 h-2 text-[#EA580C]" />
+                    <span>AL-FRIES</span>
+                  </div>
+                  <h5 className="text-[8.5px] font-black text-[#1E261F] truncate mt-0.5">loaded fries original</h5>
+                  <p className="text-[9.5px] font-black text-[#EA580C] mt-1">RM 6.00</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Bottom App Navigation */}
-          <div className="mt-auto px-4 py-2 bg-white border-t border-[#D9C9B2]/60 flex items-center justify-between text-[#556453]">
-            <div className="flex flex-col items-center">
-              <div className="w-2 h-2 rounded-full bg-[#6B7F5B]" />
-              <span className="text-[6px] font-bold text-[#6B7F5B]">Utama</span>
+          {/* Bottom Dock Navigation Tulen (Sepadan Gambar Sebenar) */}
+          <div className="mt-auto px-4 py-2 bg-white/90 backdrop-blur-md border-t border-[#F0F0EE] flex items-center justify-between text-[#6B7280] relative">
+            <div className="w-5 h-5 flex items-center justify-center text-[#1E261F]">
+              <Store className="w-3.5 h-3.5" />
             </div>
-            <ShoppingBag className="w-3.5 h-3.5 text-[#2E3A2F]" />
+            <Heart className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-full bg-[#991B1B] text-white flex items-center justify-center shadow-xs">
+              <Plus className="w-4 h-4" />
+            </div>
+            <ShoppingCart className="w-3.5 h-3.5" />
             <div className="relative">
-              <FileText className="w-3.5 h-3.5 text-[#556453]" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#C96F4F] text-[5px] text-white flex items-center justify-center font-bold">1</div>
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#EA580C] text-[6px] text-white flex items-center justify-center font-bold">4</div>
             </div>
-            <Users className="w-3.5 h-3.5 text-[#556453]" />
-          </div>
-        </div>
-      </motion.div>
 
-      {/* Kad Terapung 1 (Atas Kanan): Produk Pilihan Sebenar */}
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        className="absolute top-8 right-1 sm:right-4 md:right-8 z-20 w-44 sm:w-48 bg-white/95 backdrop-blur-md border border-[#D9C9B2] p-2.5 rounded-2xl shadow-xl flex items-center gap-2.5"
-      >
-        <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#F2EDE4] flex-shrink-0 border border-[#D9C9B2]/70">
-          <img
-            src={REAL_PRODUCTS_SHOWCASE[0].image}
-            alt="Rojak Buah"
-            className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.src = '/jpp-logo.png'; }}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-[#2E3A2F] truncate">Rojak Buah Special</p>
-          <div className="flex items-center gap-1 text-[8px] text-[#6B7F5B] font-bold">
-            <Star className="w-2.5 h-2.5 text-[#C96F4F] fill-[#C96F4F]" />
-            <span>4.9 (85 ulasan)</span>
+            {/* Butang Chat Terapung di Bucu Kanan */}
+            <div className="absolute -top-8 right-2 w-7 h-7 rounded-full bg-[#EA580C] text-white flex items-center justify-center shadow-md">
+              <MessageCircle className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-[10px] font-black text-[#C96F4F]">RM 5.00</span>
-            <span className="text-[7.5px] font-bold px-1.5 py-0.5 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F]">
-              JPP Pay
-            </span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Kad Terapung 2 (Bawah Kiri): Resit Pengesahan Pesanan */}
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-8 left-1 sm:left-4 md:left-8 z-20 w-48 sm:w-52 bg-white/95 backdrop-blur-md border border-[#D9C9B2] p-2.5 rounded-2xl shadow-xl flex items-center gap-2.5"
-      >
-        <div className="w-9 h-9 rounded-xl bg-[#6B7F5B]/15 border border-[#6B7F5B]/30 flex items-center justify-center flex-shrink-0 text-[#6B7F5B]">
-          <CheckCircle2 className="w-5 h-5 text-[#6B7F5B]" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black text-[#2E3A2F]">Pesanan Disahkan</p>
-            <span className="text-[7.5px] font-bold px-1.5 py-0.5 rounded-full bg-[#6B7F5B]/20 text-[#2E3A2F]">
-              Selesai
-            </span>
-          </div>
-          <p className="text-[8px] text-[#556453] font-medium truncate mt-0.5">#{ordersCount} • Lanyard JPP & Rojak</p>
-          <p className="text-[8px] font-black text-[#2E3A2F] mt-0.5">Ambil Sendiri di Kaunter</p>
         </div>
       </motion.div>
     </div>
   );
 };
 
-// ── 5. Bento Section 5 Modul (<BentoSection />) ───────────────
+// ── 5. Bento Section 5 Modul Estetik (<BentoSection />) ───────
 export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
   const navigate = useNavigate();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
-
-  // Modul dengan data statistik sebenar POLISAS
-  const modulesList = [
-    {
-      id: 'ekpp',
-      title: 'e-Aktiviti',
-      subtitle: 'Nadi Organisasi',
-      desc: `Sistem tadbir urus rasmi untuk ${stats.clubsCount} kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.`,
-      icon: Shield,
-      color: '#2E3A2F',
-      accentColor: '#6B7F5B',
-      path: '/portal',
-      stats: [`${stats.clubsCount} Kelab Rasmi`, `${stats.activitiesCount} Aktiviti Dipantau`],
-      preview: (
-        <div className="flex flex-col gap-2 p-4 md:p-6 h-full justify-center">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]/70 shadow-2xs">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#6B7F5B]" />
-              <div className="h-2 w-32 bg-[#2E3A2F]/20 rounded-full" />
-              <div className="ml-auto h-2 w-10 bg-[#C96F4F]/30 rounded-full hidden sm:block" />
-            </div>
-          ))}
-        </div>
-      )
-    },
-    {
-      id: 'keusahawanan',
-      title: 'e-Keusahawanan',
-      subtitle: 'Ekonomi Pintar',
-      desc: `Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.`,
-      icon: BarChart3,
-      color: '#6B7F5B',
-      accentColor: '#C96F4F',
-      path: '/keusahawanan',
-      stats: [`${stats.productsCount}+ Produk Siswa`, `${stats.ordersCount}+ Pesanan Kampus`],
-      preview: (
-        <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
-          <div className="flex items-end justify-between w-full h-full pb-4">
-            {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
-              <motion.div
-                key={i}
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: 0.3 + (i * 0.1), duration: 0.8 }}
-                className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
-              />
-            ))}
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'akademik',
-      title: 'e-Akademik',
-      subtitle: 'Kecemerlangan Holistik',
-      desc: `Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.`,
-      icon: GraduationCap,
-      color: '#2E3A2F',
-      accentColor: '#6B7F5B',
-      path: '/akademik',
-      stats: [`${stats.studentsCount.toLocaleString()}+ Rekod Siswa`, '5 Jabatan POLISAS'],
-      preview: (
-        <div className="flex items-center justify-center h-full relative">
-          <div className="w-24 h-24 rounded-full border border-[#6B7F5B]/30 flex items-center justify-center bg-[#6B7F5B]/5 shadow-xs">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-              className="w-20 h-20 rounded-full border-4 border-[#6B7F5B] border-t-transparent border-l-transparent"
-            />
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xl font-black text-[#2E3A2F]">4.00</span>
-            <span className="text-[8px] font-bold text-[#6B7F5B] uppercase tracking-widest">HPNM</span>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'polymart',
-      title: 'PolyMart',
-      subtitle: 'Pasaran Mahasiswa',
-      desc: `Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan pesan makanan, minuman, serta cenderamata rasmi siswa dalam satu hab.`,
-      icon: ShoppingCart,
-      color: '#C96F4F',
-      accentColor: '#2E3A2F',
-      path: '/polymart',
-      stats: [`${stats.productsCount}+ Menu & Barang`, `${stats.ordersCount}+ Pesanan Selesai`],
-      colSpan: 'lg:col-span-2'
-    },
-    {
-      id: 'kebajikan',
-      title: 'e-Kebajikan',
-      subtitle: 'Prihatin & Responsif',
-      desc: `Sistem pelaporan aduan telus, bantuan kebajikan siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.`,
-      icon: HeartHandshake,
-      color: '#6B7F5B',
-      accentColor: '#2E3A2F',
-      path: '/kebajikan',
-      stats: ['1,080+ Rekod Kediaman', 'Tindakan Pantas'],
-      preview: (
-        <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
-          {/* Gelombang Radar */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              animate={{ scale: [1, 2.2, 1], opacity: [0.4, 0, 0.4] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute w-24 h-24 md:w-32 md:h-32 border-2 border-[#6B7F5B]/30 rounded-full"
-            />
-            <motion.div
-              animate={{ scale: [1, 3.2, 1], opacity: [0.2, 0, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-              className="absolute w-24 h-24 md:w-32 md:h-32 border border-[#6B7F5B]/20 rounded-full"
-            />
-          </div>
-
-          <div className="relative z-10 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white border border-[#6B7F5B]/40 flex items-center justify-center shadow-xs">
-            <HeartHandshake className="w-10 h-10 md:w-14 md:h-14 text-[#6B7F5B]" />
-          </div>
-
-          {/* Nod Status Terapung */}
-          <motion.div
-            animate={{ y: [-10, 10, -10] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[10%] right-[5%] md:right-[15%] w-16 h-12 md:w-20 md:h-16 rounded-xl bg-white border border-[#D9C9B2] flex flex-col items-center justify-center gap-1 shadow-2xs"
-          >
-            <div className="w-6 md:w-10 h-1.5 md:h-2 rounded-full bg-[#6B7F5B]" />
-            <div className="w-10 md:w-14 h-1 md:h-1.5 rounded-full bg-[#D9C9B2]" />
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [10, -10, 10] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-[10%] left-[5%] w-20 h-12 md:w-24 md:h-14 rounded-xl bg-white border border-[#D9C9B2] flex items-center justify-center gap-1.5 px-3 shadow-2xs"
-          >
-            <div className="w-2 h-2 rounded-full bg-[#C96F4F]" />
-            <span className="text-[9px] font-bold text-[#2E3A2F]">Prihatin</span>
-          </motion.div>
-        </div>
-      )
-    }
-  ];
 
   return (
     <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
@@ -893,121 +779,301 @@ export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
 
       {/* Grid Kad Bento */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {modulesList.map((m: any) => {
-          // Khusus untuk PolyMart: Reka Bentuk Padanan Gambar Mockup Aplikasi Mudah Alih
-          if (m.id === 'polymart') {
-            return (
-              <SpotlightCard
-                key={m.id}
-                onClick={() => navigate(m.path)}
-                className="p-8 md:p-10 flex flex-col justify-between h-full bg-white lg:col-span-2 overflow-hidden relative group"
-              >
-                {/* Bahagian Atas */}
-                <div className="flex items-start justify-between mb-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
-                      style={{ backgroundColor: `${m.color}15`, color: m.color }}
-                    >
-                      <m.icon className="w-7 h-7 md:w-8 md:h-8" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block">
-                        {m.subtitle}
-                      </span>
-                      <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">
-                        {m.title}
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
-                    <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
-                  </div>
-                </div>
-
-                {/* Penerangan & Metrik PolyMart */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10 flex-1">
-                  <div className="lg:col-span-5 flex flex-col justify-between h-full space-y-6">
-                    <p className="text-sm text-[#556453] font-medium leading-relaxed">
-                      {m.desc}
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-4 py-4 border-y border-[#D9C9B2]/60">
-                      <div>
-                        <span className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">{stats.productsCount}+</span>
-                        <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider block mt-0.5">Produk Siswa Aktif</span>
-                      </div>
-                      <div>
-                        <span className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">{stats.ordersCount}+</span>
-                        <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider block mt-0.5">Pesanan Kampus</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#C96F4F] group-hover:translate-x-1 transition-transform">
-                      <span>Buka Pasaran Siswa</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-
-                  {/* Bahagian Mockup Mudah Alih Sebenar Seperti Gambar Rujukan */}
-                  <div className="lg:col-span-7 flex justify-center items-center relative min-h-[380px]">
-                    <PolyMartMobilePreview productsCount={stats.productsCount} ordersCount={stats.ordersCount} />
-                  </div>
-                </div>
-              </SpotlightCard>
-            );
-          }
-
-          // Untuk modul lain: Reka Bentuk Piawai Bento
-          return (
-            <SpotlightCard
-              key={m.id}
-              onClick={() => navigate(m.path)}
-              className={cn("p-8 md:p-10 flex flex-col h-full bg-white", m.colSpan)}
-            >
-              {/* Bahagian Atas */}
-              <div className="flex items-start justify-between mb-8">
-                <div
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
-                  style={{ backgroundColor: `${m.color}15`, color: m.color }}
-                >
-                  <m.icon className="w-7 h-7 md:w-8 md:h-8" />
-                </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
-                  <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
-                </div>
+        
+        {/* Kad 1: e-Aktiviti (Estetik & Workflow Kertas Kerja Sebenar) */}
+        <SpotlightCard
+          onClick={() => navigate('/portal')}
+          className="p-8 md:p-10 flex flex-col justify-between h-full bg-white"
+        >
+          <div>
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#2E3A2F]/10 text-[#2E3A2F] shadow-xs">
+                <Shield className="w-7 h-7" />
               </div>
+              <div className="w-10 h-10 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-[#2E3A2F] group-hover:text-white" />
+              </div>
+            </div>
 
-              {/* Kandungan Penerangan */}
-              <div className="flex-1 mb-8">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-2">
-                  {m.subtitle}
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-1">
+              Nadi Organisasi
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
+              e-Aktiviti
+            </h3>
+            <p className="text-sm text-[#556453] font-medium leading-relaxed mb-6">
+              Sistem tadbir urus rasmi untuk {stats.clubsCount} kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.
+            </p>
+          </div>
+
+          {/* Pratonton Estetik: Penjejak Kertas Kerja & Kelab */}
+          <div className="space-y-4 pt-4 border-t border-[#D9C9B2]/60">
+            <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#2E3A2F] text-white flex items-center justify-center text-[9px] font-black">
+                    P
+                  </div>
+                  <span className="text-xs font-bold text-[#2E3A2F]">PePKa (Awam)</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] text-[9px] font-bold">
+                  Diluluskan HEP
                 </span>
-                <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
-                  {m.title}
-                </h3>
-                <p className="text-sm text-[#556453] font-medium leading-relaxed">
-                  {m.desc}
-                </p>
+              </div>
+              
+              <p className="text-[11px] font-bold text-[#556453]">Malam Apresiasi Siswa 2026</p>
+              
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="flex flex-col gap-1">
+                  <div className="h-1.5 w-full bg-[#6B7F5B] rounded-full" />
+                  <span className="text-[8px] font-bold text-[#6B7F5B]">1. Semakan</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="h-1.5 w-full bg-[#6B7F5B] rounded-full" />
+                  <span className="text-[8px] font-bold text-[#6B7F5B]">2. JPP OK</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="h-1.5 w-full bg-[#C96F4F] rounded-full animate-pulse" />
+                  <span className="text-[8px] font-bold text-[#C96F4F]">3. Bajet RM2.5k</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-2">
+              <span className="text-sm font-black text-[#2E3A2F]">{stats.clubsCount} Kelab Berdaftar</span>
+              <span className="text-xs font-bold text-[#6B7F5B]">{stats.activitiesCount} Aktiviti Aktif</span>
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* Kad 2: e-Keusahawanan (Estetik POS & Transaksi Gerai) */}
+        <SpotlightCard
+          onClick={() => navigate('/keusahawanan')}
+          className="p-8 md:p-10 flex flex-col justify-between h-full bg-white"
+        >
+          <div>
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#6B7F5B]/10 text-[#6B7F5B] shadow-xs">
+                <BarChart3 className="w-7 h-7" />
+              </div>
+              <div className="w-10 h-10 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-[#2E3A2F] group-hover:text-white" />
+              </div>
+            </div>
+
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-1">
+              Ekonomi Pintar
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
+              e-Keusahawanan
+            </h3>
+            <p className="text-sm text-[#556453] font-medium leading-relaxed mb-6">
+              Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.
+            </p>
+          </div>
+
+          {/* Pratonton Estetik: Terminal Transaksi & Trend Jualan */}
+          <div className="space-y-4 pt-4 border-t border-[#D9C9B2]/60">
+            <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#556453]">Jualan Sesi Ini</span>
+                <span className="flex items-center gap-1 text-[9px] font-bold text-[#6B7F5B]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-ping" />
+                  Masa Nyata
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-black text-[#2E3A2F]">RM 4,361.30</p>
+                <span className="text-[10px] font-bold text-[#6B7F5B]">+18.4% jualan</span>
+              </div>
+              <div className="h-10 flex items-end justify-between gap-1 pt-1">
+                {[30, 45, 60, 40, 95, 75, 50].map((h, idx) => (
+                  <div key={idx} className="w-full flex flex-col items-center gap-1">
+                    <div style={{ height: `${h}%` }} className="w-full rounded-t-sm bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-2">
+              <span className="text-sm font-black text-[#2E3A2F]">{stats.productsCount}+ Produk Siswa</span>
+              <span className="text-xs font-bold text-[#6B7F5B]">{stats.ordersCount}+ Pesanan Selesai</span>
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* Kad 3: e-Akademik (Estetik Pengesahan Merit QR & Rekod Pelajar) */}
+        <SpotlightCard
+          onClick={() => navigate('/akademik')}
+          className="p-8 md:p-10 flex flex-col justify-between h-full bg-white"
+        >
+          <div>
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#2E3A2F]/10 text-[#2E3A2F] shadow-xs">
+                <GraduationCap className="w-7 h-7" />
+              </div>
+              <div className="w-10 h-10 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-[#2E3A2F] group-hover:text-white" />
+              </div>
+            </div>
+
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-1">
+              Kecemerlangan Holistik
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
+              e-Akademik
+            </h3>
+            <p className="text-sm text-[#556453] font-medium leading-relaxed mb-6">
+              Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.
+            </p>
+          </div>
+
+          {/* Pratonton Estetik: Kad Merit Siswa & Pengimbas QR */}
+          <div className="space-y-4 pt-4 border-t border-[#D9C9B2]/60">
+            <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] flex items-center justify-center text-xs font-black">
+                    MA
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-[#2E3A2F]">Muhammad Aiman</p>
+                    <p className="text-[9px] text-[#556453]">04DAT24F1023 • Geomatik</p>
+                  </div>
+                </div>
+                <QrCode className="w-5 h-5 text-[#2E3A2F]" />
               </div>
 
-              {/* Bahagian Bawah: Preview & Metrik */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#D9C9B2]/60">
-                <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/70 aspect-[4/3] sm:aspect-square overflow-hidden relative">
-                  {m.preview}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span className="text-[#556453]">Merit Kolej Kediaman</span>
+                  <span className="text-[#2E3A2F]">85 / 100</span>
                 </div>
-                <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-3 py-2 sm:py-0 sm:pl-4">
-                  {m.stats.map((s: string, idx: number) => (
-                    <div key={idx} className="flex flex-col">
-                      <span className="text-lg md:text-xl font-black text-[#2E3A2F] tracking-tight">{s.split(' ')[0]}</span>
-                      <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider">{s.split(' ').slice(1).join(' ')}</span>
-                    </div>
-                  ))}
+                <div className="h-2 w-full rounded-full bg-[#D9C9B2]/50 overflow-hidden">
+                  <div className="h-full w-[85%] rounded-full bg-[#6B7F5B]" />
                 </div>
               </div>
-            </SpotlightCard>
-          );
-        })}
+            </div>
+
+            <div className="flex items-center justify-between px-2">
+              <span className="text-sm font-black text-[#2E3A2F]">{stats.studentsCount.toLocaleString()}+ Rekod Siswa</span>
+              <span className="text-xs font-bold text-[#6B7F5B]">5 Jabatan POLISAS</span>
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* Kad 4: PolyMart (SHOWCASE UTAMA LEBAR 2-KOLUM SEPADAN DENGAN GAMBAR 3) */}
+        <SpotlightCard
+          onClick={() => navigate('/polymart')}
+          className="p-8 md:p-12 flex flex-col justify-between h-full bg-white lg:col-span-2 overflow-hidden relative group"
+        >
+          {/* Header Kad */}
+          <div className="flex items-start justify-between mb-6 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center bg-[#C96F4F]/15 text-[#C96F4F] shadow-xs">
+                <ShoppingCart className="w-7 h-7 md:w-8 md:h-8" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block">
+                  PASAR MAHASISWA POLISAS
+                </span>
+                <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] tracking-tight">
+                  PolyMart Siswa
+                </h3>
+              </div>
+            </div>
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+              <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
+            </div>
+          </div>
+
+          {/* Grid Penerangan & Mockup Skrin Sebenar PolyMart */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10 flex-1">
+            {/* Kiri: Penerangan & Statistik */}
+            <div className="lg:col-span-5 flex flex-col justify-between h-full space-y-6">
+              <p className="text-sm md:text-base text-[#556453] font-medium leading-relaxed">
+                Platform e-dagang berpusat khas warga POLISAS. Sokong usahawan mahasiswa secara terus tanpa orang tengah untuk makanan sedap, minuman segar, dan cenderamata rasmi kampus.
+              </p>
+
+              <div className="space-y-3 py-4 border-y border-[#D9C9B2]/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#556453]">Produk Aktif Dalam Sistem:</span>
+                  <span className="text-sm font-black text-[#2E3A2F]">39+ Menu Pilihan</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#556453]">Peniaga Siswa Berdaftar:</span>
+                  <span className="text-sm font-black text-[#2E3A2F]">9 Gerai Aktif</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#556453]">Sistem Pembayaran:</span>
+                  <span className="text-xs font-black text-[#6B7F5B]">JPP Pay & QR Terus</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-bold text-[#C96F4F] group-hover:translate-x-1.5 transition-transform">
+                <span>Buka Pasaran Siswa Sekarang</span>
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Kanan: Mockup UI Sebenar Sepadan Gambar 3 Tanpa Clutter */}
+            <div className="lg:col-span-7 flex justify-center items-center">
+              <RealPolyMartDeviceShowcase />
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* Kad 5: e-Kebajikan (Estetik Hab Prihatin & Bantuan Siswa) */}
+        <SpotlightCard
+          onClick={() => navigate('/kebajikan')}
+          className="p-8 md:p-10 flex flex-col justify-between h-full bg-white"
+        >
+          <div>
+            <div className="flex items-start justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#6B7F5B]/10 text-[#6B7F5B] shadow-xs">
+                <HeartHandshake className="w-7 h-7" />
+              </div>
+              <div className="w-10 h-10 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-[#2E3A2F] group-hover:text-white" />
+              </div>
+            </div>
+
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-1">
+              Prihatin & Responsif
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
+              e-Kebajikan
+            </h3>
+            <p className="text-sm text-[#556453] font-medium leading-relaxed mb-6">
+              Sistem pelaporan aduan telus, bantuan Food Bank siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.
+            </p>
+          </div>
+
+          {/* Pratonton Estetik: Hab Prihatin & Food Bank */}
+          <div className="space-y-4 pt-4 border-t border-[#D9C9B2]/60">
+            <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#2E3A2F]">Food Bank Siswa</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] text-[9px] font-bold">
+                  Aktif Hari Ini
+                </span>
+              </div>
+              <p className="text-[10px] text-[#556453] font-medium leading-snug">
+                Pek makanan percuma tersedia di Kamsis Semambu untuk asnaf & B40.
+              </p>
+              <div className="flex items-center gap-2 pt-1 text-[9px] font-bold text-[#6B7F5B]">
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Pemantauan Zon Kediaman: Semambu & IM</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-2">
+              <span className="text-sm font-black text-[#2E3A2F]">1,080+ Rekod Kediaman</span>
+              <span className="text-xs font-bold text-[#6B7F5B]">Tindakan Pantas</span>
+            </div>
+          </div>
+        </SpotlightCard>
+
       </div>
     </section>
   );
@@ -1184,7 +1250,7 @@ export const Footer: React.FC = () => (
         <div className="flex flex-col text-left">
           <span className="font-black text-sm tracking-tight text-[#2E3A2F]">JPP POLISAS</span>
           <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider">
-            Majlis Perwakilan Pelajar Sesi Baharu
+            Jawatankuasa Perwakilan Pelajar Sesi Baharu
           </span>
         </div>
       </div>

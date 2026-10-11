@@ -551,7 +551,7 @@ export function LaunchVideo() {
               </div>
 
               <p className="text-[0.65vw] tracking-[0.3em] text-white/30 uppercase font-light drop-shadow-md">
-                Dibangunkan oleh Majlis Perwakilan Pelajar POLISAS &copy; 2026.
+                Dibangunkan oleh Jawatankuasa Perwakilan Pelajar POLISAS &copy; 2026.
               </p>
             </motion.div>
 

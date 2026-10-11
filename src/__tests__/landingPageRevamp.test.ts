@@ -94,10 +94,11 @@ describe('Task: LandingPage Earthy Minimal Revamp (Next Term Theme & Real Data)'
       expect(source).toContain('PolyMart');
       expect(source).toContain('e-Kebajikan');
 
-      // Real POLISAS product parity in mobile mockup
-      expect(source).toContain('Rojak Buah Special');
-      expect(source).toContain('Lanyard JPP POLISAS');
-      expect(source).toContain('Pesanan Disahkan');
+      // Real POLISAS product parity in mobile mockup matching user screenshot
+      expect(source).toContain('CHICKEN POPCORN');
+      expect(source).toContain('loaded fries original');
+      expect(source).toContain('QUADRA H');
+      expect(source).toContain('AL-FRIES');
     });
 
     it('5. Nexus AI Core Engine (<NexusSection />)', () => {

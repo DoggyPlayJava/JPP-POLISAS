@@ -340,7 +340,7 @@ export function PortalPage() {
               },
               {
                 target: '.tour-exco-modules',
-                content: 'Modul Rasmi Exco JPP. Terokai perkhidmatan khusus setiap portfolio Majlis Perwakilan Pelajar.',
+                content: 'Modul Rasmi Exco JPP. Terokai perkhidmatan khusus setiap portfolio Jawatankuasa Perwakilan Pelajar.',
                 title: 'Modul Rasmi Exco',
                 placement: 'top',
               },

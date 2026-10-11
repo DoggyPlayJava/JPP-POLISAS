@@ -110,7 +110,7 @@ export function KebajikanHubPage() {
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 mb-3 shadow-xs">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-          Majlis Perwakilan Pelajar POLISAS
+          Jawatankuasa Perwakilan Pelajar POLISAS
         </div>
 
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">

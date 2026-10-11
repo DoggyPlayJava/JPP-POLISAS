@@ -1100,7 +1100,7 @@ export function KebajikanFoodBankPage() {
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal pt-0.5">
               Program Food Bank JPP kini sedang dalam fasa persediaan akhir inventori stok barangan dan
-              penyelarasan kaunter agihan oleh barisan Majlis Perwakilan Pelajar bersama JHEP. Mahasiswa
+              penyelarasan kaunter agihan oleh barisan Jawatankuasa Perwakilan Pelajar bersama JHEP. Mahasiswa
               dialu-alukan menyemak panduan kelayakan, lokasi edaran serta katalog barangan di bawah.
               Borang permohonan akan dibuka sebaik sahaja perasmian diumumkan.
             </p>
