@@ -254,7 +254,7 @@ Pengekstrakan dijalankan sepenuhnya di pihak pelayar (*client-side*) menggunakan
   * Butang *"Tambah Slot Manual"* untuk memasukkan kelas tambahan (contohnya subjek mengulang dari kelas lain atau ko-kurikulum).
   * Butang *"Padam Slot"* untuk membuang kelas yang telah digugurkan (*drop course*).
   * **Penentuan Tarikh Semester (semester_start_date & semester_end_date):**
-    * **Sumber Utama:** Auto-isi secara automatik daripada kalendar akademik rasmi institusi (`system_settings` / `takwim-akademik-template.ts`) berdasarkan Sesi yang dikesan dari header PDF (cth: `S2 2025/2026`).
+    * **Sumber Utama:** Auto-isi daripada `src/config/takwim-akademik-template.ts` (kalendar akademik rasmi institusi — sesi I/II + tarikh mula/tamat setiap minggu) berdasarkan Sesi yang dikesan dari header PDF (cth: `S2 2025/2026`). **`system_settings` TIDAK menyimpan data sesi/semester — jangan gunakan sebagai sumber.**
     * **Fallback:** Jika tiada padanan, sistem menggunakan `TARIKH KUATKUASA` (cth: `2026-01-12`) sebagai tarikh mula, dan menambah 18 minggu (tempoh standard semester politeknik: 14 minggu kuliah + 1 minggu cuti pertengahan + 1 minggu ulang kaji + 2 minggu peperiksaan) sebagai tarikh tamat lalai.
     * **Kawalan Pelajar:** Pelajar boleh menyemak dan meminda kedua-dua tarikh ini secara terus di dalam borang modal sebelum menyimpan.
   * **Notis Pendedahan UX (Disclaimer):**
@@ -305,7 +305,7 @@ Ditempatkan pada `PortalPage.tsx` di bahagian atas (bersebelahan/di bawah `Kebaj
 * **Zon Masa Malaysia Wajib (Timezone Integrity - UTC+8):**
   * Memandangkan pangkalan data dan pelayan beroperasi secara default pada UTC, semua fungsi SQL, cron, dan perbandingan masa **WAJIB** ditukar kepada zon masa Malaysia:
     * `(NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')`
-    * `(CURRENT_DATE AT TIME ZONE 'Asia/Kuala_Lumpur')`
+    * `(NOW() AT TIME ZONE 'Asia/Kuala_Lumpur')::date`
     * `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'))` (1=Isnin .. 7=Ahad)
   * Ini menghalang ralat kritikal di mana kelas 8:00 PG Isnin waktu Malaysia dikira sebagai hari Ahad jam 00:00 UTC, yang boleh menyebabkan kegagalan penghantaran dan ralat tarikh dedup.
 * **Masa Peringatan Dinamik Mengikut Tetapan Pelajar (`reminder_minutes`):**

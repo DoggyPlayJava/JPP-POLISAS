@@ -13,10 +13,11 @@
 - **Timezone Integrity (UTC+8):** All DB SQL, cron intervals, and date calculations MUST use `AT TIME ZONE 'Asia/Kuala_Lumpur'` and `EXTRACT(ISODOW FROM (NOW() AT TIME ZONE 'Asia/Kuala_Lumpur'))` to prevent wrong day-of-week and shifted dedup dates.
 - **Dynamic Reminders:** Cron queries MUST join `student_timetable_settings` to read each student's `reminder_minutes` (default 30, or custom 15/45 min) rather than hardcoding 25-35 min.
 - **Online Class Branching:** If `is_online = true`, show "Sertai Kelas Online" (Teams) and HIDE the PolyMaps button (no physical walk). If `is_online = false`, show PolyMaps navigation button (`?room=<UUID>`).
-- **Semester Dates Sourcing:** `semester_start_date` and `semester_end_date` are auto-populated from official institutional academic session (`system_settings` / `takwim-akademik-template.ts`) with fallback to `TARIKH KUATKUASA` + 18 weeks, fully editable by the student in the preview modal.
+- **Semester Dates Sourcing:** `semester_start_date` and `semester_end_date` are auto-populated from `src/config/takwim-akademik-template.ts` (the ONLY source of institutional academic-session dates — `system_settings` has no session/semester data). Fallback when no session match: `TARIKH KUATKUASA` + 18 weeks (14 kuliah + 1 cuti pertengahan + 1 ulang kaji + 2 peperiksaan), fully editable by the student in the preview modal.
 - **Normalization:** No redundant `building_id` in `student_timetables` — access building via `location_id → imaps_locations.building_id → imaps_buildings`.
 - **Zero DB Polling:** Client-side live timer/countdown using `setInterval` over locally loaded schedule.
 - **No Hardcoded Rooms:** Data-driven mapping via `imaps_room_mappings` table.
+- **Testing Stack:** Tasks 3/4/5 use `@testing-library/react` (`render`/`screen`) which is NOT installed — `package.json` has no `@testing-library/react`, `@testing-library/jest-dom`, or `jsdom`. Existing tests (`superAppPortal.test.ts`) use pure-logic imports with zero DOM. EITHER add those devDeps + `environment: 'jsdom'` in `vitest.config`, OR rewrite those component tests to assert pure functions/helpers. Do not assume `@testing-library/react` exists.
 - **Strict Human-in-the-Loop:** Never auto-commit parsed data; mandatory user review & confirm.
 - **Documentation:** After completing implementation, update `DEV_GUIDELINE.md` per `AGENTS.md`.
 
@@ -448,6 +449,185 @@ export async function scanPdfClasses(arrayBuffer: ArrayBuffer): Promise<{ pageIn
   }
 
   return classesFound;
+}
+  return classesFound;
+}
+
+// ── parseTimetablePage: coordinate grid extractor (JKE template) ─────────────
+// ponytail: grid thresholds tuned for ONE real JKE PDF. Add per-department
+// templates (JKA/JKM/JP/JTM) as samples arrive. Do NOT generalize prematurely.
+// BLOCKER: validate against a REAL `CM_SEM3_JKE.pdf` before Phase 1 ships —
+// the cell-to-slot mapping below is a best-effort skeleton, not verified.
+
+interface PdfTextItem {
+  str: string;
+  x: number;    // device-space X (it.transform[4])
+  y: number;    // device-space Y (it.transform[5], grows downward)
+  width: number;
+  height: number;
+}
+
+const DAY_NAMES = ['ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT'];
+
+function toTextItems(content: any): PdfTextItem[] {
+  return content.items
+    .filter((it: any) => typeof it.str === 'string' && it.str.trim().length > 0)
+    .map((it: any) => ({
+      str: it.str.trim(),
+      x: it.transform[4],
+      y: it.transform[5],
+      width: it.width ?? 0,
+      height: it.height ?? 0,
+    }));
+}
+
+// Cluster text items into horizontal bands (rows) by Y proximity.
+export function clusterRowsByY(items: PdfTextItem[], tolerance = 5): PdfTextItem[][] {
+  const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const rows: PdfTextItem[][] = [];
+  let cur: PdfTextItem[] = [];
+  let anchorY: number | null = null;
+  for (const it of sorted) {
+    if (anchorY === null || Math.abs(it.y - anchorY) <= tolerance) {
+      cur.push(it);
+      if (anchorY === null) anchorY = it.y;
+    } else {
+      rows.push(cur);
+      cur = [it];
+      anchorY = it.y;
+    }
+  }
+  if (cur.length) rows.push(cur);
+  return rows;
+}
+
+function rowText(row: PdfTextItem[]): string {
+  return row
+    .slice()
+    .sort((a, b) => a.x - b.x)
+    .map((it) => it.str)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export async function parseTimetablePage(
+  arrayBuffer: ArrayBuffer,
+  pageIndex: number,
+  roomMappings: ImapsRoomMapping[] = []
+): Promise<{
+  metadata: { session: string; effectiveDate: string; className: string; department: string };
+  entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[];
+}> {
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(pageIndex);
+  const content = await page.getTextContent();
+  const items = toTextItems(content);
+  const rows = clusterRowsByY(items);
+
+  // Header metadata via full-text regex (format-independent).
+  const fullText = items
+    .slice()
+    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .map((it) => it.str)
+    .join(' ');
+  const metadata = {
+    className: fullText.match(/KELAS\s*:\s*([A-Za-z0-9_-]+)/i)?.[1]?.trim() ?? '',
+    session: fullText.match(/SESI\s*:\s*([A-Za-z0-9_/]+)/i)?.[1]?.trim() ?? '',
+    effectiveDate: fullText.match(/TARIKH\s*KUATKUASA\s*:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i)?.[1]?.trim() ?? '',
+    department: fullText.match(/JABATAN\s*:\s*([A-Za-z ]+)/i)?.[1]?.trim() ?? '',
+  };
+
+  // Time-column X anchors ("08:00".."16:00").
+  // ponytail: other templates may use "8-9" or merged 2h blocks — normalize here.
+  const timeColX = new Map<string, number>();
+  for (const row of rows) {
+    for (const it of row) {
+      const m = it.str.match(/^(\d{1,2}):(\d{2})$/);
+      if (m) timeColX.set(`${String(+m[1]).padStart(2, '0')}:${m[2]}`, it.x);
+    }
+  }
+  const times = [...timeColX.keys()].sort();
+
+  // Day-row Y anchors from day-name cells.
+  const dayRowY = new Map<string, number>();
+  for (const row of rows) {
+    const upper = rowText(row).toUpperCase();
+    for (const day of DAY_NAMES) {
+      if (upper.includes(day) && !dayRowY.has(day)) {
+        dayRowY.set(day, Math.min(...row.map((it) => it.y)));
+      }
+    }
+  }
+
+  const orderedDays = DAY_NAMES.filter((d) => dayRowY.has(d));
+  const sortedDayYs = orderedDays.map((d) => dayRowY.get(d)!).sort((a, b) => a - b);
+  const timeXs = times.map((t) => timeColX.get(t)!).sort((a, b) => a - b);
+  const halfGap = timeXs.length > 1 ? (timeXs[1] - timeXs[0]) / 2 : 30;
+
+  const entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[] = [];
+  for (let di = 0; di < orderedDays.length; di++) {
+    const day = orderedDays[di];
+    const y0 = dayRowY.get(day)!;
+    const y1 = sortedDayYs[di + 1] ?? (y0 + 200);
+    for (let ti = 0; ti < times.length; ti++) {
+      const x0 = timeXs[ti] - halfGap;
+      const x1 = timeXs[ti] + halfGap;
+      const cell = items
+        .filter((it) => it.y > y0 && it.y < y1 && it.x >= x0 && it.x < x1)
+        .sort((a, b) => a.y - b.y || a.x - b.x);
+      const cellText = cell.map((it) => it.str).join(' ').trim();
+      if (!cellText) continue;
+
+      const parsed = parseCell(cellText, roomMappings);
+      if (!parsed.course_code) continue;
+
+      entries.push({
+        academic_session: metadata.session,
+        semester: '',
+        class_name: metadata.className,
+        day_of_week: di + 1,
+        start_time: `${times[ti]}:00`,
+        end_time: `${times[ti + 1] ?? '17:00'}:00`,
+        course_code: parsed.course_code,
+        course_name: parsed.course_code, // legend match or manual edit fills this
+        class_type: parsed.class_type,
+        lecturer_code: parsed.lecturer_code,
+        room_raw: parsed.room_raw,
+        location_id: parsed.location_id,
+        is_online: parsed.is_online,
+        color: COURSE_PALETTE[0],
+        is_archived: false,
+      });
+    }
+  }
+
+  return { metadata, entries: mergeConsecutiveSlots(entries) };
+}
+
+// ponytail: lecturer-vs-room token heuristic is JKE-specific ("DEE20153(L) AI EA303").
+// Validate token order against the real sample; adjust when format differs.
+function parseCell(cellText: string, roomMappings: ImapsRoomMapping[]) {
+  const codeType = cellText.match(/^([A-Z0-9]+)\s*\((L|P|TU|O)\)/i);
+  const { courseCode, classType } = codeType
+    ? parseCourseCodeAndType(codeType[0])
+    : { courseCode: '', classType: 'LAIN_LAIN' as ClassType };
+
+  const rest = cellText.replace(/^[A-Z0-9]+\s*\((L|P|TU|O)\)/i, '').trim();
+  const tokens = rest.split(/\s+/);
+  const room = tokens[tokens.length - 1] ?? '';
+  const lecturer = tokens.length > 1 ? tokens.slice(0, -1).join(',') : '';
+
+  const mapping = roomMappings.find((m) => m.room_code_pattern === room);
+  return {
+    course_code: courseCode,
+    class_type: classType,
+    lecturer_code: lecturer,
+    room_raw: room,
+    location_id: mapping?.location_id ?? null,
+    is_online: mapping?.is_online ?? false,
+  };
 }
 ```
 
