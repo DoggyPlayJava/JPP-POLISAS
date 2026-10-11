@@ -38,7 +38,10 @@ export function useDevicePerformance(): DevicePerformanceInfo {
       return { isLowPerf: false, concurrency: 8, memory: 8, prefersReducedMotion: false, isThrottledCpu: false };
     }
 
-    const concurrency = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
+    // iOS Safari < 18 does NOT expose navigator.hardwareConcurrency (undefined).
+    // Undefined = "unknown", NOT "weak" — fallback to 8 so iPhones are never
+    // mislabeled low-end (which disabled the PolyMaps drag gesture).
+    const concurrency = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 8;
     const memory = typeof navigator !== 'undefined' && (navigator as any).deviceMemory ? (navigator as any).deviceMemory : null;
     const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
     

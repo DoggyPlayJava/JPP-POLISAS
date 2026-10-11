@@ -86,6 +86,11 @@ export function GlobalPullToUpdate() {
     const handleTouchStart = (e: TouchEvent) => {
       if (isRefreshingRef.current) return;
 
+      // Modal overlay (CompleteProfileModal, dsb.) sets body overflow:hidden.
+      // Disable pull-to-refresh while a modal is open — the touchmove preventDefault
+      // interferes with modal scrolling and causes lag on Android.
+      if (document.body.style.overflow === 'hidden') return;
+
       // Check if user is at the top of the viewport (fast 0.01ms check, no getComputedStyle)
       const isAtTop = window.scrollY <= 0 && (document.documentElement?.scrollTop ?? 0) <= 0;
 

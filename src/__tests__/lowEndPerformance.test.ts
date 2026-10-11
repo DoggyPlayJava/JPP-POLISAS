@@ -53,6 +53,9 @@ describe('Low-End Device Performance Guarantee', () => {
   describe('Detection hook: hardware only (prefersReducedMotion NOT low-perf)', () => {
     it('flags <=4 CPU cores as low-perf', () => {
       expect(hook).toContain('concurrency <= 4');
+      // iOS fallback must be 8, NOT 4 — undefined hardwareConcurrency means
+      // "unknown", not "weak"; 4 disabled PolyMaps drag on iPhone.
+      expect(hook).toContain('hardwareConcurrency ? navigator.hardwareConcurrency : 8');
     });
 
     it('flags <=4GB RAM as low-perf', () => {
