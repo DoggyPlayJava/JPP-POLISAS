@@ -254,13 +254,26 @@ export function extractTimetableFromItems(
       ?? '',
   };
 
-  // Day-row Y anchors from day-name cells.
+  // Day-row Y anchors: prioritize authentic day label in day column (x < 90)
   const dayRowY = new Map<string, number>();
-  for (const row of rows) {
-    const upper = rowText(row).toUpperCase();
+  for (const it of items) {
+    if (it.x > 90) continue;
+    const upper = it.str.toUpperCase().trim();
     for (const day of DAY_NAMES) {
-      if (upper.includes(day) && !dayRowY.has(day)) {
-        dayRowY.set(day, Math.min(...row.map((it) => it.y)));
+      if (upper === day || (upper.startsWith(day) && !dayRowY.has(day))) {
+        if (!dayRowY.has(day)) {
+          dayRowY.set(day, it.y);
+        }
+      }
+    }
+  }
+
+  // Fallback for synthetic unit tests where x coordinates may vary: search all items
+  for (const it of items) {
+    const upper = it.str.toUpperCase().trim();
+    for (const day of DAY_NAMES) {
+      if ((upper === day || upper.startsWith(day)) && !dayRowY.has(day)) {
+        dayRowY.set(day, it.y);
       }
     }
   }
