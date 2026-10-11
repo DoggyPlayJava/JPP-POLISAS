@@ -199,10 +199,20 @@ ON public.student_timetable_notification_logs(timetable_id, notified_date);
 
 ALTER TABLE public.student_timetable_notification_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "student_timetable_notification_logs_superadmin_and_system"
-ON public.student_timetable_notification_logs FOR ALL
-USING (true)
-WITH CHECK (true);
+-- Pelajar hanya boleh membaca rekod notifikasi mereka sendiri
+CREATE POLICY "student_timetable_notification_logs_select_own"
+ON public.student_timetable_notification_logs
+FOR SELECT
+USING ((SELECT auth.uid()) = user_id);
+
+-- Pentadbir Mutlak (SUPER_ADMIN_JPP) mempunyai akses penuh
+CREATE POLICY "student_timetable_notification_logs_superadmin"
+ON public.student_timetable_notification_logs
+FOR ALL
+USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role = 'SUPER_ADMIN_JPP'))
+WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role = 'SUPER_ADMIN_JPP'));
+
+-- Nota Keselamatan: Penulisan rekod log dedup dari cron dijalankan melalui service_role (supabaseAdmin) yang melangkaui RLS secara selamat. Pelajar biasa dihalang sepenuhnya daripada menyuntik atau memadam rekod log.
 ```
 
 ---
