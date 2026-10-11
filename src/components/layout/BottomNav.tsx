@@ -7,7 +7,7 @@ import {
   Bike, Map
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, useDragControls } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
@@ -42,6 +42,8 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   const navRef = useRef<HTMLDivElement>(null);
   const [showPolymartModal, setShowPolymartModal] = useState(false);
   const { isLowPerf } = useDevicePerformance();
+  // Drag handle-only swipe-to-dismiss (iOS: whole-menu drag was swallowed by native scroll)
+  const quickActionsDragControls = useDragControls();
 
   // -- Auto-hide on Scroll Logic via Framer Motion --
   const { scrollY } = useScroll();
@@ -134,7 +136,9 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               className="fixed inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-md backdrop-grayscale z-[110] shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]"
             />
             <motion.div
-              drag={isLowPerf ? false : "y"}
+              drag="y"
+              dragListener={false}
+              dragControls={quickActionsDragControls}
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.4}
               onDragEnd={(e, info) => {
@@ -158,7 +162,10 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               className="quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl border border-white/50 dark:border-white/10 rounded-3xl p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]"
             >
               {/* Drag Handle Indicator */}
-              <div className="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full mx-auto mb-4" />
+              <div
+                onPointerDown={(e) => quickActionsDragControls.start(e)}
+                className="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
+              />
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">Tindakan Pantas</h3>
               <motion.div 
                 className="grid grid-cols-4 gap-y-6 gap-x-2"

@@ -377,7 +377,7 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 | `ExcoThemeContext` | `useExcoTheme()` | Warna exco aktif untuk theming |
 | `SupsasContext` | `useSupsas()` | Data edisi, kontingen, sukan, fixtures, medal tally SUPSAS |
 | `JppConfigContext` | `useJppConfig()` | Konfigurasi portal JPP (tetapan, feature flags) |
-| `useDevicePerformance` | `useDevicePerformance()` | Pengesanan pasif spesifikasi peranti (`<=4` teras CPU, `<=4GB` RAM) untuk tiering prestasi & CSS `.low-perf-device` |
+| `useDevicePerformance` | `useDevicePerformance()` | Pengesanan **runtime-adaptive** jank (ukur rAF frame drop + `deviceMemory<=4GB` + Data Saver), BUKAN teka hardware. Core count TIDAK lagi dipakai. |
 
 ---
 
@@ -1076,9 +1076,13 @@ Bagi mengelakkan isu kelambatan (frame drops, laggy scroll, memory spikes) pada 
    - Hanya shell teras (~3MB) di-precache dalam SW manifest awal.
    - Pustaka berat seperti `@react-pdf/renderer`, `exceljs`, `heic2any`, `pdfjs`, `html5-qrcode` mesti diabaikan (`globIgnores`) daripada precache awal dan di-cache atas permintaan (on-demand runtime caching) melalui `lazy-assets-cache` dalam `src/sw.ts`.
 
-2. **Pengesanan Pasif Spesifikasi Peranti (`useDevicePerformance`):**
-   - Hook `useDevicePerformance` mengesan `hardwareConcurrency <= 4` atau `deviceMemory <= 4GB`.
-   - Mengaktifkan kelas `.low-perf-device` pada `<html>` yang secara automatik mematikan offscreen `backdrop-filter: blur(...)` dan `mix-blend-*` render passes.
+2. **Pengesanan Runtime-Adaptive (`useDevicePerformance`):**
+   - Hook `useDevicePerformance` **MENGUKUR jank sebenar, BUKAN teka hardware**.
+   - Signal boleh dipercayai: `deviceMemory <= 4GB`, `navigator.connection.saveData`, manual override (`?perf=low` / `localStorage.force_low_perf`).
+   - Signal yang DIBUANG: `hardwareConcurrency <= 4` (budget MediaTek 8-core lebih perlahan dari iPhone 6-core — core count tak bermakna) dan benchmark CPU mount-time (noisy semasa hydration).
+   - **Runtime jank detection:** sampling ~45 `requestAnimationFrame` frame (deferred ke `requestIdleCallback`); jika median frame > 28ms (sustained < ~36fps), upgrade ke low-perf sekali sahaja (upgrade-only, tak oscillate).
+   - Mengaktifkan kelas `.low-perf-device` pada `<html>` yang secara automatik mematikan `backdrop-filter: blur(...)` dan `mix-blend-*` render passes.
+   - ⚠️ **JANGAN** masukkan `prefersReducedMotion` ke dalam `isLowPerf` — itu pilihan aksesibiliti, diurus oleh `MotionConfig reducedMotion="user"`.
 
 3. **Scoping Provider Tempatan (Jangan Letak di Root):**
    - Modul khusus seperti `KarnivalProvider` atau `SupsasProvider` **TIDAK BOLEH** dibungkus pada root `App.tsx`.
@@ -1088,6 +1092,21 @@ Bagi mengelakkan isu kelambatan (frame drops, laggy scroll, memory spikes) pada 
 4. **Zero-Jank Touch (`GlobalPullToUpdate.tsx`):**
    - Dilarang membuat traversal rekursif DOM dengan `window.getComputedStyle(el)` pada event `touchstart`.
    - Hanya pasang listener `touchmove` (`passive: false`) secara dinamik apabila pengguna berada di bahagian atas sekali (`window.scrollY <= 0`).
+
+4b. **Drag Gesture — GUNA `useDragControls` + Handle Sahaja (JANGAN `drag` pada seluruh sheet/menu):**
+   - **Punca bug:** `drag="y"` dilekatkan pada SELURUH `motion.div` sheet/menu (PolyMaps bottom sheet, BottomNav quick-actions). Pada iOS Safari, native scroll kandungan (`overflow-y-auto`) MENELAN gesture drag → swipe tak jalan (Android jalan, iOS tidak).
+   - **Fix betul:** attach `drag="y" dragListener={false} dragControls={controls}` pada container, kemudian `onPointerDown={(e) => controls.start(e)}` pada HANDLE sahaja (bar kecil / drag indicator). Isi sheet scroll normal.
+   - **Contoh (lihat `PolyMapsPage.tsx` / `BottomNav.tsx`):**
+     ```tsx
+     const controls = useDragControls();
+     <motion.div drag="y" dragListener={false} dragControls={controls}
+                 dragConstraints={{ top: 0, bottom: 0 }} dragElastic={0.2}
+                 onDragEnd={(_e, info) => { /* snap logic */ }}>
+       <div onPointerDown={(e) => controls.start(e)} className="...cursor-grab...">drag handle</div>
+       {/* content scroll normal */}
+     </motion.div>
+     ```
+   - **Sebab `drag={isLowPerf ? false : "y"}` salah:** (a) ia padam gesture untuk low-end device yang sepatutnya masih boleh pakai; (b) `isLowPerf` heuristic lama tersilap label iPhone sebagai low-end (core count fallback `4`), jadi iPhone hilang swipe — dua-dua bug serentak.
 
 5. **Dynamic Imports untuk Export Heavy Libraries:**
    - Semua fungsi jana laporan PDF atau Excel mesti menggunakan dynamic `await import('@react-pdf/renderer')` atau `await import('exceljs')` di dalam event handler, bukan `import` statik di atas fail.

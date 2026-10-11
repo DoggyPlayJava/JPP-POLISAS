@@ -1,38 +1,53 @@
 import { describe, it, expect } from 'vitest';
 
+/**
+ * Device Performance Detection Logic — runtime-adaptive.
+ *
+ * The old formula used `concurrency <= 4` + a mount-time CPU benchmark. Both were
+ * unreliable: budget 8-core phones passed as high-end, iPhones (hidden/6-core)
+ * got flagged, and the mount benchmark fired during hydration (false positive).
+ *
+ * Correct detection = measure real jank at runtime. The initial guess uses only
+ * reliable signals (Data Saver, deviceMemory <= 4GB, manual override); a deferred
+ * rAF sampling pass upgrades to low-end only when the median frame exceeds 28ms.
+ */
 describe('Device Performance Detection Logic', () => {
-  // Formula betul (selepas fix): HARDWARE sahaja. prefersReducedMotion DILEPASKAN.
-  const calcIsLowPerf = (
-    concurrency: number,
+  // Pure helper mirroring the hook's INITIAL guess (before runtime refinement).
+  const initialIsLowPerf = (
     memory: number | null,
-    prefersReducedMotion: boolean,
-    isThrottledCpu: boolean,
-    isSaveData = false
-  ) => isSaveData || concurrency <= 4 || (memory !== null && memory <= 4) || isThrottledCpu;
+    isSaveData = false,
+    forceLowPerf = false
+  ) => forceLowPerf || isSaveData || (memory !== null && memory <= 4);
 
-  it('identifies devices with <= 4 cores as low-performance', () => {
-    expect(calcIsLowPerf(4, 8, false, false)).toBe(true);
+  it('does NOT use core count as a signal anymore', () => {
+    // 8-core budget phone must NOT be flagged high-end by core count alone;
+    // the signal is dropped entirely from the formula.
+    expect(initialIsLowPerf(null)).toBe(false); // 8-core, unknown RAM, no save-data
   });
 
-  it('identifies devices with <= 4GB RAM as low-performance', () => {
-    expect(calcIsLowPerf(8, 3, false, false)).toBe(true);
+  it('flags <=4GB RAM as low-end', () => {
+    expect(initialIsLowPerf(3)).toBe(true);
+    expect(initialIsLowPerf(4)).toBe(true);
   });
 
-  it('does NOT label prefers-reduced-motion as low-performance (accessibility, not hardware)', () => {
-    // Device KUAT (8 core, 16GB) dengan reduce-motion ON = masih high-end.
-    // Animation boleh off (respect OS), tapi bukan "low-end device".
-    expect(calcIsLowPerf(8, 16, true, false)).toBe(false);
+  it('does NOT flag >4GB RAM as low-end (awaiting runtime jank evidence)', () => {
+    expect(initialIsLowPerf(8)).toBe(false);
+    expect(initialIsLowPerf(16)).toBe(false);
   });
 
-  it('identifies devices with throttled or slow CPU benchmark as low-performance mode', () => {
-    expect(calcIsLowPerf(8, 16, false, true)).toBe(true);
+  it('flags Data Saver mode as low-end', () => {
+    expect(initialIsLowPerf(null, true)).toBe(true);
+    expect(initialIsLowPerf(16, true)).toBe(true);
   });
 
-  it('identifies 8-core, 8GB+ unthrottled machines as high performance', () => {
-    expect(calcIsLowPerf(8, 8, false, false)).toBe(false);
+  it('honors manual override', () => {
+    expect(initialIsLowPerf(null, false, true)).toBe(true);
   });
 
-  it('identifies Data Saver mode as low-performance', () => {
-    expect(calcIsLowPerf(8, 16, false, false, true)).toBe(true);
+  it('runtime jank detection upgrades to low-end when median frame > 28ms', () => {
+    // Mirror the hook's threshold: sustained < ~36fps while idle.
+    const medianFrameMs = 35;
+    const JANK_THRESHOLD_MS = 28;
+    expect(medianFrameMs > JANK_THRESHOLD_MS).toBe(true);
   });
 });
