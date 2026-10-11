@@ -94,5 +94,11 @@ END;
 $$;
 
 -- 4. Permissions
-GRANT EXECUTE ON FUNCTION public.get_upcoming_timetable_reminders() TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.log_timetable_notification(UUID, UUID) TO authenticated, service_role;
+-- SECURITY: SECURITY DEFINER functions must be service_role ONLY.
+-- Granting to `authenticated` would let any student (a) forge dedup logs to
+-- suppress their own reminders, and (b) read every student's schedule via
+-- get_upcoming_timetable_reminders(). The cron worker runs as service_role.
+GRANT EXECUTE ON FUNCTION public.get_upcoming_timetable_reminders() TO service_role;
+GRANT EXECUTE ON FUNCTION public.log_timetable_notification(UUID, UUID) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.get_upcoming_timetable_reminders() FROM authenticated, anon;
+REVOKE EXECUTE ON FUNCTION public.log_timetable_notification(UUID, UUID) FROM authenticated, anon;
