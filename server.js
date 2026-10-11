@@ -3267,6 +3267,130 @@ cron.schedule('*/15 * * * *', async () => {
     }
 });
 
+// ── Timetable & PolyMaps Automated Class Reminder Cron (Every 5 Minutes) ───────
+// Scans for upcoming classes matching student reminder preferences in Malaysian Time (UTC+8).
+// Uses atomic database-level deduplication (ON CONFLICT DO NOTHING) to ensure single-worker dispatch.
+cron.schedule('*/5 * * * *', async () => {
+    try {
+        if (!supabaseAdmin) return;
+
+        const { data: upcoming, error: rpcErr } = await supabaseAdmin.rpc('get_upcoming_timetable_reminders');
+        if (rpcErr) {
+            console.warn('[CRON-TIMETABLE] get_upcoming_timetable_reminders RPC failed:', rpcErr.message);
+            return;
+        }
+
+        if (!upcoming || upcoming.length === 0) return;
+
+        const vapidPublicKey = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
+        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+        const hasVapid = Boolean(vapidPublicKey && vapidPrivateKey);
+        if (hasVapid) {
+            webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+        }
+
+        for (const item of upcoming) {
+            try {
+                // 1. Atomic log to deduplicate across multi-worker PM2 instances
+                const { data: wasLogged, error: logErr } = await supabaseAdmin.rpc('log_timetable_notification', {
+                    p_timetable_id: item.timetable_id,
+                    p_user_id: item.user_id,
+                });
+
+                if (logErr) {
+                    console.error(`[CRON-TIMETABLE] Error logging dedup for ${item.timetable_id}:`, logErr.message);
+                    continue;
+                }
+
+                if (!wasLogged) {
+                    // Already notified today
+                    continue;
+                }
+
+                const deepLink = item.is_online
+                    ? '/akademik/takwim'
+                    : (item.location_id
+                        ? `/polymaps?room=${item.location_id}`
+                        : `/polymaps?q=${encodeURIComponent(item.room_raw)}`);
+
+                const notifTitle = `Peringatan Kuliah: ${item.course_code}`;
+                const notifMessage = `Kelas ${item.course_code} (${item.course_name}) akan bermula dalam ~${item.reminder_mins} minit di ${item.is_online ? 'Dalam Talian (MS Teams)' : item.room_raw}.`;
+
+                // 2. Insert in-app notification
+                const { error: notifErr } = await supabaseAdmin.from('notifications').insert({
+                    user_id: item.user_id,
+                    title: `Peringatan Kuliah: ${item.course_code}`,
+                    message: notifMessage,
+                    type: 'timetable_reminder',
+                    module: 'AKADEMIK',
+                    link: deepLink,
+                    reference_id: item.timetable_id,
+                });
+
+                if (notifErr) {
+                    console.error(`[CRON-TIMETABLE] Error inserting in-app notification for ${item.timetable_id}:`, notifErr.message);
+                }
+
+                // 3. Dispatch Web Push
+                if (hasVapid) {
+                    try {
+                        const { data: subs } = await supabaseAdmin
+                            .from('push_subscriptions')
+                            .select('id, endpoint, p256dh, auth')
+                            .eq('user_id', item.user_id);
+
+                        if (subs && subs.length > 0) {
+                            const pushPayload = JSON.stringify({
+                                title: `Peringatan Kuliah: ${item.course_code}`,
+                                body: notifMessage,
+                                icon: '/icon-192-maskable.png',
+                                badge: '/icon-192-maskable.png',
+                                tag: `timetable-reminder-${item.timetable_id}`,
+                                renotify: true,
+                                data: {
+                                    url: deepLink,
+                                    link: deepLink,
+                                    module: 'AKADEMIK',
+                                    type: 'timetable_reminder',
+                                    reference_id: item.timetable_id,
+                                },
+                            });
+
+                            const staleIds = [];
+                            await Promise.allSettled(
+                                subs.map(async (s) => {
+                                    try {
+                                        const subscription = {
+                                            endpoint: s.endpoint,
+                                            keys: { p256dh: s.p256dh, auth: s.auth },
+                                        };
+                                        await webpush.sendNotification(subscription, pushPayload);
+                                    } catch (err) {
+                                        if (err.statusCode === 410 || err.statusCode === 404) {
+                                            staleIds.push(s.id);
+                                        }
+                                    }
+                                })
+                            );
+
+                            if (staleIds.length > 0) {
+                                await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+                            }
+                        }
+                    } catch (pushErr) {
+                        console.error(`[CRON-TIMETABLE] Web push dispatch failed for ${item.timetable_id}:`, pushErr.message);
+                    }
+                }
+            } catch (itemErr) {
+                console.error(`[CRON-TIMETABLE] Unexpected error processing class ${item.timetable_id}:`, itemErr.message);
+            }
+        }
+    } catch (err) {
+        console.error('[CRON-TIMETABLE] Cron tick failed:', err.message);
+    }
+});
+
 // ── Infrastructure Watchdog Cron (Every 5 Minutes) ────────────────────────────
 // Auto-detects crash precursors (WAL bloat, OOM risk) and sends emergency email.
 // Provides 2–4 hour warning window before potential OOM crash.
