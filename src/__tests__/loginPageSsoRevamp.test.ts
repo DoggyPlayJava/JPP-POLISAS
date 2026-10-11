@@ -31,28 +31,30 @@ describe('LoginPage Google SSO-First & Earthy Minimal Redesign', () => {
       // Background: Warm Alabaster / Cream
       expect(source).toContain('#F8F6EE');
     });
+
+    it('removes fake 15,000+ students and 120+ clubs, using authentic POLISAS stats', () => {
+      expect(source).not.toContain('15,000+');
+      expect(source).not.toContain('120+');
+      // Real POLISAS metrics: Kelab & Persatuan, 9 Portfolio Exco, 5 Jabatan
+      expect(source).toContain('Unit Exco JPP');
+      expect(source).toContain('Jabatan Akademik');
+    });
   });
 
-  describe('Google SSO-First Hierarchy', () => {
-    it('prioritizes Google SSO as primary action before manual login', () => {
+  describe('Google SSO-First Clean Hierarchy (Uncluttered)', () => {
+    it('prioritizes Google SSO as primary hero action', () => {
       expect(source).toContain('handleGoogleLogin');
       expect(source).toContain('Teruskan dengan Google');
-
-      // Ensure Google button appears before password input in standard login form
-      const googleIndex = source.indexOf('handleGoogleLogin');
-      const passwordInputIndex = source.indexOf('type="password"');
-      expect(googleIndex).toBeGreaterThan(-1);
-      expect(passwordInputIndex).toBeGreaterThan(-1);
-      expect(googleIndex).toBeLessThan(passwordInputIndex);
     });
 
-    it('provides clean divider and manual login option', () => {
-      expect(source).toMatch(/atau log masuk manual|atau guna emel/i);
+    it('hides manual login by default behind a clean toggle (showManualLogin)', () => {
+      expect(source).toContain('showManualLogin');
+      expect(source).toContain('setShowManualLogin');
+    });
+
+    it('preserves core authentication handlers and security guards', () => {
       expect(source).toContain('handleLogin');
       expect(source).toContain('resolve_login_identifier');
-    });
-
-    it('preserves registration with Google priority and role selection', () => {
       expect(source).toContain('handleRegister');
       expect(source).toContain('check_matric_registered');
       expect(source).toContain('check_email_registered');

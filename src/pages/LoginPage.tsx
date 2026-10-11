@@ -25,7 +25,8 @@ import {
   Send,
   ShieldCheck,
   GraduationCap,
-  Users
+  Users,
+  X
 } from 'lucide-react';
 import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkademikClubId } from '@/types';
 import { cn } from '@/lib/utils';
@@ -55,8 +56,16 @@ export function LoginPage() {
   const [resendLoading, setResendLoading] = useState(false);
   const [emailSentOnce, setEmailSentOnce] = useState(false);
   const [showManualRegister, setShowManualRegister] = useState(false);
+  const [showManualLogin, setShowManualLogin] = useState(false);
   const [traditionalRegistrationEnabled, setTraditionalRegistrationEnabled] = useState(true);
   const [hasQrRedirect, setHasQrRedirect] = useState(false);
+
+  // Real institutional stats (live from database + institutional structure)
+  const [realStats, setRealStats] = useState({
+    clubCount: 21,
+    unitCount: 9,
+    deptCount: 5,
+  });
 
   // Register flow state
   const [step, setStep] = useState<Step>(1);
@@ -82,6 +91,7 @@ export function LoginPage() {
     setPhone('');
     setPasscode('');
     setShowManualRegister(false);
+    setShowManualLogin(false);
     setVerificationSent(false);
     setRegisteredEmail('');
     setEmailSentOnce(false);
@@ -103,16 +113,22 @@ export function LoginPage() {
           setTraditionalRegistrationEnabled(data.value === 'true' || data.value === true);
         }
       });
+
+    // Dapatkan bilangan kelab berdaftar sebenar secara langsung dari pangkalan data
+    supabase.from('clubs').select('*', { count: 'exact', head: true })
+      .then(({ count }) => {
+        if (count && count > 0) {
+          setRealStats(prev => ({ ...prev, clubCount: count }));
+        }
+      });
   }, []);
 
   // Resolve identifier (emel/nama/no matrik) -> emel sebenar
   const resolveIdentifier = async (identifier: string): Promise<{ email: string | null; error: string | null }> => {
     const trimmed = identifier.trim();
-    // Jika ada '@', ia sudah emel -> bypass RPC
     if (trimmed.includes('@')) {
       return { email: trimmed.toLowerCase(), error: null };
     }
-    // Guna RPC untuk resolve nama/no matrik -> emel
     const { data, error } = await supabase.rpc('resolve_login_identifier', { p_identifier: trimmed });
     if (error) return { email: null, error: error.message };
     if (!data || data.length === 0) return { email: null, error: 'Tiada akaun dijumpai dengan maklumat ini.' };
@@ -335,7 +351,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-12 bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] relative overflow-hidden font-sans">
-      {/* ── Left Editorial Brand Panel (Hidden on Mobile) ─────────── */}
+      {/* ── Left Editorial Brand Panel (Authentic POLISAS Structure) ─── */}
       <div className="hidden lg:flex lg:col-span-5 flex-col justify-between relative bg-[#2E3A2F] text-[#F8F6EE] p-12 overflow-hidden border-r border-[#D9C9B2]/20">
         {/* Ambient Organic Glows */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#6B7F5B]/15 rounded-full blur-[120px] -mr-[250px] -mt-[250px] pointer-events-none" />
@@ -377,26 +393,26 @@ export function LoginPage() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight leading-[1.12] text-white">
-              Membentuk Kepimpinan Kampus Digital Masa Hadapan.
+              Membentuk Kepimpinan Kampus Digital POLISAS.
             </h2>
 
             <p className="text-sm sm:text-base text-[#D9C9B2] font-normal leading-relaxed max-w-md">
-              Akses e-Akademik, aktiviti kelab, pasaran siswa PolyMart, dan kebajikan mahasiswa dalam satu sentuhan mudah alih yang pantas dan telus.
+              Sistem pengurusan bersepadu aktiviti kelab, rekod kebajikan, e-Akademik, dan pasaran usahawan siswa Politeknik Sultan Haji Ahmad Shah.
             </p>
 
-            {/* Institutional Metric Pill List */}
+            {/* Authentic POLISAS Institutional Metric List */}
             <div className="pt-4 grid grid-cols-3 gap-3 border-t border-[#D9C9B2]/20">
               <div>
-                <p className="text-xl font-black text-white font-mono">15,000+</p>
-                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Mahasiswa</p>
+                <p className="text-2xl font-black text-white font-mono">{realStats.clubCount}</p>
+                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Kelab Berdaftar</p>
               </div>
               <div>
-                <p className="text-xl font-black text-white font-mono">120+</p>
-                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Kelab Aktif</p>
+                <p className="text-2xl font-black text-white font-mono">{realStats.unitCount}</p>
+                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Unit Exco JPP</p>
               </div>
               <div>
-                <p className="text-xl font-black text-[#D9C9B2] font-mono">100%</p>
-                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Bebas Kertas</p>
+                <p className="text-2xl font-black text-[#D9C9B2] font-mono">{realStats.deptCount}</p>
+                <p className="text-[10px] text-[#D9C9B2] font-semibold mt-0.5">Jabatan Akademik</p>
               </div>
             </div>
           </motion.div>
@@ -410,27 +426,27 @@ export function LoginPage() {
               Sistem Beroperasi Penuh
             </span>
           </div>
-          <span className="text-[10px] text-[#D9C9B2]/60">Sesi 2026/2027</span>
+          <span className="text-[10px] text-[#D9C9B2]/70 font-mono">Sesi 2026/2027</span>
         </div>
       </div>
 
-      {/* ── Right Panel: SSO-First Auth Flow ───────────────────────── */}
+      {/* ── Right Panel: Clean Frictionless SSO-First Interface ──────── */}
       <div className="lg:col-span-7 flex items-center justify-center p-4 sm:p-8 md:p-12 relative overflow-y-auto min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-[440px] relative z-10"
+          className="w-full max-w-[430px] relative z-10 my-auto"
         >
           {/* Mobile Top Brand Header */}
-          <div className="flex lg:hidden flex-col items-center mb-8 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#242E25] border border-[#D9C9B2] dark:border-[#3A4A3B] p-2 flex items-center justify-center shadow-sm mb-3">
+          <div className="flex lg:hidden flex-col items-center mb-6 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-[#242E25] border border-[#D9C9B2] dark:border-[#3A4A3B] p-2 flex items-center justify-center shadow-xs mb-2.5">
               <img src="/jpp-logo.png" alt="JPP Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">
+            <h1 className="text-xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">
               JPP Digital Portal
             </h1>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#6B7F5B] mt-0.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#6B7F5B]">
               Politeknik Sultan Haji Ahmad Shah
             </p>
           </div>
@@ -458,10 +474,10 @@ export function LoginPage() {
                 {isForgotPassword
                   ? 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.'
                   : isSignUp && step === 1
-                  ? 'Gunakan Google untuk pendaftaran segera atau lengkapkan borang.'
+                  ? 'Gunakan Google untuk pendaftaran segera atau daftar manual.'
                   : isSignUp && step === 2
                   ? 'Pilih jabatan atau kelab untuk pendaftaran peranan.'
-                  : 'Akses pantas akaun portal anda melalui Google SSO atau log masuk manual.'}
+                  : 'Akses akaun portal kampus anda dengan satu sentuhan pantas.'}
               </p>
 
               {/* QR Redirect Notification Banner */}
@@ -574,7 +590,7 @@ export function LoginPage() {
                 </Button>
               </div>
             ) : isSignUp ? (
-              /* ── Sign Up Flow (Google Priority on Top) ───────────── */
+              /* ── Sign Up Flow (Google Priority with Collapsible Manual) ─ */
               <AnimatePresence mode="wait">
                 {step === 1 ? (
                   <motion.form
@@ -666,7 +682,7 @@ export function LoginPage() {
                                 onClick={() => setShowManualRegister(!showManualRegister)}
                                 className="bg-white dark:bg-[#242E25] px-3.5 py-1 rounded-full border border-[#D9C9B2]/70 dark:border-[#3A4A3B] text-[10px] uppercase font-bold tracking-wider text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] flex items-center gap-1.5 transition-colors cursor-pointer"
                               >
-                                <span>ATAU DAFTAR MANUAL</span>
+                                <span>{showManualRegister ? 'TUTUP PENDAFTARAN MANUAL' : 'ATAU DAFTAR MANUAL'}</span>
                                 <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
                               </button>
                             ) : (
@@ -944,14 +960,14 @@ export function LoginPage() {
                 )}
               </AnimatePresence>
             ) : (
-              /* ── Standard Login Form (SSO-First like Image 1) ───── */
-              <div className="space-y-5">
+              /* ── Standard Login Form (SSO-First with Collapsible Manual) ── */
+              <div className="space-y-4">
                 {/* 1. Hero Action: Prominent Google SSO Button */}
                 <div className="space-y-2">
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    className="w-full h-13 rounded-2xl border border-[#D9C9B2] dark:border-[#3A4A3B] bg-white dark:bg-[#151D16] hover:bg-[#F8F6EE] dark:hover:bg-[#2E3A2F]/40 text-[#2E3A2F] dark:text-[#F8F6EE] font-extrabold text-sm tracking-wide flex items-center justify-center gap-3 transition-all shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer group"
+                    className="w-full h-14 rounded-2xl border border-[#D9C9B2] dark:border-[#3A4A3B] bg-white dark:bg-[#151D16] hover:bg-[#F8F6EE] dark:hover:bg-[#2E3A2F]/40 text-[#2E3A2F] dark:text-[#F8F6EE] font-black text-sm tracking-wide flex items-center justify-center gap-3 transition-all shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer group"
                   >
                     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z" />
@@ -962,104 +978,131 @@ export function LoginPage() {
                     <span>Teruskan dengan Google</span>
                   </button>
                   <p className="text-[10px] text-center text-[#556453] dark:text-[#A3B39F] font-medium">
-                    Disyorkan untuk akses 1-sentuhan pantas seluruh warga kampus
+                    Pilihan rasmi 1-sentuhan untuk seluruh warga kampus
                   </p>
                 </div>
 
-                {/* 2. Clean Subtle Divider */}
-                <div className="relative py-1">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-[#D9C9B2]/60 dark:border-[#3A4A3B]"></div>
-                  </div>
-                  <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-                    <span className="bg-white dark:bg-[#242E25] px-3 text-[#556453] dark:text-[#A3B39F]">
-                      atau log masuk manual
-                    </span>
-                  </div>
-                </div>
-
-                {/* 3. Manual Form Fields */}
-                <form onSubmit={handleLogin} className="space-y-3.5">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]">
-                      {isForgotPassword ? 'Emel Pendaftaran' : 'Emel / Nama / No Matrik'}
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#556453]/50" />
-                      <Input
-                        type="text"
-                        placeholder="emel@gmail.com / NAMA PENUH / 02DKM1234"
-                        required
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="h-11 pl-10 rounded-xl bg-[#F8F6EE]/60 dark:bg-[#151D16] border-[#D9C9B2] dark:border-[#3A4A3B] text-xs font-medium"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1.5 pl-1 pt-0.5 text-[10px] text-[#556453] dark:text-[#A3B39F]">
-                      <Lightbulb className="w-3 h-3 text-[#6B7F5B] shrink-0" />
-                      <span>Boleh guna emel, nama penuh, atau no matrik</span>
-                    </div>
-                  </div>
-
-                  {!isForgotPassword && (
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]">
-                          Kata Laluan
-                        </Label>
-                        <button
-                          type="button"
-                          onClick={() => setIsForgotPassword(true)}
-                          className="text-[10px] font-bold uppercase tracking-wider text-[#C96F4F] hover:underline transition-colors cursor-pointer"
-                        >
-                          Lupa?
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#556453]/50" />
-                        <Input
-                          type="password"
-                          required
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          className="h-11 pl-10 rounded-xl bg-[#F8F6EE]/60 dark:bg-[#151D16] border-[#D9C9B2] dark:border-[#3A4A3B] font-bold tracking-widest text-xs"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-1"
-                  >
-                    <span>{isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan' : 'Log Masuk'}</span>
-                    {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-
-                  {/* Dev Mode Bypass Button (Only in development) */}
-                  {import.meta.env.DEV && !isForgotPassword && (
+                {/* 2. Secondary Discrete Action: Collapsed Manual Login Toggle */}
+                {!showManualLogin ? (
+                  <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        localStorage.setItem('use_mock_auth', 'true');
-                        toast.success('Pintasan Developer diaktifkan!');
-                        setTimeout(() => window.location.href = '/portal', 500);
-                      }}
-                      className="w-full h-10 rounded-xl border border-dashed border-[#6B7F5B]/50 bg-[#6B7F5B]/10 hover:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer"
+                      onClick={() => setShowManualLogin(true)}
+                      className="w-full py-3 px-4 rounded-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 hover:bg-[#F8F6EE] dark:hover:bg-[#151D16] text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs active:scale-[0.99]"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                      <span>Pintas Log Masuk (Dev Mode)</span>
+                      <Mail className="w-3.5 h-3.5 text-[#6B7F5B]" />
+                      <span>Log masuk menggunakan Emel / No Matrik</span>
+                      <ChevronDown className="w-3.5 h-3.5 opacity-60" />
                     </button>
-                  )}
-                </form>
+                  </div>
+                ) : (
+                  /* 3. Smooth Expanded Manual Form (Only when clicked) */
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="pt-3 border-t border-[#D9C9B2]/60 dark:border-[#3A4A3B] space-y-3.5 overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]">
+                          Borang Log Masuk Manual
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowManualLogin(false)}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-[#C96F4F] hover:underline cursor-pointer"
+                        >
+                          <span>Tutup</span>
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleLogin} className="space-y-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]">
+                            {isForgotPassword ? 'Emel Pendaftaran' : 'Emel / Nama / No Matrik'}
+                          </Label>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#556453]/50" />
+                            <Input
+                              type="text"
+                              placeholder="emel@gmail.com / NAMA PENUH / 02DKM1234"
+                              required
+                              value={email}
+                              onChange={e => setEmail(e.target.value)}
+                              className="h-11 pl-10 rounded-xl bg-[#F8F6EE]/60 dark:bg-[#151D16] border-[#D9C9B2] dark:border-[#3A4A3B] text-xs font-medium"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5 pl-1 pt-0.5 text-[10px] text-[#556453] dark:text-[#A3B39F]">
+                            <Lightbulb className="w-3 h-3 text-[#6B7F5B] shrink-0" />
+                            <span>Boleh guna emel, nama penuh, atau no matrik</span>
+                          </div>
+                        </div>
+
+                        {!isForgotPassword && (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]">
+                                Kata Laluan
+                              </Label>
+                              <button
+                                type="button"
+                                onClick={() => setIsForgotPassword(true)}
+                                className="text-[10px] font-bold uppercase tracking-wider text-[#C96F4F] hover:underline transition-colors cursor-pointer"
+                              >
+                                Lupa?
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#556453]/50" />
+                              <Input
+                                type="password"
+                                required
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="h-11 pl-10 rounded-xl bg-[#F8F6EE]/60 dark:bg-[#151D16] border-[#D9C9B2] dark:border-[#3A4A3B] font-bold tracking-widest text-xs"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-1"
+                        >
+                          <span>{isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan' : 'Log Masuk'}</span>
+                          {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+                        </Button>
+
+                        {/* Dev Mode Bypass Button (Only in development) */}
+                        {import.meta.env.DEV && !isForgotPassword && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              localStorage.setItem('use_mock_auth', 'true');
+                              toast.success('Pintasan Developer diaktifkan!');
+                              setTimeout(() => window.location.href = '/portal', 500);
+                            }}
+                            className="w-full h-9 rounded-xl border border-dashed border-[#6B7F5B]/50 bg-[#6B7F5B]/10 hover:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" />
+                            <span>Pintas Log Masuk (Dev Mode)</span>
+                          </button>
+                        )}
+                      </form>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
               </div>
             )}
           </div>
 
           {/* Bottom Controls & Mode Switcher */}
           {!resetSent && !verificationSent && (
-            <div className="mt-6 flex justify-center">
+            <div className="mt-5 flex justify-center">
               {isForgotPassword ? (
                 <button
                   type="button"
@@ -1090,7 +1133,7 @@ export function LoginPage() {
           )}
 
           {/* Official JPP Help Contact */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-5 flex justify-center">
             <a
               href="https://wa.me/601139413699"
               target="_blank"
@@ -1103,7 +1146,7 @@ export function LoginPage() {
           </div>
 
           {/* Footer copyright */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 text-center">
             <p className="text-[10px] font-medium text-[#556453]/70 dark:text-[#A3B39F]/50">
               © 2026 JPP Digital Portal. Majlis Perwakilan Pelajar POLISAS.
             </p>

@@ -3763,13 +3763,19 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ### 31.4 Laman Log Masuk SSO-First & Penyelarasan Tema Earthy Minimal (`src/pages/LoginPage.tsx`)
 
-1. **Hierarki SSO-First (Inspirasi Reka Bentuk Moden 1-Sentuhan):**
-   - **Tindakan Hero Utama:** Butang **"Teruskan dengan Google"** diletakkan di bahagian paling atas dan paling menonjol pada borang log masuk bagi menghapuskan geseran menaip manual dan mengurangkan isu pelajar terlupa kata laluan semasa minggu orientasi/pendaftaran.
-   - **Pemisah Halus (*Subtle Divider*):** Garisan pembahagi *"atau log masuk manual"* memisahkan SSO dengan pilihan log masuk tradisional.
-   - **Borang Manual Berkemas:** Medan input bagi Emel/Nama/No Matrik dan Kata Laluan disusun rapi di bawah pembahagi tanpa mendominasi paparan utama. Pilihan "Lupa?" menggunakan aksen terakota `#C96F4F`.
-   - **Pendaftaran Baharu:** Turut mengutamakan "Daftar bersama Google" di bahagian atas sebelum togol pendaftaran manual.
+1. **Hierarki SSO-First Tanpa Keserabutan (*Frictionless & Uncluttered*):**
+   - **Tindakan Hero Utama:** Butang **"Teruskan dengan Google"** (`h-14`, rounded-2xl) diletakkan di bahagian paling atas dan paling menonjol pada borang log masuk bagi menghapuskan geseran menaip manual dan mengurangkan isu pelajar terlupa kata laluan.
+   - **Borang Manual Tersembunyi Secara Default (*Collapsible Manual Form*):** Borang log masuk manual disembunyikan secara lalai di sebalik butang togol minimalis *"Log masuk menggunakan Emel / No Matrik"*. Hanya apabila pelajar menekannya, borang manual akan mengembang secara lancar dengan animasi Framer Motion. Ini memastikan fokus visual 100% tertumpu pada Google SSO.
+   - **Pendaftaran Baharu:** Turut mendahulukan kad "Daftar bersama Google" di bahagian atas sebelum togol pendaftaran manual.
 
-2. **Palet Warna Earthy Minimal (Selaras dengan Landing Page):**
+2. **Statistik Tulen Institusi POLISAS (*Authentic Institutional Data*):**
+   - Menggantikan angka rekaan seperti "15,000+ Mahasiswa" dan "120+ Kelab" kepada metrik institusi sebenar POLISAS:
+     - **Kelab Berdaftar:** Disemak dan dikira secara langsung (live) dari pangkalan data Supabase jadual `clubs` (`realStats.clubCount`).
+     - **Unit Exco JPP:** 9 Portfolio Eksekutif Rasmi MPP POLISAS.
+     - **Jabatan Akademik:** 5 Jabatan Utama (JP, JKM, JTM, JKE, JKA).
+     - **Sesi Semasa:** Sesi 2026/2027.
+
+3. **Palet Warna Earthy Minimal (Selaras dengan Landing Page):**
    - Kanvas Latar Belakang: `#F8F6EE` (*Warm Alabaster / Cream*) & `#151D16` (*Dark Charcoal Green*)
    - Warna Utama / Butang: `#2E3A2F` (*Deep Forest Moss*)
    - Warna Sekunder / Lencana: `#6B7F5B` (*Sage Green*)
