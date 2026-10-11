@@ -3815,5 +3815,33 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Sifar Em-Dash:** Tiada sengkang em-dash (`—` / `–`) di dalam teks paparan mahupun komen kod.
    - **Ketahanan Ujian Automatik:** Mengekalkan 100% kepatuhan pada 26 suite ujian vitest (455 ujian lulus) termasuk ujian integriti portal SuperApp.
 
+---
+
+### 31.6 Penyelarasan Menyeluruh Earthy Minimal (Profil & Tetapan, PolyMaps, Papan Pemuka JPP HQ)
+
+1. **Profil Digital Siswa & Hab Tetapan (`src/pages/SettingsPage.tsx`, `src/App.tsx`):**
+   - **Kanvas & Suasana:** Menggunakan kanvas dwi-mod `#F8F6EE` (Warm Alabaster) & `#151D16` (Charcoal Forest) bersama pendaran aura organik `#6B7F5B` (Sage) dan `#C96F4F` (Terracotta) yang dipagar dengan semakan prestasi `isLowEnd`.
+   - **Kad Matrik Digital Mahasiswa:** Ditransformasikan kepada gaya kad keahlian premium seramik obsidian bergaris halus emas pasir `#D9C9B2`, dilengkapi avatar berkontur, No. Matrik font mono, dan jalur status 3-lencana (Semester, Merit, Kediaman).
+   - **6 Tab Tetapan Segmen:** `Profil & Akademik`, `Status Kediaman`, `Paparan & Tema`, `Pemberitahuan`, `Keselamatan`, dan `Bantuan` diselaraskan ke rona Deep Forest Moss (`#2E3A2F`) dan Sage Green (`#6B7F5B`).
+   - **Alias Laluan:** Menambah sokongan rasmi bagi laluan alias `/profile` dan `/settings` yang melencongkan pengguna secara lancar ke `/tetapan` di bawah kawalan `RequireApproval` dalam `src/App.tsx`.
+
+2. **Navigasi Kampus PolyMaps (`src/pages/polymaps/PolyMapsPage.tsx`):**
+   - **Kapsul Carian & Menu:** Kapsul carian terapung berlatar kaca alabaster berkabut `bg-[#F8F6EE]/90 dark:bg-[#151D16]/90` berpagarkan `#D9C9B2]/80 dark:border-[#3A4A3B]`, ikon Sage Green `#6B7F5B`, dan pil penapis fasiliti yang kemas.
+   - **Helaian Bawah Pintar (*Bottom Sheet*):** Permukaan dwi-mod dengan bar pemegang leretan selamat (`touch-none`) dan butang suis segmen 1-sentuhan `[ Ringkas | Separuh | Penuh ]`.
+   - **Kad Bangunan & Tindakan Pandu Arah:** Lencana 360 AKTIF berona Sage Green berkilau, butang 360 Panorama penuh Deep Forest Moss, dan butang tindakan navigasi "Mula Pandu Arah" dalam aksen hangat **Terracotta Clay** (`#C96F4F`).
+   - **Menu Sisi Eksplorasi:** Panel direktori akordion kampus berlatar `#F8F6EE` & `#151D16` dengan pembahagi sempadan pasir halus `#D9C9B2]/50`.
+
+3. **Papan Pemuka Kepimpinan JPP HQ & Bar Sisi Exco (`src/pages/jpp/*`):**
+   - **Konfigurasi Tema (`jppConfig.ts`):** Menggantikan warna marun lama (`#7f1d1d`) kepada warna rasmi `#2E3A2F` (*Deep Forest Moss*), mengemas kini palet preset, dan menyelaraskan fungsi kecerunan bar sisi `getJppSidebarBg` dengan token Earthy Minimal.
+   - **Bar Sisi Eksekutif (`JppSidebar.tsx`):** Membasmi sepenuhnya semua kelas marun/merah lama (`rose-*`) dan menggantikannya dengan susunan warna *Executive Forest War Room* yang matang dan berwibawa.
+   - **Kerangka & Analitik (`JppLayout.tsx`, `JppOverviewPage.tsx`):** Kanvas papan pemuka dan kad ringkasan unit beralih kepada rona `#F8F6EE` / `#151D16` dengan sempadan `#D9C9B2]/80 dark:border-[#3A4A3B]`.
+
+4. **Integriti Visual & Kualiti Kod:**
+   - **100% Sifar Emoji Mentah:** Semua simbol visual mematuhi standard ketat Lucide vector icons.
+   - **Sifar Em-Dash:** Tiada sengkang em-dash (`—` / `–`) di dalam teks mahupun komen kod.
+   - **Pencegahan Beban Peranti:** Logik `isLowEnd` memelihara kelancaran 60 FPS pada peranti berkapasiti terhad.
+   - **Ujian Automatik Sepenuhnya:** Disahkan melalui suite ujian TDD baharu (`settingsEarthyMinimal.test.ts`, `polymapsEarthyMinimal.test.ts`, `jppCockpitEarthyMinimal.test.ts`) dengan 100% lulus merentasi 29 suite ujian (480 ujian).
+
+
 
 
