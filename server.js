@@ -84,6 +84,34 @@ app.use(globalRateLimiter);
 app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
+// Slow-endpoint tracing: rekod API request > 1s ke system_error_events (dedup 60s per endpoint)
+app.use((req, res, next) => {
+    if (!req.path.startsWith('/api/')) return next();
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        if (duration < 1000) return;
+        const key = 'slow|' + req.method + '|' + req.path;
+        if (!global._slowTrack) global._slowTrack = new Map();
+        const last = global._slowTrack.get(key) || 0;
+        if (Date.now() - last < 60000) return;
+        global._slowTrack.set(key, Date.now());
+        if (global._slowTrack.size > 500) global._slowTrack.clear();
+        recordError({
+            error_type: 'slow_endpoint',
+            message: req.method + ' ' + req.path + ' — ' + duration + 'ms (status ' + res.statusCode + ')',
+            stack: null,
+            endpoint: req.originalUrl,
+            method: req.method,
+            status_code: res.statusCode,
+            severity: 'WARNING',
+            user_agent: req.headers['user-agent'] || null,
+            ip: req.ip,
+        });
+    });
+    next();
+});
+
 // Configure multer for file uploads in memory
 const upload = multer({ 
     storage: multer.memoryStorage(),

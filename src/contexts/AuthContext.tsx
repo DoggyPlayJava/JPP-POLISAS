@@ -360,11 +360,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // A+C: Jalankan refreshClubs dan getSession SECARA SELARI untuk jimat masa
-        const [, { data: { session: initialSession } }] = await Promise.all([
-          refreshClubs().catch(() => {}), // prevent crash if DB is offline
-          supabase.auth.getSession().catch(() => ({ data: { session: null } })),
-        ]);
+        // A+C: Auth mesti settle DULU (baca localStorage — laju, tiada network).
+        // JANGAN block getSession() dengan refreshClubs() (network ke table clubs).
+        // Kalau refreshClubs lambat/hang, user stuck di splash walau sesi valid.
+        const { data: { session: initialSession } } = await supabase.auth
+            .getSession()
+            .catch(() => ({ data: { session: null } }));
 
         if (isMounted) {
           setSession(initialSession);
@@ -375,6 +376,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await fetchProfile(initialSession.user.id);
           }
         }
+
+        // Clubs load di background — tak block auth settle
+        refreshClubs().catch(() => {});
       } catch (err) {
         console.error("[AuthContext] Init error:", err);
       } finally {
@@ -389,6 +393,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, currentSession) => {
         if (!isMounted) return;
         if (localStorage.getItem('use_mock_auth') === 'true') return; // Skip if in mock mode
+
+        // 🔑 INITIAL_SESSION = event sintetik yang fire SEGERA masa subscribe dengan
+        // session null (belum baca localStorage). Kalau kita treat ia sebagai "no
+        // session", user akan kena redirect /login SEBELUM getSession() sempat settle.
+        // Biar getSession() dalam initialize() jadi source of truth untuk boot pertama.
+        if (event === 'INITIAL_SESSION') return;
 
         // ✅ Bila onAuthStateChange fire, batalkan safety timer — auth dah siap
         safetyTimerFired = true;
