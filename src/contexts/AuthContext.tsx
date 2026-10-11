@@ -363,17 +363,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // A+C: Auth mesti settle DULU (baca localStorage — laju, tiada network).
         // JANGAN block getSession() dengan refreshClubs() (network ke table clubs).
         // Kalau refreshClubs lambat/hang, user stuck di splash walau sesi valid.
+        //
+        // 🔑 OPTIMISTIC RESTORE: JWT expired (selepas ~1 jam) buat getSession()
+        // trigger NETWORK refresh yang lambat di 4G. Sebelum tu, baca sesi dari
+        // localStorage SECARA SYNCHRONOUS dan set user terus — supaya UI tak
+        // tunggu refresh. Refresh token jalan background lepas tu.
+        let restoredUser = null;
+        let restoredSession = null;
+        try {
+          const raw = localStorage.getItem('jpp-polisas-auth');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            // Format supabase-js v2: { currentSession: {...}, expiresAt: N }
+            const sess = parsed?.currentSession || parsed;
+            if (sess?.user && sess?.access_token) {
+              restoredSession = sess;
+              restoredUser = sess.user;
+            }
+          }
+        } catch (_) { /* JSON rosak — abaikan */ }
+
+        if (isMounted && restoredUser) {
+          setSession(restoredSession);
+          setUser(restoredUser);
+          currentUserId.current = restoredUser.id;
+          // 🔑 Masuk INSTANT — jangan tunggu network refresh. Refresh jalan background.
+          // Tanpa ini, isLoading masih true sampai getSession() selesai (network),
+          // dan user tetap nampak splash walaupun sesi dah restore.
+          setIsLoading(false);
+          clearTimeout(safetyTimer);
+          safetyTimerFired = true;
+        }
+
         const { data: { session: initialSession } } = await supabase.auth
             .getSession()
             .catch(() => ({ data: { session: null } }));
 
         if (isMounted) {
           setSession(initialSession);
-          setUser(initialSession?.user ?? null);
+          setUser(initialSession?.user ?? restoredUser ?? null);
 
-          if (initialSession?.user) {
-            currentUserId.current = initialSession.user.id;
-            await fetchProfile(initialSession.user.id);
+          const uid = initialSession?.user?.id || restoredUser?.id;
+          if (uid) {
+            currentUserId.current = uid;
+            // fetchProfile di background — jangan block auth settle
+            fetchProfile(uid).catch(() => {});
           }
         }
 
