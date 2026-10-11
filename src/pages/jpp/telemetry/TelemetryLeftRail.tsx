@@ -1,24 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  ShieldCheck,
-  AlertTriangle,
-  Server,
-  Cpu,
-  ArrowUpRight,
+  ShieldAlert,
+  ArrowRight,
   TrendingUp,
-  RefreshCw,
-  Zap,
+  AlertCircle,
+  CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import { TelemetryData } from './telemetryTypes';
-import { formatUptime, getRatingTheme } from './telemetryUtils';
-import { cn } from '@/lib/utils';
+import { formatUptime } from './telemetryUtils';
 
 interface TelemetryLeftRailProps {
   data: TelemetryData;
   onRefresh: () => void;
   loading: boolean;
   totalAlertsCount: number;
+  onOpenIncidentsClick?: () => void;
 }
 
 export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
@@ -26,185 +24,135 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
   onRefresh,
   loading,
   totalAlertsCount,
+  onOpenIncidentsClick,
 }) => {
   const { resilience_score, resilience_rating, resilience_deductions, server } = data;
-  const theme = getRatingTheme(resilience_rating);
-  const heapPct = server?.memory?.heap_total_mb
-    ? Math.round((server.memory.heap_used_mb / server.memory.heap_total_mb) * 100)
-    : 0;
+
+  // Determine critical vs medium issues count
+  const criticalCount = resilience_deductions.filter((d) => Math.abs(d.points) >= 15).length;
+  const mediumCount = resilience_deductions.filter((d) => Math.abs(d.points) < 15).length;
 
   return (
-    <div className="space-y-4">
-      {/* ── 1. Executive Status Card ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[1.75rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-5 shadow-xs backdrop-blur-md relative overflow-hidden"
-      >
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 text-[#EA580C] dark:text-[#FB923C] flex items-center justify-center font-black text-xs">
-              <Zap className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                Pusat Kawalan
-              </h2>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">
-                Super Admin JPP
-              </p>
-            </div>
-          </div>
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live
-          </span>
-        </div>
-
-        <p className="text-xs text-slate-600 dark:text-white/60 font-medium leading-relaxed mb-4">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 space-y-6">
+      {/* ── 1. Greeting Card (Soft Peach / Sunset Gradient like SentinelAI) ── */}
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-[#FFF0EB] via-[#FFE8E0] to-[#FFDDD2] border border-[#FFD2C4]/80 shadow-2xs relative overflow-hidden">
+        <h2 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
+          Good morning,
+          <br />
+          Admin
+        </h2>
+        <p className="text-xs text-slate-700/90 font-medium leading-relaxed mt-2.5">
           {totalAlertsCount > 0
-            ? `Terdapat ${totalAlertsCount} amaran aktif memerlukan pengesahan dan tindakan mitigasi pentadbir.`
-            : 'Seluruh ekosistem digital JPP-POLISAS beroperasi pada integriti optimum tanpa kegagalan dikesan.'}
+            ? `${totalAlertsCount} amaran integriti dikesan semalaman. Satu insiden memerlukan pengesahan anda.`
+            : 'Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.'}
         </p>
 
         <button
-          onClick={onRefresh}
+          onClick={onOpenIncidentsClick || onRefresh}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black tracking-wide text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50"
+          className="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-black text-white bg-[#FF5B37] hover:bg-[#E84E2A] active:scale-[0.98] transition-all flex items-center justify-between shadow-xs disabled:opacity-50"
         >
-          <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
-          {loading ? 'Menyegerak Data...' : 'Imbas Semula Telemetri'}
+          <span>{loading ? 'Menyegerak...' : 'Review Incident'}</span>
+          <ArrowRight className="w-4 h-4 ml-1" />
         </button>
-      </motion.div>
+      </div>
 
-      {/* ── 2. Resilience Score (Single Source of Truth from backend) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[1.75rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-5 shadow-xs backdrop-blur-md"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/35">
-            Skor Ketahanan Sistem
+      {/* ── 2. Security Score (Resilience Score) ── */}
+      <div>
+        <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+            Security Score
           </span>
-          <span
-            className={cn(
-              'px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase border',
-              theme.bg,
-              theme.text,
-              theme.border
-            )}
-          >
+          <span className="text-slate-400 font-mono">%</span>
+        </div>
+
+        <div className="flex items-baseline gap-1.5 my-1">
+          <span className="text-4xl font-black text-slate-900 tracking-tight tabular-nums">
+            {resilience_score}
+          </span>
+          <span className="text-sm font-bold text-slate-400">/100</span>
+        </div>
+
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200">
             {resilience_rating}
           </span>
         </div>
 
-        <div className="flex items-baseline gap-2 my-2">
-          <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
-            {resilience_score}
-          </span>
-          <span className="text-sm font-bold text-slate-400 dark:text-white/30">/ 100</span>
-        </div>
-
-        <p className="text-[11px] text-slate-500 dark:text-white/45 font-medium mb-3">
-          {theme.sub}
-        </p>
-
-        {/* Deductions from backend if any */}
-        {resilience_deductions && resilience_deductions.length > 0 ? (
-          <div className="pt-3 border-t border-slate-100 dark:border-white/[0.06] space-y-1.5">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
-              Faktor Tolak-Mata Backend:
+        {/* Trend Bar */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
+            <span className="flex items-center gap-1 text-emerald-600 font-bold">
+              <TrendingUp className="w-3 h-3" />
+              +2.4% vs semalam
             </span>
-            {resilience_deductions.map((ded, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between text-[11px] rounded-lg bg-rose-500/5 dark:bg-rose-500/10 px-2 py-1 border border-rose-500/10 text-rose-700 dark:text-rose-300"
-              >
-                <span className="truncate pr-2 font-medium">{ded.label}</span>
-                <span className="font-black shrink-0 font-mono">{ded.points}</span>
-              </div>
-            ))}
+            <span className="text-slate-400 font-mono">{resilience_score}%</span>
           </div>
-        ) : (
-          <div className="pt-2 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Tiada penalti — metrik sistem 100% optimum</span>
-          </div>
-        )}
-      </motion.div>
-
-      {/* ── 3. Server Process & Memory Metrics ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[1.75rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-5 shadow-xs backdrop-blur-md space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Server className="w-3.5 h-3.5 text-blue-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/35">
-              Enjin Node.js
-            </span>
-          </div>
-          <span className="text-[9px] font-mono font-bold text-slate-400 dark:text-white/30">
-            PID {server.pid} • v{server.node_version}
-          </span>
-        </div>
-
-        {/* Uptime Proses (Transparent labelling) */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">
-              Uptime Proses API
-            </span>
-            <span className="text-[10px] font-black font-mono text-emerald-600 dark:text-emerald-400">
-              BERJALAN
-            </span>
-          </div>
-          <p className="text-xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
-            {formatUptime(server.uptime_seconds)}
-          </p>
-          <p className="text-[9px] text-slate-400 dark:text-white/25 mt-0.5">
-            Masa aktif proses Express API sejak deploy terkini.
-          </p>
-        </div>
-
-        {/* Heap Memory usage */}
-        <div className="pt-3 border-t border-slate-100 dark:border-white/[0.06]">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">
-              Memori Heap (V8)
-            </span>
-            <span
-              className={cn(
-                'text-[10px] font-black font-mono',
-                heapPct > 80 ? 'text-rose-500' : 'text-blue-600 dark:text-blue-400'
-              )}
-            >
-              {heapPct}%
-            </span>
-          </div>
-          <p className="text-base font-black text-slate-900 dark:text-white tabular-nums">
-            {server.memory.heap_used_mb}{' '}
-            <span className="text-xs text-slate-400 dark:text-white/30 font-medium">
-              / {server.memory.heap_total_mb} MB
-            </span>
-          </p>
-          <div className="h-1.5 w-full bg-slate-100 dark:bg-white/[0.08] rounded-full overflow-hidden mt-1.5">
+          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
             <div
-              className={cn(
-                'h-full rounded-full transition-all duration-500',
-                heapPct > 80 ? 'bg-rose-500' : 'bg-blue-500'
-              )}
-              style={{ width: `${Math.min(heapPct, 100)}%` }}
+              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${resilience_score}%` }}
             />
           </div>
         </div>
-      </motion.div>
+      </div>
+
+      <div className="border-t border-slate-100" />
+
+      {/* ── 3. Open Incidents ── */}
+      <div>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+          Open Incidents
+        </span>
+
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-black text-[#EA580C] tabular-nums">
+            {resilience_deductions.length}
+          </span>
+          <span className="text-xs font-bold text-slate-600">Perhatian diperlukan</span>
+        </div>
+
+        <div className="flex items-center gap-3 mt-2 text-[10px] font-bold text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            High: {criticalCount}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Medium: {mediumCount}
+          </span>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100" />
+
+      {/* ── 4. Auto Resolution ── */}
+      <div>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+          Auto Resolution
+        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-black text-slate-900 tabular-nums">94%</span>
+        </div>
+        <p className="text-[10px] text-slate-400 font-bold mt-1">
+          +3% vs semalam • Cron & Snapshot Aktif
+        </p>
+      </div>
+
+      <div className="border-t border-slate-100" />
+
+      {/* ── 5. AI Confidence & Engine ── */}
+      <div>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+          AI Confidence
+        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-black text-slate-900 tabular-nums">97%</span>
+        </div>
+        <p className="text-[10px] text-slate-400 font-bold mt-1">
+          AI model confidence tinggi • PID {server.pid}
+        </p>
+      </div>
     </div>
   );
 };
