@@ -416,4 +416,118 @@ describe('Timetable Parser Logic', () => {
     expect(afternoonClass!.start_time).toBe('13:00:00');
     expect(afternoonClass!.end_time).toBe('14:00:00');
   });
+
+  it('should support double-row SPMP header times (8:00..4:00 on top, 9:00..5:00 on bottom) without column collapse', () => {
+    const items = [
+      { str: 'KELAS : DKA1A', x: 50, y: 700, width: 80, height: 10 },
+      { str: 'SESI : S1 20262027', x: 200, y: 700, width: 100, height: 10 },
+
+      // Upper row of time headers (y=640)
+      { str: '8:00', x: 104.5, y: 640.9, width: 30, height: 10 },
+      { str: '9:00', x: 222.7, y: 640.9, width: 30, height: 10 },
+      { str: '10:00', x: 340.9, y: 640.9, width: 30, height: 10 },
+      { str: '11:00', x: 459.1, y: 640.9, width: 30, height: 10 },
+      { str: '12:00', x: 577.3, y: 640.9, width: 30, height: 10 },
+      { str: '1:00', x: 695.5, y: 640.9, width: 30, height: 10 },
+      { str: '2:00', x: 813.6, y: 640.9, width: 30, height: 10 },
+      { str: '3:00', x: 931.8, y: 640.9, width: 30, height: 10 },
+      { str: '4:00', x: 1050.0, y: 640.9, width: 30, height: 10 },
+
+      // Lower row of time headers (y=624)
+      { str: '9:00', x: 188.3, y: 624.4, width: 30, height: 10 },
+      { str: '10:00', x: 300.3, y: 624.4, width: 30, height: 10 },
+      { str: '11:00', x: 418.5, y: 624.4, width: 30, height: 10 },
+      { str: '12:00', x: 536.7, y: 624.4, width: 30, height: 10 },
+      { str: '1:00', x: 661.1, y: 624.4, width: 30, height: 10 },
+      { str: '2:00', x: 779.3, y: 624.4, width: 30, height: 10 },
+      { str: '3:00', x: 897.4, y: 624.4, width: 30, height: 10 },
+      { str: '4:00', x: 1015.6, y: 624.4, width: 30, height: 10 },
+      { str: '5:00', x: 1133.8, y: 624.4, width: 30, height: 10 },
+
+      // Day: ISNIN (y=595.2)
+      { str: 'ISNIN', x: 49.3, y: 595.2, width: 40, height: 10 },
+
+      // Class 1 in column 10:00-11:00 (x=372.4)
+      { str: 'DCC40423(L)', x: 372.4, y: 606.4, width: 60, height: 10 },
+      { str: 'RMR', x: 386.1, y: 595.9, width: 30, height: 10 },
+      { str: 'CPJ108', x: 381.4, y: 585.4, width: 40, height: 10 },
+
+      // Class 2 in column 14:00-15:00 (x=845.1)
+      { str: 'DCC40412(L)', x: 845.1, y: 606.4, width: 60, height: 10 },
+      { str: 'ARAR', x: 857.2, y: 595.9, width: 30, height: 10 },
+      { str: 'CPJ407', x: 854.1, y: 585.4, width: 40, height: 10 },
+    ];
+
+    const { entries } = extractTimetableFromItems(items);
+    expect(entries.length).toBe(2);
+
+    const class1 = entries.find((e) => e.course_code === 'DCC40423');
+    expect(class1).toBeDefined();
+    expect(class1!.start_time).toBe('10:00:00');
+    expect(class1!.end_time).toBe('11:00:00');
+    expect(class1!.room_raw).toBe('CPJ108');
+    expect(class1!.lecturer_code).toBe('RMR');
+
+    const class2 = entries.find((e) => e.course_code === 'DCC40412');
+    expect(class2).toBeDefined();
+    expect(class2!.start_time).toBe('14:00:00');
+    expect(class2!.end_time).toBe('15:00:00');
+    expect(class2!.room_raw).toBe('CPJ407');
+    expect(class2!.lecturer_code).toBe('ARAR');
+  });
+
+  it('should parse course codes with spaces (MPU 21072) and underscores (ELECTIVE_JKM)', () => {
+    expect(parseCourseCodeAndType('MPU 21072(L)')).toEqual({
+      courseCode: 'MPU 21072',
+      classType: 'KULIAH',
+    });
+    expect(parseCourseCodeAndType('MPU 21072(TU)')).toEqual({
+      courseCode: 'MPU 21072',
+      classType: 'TUTORIAL',
+    });
+    expect(parseCourseCodeAndType('ELECTIVE_JKM(L)')).toEqual({
+      courseCode: 'ELECTIVE_JKM',
+      classType: 'KULIAH',
+    });
+    expect(parseCourseCodeAndType('MPU24XXX(P)')).toEqual({
+      courseCode: 'MPU24XXX',
+      classType: 'AMALI',
+    });
+    expect(parseCourseCodeAndType('MPU24XX1(P)')).toEqual({
+      courseCode: 'MPU24XX1',
+      classType: 'AMALI',
+    });
+  });
+
+  it('should parse multi-course cells (e.g. MPU24031(P), MPU24041(P)) without leaking into lecturer', () => {
+    const parsed = parseCell('MPU24031(P), MPU24041(P), KOKO JPH');
+    expect(parsed.course_code).toBe('MPU24031 / MPU24041');
+    expect(parsed.class_type).toBe('AMALI');
+    expect(parsed.lecturer_code).toBe('KOKO');
+    expect(parsed.room_raw).toBe('JPH');
+    expect(parsed.is_online).toBe(false);
+  });
+
+  it('should recognize all department online Teams keywords and clean trailing commas', () => {
+    // JP (PMSTEAM1, PMSTEAM2)
+    const jpCell = parseCell('DPS10033(L) PMRR PMSTEAM1');
+    expect(jpCell.is_online).toBe(true);
+    expect(jpCell.room_raw).toBe('PMSTEAM1');
+
+    // JKA / JKM (CMSTEAM)
+    const jkaCell = parseCell('DUW10042(L) RAR CMSTEAM');
+    expect(jkaCell.is_online).toBe(true);
+    expect(jkaCell.room_raw).toBe('CMSTEAM');
+
+    // JTM (MMSTEAM)
+    const jtmCell = parseCell('DMT10293(L) SHARINA MMSTEAM');
+    expect(jtmCell.is_online).toBe(true);
+    expect(jtmCell.room_raw).toBe('MMSTEAM');
+
+    // Physical room priority with trailing comma: MMD103, MMSTEAM -> MMD103 (online: false)
+    const hybridCell = parseCell('DMT10283(L) ROSLIZA MMD103, MMSTEAM');
+    expect(hybridCell.is_online).toBe(false);
+    expect(hybridCell.room_raw).toBe('MMD103');
+    expect(hybridCell.lecturer_code).toBe('ROSLIZA');
+  });
 });
