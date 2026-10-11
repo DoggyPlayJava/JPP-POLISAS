@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -574,6 +574,10 @@ export function PolyMapsPage() {
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const { user, profile } = useAuth();
   const { isLowPerf: isLowEnd } = useDevicePerformance();
+  // DragControls lets the sheet scroll freely (iOS) while the HANDLE alone triggers
+  // the drag gesture. Attaching drag="y" to the whole sheet made iOS Safari's native
+  // scroll swallow the gesture -> sheet never snapped (Android worked, iOS didn't).
+  const sheetDragControls = useDragControls();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [reportForm, setReportForm] = useState({
@@ -2405,11 +2409,12 @@ export function PolyMapsPage() {
             {(activeBuilding || selectedEmsEvent || selectedPolyMartHub) && !isNavigating && (
               <motion.div
                 layout
-                drag={isLowEnd ? false : "y"}
+                drag="y"
+                dragListener={false}
+                dragControls={sheetDragControls}
                 dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={isLowEnd ? 0 : 0.2}
+                dragElastic={0.2}
                 onDragEnd={(_e, info) => {
-                  if (isLowEnd) return;
                   if (info.offset.y < -35 || info.velocity.y < -250) {
                     setSheetSnap(prev => (prev === 'PEEK' ? 'HALF' : 'FULL'));
                   } else if (info.offset.y > 35 || info.velocity.y > 250) {
@@ -2434,6 +2439,7 @@ export function PolyMapsPage() {
                 <div 
                   className="w-full pt-2 pb-1.5 flex flex-col items-center justify-center select-none shrink-0 touch-none"
                   title="Tarik atau tekan untuk tukar saiz paparan"
+                  onPointerDown={(e) => sheetDragControls.start(e)}
                 >
                   <div 
                     onClick={() => {

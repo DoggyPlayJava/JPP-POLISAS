@@ -188,7 +188,8 @@ describe('Task 4: PolyMaps Draggable Gesture Bottom Sheet & Live Event Overlays'
   });
 
   it('implements draggable gesture bottom sheet with Framer Motion drag, touch-none handle, and 1-tap snap buttons', () => {
-    expect(source).toContain('drag={isLowEnd ? false : "y"}');
+    expect(source).toContain('drag="y"');
+    expect(source).toContain('dragListener={false}');
     expect(source).toContain('touch-none');
     expect(source).toContain('Ringkas');
     expect(source).toContain('Separuh');
@@ -219,7 +220,7 @@ describe('Task 4: PolyMaps Draggable Gesture Bottom Sheet & Live Event Overlays'
 
   it('respects isLowEnd device performance optimization for drag physics and ping animations', () => {
     expect(source).toContain('isLowEnd');
-    expect(source).toContain('drag={isLowEnd ? false : "y"}');
+    expect(source).toContain('drag="y"');
     expect(source).toContain("const pingEffect = lowEnd ? '' :");
   });
 
@@ -262,7 +263,7 @@ describe('Future Tasks Scaffold: AkademikCgpa, AkademikFolderPage, and PolyMapsP
     const source = fs.readFileSync(polyPath, 'utf-8');
     expect(source).toContain('isLowEnd');
 
-    const hasDragSupport = source.includes('drag="y"') || source.includes('drag={isLowEnd ? false : "y"}');
+    const hasDragSupport = source.includes('drag="y"') || source.includes('dragListener={false}');
     expect(hasDragSupport).toBe(true);
 
     const hasOverlayOrLayers = source.includes('activeOverlayFilter') || source.includes('Layers');

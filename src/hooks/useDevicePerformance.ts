@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface DevicePerformanceInfo {
   isLowPerf: boolean;
@@ -9,28 +9,30 @@ export interface DevicePerformanceInfo {
 }
 
 /**
- * Passive micro-benchmark to detect throttled CPU or sluggish low-tier chipset.
- * On modern desktop/high-end phone: takes < 0.2ms.
- * Under DevTools 10x-20x throttling or budget phone (e.g. Helio G35): takes > 2.0ms.
- */
-function runCpuBenchmark(): boolean {
-  if (typeof performance === 'undefined' || !performance.now) return false;
-  try {
-    const start = performance.now();
-    let sum = 0;
-    for (let i = 0; i < 50000; i++) {
-      sum += (i % 7) * 3;
-    }
-    const elapsed = performance.now() - start;
-    return elapsed > 2.0 || sum === 0; // if elapsed > 2ms, CPU is heavily throttled/low-spec
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Hook to passively detect device hardware capacity and apply `.low-perf-device` CSS tiering.
- * Helps prevent frame drops and GPU thermal throttling on low-spec phones and tablets.
+ * Runtime-adaptive low-end detection.
+ *
+ * WHY (lesson learned the hard way):
+ * The old heuristic used `navigator.hardwareConcurrency <= 4` and a single-shot
+ * CPU micro-benchmark run synchronously at mount. Both are UNRELIABLE:
+ *   - Core count is meaningless: budget MediaTek/Snapdragon phones ship 8 cores
+ *     (Cortex-A53) that are SLOWER than a 6-core iPhone. 8-core budget phone
+ *     passed as "high-end"; iPhone (hidden/6 cores) got flagged. Backwards.
+ *   - The mount-time benchmark runs during React hydration/JS-parse, so even a
+ *     fast device spikes >2ms and gets a false positive.
+ *
+ * CORRECT approach: MEASURE actual jank at runtime instead of guessing from
+ * hardware specs. A device is "low-end" only when it PROVABLY drops frames.
+ *
+ * Signals kept (reliable):
+ *   - `navigator.connection.saveData` (Data Saver) — explicit user signal.
+ *   - `navigator.deviceMemory <= 4` (GB) — Chrome reports reliably, useful hint.
+ *   - Runtime frame-drop detection (NEW): sample requestAnimationFrame deltas;
+ *     if the median frame exceeds ~28ms (i.e. sustained < ~36fps), flag low-end.
+ *
+ * `prefersReducedMotion` is deliberately NOT part of `isLowPerf` — it is an
+ * accessibility preference, handled separately by MotionConfig reducedMotion="user".
+ *
+ * Upgrade-only: once flagged low-end, stay flagged (never oscillate).
  */
 export function useDevicePerformance(): DevicePerformanceInfo {
   const [perfInfo, setPerfInfo] = useState<DevicePerformanceInfo>(() => {
@@ -38,11 +40,23 @@ export function useDevicePerformance(): DevicePerformanceInfo {
       return { isLowPerf: false, concurrency: 8, memory: 8, prefersReducedMotion: false, isThrottledCpu: false };
     }
 
-    const concurrency = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const memory = typeof navigator !== 'undefined' && (navigator as any).deviceMemory ? (navigator as any).deviceMemory : null;
-    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
-    
-    // Check manual override via URL param (?perf=low) or localStorage
+    // iOS Safari < 18 does NOT expose navigator.hardwareConcurrency (undefined).
+    // Undefined = "unknown", NOT "weak" — fallback to 8 so iPhones are never
+    // mislabeled low-end (which previously disabled the PolyMaps drag gesture).
+    const concurrency =
+      typeof navigator !== 'undefined' && navigator.hardwareConcurrency
+        ? navigator.hardwareConcurrency
+        : 8;
+    const memory =
+      typeof navigator !== 'undefined' && (navigator as any).deviceMemory
+        ? (navigator as any).deviceMemory
+        : null;
+    const prefersReducedMotion =
+      typeof window !== 'undefined' && window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : false;
+
+    // Manual override (?perf=low / localStorage force_low_perf) still honored.
     let forceLowPerf = false;
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -51,26 +65,67 @@ export function useDevicePerformance(): DevicePerformanceInfo {
       }
     } catch {}
 
-    // Check Data Saver mode
-    const isSaveData = typeof navigator !== 'undefined' && (navigator as any).connection?.saveData === true;
+    const isSaveData =
+      typeof navigator !== 'undefined' && (navigator as any).connection?.saveData === true;
 
-    // Run passive CPU micro-benchmark
-    const isThrottledCpu = runCpuBenchmark();
+    // NOTE: concurrency is intentionally NOT used to decide isLowPerf anymore.
+    // Initial guess uses only reliable signals; runtime jank detection refines it.
+    const isLowPerf = forceLowPerf || isSaveData || (memory !== null && memory <= 4);
 
-    // Detect low-end profile (HARDWARE sahaja — BUKAN user preference):
-    // 1. Manual flag OR Data Saver
-    // 2. Hardware: <=4 CPU cores OR <=4GB RAM
-    // 3. Runtime: CPU execution benchmark > 2ms (DevTools throttling or entry-level SoC)
-    //
-    // PENTING: prefersReducedMotion DILEPASKAN dari isLowPerf.
-    // Reduce-motion = pilihan aksesibiliti pengguna (banyak device KUAT ada ini ON).
-    // Ia patut matikan animation sahaja (respect OS), TAPI tidak boleh melabel
-    // device sebagai "low-end" — kalau tidak, MotionConfig reducedMotion="always"
-    // akan matikan SEMUA animation pada device yang sebenarnya berkuasa.
-    const isLowPerf = forceLowPerf || isSaveData || concurrency <= 4 || (memory !== null && memory <= 4) || isThrottledCpu;
-
-    return { isLowPerf, concurrency, memory, prefersReducedMotion, isThrottledCpu };
+    return { isLowPerf, concurrency, memory, prefersReducedMotion, isThrottledCpu: isLowPerf };
   });
+
+  const flaggedRef = useRef(perfInfo.isLowPerf);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (flaggedRef.current) return; // already low-end (or forced) — no need to measure
+
+    // ── Runtime jank detection ──────────────────────────────────────────────
+    // Sample ~45 rAF frames (~0.75s on a 60Hz device). Compute the MEDIAN delta.
+    // A sustained median above ~28ms means the device is rendering under ~36fps
+    // → genuinely low-end (or heavily throttled). Upgrade to low-perf once.
+    let rafId = 0;
+    let last = performance.now();
+    const samples: number[] = [];
+    const targetSamples = 45;
+
+    const tick = (now: number) => {
+      const delta = now - last;
+      last = now;
+      // Skip the first sample (includes the initial call latency).
+      if (samples.length > 0 || delta < 1000) {
+        samples.push(delta);
+      }
+      if (samples.length < targetSamples) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        const sorted = [...samples].sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)];
+        // 28ms median ≈ device struggles to hold 36fps even when idle.
+        if (median > 28) {
+          flaggedRef.current = true;
+          setPerfInfo((prev) => ({ ...prev, isLowPerf: true, isThrottledCpu: true }));
+        }
+      }
+    };
+
+    // Defer measurement until the page is idle — avoids measuring during hydration.
+    const idleId =
+      'requestIdleCallback' in window
+        ? (window as any).requestIdleCallback(() => {
+            rafId = requestAnimationFrame(tick);
+          }, { timeout: 1500 })
+        : setTimeout(() => {
+            rafId = requestAnimationFrame(tick);
+          }, 300);
+
+    return () => {
+      if ('cancelIdleCallback' in window) (window as any).cancelIdleCallback(idleId);
+      else clearTimeout(idleId);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -81,17 +136,11 @@ export function useDevicePerformance(): DevicePerformanceInfo {
       document.documentElement.classList.remove('low-perf-device');
     }
 
-    // Listen for reduced motion preference changes
+    // Listen for reduced motion preference changes.
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handleMotionChange = (e: MediaQueryListEvent) => {
-      setPerfInfo(prev => {
-        // Reduce-motion TIDAK mengubah isLowPerf (itu hardware signal sahaja).
-        // Ia hanya mengemas kini prefersReducedMotion supaya MotionConfig
-        // (reducedMotion="user") menghormati setting OS.
-        return { ...prev, prefersReducedMotion: e.matches };
-      });
+      setPerfInfo((prev) => ({ ...prev, prefersReducedMotion: e.matches }));
     };
-
     mediaQuery.addEventListener('change', handleMotionChange);
     return () => mediaQuery.removeEventListener('change', handleMotionChange);
   }, [perfInfo.isLowPerf]);

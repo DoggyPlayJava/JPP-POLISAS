@@ -8,7 +8,9 @@ import path from 'path';
  * 1. App.tsx guna MotionConfig reducedMotion="user" (respect OS, BUKAN hardware)
  * 2. useDevicePerformance masih dipanggil (class .low-perf-device dikenakan)
  * 3. index.css ada rule .low-perf-device yang matikan blur + mix-blend (BUKAN transition)
- * 4. prefersReducedMotion TIDAK dilabel low-end (hardware sahaja)
+ * 4. Detection adalah RUNTIME-ADAPTIVE (ukur jank sebenar), bukan teka hardware.
+ *    - core count TIDAK lagi jadi signal (budget Android 8-core adalah bukti ia tak bermakna)
+ *    - mount-time benchmark dibuang (noisy semasa hydration)
  */
 
 describe('Low-End Device Performance Guarantee', () => {
@@ -42,30 +44,36 @@ describe('Low-End Device Performance Guarantee', () => {
     });
 
     it('does NOT kill transitions globally (that caused FAB flicker)', () => {
-      // Rule global .low-perf-device * { transition-duration: 0.01ms } MESTI TIDAK WUJUD.
-      // Ia membunuh transition-all pada FAB → flicker. Hanya reduced-motion media query
-      // (pilihan pengguna) yang patut matikan transition.
-      const lowPerfGlobalTransitionKill = /\.low-perf-device \*[^{]*\{[^}]*transition-duration/g;
+      const lowPerfGlobalTransitionKill = /\\.low-perf-device \\*[^{]*\\{[^}]*transition-duration/g;
       expect(lowPerfGlobalTransitionKill.test(css)).toBe(false);
     });
   });
 
-  describe('Detection hook: hardware only (prefersReducedMotion NOT low-perf)', () => {
-    it('flags <=4 CPU cores as low-perf', () => {
-      expect(hook).toContain('concurrency <= 4');
+  describe('Detection hook: runtime-adaptive (NOT hardware guessing)', () => {
+    it('does NOT use core count as a low-end signal (budget phones ship 8 cores)', () => {
+      // The old "concurrency <= 4" heuristic is removed.
+      expect(hook).not.toContain('concurrency <= 4');
     });
 
-    it('flags <=4GB RAM as low-perf', () => {
+    it('iOS fallback for hardwareConcurrency is 8 (undefined = unknown, not weak)', () => {
+      expect(hook).toContain('hardwareConcurrency');
+      expect(hook).toContain(': 8');
+    });
+
+    it('measures real jank via requestAnimationFrame frame deltas', () => {
+      expect(hook).toContain('requestAnimationFrame');
+      expect(hook).toContain('median');
+    });
+
+    it('keeps Data Saver as a low-end signal', () => {
+      expect(hook).toContain('saveData');
+    });
+
+    it('keeps deviceMemory <= 4 as a low-end signal', () => {
       expect(hook).toContain('memory <= 4');
     });
 
-    it('flags Data Saver + throttled CPU', () => {
-      expect(hook).toContain('saveData');
-      expect(hook).toContain('runCpuBenchmark');
-    });
-
     it('does NOT include prefersReducedMotion in isLowPerf formula', () => {
-      // Extract isLowPerf line and verify prefersReducedMotion is not OR'd in
       const match = hook.match(/const isLowPerf = [^;]+;/);
       expect(match).toBeTruthy();
       expect(match![0]).not.toContain('prefersReducedMotion');

@@ -230,6 +230,8 @@ export function CompleteProfileModal() {
       });
   }, []);
 
+
+
   // ── Profile completeness ─────────────────────────────────────────────────
   const isStaffRole = ['STAFF', 'SUPER_ADMIN_JPP', 'ADMIN'].includes(profile?.role ?? '');
   const hasMatric   = !!profile?.matric_no?.trim();
@@ -698,7 +700,7 @@ export function CompleteProfileModal() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+          className="absolute inset-0 bg-slate-950/90"
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -711,7 +713,7 @@ export function CompleteProfileModal() {
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)]" />
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 0.001 }}
               className="absolute -right-10 -top-10 opacity-30"
             >
               <Sparkles className="w-40 h-40 text-white" />
