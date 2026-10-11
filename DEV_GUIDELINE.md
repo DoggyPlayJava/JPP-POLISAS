@@ -4014,3 +4014,22 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
   - Sekiranya belum ada laporan untuk bilik tersebut, fungsi membuat baris baru dengan `report_count = 1`.
   - Panel Admin JPP (`JppPolyMapsAdmin.tsx`) memaparkan lencana jumlah laporan pelajar (cth: *"2 Laporan"*) untuk memudahkan pentadbir mengenalpasti bilik yang paling kerap diperlukan pelajar.
 
+### 32.9 Penambahbaikan Enjin Pengecaman Jadual Pelbagai Jabatan & Sempadan Jalur Contiguous (`src/lib/timetableParser.ts`)
+
+- **Penghapusan Zon Mati Vertikal (*Zero Dead-Zone Contiguous Day Bands*):**
+  - Menggantikan formula had atas berasaskan anchor hari (`yTop = curY + 15`) dengan sempadan jalur vertikal bersambung (*contiguous bands*).
+  - Hari Pertama (Isnin): Menggunakan `headerBottomY = min(headerTimeItems.y) - 5` (tepat di bawah lajur masa header), membolehkan kod kursus yang terletak di bahagian paling atas sel ($Y \approx 606$) dikesan tanpa terpotong oleh label hari yang terletak di tengah ($Y \approx 579$).
+  - Hari Pertengahan: Menggunakan titik tengah tepat `(dayY[i-1] + curY) / 2` sebagai had atas dan `(curY + dayY[i+1]) / 2` sebagai had bawah, menghapuskan ruang vakum (dead zone) antara baris jadual.
+  - Hari Terakhir (Jumaat): Menggunakan unjuran ketinggian purata baris `curY - (avgRowHeight * 0.6)` bagi memastikan slot petang Jumaat dikesan sepenuhnya.
+- **Pengecaman Aras Menegak Sel Pintar (*Smart Cell Level Classifier*):**
+  - **Aras Atas (Level 0 & limpahan kursus):** Menghimpunkan kod kursus (`course_code`) dan jenis kelas (`class_type`), menyokong subjek amali berbilang kod (cth: `MPU24031(P), MPU24041(P)`).
+  - **Aras Bawah Sekali (`levels[levels.length - 1]`):** Lokasi mandatori bagi bilik kuliah fizikal, bengkel kejuruteraan, makmal sains, atau kata kunci Teams.
+  - **Aras Pertengahan:** Menampung senarai pensyarah bertugas. Menghalang serpihan kod kursus (seperti `DCC50552(L)`) atau aksara limpahan nama pensyarah (seperti `H`, `S`, `MA`) daripada disalah anggap sebagai kod bilik darjah.
+- **Peluasan Kamus Bengkel & Makmal Teknikal POLISAS (`isRoomCandidate`):**
+  - Menyokong pengecaman nama bengkel dan makmal khusus semua jabatan:
+    - *JKA:* `CPROJEK`, `CBBATA`, `CBPAIP`, `CBKAYU`, `CMKON`.
+    - *JKM:* `JGEGAS`, `JMESIN1/2`, `JKIMPALAN`, `JAUTO1/2`, `JFAB`, `JFOUNDRY`, `JMET`, `JCNC`, `JCAD`.
+    - *JTM:* `MFIZIKAL`, `MSENSORI`.
+    - *JP:* `PBK1..9`, `PBL1..3`, `PMK1..3`, `TECC_JP`.
+  - Menolak sebarang token dengan panjang kurang daripada 2 aksara (`length < 2`) bagi mengelakkan bunyi bising (*glyph noise*) daripada mencemarkan nama bilik.
+

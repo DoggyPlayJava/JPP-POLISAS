@@ -530,4 +530,89 @@ describe('Timetable Parser Logic', () => {
     expect(hybridCell.room_raw).toBe('MMD103');
     expect(hybridCell.lecturer_code).toBe('ROSLIZA');
   });
+
+  it('should capture classes when course code is near top of cell and day label is in middle of band (no dead zone)', () => {
+    // Simulating SPMP senior class layout (e.g. DKA5A):
+    // Header times at Y=640 and Y=624.
+    // ISNIN label at Y=579.
+    // Course code at Y=606 (above ISNIN + 15).
+    const items = [
+      { str: 'KELAS : DKA5A', x: 50, y: 660, width: 80, height: 10 },
+      { str: 'SESI : S1 20262027', x: 200, y: 660, width: 100, height: 10 },
+      { str: 'TARIKH KUATKUASA : 29-June-2026', x: 50, y: 650, width: 120, height: 10 },
+      // Header times (upper & lower)
+      { str: '8:00', x: 100, y: 640, width: 30, height: 10 },
+      { str: '9:00', x: 100, y: 624, width: 30, height: 10 },
+      { str: '9:00', x: 200, y: 640, width: 30, height: 10 },
+      { str: '10:00', x: 200, y: 624, width: 30, height: 10 },
+      // ISNIN label centered at Y=579
+      { str: 'ISNIN', x: 30, y: 579, width: 40, height: 10 },
+      // Course in slot 08:00 at Y=606 (would be cut off by yTop = curY + 15)
+      { str: 'DCC50492(L)', x: 100, y: 606, width: 60, height: 10 },
+      { str: 'NK', x: 100, y: 585, width: 30, height: 10 },
+      { str: 'CPJ407', x: 100, y: 570, width: 40, height: 10 },
+      // SELASA at Y=520
+      { str: 'SELASA', x: 30, y: 520, width: 40, height: 10 },
+      { str: 'DCC50522(L)', x: 200, y: 535, width: 60, height: 10 },
+      { str: 'JJ', x: 200, y: 520, width: 30, height: 10 },
+      { str: 'CMA103', x: 200, y: 505, width: 40, height: 10 },
+    ];
+
+    const { entries } = extractTimetableFromItems(items);
+    expect(entries.length).toBe(2);
+
+    const mondayEntry = entries.find((e) => e.day_of_week === 1);
+    expect(mondayEntry).toBeDefined();
+    expect(mondayEntry!.course_code).toBe('DCC50492');
+    expect(mondayEntry!.room_raw).toBe('CPJ407');
+    expect(mondayEntry!.lecturer_code).toBe('NK');
+
+    const tuesdayEntry = entries.find((e) => e.day_of_week === 2);
+    expect(tuesdayEntry).toBeDefined();
+    expect(tuesdayEntry!.course_code).toBe('DCC50522');
+  });
+
+  it('should extract bottom-level workshop rooms when amali has multi-line lecturers and ignore single-char overflow', () => {
+    // Simulating DAD1A Friday amali with 5 levels:
+    // Level 0: Course
+    // Level 1: Lecturers line 1
+    // Level 2: Lecturers line 2 (starts with single char "S")
+    // Level 3: Lecturers line 3
+    // Level 4: Workshops (bottom level)
+    const cellItems: PdfTextItem[] = [
+      { str: 'DJJ10232(P)', x: 100, y: 448, width: 60, height: 10 },
+      { str: 'FARID,SYED,AMIN A,HADRY,AMIN', x: 100, y: 437, width: 120, height: 10 },
+      { str: 'S,HAZ,JUE,SYAMSI,MAS,MUNIRAH,OTH', x: 100, y: 427, width: 130, height: 10 },
+      { str: 'MAN,ACR', x: 100, y: 416, width: 60, height: 10 },
+      { str: 'JGEGAS, JMESIN2, JKIMPALAN', x: 100, y: 406, width: 120, height: 10 },
+    ];
+
+    const parsed = parseCell(cellItems);
+    expect(parsed.course_code).toBe('DJJ10232');
+    expect(parsed.class_type).toBe('AMALI');
+    // Workshop rooms extracted from bottom level, joined with slash
+    expect(parsed.room_raw).toBe('JGEGAS/JMESIN2/JKIMPALAN');
+    // Single char "S" is NOT treated as room
+    expect(parsed.room_raw).not.toBe('S');
+    expect(parsed.is_online).toBe(false);
+  });
+
+  it('should correctly recognize named workshops across JKA (CPROJEK, CBBATA) and JTM (MFIZIKAL, MSENSORI)', () => {
+    // JKA CPROJEK
+    const jkaProjek = parseCell('DCC50513(P) JJ,RMR CPROJEK');
+    expect(jkaProjek.room_raw).toBe('CPROJEK');
+    expect(jkaProjek.is_online).toBe(false);
+
+    // JKA CBBATA
+    const jkaBata = parseCell('DCC10273(P) ELA,NLJ CBBATA');
+    expect(jkaBata.room_raw).toBe('CBBATA');
+
+    // JTM MFIZIKAL
+    const jtmFizikal = parseCell('DMT30353(P) RABIATUL MFIZIKAL');
+    expect(jtmFizikal.room_raw).toBe('MFIZIKAL');
+
+    // JTM MSENSORI
+    const jtmSensori = parseCell('DMT50454(P) IMAN,NUSRAH MSENSORI');
+    expect(jtmSensori.room_raw).toBe('MSENSORI');
+  });
 });

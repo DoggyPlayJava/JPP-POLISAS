@@ -254,13 +254,26 @@ export function extractTimetableFromItems(
       ?? '',
   };
 
-  // Day-row Y anchors from day-name cells.
+  // Day-row Y anchors: prioritize authentic day label in day column (x < 90)
   const dayRowY = new Map<string, number>();
-  for (const row of rows) {
-    const upper = rowText(row).toUpperCase();
+  for (const it of items) {
+    if (it.x > 90) continue;
+    const upper = it.str.toUpperCase().trim();
     for (const day of DAY_NAMES) {
-      if (upper.includes(day) && !dayRowY.has(day)) {
-        dayRowY.set(day, Math.min(...row.map((it) => it.y)));
+      if (upper === day || (upper.startsWith(day) && !dayRowY.has(day))) {
+        if (!dayRowY.has(day)) {
+          dayRowY.set(day, it.y);
+        }
+      }
+    }
+  }
+
+  // Fallback for synthetic unit tests where x coordinates may vary: search all items
+  for (const it of items) {
+    const upper = it.str.toUpperCase().trim();
+    for (const day of DAY_NAMES) {
+      if ((upper === day || upper.startsWith(day)) && !dayRowY.has(day)) {
+        dayRowY.set(day, it.y);
       }
     }
   }
@@ -368,16 +381,34 @@ export function extractTimetableFromItems(
     .map((day) => ({ day, y: dayRowY.get(day)! }))
     .sort((a, b) => b.y - a.y); // top to bottom (higher Y to lower Y in PDF)
 
+  // Header bottom: just below the lowest header time item, or fallback above day 0
+  const headerBottomY = headerTimeItems.length > 0
+    ? Math.min(...headerTimeItems.map((it) => it.y)) - 5
+    : (dayYEntries[0]?.y ?? 500) + 40;
+
+  // Average row height across detected days
+  const avgRowHeight = dayYEntries.length > 1
+    ? (dayYEntries[0].y - dayYEntries[dayYEntries.length - 1].y) / (dayYEntries.length - 1)
+    : 60;
+
   const entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[] = [];
   for (let di = 0; di < dayYEntries.length; di++) {
     const { day, y: curY } = dayYEntries[di];
-    const nextY = dayYEntries[di + 1]?.y ?? (curY - 60);
-    const yTop = Math.max(curY, nextY) + 15;
-    const yBottom = dayYEntries[di + 1] ? (curY + nextY) / 2 : (nextY - 5);
+
+    // Contiguous vertical day bands:
+    // yTop: headerBottomY for first day (ISNIN), midpoint with previous day for subsequent days
+    const yTop = di === 0
+      ? headerBottomY
+      : (dayYEntries[di - 1].y + curY) / 2;
+
+    // yBottom: midpoint with next day, or curY - (avgRowHeight * 0.6) for last day
+    const yBottom = di < dayYEntries.length - 1
+      ? (curY + dayYEntries[di + 1].y) / 2
+      : curY - (avgRowHeight * 0.6);
 
     for (const col of columns) {
       const cell = items
-        .filter((it) => it.y >= yBottom && it.y <= yTop && it.x >= col.x0 && it.x < col.x1)
+        .filter((it) => it.y >= yBottom && it.y < yTop && it.x >= col.x0 && it.x < col.x1)
         .sort((a, b) => b.y - a.y || a.x - b.x);
 
       if (cell.length === 0) continue;
@@ -581,17 +612,20 @@ export function parseCell(
   const cleanToken = (t: string) => t.replace(/^[,\s;/-]+|[,\s;/-]+$/g, '').trim();
 
   const isRoomCandidate = (t: string) => {
+    if (!t || t.length < 2) return false;
     if (isOnlineKeyword(t)) return false;
     const res = matchRoomToLocation(t, locations, roomMappings);
     if (res.location_id) return true;
     return (
-      /^[A-Za-z]{0,4}\d{2,4}[A-Za-z]?(?:\/[A-Za-z]{0,4}\d{2,4}[A-Za-z]?)?$/i.test(t) ||
-      /^(DEWAN|MAKMAL|BENGKEL|KULIAH|BKA|BKB|MBKA|MBKB|PBK\d*|JPH\d*|CME\d*|CPJ\d*|CU\d*|JLUKISAN|CKOKO|MMB\d*|MMD\d*|MMKM|PDKJP)/i.test(t)
+      /^[A-Za-z]{0,4}\d{2,4}[A-Za-z]?(?:\/[A-Za-z0-9_-]+)*$/i.test(t) ||
+      /^(DEWAN|MAKMAL|BENGKEL|KULIAH|BKA|BKB|MBKA|MBKB|TECC|TECC_JP|CKOKO|JLUKISAN|CPROJEK|CBBATA|CBPAIP|CBKAYU|CMKON|JGEGAS|JMESIN\d*|JKIMPALAN|JAUTO\d*|JFAB|JFOUNDRY|JMET|JCNC|JCAD|MFIZIKAL|MSENSORI|MMMB\d*|MMKM|MMTN|MMPS|MMPN|MMAN|MMLM|PDKJP)/i.test(t)
     );
   };
 
   let lecturerTokens: string[] = [];
   let roomTokens: string[] = [];
+
+  const isCourseItem = (str: string) => courseRegex.test(str) || /\bPA\b/i.test(str);
 
   if (cellItems && cellItems.length > 0) {
     const sorted = [...cellItems].sort((a, b) => b.y - a.y || a.x - b.x);
@@ -606,30 +640,7 @@ export function parseCell(
     }
     levels.sort((a, b) => b[0].y - a[0].y);
 
-    if (levels.length >= 3) {
-      lecturerTokens = levels[1]
-        .flatMap((it) => it.str.split(/[\s,;]+/))
-        .map(cleanToken)
-        .filter(Boolean);
-
-      roomTokens = levels.slice(2).flat()
-        .flatMap((it) => it.str.split(/[\s,;]+/))
-        .map(cleanToken)
-        .filter(Boolean);
-    } else if (levels.length === 2) {
-      const line1Tokens = levels[1]
-        .flatMap((it) => it.str.split(/[\s,;]+/))
-        .map(cleanToken)
-        .filter(Boolean);
-
-      for (const t of line1Tokens) {
-        if (isOnlineKeyword(t) || isRoomCandidate(t)) {
-          roomTokens.push(t);
-        } else {
-          lecturerTokens.push(t);
-        }
-      }
-    } else {
+    if (levels.length === 1) {
       const rest = cellText.replace(courseRegex, '').replace(/\bPA\b/i, '').trim();
       const tokens = rest.split(/[\s,;]+/).map(cleanToken).filter(Boolean);
       for (const t of tokens) {
@@ -637,6 +648,49 @@ export function parseCell(
           roomTokens.push(t);
         } else {
           lecturerTokens.push(t);
+        }
+      }
+    } else if (levels.length === 2) {
+      const l1Tokens = levels[1]
+        .flatMap((it) => it.str.split(/[\s,;]+/))
+        .map(cleanToken)
+        .filter((t) => Boolean(t) && !isCourseItem(t));
+
+      for (const t of l1Tokens) {
+        if (isOnlineKeyword(t) || isRoomCandidate(t)) {
+          roomTokens.push(t);
+        } else {
+          lecturerTokens.push(t);
+        }
+      }
+    } else {
+      // 3 or more levels:
+      // In SPMP layout, the room/online destination is at the bottom level.
+      // Top levels are courses, and middle levels are lecturers.
+      const bottomLevel = levels[levels.length - 1];
+      const middleLevels = levels.slice(1, levels.length - 1);
+
+      roomTokens = bottomLevel
+        .flatMap((it) => it.str.split(/[\s,;]+/))
+        .map(cleanToken)
+        .filter((t) => Boolean(t) && !isCourseItem(t));
+
+      for (const lvl of middleLevels) {
+        const lvlTokens = lvl
+          .flatMap((it) => it.str.split(/[\s,;]+/))
+          .map(cleanToken)
+          .filter((t) => Boolean(t) && !isCourseItem(t));
+
+        for (const t of lvlTokens) {
+          if (isRoomCandidate(t) || isOnlineKeyword(t)) {
+            if (roomTokens.length > 0 && roomTokens.every((rt) => isRoomCandidate(rt) || isOnlineKeyword(rt))) {
+              roomTokens.unshift(t);
+            } else {
+              lecturerTokens.push(t);
+            }
+          } else {
+            lecturerTokens.push(t);
+          }
         }
       }
     }
@@ -667,6 +721,9 @@ export function parseCell(
     }
   }
 
+  // Ensure no course codes or PA remain in lecturerTokens
+  lecturerTokens = lecturerTokens.filter((t) => !isCourseItem(t));
+
   // Priority rule:
   // If physical room candidate(s) exist, PRIORITIZE THEM over online keywords!
   const physicalRooms = roomTokens.filter((r) => !isOnlineKeyword(r) && isRoomCandidate(r));
@@ -682,8 +739,11 @@ export function parseCell(
     chosenRoom = onlineRooms[0];
     isOnline = true;
   } else if (roomTokens.length > 0) {
-    chosenRoom = roomTokens[0];
-    isOnline = isOnlineKeyword(chosenRoom);
+    const validRooms = roomTokens.filter((r) => r.length >= 2);
+    if (validRooms.length > 0) {
+      chosenRoom = validRooms[0];
+      isOnline = isOnlineKeyword(chosenRoom);
+    }
   }
 
   const lecturer = lecturerTokens.join(',');
