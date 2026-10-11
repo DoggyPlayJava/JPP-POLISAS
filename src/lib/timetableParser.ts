@@ -150,33 +150,30 @@ export function rowText(row: PdfTextItem[]): string {
     .trim();
 }
 
-export async function parseTimetablePage(
-  arrayBuffer: ArrayBuffer,
-  pageIndex: number,
+export function extractTimetableFromItems(
+  items: PdfTextItem[],
   roomMappings: ImapsRoomMapping[] = []
-): Promise<{
+): {
   metadata: { session: string; effectiveDate: string; className: string; department: string };
   entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[];
-}> {
-  const pdfjsLib = await getPdfLib();
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdf = await loadingTask.promise;
-  const page = await pdf.getPage(pageIndex);
-  const content = await page.getTextContent();
-  const items = toTextItems(content);
+} {
   const rows = clusterRowsByY(items);
 
   // Header metadata via full-text regex (format-independent).
   const fullText = items
     .slice()
-    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .sort((a, b) => b.y - a.y || a.x - b.x)
     .map((it) => it.str)
     .join(' ');
   const metadata = {
     className: fullText.match(/KELAS\s*:\s*([A-Za-z0-9_-]+)/i)?.[1]?.trim() ?? '',
-    session: fullText.match(/SESI\s*:\s*([A-Za-z0-9_/]+)/i)?.[1]?.trim() ?? '',
+    session: fullText.match(/SESI\s*:\s*([A-Za-z0-9_/: -]+?)(?=\s+(?:TARIKH|KELAS|JABATAN|ISNIN|\d{1,2}:)|$)/i)?.[1]?.trim()
+      ?? fullText.match(/SESI\s*:\s*([A-Za-z0-9_/]+)/i)?.[1]?.trim()
+      ?? '',
     effectiveDate: fullText.match(/TARIKH\s*KUATKUASA\s*:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i)?.[1]?.trim() ?? '',
-    department: fullText.match(/JABATAN\s*:\s*([A-Za-z ]+)/i)?.[1]?.trim() ?? '',
+    department: fullText.match(/JABATAN\s*:\s*([A-Za-z ]+?)(?=\s+(?:TARIKH|KELAS|SESI|ISNIN|\d{1,2}:)|$)/i)?.[1]?.trim()
+      ?? fullText.match(/JABATAN\s*:\s*([A-Za-z ]+)/i)?.[1]?.trim()
+      ?? '',
   };
 
   // Time-column X anchors ("08:00".."16:00").
@@ -201,7 +198,6 @@ export async function parseTimetablePage(
   }
 
   const orderedDays = DAY_NAMES.filter((d) => dayRowY.has(d));
-  const sortedDayYs = orderedDays.map((d) => dayRowY.get(d)!).sort((a, b) => a - b);
   const timeXs = times.map((t) => timeColX.get(t)!).sort((a, b) => a - b);
   const halfGap = timeXs.length > 1 ? (timeXs[1] - timeXs[0]) / 2 : 30;
 
@@ -216,17 +212,22 @@ export async function parseTimetablePage(
     return courseColorMap.get(code)!;
   };
 
+  const dayYEntries = orderedDays
+    .map((day) => ({ day, y: dayRowY.get(day)! }))
+    .sort((a, b) => b.y - a.y); // top to bottom (higher Y to lower Y in PDF)
+
   const entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[] = [];
-  for (let di = 0; di < orderedDays.length; di++) {
-    const day = orderedDays[di];
-    const y0 = dayRowY.get(day)!;
-    const y1 = sortedDayYs[di + 1] ?? (y0 + 200);
+  for (let di = 0; di < dayYEntries.length; di++) {
+    const { day, y: curY } = dayYEntries[di];
+    const nextY = dayYEntries[di + 1]?.y ?? (curY - 60);
+    const yTop = Math.max(curY, nextY) + 15;
+    const yBottom = dayYEntries[di + 1] ? (curY + nextY) / 2 : (nextY - 5);
     for (let ti = 0; ti < times.length; ti++) {
       const x0 = timeXs[ti] - halfGap;
       const x1 = timeXs[ti] + halfGap;
       const cell = items
-        .filter((it) => it.y > y0 && it.y < y1 && it.x >= x0 && it.x < x1)
-        .sort((a, b) => a.y - b.y || a.x - b.x);
+        .filter((it) => it.y >= yBottom && it.y <= yTop && it.x >= x0 && it.x < x1)
+        .sort((a, b) => b.y - a.y || a.x - b.x);
       const cellText = cell.map((it) => it.str).join(' ').trim();
       if (!cellText) continue;
 
@@ -237,7 +238,7 @@ export async function parseTimetablePage(
         academic_session: metadata.session,
         semester: '',
         class_name: metadata.className,
-        day_of_week: di + 1,
+        day_of_week: DAY_NAMES.indexOf(day) + 1,
         start_time: `${times[ti]}:00`,
         end_time: `${times[ti + 1] ?? '17:00'}:00`,
         course_code: parsed.course_code,
@@ -254,6 +255,23 @@ export async function parseTimetablePage(
   }
 
   return { metadata, entries: mergeConsecutiveSlots(entries) };
+}
+
+export async function parseTimetablePage(
+  arrayBuffer: ArrayBuffer,
+  pageIndex: number,
+  roomMappings: ImapsRoomMapping[] = []
+): Promise<{
+  metadata: { session: string; effectiveDate: string; className: string; department: string };
+  entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[];
+}> {
+  const pdfjsLib = await getPdfLib();
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(pageIndex);
+  const content = await page.getTextContent();
+  const items = toTextItems(content);
+  return extractTimetableFromItems(items, roomMappings);
 }
 
 export function parseCell(cellText: string, roomMappings: ImapsRoomMapping[] = []) {

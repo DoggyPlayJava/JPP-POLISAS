@@ -7,7 +7,8 @@ import {
   toTextItems,
   rowText,
   COURSE_PALETTE,
-  DAY_NAMES
+  DAY_NAMES,
+  extractTimetableFromItems
 } from '@/lib/timetableParser';
 import type { ImapsRoomMapping } from '@/types';
 
@@ -149,5 +150,80 @@ describe('Timetable Parser Logic', () => {
   it('should export expected palettes and day names', () => {
     expect(COURSE_PALETTE.length).toBeGreaterThanOrEqual(8);
     expect(DAY_NAMES).toEqual(['ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT']);
+  });
+
+  it('should extract timetable entries with synthetic PDF coordinate items and canonical day index', () => {
+    // Synthetic items in PDF coordinates (Y increases upwards: higher Y is higher on page)
+    // We intentionally put items out of order to verify sorting by Y descending & X ascending
+    const syntheticItems = [
+      // Headers at top of page (Y=520..550)
+      { str: 'JABATAN : JABATAN KEJURUTERAAN ELEKTRIK', x: 50, y: 550, width: 200, height: 10 },
+      { str: 'KELAS : DEP4A', x: 50, y: 540, width: 80, height: 10 },
+      { str: 'SESI : II : 2025/2026', x: 200, y: 540, width: 100, height: 10 },
+      { str: 'TARIKH KUATKUASA : 01-03-2026', x: 350, y: 540, width: 100, height: 10 },
+
+      // Time row headers (Y=480)
+      { str: '08:00', x: 100, y: 480, width: 30, height: 10 },
+      { str: '09:00', x: 180, y: 480, width: 30, height: 10 },
+      { str: '10:00', x: 260, y: 480, width: 30, height: 10 },
+
+      // Day 1: ISNIN (Row anchor Y=400)
+      { str: 'ISNIN', x: 30, y: 400, width: 40, height: 10 },
+      // Cell at 08:00 (x=100). Line 2 has lower Y (380), Line 1 has higher Y (395).
+      // We list line 2 first in items array to verify Y descending sort (b.y - a.y)
+      { str: 'AI EA303', x: 100, y: 380, width: 50, height: 10 },
+      { str: 'DEE20153(L)', x: 100, y: 395, width: 60, height: 10 },
+
+      // Note: SELASA is intentionally omitted to verify canonical day_of_week index!
+      // Day 3: RABU (Row anchor Y=300)
+      { str: 'RABU', x: 30, y: 300, width: 40, height: 10 },
+      // Cell at 09:00 (x=180).
+      { str: 'NUR EB101', x: 180, y: 280, width: 50, height: 10 },
+      { str: 'DET30053(P)', x: 180, y: 295, width: 60, height: 10 },
+    ];
+
+    const roomMappings: ImapsRoomMapping[] = [
+      {
+        id: 'map-1',
+        room_code_pattern: '^EA303$',
+        location_id: 'loc-ea303',
+        is_online: false,
+      },
+    ];
+
+    const { metadata, entries } = extractTimetableFromItems(syntheticItems, roomMappings);
+
+    // Verify metadata parsed accurately
+    expect(metadata.className).toBe('DEP4A');
+    expect(metadata.session).toBe('II : 2025/2026');
+    expect(metadata.effectiveDate).toBe('01-03-2026');
+    expect(metadata.department).toBe('JABATAN KEJURUTERAAN ELEKTRIK');
+
+    // Verify entries
+    expect(entries.length).toBe(2);
+
+    // ISNIN entry (Monday -> canonical day 1)
+    const isninEntry = entries.find((e) => e.day_of_week === 1);
+    expect(isninEntry).toBeDefined();
+    expect(isninEntry!.course_code).toBe('DEE20153');
+    expect(isninEntry!.class_type).toBe('KULIAH');
+    expect(isninEntry!.lecturer_code).toBe('AI');
+    expect(isninEntry!.room_raw).toBe('EA303');
+    expect(isninEntry!.location_id).toBe('loc-ea303');
+    expect(isninEntry!.start_time).toBe('08:00:00');
+    expect(isninEntry!.end_time).toBe('09:00:00');
+
+    // RABU entry (Wednesday -> canonical day 3, NOT shifted to 2!)
+    const rabuEntry = entries.find((e) => e.day_of_week === 3);
+    expect(rabuEntry).toBeDefined();
+    expect(rabuEntry!.course_code).toBe('DET30053');
+    expect(rabuEntry!.class_type).toBe('AMALI');
+    expect(rabuEntry!.lecturer_code).toBe('NUR');
+    expect(rabuEntry!.room_raw).toBe('EB101');
+    expect(rabuEntry!.start_time).toBe('09:00:00');
+    expect(rabuEntry!.end_time).toBe('10:00:00');
+
+    // Verify day 2 (SELASA) was not assigned
+    expect(entries.some((e) => e.day_of_week === 2)).toBe(false);
   });
 });
