@@ -10,6 +10,7 @@ import {
   DAY_NAMES,
   extractTimetableFromItems,
   matchRoomToLocation,
+  normalizeTimetableTime,
   type RoomLocationLookup
 } from '@/lib/timetableParser';
 import type { ImapsRoomMapping } from '@/types';
@@ -337,5 +338,82 @@ describe('Timetable Parser Logic', () => {
     expect(parsed.is_online).toBe(false);
     expect(parsed.location_id).toBe('loc-ea301');
     expect(parsed.lecturer_code).toBe('AI');
+  });
+
+  it('should normalize timetable header time strings accurately (1:00 PM -> 13:00)', () => {
+    // 12-hour format afternoon hours in Malaysian polytechnic timetables
+    expect(normalizeTimetableTime('1:00')).toBe('13:00');
+    expect(normalizeTimetableTime('01:00')).toBe('13:00');
+    expect(normalizeTimetableTime('2:00')).toBe('14:00');
+    expect(normalizeTimetableTime('3:00')).toBe('15:00');
+    expect(normalizeTimetableTime('4:00')).toBe('16:00');
+    expect(normalizeTimetableTime('5:00')).toBe('17:00');
+    expect(normalizeTimetableTime('6:00')).toBe('18:00');
+
+    // Dot notation
+    expect(normalizeTimetableTime('1.00')).toBe('13:00');
+    expect(normalizeTimetableTime('2.00')).toBe('14:00');
+
+    // Range notation
+    expect(normalizeTimetableTime('1:00 - 2:00')).toBe('13:00');
+    expect(normalizeTimetableTime('8:00 - 9:00')).toBe('08:00');
+
+    // Morning and noon hours
+    expect(normalizeTimetableTime('8:00')).toBe('08:00');
+    expect(normalizeTimetableTime('08:00')).toBe('08:00');
+    expect(normalizeTimetableTime('9:00')).toBe('09:00');
+    expect(normalizeTimetableTime('10:00')).toBe('10:00');
+    expect(normalizeTimetableTime('11:00')).toBe('11:00');
+    expect(normalizeTimetableTime('12:00')).toBe('12:00');
+
+    // Already 24-hour format
+    expect(normalizeTimetableTime('13:00')).toBe('13:00');
+    expect(normalizeTimetableTime('14:00')).toBe('14:00');
+
+    // Invalid string
+    expect(normalizeTimetableTime('')).toBeNull();
+    expect(normalizeTimetableTime('ISNIN')).toBeNull();
+  });
+
+  it('should correctly parse afternoon classes with 1:00 as 13:00 (1:00 PM, not 1:00 AM)', () => {
+    // Synthetic grid where time headers are 8:00, 9:00, 12:00, 1:00, 2:00
+    const items = [
+      { str: 'KELAS : DEE1A', x: 50, y: 550, width: 80, height: 10 },
+      { str: 'SESI : I : 2026/2027', x: 200, y: 550, width: 100, height: 10 },
+
+      // Time headers across the top (X increases left-to-right)
+      { str: '8:00', x: 100, y: 480, width: 30, height: 10 },
+      { str: '9:00', x: 180, y: 480, width: 30, height: 10 },
+      { str: '12:00', x: 260, y: 480, width: 30, height: 10 },
+      { str: '1:00', x: 340, y: 480, width: 30, height: 10 }, // 1:00 PM
+      { str: '2:00', x: 420, y: 480, width: 30, height: 10 }, // 2:00 PM
+
+      // Day 1: ISNIN
+      { str: 'ISNIN', x: 30, y: 400, width: 40, height: 10 },
+
+      // Morning class at 8:00 AM (x=100)
+      { str: 'DEE1013(L)', x: 100, y: 395, width: 60, height: 10 },
+      { str: 'AI EA301', x: 100, y: 380, width: 50, height: 10 },
+
+      // Afternoon class at 1:00 PM (x=340)
+      { str: 'DEE1022(P)', x: 340, y: 395, width: 60, height: 10 },
+      { str: 'NUR EA302', x: 340, y: 380, width: 50, height: 10 },
+    ];
+
+    const { entries } = extractTimetableFromItems(items);
+
+    expect(entries.length).toBe(2);
+
+    // Morning class at 8:00 AM -> 08:00:00
+    const morningClass = entries.find((e) => e.course_code === 'DEE1013');
+    expect(morningClass).toBeDefined();
+    expect(morningClass!.start_time).toBe('08:00:00');
+    expect(morningClass!.end_time).toBe('09:00:00');
+
+    // Afternoon class at 1:00 PM -> MUST BE 13:00:00, NOT 01:00:00!
+    const afternoonClass = entries.find((e) => e.course_code === 'DEE1022');
+    expect(afternoonClass).toBeDefined();
+    expect(afternoonClass!.start_time).toBe('13:00:00');
+    expect(afternoonClass!.end_time).toBe('14:00:00');
   });
 });

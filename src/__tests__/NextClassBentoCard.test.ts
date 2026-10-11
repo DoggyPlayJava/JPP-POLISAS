@@ -149,12 +149,13 @@ describe('NextClassBentoCard Implementation & Parity', () => {
     expect(url).not.toContain('?room=q=');
   });
 
-  it('verifies collapsible functionality with localStorage persistence', () => {
+  it('includes a clearly-labeled collapsible toggle', () => {
     const content = fs.readFileSync(cardPath, 'utf-8');
     expect(content).toContain('portal_next_class_collapsed');
     expect(content).toContain('isCollapsed');
     expect(content).toContain('toggleCollapsed');
-    expect(content).toContain('ChevronDown');
-    expect(content).toContain('ChevronUp');
+    // Labeled buttons (not bare chevrons) so students notice the toggle
+    expect(content).toContain('Kecilkan');
+    expect(content).toContain('Kembangkan');
   });
 });

@@ -203,6 +203,30 @@ export interface RoomLocationLookup {
   search_tags?: string | null;
 }
 
+/**
+ * Normalizes time string from timetable headers into 24-hour HH:mm format.
+ * In Malaysian polytechnic timetables, class hours occur during the daytime (08:00 - 18:00).
+ * Headers often use 12-hour labels without AM/PM:
+ * - Hours 1..7 represent afternoon/evening (1:00 PM -> 13:00, ..., 5:00 PM -> 17:00).
+ * - Hours 8..12 represent morning/noon (8:00 AM -> 08:00, ..., 12:00 PM -> 12:00).
+ * - Hours 13..23 are already in 24-hour format and preserved.
+ */
+export function normalizeTimetableTime(rawTimeStr: string): string | null {
+  if (!rawTimeStr) return null;
+  const trimmed = rawTimeStr.trim();
+  const m = trimmed.match(/^(\d{1,2})[:.](\d{2})(?:\s*-\s*\d{1,2}[:.]\d{2})?$/);
+  if (!m) return null;
+
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+
+  if (h >= 1 && h <= 7) {
+    h += 12;
+  }
+
+  return `${String(h).padStart(2, '0')}:${min}`;
+}
+
 export function extractTimetableFromItems(
   items: PdfTextItem[],
   roomMappings: ImapsRoomMapping[] = [],
@@ -230,15 +254,26 @@ export function extractTimetableFromItems(
       ?? '',
   };
 
-  // Time-column X anchors ("08:00".."16:00").
-  const timeColX = new Map<string, number>();
+  // Time-column X anchors: Map normalized 24-hour time ("08:00".."17:00") to X coordinate
+  const timeColMap = new Map<string, number>();
   for (const row of rows) {
     for (const it of row) {
-      const m = it.str.match(/^(\d{1,2}):(\d{2})$/);
-      if (m) timeColX.set(`${String(+m[1]).padStart(2, '0')}:${m[2]}`, it.x);
+      const normalized = normalizeTimetableTime(it.str);
+      if (normalized && !timeColMap.has(normalized)) {
+        timeColMap.set(normalized, it.x);
+      }
     }
   }
-  const times = [...timeColX.keys()].sort();
+
+  // Sort time columns strictly by X coordinate (left-to-right across the page).
+  // This guarantees physical columns on the PDF grid always match chronological order.
+  const timeColumns = Array.from(timeColMap.entries())
+    .map(([time, x]) => ({ time, x }))
+    .sort((a, b) => a.x - b.x);
+
+  const times = timeColumns.map((c) => c.time);
+  const timeXs = timeColumns.map((c) => c.x);
+  const halfGap = timeXs.length > 1 ? (timeXs[1] - timeXs[0]) / 2 : 30;
 
   // Day-row Y anchors from day-name cells.
   const dayRowY = new Map<string, number>();
@@ -252,8 +287,6 @@ export function extractTimetableFromItems(
   }
 
   const orderedDays = DAY_NAMES.filter((d) => dayRowY.has(d));
-  const timeXs = times.map((t) => timeColX.get(t)!).sort((a, b) => a - b);
-  const halfGap = timeXs.length > 1 ? (timeXs[1] - timeXs[0]) / 2 : 30;
 
   // Track colors for course codes to ensure unique colors across courses
   const courseColorMap = new Map<string, string>();
@@ -288,13 +321,21 @@ export function extractTimetableFromItems(
       const parsed = parseCell(cellText, roomMappings, locations);
       if (!parsed.course_code) continue;
 
+      const calculateDefaultEndTime = (startTime: string): string => {
+        const [h, m] = startTime.split(':').map(Number);
+        return `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+      };
+
+      const startTimeFormatted = `${times[ti]}:00`;
+      const endTimeFormatted = times[ti + 1] ? `${times[ti + 1]}:00` : calculateDefaultEndTime(times[ti]);
+
       entries.push({
         academic_session: metadata.session,
         semester: '',
         class_name: metadata.className,
         day_of_week: DAY_NAMES.indexOf(day) + 1,
-        start_time: `${times[ti]}:00`,
-        end_time: `${times[ti + 1] ?? '17:00'}:00`,
+        start_time: startTimeFormatted,
+        end_time: endTimeFormatted,
         course_code: parsed.course_code,
         course_name: parsed.course_code, // legend match or manual edit fills this
         class_type: parsed.class_type,

@@ -911,8 +911,16 @@ export function PolyMapsPage() {
     fetchInitialData();
     
     // Fetch basic weather for Kuantan (POLISAS coords)
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.8168&longitude=103.3317&current_weather=true')
-      .then(res => res.json())
+    // Best-effort with timeout: open-meteo can 503/504 transiently; never block the page.
+    const weatherCtrl = new AbortController();
+    const weatherTimeout = setTimeout(() => weatherCtrl.abort(), 8000);
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.8168&longitude=103.3317&current_weather=true', {
+      signal: weatherCtrl.signal,
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`weather HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (data && data.current_weather) {
           const code = data.current_weather.weathercode;
@@ -922,7 +930,12 @@ export function PolyMapsPage() {
             isHot: temp >= 32
           });
         }
-      }).catch(e => console.log('Weather fetch failed', e));
+      })
+      .catch(e => {
+        if (e?.name === 'AbortError') console.log('Weather fetch timed out');
+        else console.log('Weather fetch failed', e);
+      })
+      .finally(() => clearTimeout(weatherTimeout));
   }, []);
 
   useEffect(() => {

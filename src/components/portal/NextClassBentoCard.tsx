@@ -251,7 +251,7 @@ export function NextClassBentoCard({
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // COLLAPSED COMPACT BAR (For active states)
+  // COLLAPSED COMPACT BAR (For active states) — toggle via labeled button
   // ─────────────────────────────────────────────────────────────────────────────
   if (isCollapsed && stateData.type !== 'EMPTY') {
     return (
@@ -329,21 +329,15 @@ export function NextClassBentoCard({
                 <span>Peta</span>
               </Link>
             )}
-            <Link
-              to="/akademik/takwim"
-              className="text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-              title="Jadual Penuh"
-            >
-              Jadual
-            </Link>
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               title="Kembangkan kad"
               aria-label="Kembangkan kad"
             >
-              <ChevronDown className="w-4 h-4" />
+              <span>Kembangkan</span>
+              <ChevronDown className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -469,11 +463,12 @@ export function NextClassBentoCard({
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               title="Kecilkan kad"
               aria-label="Kecilkan kad"
             >
-              <ChevronUp className="w-4 h-4" />
+              <span>Kecilkan</span>
+              <ChevronUp className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -611,11 +606,12 @@ export function NextClassBentoCard({
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               title="Kecilkan kad"
               aria-label="Kecilkan kad"
             >
-              <ChevronUp className="w-4 h-4" />
+              <span>Kecilkan</span>
+              <ChevronUp className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -719,11 +715,12 @@ export function NextClassBentoCard({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
             title="Kecilkan kad"
             aria-label="Kecilkan kad"
           >
-            <ChevronUp className="w-4 h-4" />
+            <span>Kecilkan</span>
+            <ChevronUp className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
