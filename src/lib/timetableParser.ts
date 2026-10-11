@@ -70,7 +70,7 @@ export const COURSE_PALETTE = [
 ];
 
 export function parseCourseCodeAndType(raw: string): { courseCode: string; classType: ClassType } {
-  const match = raw.match(/^([A-Z0-9]+)\s*\((L|P|TU|O)\)/i);
+  const match = raw.match(/^([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+)?)\s*\((L|P|TU|O)\)/i);
   if (!match) return { courseCode: raw.trim(), classType: 'LAIN_LAIN' };
   
   const typeMap: Record<string, ClassType> = {
@@ -80,7 +80,7 @@ export function parseCourseCodeAndType(raw: string): { courseCode: string; class
     O: 'LAIN_LAIN',
   };
   return {
-    courseCode: match[1].toUpperCase(),
+    courseCode: match[1].trim().toUpperCase(),
     classType: typeMap[match[2].toUpperCase()] || 'LAIN_LAIN',
   };
 }
@@ -254,27 +254,6 @@ export function extractTimetableFromItems(
       ?? '',
   };
 
-  // Time-column X anchors: Map normalized 24-hour time ("08:00".."17:00") to X coordinate
-  const timeColMap = new Map<string, number>();
-  for (const row of rows) {
-    for (const it of row) {
-      const normalized = normalizeTimetableTime(it.str);
-      if (normalized && !timeColMap.has(normalized)) {
-        timeColMap.set(normalized, it.x);
-      }
-    }
-  }
-
-  // Sort time columns strictly by X coordinate (left-to-right across the page).
-  // This guarantees physical columns on the PDF grid always match chronological order.
-  const timeColumns = Array.from(timeColMap.entries())
-    .map(([time, x]) => ({ time, x }))
-    .sort((a, b) => a.x - b.x);
-
-  const times = timeColumns.map((c) => c.time);
-  const timeXs = timeColumns.map((c) => c.x);
-  const halfGap = timeXs.length > 1 ? (timeXs[1] - timeXs[0]) / 2 : 30;
-
   // Day-row Y anchors from day-name cells.
   const dayRowY = new Map<string, number>();
   for (const row of rows) {
@@ -287,6 +266,92 @@ export function extractTimetableFromItems(
   }
 
   const orderedDays = DAY_NAMES.filter((d) => dayRowY.has(d));
+  const topDayY = orderedDays.length > 0
+    ? Math.max(...orderedDays.map((d) => dayRowY.get(d)!))
+    : 500;
+
+  // Header time items (above ISNIN / day band: y > topDayY - 10)
+  const headerTimeItems = items
+    .filter((it) => it.y > topDayY - 10 && /^\d{1,2}[:.]\d{2}/.test(it.str))
+    .sort((a, b) => b.y - a.y || a.x - b.x);
+
+  const timeRows: PdfTextItem[][] = [];
+  for (const it of headerTimeItems) {
+    let r = timeRows.find((row) => Math.abs(row[0].y - it.y) <= 6);
+    if (!r) {
+      r = [];
+      timeRows.push(r);
+    }
+    r.push(it);
+  }
+  timeRows.sort((a, b) => b[0].y - a[0].y); // top to bottom (Row 1: start times, Row 2: end times)
+
+  const startRow = (timeRows[0] || []).sort((a, b) => a.x - b.x);
+  const endRow = (timeRows[1] || []).sort((a, b) => a.x - b.x);
+
+  const columns: { startTime: string; endTime: string; x0: number; x1: number }[] = [];
+
+  for (let i = 0; i < startRow.length; i++) {
+    const sItem = startRow[i];
+    const sTime = normalizeTimetableTime(sItem.str);
+    if (!sTime) continue;
+
+    const eItem = endRow[i];
+    const eTime = eItem
+      ? normalizeTimetableTime(eItem.str)
+      : (startRow[i + 1] ? normalizeTimetableTime(startRow[i + 1].str) : null);
+
+    const prevX = i > 0 ? startRow[i - 1].x : null;
+    const nextX = i < startRow.length - 1 ? startRow[i + 1].x : null;
+
+    const x0 = prevX !== null ? (prevX + sItem.x) / 2 : sItem.x - 30;
+    const x1 = nextX !== null
+      ? (sItem.x + nextX) / 2
+      : (eItem ? eItem.x + 30 : sItem.x + (sItem.x - (prevX ?? (sItem.x - 80))) * 0.9);
+
+    const calculateDefaultEndTime = (startTime: string): string => {
+      const [h, m] = startTime.split(':').map(Number);
+      return `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    columns.push({
+      startTime: sTime,
+      endTime: eTime || calculateDefaultEndTime(sTime),
+      x0,
+      x1,
+    });
+  }
+
+  // Robust fallback: if header detection didn't find time columns (e.g. synthetic single-row tests)
+  if (columns.length === 0) {
+    const fallbackTimeMap = new Map<string, number>();
+    for (const it of items) {
+      const norm = normalizeTimetableTime(it.str);
+      if (norm && !fallbackTimeMap.has(norm)) {
+        fallbackTimeMap.set(norm, it.x);
+      }
+    }
+    const sortedFallback = Array.from(fallbackTimeMap.entries())
+      .map(([t, x]) => ({ t, x }))
+      .sort((a, b) => a.x - b.x);
+
+    for (let i = 0; i < sortedFallback.length; i++) {
+      const cur = sortedFallback[i];
+      const prevX = i > 0 ? sortedFallback[i - 1].x : null;
+      const nextX = i < sortedFallback.length - 1 ? sortedFallback[i + 1].x : null;
+      const nextT = i < sortedFallback.length - 1 ? sortedFallback[i + 1].t : null;
+
+      const [h, m] = cur.t.split(':').map(Number);
+      const defaultEnd = `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+      columns.push({
+        startTime: cur.t,
+        endTime: nextT || defaultEnd,
+        x0: prevX !== null ? (prevX + cur.x) / 2 : cur.x - 30,
+        x1: nextX !== null ? (cur.x + nextX) / 2 : cur.x + 80,
+      });
+    }
+  }
 
   // Track colors for course codes to ensure unique colors across courses
   const courseColorMap = new Map<string, string>();
@@ -309,33 +374,24 @@ export function extractTimetableFromItems(
     const nextY = dayYEntries[di + 1]?.y ?? (curY - 60);
     const yTop = Math.max(curY, nextY) + 15;
     const yBottom = dayYEntries[di + 1] ? (curY + nextY) / 2 : (nextY - 5);
-    for (let ti = 0; ti < times.length; ti++) {
-      const x0 = timeXs[ti] - halfGap;
-      const x1 = timeXs[ti] + halfGap;
+
+    for (const col of columns) {
       const cell = items
-        .filter((it) => it.y >= yBottom && it.y <= yTop && it.x >= x0 && it.x < x1)
+        .filter((it) => it.y >= yBottom && it.y <= yTop && it.x >= col.x0 && it.x < col.x1)
         .sort((a, b) => b.y - a.y || a.x - b.x);
-      const cellText = cell.map((it) => it.str).join(' ').trim();
-      if (!cellText) continue;
 
-      const parsed = parseCell(cellText, roomMappings, locations);
+      if (cell.length === 0) continue;
+
+      const parsed = parseCell(cell, roomMappings, locations);
       if (!parsed.course_code) continue;
-
-      const calculateDefaultEndTime = (startTime: string): string => {
-        const [h, m] = startTime.split(':').map(Number);
-        return `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
-      };
-
-      const startTimeFormatted = `${times[ti]}:00`;
-      const endTimeFormatted = times[ti + 1] ? `${times[ti + 1]}:00` : calculateDefaultEndTime(times[ti]);
 
       entries.push({
         academic_session: metadata.session,
         semester: '',
         class_name: metadata.className,
         day_of_week: DAY_NAMES.indexOf(day) + 1,
-        start_time: startTimeFormatted,
-        end_time: endTimeFormatted,
+        start_time: `${col.startTime}:00`,
+        end_time: `${col.endTime}:00`,
         course_code: parsed.course_code,
         course_name: parsed.course_code, // legend match or manual edit fills this
         class_type: parsed.class_type,
@@ -372,12 +428,9 @@ export function isOnlineKeyword(token: string): boolean {
   if (!token) return false;
   const clean = token.replace(/[\s_\/-]+/g, '').toUpperCase();
   return (
-    clean === 'EMSTEAM' ||
-    clean === 'AMSTEAM' ||
+    clean.includes('STEAM') ||
+    clean.includes('TEAMS') ||
     clean === 'ONLINE' ||
-    clean === 'TEAMS' ||
-    clean === 'MSTEAMS' ||
-    clean === 'MICROSOFTTEAMS' ||
     clean === 'ZOOM' ||
     clean === 'GOOGLEMEET' ||
     clean === 'MEET' ||
@@ -478,24 +531,42 @@ export function matchRoomToLocation(
 }
 
 export function parseCell(
-  cellText: string,
+  cellInput: string | PdfTextItem[],
   mappingsOrLocations: (ImapsRoomMapping | RoomLocationLookup)[] = [],
   locationsParam: RoomLocationLookup[] = []
 ) {
-  const codeType = cellText.match(/^([A-Z0-9]+)\s*\((L|P|TU|O)\)/i);
-  const { courseCode, classType } = codeType
-    ? parseCourseCodeAndType(codeType[0])
-    : { courseCode: '', classType: 'LAIN_LAIN' as ClassType };
+  const cellItems = Array.isArray(cellInput) ? cellInput : null;
+  const cellText = cellItems
+    ? cellItems.slice().sort((a, b) => b.y - a.y || a.x - b.x).map((it) => it.str).join(' ').trim()
+    : String(cellInput || '').trim();
 
-  // Normalize slashes with adjacent tokens e.g. "EA301 / EA302" -> "EA301/EA302"
-  const rest = cellText
-    .replace(/^[A-Z0-9]+\s*\((L|P|TU|O)\)/i, '')
-    .replace(/\s*\/\s*/g, '/')
-    .trim();
+  const courseRegex = /([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+)?)\s*\((L|P|TU|O)\)/gi;
+  const courseMatches = Array.from(cellText.matchAll(courseRegex));
 
-  const tokens = rest.split(/\s+/).filter(Boolean);
+  let courseCode = '';
+  let classType: ClassType = 'LAIN_LAIN';
 
-  // Distinguish roomMappings vs locations if passed flexibly
+  if (courseMatches.length > 0) {
+    courseCode = courseMatches.map((m) => m[1].trim().toUpperCase()).join(' / ');
+    const firstParsed = parseCourseCodeAndType(courseMatches[0][0]);
+    classType = firstParsed.classType;
+  } else {
+    const paMatch = cellText.match(/\b(PA|PENASIHAT\s*AKADEMIK)\b/i);
+    if (paMatch) {
+      courseCode = 'PA';
+      classType = 'LAIN_LAIN';
+    } else {
+      return {
+        course_code: '',
+        class_type: 'LAIN_LAIN' as ClassType,
+        lecturer_code: '',
+        room_raw: '',
+        location_id: null,
+        is_online: false,
+      };
+    }
+  }
+
   let roomMappings: ImapsRoomMapping[] = [];
   let locations: RoomLocationLookup[] = [...locationsParam];
 
@@ -507,43 +578,112 @@ export function parseCell(
     }
   }
 
-  // Priority Rule:
-  // If EMSTEAM or AMSTEAM coincides with a physical classroom token in the cell,
-  // PRIORITIZE the physical classroom first!
-  // Example: "AI EA301 EMSTEAM" or "NUR AMSTEAM EA303" or "AI EA301/EA302"
-  let chosenRoom = '';
-  let lecturerTokens: string[] = [];
+  const cleanToken = (t: string) => t.replace(/^[,\s;/-]+|[,\s;/-]+$/g, '').trim();
 
   const isRoomCandidate = (t: string) => {
     if (isOnlineKeyword(t)) return false;
-    // Check if matches location lookup directly
     const res = matchRoomToLocation(t, locations, roomMappings);
     if (res.location_id) return true;
-    // Room code with digits (e.g. EA301, EA301/EA302, B101, F107, MK1, DK2)
     return (
       /^[A-Za-z]{0,4}\d{2,4}[A-Za-z]?(?:\/[A-Za-z]{0,4}\d{2,4}[A-Za-z]?)?$/i.test(t) ||
-      /^(DEWAN|MAKMAL|BENGKEL|KULIAH)/i.test(t)
+      /^(DEWAN|MAKMAL|BENGKEL|KULIAH|BKA|BKB|MBKA|MBKB|PBK\d*|JPH\d*|CME\d*|CPJ\d*|CU\d*|JLUKISAN|CKOKO|MMB\d*|MMD\d*|MMKM|PDKJP)/i.test(t)
     );
   };
 
-  const physicalIndex = tokens.findIndex(isRoomCandidate);
+  let lecturerTokens: string[] = [];
+  let roomTokens: string[] = [];
 
-  if (physicalIndex !== -1) {
-    // Physical room found: prioritize it!
-    chosenRoom = tokens[physicalIndex];
-    // Remaining non-online tokens form the lecturer code
-    lecturerTokens = tokens.filter((_, idx) => idx !== physicalIndex && !isOnlineKeyword(tokens[idx]));
-  } else {
-    // No physical room found. Check if an online keyword is present
-    const onlineIndex = tokens.findIndex(isOnlineKeyword);
-    if (onlineIndex !== -1) {
-      chosenRoom = tokens[onlineIndex];
-      lecturerTokens = tokens.filter((_, idx) => idx !== onlineIndex);
-    } else {
-      // Fallback to classic last token
-      chosenRoom = tokens[tokens.length - 1] ?? '';
-      lecturerTokens = tokens.length > 1 ? tokens.slice(0, -1) : [];
+  if (cellItems && cellItems.length > 0) {
+    const sorted = [...cellItems].sort((a, b) => b.y - a.y || a.x - b.x);
+    const levels: PdfTextItem[][] = [];
+    for (const it of sorted) {
+      let lvl = levels.find((l) => Math.abs(l[0].y - it.y) <= 4);
+      if (!lvl) {
+        lvl = [];
+        levels.push(lvl);
+      }
+      lvl.push(it);
     }
+    levels.sort((a, b) => b[0].y - a[0].y);
+
+    if (levels.length >= 3) {
+      lecturerTokens = levels[1]
+        .flatMap((it) => it.str.split(/[\s,;]+/))
+        .map(cleanToken)
+        .filter(Boolean);
+
+      roomTokens = levels.slice(2).flat()
+        .flatMap((it) => it.str.split(/[\s,;]+/))
+        .map(cleanToken)
+        .filter(Boolean);
+    } else if (levels.length === 2) {
+      const line1Tokens = levels[1]
+        .flatMap((it) => it.str.split(/[\s,;]+/))
+        .map(cleanToken)
+        .filter(Boolean);
+
+      for (const t of line1Tokens) {
+        if (isOnlineKeyword(t) || isRoomCandidate(t)) {
+          roomTokens.push(t);
+        } else {
+          lecturerTokens.push(t);
+        }
+      }
+    } else {
+      const rest = cellText.replace(courseRegex, '').replace(/\bPA\b/i, '').trim();
+      const tokens = rest.split(/[\s,;]+/).map(cleanToken).filter(Boolean);
+      for (const t of tokens) {
+        if (isOnlineKeyword(t) || isRoomCandidate(t)) {
+          roomTokens.push(t);
+        } else {
+          lecturerTokens.push(t);
+        }
+      }
+    }
+  } else {
+    // String-only input (used by unit tests)
+    const rest = cellText
+      .replace(courseRegex, '')
+      .replace(/\bPA\b/i, '')
+      .replace(/\s*\/\s*/g, '/')
+      .trim();
+
+    const tokens = rest.split(/[\s,;]+/).map(cleanToken).filter(Boolean);
+
+    // Physical room priority
+    const physicalIdx = tokens.findIndex((t) => isRoomCandidate(t));
+    if (physicalIdx !== -1) {
+      roomTokens.push(tokens[physicalIdx]);
+      lecturerTokens = tokens.filter((_, idx) => idx !== physicalIdx && !isOnlineKeyword(tokens[idx]));
+    } else {
+      const onlineIdx = tokens.findIndex((t) => isOnlineKeyword(t));
+      if (onlineIdx !== -1) {
+        roomTokens.push(tokens[onlineIdx]);
+        lecturerTokens = tokens.filter((_, idx) => idx !== onlineIdx);
+      } else if (tokens.length > 0) {
+        roomTokens.push(tokens[tokens.length - 1]);
+        lecturerTokens = tokens.slice(0, -1);
+      }
+    }
+  }
+
+  // Priority rule:
+  // If physical room candidate(s) exist, PRIORITIZE THEM over online keywords!
+  const physicalRooms = roomTokens.filter((r) => !isOnlineKeyword(r) && isRoomCandidate(r));
+  const onlineRooms = roomTokens.filter((r) => isOnlineKeyword(r));
+
+  let chosenRoom = '';
+  let isOnline = false;
+
+  if (physicalRooms.length > 0) {
+    chosenRoom = physicalRooms.join('/');
+    isOnline = false;
+  } else if (onlineRooms.length > 0) {
+    chosenRoom = onlineRooms[0];
+    isOnline = true;
+  } else if (roomTokens.length > 0) {
+    chosenRoom = roomTokens[0];
+    isOnline = isOnlineKeyword(chosenRoom);
   }
 
   const lecturer = lecturerTokens.join(',');
@@ -555,6 +695,6 @@ export function parseCell(
     lecturer_code: lecturer,
     room_raw: chosenRoom,
     location_id: matched.location_id,
-    is_online: matched.is_online,
+    is_online: isOnline,
   };
 }
