@@ -135,4 +135,10 @@ export interface UnifiedTimelineEvent {
   badge: string;
   source: string;
   endpoint?: string;
+  pagePath?: string;
+  pageTitle?: string;
+  filename?: string;
+  stack?: string;
+  errorType?: string;
+  statusCode?: number;
 }

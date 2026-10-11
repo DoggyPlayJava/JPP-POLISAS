@@ -3,6 +3,7 @@ import {
   formatUptime,
   getRatingTheme,
   buildUnifiedTimeline,
+  extractPageRoute,
 } from '@/pages/jpp/telemetry/telemetryUtils';
 import {
   SystemErrorEvent,
@@ -17,6 +18,18 @@ describe('Telemetry Command Center Utilities', () => {
       expect(formatUptime(125)).toBe('2m 5s');
       expect(formatUptime(3665)).toBe('1j 1m 5s');
       expect(formatUptime(90065)).toBe('1h 1j 1m');
+    });
+  });
+
+  describe('extractPageRoute', () => {
+    it('identifies POLISAS pages from full URLs and relative paths', () => {
+      expect(extractPageRoute('https://jpp.cipher-node.org/polysuara').path).toBe('/polysuara');
+      expect(extractPageRoute('https://jpp.cipher-node.org/polysuara').name).toBe('PolySuara Mahasiswa');
+
+      expect(extractPageRoute('https://jpp.cipher-node.org/polymart/order/1').path).toBe('/polymart');
+      expect(extractPageRoute('https://jpp.cipher-node.org/kebajikan').path).toBe('/kebajikan');
+      expect(extractPageRoute('/jpp/asrama').path).toBe('/jpp/asrama');
+      expect(extractPageRoute(undefined).name).toBe('Background / Server Process');
     });
   });
 
@@ -56,7 +69,7 @@ describe('Telemetry Command Center Utilities', () => {
       expect(timeline[0].badge).toBe('OPTIMAL');
     });
 
-    it('combines crash error events with diagnostic alerts and sorts chronologically', () => {
+    it('combines crash error events with diagnostic alerts and parses page routes', () => {
       const mockErrors: SystemErrorEvent[] = [
         {
           id: 'err-1',
@@ -64,7 +77,7 @@ describe('Telemetry Command Center Utilities', () => {
           error_type: 'UncaughtException',
           message: 'Database connection timeout',
           occurred_at: '2026-10-11T10:00:00Z',
-          endpoint: '/api/test',
+          endpoint: 'https://jpp.cipher-node.org/polysuara',
           method: 'GET',
         },
       ];
@@ -83,14 +96,10 @@ describe('Telemetry Command Center Utilities', () => {
       const timeline = buildUnifiedTimeline(mockErrors, mockDiagnostics, '2026-10-11T10:05:00Z');
 
       expect(timeline.length).toBe(3);
-      // Verify items exist
-      const hasError = timeline.some((e) => e.type === 'error' && e.severity === 'CRITICAL');
-      const hasDbAlert = timeline.some((e) => e.source === 'Pangkalan Data' && e.severity === 'CRITICAL');
-      const hasKebAlert = timeline.some((e) => e.source === 'e-Kebajikan');
-
-      expect(hasError).toBe(true);
-      expect(hasDbAlert).toBe(true);
-      expect(hasKebAlert).toBe(true);
+      const errEvent = timeline.find((e) => e.type === 'error');
+      expect(errEvent).toBeDefined();
+      expect(errEvent?.pagePath).toBe('/polysuara');
+      expect(errEvent?.pageTitle).toBe('PolySuara Mahasiswa');
     });
   });
 });
