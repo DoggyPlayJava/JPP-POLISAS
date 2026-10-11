@@ -2721,7 +2721,14 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - `src/pages/jpp/JppLogsPage.tsx`: Audit log sistem, kad ringkasan AI, bar statistik & jadual peristiwa audit.
   - `src/pages/jpp/JppSettingsPage.tsx`: Konfigurasi takwim akademik, kod staf, permintaan sunting profil & pengurus pautan QR.
   - `src/pages/jpp/JppNexusPage.tsx`: Nexus AI Admin Hub, pemantauan model AI, kill-switch & token analytics.
-  - `src/pages/jpp/JppTelemetryPage.tsx`: Telemetri sistem, status server Node.js, status kluster PostgreSQL & carta aktiviti Recharts.
+  - `src/pages/jpp/JppTelemetryPage.tsx`: Pusat Kawalan Telemetri Sistem (SentinelAI Style) berstruktur modular 3-lajur:
+    - `src/pages/jpp/telemetry/telemetryTypes.ts`: Kontrak TypeScript backend (`resilience_score`, `resilience_rating`, `resilience_deductions`, `system_error_events`).
+    - `src/pages/jpp/telemetry/telemetryUtils.ts`: Penukar format masa, pembina `UnifiedTimelineEvent`, dan tema warna penarafan.
+    - `src/pages/jpp/telemetry/TelemetryLeftRail.tsx`: Skor ketahanan sistem (0-100) berasaskan backend, uptime proses Node.js, memori heap & amaran aktif.
+    - `src/pages/jpp/telemetry/TelemetryTopologyFlow.tsx`: Aliran topologi nod interaktif (Ingress -> Node.js -> Auth -> Modul -> DB & WAL) dengan 3 mod toggle (*Flow View*, *Traffic*, *Health Heatmap*).
+    - `src/pages/jpp/telemetry/TelemetryLiveTimeline.tsx`: Kronologi bersatu insiden crash/ralat (`/api/system-errors`) dan amaran diagnostik subsistem dengan penapis pills `[Semua] [Kritikal] [Amaran] [Sistem]`.
+    - `src/pages/jpp/telemetry/TelemetryQuickMetrics.tsx`: 4 kad metrik operasi utama (Bottlenecks, DB & WAL, AI Nexus, Automasi/Snapshots).
+    - `src/pages/jpp/telemetry/TelemetryModuleTabs.tsx`: Tab navigasi rapi mengekalkan 15+ modul kampus, komersial, graf trend 30-hari, dan diagnostik pangkalan data mendalam.
   - `src/pages/jpp/PolyServicesAdmin.tsx`: Pentadbiran PolyServices, penapis tab, kad pos/komen confession & panel analitik sentimen.
   - `src/pages/jpp/JppStructureSettings.tsx`: Tetapan struktur carta organisasi JPP & input jawatan exco.
   - `src/pages/jpp/JppAsramaPage.tsx`: Papan rujukan asrama KAMSIS & pemohon rayuan.
