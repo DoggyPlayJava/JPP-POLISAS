@@ -107,12 +107,12 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   // -- Unified Institutional Theme Logic --
   const getTheme = () => {
     return {
-      color: 'text-primary dark:text-amber-400',
-      bg: 'bg-primary dark:bg-amber-400',
-      shadow: 'shadow-[0_0_8px_rgba(131,16,16,0.6)]',
-      fabBg: 'bg-gradient-to-tr from-primary to-[#a81c1c] dark:from-primary dark:to-amber-500 hover:shadow-primary/30',
-      pillBg: 'bg-primary/10 dark:bg-primary/20',
-      glow: 'shadow-[0_0_20px_rgba(131,16,16,0.4)]'
+      color: 'text-[#2E3A2F] dark:text-[#84A98C]',
+      bg: 'bg-[#2E3A2F] dark:bg-[#6B7F5B]',
+      shadow: 'shadow-[0_0_8px_rgba(46,58,47,0.4)]',
+      fabBg: 'bg-gradient-to-tr from-[#2E3A2F] to-[#6B7F5B] hover:shadow-[#2E3A2F]/30',
+      pillBg: 'bg-[#6B7F5B]/10 dark:bg-[#6B7F5B]/20',
+      glow: 'shadow-[0_0_20px_rgba(46,58,47,0.3)]'
     };
   };
 

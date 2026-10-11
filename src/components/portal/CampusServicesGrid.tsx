@@ -109,7 +109,7 @@ export function CampusServicesGrid({
   const handleAction = (service: CampusServiceItem) => {
     const isEnabled = checkEnabled(service.id);
     if (!isEnabled && !isSuperAdmin) {
-      toast(`${service.label} sedang dikemas kini!`, { icon: '🚧' });
+      toast(`${service.label} sedang dikemas kini!`);
       return;
     }
 

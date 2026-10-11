@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ArrowRight, Tag } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Tag, Flame, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatProductPrice, isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 import { cn } from '@/lib/utils';
@@ -134,10 +134,10 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+              <h2 className="text-sm sm:text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight truncate">
                 PolyMart Siswa
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate">
+              <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] hidden sm:block truncate">
                 Produk & makanan usahawan siswa POLISAS
               </p>
             </div>
@@ -160,25 +160,27 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               type="button"
               onClick={() => setActiveFilter('hot')}
               className={cn(
-                "px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
+                "inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
                 activeFilter === 'hot'
                   ? "bg-amber-500 text-slate-950 shadow-sm"
                   : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
               )}
             >
-              🔥 Terhangat
+              <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Terhangat</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveFilter('latest')}
               className={cn(
-                "px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
+                "inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold tracking-tight transition-all cursor-pointer active:scale-95",
                 activeFilter === 'latest'
                   ? "bg-amber-500 text-slate-950 shadow-sm"
                   : "text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white"
               )}
             >
-              ✨ Terkini
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Terkini</span>
             </button>
           </div>
         </div>

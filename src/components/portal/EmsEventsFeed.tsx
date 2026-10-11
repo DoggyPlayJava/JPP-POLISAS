@@ -77,14 +77,14 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+              <h2 className="text-sm sm:text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
                 Acara Kampus
               </h2>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 EMS
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+            <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] hidden sm:block">
               Pertandingan & program siswa terkini
             </p>
           </div>

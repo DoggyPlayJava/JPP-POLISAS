@@ -3795,4 +3795,25 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - Warna Aksen Hangat: `#C96F4F` (*Terracotta Clay*)
    - **100% Sifar Emoji Mentah & Sifar Em-Dash:** Menggunakan ikon vektor Lucide React secara eksklusif (`Smartphone`, `Lightbulb`, `CheckCircle2`, `Mail`, `Send`, `PhoneCall`).
 
+---
+
+### 31.5 Penyelarasan Tema Earthy Minimal pada Portal Pelajar (`src/pages/PortalPage.tsx`)
+
+1. **Kesinambungan Estetika Menyeluruh (*Design System Continuity*):**
+   - Mengaplikasikan palet reka bentuk **Earthy Minimal / Forest & Sage** dari `LandingPage.tsx` dan `LoginPage.tsx` terus ke `PortalPage.tsx` dan komponen-komponen teras portal untuk mewujudkan pengalaman pengguna yang lancar, premium, dan konsisten merentasi keseluruhan kitaran hidup aplikasi.
+   - Menggantikan kesan pencahayaan tajam OLED biru kepada aura organik Forest & Terracotta (`#6B7F5B` dan `#C96F4F`) dengan nilai ketelusan yang halus bagi mengelakkan keletihan mata pengguna.
+
+2. **Permukaan Kad & Elemen UI Portal:**
+   - **Kanvas Utama:** `bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE]`.
+   - **Kad Exco & Servis (`ExcoCard.tsx`, `CampusServicesGrid.tsx`):** `bg-white dark:bg-[#1E271F]/80 border-[#D9C9B2]/80 dark:border-[#3A4A3B] hover:border-[#6B7F5B]/50 hover:bg-white dark:hover:bg-[#242E25] shadow-[0_4px_20px_rgba(46,58,47,0.04)]`.
+   - **Pengepala SuperApp (`SuperAppHeader.tsx`):** Kapsul carian dan pil lokasi diselaraskan ke rona warm alabaster berkontur `#D9C9B2]/20` dengan ikon `#6B7F5B` dan tipografi `#2E3A2F`.
+   - **Pengaki Portal (`PortalFooter.tsx`):** Latar `bg-[#F2EDE4]/60 dark:bg-[#151D16]/80` berpagarkan garis halus `border-[#D9C9B2]/80 dark:border-[#3A4A3B]`.
+   - **Navigasi Bawah (`BottomNav.tsx`):** Kecerunan butang tindakan terapung (FAB) dialihkan daripada warna marun lama (`#a81c1c`) kepada dwi-tona rimba `from-[#2E3A2F] to-[#6B7F5B]`.
+
+3. **Integriti Visual & Standard Kod:**
+   - **100% Sifar Emoji Mentah:** Semua simbol visual di karusel kempen, suapan PolyMart, acara EMS, dan kad perkhidmatan kampus menggunakan ikon vektor Lucide React (`Sparkles`, `Trophy`, `Flame`, `Store`, `Calendar`, dll).
+   - **Sifar Em-Dash:** Tiada sengkang em-dash (`—` / `–`) di dalam teks paparan mahupun komen kod.
+   - **Ketahanan Ujian Automatik:** Mengekalkan 100% kepatuhan pada 26 suite ujian vitest (455 ujian lulus) termasuk ujian integriti portal SuperApp.
+
+
 

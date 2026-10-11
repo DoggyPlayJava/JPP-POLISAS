@@ -47,7 +47,7 @@ export function buildCampaignSlides(params: {
   if (params.makmpStatus === 'DIJEMPUT') {
     slides.push({
       id: 'makmp',
-      title: 'Anda Dijemput ke MAKMP 2026! 🎉',
+      title: 'Anda Dijemput ke MAKMP 2026!',
       badge: 'Jemputan Khas',
       description: 'Tahniah atas pencapaian cemerlang anda. Sila sahkan kehadiran & muat naik gambar.',
       actionText: 'Semak Status',
@@ -73,7 +73,7 @@ export function buildCampaignSlides(params: {
   if (params.karnivalActive) {
     slides.push({
       id: 'karnival',
-      title: 'Karnival Siswa POLISAS 2026 🎪',
+      title: 'Karnival Siswa POLISAS 2026',
       badge: 'Sedang Berlangsung',
       description: 'Sertai pelbagai gerai jualan, persembahan pentas dan cabutan bertuah!',
       actionText: 'Masuk Karnival',
@@ -85,7 +85,7 @@ export function buildCampaignSlides(params: {
   if (params.supsasActive) {
     slides.push({
       id: 'supsas',
-      title: 'Sukan Antara Jabatan (SUPSAS) 🏆',
+      title: 'Sukan Antara Jabatan (SUPSAS)',
       badge: 'Langsung',
       description: 'Pantau kedudukan pingat dan jadual perlawanan sukan jabatan anda.',
       actionText: 'Papan Skor',

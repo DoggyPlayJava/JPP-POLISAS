@@ -139,11 +139,11 @@ export function CampusCampaignCarousel({
                   </span>
                 </div>
 
-                <h3 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white tracking-tight line-clamp-1">
+                <h3 className="text-sm sm:text-base md:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight line-clamp-1">
                   {currentSlide.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium line-clamp-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] font-medium line-clamp-2 leading-relaxed">
                   {currentSlide.description}
                 </p>
               </div>
@@ -183,8 +183,8 @@ export function CampusCampaignCarousel({
               className={cn(
                 'h-1.5 rounded-full transition-all duration-300 cursor-pointer',
                 idx === safeIndex
-                  ? 'w-6 bg-slate-800 dark:bg-white'
-                  : 'w-1.5 bg-slate-300 dark:bg-white/20 hover:bg-slate-400 dark:hover:bg-white/40'
+                  ? 'w-6 bg-[#2E3A2F] dark:bg-[#F8F6EE]'
+                  : 'w-1.5 bg-[#D9C9B2] dark:bg-[#3A4A3B] hover:bg-[#6B7F5B]'
               )}
             />
           ))}

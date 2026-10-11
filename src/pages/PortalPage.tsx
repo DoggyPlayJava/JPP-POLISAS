@@ -167,15 +167,15 @@ export function PortalPage() {
         supabase.from('portal_settings')
           .select('exco_module, color, is_enabled')
           .abortSignal(controller.signal),
-        // 2. Kebajikan — open tickets
+        // 2. Kebajikan - open tickets
         supabase.from('kebajikan_tickets')
           .select('id', { count: 'exact', head: true })
           .not('status', 'in', '(RESOLVED,CLOSED,CANCELLED)'),
-        // 3. Kebajikan — resolved tickets
+        // 3. Kebajikan - resolved tickets
         supabase.from('kebajikan_tickets')
           .select('id', { count: 'exact', head: true })
           .in('status', ['RESOLVED', 'CLOSED']),
-        // 4. Kebajikan — ratings
+        // 4. Kebajikan - ratings
         supabase.from('kebajikan_tickets')
           .select('rating')
           .not('rating', 'is', null),
@@ -189,7 +189,7 @@ export function PortalPage() {
           localStorage.setItem('jpp_portal_settings_cache', JSON.stringify(settingsData));
         } catch {}
 
-        // SUPSAS edition — only fetch if supsas module is enabled
+        // SUPSAS edition - only fetch if supsas module is enabled
         const supsasSetting = settingsData.find(s => s.exco_module === 'supsas');
         const supsasOn = supsasSetting ? supsasSetting.is_enabled : false;
         if (supsasOn) {
@@ -312,7 +312,7 @@ export function PortalPage() {
   }, [kamsisStatus, makmpStatus, karnivalActive, supsasActive]);
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-300">
+    <div className="relative min-h-screen bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] flex flex-col font-sans transition-colors duration-300">
       {/* Joyride Tour */}
       {runTour && (
         <React.Suspense fallback={null}>
@@ -386,10 +386,10 @@ export function PortalPage() {
       {karnivalActive && <KarnivalEffects />}
       {supsasActive && !karnivalActive && <SupsasEffects />}
 
-      {/* Dark Mode Ambient Mesh Aura (OLED Deep Glass) */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden hidden dark:block" aria-hidden="true">
-        <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-emerald-500/[0.035] blur-[130px] rounded-full transform-gpu" />
-        <div className="absolute top-[55%] left-1/4 w-[500px] h-[320px] bg-indigo-500/[0.025] blur-[150px] rounded-full transform-gpu" />
+      {/* Ambient Mesh Aura (Deep Forest & Terracotta Earthy Glows) */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-[#6B7F5B]/[0.08] dark:bg-[#6B7F5B]/[0.05] blur-[130px] rounded-full transform-gpu" />
+        <div className="absolute top-[55%] left-1/4 w-[500px] h-[320px] bg-[#C96F4F]/[0.05] dark:bg-[#C96F4F]/[0.03] blur-[150px] rounded-full transform-gpu" />
       </div>
 
       {/* Modern Super App Header */}
@@ -436,10 +436,10 @@ export function PortalPage() {
         <section aria-label="Modul Rasmi Exco" className="tour-exco-modules space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
                 Modul Rasmi Exco JPP
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-white/60">
+              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F]">
                 Akses terus ke portal rasmi pengurusan dan pentadbiran mahasiswa
               </p>
             </div>
@@ -528,7 +528,7 @@ function AdminStatusIndicator({ color, label }: { color: string; label: string }
   return (
     <div className="flex items-center gap-3">
       <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50">{label}</span>
+      <span className="text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">{label}</span>
     </div>
   );
 }

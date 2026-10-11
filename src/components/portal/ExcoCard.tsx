@@ -146,7 +146,6 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
     if (!canAccess) {
       triggerHaptic('light');
       toast(`${module.name} bakal tiba tidak lama lagi!`, {
-        icon: '🚀',
         duration: 2500,
       });
       return;
@@ -155,7 +154,6 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
     triggerHaptic('medium');
     if (isPreviewMode) {
       toast.success('Admin Preview Mode Active', {
-        icon: '👁️',
         style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
       });
     }
@@ -179,7 +177,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
               karnivalActive ? (isLowPerf ? "bg-black/80 border-violet-500/20" : "bg-black/40 backdrop-blur-xl border-violet-500/20") : "bg-black/20 border-white/10",
               karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
             )
-          : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1",
+          : "bg-white dark:bg-[#1E271F]/80 border-[#D9C9B2]/80 dark:border-[#3A4A3B] hover:border-[#6B7F5B]/50 hover:bg-white dark:hover:bg-[#242E25] hover:-translate-y-1 shadow-[0_4px_20px_rgba(46,58,47,0.04)]",
         className
       )}
       style={!isEventMode ? {
@@ -311,13 +309,13 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
           <h2 className={cn(
             "text-xl font-bold mb-1.5 transition-colors", 
             !canAccess && "opacity-70",
-            isEventMode ? "text-white" : "text-slate-900 dark:text-white"
+            isEventMode ? "text-white" : "text-[#2E3A2F] dark:text-[#F8F6EE]"
           )}>
             {module.name}
           </h2>
           <p className={cn(
             "text-sm leading-relaxed font-medium transition-colors",
-            isEventMode ? "text-white/70" : "text-slate-500 dark:text-white/60"
+            isEventMode ? "text-white/70" : "text-[#556453] dark:text-[#A3B39F]"
           )}>
             {module.description}
           </p>
@@ -329,7 +327,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
           "flex items-center gap-1.5 text-xs font-bold transition-all duration-300",
           !canAccess && "opacity-50",
           canAccess && "group-hover:gap-3",
-          isEventMode ? "text-white/80 group-hover:text-white" : "text-slate-700 dark:text-white/80 group-hover:text-slate-900 dark:group-hover:text-white"
+          isEventMode ? "text-white/80 group-hover:text-white" : "text-[#2E3A2F] dark:text-[#F8F6EE]/90 group-hover:text-[#2E3A2F] dark:group-hover:text-white"
         )}
         style={canAccess ? { '--hover-color': color } as React.CSSProperties : {}}>
           <span className="group-hover:text-[var(--hover-color)] transition-colors">
@@ -340,7 +338,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
         <div className={cn(
           "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md",
-          isEventMode ? "bg-white/10 text-white/50" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40"
+          isEventMode ? "bg-white/10 text-white/50" : "bg-[#F8F6EE] dark:bg-[#151D16] text-[#556453] dark:text-[#A3B39F] border border-[#D9C9B2]/60 dark:border-[#3A4A3B]"
         )}>
           {module.tagline}
         </div>
