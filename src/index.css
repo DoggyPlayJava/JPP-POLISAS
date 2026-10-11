@@ -257,6 +257,25 @@ body.supsas-route {
   display: none !important;
 }
 
+/* ── Low-end: kill SEMUA animasi & transition (bukan cuma reduced-motion) ──
+   Framer-motion guna inline style (bukan CSS animation), jadi tak boleh
+   dimatikan via CSS animation-duration. Tapi CSS animation (animate-spin,
+   animate-pulse) + transition tetap kena. MotionConfig reducedMotion="always"
+   handle framer-motion. */
+.low-perf-device *,
+.low-perf-device *::before,
+.low-perf-device *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Gantikan spinner/blur yang GPU-intensive pada low-end */
+.low-perf-device .animate-spin {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

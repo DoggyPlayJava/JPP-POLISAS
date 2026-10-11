@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Toaster, ToastBar, resolveValue } from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import { Check, X, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -667,10 +667,11 @@ function SeoManager() {
 }
 
 function App() {
-  useDevicePerformance();
+  const { isLowPerf } = useDevicePerformance();
 
   return (
     <ErrorBoundary>
+      <MotionConfig reducedMotion={isLowPerf ? 'always' : 'user'}>
       <ThemeProvider>
         <BrowserRouter>
           <GlobalRedirector />
@@ -737,6 +738,7 @@ function App() {
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }
