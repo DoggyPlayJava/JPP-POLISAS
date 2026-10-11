@@ -134,6 +134,11 @@ export function findNextUpcomingClass(
   return null;
 }
 
+export function buildPolyMapsRoomUrl(entry: Pick<StudentTimetableEntry, 'location_id' | 'room_raw'>): string {
+  const target = entry.location_id || entry.room_raw;
+  return `/polymaps?room=${encodeURIComponent(target || '')}`;
+}
+
 export function NextClassBentoCard({
   entries,
   className,
@@ -209,8 +214,8 @@ export function NextClassBentoCard({
   }, [activeEntries, now]);
 
   // Helper for PolyMaps deep link URL
-  const getPolyMapsUrl = (entry: StudentTimetableEntry): string => {
-    return `/polymaps?room=${entry.location_id || ''}${!entry.location_id ? `q=${encodeURIComponent(entry.room_raw)}` : ''}`;
+  const getPolyMapsUrl = (entry: Pick<StudentTimetableEntry, 'location_id' | 'room_raw'>): string => {
+    return buildPolyMapsRoomUrl(entry);
   };
 
   // Helper for physical location label

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
-import { scanPdfClasses, parseTimetablePage } from '@/lib/timetableParser';
+import { scanPdfClasses, parseTimetablePage, type RoomLocationLookup } from '@/lib/timetableParser';
 import type { StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { TimetablePreviewModal } from './TimetablePreviewModal';
 
@@ -73,22 +73,29 @@ export function TimetableUploadModal({
     entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[];
   } | null>(null);
 
+  const [locations, setLocations] = useState<RoomLocationLookup[]>([]);
   const [roomMappings, setRoomMappings] = useState<ImapsRoomMapping[]>([]);
 
-  // Pre-load room mappings
+  // Pre-load locations and room mappings in parallel
   useEffect(() => {
     if (!isOpen) return;
-    async function loadMappings() {
+    async function loadLookupData() {
       try {
-        const { data, error } = await supabase.from('imaps_room_mappings').select('*');
-        if (!error && data) {
-          setRoomMappings(data as ImapsRoomMapping[]);
+        const [locsRes, mapRes] = await Promise.all([
+          supabase.from('imaps_locations').select('id, room_code, search_tags'),
+          supabase.from('imaps_room_mappings').select('*'),
+        ]);
+        if (locsRes.data) {
+          setLocations(locsRes.data as RoomLocationLookup[]);
+        }
+        if (mapRes.data) {
+          setRoomMappings(mapRes.data as ImapsRoomMapping[]);
         }
       } catch (err) {
-        console.error('Failed to load room mappings:', err);
+        console.error('Failed to load room lookup data:', err);
       }
     }
-    loadMappings();
+    loadLookupData();
   }, [isOpen]);
 
   // Reset state on close
@@ -198,17 +205,27 @@ export function TimetableUploadModal({
     setErrorMessage(null);
 
     try {
-      // Load fresh mappings if not already available
+      // Load fresh locations & mappings in parallel if not already available
       let mappingsToUse = roomMappings;
-      if (mappingsToUse.length === 0) {
-        const { data } = await supabase.from('imaps_room_mappings').select('*');
-        if (data) mappingsToUse = data as ImapsRoomMapping[];
+      let locationsToUse = locations;
+      if (locationsToUse.length === 0 || mappingsToUse.length === 0) {
+        const [locsRes, mapRes] = await Promise.all([
+          locationsToUse.length === 0
+            ? supabase.from('imaps_locations').select('id, room_code, search_tags')
+            : Promise.resolve({ data: locationsToUse }),
+          mappingsToUse.length === 0
+            ? supabase.from('imaps_room_mappings').select('*')
+            : Promise.resolve({ data: mappingsToUse }),
+        ]);
+        if (locsRes.data) locationsToUse = locsRes.data as RoomLocationLookup[];
+        if (mapRes.data) mappingsToUse = mapRes.data as ImapsRoomMapping[];
       }
 
       const parsedResult = await parseTimetablePage(
         pdfBuffer,
         selectedPageIndex,
-        mappingsToUse
+        mappingsToUse,
+        locationsToUse
       );
 
       if (parsedResult.entries.length === 0) {

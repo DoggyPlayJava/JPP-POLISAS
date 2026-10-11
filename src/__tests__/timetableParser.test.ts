@@ -8,7 +8,9 @@ import {
   rowText,
   COURSE_PALETTE,
   DAY_NAMES,
-  extractTimetableFromItems
+  extractTimetableFromItems,
+  matchRoomToLocation,
+  type RoomLocationLookup
 } from '@/lib/timetableParser';
 import type { ImapsRoomMapping } from '@/types';
 
@@ -225,5 +227,60 @@ describe('Timetable Parser Logic', () => {
 
     // Verify day 2 (SELASA) was not assigned
     expect(entries.some((e) => e.day_of_week === 2)).toBe(false);
+  });
+
+  it('should match room to location via room_code, search_tags, online keywords, and prefix stripping', () => {
+    const locations: RoomLocationLookup[] = [
+      { id: 'loc-ea301', room_code: 'EA301', search_tags: 'JKE, A301' },
+      { id: 'loc-bf107', room_code: 'BF107', search_tags: 'Makmal Komputer, F107, JKE' },
+      { id: 'loc-bka', room_code: 'BILIK KULIAH A', search_tags: 'BKA, BKB, MBKA' },
+      { id: 'loc-ea304', room_code: 'EA304', search_tags: null },
+    ];
+
+    // 1. Exact match
+    expect(matchRoomToLocation('EA301', locations)).toEqual({
+      location_id: 'loc-ea301',
+      is_online: false,
+    });
+
+    // 2. Alias via search_tags (A301 -> EA301)
+    expect(matchRoomToLocation('A301', locations)).toEqual({
+      location_id: 'loc-ea301',
+      is_online: false,
+    });
+
+    // 3. Alias via search_tags (F107 -> BF107)
+    expect(matchRoomToLocation('F107', locations)).toEqual({
+      location_id: 'loc-bf107',
+      is_online: false,
+    });
+
+    // 4. Nickname via search_tags (BKA -> BILIK KULIAH A)
+    expect(matchRoomToLocation('BKA', locations)).toEqual({
+      location_id: 'loc-bka',
+      is_online: false,
+    });
+
+    // 5. Online keywords
+    expect(matchRoomToLocation('ONLINE', locations)).toEqual({
+      location_id: null,
+      is_online: true,
+    });
+    expect(matchRoomToLocation('MICROSOFT TEAMS', locations)).toEqual({
+      location_id: null,
+      is_online: true,
+    });
+
+    // 6. Prefix stripping fallback (A304 without tag matches EA304)
+    expect(matchRoomToLocation('A304', locations)).toEqual({
+      location_id: 'loc-ea304',
+      is_online: false,
+    });
+
+    // 7. Unknown room returns null
+    expect(matchRoomToLocation('ZZ999', locations)).toEqual({
+      location_id: null,
+      is_online: false,
+    });
   });
 });
