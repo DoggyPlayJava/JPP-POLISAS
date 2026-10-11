@@ -69,8 +69,8 @@ describe('Low-End Device Performance Guarantee', () => {
       expect(hook).toContain('saveData');
     });
 
-    it('keeps deviceMemory <= 4 as a low-end signal', () => {
-      expect(hook).toContain('memory <= 4');
+    it('keeps deviceMemory <= 6 as a low-end signal', () => {
+      expect(hook).toContain('memory <= 6');
     });
 
     it('does NOT include prefersReducedMotion in isLowPerf formula', () => {

@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
  * got flagged, and the mount benchmark fired during hydration (false positive).
  *
  * Correct detection = measure real jank at runtime. The initial guess uses only
- * reliable signals (Data Saver, deviceMemory <= 4GB, manual override); a deferred
+ * reliable signals (Data Saver, deviceMemory <= 6GB, manual override); a deferred
  * rAF sampling pass upgrades to low-end only when the median frame exceeds 28ms.
  */
 describe('Device Performance Detection Logic', () => {
@@ -17,7 +17,7 @@ describe('Device Performance Detection Logic', () => {
     memory: number | null,
     isSaveData = false,
     forceLowPerf = false
-  ) => forceLowPerf || isSaveData || (memory !== null && memory <= 4);
+  ) => forceLowPerf || isSaveData || (memory !== null && memory <= 6);
 
   it('does NOT use core count as a signal anymore', () => {
     // 8-core budget phone must NOT be flagged high-end by core count alone;
@@ -25,12 +25,13 @@ describe('Device Performance Detection Logic', () => {
     expect(initialIsLowPerf(null)).toBe(false); // 8-core, unknown RAM, no save-data
   });
 
-  it('flags <=4GB RAM as low-end', () => {
+  it('flags <=6GB RAM as low-end (budget/entry tier)', () => {
     expect(initialIsLowPerf(3)).toBe(true);
     expect(initialIsLowPerf(4)).toBe(true);
+    expect(initialIsLowPerf(6)).toBe(true);
   });
 
-  it('does NOT flag >4GB RAM as low-end (awaiting runtime jank evidence)', () => {
+  it('does NOT flag >6GB RAM as low-end (awaiting runtime jank evidence)', () => {
     expect(initialIsLowPerf(8)).toBe(false);
     expect(initialIsLowPerf(16)).toBe(false);
   });

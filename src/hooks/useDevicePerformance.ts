@@ -25,7 +25,9 @@ export interface DevicePerformanceInfo {
  *
  * Signals kept (reliable):
  *   - `navigator.connection.saveData` (Data Saver) — explicit user signal.
- *   - `navigator.deviceMemory <= 4` (GB) — Chrome reports reliably, useful hint.
+ *   - `navigator.deviceMemory <= 6` (GB) — Chrome reports reliably. 6GB is the
+ *     budget/entry tier (4–6GB MediaTek/Snapdragon 6-series); iOS hides this so
+ *     iPhones fall through to the rAF test instead.
  *   - Runtime frame-drop detection (NEW): sample requestAnimationFrame deltas;
  *     if the median frame exceeds ~28ms (i.e. sustained < ~36fps), flag low-end.
  *
@@ -70,7 +72,7 @@ export function useDevicePerformance(): DevicePerformanceInfo {
 
     // NOTE: concurrency is intentionally NOT used to decide isLowPerf anymore.
     // Initial guess uses only reliable signals; runtime jank detection refines it.
-    const isLowPerf = forceLowPerf || isSaveData || (memory !== null && memory <= 4);
+    const isLowPerf = forceLowPerf || isSaveData || (memory !== null && memory <= 6);
 
     return { isLowPerf, concurrency, memory, prefersReducedMotion, isThrottledCpu: isLowPerf };
   });
@@ -82,21 +84,29 @@ export function useDevicePerformance(): DevicePerformanceInfo {
     if (flaggedRef.current) return; // already low-end (or forced) — no need to measure
 
     // ── Runtime jank detection ──────────────────────────────────────────────
-    // Sample ~45 rAF frames (~0.75s on a 60Hz device). Compute the MEDIAN delta.
+    // Sample ~60 rAF frames (~1s on a 60Hz device). Compute the MEDIAN delta.
     // A sustained median above ~28ms means the device is rendering under ~36fps
     // → genuinely low-end (or heavily throttled). Upgrade to low-perf once.
+    //
+    // WHY a fixed setTimeout (NOT requestIdleCallback): iOS Safari has no
+    // requestIdleCallback, so it used to fall back to a 300ms timer and measure
+    // during the post-mount animation burst → false "low-end" on fast iPhones.
+    // Android Chrome deferred to true idle → measured clean → false "high-end"
+    // on budget phones. A fixed 1000ms delay measures both under the same,
+    // settled conditions.
     let rafId = 0;
-    let last = performance.now();
+    let firstFrame = true;
+    let last = 0;
     const samples: number[] = [];
-    const targetSamples = 45;
+    const targetSamples = 60;
 
     const tick = (now: number) => {
-      const delta = now - last;
-      last = now;
-      // Skip the first sample (includes the initial call latency).
-      if (samples.length > 0 || delta < 1000) {
-        samples.push(delta);
+      if (!firstFrame) {
+        samples.push(now - last);
       }
+      firstFrame = false;
+      last = now;
+
       if (samples.length < targetSamples) {
         rafId = requestAnimationFrame(tick);
       } else {
@@ -110,19 +120,12 @@ export function useDevicePerformance(): DevicePerformanceInfo {
       }
     };
 
-    // Defer measurement until the page is idle — avoids measuring during hydration.
-    const idleId =
-      'requestIdleCallback' in window
-        ? (window as any).requestIdleCallback(() => {
-            rafId = requestAnimationFrame(tick);
-          }, { timeout: 1500 })
-        : setTimeout(() => {
-            rafId = requestAnimationFrame(tick);
-          }, 300);
+    const delayId = setTimeout(() => {
+      rafId = requestAnimationFrame(tick);
+    }, 1000);
 
     return () => {
-      if ('cancelIdleCallback' in window) (window as any).cancelIdleCallback(idleId);
-      else clearTimeout(idleId);
+      clearTimeout(delayId);
       cancelAnimationFrame(rafId);
     };
   }, []);
