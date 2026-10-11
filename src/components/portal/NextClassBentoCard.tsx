@@ -148,12 +148,13 @@ export function NextClassBentoCard({
   // Client-side live timer (zero DB polling) updating every 30 seconds
   const [now, setNow] = useState(() => getMalaysianNow());
 
-  // Collapsible card state persisted in localStorage
+  // Collapsible card state persisted in localStorage - defaults to COMPACT (isCollapsed = true)
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('portal_next_class_collapsed') === 'true';
+      const saved = localStorage.getItem('portal_next_class_collapsed');
+      return saved !== null ? saved === 'true' : true; // DEFAULT TO COMPACT
     } catch {
-      return false;
+      return true;
     }
   });
 
@@ -251,100 +252,150 @@ export function NextClassBentoCard({
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // COLLAPSED COMPACT BAR (For active states)
+  // COLLAPSED COMPACT BAR (Default View)
   // ─────────────────────────────────────────────────────────────────────────────
   if (isCollapsed && stateData.type !== 'EMPTY') {
     return (
       <div
+        role="button"
+        tabIndex={0}
+        onClick={toggleCollapsed}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCollapsed(); } }}
         className={cn(
-          'w-full rounded-2xl p-3 sm:p-4 transition-all duration-300',
-          'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md backdrop-blur-md',
+          'w-full rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer select-none',
+          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'shadow-sm hover:shadow-md hover:border-[#2E3A2F]/20 dark:hover:border-[#F8F6EE]/20 backdrop-blur-md',
+          'group',
           className
         )}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+          {/* Left Info Section */}
+          <div className="flex items-center gap-3 min-w-0">
             {stateData.type === 'TODAY_ACTIVE' ? (
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Clock className="w-4 h-4" />
+              <span
+                className={cn(
+                  'flex items-center justify-center w-8 h-8 rounded-xl shrink-0 transition-transform group-hover:scale-105',
+                  stateData.isOngoing
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                )}
+              >
+                {stateData.isOngoing ? (
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                ) : (
+                  <Clock className="w-4 h-4" />
+                )}
               </span>
             ) : stateData.type === 'COMPLETED_TODAY' ? (
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
                 <CheckCircle2 className="w-4 h-4" />
               </span>
             ) : (
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+              <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
                 <Calendar className="w-4 h-4" />
               </span>
             )}
 
-            <div className="min-w-0 flex items-center gap-2 flex-wrap">
+            <div className="min-w-0 space-y-0.5">
               {stateData.type === 'TODAY_ACTIVE' ? (
                 <>
-                  <span className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate">
-                    {stateData.isOngoing ? 'Kelas Semasa' : 'Kelas Seterusnya'}: {stateData.entry.course_code}
-                  </span>
-                  <span className="text-[11px] text-[#556453] dark:text-[#A3B39F]">
-                    ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 truncate">
-                    · {stateData.entry.is_online ? 'Dalam Talian' : getLocationLabel(stateData.entry)}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+                      {stateData.entry.course_code}
+                    </span>
+                    <span className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium">
+                      ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                    {stateData.entry.is_online ? (
+                      <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
+                        <Laptop className="w-3 h-3" />
+                        <span>Dalam Talian (Teams)</span>
+                      </span>
+                    ) : (
+                      <span className="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
+                        <span className="truncate">{getLocationLabel(stateData.entry)}</span>
+                      </span>
+                    )}
+                  </div>
                 </>
               ) : stateData.type === 'COMPLETED_TODAY' ? (
                 <>
-                  <span className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                  <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
                     Semua kelas selesai hari ini
-                  </span>
+                  </div>
                   {stateData.nextClass && (
-                    <span className="text-[11px] text-[#556453] dark:text-[#A3B39F] truncate">
-                      · Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
-                    </span>
+                    <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                    </div>
                   )}
                 </>
               ) : (
                 <>
-                  <span className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                  <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
                     Tiada kelas hari ini
-                  </span>
+                  </div>
                   {stateData.nextClass && (
-                    <span className="text-[11px] text-[#556453] dark:text-[#A3B39F] truncate">
-                      · Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
-                    </span>
+                    <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                    </div>
                   )}
                 </>
               )}
             </div>
           </div>
 
+          {/* Right Action & Expand Button */}
           <div className="flex items-center gap-2 shrink-0">
-            {stateData.type === 'TODAY_ACTIVE' && !stateData.entry.is_online && (
+            {stateData.type === 'TODAY_ACTIVE' && (
+              stateData.entry.is_online ? (
+                <a
+                  href="https://teams.microsoft.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                  title="Sertai Kelas Dalam Talian"
+                >
+                  <Laptop className="w-3.5 h-3.5" />
+                  <span>Sertai</span>
+                  <ExternalLink className="w-3 h-3 opacity-80" />
+                </a>
+              ) : (
+                <Link
+                  to={getPolyMapsUrl(stateData.entry)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-all shadow-sm group-hover:scale-105"
+                  title="Tunjuk Arah ke Bilik Kelas"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-rose-400 dark:text-rose-600 shrink-0" />
+                  <span>Tunjuk Arah</span>
+                  <ArrowRight className="w-3 h-3 opacity-80" />
+                </Link>
+              )
+            )}
+
+            {(stateData.type === 'COMPLETED_TODAY' || stateData.type === 'NO_CLASS_TODAY') && (
               <Link
-                to={getPolyMapsUrl(stateData.entry)}
-                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
-                title="Panduan PolyMaps"
+                to="/akademik/takwim"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-bold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               >
-                <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                <span>Peta</span>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Jadual</span>
               </Link>
             )}
-            <Link
-              to="/akademik/takwim"
-              className="text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-              title="Jadual Penuh"
-            >
-              Jadual
-            </Link>
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-              title="Kembangkan kad"
-              aria-label="Kembangkan kad"
+
+            {/* Subtle expand chevron */}
+            <span
+              className="p-1 rounded-lg text-[#556453] dark:text-[#A3B39F] group-hover:text-[#2E3A2F] dark:group-hover:text-[#F8F6EE] group-hover:bg-[#2E3A2F]/5 dark:group-hover:bg-[#F8F6EE]/5 transition-colors"
+              title="Kembangkan untuk maklumat penuh"
             >
               <ChevronDown className="w-4 h-4" />
-            </button>
+            </span>
           </div>
         </div>
       </div>
@@ -398,19 +449,25 @@ export function NextClassBentoCard({
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // STATE 1: Upcoming or Ongoing Class Today
+  // STATE 1: Upcoming or Ongoing Class Today (Expanded State)
   // ─────────────────────────────────────────────────────────────────────────────
   if (stateData.type === 'TODAY_ACTIVE') {
     const { entry, isOngoing } = stateData;
     const typeBadge = CLASS_TYPE_BADGES[entry.class_type] || CLASS_TYPE_BADGES.KULIAH;
 
-    // Countdown calculation
+    const startMin = parseTimeToMinutes(entry.start_time);
+    const endMin = parseTimeToMinutes(entry.end_time);
+    const totalDuration = Math.max(endMin - startMin, 1);
+    const elapsedMinutes = Math.min(Math.max(now.currentMinutes - startMin, 0), totalDuration);
+    const progressPercent = Math.round((elapsedMinutes / totalDuration) * 100);
+
+    // Clean Countdown text (No redundant labels)
     let countdownBadgeText = 'Sedang berlangsung';
     if (isOngoing) {
-      const remainingMin = parseTimeToMinutes(entry.end_time) - now.currentMinutes;
+      const remainingMin = endMin - now.currentMinutes;
       countdownBadgeText = remainingMin > 0 ? `Sedang berlangsung · Berbaki ${remainingMin} min` : 'Sedang berlangsung';
     } else {
-      const diffMin = parseTimeToMinutes(entry.start_time) - now.currentMinutes;
+      const diffMin = startMin - now.currentMinutes;
       if (diffMin <= 1) {
         countdownBadgeText = 'Bermula sebentar lagi';
       } else if (diffMin < 60) {
@@ -422,111 +479,133 @@ export function NextClassBentoCard({
       }
     }
 
+    // Check if course_name is identical to course_code to avoid redundant printing
+    const hasDistinctCourseName = Boolean(
+      entry.course_name && entry.course_name.trim().toUpperCase() !== entry.course_code.trim().toUpperCase()
+    );
+
     return (
       <div
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-          'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
           'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
           className
         )}
       >
-        {/* Top Header Row */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE]">
-              <Clock className="w-3 h-3" />
-              <span>{isOngoing ? 'Kelas Semasa' : 'Kelas Seterusnya Hari Ini'}</span>
-            </span>
-
-            {/* Countdown / Live Indicator */}
+        {/* Top Bar: Only the live countdown pill + Minimize button (No redundant headers) */}
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border',
+              isOngoing
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
+            )}
+          >
             <span
               className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border',
-                isOngoing
-                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
-                  : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
+                'w-2 h-2 rounded-full',
+                isOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
               )}
-            >
-              <span
-                className={cn(
-                  'w-2 h-2 rounded-full',
-                  isOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
-                )}
-              />
-              <span>{countdownBadgeText}</span>
-            </span>
-          </div>
+            />
+            <span>{countdownBadgeText}</span>
+          </span>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/akademik/takwim"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-            >
-              <span>Jadual Penuh</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-              title="Kecilkan kad"
-              aria-label="Kecilkan kad"
-            >
-              <ChevronUp className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            title="Kecilkan kad"
+            aria-label="Kecilkan kad"
+          >
+            <span>Kecilkan</span>
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Middle Subject Info */}
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE]">
-              {entry.course_code}
-            </span>
-            <span
-              className={cn(
-                'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border',
-                typeBadge.badgeClass
-              )}
-            >
-              {typeBadge.label}
-            </span>
-          </div>
+        {/* Course Details (Non-redundant: only prints code once if no distinct name) */}
+        <div className="space-y-2">
+          {hasDistinctCourseName ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE]">
+                  {entry.course_code}
+                </span>
+                <span
+                  className={cn(
+                    'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                    typeBadge.badgeClass
+                  )}
+                >
+                  {typeBadge.label}
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+                {entry.course_name}
+              </h3>
+            </>
+          ) : (
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-xl sm:text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+                {entry.course_code}
+              </h3>
+              <span
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border',
+                  typeBadge.badgeClass
+                )}
+              >
+                {typeBadge.label}
+              </span>
+            </div>
+          )}
 
-          <h3 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-            {entry.course_name}
-          </h3>
-
-          {/* Time, Lecturer, & Location Meta */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-xs text-[#556453] dark:text-[#A3B39F]">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
+          {/* Meta Chips */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs text-[#556453] dark:text-[#A3B39F]">
+            <div className="flex items-center gap-1.5 font-medium">
+              <Clock className="w-3.5 h-3.5 text-blue-500" />
               <span>
                 {formatDisplayTime(entry.start_time)} - {formatDisplayTime(entry.end_time)}
               </span>
             </div>
 
-            {/* Room or Online Badge */}
             {entry.is_online ? (
-              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-medium">
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold">
                 <Laptop className="w-3.5 h-3.5" />
-                <span>DALAM TALIAN (TEAMS)</span>
+                <span>Dalam Talian (Microsoft Teams)</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-[#2E3A2F] dark:text-[#F8F6EE] font-medium">
-                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+              <div className="flex items-center gap-1.5 text-[#2E3A2F] dark:text-[#F8F6EE] font-semibold">
+                <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                 <span>{getLocationLabel(entry)}</span>
               </div>
             )}
 
             {entry.lecturer_code && (
               <div className="flex items-center gap-1 text-[11px] text-[#556453] dark:text-[#A3B39F]">
+                <BookOpen className="w-3 h-3 opacity-70" />
                 <span>Pensyarah:</span>
-                <span className="font-semibold">{entry.lecturer_code}</span>
+                <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{entry.lecturer_code}</span>
               </div>
             )}
           </div>
+
+          {/* Ongoing Class Progress Bar */}
+          {isOngoing && (
+            <div className="pt-2 space-y-1">
+              <div className="w-full bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-[#556453] dark:text-[#A3B39F] font-medium">
+                <span>{elapsedMinutes} min berlalu</span>
+                <span>{totalDuration - elapsedMinutes} min berbaki</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons Row */}
@@ -536,7 +615,7 @@ export function NextClassBentoCard({
               href="https://teams.microsoft.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm"
             >
               <Laptop className="w-4 h-4" />
               <span>Sertai Kelas Dalam Talian</span>
@@ -545,17 +624,17 @@ export function NextClassBentoCard({
           ) : (
             <Link
               to={getPolyMapsUrl(entry)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-sm"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-sm"
             >
               <MapPin className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
-              <span>Panduan PolyMaps</span>
+              <span>Tunjuk Arah PolyMaps</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           )}
 
           <Link
             to="/akademik/takwim"
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#2E3A2F]/15 dark:border-[#F8F6EE]/15 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#2E3A2F]/15 dark:border-[#F8F6EE]/15 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 transition-colors"
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Lihat Jadual Penuh</span>
@@ -575,7 +654,7 @@ export function NextClassBentoCard({
       <div
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-          'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
           'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
           className
         )}
@@ -586,52 +665,45 @@ export function NextClassBentoCard({
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                  Hari Ini Selesai
-                </span>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-block">
+                Hari Ini Selesai
+              </span>
               <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
                 Semua kelas selesai untuk hari ini
               </h3>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
-                Semua sesi kuliah anda telah tamat. Berehat atau buat persediaan untuk sesi kelas yang seterusnya.
+                Semua sesi kuliah anda telah tamat. Berehat atau buat persediaan untuk sesi kelas seterusnya.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              to="/akademik/takwim"
-              className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-            >
-              <span>Jadual Penuh</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-              title="Kecilkan kad"
-              aria-label="Kecilkan kad"
-            >
-              <ChevronUp className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
+            title="Kecilkan kad"
+            aria-label="Kecilkan kad"
+          >
+            <span>Kecilkan</span>
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Next Class Preview */}
         {nextClass && (
-          <div className="rounded-xl p-3 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="rounded-xl p-3.5 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
                 <Clock className="w-3.5 h-3.5 text-blue-500" />
                 <span>
-                  Kelas Seterusnya: {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
+                  Seterusnya {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
                 </span>
               </div>
               <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                {nextClass.entry.course_code} - {nextClass.entry.course_name}
+                {nextClass.entry.course_code}
+                {nextClass.entry.course_name && nextClass.entry.course_name !== nextClass.entry.course_code
+                  ? ` - ${nextClass.entry.course_name}`
+                  : ''}
               </div>
               <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
                 {nextClass.entry.is_online ? (
@@ -681,7 +753,7 @@ export function NextClassBentoCard({
     <div
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-        'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+        'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
         'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
         className
       )}
@@ -708,38 +780,33 @@ export function NextClassBentoCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            to="/akademik/takwim"
-            className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-          >
-            <span>Jadual Penuh</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-            title="Kecilkan kad"
-            aria-label="Kecilkan kad"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
+          title="Kecilkan kad"
+          aria-label="Kecilkan kad"
+        >
+          <span>Kecilkan</span>
+          <ChevronUp className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Next Class Preview (e.g. Next Monday) */}
       {nextClass && (
-        <div className="rounded-xl p-3 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="rounded-xl p-3.5 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
               <Clock className="w-3.5 h-3.5 text-blue-500" />
               <span>
-                Kelas Seterusnya: {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
+                Seterusnya {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
               </span>
             </div>
             <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-              {nextClass.entry.course_code} - {nextClass.entry.course_name}
+              {nextClass.entry.course_code}
+              {nextClass.entry.course_name && nextClass.entry.course_name.trim().toUpperCase() !== nextClass.entry.course_code.trim().toUpperCase()
+                ? ` - ${nextClass.entry.course_name}`
+                : ''}
             </div>
             <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
               {nextClass.entry.is_online ? (

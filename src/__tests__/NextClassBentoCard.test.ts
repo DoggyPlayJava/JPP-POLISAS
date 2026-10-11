@@ -149,12 +149,20 @@ describe('NextClassBentoCard Implementation & Parity', () => {
     expect(url).not.toContain('?room=q=');
   });
 
-  it('verifies collapsible functionality with localStorage persistence', () => {
+  it('verifies collapsible functionality with localStorage persistence and default compact state', () => {
     const content = fs.readFileSync(cardPath, 'utf-8');
     expect(content).toContain('portal_next_class_collapsed');
     expect(content).toContain('isCollapsed');
     expect(content).toContain('toggleCollapsed');
     expect(content).toContain('ChevronDown');
     expect(content).toContain('ChevronUp');
+    // Default is collapsed (compact view)
+    expect(content).toContain("return saved !== null ? saved === 'true' : true;");
+    // Direct action buttons in compact bar stop propagation
+    expect(content).toContain('onClick={(e) => e.stopPropagation()}');
+    // Prevents redundant header repetitions
+    expect(content).toContain('hasDistinctCourseName');
+    // Includes ongoing progress bar
+    expect(content).toContain('progressPercent');
   });
 });
