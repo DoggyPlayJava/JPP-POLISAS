@@ -101,11 +101,26 @@ export function buildUnifiedTimeline(
   errors.forEach((err, idx) => {
     const isCritical = err.severity === 'CRITICAL';
     const isWarn = err.severity === 'WARNING';
+    const isSlow = err.error_type === 'slow_endpoint';
+    const isHttp = err.error_type === 'client_http_error';
     const { path, name } = extractPageRoute(err.endpoint);
 
     // Clean human readable error message
     let displayTitle = err.message || err.error_type || 'Ralat Runtime dikesan';
-    if (displayTitle === 'Script error.') {
+    let source = 'Crash & Error Tracker';
+    let badge = err.severity;
+
+    if (isSlow) {
+      // "GET /api/polymart — 2310ms (status 200)"  →  title + friendly source
+      const m = displayTitle.match(/^(\w+) (\/api\/[^\s]+)\s+—\s+(\d+)ms\s+\(status (\d+)\)/);
+      displayTitle = m ? `${m[1]} ${m[2]}` : displayTitle;
+      source = 'Slow Endpoint (>1s)';
+      badge = 'SLOW';
+    } else if (isHttp) {
+      // "HTTP 500 pada /api/xxx"  →  friendly
+      source = 'HTTP Response Error';
+      badge = 'HTTP ' + (err.status_code || 'ERR');
+    } else if (displayTitle === 'Script error.') {
       displayTitle = err.filename
         ? `Script error pada ${err.filename.split('/').pop()}`
         : 'Script error (Cross-origin bundle)';
@@ -118,8 +133,8 @@ export function buildUnifiedTimeline(
       title: displayTitle,
       subtitle: err.stack ? err.stack.split('\n')[0] : (err.filename || undefined),
       timestamp: err.occurred_at || new Date().toISOString(),
-      badge: err.severity,
-      source: 'Crash & Error Tracker',
+      badge,
+      source,
       endpoint: err.endpoint,
       pagePath: path,
       pageTitle: name,
