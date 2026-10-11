@@ -230,16 +230,7 @@ export function CompleteProfileModal() {
       });
   }, []);
 
-  // ── Lock body scroll while modal is open ──────────────────────────────
-  // (a) stops the portal behind the modal from scrolling, and (b) signals
-  // GlobalPullToUpdate to disable its touchmove listener -> fixes Android lag.
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
+
 
   // ── Profile completeness ─────────────────────────────────────────────────
   const isStaffRole = ['STAFF', 'SUPER_ADMIN_JPP', 'ADMIN'].includes(profile?.role ?? '');
