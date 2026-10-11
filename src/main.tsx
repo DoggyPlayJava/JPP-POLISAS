@@ -89,6 +89,31 @@ import './index.css'
       error_type: 'client_promise_rejection',
     });
   });
+
+  // Track non-2xx API responses (fetch yang return 400/500 tapi tak throw)
+  // Wrapper patch window.fetch — log bila response status >= 400 (dedup 10s per url)
+  const _origFetch = window.fetch.bind(window);
+  const _httpErrSeen = new Map();
+  window.fetch = async (...args) => {
+    const res = await _origFetch(...args);
+    try {
+      const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
+      if (res && res.status >= 400 && url && !url.includes('/api/system-errors')) {
+        const key = res.status + '|' + url;
+        const now = Date.now();
+        if (now - (_httpErrSeen.get(key) || 0) > 10000) {
+          _httpErrSeen.set(key, now);
+          send({
+            message: 'HTTP ' + res.status + ' pada ' + url,
+            url: location.href,
+            error_type: 'client_http_error',
+            filename: url,
+          });
+        }
+      }
+    } catch (_) { /* ignore */ }
+    return res;
+  };
 })();
 
 console.log('Dependencies imported, grabbing root...');
