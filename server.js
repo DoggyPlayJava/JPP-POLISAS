@@ -2951,7 +2951,71 @@ app.get('/api/system-telemetry', requireAuth, async (req, res) => {
             .gte('snapshot_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
             .order('snapshot_date', { ascending: true });
 
+        // ── Resilience Score (Single Source of Truth: backend) ──
+        // Markah asas 100, tolak berdasarkan insiden diagnostik dikesan.
+        const deductions = [];
+        let resilienceScore = 100;
+
+        // 1. Memori Heap > 80%
+        if (memUsage.heapTotal > 0 && (memUsage.heapUsed / memUsage.heapTotal) > 0.8) {
+            resilienceScore -= 10;
+            deductions.push({ code: 'heap_high', label: 'Penggunaan memori heap melebihi 80%', points: -10 });
+        }
+        // 2. Sambungan DB > 80%
+        const dbMax = diagnostics.database.max_connections || 100;
+        const dbActive = diagnostics.database.active_connections || 0;
+        if (dbMax > 0 && (dbActive / dbMax) > 0.8) {
+            resilienceScore -= 15;
+            deductions.push({ code: 'db_connections_high', label: 'Sambungan pangkalan data melebihi 80%', points: -15 });
+        }
+        // 3. WAL Retained
+        const walMb = diagnostics.database.wal_retained_mb || 0;
+        if (walMb > 1024) {
+            resilienceScore -= 30;
+            deductions.push({ code: 'wal_critical', label: `WAL Retained ${walMb} MB (melebihi 1GB — risiko crash)`, points: -30 });
+        } else if (walMb > 512) {
+            resilienceScore -= 15;
+            deductions.push({ code: 'wal_warning', label: `WAL Retained ${walMb} MB (melebihi 512MB)`, points: -15 });
+        }
+        // 4. SLA Kebajikan (maks -25)
+        const slaBreach = diagnostics.kebajikan.sla_breached || 0;
+        if (slaBreach > 0) {
+            const pts = Math.min(slaBreach * 10, 25);
+            resilienceScore -= pts;
+            deductions.push({ code: 'kebajikan_sla', label: `${slaBreach} tiket e-Kebajikan melepasi SLA`, points: -pts });
+        }
+        // 5. PolyRider SOS tersekat
+        const sosStuck = diagnostics.polyrider.stuck_emergency || 0;
+        if (sosStuck > 0) {
+            const pts = sosStuck * 20;
+            resilienceScore -= pts;
+            deductions.push({ code: 'polyrider_sos', label: `${sosStuck} trip SOS tanpa respons rider`, points: -pts });
+        }
+        // 6. PolyMart pesanan tertunggak > 48 jam
+        const pmStale = diagnostics.polymart.pending_stale || 0;
+        if (pmStale > 0) {
+            const pts = pmStale * 5;
+            resilienceScore -= pts;
+            deductions.push({ code: 'polymart_stale', label: `${pmStale} pesanan PolyMart tertunggak > 48 jam`, points: -pts });
+        }
+        // 7. Token AI > 90%
+        if ((diagnostics.ai.usage_pct || 0) > 90) {
+            resilienceScore -= 10;
+            deductions.push({ code: 'ai_quota', label: 'Penggunaan token AI melebihi 90%', points: -10 });
+        }
+
+        // Clamp 0-100
+        resilienceScore = Math.max(0, Math.min(100, resilienceScore));
+
+        const resilienceRating =
+            resilienceScore >= 90 ? 'Cemerlang' :
+            resilienceScore >= 75 ? 'Stabil' :
+            resilienceScore >= 50 ? 'Perhatian Diperlukan' : 'Kritikal';
+
         return res.status(200).json({
+            resilience_score: resilienceScore,
+            resilience_rating: resilienceRating,
+            resilience_deductions: deductions,
             server: {
                 uptime_seconds: Math.floor(uptimeSeconds),
                 memory: {
