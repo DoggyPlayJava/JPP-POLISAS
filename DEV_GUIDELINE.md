@@ -432,6 +432,7 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
 | `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
+| `supabase/migrations/20261011000002_imaps_missing_reports_dedup_rpc.sql` | RPC pelaporan automatik bilik tiada dalam PolyMaps dengan kaunter deduplikasi atomik selamat RLS |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 
@@ -3983,3 +3984,33 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
 - **Penghantaran Saluran Dwi-Pemberitahuan:**
   - Menulis rekod notifikasi ke dalam jadual `notifications` (`module: 'AKADEMIK'`, `type: 'timetable_reminder'`).
   - Menghantar Web Push Notification ke peranti berdaftar melalui `webpush.sendNotification` berserta pembersihan langganan mati (HTTP 410/404).
+
+### 32.6 Prioriti Bilik Fizikal & Sokongan Bilik Komposit (`src/lib/timetableParser.ts` & `src/lib/polyMapsResolver.ts`)
+
+- **Prioriti Bilik Fizikal Berbanding Online:**
+  - Sekiranya kata kunci online (seperti `EMSTEAM` atau `AMSTEAM`) bertindih dengan kod bilik darjah fizikal di dalam sel waktu yang sama, sistem **mengutamakan bilik darjah fizikal terlebih dahulu** (`is_online = false`).
+  - Hanya jika tiada sebarang bilik darjah fizikal ditemui barulah slot tersebut ditandakan sebagai kelas dalam talian (`is_online = true`).
+- **Pengendalian Bilik Komposit / Gabungan (cth: `EA301/EA302`):**
+  - Teks penuh bilik komposit dikekalkan dalam `room_raw` untuk rujukan visual pelajar.
+  - Untuk pemetaan PolyMaps, enjin resolusi membelah kod bilik mengikut `/` dan memadankan koordinat berdasarkan bilik utama (`EA301`).
+
+### 32.7 Ciri Kad Bento Boleh Dikecilkan & Paparan Listing Lalai
+
+- **Kad Bento Boleh Dikecilkan (*Collapsible Bento Box*):**
+  - Kad `NextClassBentoCard.tsx` di Portal Page menyokong pengecilan kepada bar ringkas satu baris untuk menjimatkan ruang skrin (terutamanya pada peranti mudah alih).
+  - Keadaan pilihan pengguna disimpan di dalam `localStorage` (`portal_next_class_collapsed`).
+- **Paparan Jadual Waktu e-Akademik (`MyTimetableView.tsx`):**
+  - Mod paparan lalai ditetapkan kepada **Listing / Agenda** (`agenda`) untuk pengalaman tatalan bersih dan pantas.
+  - Tab pilihan **"Semua"** disediakan (`selectedDay = 0`) yang memaparkan keseluruhan kelas Isnin hingga Jumaat dikelompokkan mengikut hari, membolehkan pelajar menatal jadual seminggu penuh tanpa perlu menekan satu per satu tab hari.
+
+### 32.8 Pelaporan Automatik Bilik Tiada dengan Kaunter Deduplikasi Selamat RLS (`report_missing_timetable_room`)
+
+- **Isu Keselamatan & Halangan RLS:**
+  - Jadual `imaps_missing_reports` menguatkuasakan polisi RLS di mana pelajar hanya boleh membaca dan menambah laporan milik sendiri (`student_id = (SELECT auth.uid())`).
+  - Semakan duplikasi client-side adalah mustahil tanpa membocorkan laporan pelajar lain dan gagal apabila pelajar cuba mengemas kini baris milik pelajar lain.
+- **Penyelesaian Seni Bina (SECURITY DEFINER RPC):**
+  - Menggunakan fungsi RPC PostgreSQL `report_missing_timetable_room(p_room_code, p_description)` dengan hak akses `SECURITY DEFINER`.
+  - Fungsi ini menormalkan kod bilik kepada huruf besar (`UPPER(TRIM(p_room_code))`), mengunci rekod sedia ada yang berstatus `pending` (`FOR UPDATE`), dan menaikkan nilai lajur `report_count` secara atomik (`report_count = report_count + 1`).
+  - Sekiranya belum ada laporan untuk bilik tersebut, fungsi membuat baris baru dengan `report_count = 1`.
+  - Panel Admin JPP (`JppPolyMapsAdmin.tsx`) memaparkan lencana jumlah laporan pelajar (cth: *"2 Laporan"*) untuk memudahkan pentadbir mengenalpasti bilik yang paling kerap diperlukan pelajar.
+

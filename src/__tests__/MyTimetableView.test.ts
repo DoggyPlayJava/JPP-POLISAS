@@ -32,4 +32,11 @@ describe('MyTimetableView & AkademikTakwimPage Unified Tabs', () => {
       expect(emojis).toEqual([]);
     }
   });
+
+  it('verifies default view mode is listing/agenda with "Semua" option', () => {
+    const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
+    expect(content).toContain("useState<'grid' | 'agenda'>('agenda')");
+    expect(content).toContain('setSelectedDay(0)');
+    expect(content).toContain('>Semua</span>');
+  });
 });

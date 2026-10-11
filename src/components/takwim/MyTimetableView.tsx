@@ -82,14 +82,10 @@ export function MyTimetableView() {
   const [settings, setSettings] = useState<StudentTimetableSettings | null>(null);
   const [metadata, setMetadata] = useState<StudentTimetableMetadata | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'agenda'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'agenda'>('agenda');
 
-  // Default to today if weekday (1=Mon..5=Fri), otherwise Monday (1)
-  const initialDay = useMemo(() => {
-    const day = new Date().getDay();
-    return day >= 1 && day <= 5 ? day : 1;
-  }, []);
-  const [selectedDay, setSelectedDay] = useState<number>(initialDay);
+  // Default to 0 ("Semua" / All days) for continuous week scroll, or specific day when selected
+  const [selectedDay, setSelectedDay] = useState<number>(0);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -508,8 +504,30 @@ export function MyTimetableView() {
       ) : (
         /* ── Daily Agenda List (Mobile Segmented) ── */
         <div className="space-y-4">
-          {/* Day Segmented Tabs */}
+          {/* Day Segmented Tabs (Semua + Isnin..Jumaat) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {/* Tab: Semua */}
+            <button
+              type="button"
+              onClick={() => setSelectedDay(0)}
+              className={cn(
+                'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border',
+                selectedDay === 0
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                  : 'bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/10'
+              )}
+            >
+              <span>Semua</span>
+              <span
+                className={cn(
+                  'text-[10px] font-black px-1.5 py-0.2 rounded-md',
+                  selectedDay === 0 ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-white/10'
+                )}
+              >
+                {entries.length}
+              </span>
+            </button>
+
             {DAYS.map(day => {
               const count = entriesByDay[day.value]?.length || 0;
               const isSelected = selectedDay === day.value;
@@ -549,24 +567,71 @@ export function MyTimetableView() {
             })}
           </div>
 
-          {/* Agenda items for selected day */}
-          <div className="space-y-2.5 max-w-3xl">
-            {(entriesByDay[selectedDay] || []).length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]">
-                <Clock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-2" />
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
-                  Tiada kelas dijadualkan pada hari ini
-                </p>
-              </div>
+          {/* Agenda items */}
+          <div className="space-y-4 max-w-3xl">
+            {selectedDay === 0 ? (
+              /* All Days Listing grouped by day */
+              entries.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]">
+                  <Clock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-2" />
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
+                    Tiada kelas berjadual
+                  </p>
+                </div>
+              ) : (
+                DAYS.map(day => {
+                  const daySlots = entriesByDay[day.value] || [];
+                  if (daySlots.length === 0) return null;
+                  const isToday = new Date().getDay() === day.value;
+
+                  return (
+                    <div key={day.value} className="space-y-2">
+                      <div className="flex items-center gap-2 px-1 pt-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                          {day.label}
+                        </span>
+                        {isToday && (
+                          <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 text-[9px] font-black px-1.5 py-0.2">
+                            Hari Ini
+                          </Badge>
+                        )}
+                        <span className="text-[10px] text-slate-400 dark:text-white/30">
+                          ({daySlots.length} slot)
+                        </span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {daySlots.map(slot => (
+                          <ClassCard
+                            key={slot.id}
+                            entry={slot}
+                            onDelete={() => handleDeleteSlot(slot.id)}
+                            extended
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )
             ) : (
-              (entriesByDay[selectedDay] || []).map(slot => (
-                <ClassCard
-                  key={slot.id}
-                  entry={slot}
-                  onDelete={() => handleDeleteSlot(slot.id)}
-                  extended
-                />
-              ))
+              /* Single Day Listing */
+              (entriesByDay[selectedDay] || []).length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]">
+                  <Clock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-2" />
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
+                    Tiada kelas dijadualkan pada hari ini
+                  </p>
+                </div>
+              ) : (
+                (entriesByDay[selectedDay] || []).map(slot => (
+                  <ClassCard
+                    key={slot.id}
+                    entry={slot}
+                    onDelete={() => handleDeleteSlot(slot.id)}
+                    extended
+                  />
+                ))
+              )
             )}
           </div>
         </div>

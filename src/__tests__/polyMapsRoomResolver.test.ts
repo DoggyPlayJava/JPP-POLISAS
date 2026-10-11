@@ -91,4 +91,16 @@ describe('PolyMaps Room Location Resolver (search_tags & aliases)', () => {
     expect(resolveRoomLocation('', mockLocations)).toBeUndefined();
     expect(resolveRoomLocation('EA301', [])).toBeUndefined();
   });
+
+  it('resolves composite / split rooms to primary location (EA301/EA302)', () => {
+    const res = resolveRoomLocation('EA301/EA302', mockLocations);
+    expect(res).toBeDefined();
+    expect(res?.id).toBe('uuid-ea301');
+    expect(res?.room_code).toBe('EA301');
+
+    // Also with spaces around slash or aliases in composite
+    const resWithSpace = resolveRoomLocation('A302 / A301', mockLocations);
+    expect(resWithSpace).toBeDefined();
+    expect(resWithSpace?.id).toBe('uuid-ea302');
+  });
 });

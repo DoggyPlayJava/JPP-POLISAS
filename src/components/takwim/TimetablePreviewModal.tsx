@@ -442,6 +442,32 @@ export function TimetablePreviewModal({
         throw metaError;
       }
 
+      // 4. Auto-report unrecognized physical rooms to JPP (deduplicated via RPC)
+      try {
+        const unrecognizedRooms = Array.from(
+          new Set(
+            slots
+              .filter(s => !s.is_online && !s.location_id && s.room_raw?.trim())
+              .map(s => s.room_raw.trim().toUpperCase())
+          )
+        );
+
+        if (unrecognizedRooms.length > 0) {
+          Promise.all(
+            unrecognizedRooms.map(roomCode =>
+              supabase.rpc('report_missing_timetable_room', {
+                p_room_code: roomCode,
+                p_description: `Dikesan daripada jadual waktu kelas ${className.trim().toUpperCase()} (${session.trim() || 'Semasa'})`,
+              })
+            )
+          ).catch(err => {
+            console.warn('Auto-reporting missing rooms failed silently:', err);
+          });
+        }
+      } catch (err) {
+        console.warn('Auto-report trigger error:', err);
+      }
+
       toast.success('Jadual kuliah berjaya disahkan dan disimpan!');
       onSuccess?.();
       onClose();

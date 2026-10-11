@@ -148,4 +148,13 @@ describe('NextClassBentoCard Implementation & Parity', () => {
     expect(url).toBe('/polymaps?room=BK%20A');
     expect(url).not.toContain('?room=q=');
   });
+
+  it('verifies collapsible functionality with localStorage persistence', () => {
+    const content = fs.readFileSync(cardPath, 'utf-8');
+    expect(content).toContain('portal_next_class_collapsed');
+    expect(content).toContain('isCollapsed');
+    expect(content).toContain('toggleCollapsed');
+    expect(content).toContain('ChevronDown');
+    expect(content).toContain('ChevronUp');
+  });
 });

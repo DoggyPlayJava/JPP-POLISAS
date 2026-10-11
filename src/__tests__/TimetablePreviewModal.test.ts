@@ -84,4 +84,10 @@ describe('Timetable Modals Implementation & Parity', () => {
     expect(inferSemesterFromClassName('UNKNOWN')).toBe('1');
     expect(inferSemesterFromClassName('')).toBe('1');
   });
+
+  it('verifies auto-reporting RPC integration for missing timetable rooms', () => {
+    const content = fs.readFileSync(previewModalPath, 'utf-8');
+    expect(content).toContain('report_missing_timetable_room');
+    expect(content).toContain('p_room_code');
+  });
 });

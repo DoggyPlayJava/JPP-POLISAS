@@ -284,6 +284,7 @@ interface MissingReport {
   floor_level?: number | null;
   description?: string | null;
   status: 'pending' | 'approved' | 'rejected';
+  report_count?: number;
   created_at: string;
   student?: {
     id: string;
@@ -452,7 +453,7 @@ export function JppPolyMapsAdmin() {
         supabase.from('imaps_buildings').select('*').order('name'),
         supabase.from('imaps_locations').select('*').order('room_code'),
         supabase.from('imaps_missing_reports').select(`
-          id, student_id, room_code, building_id, building_name_suggestion, floor_level, description, status, created_at,
+          id, student_id, room_code, building_id, building_name_suggestion, floor_level, description, status, report_count, created_at,
           student:student_id (
             id,
             full_name,
@@ -1499,7 +1500,20 @@ export function JppPolyMapsAdmin() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md">{r.room_code}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md">
+                            {r.room_code}
+                          </span>
+                          {r.report_count && r.report_count > 1 ? (
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                              {r.report_count} Laporan
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/40 whitespace-nowrap">
+                              1 Laporan
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-slate-800 dark:text-white/80">
                         {r.building_id
