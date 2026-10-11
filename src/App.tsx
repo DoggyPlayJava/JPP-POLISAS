@@ -326,6 +326,8 @@ function AppRoutes() {
 
         {/* ⚙️ TETAPAN GLOBAL - standalone tanpa sidebar */}
         <Route path="/tetapan" element={<RequireApproval><SettingsPage /></RequireApproval>} />
+        <Route path="/profile" element={<RequireApproval><Navigate to="/tetapan" replace /></RequireApproval>} />
+        <Route path="/settings" element={<RequireApproval><Navigate to="/tetapan" replace /></RequireApproval>} />
 
         {/* ── PolyServices - standalone tanpa sidebar ── */}
         <Route path="/polysuara" element={<RequireApproval><PolySuaraPage /></RequireApproval>} />
