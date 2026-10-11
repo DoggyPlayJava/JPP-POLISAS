@@ -212,9 +212,7 @@ export function TimetableUploadModal({
       );
 
       if (parsedResult.entries.length === 0) {
-        toast('Tiada slot kuliah ditemui pada muka surat ini. Sila semak semula atau tambah secara manual.', {
-          icon: 'ℹ️',
-        });
+        toast('Tiada slot kuliah ditemui pada muka surat ini. Sila semak semula atau tambah secara manual.');
       }
 
       if (onParsed) {

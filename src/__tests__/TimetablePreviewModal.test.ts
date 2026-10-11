@@ -15,7 +15,7 @@ describe('Timetable Modals Implementation & Parity', () => {
   it('verifies TimetablePreviewModal contains mandatory disclosure and slot edit handlers', () => {
     expect(fs.existsSync(previewModalPath)).toBe(true);
     const content = fs.readFileSync(previewModalPath, 'utf-8');
-    expect(content).toContain('Peringatan: Ini adalah jadual kuliah mingguan biasa');
+    expect(content).toContain('Ini adalah jadual kuliah mingguan biasa');
     expect(content).toContain('student_timetables');
     expect(content).toContain('student_timetable_metadata');
   });

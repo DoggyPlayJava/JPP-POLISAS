@@ -334,6 +334,30 @@ export function TimetablePreviewModal({
       return;
     }
 
+    const hasInvalidTime = slots.some(s => {
+      if (!s.start_time?.trim() || !s.end_time?.trim()) return true;
+      const startParts = s.start_time.split(':');
+      const endParts = s.end_time.split(':');
+      const startH = parseInt(startParts[0], 10);
+      const startM = parseInt(startParts[1], 10);
+      const endH = parseInt(endParts[0], 10);
+      const endM = parseInt(endParts[1], 10);
+      if (
+        isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM) ||
+        startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
+        endH < 0 || endH > 23 || endM < 0 || endM > 59
+      ) {
+        return true;
+      }
+      const startMin = parseTimeToMinutes(s.start_time);
+      const endMin = parseTimeToMinutes(s.end_time);
+      return startMin >= endMin;
+    });
+    if (hasInvalidTime) {
+      toast.error('Sila pastikan waktu mula dan waktu tamat adalah sah.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       // 1. Archive existing non-archived timetable records for the student
@@ -401,7 +425,7 @@ export function TimetablePreviewModal({
         );
 
       if (metaError) {
-        console.error('Error updating timetable metadata:', metaError);
+        throw metaError;
       }
 
       toast.success('Jadual kuliah berjaya disahkan dan disimpan!');
@@ -447,8 +471,8 @@ export function TimetablePreviewModal({
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <span className="font-semibold block">Peringatan:</span>
-              <p className="leading-relaxed">
-                Peringatan: Ini adalah jadual kuliah mingguan biasa. Untuk minggu peperiksaan, cuti umum, atau minggu amali khas, sila rujuk Takwim Rasmi atau arahan pensyarah.
+              <p className="mt-0.5 leading-relaxed">
+                Ini adalah jadual kuliah mingguan biasa. Untuk minggu peperiksaan, cuti umum, atau minggu amali khas, sila rujuk Takwim Rasmi atau arahan pensyarah.
               </p>
             </div>
           </div>
