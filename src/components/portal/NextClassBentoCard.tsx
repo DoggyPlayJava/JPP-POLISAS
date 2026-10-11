@@ -282,7 +282,7 @@ export function NextClassBentoCard({
                 )}
               >
                 {stateData.isOngoing ? (
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse motion-reduce:animate-none" />
                 ) : (
                   <Clock className="w-4 h-4" />
                 )}
@@ -506,7 +506,7 @@ export function NextClassBentoCard({
             <span
               className={cn(
                 'w-2 h-2 rounded-full',
-                isOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
+                isOngoing ? 'bg-emerald-500 animate-pulse motion-reduce:animate-none' : 'bg-blue-500'
               )}
             />
             <span>{countdownBadgeText}</span>

@@ -257,6 +257,10 @@ body.supsas-route {
   display: none !important;
 }
 
+.low-perf-device .animate-pulse {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

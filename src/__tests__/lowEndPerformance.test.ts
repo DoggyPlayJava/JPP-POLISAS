@@ -43,6 +43,11 @@ describe('Low-End Device Performance Guarantee', () => {
       expect(css).toContain('mix-blend-mode: normal !important');
     });
 
+    it('kills continuous pulse animations on low-end', () => {
+      expect(css).toContain('.low-perf-device .animate-pulse');
+      expect(css).toContain('animation: none !important');
+    });
+
     it('does NOT kill transitions globally (that caused FAB flicker)', () => {
       const lowPerfGlobalTransitionKill = /\\.low-perf-device \\*[^{]*\\{[^}]*transition-duration/g;
       expect(lowPerfGlobalTransitionKill.test(css)).toBe(false);
