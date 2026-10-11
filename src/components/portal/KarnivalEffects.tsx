@@ -94,11 +94,10 @@ export function KarnivalEffects() {
       {/* Heavy Cinematic Vignette */}
       <div className="fixed inset-0 z-[1] pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] mix-blend-multiply" />
 
-      {/* Upgraded Aurora Blobs with Color Dodge */}
+      {/* Aurora Blobs (reduced: 2 blobs, lower blur) */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none mix-blend-color-dodge">
-        <div className="absolute -top-[15%] -left-[10%] w-[80vw] h-[80vw] rounded-full opacity-40 blur-[120px]" style={{ background: 'radial-gradient(circle, #c084fc 0%, transparent 70%)', animation: 'aurora-blob-1 25s ease-in-out infinite' }} />
-        <div className="absolute top-[50%] -right-[15%] w-[70vw] h-[70vw] rounded-full opacity-30 blur-[120px]" style={{ background: 'radial-gradient(circle, #f472b6 0%, transparent 70%)', animation: 'aurora-blob-2 30s ease-in-out infinite' }} />
-        <div className="absolute top-[20%] left-[40%] w-[60vw] h-[60vw] rounded-full opacity-20 blur-[140px]" style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)', animation: 'aurora-blob-1 40s ease-in-out infinite reverse' }} />
+        <div className="absolute -top-[15%] -left-[10%] w-[80vw] h-[80vw] rounded-full opacity-40 blur-[80px]" style={{ background: 'radial-gradient(circle, #c084fc 0%, transparent 70%)', animation: 'aurora-blob-1 25s ease-in-out infinite' }} />
+        <div className="absolute top-[50%] -right-[15%] w-[70vw] h-[70vw] rounded-full opacity-30 blur-[80px]" style={{ background: 'radial-gradient(circle, #f472b6 0%, transparent 70%)', animation: 'aurora-blob-2 30s ease-in-out infinite' }} />
       </div>
 
       {/* Dynamic Spotlight */}
@@ -161,43 +160,20 @@ export function KarnivalEffects() {
         ))}
       </div>
 
-      {/* Confetti Layer (15s) */}
+      {/* Confetti Layer (15s) — reduced to 10 pieces for GPU headroom */}
       {!confettiDone && (
         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
           {[
-            { l: '3%', s: 8, r: 0.5, c: '#a855f7', d: '3.1s', dl: '2.0s', sh: 'square' },
-            { l: '7%', s: 6, r: 1.8, c: '#fbbf24', d: '4.2s', dl: '2.3s', sh: 'rect' },
-            { l: '11%', s: 9, r: 1, c: '#f472b6', d: '3.5s', dl: '2.7s', sh: 'circle' },
-            { l: '15%', s: 7, r: 0.6, c: '#818cf8', d: '5.0s', dl: '2.1s', sh: 'square' },
-            { l: '19%', s: 10, r: 1.5, c: '#c084fc', d: '3.8s', dl: '3.2s', sh: 'rect' },
-            { l: '23%', s: 5, r: 1, c: '#e879f9', d: '4.5s', dl: '2.5s', sh: 'circle' },
-            { l: '27%', s: 8, r: 0.7, c: '#fbbf24', d: '3.2s', dl: '2.9s', sh: 'square' },
-            { l: '31%', s: 6, r: 2, c: '#a78bfa', d: '4.8s', dl: '2.2s', sh: 'rect' },
-            { l: '35%', s: 9, r: 1, c: '#f9a8d4', d: '3.6s', dl: '3.4s', sh: 'circle' },
-            { l: '39%', s: 7, r: 0.5, c: '#7c3aed', d: '5.2s', dl: '2.6s', sh: 'square' },
-            { l: '43%', s: 11, r: 1.3, c: '#f472b6', d: '3.4s', dl: '2.4s', sh: 'rect' },
-            { l: '47%', s: 6, r: 1, c: '#fbbf24', d: '4.1s', dl: '3.1s', sh: 'circle' },
-            { l: '51%', s: 8, r: 0.8, c: '#c084fc', d: '3.9s', dl: '2.8s', sh: 'square' },
-            { l: '55%', s: 7, r: 1.6, c: '#818cf8', d: '4.7s', dl: '2.0s', sh: 'rect' },
-            { l: '59%', s: 9, r: 1, c: '#a855f7', d: '3.3s', dl: '3.3s', sh: 'circle' },
-            { l: '63%', s: 6, r: 0.6, c: '#e879f9', d: '5.1s', dl: '2.3s', sh: 'square' },
-            { l: '67%', s: 10, r: 1.4, c: '#fbbf24', d: '3.7s', dl: '2.7s', sh: 'rect' },
-            { l: '71%', s: 7, r: 1, c: '#f9a8d4', d: '4.4s', dl: '3.0s', sh: 'circle' },
-            { l: '75%', s: 8, r: 0.7, c: '#7c3aed', d: '3.0s', dl: '2.5s', sh: 'square' },
-            { l: '79%', s: 6, r: 2, c: '#a78bfa', d: '4.9s', dl: '2.2s', sh: 'rect' },
-            { l: '83%', s: 9, r: 1, c: '#c084fc', d: '3.5s', dl: '3.5s', sh: 'circle' },
-            { l: '87%', s: 7, r: 0.5, c: '#fbbf24', d: '5.3s', dl: '2.6s', sh: 'square' },
-            { l: '91%', s: 8, r: 1.7, c: '#f472b6', d: '3.8s', dl: '2.9s', sh: 'rect' },
-            { l: '95%', s: 6, r: 1, c: '#818cf8', d: '4.3s', dl: '2.1s', sh: 'circle' },
-            { l: '5%', s: 7, r: 0.8, c: '#e879f9', d: '4.6s', dl: '3.8s', sh: 'square' },
-            { l: '13%', s: 9, r: 1.2, c: '#fbbf24', d: '3.1s', dl: '4.1s', sh: 'rect' },
-            { l: '22%', s: 6, r: 1, c: '#a855f7', d: '5.0s', dl: '3.7s', sh: 'circle' },
-            { l: '33%', s: 10, r: 0.6, c: '#f9a8d4', d: '3.4s', dl: '4.3s', sh: 'square' },
-            { l: '44%', s: 7, r: 1.5, c: '#7c3aed', d: '4.2s', dl: '3.6s', sh: 'rect' },
-            { l: '56%', s: 8, r: 1, c: '#c084fc', d: '3.7s', dl: '4.0s', sh: 'circle' },
-            { l: '68%', s: 6, r: 0.7, c: '#fbbf24', d: '4.8s', dl: '3.9s', sh: 'square' },
-            { l: '77%', s: 9, r: 1.3, c: '#a78bfa', d: '3.2s', dl: '4.4s', sh: 'rect' },
-            { l: '89%', s: 7, r: 1, c: '#f472b6', d: '5.1s', dl: '3.5s', sh: 'circle' },
+            { l: '5%', s: 8, r: 0.5, c: '#a855f7', d: '3.4s', dl: '2.0s', sh: 'square' },
+            { l: '15%', s: 7, r: 0.6, c: '#818cf8', d: '4.2s', dl: '2.3s', sh: 'square' },
+            { l: '25%', s: 9, r: 1, c: '#f472b6', d: '3.6s', dl: '2.7s', sh: 'circle' },
+            { l: '35%', s: 6, r: 1.5, c: '#c084fc', d: '4.5s', dl: '3.0s', sh: 'rect' },
+            { l: '45%', s: 10, r: 0.7, c: '#fbbf24', d: '3.2s', dl: '2.5s', sh: 'rect' },
+            { l: '55%', s: 8, r: 1, c: '#e879f9', d: '4.0s', dl: '2.1s', sh: 'circle' },
+            { l: '65%', s: 7, r: 1.3, c: '#a78bfa', d: '3.8s', dl: '2.9s', sh: 'square' },
+            { l: '75%', s: 9, r: 0.8, c: '#f9a8d4', d: '4.4s', dl: '3.2s', sh: 'circle' },
+            { l: '85%', s: 6, r: 1, c: '#7c3aed', d: '3.5s', dl: '2.4s', sh: 'rect' },
+            { l: '92%', s: 8, r: 0.6, c: '#f472b6', d: '4.8s', dl: '2.8s', sh: 'square' },
           ].map((p, i) => (
             <div key={i} style={{
               position: 'absolute', top: 0, left: p.l,
@@ -215,27 +191,17 @@ export function KarnivalEffects() {
         </div>
       )}
 
-      {/* Spring Physics Micro-Particles */}
+      {/* Spring Physics Micro-Particles (reduced to 8) */}
       <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
         {[
-          { x: 8, y: 15, s: 3, c: '#c084fc', d: 2.1 },
-          { x: 15, y: 45, s: 2, c: '#fbbf24', d: 3.0 },
-          { x: 22, y: 72, s: 4, c: '#f472b6', d: 2.5 },
-          { x: 31, y: 28, s: 2, c: '#818cf8', d: 3.5 },
-          { x: 40, y: 60, s: 3, c: '#a855f7', d: 2.3 },
-          { x: 50, y: 18, s: 5, c: '#fbbf24', d: 2.8 },
-          { x: 58, y: 80, s: 2, c: '#e879f9', d: 3.2 },
-          { x: 66, y: 35, s: 4, c: '#c084fc', d: 2.0 },
-          { x: 74, y: 65, s: 3, c: '#f9a8d4', d: 3.7 },
-          { x: 82, y: 22, s: 2, c: '#7c3aed', d: 2.6 },
-          { x: 89, y: 52, s: 4, c: '#fbbf24', d: 3.1 },
-          { x: 94, y: 78, s: 3, c: '#a78bfa', d: 2.4 },
-          { x: 5, y: 88, s: 2, c: '#f472b6', d: 3.3 },
-          { x: 27, y: 10, s: 3, c: '#818cf8', d: 2.7 },
-          { x: 70, y: 5, s: 4, c: '#c084fc', d: 3.0 },
-          { x: 45, y: 92, s: 2, c: '#fbbf24', d: 2.2 },
-          { x: 55, y: 48, s: 3, c: '#e879f9', d: 2.9 },
-          { x: 12, y: 58, s: 4, c: '#a855f7', d: 3.4 },
+          { x: 8, y: 20, s: 3, c: '#c084fc', d: 2.1 },
+          { x: 22, y: 65, s: 3, c: '#fbbf24', d: 3.0 },
+          { x: 40, y: 35, s: 4, c: '#f472b6', d: 2.5 },
+          { x: 55, y: 75, s: 3, c: '#a855f7', d: 2.3 },
+          { x: 68, y: 25, s: 4, c: '#818cf8', d: 3.5 },
+          { x: 82, y: 55, s: 3, c: '#e879f9', d: 2.8 },
+          { x: 90, y: 80, s: 3, c: '#f9a8d4', d: 3.2 },
+          { x: 15, y: 85, s: 4, c: '#7c3aed', d: 2.6 },
         ].map((sp, i) => (
           <motion.div
             key={i}

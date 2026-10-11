@@ -8,9 +8,7 @@ import path from 'path';
  * 1. App.tsx guna MotionConfig reducedMotion="user" (respect OS, BUKAN hardware)
  * 2. useDevicePerformance masih dipanggil (class .low-perf-device dikenakan)
  * 3. index.css ada rule .low-perf-device yang matikan blur + mix-blend (BUKAN transition)
- * 4. Detection adalah RUNTIME-ADAPTIVE (ukur jank sebenar), bukan teka hardware.
- *    - core count TIDAK lagi jadi signal (budget Android 8-core adalah bukti ia tak bermakna)
- *    - mount-time benchmark dibuang (noisy semasa hydration)
+ * 4. BLANKET low-perf: semua device dilayan low-perf, tiada detection runtime.
  */
 
 describe('Low-End Device Performance Guarantee', () => {
@@ -44,43 +42,31 @@ describe('Low-End Device Performance Guarantee', () => {
     });
 
     it('does NOT kill transitions globally (that caused FAB flicker)', () => {
-      const lowPerfGlobalTransitionKill = /\\.low-perf-device \\*[^{]*\\{[^}]*transition-duration/g;
+      const lowPerfGlobalTransitionKill = /\\\\.low-perf-device \\\\*[^{]*\\\\{[^}]*transition-duration/g;
       expect(lowPerfGlobalTransitionKill.test(css)).toBe(false);
     });
   });
 
-  describe('Detection hook: runtime-adaptive (NOT hardware guessing)', () => {
-    it('does NOT use core count as a low-end signal (budget phones ship 8 cores)', () => {
-      // The old "concurrency <= 4" heuristic is removed.
-      expect(hook).not.toContain('concurrency <= 4');
+  describe('Detection hook: BLANKET low-perf (no runtime detection)', () => {
+    it('always returns isLowPerf: true', () => {
+      expect(hook).toContain('isLowPerf: true');
     });
 
-    it('iOS fallback for hardwareConcurrency is 8 (undefined = unknown, not weak)', () => {
-      expect(hook).toContain('hardwareConcurrency');
-      expect(hook).toContain(': 8');
+    it('has no hardware heuristic', () => {
+      expect(hook).not.toContain("navigator.deviceMemory");
+      expect(hook).not.toContain("navigator.hardwareConcurrency");
     });
 
-    it('measures real jank via requestAnimationFrame frame deltas', () => {
-      expect(hook).toContain('requestAnimationFrame');
-      expect(hook).toContain('median');
-    });
-
-    it('keeps Data Saver as a low-end signal', () => {
-      expect(hook).toContain('saveData');
-    });
-
-    it('keeps deviceMemory <= 6 as a low-end signal', () => {
-      expect(hook).toContain('memory <= 6');
+    it('has no runtime jank sampling (zero rAF overhead)', () => {
+      expect(hook).not.toContain('requestAnimationFrame');
     });
 
     it('does NOT include prefersReducedMotion in isLowPerf formula', () => {
-      const match = hook.match(/const isLowPerf = [^;]+;/);
-      expect(match).toBeTruthy();
-      expect(match![0]).not.toContain('prefersReducedMotion');
+      expect(hook).not.toContain('prefersReducedMotion &&');
     });
 
     it('applies .low-perf-device class to document root', () => {
-      expect(hook).toContain("classList.add('low-perf-device')");
+      expect(hook).toContain("low-perf-device");
     });
   });
 });
