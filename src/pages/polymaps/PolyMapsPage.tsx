@@ -546,6 +546,9 @@ interface ZoneMarkerInfo {
   buildings: Building[];
 }
 
+import { resolveRoomLocation } from '@/lib/polyMapsResolver';
+export { resolveRoomLocation } from '@/lib/polyMapsResolver';
+
 export function PolyMapsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -929,6 +932,23 @@ export function PolyMapsPage() {
     }
   }, [weather?.isRaining]);
 
+  // Reactive handler for deep links when search params change (?room=...)
+  useEffect(() => {
+    if (!allLocations || allLocations.length === 0) return;
+    const searchParams = new URLSearchParams(location.search);
+    const rId = searchParams.get('room') || searchParams.get('roomId');
+    if (!rId) return;
+
+    const targetRoom = resolveRoomLocation(rId, allLocations);
+    if (targetRoom && targetRoom.id !== selectedLocation?.id) {
+      setSelectedLocation(targetRoom);
+      setActiveBuilding(targetRoom.building);
+      const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
+      setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
+      setCardExpanded(true);
+    }
+  }, [location.search, allLocations, selectedLocation?.id]);
+
   useEffect(() => {
     const zoneMap: Record<string, Building[]> = {};
     allBuildings.forEach(b => {
@@ -1104,13 +1124,8 @@ export function PolyMapsPage() {
     const queryParam = searchParams.get('q') || searchParams.get('search');
     
     if (rId && formatted.length > 0) {
-      // Find the room by ID or code
-      const rClean = rId.toLowerCase().trim();
-      const targetRoom = formatted.find((r: any) => 
-        r.id === rId || 
-        r.room_code?.toLowerCase() === rClean ||
-        r.room_code?.toLowerCase().includes(rClean)
-      );
+      // Find the room by ID, code, search_tags (aliases), or prefix normalizer
+      const targetRoom = resolveRoomLocation(rId, formatted);
       if (targetRoom) {
         setTimeout(() => {
           setSelectedLocation(targetRoom);

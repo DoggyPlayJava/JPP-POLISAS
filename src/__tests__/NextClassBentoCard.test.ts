@@ -6,6 +6,7 @@ import {
   formatDisplayTime,
   getMalaysianNow,
   findNextUpcomingClass,
+  buildPolyMapsRoomUrl,
 } from '../components/portal/NextClassBentoCard';
 import type { StudentTimetableEntry } from '../types';
 
@@ -120,5 +121,31 @@ describe('NextClassBentoCard Implementation & Parity', () => {
     expect(nextFromMon).not.toBeNull();
     expect(nextFromMon?.entry.day_of_week).toBe(3);
     expect(nextFromMon?.dayLabel).toBe('Rabu');
+  });
+
+  it('correctly constructs PolyMaps deep link URL without malformed q= prefixes', () => {
+    // When location_id is present, uses location_id
+    expect(
+      buildPolyMapsRoomUrl({
+        location_id: 'loc-123-uuid',
+        room_raw: 'EA301',
+      })
+    ).toBe('/polymaps?room=loc-123-uuid');
+
+    // When location_id is null, falls back to encoded room_raw directly
+    expect(
+      buildPolyMapsRoomUrl({
+        location_id: null,
+        room_raw: 'A301',
+      })
+    ).toBe('/polymaps?room=A301');
+
+    // Never produces malformed ?room=q=A301
+    const url = buildPolyMapsRoomUrl({
+      location_id: null,
+      room_raw: 'BK A',
+    });
+    expect(url).toBe('/polymaps?room=BK%20A');
+    expect(url).not.toContain('?room=q=');
   });
 });

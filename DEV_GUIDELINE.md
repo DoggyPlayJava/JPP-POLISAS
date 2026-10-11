@@ -427,6 +427,7 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
 | `src/components/portal/SuperAppHeader.tsx` | Header pintar Super App berorientasikan gaya hidup pelajar kampus |
 | `src/lib/timetableParser.ts` | Enjin parser PDF jadual waktu berasaskan koordinat grid client-side (`pdfjs-dist`) |
+| `src/lib/polyMapsResolver.ts` | Enjin pemadan bilik PolyMaps pintar (search_tags, alias, prefix normalizer) menghubungkan jadual ke lokasi fizikal |
 | `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya dengan countdown masa nyata client-side (tanpa DB polling) dan deep link PolyMaps |
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |

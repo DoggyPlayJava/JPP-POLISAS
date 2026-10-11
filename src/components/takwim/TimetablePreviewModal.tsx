@@ -36,7 +36,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import type { ClassType, StudentTimetableEntry, ImapsRoomMapping } from '@/types';
-import { COURSE_PALETTE } from '@/lib/timetableParser';
+import { COURSE_PALETTE, matchRoomToLocation, type RoomLocationLookup } from '@/lib/timetableParser';
 
 export const DAY_NAMES: { value: number; label: string }[] = [
   { value: 1, label: 'Isnin' },
@@ -188,6 +188,7 @@ export function TimetablePreviewModal({
   const [endDate, setEndDate] = useState('');
   const [selectedDayFilter, setSelectedDayFilter] = useState<number>(0); // 0 = all
   const [slots, setSlots] = useState<Omit<StudentTimetableEntry, 'id' | 'user_id'>[]>([]);
+  const [locations, setLocations] = useState<RoomLocationLookup[]>([]);
   const [roomMappings, setRoomMappings] = useState<ImapsRoomMapping[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -210,21 +211,44 @@ export function TimetablePreviewModal({
     setSlots(initialEntries.map(e => ({ ...e })));
   }, [isOpen, initialMetadata, initialEntries]);
 
-  // Load room mappings for real-time room matching
+  // Load locations and room mappings in parallel for real-time room matching
   useEffect(() => {
     if (!isOpen) return;
     let isMounted = true;
-    async function loadMappings() {
+    async function loadLookupData() {
       try {
-        const { data, error } = await supabase.from('imaps_room_mappings').select('*');
-        if (!error && data && isMounted) {
-          setRoomMappings(data as ImapsRoomMapping[]);
+        const [locsRes, mapRes] = await Promise.all([
+          supabase.from('imaps_locations').select('id, room_code, search_tags'),
+          supabase.from('imaps_room_mappings').select('*'),
+        ]);
+        if (isMounted) {
+          const locs = (locsRes.data || []) as RoomLocationLookup[];
+          const maps = (mapRes.data || []) as ImapsRoomMapping[];
+          setLocations(locs);
+          setRoomMappings(maps);
+
+          // If initial entries had slots where location_id is missing, auto-resolve now
+          setSlots(prev =>
+            prev.map(slot => {
+              if (!slot.location_id && slot.room_raw && !slot.is_online) {
+                const matched = matchRoomToLocation(slot.room_raw, locs, maps);
+                if (matched.location_id || matched.is_online) {
+                  return {
+                    ...slot,
+                    location_id: matched.location_id,
+                    is_online: matched.is_online,
+                  };
+                }
+              }
+              return slot;
+            })
+          );
         }
       } catch (err) {
-        console.error('Failed to load room mappings:', err);
+        console.error('Failed to load room lookup data:', err);
       }
     }
-    loadMappings();
+    loadLookupData();
     return () => {
       isMounted = false;
     };
@@ -252,21 +276,11 @@ export function TimetablePreviewModal({
       const updated = [...prev];
       const item = { ...updated[index], [field]: value };
 
-      // If room changed, recalculate location_id and is_online
+      // If room changed, recalculate location_id and is_online using matchRoomToLocation
       if (field === 'room_raw' && typeof value === 'string') {
-        const trimmed = value.trim();
-        const mapping = roomMappings.find(m => {
-          try {
-            return (
-              new RegExp(m.room_code_pattern, 'i').test(trimmed) ||
-              m.room_code_pattern.toLowerCase() === trimmed.toLowerCase()
-            );
-          } catch {
-            return m.room_code_pattern.toLowerCase() === trimmed.toLowerCase();
-          }
-        });
-        item.location_id = mapping?.location_id ?? null;
-        item.is_online = mapping?.is_online ?? false;
+        const matched = matchRoomToLocation(value, locations, roomMappings);
+        item.location_id = matched.location_id;
+        item.is_online = matched.is_online;
       }
 
       updated[index] = item;
