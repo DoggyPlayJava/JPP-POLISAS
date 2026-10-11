@@ -500,10 +500,6 @@ export function FoodBankQrPassModal({
                       <Layers className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       Manifest Barangan ({totalItemCount} Unit)
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      Nilai Anggaran: RM{' '}
-                      {(Number(application.total_estimated_value) || 0).toFixed(2)}
-                    </span>
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 text-xs">

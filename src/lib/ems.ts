@@ -770,7 +770,16 @@ export async function fetchEmsLeaderboard(
       });
     }
 
-    const averageScore = juryCount > 0 ? Number((totalJurySum / juryCount).toFixed(2)) : 0;
+    let averageScore = juryCount > 0 ? Number((totalJurySum / juryCount).toFixed(2)) : 0;
+    // Normalize ke skala 0-100: guna jumlah pemberat rubrik yang sebenarnya
+    // dinilai untuk peserta ini (rubrik Projek vs Perusahaan ada pemberat berbeza).
+    const participantRubricIds = new Set(pScores.map((s) => s.rubric_id));
+    const participantWeightSum = scopedRubrics
+      .filter((r) => participantRubricIds.has(r.id))
+      .reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
+    if (participantWeightSum > 0 && Math.abs(participantWeightSum - 100) > 0.01) {
+      averageScore = Number(((averageScore / participantWeightSum) * 100).toFixed(2));
+    }
     const isTieWinner = Boolean(participant.custom_responses?.is_tie_winner);
 
     const updatedParticipant: EmsParticipant = {

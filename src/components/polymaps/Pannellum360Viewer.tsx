@@ -59,6 +59,7 @@ function ensurePannellumLoaded(): Promise<void> {
       const script = document.createElement('script');
       script.id = 'pannellum-js';
       script.src = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js';
+      script.crossOrigin = 'anonymous'; // Dapatkan detail error sebenar (elak 'Script error.' cross-origin masking)
       script.async = true;
       script.onload = () => resolve();
       script.onerror = () => {
