@@ -718,12 +718,6 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
 | `isMissingPhoneAndCohort` | Ada matric+dept, tiada phone dan kohort | Phone + Jabatan + Program + Tahun + Intake |
 | Full Registration | Tiada matric | Nama IC + Matrik + Phone + Jabatan + Program + Intake |
 
-> **Peraturan Pendaftaran Pelajar Baharu (Full Registration):**
-> 1. **Nama Penuh (Wajib IC):** Tidak lagi default dari Google profil/emel. Ruangan dimulakan kosong dan wajib diisi nama penuh seperti dalam IC (auto-uppercase).
-> 2. **Sanitasi No. Matrik:** Automatik buang ruang kosong/sengkang, uppercase, had 13 aksara alfanumerik.
-> 3. **Format No. Matrik:** Format rasmi `^02[A-Z]{2,4}\d{2}[A-Z]\d{4}$` dengan tahun dinamik `(currentYear - 7)` hingga `(currentYear + 1)` (contoh: 2019–2027 bagi tahun 2026).
-> 4. **Smart Auto-fill (Boleh Edit):** No matrik sah auto-pilih Jabatan, Program, Tahun, dan Sesi (Intake 1/2), namun semua pilihan kekal boleh diedit manual oleh pelajar. Jika tahun dropdown berbeza dari no matrik, amaran mesra dipaparkan.
-
 > **Pelajar sedia ada (85 orang pada April 2026)** terkena senario `isOnlyMissingCohort` apabila log masuk pertama kali selepas kemaskini ini.
 
 ### 14.8 Notifikasi Automatik Intake
@@ -3847,30 +3841,6 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Sifar Em-Dash:** Tiada sengkang em-dash (`—` / `–`) di dalam teks mahupun komen kod.
    - **Pencegahan Beban Peranti:** Logik `isLowEnd` memelihara kelancaran 60 FPS pada peranti berkapasiti terhad.
    - **Ujian Automatik Sepenuhnya:** Disahkan melalui suite ujian TDD baharu (`settingsEarthyMinimal.test.ts`, `polymapsEarthyMinimal.test.ts`, `jppCockpitEarthyMinimal.test.ts`) dengan 100% lulus merentasi 29 suite ujian (480 ujian).
-
----
-
-### 31.7 Transformasi Mod Gelap Halaman Log Masuk (Luxury Obsidian Forest & Suis Tema)
-
-1. **Eradikasi Tona Hijau Keruh (*Anti-Murky Obsidian Shift*):**
-   - Menghapuskan warna hijau lumpur dan army drab (`#2E3A2F` sebagai latar belakang penuh dalam mod gelap) yang memberikan impresi malap dan kelam.
-   - Menggantikannya dengan estetika **Luxury Obsidian Forest** bertaraf sistem reka bentuk Linear, Raycast, Supabase, dan Apple:
-     - **Kanvas Luar:** `dark:bg-[#080C09]` (Obsidian Carbon tulen dengan sentuhan rimba dalam).
-     - **Panel Jenama Editorial Kiri:** `dark:bg-[#0B100C]` dengan sempadan kaca halus `dark:border-white/[0.06]`.
-     - **Kad Borang Terapung:** `dark:bg-[#111713]/95 dark:backdrop-blur-2xl` dengan kontur berkilau `dark:border-white/[0.08]` dan bayangan mewah `dark:shadow-[0_24px_60px_rgba(0,0,0,0.6),0_1px_0_rgba(255,255,255,0.06)_inset]`.
-
-2. **Butang Hero Google SSO Berkontras Tinggi (*High-Contrast Google SSO*):**
-   - Menyelaras butang Google SSO 1-sentuhan dengan latar belakang putih tulen (`dark:bg-white`) dan tipografi hitam arang (`dark:text-slate-900 font-black`) dalam mod gelap bersempadankan `dark:border-white/20` serta bayang `dark:shadow-[0_4px_24px_rgba(255,255,255,0.12)]`.
-   - Ini memastikan tindakan utama portal sentiasa menonjol dengan jelas dan intuitif sebaik sahaja pelajar membuka halaman log masuk.
-
-3. **Pemasangan Suis Tema Terapung (`ThemeToggle`):**
-   - Memasang kapsul suis tema terapung di sudut kanan atas `LoginPage.tsx` (`absolute top-4 right-4 sm:top-6 sm:right-6 z-30`) membolehkan pengguna menukar antara Mod Cerah (*Warm Alabaster*) dan Mod Gelap (*Luxury Obsidian*) secara fleksibel tanpa perlu log masuk terlebih dahulu.
-
-4. **Kepatuhan Ujian & Standard Kod:**
-   - 100% Sifar Emoji Mentah (hanya ikon vektor Lucide React).
-   - 100% Sifar Em-Dash.
-   - Disahkan dengan ujian unit vitest (`loginPageSsoRevamp.test.ts`) dan lulus keseluruhan 29 suite ujian (484 ujian).
-
 
 
 
