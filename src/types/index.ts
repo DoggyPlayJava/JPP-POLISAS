@@ -1537,6 +1537,16 @@ export interface StudentTimetableEntry {
   is_archived: boolean;
   created_at?: string;
   updated_at?: string;
+  location?: {
+    id: string;
+    room_code: string;
+    floor_level?: number | null;
+    building?: {
+      id: string;
+      name: string;
+      code: string;
+    } | null;
+  } | null;
 }
 
 export interface StudentTimetableMetadata {

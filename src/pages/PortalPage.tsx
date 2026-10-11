@@ -24,6 +24,8 @@ import { PolyMartFeed } from '@/components/portal/PolyMartFeed';
 import { PolymartServiceModal } from '@/components/portal/PolymartServiceModal';
 import { buildCampaignSlides } from '@/lib/superAppHelpers';
 import { KebajikanLiveTrackerCard } from '@/components/kebajikan/KebajikanLiveTrackerCard';
+import { NextClassBentoCard } from '@/components/portal/NextClassBentoCard';
+import type { StudentTimetableEntry } from '@/types';
 
 // Lazy-load SystemTour so react-joyride DOM watchers are completely bypassed during normal visits
 const SystemTour = React.lazy(() => import('@/components/ui/SystemTour').then(m => ({ default: m.SystemTour })));
@@ -67,6 +69,9 @@ export function PortalPage() {
   // PolyMart Modal
   const [showPolymartModal, setShowPolymartModal] = useState(false);
 
+  // User Timetable
+  const [userTimetable, setUserTimetable] = useState<StudentTimetableEntry[]>([]);
+
   const { activeSession, semesterString } = useAcademicSession();
 
   const isModuleEnabled = useCallback((moduleId: string): boolean => {
@@ -76,12 +81,12 @@ export function PortalPage() {
 
   const supsasActive = isModuleEnabled('supsas');
 
-  // ── Fetch User Specific Data (KAMSIS, MAKMP, Active Kebajikan & FoodBank) in parallel ──
+  // ── Fetch User Specific Data (KAMSIS, MAKMP, Active Kebajikan, FoodBank & Timetable) in parallel ──
   const fetchUserData = useCallback(async () => {
     if (!profile?.id) return;
 
     try {
-      const [appRes, toggleRes, makmpRes, ticketRes, foodbankRes] = await Promise.all([
+      const [appRes, toggleRes, makmpRes, ticketRes, foodbankRes, timetableRes] = await Promise.all([
         supabase.from('kamsis_applications')
           .select('status, extra_data')
           .eq('user_id', profile.id)
@@ -115,6 +120,12 @@ export function PortalPage() {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase.from('student_timetables')
+          .select('*, location:imaps_locations(id, room_code, floor_level, building:imaps_buildings(id, name, code))')
+          .eq('user_id', profile.id)
+          .eq('is_archived', false)
+          .order('day_of_week', { ascending: true })
+          .order('start_time', { ascending: true }),
       ]);
 
       if (appRes.data) {
@@ -146,6 +157,12 @@ export function PortalPage() {
         setActiveFoodbankApp(foodbankRes.data);
       } else {
         setActiveFoodbankApp(null);
+      }
+
+      if (timetableRes?.data) {
+        setUserTimetable(timetableRes.data as StudentTimetableEntry[]);
+      } else {
+        setUserTimetable([]);
       }
     } catch (err) {
       console.warn('Error fetching user portal data:', err);
@@ -412,6 +429,8 @@ export function PortalPage() {
           ticket={activeTicket}
           foodbankApp={activeFoodbankApp}
         />
+
+        <NextClassBentoCard entries={userTimetable} />
 
         {/* 2. Campus Services Grid (8 Core Micro-Apps) */}
         <CampusServicesGrid
