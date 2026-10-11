@@ -327,6 +327,23 @@ export async function parseTimetablePage(
   return extractTimetableFromItems(items, roomMappings, locations);
 }
 
+export function isOnlineKeyword(token: string): boolean {
+  if (!token) return false;
+  const clean = token.replace(/[\s_\/-]+/g, '').toUpperCase();
+  return (
+    clean === 'EMSTEAM' ||
+    clean === 'AMSTEAM' ||
+    clean === 'ONLINE' ||
+    clean === 'TEAMS' ||
+    clean === 'MSTEAMS' ||
+    clean === 'MICROSOFTTEAMS' ||
+    clean === 'ZOOM' ||
+    clean === 'GOOGLEMEET' ||
+    clean === 'MEET' ||
+    clean === 'DALAMTALIAN'
+  );
+}
+
 export function matchRoomToLocation(
   roomRaw: string,
   locations: RoomLocationLookup[] = [],
@@ -337,21 +354,16 @@ export function matchRoomToLocation(
     return { location_id: null, is_online: false };
   }
 
-  const upper = trimmed.toUpperCase();
+  // Handle composite rooms (e.g. "EA301/EA302" or "EA301 / EA302") -> match primary room
+  const cleanRoom = trimmed.replace(/\s*[\/,]\s*/g, '/');
+  const primaryRoom = cleanRoom.includes('/') ? cleanRoom.split('/')[0].trim() : cleanRoom;
+
   // 1. Check for online/virtual classes
-  if (
-    upper.includes('ONLINE') ||
-    upper.includes('TEAMS') ||
-    upper.includes('MS TEAMS') ||
-    upper.includes('MICROSOFT TEAMS') ||
-    upper.includes('GOOGLE MEET') ||
-    upper.includes('ZOOM') ||
-    upper.includes('DALAM TALIAN')
-  ) {
+  if (isOnlineKeyword(primaryRoom)) {
     return { location_id: null, is_online: true };
   }
 
-  const rClean = trimmed.toLowerCase();
+  const rClean = primaryRoom.toLowerCase();
 
   // 2. Primary source: match against imaps_locations (room_code + search_tags)
   if (locations && locations.length > 0) {
@@ -390,7 +402,7 @@ export function matchRoomToLocation(
     const mapping = roomMappings.find((m) => {
       try {
         return (
-          new RegExp(m.room_code_pattern, 'i').test(trimmed) ||
+          new RegExp(m.room_code_pattern, 'i').test(primaryRoom) ||
           m.room_code_pattern.toLowerCase() === rClean
         );
       } catch {
@@ -434,10 +446,13 @@ export function parseCell(
     ? parseCourseCodeAndType(codeType[0])
     : { courseCode: '', classType: 'LAIN_LAIN' as ClassType };
 
-  const rest = cellText.replace(/^[A-Z0-9]+\s*\((L|P|TU|O)\)/i, '').trim();
+  // Normalize slashes with adjacent tokens e.g. "EA301 / EA302" -> "EA301/EA302"
+  const rest = cellText
+    .replace(/^[A-Z0-9]+\s*\((L|P|TU|O)\)/i, '')
+    .replace(/\s*\/\s*/g, '/')
+    .trim();
+
   const tokens = rest.split(/\s+/).filter(Boolean);
-  const room = tokens[tokens.length - 1] ?? '';
-  const lecturer = tokens.length > 1 ? tokens.slice(0, -1).join(',') : '';
 
   // Distinguish roomMappings vs locations if passed flexibly
   let roomMappings: ImapsRoomMapping[] = [];
@@ -451,13 +466,53 @@ export function parseCell(
     }
   }
 
-  const matched = matchRoomToLocation(room, locations, roomMappings);
+  // Priority Rule:
+  // If EMSTEAM or AMSTEAM coincides with a physical classroom token in the cell,
+  // PRIORITIZE the physical classroom first!
+  // Example: "AI EA301 EMSTEAM" or "NUR AMSTEAM EA303" or "AI EA301/EA302"
+  let chosenRoom = '';
+  let lecturerTokens: string[] = [];
+
+  const isRoomCandidate = (t: string) => {
+    if (isOnlineKeyword(t)) return false;
+    // Check if matches location lookup directly
+    const res = matchRoomToLocation(t, locations, roomMappings);
+    if (res.location_id) return true;
+    // Room code with digits (e.g. EA301, EA301/EA302, B101, F107, MK1, DK2)
+    return (
+      /^[A-Za-z]{0,4}\d{2,4}[A-Za-z]?(?:\/[A-Za-z]{0,4}\d{2,4}[A-Za-z]?)?$/i.test(t) ||
+      /^(DEWAN|MAKMAL|BENGKEL|KULIAH)/i.test(t)
+    );
+  };
+
+  const physicalIndex = tokens.findIndex(isRoomCandidate);
+
+  if (physicalIndex !== -1) {
+    // Physical room found: prioritize it!
+    chosenRoom = tokens[physicalIndex];
+    // Remaining non-online tokens form the lecturer code
+    lecturerTokens = tokens.filter((_, idx) => idx !== physicalIndex && !isOnlineKeyword(tokens[idx]));
+  } else {
+    // No physical room found. Check if an online keyword is present
+    const onlineIndex = tokens.findIndex(isOnlineKeyword);
+    if (onlineIndex !== -1) {
+      chosenRoom = tokens[onlineIndex];
+      lecturerTokens = tokens.filter((_, idx) => idx !== onlineIndex);
+    } else {
+      // Fallback to classic last token
+      chosenRoom = tokens[tokens.length - 1] ?? '';
+      lecturerTokens = tokens.length > 1 ? tokens.slice(0, -1) : [];
+    }
+  }
+
+  const lecturer = lecturerTokens.join(',');
+  const matched = matchRoomToLocation(chosenRoom, locations, roomMappings);
 
   return {
     course_code: courseCode,
     class_type: classType,
     lecturer_code: lecturer,
-    room_raw: room,
+    room_raw: chosenRoom,
     location_id: matched.location_id,
     is_online: matched.is_online,
   };

@@ -282,5 +282,60 @@ describe('Timetable Parser Logic', () => {
       location_id: null,
       is_online: false,
     });
+
+    // 8. Composite rooms (e.g. EA301/EA302 resolves primary EA301)
+    expect(matchRoomToLocation('EA301/EA302', locations)).toEqual({
+      location_id: 'loc-ea301',
+      is_online: false,
+    });
+  });
+
+  it('should prioritize physical classroom when EMSTEAM or AMSTEAM coincides in the same cell', () => {
+    const locations: RoomLocationLookup[] = [
+      { id: 'loc-ea301', room_code: 'EA301', search_tags: 'JKE, A301' },
+      { id: 'loc-ea303', room_code: 'EA303', search_tags: 'JKE, A303' },
+    ];
+
+    // Cell containing both physical classroom EA301 and EMSTEAM
+    const parsed1 = parseCell('DEE20153(L) AI EA301 EMSTEAM', locations);
+    expect(parsed1.course_code).toBe('DEE20153');
+    expect(parsed1.class_type).toBe('KULIAH');
+    expect(parsed1.room_raw).toBe('EA301');
+    expect(parsed1.is_online).toBe(false);
+    expect(parsed1.location_id).toBe('loc-ea301');
+    expect(parsed1.lecturer_code).toBe('AI');
+
+    // Cell containing AMSTEAM and physical room EA303
+    const parsed2 = parseCell('DET30053(P) NUR AMSTEAM EA303', locations);
+    expect(parsed2.course_code).toBe('DET30053');
+    expect(parsed2.class_type).toBe('AMALI');
+    expect(parsed2.room_raw).toBe('EA303');
+    expect(parsed2.is_online).toBe(false);
+    expect(parsed2.location_id).toBe('loc-ea303');
+    expect(parsed2.lecturer_code).toBe('NUR');
+
+    // Cell with purely online class (no physical classroom)
+    const parsed3 = parseCell('MPU21032(L) UST EMSTEAM', locations);
+    expect(parsed3.course_code).toBe('MPU21032');
+    expect(parsed3.class_type).toBe('KULIAH');
+    expect(parsed3.room_raw).toBe('EMSTEAM');
+    expect(parsed3.is_online).toBe(true);
+    expect(parsed3.location_id).toBeNull();
+    expect(parsed3.lecturer_code).toBe('UST');
+  });
+
+  it('should support composite / split rooms (e.g. EA301/EA302)', () => {
+    const locations: RoomLocationLookup[] = [
+      { id: 'loc-ea301', room_code: 'EA301', search_tags: 'JKE, A301' },
+      { id: 'loc-ea302', room_code: 'EA302', search_tags: 'JKE, A302' },
+    ];
+
+    const parsed = parseCell('DEE20153(L) AI EA301/EA302', locations);
+    expect(parsed.course_code).toBe('DEE20153');
+    expect(parsed.class_type).toBe('KULIAH');
+    expect(parsed.room_raw).toBe('EA301/EA302');
+    expect(parsed.is_online).toBe(false);
+    expect(parsed.location_id).toBe('loc-ea301');
+    expect(parsed.lecturer_code).toBe('AI');
   });
 });

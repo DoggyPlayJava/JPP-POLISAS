@@ -11,6 +11,8 @@ import {
   BookOpen,
   CheckCircle2,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   AlertCircle,
   Building,
 } from 'lucide-react';
@@ -146,6 +148,25 @@ export function NextClassBentoCard({
   // Client-side live timer (zero DB polling) updating every 30 seconds
   const [now, setNow] = useState(() => getMalaysianNow());
 
+  // Collapsible card state persisted in localStorage
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('portal_next_class_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('portal_next_class_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(getMalaysianNow());
@@ -228,6 +249,107 @@ export function NextClassBentoCard({
     }
     return entry.room_raw || 'Dewan / Bilik Kuliah';
   };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // COLLAPSED COMPACT BAR (For active states)
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (isCollapsed && stateData.type !== 'EMPTY') {
+    return (
+      <div
+        className={cn(
+          'w-full rounded-2xl p-3 sm:p-4 transition-all duration-300',
+          'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'shadow-sm hover:shadow-md backdrop-blur-md',
+          className
+        )}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {stateData.type === 'TODAY_ACTIVE' ? (
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Clock className="w-4 h-4" />
+              </span>
+            ) : stateData.type === 'COMPLETED_TODAY' ? (
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+              </span>
+            ) : (
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                <Calendar className="w-4 h-4" />
+              </span>
+            )}
+
+            <div className="min-w-0 flex items-center gap-2 flex-wrap">
+              {stateData.type === 'TODAY_ACTIVE' ? (
+                <>
+                  <span className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate">
+                    {stateData.isOngoing ? 'Kelas Semasa' : 'Kelas Seterusnya'}: {stateData.entry.course_code}
+                  </span>
+                  <span className="text-[11px] text-[#556453] dark:text-[#A3B39F]">
+                    ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                    · {stateData.entry.is_online ? 'Dalam Talian' : getLocationLabel(stateData.entry)}
+                  </span>
+                </>
+              ) : stateData.type === 'COMPLETED_TODAY' ? (
+                <>
+                  <span className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                    Semua kelas selesai hari ini
+                  </span>
+                  {stateData.nextClass && (
+                    <span className="text-[11px] text-[#556453] dark:text-[#A3B39F] truncate">
+                      · Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                    Tiada kelas hari ini
+                  </span>
+                  {stateData.nextClass && (
+                    <span className="text-[11px] text-[#556453] dark:text-[#A3B39F] truncate">
+                      · Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {stateData.type === 'TODAY_ACTIVE' && !stateData.entry.is_online && (
+              <Link
+                to={getPolyMapsUrl(stateData.entry)}
+                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
+                title="Panduan PolyMaps"
+              >
+                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                <span>Peta</span>
+              </Link>
+            )}
+            <Link
+              to="/akademik/takwim"
+              className="text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              title="Jadual Penuh"
+            >
+              Jadual
+            </Link>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              title="Kembangkan kad"
+              aria-label="Kembangkan kad"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE 4: No Timetable Uploaded Yet (Empty State)
@@ -336,13 +458,24 @@ export function NextClassBentoCard({
             </span>
           </div>
 
-          <Link
-            to="/akademik/takwim"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-          >
-            <span>Jadual Penuh</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/akademik/takwim"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            >
+              <span>Jadual Penuh</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              title="Kecilkan kad"
+              aria-label="Kecilkan kad"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Middle Subject Info */}
@@ -467,13 +600,24 @@ export function NextClassBentoCard({
             </div>
           </div>
 
-          <Link
-            to="/akademik/takwim"
-            className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
-          >
-            <span>Jadual Penuh</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              to="/akademik/takwim"
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            >
+              <span>Jadual Penuh</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+              title="Kecilkan kad"
+              aria-label="Kecilkan kad"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Next Class Preview */}
@@ -564,13 +708,24 @@ export function NextClassBentoCard({
           </div>
         </div>
 
-        <Link
-          to="/akademik/takwim"
-          className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
-        >
-          <span>Jadual Penuh</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            to="/akademik/takwim"
+            className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+          >
+            <span>Jadual Penuh</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="p-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            title="Kecilkan kad"
+            aria-label="Kecilkan kad"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Next Class Preview (e.g. Next Monday) */}

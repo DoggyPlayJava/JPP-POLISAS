@@ -6,7 +6,8 @@
  * 1. Direct UUID match (100% precision)
  * 2. Room code exact or substring match (e.g. "EA301")
  * 3. Search tags / nicknames / aliases match (e.g. "A301", "F107", "BKA")
- * 4. Department prefix normalizer fallback (strips 'E', 'B', 'M', 'KA', etc.)
+ * 4. Composite room splitting (e.g. "EA301/EA302" -> resolves primary "EA301")
+ * 5. Department prefix normalizer fallback (strips 'E', 'B', 'M', 'KA', etc.)
  */
 
 export interface RoomLocationItem {
@@ -17,11 +18,10 @@ export interface RoomLocationItem {
   [key: string]: any;
 }
 
-export function resolveRoomLocation<T extends RoomLocationItem>(
+function resolveSingleRoomLocation<T extends RoomLocationItem>(
   rId: string,
   locations: T[]
 ): T | undefined {
-  if (!rId || !locations || locations.length === 0) return undefined;
   const rClean = rId.toLowerCase().trim();
   const stripPrefix = (str: string) =>
     str.replace(/^(jke|jkm|jka|jp|jmsk|e|b|m|ka)[\s_-]*/i, '').trim().toLowerCase();
@@ -54,4 +54,27 @@ export function resolveRoomLocation<T extends RoomLocationItem>(
   }
 
   return targetRoom;
+}
+
+export function resolveRoomLocation<T extends RoomLocationItem>(
+  rId: string,
+  locations: T[]
+): T | undefined {
+  if (!rId || !locations || locations.length === 0) return undefined;
+
+  // Try direct resolution first
+  const directMatch = resolveSingleRoomLocation(rId, locations);
+  if (directMatch) return directMatch;
+
+  // Handle composite rooms (e.g. "EA301/EA302" or "EA301 / EA302" or "EA301,EA302")
+  const normalizedComposite = rId.replace(/\s*[\/,]\s*/g, '/');
+  if (normalizedComposite.includes('/')) {
+    const parts = normalizedComposite.split('/').map(p => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      const partMatch = resolveSingleRoomLocation(part, locations);
+      if (partMatch) return partMatch;
+    }
+  }
+
+  return undefined;
 }
