@@ -667,11 +667,11 @@ function SeoManager() {
 }
 
 function App() {
-  const { isLowPerf } = useDevicePerformance();
+  useDevicePerformance();
 
   return (
     <ErrorBoundary>
-      <MotionConfig reducedMotion={isLowPerf ? 'always' : 'user'}>
+      <MotionConfig reducedMotion="user">
       <ThemeProvider>
         <BrowserRouter>
           <GlobalRedirector />

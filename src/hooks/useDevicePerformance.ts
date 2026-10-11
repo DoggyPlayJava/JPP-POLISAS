@@ -57,12 +57,17 @@ export function useDevicePerformance(): DevicePerformanceInfo {
     // Run passive CPU micro-benchmark
     const isThrottledCpu = runCpuBenchmark();
 
-    // Detect low-end profile:
+    // Detect low-end profile (HARDWARE sahaja — BUKAN user preference):
     // 1. Manual flag OR Data Saver
     // 2. Hardware: <=4 CPU cores OR <=4GB RAM
-    // 3. System motion preference: prefers-reduced-motion
-    // 4. Runtime: CPU execution benchmark > 2ms (DevTools throttling or entry-level SoC)
-    const isLowPerf = forceLowPerf || isSaveData || concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
+    // 3. Runtime: CPU execution benchmark > 2ms (DevTools throttling or entry-level SoC)
+    //
+    // PENTING: prefersReducedMotion DILEPASKAN dari isLowPerf.
+    // Reduce-motion = pilihan aksesibiliti pengguna (banyak device KUAT ada ini ON).
+    // Ia patut matikan animation sahaja (respect OS), TAPI tidak boleh melabel
+    // device sebagai "low-end" — kalau tidak, MotionConfig reducedMotion="always"
+    // akan matikan SEMUA animation pada device yang sebenarnya berkuasa.
+    const isLowPerf = forceLowPerf || isSaveData || concurrency <= 4 || (memory !== null && memory <= 4) || isThrottledCpu;
 
     return { isLowPerf, concurrency, memory, prefersReducedMotion, isThrottledCpu };
   });
@@ -80,13 +85,10 @@ export function useDevicePerformance(): DevicePerformanceInfo {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handleMotionChange = (e: MediaQueryListEvent) => {
       setPerfInfo(prev => {
-        const isLowPerf = prev.concurrency <= 4 || (prev.memory !== null && prev.memory <= 4) || prev.isThrottledCpu || e.matches;
-        if (isLowPerf) {
-          document.documentElement.classList.add('low-perf-device');
-        } else {
-          document.documentElement.classList.remove('low-perf-device');
-        }
-        return { ...prev, prefersReducedMotion: e.matches, isLowPerf };
+        // Reduce-motion TIDAK mengubah isLowPerf (itu hardware signal sahaja).
+        // Ia hanya mengemas kini prefersReducedMotion supaya MotionConfig
+        // (reducedMotion="user") menghormati setting OS.
+        return { ...prev, prefersReducedMotion: e.matches };
       });
     };
 
