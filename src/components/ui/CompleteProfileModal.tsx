@@ -850,7 +850,7 @@ export function CompleteProfileModal() {
                     {registerMode !== 'staff' && (
                       <div className="space-y-1 px-1">
                         <p className="text-[10px] text-slate-400 font-medium">
-                          Contoh format POLISAS: 02DTK25F1037 (02 + Kursus + Tahun + Sesi + Siri)
+                          Tidak tahu no matrik anda? Rujuk SPMP anda!
                         </p>
                         {matricParsed && !matricParsed.isValidFormat && matricNo.length >= 4 && (
                           <p className="text-[10px] text-rose-500 font-medium">
