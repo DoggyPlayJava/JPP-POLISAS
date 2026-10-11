@@ -85,4 +85,30 @@ describe('LoginPage Google SSO-First & Earthy Minimal Redesign', () => {
       expect(source).toContain('post_login_redirect');
     });
   });
+
+  describe('Luxury Obsidian Forest Dark Mode & Theme Toggle Parity', () => {
+    it('mounts ThemeToggle component on LoginPage for seamless theme switching', () => {
+      expect(source).toContain("import { ThemeToggle } from '@/components/ui/ThemeToggle'");
+      expect(source).toContain('<ThemeToggle />');
+    });
+
+    it('uses obsidian canvas tokens (#080C09, #0B100C, #111713) instead of muddy army drab tones', () => {
+      // Obsidian deep root canvas
+      expect(source).toContain('dark:bg-[#080C09]');
+      // Obsidian brand panel
+      expect(source).toContain('dark:bg-[#0B100C]');
+      // Obsidian elevated card with frosted glass
+      expect(source).toContain('dark:bg-[#111713]');
+    });
+
+    it('renders high-contrast Google SSO hero button in dark mode (crisp white background & slate text)', () => {
+      expect(source).toContain('dark:bg-white');
+      expect(source).toContain('dark:text-slate-900');
+    });
+
+    it('uses razor-thin hairline borders in dark mode for ultra-premium depth', () => {
+      expect(source).toContain('dark:border-white/[0.06]');
+      expect(source).toContain('dark:border-white/[0.08]');
+    });
+  });
 });
