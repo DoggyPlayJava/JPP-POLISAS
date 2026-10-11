@@ -1,6 +1,11 @@
 import type { ClassType, StudentTimetableEntry, ImapsRoomMapping } from '@/types';
+import { ensurePdfPolyfills } from '@/lib/polyfills';
+
+// Ensure polyfills are active for PDF.js execution (ReadableStream, Promise.withResolvers)
+ensurePdfPolyfills();
 
 async function getPdfLib() {
+  ensurePdfPolyfills();
   if (typeof window === 'undefined') {
     return await import('pdfjs-dist/legacy/build/pdf.mjs');
   }
@@ -9,6 +14,47 @@ async function getPdfLib() {
     lib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   }
   return lib;
+}
+
+/**
+ * Resilient PDF loader supporting iOS WebKit, Safari, and worker fallback.
+ * Uses a cloned slice so the original ArrayBuffer is never transferred or detached.
+ */
+export async function loadPdfDocument(arrayBuffer: ArrayBuffer) {
+  ensurePdfPolyfills();
+  const pdfjsLib = await getPdfLib();
+
+  // Create isolated copy to protect original buffer against detachment across multiple parses
+  const data = new Uint8Array(arrayBuffer.slice(0));
+
+  const isIOS = typeof navigator !== 'undefined' && (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+
+  const tryLoad = async (useWorker: boolean) => {
+    const opts: any = { data: new Uint8Array(data.buffer.slice(0)) };
+    if (!useWorker) {
+      opts.disableWorker = true;
+    }
+    const loadingTask = pdfjsLib.getDocument(opts);
+    return await loadingTask.promise;
+  };
+
+  if (isIOS) {
+    try {
+      return await tryLoad(false);
+    } catch {
+      return await tryLoad(true);
+    }
+  }
+
+  try {
+    return await tryLoad(true);
+  } catch (err) {
+    console.warn('[timetable-parser] Worker failed, retrying without worker:', err);
+    return await tryLoad(false);
+  }
 }
 
 // Palette for distinct course color assignment
@@ -78,15 +124,16 @@ export function mergeConsecutiveSlots<T extends {
 }
 
 export async function scanPdfClasses(arrayBuffer: ArrayBuffer): Promise<{ pageIndex: number; className: string }[]> {
-  const pdfjsLib = await getPdfLib();
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdf = await loadingTask.promise;
+  const pdf = await loadPdfDocument(arrayBuffer);
   const classesFound: { pageIndex: number; className: string }[] = [];
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    const fullText = content.items.map((it: any) => it.str).join(' ');
+    const fullText = (content?.items || [])
+      .filter((it: any) => it && typeof it.str === 'string')
+      .map((it: any) => it.str)
+      .join(' ');
     const match = fullText.match(/KELAS\s*:\s*([A-Za-z0-9_-]+)/i);
     if (match) {
       classesFound.push({ pageIndex: pageNum, className: match[1].trim() });
@@ -265,9 +312,7 @@ export async function parseTimetablePage(
   metadata: { session: string; effectiveDate: string; className: string; department: string };
   entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[];
 }> {
-  const pdfjsLib = await getPdfLib();
-  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-  const pdf = await loadingTask.promise;
+  const pdf = await loadPdfDocument(arrayBuffer);
   const page = await pdf.getPage(pageIndex);
   const content = await page.getTextContent();
   const items = toTextItems(content);

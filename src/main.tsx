@@ -1,3 +1,4 @@
+import '@/lib/polyfills';
 import { Buffer } from 'buffer';
 window.Buffer = window.Buffer || Buffer;
 console.log('Buffer polyfilled');
