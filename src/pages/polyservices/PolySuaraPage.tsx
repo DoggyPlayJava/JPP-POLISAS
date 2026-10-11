@@ -199,6 +199,7 @@ export function PolySuaraPage({
 
   // Filter & sort
   const [activeCategory, setActiveCategory] = useState<string>('SEMUA');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'LATEST'|'TRENDING'>('LATEST');
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
@@ -1722,6 +1723,16 @@ export function PolySuaraPage({
                     {cat.charAt(0) + cat.slice(1).toLowerCase()}
                   </button>
                 ))}
+                {activeTag && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTag(null)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 bg-rose-500 text-white shadow-xs flex items-center gap-1"
+                  >
+                    #{activeTag}
+                    <span className="text-[10px] opacity-80">✕</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1898,7 +1909,7 @@ export function PolySuaraPage({
               <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 py-1.5 flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-rose-500"/> Trending:</span>
                 {trendingTags.map((tag, i) => (
-                  <button key={i} onClick={() => setNewContent(prev => prev + ' ' + tag.tag)} className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold whitespace-nowrap transition-colors">
+                  <button key={i} onClick={() => { setActiveTag(activeTag === tag.tag ? null : tag.tag); setActiveCategory('SEMUA'); }} className={cn('px-3 py-1.5 rounded-full border text-[10px] font-bold whitespace-nowrap transition-colors', activeTag === tag.tag ? 'bg-rose-500 border-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent text-slate-600 dark:text-slate-300')}>
                     {tag.tag} ({tag.count})
                   </button>
                 ))}
@@ -1919,7 +1930,11 @@ export function PolySuaraPage({
                 </div>
               ) : (
                 <AnimatePresence>
-                  {confessions.filter(c => activeCategory === 'SEMUA' || c.category === activeCategory).map((confession, index) => {
+                  {confessions.filter(c => {
+                    const catOk = activeCategory === 'SEMUA' || c.category === activeCategory;
+                    const tagOk = !activeTag || (c.hashtags && c.hashtags.includes(activeTag));
+                    return catOk && tagOk;
+                  }).map((confession, index) => {
                     const isUpvoted = userUpvotes.has(confession.id);
                     const isMine = myConfessions.has(confession.id) || (profile?.id && confession.author_id === profile.id);
                     const isTrending = confession.upvotes > 30 && (new Date().getTime() - new Date(confession.created_at).getTime() < 24 * 60 * 60 * 1000);
@@ -2035,7 +2050,7 @@ export function PolySuaraPage({
                         {!isConfessionDeleted && confession.hashtags && confession.hashtags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-4">
                             {confession.hashtags.map((tag: string, i: number) => (
-                              <span key={i} className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">{tag}</span>
+                              <button key={i} onClick={() => { setActiveTag(activeTag === tag ? null : tag); setActiveCategory('SEMUA'); }} className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">{tag}</button>
                             ))}
                           </div>
                         )}
