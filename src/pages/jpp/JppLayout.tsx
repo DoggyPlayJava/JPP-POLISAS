@@ -80,10 +80,10 @@ export function JppLayout() {
 
   if (isLoading || (checkingFbOfficer && !isJppMember && !isSuperAdmin && !hasKediamanAccess && location.pathname.startsWith('/jpp/foodbank'))) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="h-screen w-screen flex items-center justify-center bg-[#F8F6EE] dark:bg-[#151D16]">
         <div className="relative w-10 h-10">
-          <div className="absolute inset-0 border-4 rounded-full border-border" />
-          <div className="absolute inset-0 border-4 border-t-transparent rounded-full animate-spin border-rose-500" />
+          <div className="absolute inset-0 border-4 rounded-full border-[#D9C9B2]/40 dark:border-[#3A4A3B]/40" />
+          <div className="absolute inset-0 border-4 border-t-transparent rounded-full animate-spin border-[#2E3A2F] dark:border-[#6B7F5B]" />
         </div>
       </div>
     );
@@ -96,7 +96,7 @@ export function JppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
+    <div className="flex h-screen overflow-hidden bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] transition-colors">
 
       {/* Mobile backdrop */}
       <AnimatePresence>
@@ -133,19 +133,19 @@ export function JppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top header (mobile + tablet) */}
-        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0 z-50 text-slate-900 dark:text-white">
+        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/80 dark:bg-[#151D16]/80 backdrop-blur-xl sticky top-0 z-50 text-[#2E3A2F] dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-2 -ml-1 rounded-xl text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
+            className="p-2 -ml-1 rounded-xl text-[#2E3A2F]/70 dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white hover:bg-[#2E3A2F]/5 dark:hover:bg-white/10 transition-all"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2">
               <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
-              <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white">JPP HQ</span>
+              <span className="text-sm font-black tracking-tight text-[#2E3A2F] dark:text-white">JPP HQ</span>
             </div>
-            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/25 mt-0.5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-[#556453] dark:text-white/25 mt-0.5">
               {getCurrentAcademicSession()}
             </span>
           </div>
@@ -156,7 +156,7 @@ export function JppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 bg-slate-100 dark:bg-[#0a0a0f]">
+        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 bg-[#F8F6EE] dark:bg-[#151D16]">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -174,7 +174,7 @@ export function JppLayout() {
         {/* Global Floating AI Chat for JPP HQ */}
         <FloatingAiChat />
 
-        {/* QR Code FAB — untuk semua ahli JPP jana QR berjenama */}
+        {/* QR Code FAB : untuk semua ahli JPP jana QR berjenama */}
         <QrCodeFab unitLinks={JPP_UNIT_LINKS} />
 
         {/* Floating Mobile Navigation Dock */}

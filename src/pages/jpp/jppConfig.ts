@@ -1,5 +1,5 @@
 // ============================================================
-// JPP HQ Portal — Shared Config
+// JPP HQ Portal : Shared Config
 // ============================================================
 import {
   Landmark, Lightbulb, HeartHandshake, Trophy,
@@ -8,7 +8,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { hexToRgba } from '@/lib/utils';
 
-export const JPP_THEME_DEFAULT_COLOR = '#7f1d1d';
+export const JPP_THEME_DEFAULT_COLOR = '#2E3A2F';
 export const JPP_MODULE_ID = 'jpp';
 
 export interface UnitConfig {
@@ -122,30 +122,27 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
 export function getJppSidebarBg(hex: string, isDark: boolean = true) {
   if (!isDark) {
     return {
-      top: '#fff8f8',
-      bottom: '#fee2e2',
-      border: 'rgba(153, 27, 27, 0.15)',
-      textPrimary: '#881337',
-      textSecondary: '#9f1239',
-      hoverBg: 'rgba(153, 27, 27, 0.08)',
-      activeBg: 'rgba(153, 27, 27, 0.14)',
+      top: '#F8F6EE',
+      bottom: '#F2EDE4',
+      border: 'rgba(217, 201, 178, 0.8)',
+      textPrimary: '#2E3A2F',
+      textSecondary: '#556453',
+      hoverBg: 'rgba(46, 58, 47, 0.06)',
+      activeBg: 'rgba(46, 58, 47, 0.12)',
     };
   }
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
   return {
-    top: `rgb(${Math.floor(r * 0.07)}, ${Math.floor(g * 0.03)}, ${Math.floor(b * 0.03)})`,
-    bottom: `rgb(${Math.floor(r * 0.13)}, ${Math.floor(g * 0.05)}, ${Math.floor(b * 0.05)})`,
-    border: hexToRgba(hex, 0.15),
-    textPrimary: '#ffffff',
-    textSecondary: 'rgba(255, 255, 255, 0.5)',
-    hoverBg: 'rgba(255, 255, 255, 0.06)',
-    activeBg: 'rgba(255, 255, 255, 0.12)',
+    top: '#151D16',
+    bottom: '#1B241C',
+    border: 'rgba(58, 74, 59, 0.5)',
+    textPrimary: '#F8F6EE',
+    textSecondary: '#A3B39F',
+    hoverBg: 'rgba(255, 255, 255, 0.05)',
+    activeBg: 'rgba(107, 127, 91, 0.2)',
   };
 }
 
 /** Preset accent colors for JPP HQ */
 export const JPP_COLOR_PRESETS = [
-  '#7f1d1d', '#991b1b', '#b91c1c', '#c2410c', '#92400e', '#1e3a5f',
+  '#2E3A2F', '#1E271F', '#3B4A3C', '#6B7F5B', '#C96F4F', '#4A584B',
 ];
