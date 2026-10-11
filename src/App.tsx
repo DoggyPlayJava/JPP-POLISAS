@@ -587,6 +587,85 @@ function GlobalRedirector() {
   return null;
 }
 
+// ── SEO: update title + meta description + canonical ikut route ─────────────
+// SPA kongsi satu index.html, jadi setiap public route perlukan meta unik
+// supaya Google tak nampak semua halaman sebagai satu tajuk sahaja.
+const SEO_MAP: Record<string, { title: string; desc: string }> = {
+  '/': {
+    title: 'JPP Digital Portal — Politeknik Sultan Haji Ahmad Shah',
+    desc: 'Platform pengurusan digital rasmi untuk Jawatankuasa Perwakilan Pelajar (JPP) POLISAS. Urus kelab, persatuan, kebajikan, dan aktiviti perpaduan pelajar secara bersepadu.',
+  },
+  '/polymaps': {
+    title: 'Peta Kampus POLISAS — PolyMaps',
+    desc: 'Navigasi kampus POLISAS secara interaktif. Cari bilik kuliah, kafe, surau, dan fasiliti kampus dengan peta 360 panorama dan pandu arah berjalan kaki.',
+  },
+  '/login': {
+    title: 'Log Masuk — JPP Digital Portal POLISAS',
+    desc: 'Log masuk ke portal pelajar POLISAS menggunakan akaun Google atau emel dan nombor matrik rasmi.',
+  },
+  '/kebajikan/statistik': {
+    title: 'Statistik e-Kebajikan — JPP POLISAS',
+    desc: 'Statistik aduan dan bantuan kebajikan pelajar POLISAS secara telus dan masa nyata.',
+  },
+  '/klk/statistik': {
+    title: 'Statistik KAMSIS — JPP POLISAS',
+    desc: 'Statistik kediaman dan residensi KAMSIS pelajar POLISAS.',
+  },
+  '/makmp': {
+    title: 'MAKMP 2026 — Majlis Anugerah Kecemerlangan POLISAS',
+    desc: 'Borang penyertaan rasmi Majlis Anugerah Kecemerlangan POLISAS (MAKMP). Hantar pencapaian cemerlang anda.',
+  },
+  '/makmp/status': {
+    title: 'Semak Status MAKMP — JPP POLISAS',
+    desc: 'Semak status permohonan dan pencalonan Majlis Anugerah Kecemerlangan POLISAS (MAKMP).',
+  },
+  '/ems/cert/verify': {
+    title: 'Pengesahan Sijil EMS — JPP POLISAS',
+    desc: 'Sahkan kesahihan sijil penyertaan dan kejohanan EMS POLISAS secara dalam talian.',
+  },
+};
+
+function setMeta(name: string, content: string, property = false) {
+  const attr = property ? 'property' : 'name';
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${name}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
+function SeoManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname === '/' ? '/' : location.pathname.replace(/\/$/, '');
+    const meta = SEO_MAP[path];
+
+    if (meta) {
+      document.title = meta.title;
+      setMeta('description', meta.desc);
+
+      // Canonical per-route
+      const url = 'https://jpp.cipher-node.org' + (path === '/' ? '/' : path);
+      let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', url);
+
+      // og:title / og:url ikut route
+      setMeta('og:title', meta.title, true);
+      setMeta('og:url', url, true);
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 function App() {
   useDevicePerformance();
 
@@ -595,6 +674,7 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <GlobalRedirector />
+          <SeoManager />
           <AuthProvider>
             <AcademicSessionProvider>
               <NotificationProvider>
@@ -661,4 +741,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;
