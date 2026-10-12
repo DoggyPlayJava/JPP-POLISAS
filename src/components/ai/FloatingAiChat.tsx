@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { getMalaysianNickname } from '@/lib/utils';
+import { getMalaysianNickname, cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 
