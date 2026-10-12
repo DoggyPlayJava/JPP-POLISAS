@@ -43,9 +43,9 @@ function BigStatCard({
   const { isLowPerf } = useDevicePerformance();
   return (
     <motion.div
-      initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: isLowPerf ? 0 : delay, duration: isLowPerf ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
       className={`rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-5 shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none transition-all ${
         onClick ? 'cursor-pointer hover:bg-[#F8F6EE]/60 dark:hover:bg-[#2E3A2F]/20 hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-[#F8F6EE]/40 dark:hover:bg-[#2E3A2F]/10'
@@ -124,10 +124,10 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <motion.div
-        initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
-        transition={isLowPerf ? { duration: 0 } : undefined}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={undefined}
         className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] rounded-3xl overflow-hidden flex flex-col shadow-2xl text-[#2E3A2F] dark:text-[#F8F6EE]"
       >
         <div className="p-6 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] flex items-center justify-between bg-[#F8F6EE]/60 dark:bg-white/[0.02]">
@@ -346,7 +346,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: isLowPerf ? 0 : 0.5, delay: isLowPerf ? 0 : 0.55 }} className="space-y-4">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.55 }} className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}>
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
@@ -447,12 +447,12 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
       <AnimatePresence>
         {reviewModal.open && reviewModal.req && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={isLowPerf ? { duration: 0 } : undefined}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={undefined}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
             />
             <motion.div
-              initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} transition={isLowPerf ? { duration: 0 } : undefined}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={undefined}
               className="relative w-full max-w-md rounded-[2rem] p-6 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] z-10 shadow-2xl"
             >
               <div className="space-y-5">
@@ -637,9 +637,9 @@ export function JppOverviewPage() {
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: isLowPerf ? 0 : 0.5 }}
+          transition={{ duration: 0.5 }}
           className="space-y-2"
         >
           <div className="flex items-center gap-3">
@@ -689,9 +689,9 @@ export function JppOverviewPage() {
               
               {/* Registration Trend Area Chart */}
               <motion.div
-                initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: isLowPerf ? 0 : 0.45 }}
+                transition={{ delay: 0.45 }}
                 className="lg:col-span-2 rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-6 flex flex-col shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -764,9 +764,9 @@ export function JppOverviewPage() {
 
               {/* Kebajikan Tickets Pie Chart */}
               <motion.div
-                initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: isLowPerf ? 0 : 0.5 }}
+                transition={{ delay: 0.5 }}
                 className="rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-6 flex flex-col shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none"
               >
                 <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-2">

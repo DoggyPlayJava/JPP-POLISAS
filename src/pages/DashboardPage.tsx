@@ -354,7 +354,7 @@ export function DashboardPage() {
     }
   ];
   return (
-    <motion.div initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={isLowPerf ? { duration: 0 } : undefined} className="page-container space-y-10 pb-20">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20">
       {/* ── REFRESH INDICATOR (subtle bar, no skeleton flash) ── */}
       {isRefreshing && (
         <div className="fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-primary/20 overflow-hidden">

@@ -151,7 +151,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 opacity: 1, 
                 y: 0, 
                 scale: 1,
-                transition: isLowPerf ? { duration: 0.1 } : { type: "spring", stiffness: 350, damping: 22 }
+                transition: { type: "spring", stiffness: 350, damping: 22 }
               }}
               exit={{ 
                 opacity: 0, 
@@ -262,7 +262,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
             </AnimatePresence>
 
             {/* Breathing Glow Background */}
-            {!isActionsOpen && !isLowPerf && (
+            {!isActionsOpen && (
               <motion.div
                 className={cn("absolute inset-0 rounded-full z-[-1]", theme.fabBg)}
                 animate={{ 
@@ -323,8 +323,8 @@ function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, l
       onClick={onClick} 
       className="flex flex-col items-center gap-2 group"
       variants={{
-        hidden: { opacity: 0, y: isLowPerf ? 0 : 20, scale: isLowPerf ? 1 : 0.8 },
-        visible: { opacity: 1, y: 0, scale: 1, transition: isLowPerf ? { duration: 0.1 } : { type: "spring", stiffness: 400, damping: 15 } }
+        hidden: { opacity: 0, y: 20, scale: 0.8 },
+        visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 400, damping: 15 } }
       }}
     >
       <div className={cn("relative w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-lg transition-transform duration-200 group-active:scale-90", bgClass)}>
@@ -349,7 +349,7 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
     <motion.button
       onClick={onClick}
       layout={!isLowPerf}
-      transition={isLowPerf ? { duration: 0.1 } : { type: "spring", stiffness: 500, damping: 30 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className={cn(
         "flex items-center justify-center gap-1.5 h-10 rounded-full transition-all duration-300 active:scale-95 relative",
         isActive 
@@ -364,10 +364,10 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
       <AnimatePresence mode="popLayout">
         {isActive && (
           <motion.span
-            initial={{ opacity: 0, width: 0, scale: isLowPerf ? 1 : 0.8 }}
+            initial={{ opacity: 0, width: 0, scale: 0.8 }}
             animate={{ opacity: 1, width: "auto", scale: 1 }}
-            exit={{ opacity: 0, width: 0, scale: isLowPerf ? 1 : 0.8 }}
-            transition={isLowPerf ? { duration: 0.1 } : { type: "spring", stiffness: 500, damping: 30 }}
+            exit={{ opacity: 0, width: 0, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className="text-[11px] font-bold overflow-hidden whitespace-nowrap"
           >
             {label}

@@ -162,9 +162,9 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
   return (
     <motion.div
-      initial={{ opacity: isLowPerf ? 1 : 0, y: isLowPerf ? 0 : 20 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={isLowPerf ? { duration: 0 } : { delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       onClick={handleClick}
       className={cn(
         `tour-mod-${module.id}`,

@@ -163,7 +163,7 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
       to={item.href}
       className={({ isActive }) => cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl group',
-        isLowPerf ? '' : 'transition-all duration-200',
+        'transition-all duration-200',
         isActive ? c.active : 'text-white/50 hover:bg-white/7 hover:text-white/85'
       )}
     >
@@ -171,7 +171,7 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
         <>
           <div className={cn(
             'w-7 h-7 rounded-lg flex items-center justify-center',
-            isLowPerf ? '' : 'transition-all duration-200',
+            'transition-all duration-200',
             isActive ? c.iconBg : 'group-hover:bg-white/8'
           )}>
             <item.icon className={cn('w-3.5 h-3.5', isActive ? (c.iconText ?? `text-${accentColor}-400`) : '')} />
@@ -434,7 +434,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
     <div className="relative mt-2.5 z-[9999]" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={cn("w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest backdrop-blur-md shadow-sm", isLowPerf ? "" : "transition-all")}
+        className={cn("w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest backdrop-blur-md shadow-sm", "transition-all")}
       >
         <div className="flex items-center gap-2.5 truncate">
           {selectedClub ? (
@@ -446,7 +446,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
              <span className="truncate">— PILIH KELAB —</span>
           )}
         </div>
-        <ChevronDown className={cn("w-3.5 h-3.5 text-white/40", isLowPerf ? "" : "transition-transform duration-200", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("w-3.5 h-3.5 text-white/40", "transition-transform duration-200", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (

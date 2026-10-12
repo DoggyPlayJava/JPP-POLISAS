@@ -1937,7 +1937,7 @@ export function PolyMapsPage() {
               initial={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
               animate={isLowEnd ? { opacity: 1 } : { x: 0 }}
               exit={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
-              transition={isLowEnd ? { duration: 0.15 } : { type: 'spring', damping: 25, stiffness: 200 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="absolute top-0 left-0 bottom-0 w-80 bg-[#F8F6EE] dark:bg-[#151D16] z-[10001] shadow-2xl flex flex-col border-r border-[#D9C9B2]/50 dark:border-[#3A4A3B]"
             >
               <div className="p-5 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B] flex items-center justify-between">
@@ -2480,7 +2480,7 @@ export function PolyMapsPage() {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                transition={isLowEnd ? { duration: 0.15 } : { type: 'spring', damping: 25, stiffness: 250 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 250 }}
                 className={cn(
                   "rounded-3xl shadow-2xl overflow-hidden relative flex flex-col",
                   isLowEnd 

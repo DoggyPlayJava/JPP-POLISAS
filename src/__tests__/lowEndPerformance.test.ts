@@ -5,7 +5,7 @@ import path from 'path';
 /**
  * Ujian Low-End Device Performance Guarantee.
  * Pastikan:
- * 1. App.tsx guna MotionConfig reducedMotion="user" (respect OS, BUKAN hardware)
+ * 1. App.tsx guna MotionConfig reducedMotion="user" (respect OS, KECUALI heavy effect yg di-guard isLowPerf)
  * 2. useDevicePerformance masih dipanggil (class .low-perf-device dikenakan)
  * 3. index.css ada rule .low-perf-device yang matikan blur + mix-blend (BUKAN transition)
  * 4. BLANKET low-perf: semua device dilayan low-perf, tiada detection runtime.
@@ -19,31 +19,44 @@ describe('Low-End Device Performance Guarantee', () => {
   const css = fs.readFileSync(cssPath, 'utf-8');
   const hook = fs.readFileSync(hookPath, 'utf-8');
 
-  describe('Framer-motion respects OS motion preference (not hardware)', () => {
+  describe('Framer-motion respects OS motion preference', () => {
     it('wraps app in MotionConfig with reducedMotion="user"', () => {
       expect(app).toContain('<MotionConfig');
       expect(app).toContain('reducedMotion="user"');
     });
 
-    it('does NOT force reducedMotion="always" based on isLowPerf', () => {
+    it('does NOT force reducedMotion via isLowPerf inline', () => {
       expect(app).not.toContain("reducedMotion={isLowPerf");
     });
   });
 
-  describe('CSS low-perf-device tiering', () => {
-    it('kills backdrop-blur on low-end', () => {
-      expect(css).toContain('.low-perf-device .backdrop-blur-xl');
+  describe('CSS low-perf-device tiering (kill yang MAHAL sahaja)', () => {
+    it('kills all backdrop-filter (incl. inline) on low-end', () => {
+      expect(css).toContain('.low-perf-device *');
       expect(css).toContain('backdrop-filter: none !important');
+      expect(css).toContain('-webkit-backdrop-filter: none !important');
     });
 
-    it('neutralizes mix-blend-mode', () => {
-      expect(css).toContain('.low-perf-device [class*="mix-blend-"]');
+    it('neutralizes mix-blend-mode (compositing overhead)', () => {
       expect(css).toContain('mix-blend-mode: normal !important');
     });
 
-    it('does NOT kill transitions globally (that caused FAB flicker)', () => {
-      const lowPerfGlobalTransitionKill = /\\\\.low-perf-device \\\\*[^{]*\\\\{[^}]*transition-duration/g;
-      expect(lowPerfGlobalTransitionKill.test(css)).toBe(false);
+    it('kills large ambient blur >= 80px (fill-rate killer)', () => {
+      expect(css).toContain('blur-[120px]');
+      expect(css).toContain('blur-[80px]');
+      expect(css).toContain('filter: none !important');
+    });
+
+    it('keeps small blur (blur-sm/md/lg) — murah, untuk icon glow', () => {
+      // Rule guna `filter` specific, BUKAN `filter: none` pada `*`.
+      // Pastikan tiada `.low-perf-device *` yang set `filter: none` global.
+      const lowPerfGlobalFilterKill = /\.low-perf-device \*[^{]*\{[^}]*(?<![a-z-])filter: none/s;
+      expect(lowPerfGlobalFilterKill.test(css)).toBe(false);
+    });
+
+    it('does NOT kill transitions globally (fade/hover kekal)', () => {
+      expect(css).not.toContain('transition: none !important');
+      expect(css).not.toContain('animation: none !important');
     });
   });
 

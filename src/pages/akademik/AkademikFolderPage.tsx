@@ -17,11 +17,8 @@ import { zipSync, strToU8 } from 'fflate';
 
 const THEME = '#818CF8';
 
-// Device performance check (avoids heavy blur loops on low-tier mobile)
-const isLowEnd = typeof navigator !== 'undefined' && (
-  (('deviceMemory' in navigator) && (navigator as any).deviceMemory <= 4) ||
-  (navigator.hardwareConcurrency != null && navigator.hardwareConcurrency <= 4)
-);
+// BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
+const isLowEnd = true;
 
 const FOLDER_PRESETS = [
   { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },

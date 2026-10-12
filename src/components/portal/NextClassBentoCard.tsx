@@ -465,7 +465,15 @@ export function NextClassBentoCard({
     let countdownBadgeText = 'Sedang berlangsung';
     if (isOngoing) {
       const remainingMin = endMin - now.currentMinutes;
-      countdownBadgeText = remainingMin > 0 ? `Sedang berlangsung · Berbaki ${remainingMin} min` : 'Sedang berlangsung';
+      if (remainingMin <= 0) {
+        countdownBadgeText = 'Sedang berlangsung';
+      } else if (remainingMin < 60) {
+        countdownBadgeText = `Sedang berlangsung · Berbaki ${remainingMin} minit`;
+      } else {
+        const rh = Math.floor(remainingMin / 60);
+        const rm = remainingMin % 60;
+        countdownBadgeText = rm > 0 ? `Sedang berlangsung · Berbaki ${rh} jam ${rm} minit` : `Sedang berlangsung · Berbaki ${rh} jam`;
+      }
     } else {
       const diffMin = startMin - now.currentMinutes;
       if (diffMin <= 1) {
