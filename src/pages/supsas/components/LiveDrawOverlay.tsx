@@ -163,7 +163,7 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.4 } }}
           className="fixed inset-0 z-[999] flex items-center justify-center p-4 overflow-y-auto"
-          style={{ background: 'rgba(4, 9, 18, 0.98)', backdropFilter: 'blur(24px)' }}
+          style={{ background: 'rgba(4, 9, 18, 0.98)' }}
         >
           <motion.div
             initial={{ scale: 0.9, y: 40 }}

@@ -167,7 +167,7 @@ export function KarnivalScoreboard() {
 
       {/* ── HEADER ──────────────────────────────────────────────── */}
       <header className="relative z-20 px-6 md:px-10 py-4"
-        style={{ borderBottom: '1px solid rgba(139,92,246,0.15)', background: 'rgba(5,5,15,0.8)', backdropFilter: 'blur(20px)' }}>
+        style={{ borderBottom: '1px solid rgba(139,92,246,0.15)', background: 'rgba(5,5,15,0.8)' }}>
         <div className="grid grid-cols-3 items-center gap-4">
 
           {/* Left: branding */}
@@ -272,7 +272,7 @@ export function KarnivalScoreboard() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-none"
-            style={{ background: 'rgba(5,5,15,0.92)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'rgba(5,5,15,0.92)' }}
           >
             {/* Radial glow */}
             <div className="absolute inset-0" style={{
@@ -515,7 +515,7 @@ export function KarnivalScoreboard() {
 
       {/* ── FOOTER ──────────────────────────────────────────────── */}
       <footer className="relative z-20 px-6 md:px-10 py-3 flex items-center justify-between flex-wrap gap-2"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(5,5,15,0.9)', backdropFilter: 'blur(20px)' }}>
+        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(5,5,15,0.9)' }}>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">JPP POLISAS · Karnival {edition?.name}</p>
