@@ -95,7 +95,7 @@ export function KeusahawananOnboarding() {
         </button>
 
         {isWaiting && view === 'SELECT' ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center bg-white/5 border border-white/10 rounded-[2rem] p-12 backdrop-blur-3xl shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center bg-white/5 border border-white/10 rounded-[2rem] p-12  shadow-2xl">
             <div className="w-20 h-20 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
               <Lightbulb className="w-10 h-10 animate-pulse" />
             </div>
@@ -155,7 +155,7 @@ export function KeusahawananOnboarding() {
                   {/* Join Existing */}
                   <div
                     onClick={() => setView('JOIN')}
-                    className="group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-2xl p-8 hover:bg-white/10 transition-all duration-500"
+                    className="group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white/5 border border-white/10  p-8 hover:bg-white/10 transition-all duration-500"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-emerald-500/30">
@@ -168,7 +168,7 @@ export function KeusahawananOnboarding() {
                   {/* Create New */}
                   <div
                     onClick={() => setView('CREATE')}
-                    className="group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-2xl p-8 hover:bg-white/10 transition-all duration-500"
+                    className="group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white/5 border border-white/10  p-8 hover:bg-white/10 transition-all duration-500"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-amber-500/30">
@@ -268,7 +268,7 @@ export function KeusahawananOnboarding() {
                    </div>
                 </div>
 
-                <form onSubmit={handleCreate} className="bg-white/5 border border-white/10 rounded-3xl backdrop-blur-2xl p-6 md:p-10 shadow-2xl space-y-6">
+                <form onSubmit={handleCreate} className="bg-white/5 border border-white/10 rounded-3xl  p-6 md:p-10 shadow-2xl space-y-6">
                   
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-white/60">Nama Perniagaan / Syarikat</label>

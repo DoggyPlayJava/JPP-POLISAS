@@ -236,7 +236,7 @@ export function KelabPage() {
         </div>
 
         <div className="relative w-full max-w-2xl group mt-4 z-10">
-          <div className="absolute inset-0 bg-primary/5 blur-2xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-primary/5  rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity" />
           <div className="relative flex items-center bg-card border border-border shadow-xl rounded-full overflow-hidden p-2">
             <Search className="w-6 h-6 text-muted-foreground/40 ml-4 shrink-0" />
             <Input placeholder="Taip nama kelab (cth: Elektron, Ketema)..."

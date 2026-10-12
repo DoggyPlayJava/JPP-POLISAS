@@ -202,7 +202,7 @@ export function SupsasLayout() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-4 top-20 z-40 rounded-[2rem] bg-[#0A1628]/95 backdrop-blur-3xl border border-white/10 p-5 flex flex-col gap-2 shadow-[0_20px_60px_rgba(0,0,0,0.5)] md:hidden"
+            className="fixed inset-x-4 top-20 z-40 rounded-[2rem] bg-[#0A1628]/95  border border-white/10 p-5 flex flex-col gap-2 shadow-[0_20px_60px_rgba(0,0,0,0.5)] md:hidden"
           >
             {NAV_ITEMS.map((item) => {
               const active = location.pathname === item.path || (item.path !== '/supsas' && location.pathname.startsWith(item.path));

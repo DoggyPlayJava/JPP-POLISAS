@@ -140,10 +140,10 @@ const MODULES = [
           {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
             <motion.div
               key={i}
-              initial={{ }}
-              animate={{ height: `${h}%` }}
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: h / 100 }}
               transition={{ delay: 0.3 + (i * 0.1), duration: 0.8 }}
-              className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
+              className="w-4 md:w-6 lg:w-8 h-full origin-bottom bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
             />
           ))}
         </div>
@@ -365,7 +365,7 @@ export const Navbar: React.FC = () => {
           className={cn(
             "flex items-center justify-between w-full max-w-6xl px-4 md:px-6 py-3 md:py-2.5 rounded-full border transition-all duration-500",
             isScrolled
-              ? "bg-[#F8F6EE]/94 backdrop-blur-2xl border-[#D9C9B2] shadow-[0_6px_25px_rgba(46,58,47,0.08)]"
+              ? "bg-[#F8F6EE]/94  border-[#D9C9B2] shadow-[0_6px_25px_rgba(46,58,47,0.08)]"
               : "bg-white/85 backdrop-blur-md border-[#D9C9B2]/80 shadow-xs"
           )}
         >
@@ -428,7 +428,7 @@ export const Navbar: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-4 top-24 z-40 p-6 rounded-3xl bg-[#F8F6EE]/98 backdrop-blur-2xl border border-[#D9C9B2] md:hidden shadow-xl flex flex-col gap-3"
+            className="fixed inset-x-4 top-24 z-40 p-6 rounded-3xl bg-[#F8F6EE]/98  border border-[#D9C9B2] md:hidden shadow-xl flex flex-col gap-3"
           >
             {navLinks.map((item) => (
               <button

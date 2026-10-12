@@ -89,8 +89,8 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
           className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-red-100 dark:border-red-900/30 overflow-hidden relative"
         >
           {/* Danger background effect */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full  pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full  pointer-events-none"></div>
 
           <div className="w-24 h-24 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 relative z-10">
             <AlertOctagon className="w-12 h-12 text-red-600 dark:text-red-500" />

@@ -163,7 +163,7 @@ export function JppNexusPage() {
     return (
         <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white overflow-x-hidden transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5"
+                <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5"
                     style={{ background: themeColor }} />
             </div>
 
@@ -188,7 +188,7 @@ export function JppNexusPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Main Metrics Card */}
                         <div className="md:col-span-2 p-8 lg:p-10 rounded-[2.5rem] border border-indigo-200 dark:border-white/[0.06] bg-gradient-to-br from-indigo-900 via-indigo-950 to-violet-950 text-white shadow-md relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity" />
+                            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500/10 rounded-full  opacity-50 group-hover:opacity-70 transition-opacity" />
                             
                             <div className="relative z-10 space-y-8 flex flex-col justify-between h-full">
                                 <div className="flex items-start justify-between">

@@ -46,7 +46,7 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-card">
         <DialogHeader className="p-8 bg-gradient-to-r from-violet-600 to-indigo-600 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full  -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <DialogTitle className="text-3xl font-black italic flex items-center gap-3 relative z-10">
             <Bot size={32} /> JPP <span className="text-violet-200">Nexus</span>
           </DialogTitle>

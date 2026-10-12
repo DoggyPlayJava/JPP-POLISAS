@@ -338,7 +338,7 @@ export function FoodBankQrPassModal({
               {/* Top Boarding Pass Header Banner */}
               <div className="relative p-5 sm:p-6 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white overflow-hidden">
                 {/* Background Pattern Elements */}
-                <div className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-12 -mt-12" />
+                <div className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full  pointer-events-none -mr-12 -mt-12" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/10 rounded-full blur-xl pointer-events-none -ml-8 -mb-8" />
 
                 <div className="relative z-10 flex items-start justify-between gap-4">

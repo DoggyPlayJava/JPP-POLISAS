@@ -47,7 +47,7 @@ export function ResetPasswordPage() {
       {/* Background elements */}
 
       <div className="w-full max-w-md relative z-10">
-        <Card className="border border-border/60 shadow-2xl bg-card/80 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden">
+        <Card className="border border-border/60 shadow-2xl bg-card/80  rounded-[2.5rem] overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
           <CardHeader className="space-y-1 px-8 pt-8 pb-4">
             <CardTitle className="text-2xl font-black text-center tracking-tight text-primary">

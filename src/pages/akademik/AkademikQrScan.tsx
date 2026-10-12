@@ -403,7 +403,7 @@ export function AkademikQrScan() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60vw] h-[60vw] rounded-full blur-3xl opacity-[0.07]" style={{ background: THEME }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60vw] h-[60vw] rounded-full  opacity-[0.07]" style={{ background: THEME }} />
       </div>
       <motion.div
         initial={{ opacity: 0, y: 24 }}

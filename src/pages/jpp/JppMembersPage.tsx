@@ -765,7 +765,7 @@ export function JppMembersPage() {
     <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5 dark:opacity-8"
+        <div className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
           style={{ background: themeColor }} />
       </div>
 

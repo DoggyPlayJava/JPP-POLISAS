@@ -2473,8 +2473,8 @@ export function JppFoodBankAdmin() {
                  ════════════════════════════════════════════════════════════════════ */}
               <div className="p-5 sm:p-7 rounded-3xl bg-slate-950 text-white shadow-2xl border border-emerald-500/30 relative overflow-hidden">
                 {/* Obsidian Emerald Ambient Glow */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full  pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full  pointer-events-none" />
 
                 {/* HUD Header Bar */}
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">

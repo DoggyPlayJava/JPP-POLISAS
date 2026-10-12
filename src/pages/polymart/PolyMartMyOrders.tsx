@@ -190,10 +190,10 @@ function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelRe
         
         {/* Active Progress Line */}
         <motion.div 
-          className="absolute top-4 left-2 h-1 rounded-full z-0"
+          className="absolute top-4 left-2 right-2 h-1 rounded-full z-0 origin-left"
           style={{ background: PM_ACCENT }}
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.max(0, currentIdx) * (100 / (steps.length - 1))}%` }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: Math.max(0, currentIdx) / (steps.length - 1) }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
         />
 
@@ -210,8 +210,8 @@ function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelRe
                   backgroundColor: isActive ? PM_ACCENT : 'hsl(var(--muted))',
                   color: isActive ? '#fff' : 'hsl(var(--muted-foreground))',
                   scale: isCurrent ? 1.15 : 1,
-                  boxShadow: isCurrent ? `0 0 12px ${PM_ACCENT}40` : 'none'
                 }}
+                style={{ boxShadow: isCurrent ? `0 0 12px ${PM_ACCENT}40` : 'none' }}
                 className="w-8 h-8 rounded-full flex items-center justify-center border-[3px] border-card transition-colors duration-300"
               >
                 <StepIcon className="w-3.5 h-3.5" />

@@ -149,7 +149,7 @@ export function ClubDetailPage() {
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-12 md:gap-16">
           <motion.div 
             whileHover={{ y: -10, rotate: -2 }}
-            className="w-56 h-56 rounded-[3.5rem] bg-white/10 backdrop-blur-2xl border-4 border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-2xl hover:border-white/40 transition-all duration-500">
+            className="w-56 h-56 rounded-[3.5rem] bg-white/10  border-4 border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-2xl hover:border-white/40 transition-all duration-500">
             {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.name} /> : <span className="text-7xl font-black">{club.short_name?.slice(0, 2)}</span>}
           </motion.div>
           <div className="text-center md:text-left space-y-6 pt-4">

@@ -1124,8 +1124,8 @@ export function KebajikanFoodBankPage() {
       {activeApplication ? (
         <div className="rounded-3xl bg-slate-900 text-white border border-amber-500/40 shadow-2xl relative overflow-hidden">
           {/* Subtle Accent Glows */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full  pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full  pointer-events-none" />
 
           {/* Boarding Pass Header Strip */}
           <div className="p-6 sm:p-7 border-b border-white/10 bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">

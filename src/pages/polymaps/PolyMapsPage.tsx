@@ -2253,10 +2253,10 @@ export function PolyMapsPage() {
                                       {steps.map((_, idx) => (
                                         <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
                                           <motion.div 
-                                            className="h-full bg-white"
+                                            className="h-full w-full origin-left bg-white"
                                             initial={false}
                                             animate={{ 
-                                              width: idx <= currentStep ? '100%' : '0%' 
+                                              scaleX: idx <= currentStep ? 1 : 0 
                                             }}
                                             transition={{ duration: 0.3 }}
                                           />

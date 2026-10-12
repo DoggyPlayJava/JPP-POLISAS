@@ -106,11 +106,11 @@ export function AkademikLayout() {
       {/* ── Background blobs ── */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-[30%] -left-[10%] w-[60vw] h-[60vw] rounded-full opacity-[0.06] blur-3xl"
+          className="absolute -top-[30%] -left-[10%] w-[60vw] h-[60vw] rounded-full opacity-[0.06] "
           style={{ background: THEME }}
         />
         <div
-          className="absolute bottom-0 right-0 w-[50vw] h-[50vw] rounded-full opacity-[0.04] blur-3xl"
+          className="absolute bottom-0 right-0 w-[50vw] h-[50vw] rounded-full opacity-[0.04] "
           style={{ background: '#60A5FA' }}
         />
       </div>

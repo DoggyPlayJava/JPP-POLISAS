@@ -93,7 +93,7 @@ export function KebajikanStatsPage() {
       {/* Glow Effects */}
       
       {/* Hero */}
-      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/40 backdrop-blur-3xl transition-colors">
+      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/40  transition-colors">
         <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20 text-center relative z-10">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <div

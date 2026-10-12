@@ -429,8 +429,8 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
     <div
       className="relative rounded-3xl overflow-hidden w-full shrink-0 border border-amber-500/20 max-h-[180px] bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950/40"
     >
-      <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-20 bg-amber-500 pointer-events-none" />
-      <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full blur-2xl opacity-15 bg-orange-500 pointer-events-none" />
+      <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full  opacity-20 bg-amber-500 pointer-events-none" />
+      <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full  opacity-15 bg-orange-500 pointer-events-none" />
 
       <div className="relative p-4 sm:p-5 flex items-center justify-between h-full">
         <div className="flex-1 pr-3">

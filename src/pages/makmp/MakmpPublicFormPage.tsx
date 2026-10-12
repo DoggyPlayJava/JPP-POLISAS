@@ -1325,7 +1325,7 @@ export default function MakmpPublicFormPage() {
         {/* Banner Hero */}
         {step !== 4 && (
           <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-white dark:via-slate-900/40 dark:to-slate-900 p-6 md:p-8 mb-8 shadow-sm dark:shadow-xl transition-colors">
-            <div className="absolute -right-8 -top-8 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -right-8 -top-8 w-48 h-48 bg-amber-500/10 rounded-full  pointer-events-none" />
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold mb-3">
                 <Sparkles className="w-3.5 h-3.5" />

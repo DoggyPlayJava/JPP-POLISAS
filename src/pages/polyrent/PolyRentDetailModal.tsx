@@ -361,7 +361,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
           </div>
 
           {/* Floating Sticky Action Bar (Airbnb Reserve Style) */}
-          <div className="absolute bottom-0 inset-x-0 px-6 py-4 pb-8 sm:pb-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div className="absolute bottom-0 inset-x-0 px-6 py-4 pb-8 sm:pb-6 bg-white/80 dark:bg-slate-950/80  border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
              <div className="flex flex-col">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Sewa Bulanan</p>
                 <div className="flex items-end gap-1">

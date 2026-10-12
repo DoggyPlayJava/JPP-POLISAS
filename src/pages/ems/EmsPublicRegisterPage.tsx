@@ -1390,8 +1390,8 @@ export function EmsPublicRegisterPage() {
                 className="bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 text-left shadow-2xl relative overflow-hidden my-6 transition-colors"
               >
                 {/* Decorative glow */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full  pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full  pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                   {/* Left Pass Details */}

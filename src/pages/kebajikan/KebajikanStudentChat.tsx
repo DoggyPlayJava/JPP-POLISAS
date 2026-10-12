@@ -271,7 +271,7 @@ export function KebajikanStudentChat() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06] backdrop-blur-2xl bg-white/80 dark:bg-slate-950/80 transition-colors">
+      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06]  bg-white/80 dark:bg-slate-950/80 transition-colors">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate('/kebajikan/aduan-saya')}
@@ -486,7 +486,7 @@ export function KebajikanStudentChat() {
 
       {/* ── Sticky input bar (only when can chat) ── */}
       {canChat && (
-        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-slate-200 dark:border-white/[0.06] backdrop-blur-2xl bg-white/90 dark:bg-slate-950/90 transition-colors">
+        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-slate-200 dark:border-white/[0.06]  bg-white/90 dark:bg-slate-950/90 transition-colors">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-end gap-3">
             <div className="flex-1 relative">
               <Textarea

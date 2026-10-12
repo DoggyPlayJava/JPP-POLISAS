@@ -213,7 +213,7 @@ export function QuickActions({
       {/* ── BENTO 3: QR Merit (Small Square) ── */}
       {wrap((
         <>
-          <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 z-0", karnivalActive ? "bg-pink-500/30" : "bg-emerald-500/10 dark:bg-emerald-500/20")} />
+          <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full  -translate-y-1/2 translate-x-1/2 z-0", karnivalActive ? "bg-pink-500/30" : "bg-emerald-500/10 dark:bg-emerald-500/20")} />
           {getSupsasMetallicBackground(3)}
 
           <div className={cn("w-12 h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform relative z-10 shrink-0 mb-4", karnivalActive ? "bg-pink-500/20 border-pink-500/30 text-pink-400" : supsasActive ? "bg-orange-500/20 border-orange-500/30 text-orange-800 dark:text-orange-300" : "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 text-emerald-600 dark:text-emerald-400")}>
@@ -240,7 +240,7 @@ export function QuickActions({
       {!isJPPMode && (
         wrap((
           <>
-            <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 z-0", karnivalActive ? "bg-purple-500/30" : "bg-sky-500/10 dark:bg-sky-500/20")} />
+            <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full  -translate-y-1/2 translate-x-1/2 z-0", karnivalActive ? "bg-purple-500/30" : "bg-sky-500/10 dark:bg-sky-500/20")} />
             {getSupsasMetallicBackground(4)}
 
             <div className={cn("w-12 h-12 rounded-2xl border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform relative z-10 shrink-0", karnivalActive ? "bg-purple-500/20 border-purple-500/30 text-purple-400" : supsasActive ? "bg-orange-500/20 border-orange-500/30 text-orange-800 dark:text-orange-300" : "bg-sky-500/10 dark:bg-sky-500/20 border-sky-500/20 text-sky-600 dark:text-sky-400")}>

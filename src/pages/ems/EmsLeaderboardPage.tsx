@@ -560,7 +560,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
         {/* Ambient Background Lights */}
 
-        <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
+        <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60  border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
             <Lock className="w-12 h-12 text-amber-500 dark:text-amber-400" />
           </div>
@@ -606,7 +606,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
           {/* Ambient Background Lights */}
 
-          <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
+          <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60  border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
               <Lock className="w-12 h-12 text-amber-500 dark:text-amber-400" />
             </div>
@@ -905,7 +905,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 1ST PLACE (GOLD) - Center / Highest */}
                 {top1 ? (
                   <div className="order-1 md:order-2 flex flex-col items-center -mt-6 md:-mt-10">
-                    <div className="w-full bg-amber-50/40 dark:bg-gradient-to-b dark:from-amber-950/80 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-500 dark:border-amber-400/60 rounded-3xl p-8 text-center shadow-xl dark:shadow-[0_0_60px_rgba(245,158,11,0.35)] backdrop-blur-2xl relative overflow-hidden transform md:scale-105 transition-transform">
+                    <div className="w-full bg-amber-50/40 dark:bg-gradient-to-b dark:from-amber-950/80 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-500 dark:border-amber-400/60 rounded-3xl p-8 text-center shadow-xl dark:shadow-[0_0_60px_rgba(245,158,11,0.35)]  relative overflow-hidden transform md:scale-105 transition-transform">
                       <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 animate-pulse" />
 
                       {/* Crown / Trophy icon */}

@@ -1314,8 +1314,8 @@ export function NexusPage() {
             {/* Left Section: Dashboard & Status */}
             <div className="lg:col-span-5 space-y-8">
               <Card className="border-indigo-500/10 shadow-2xl overflow-hidden bg-white/80 dark:bg-[#121214]/80 backdrop-blur-xl relative">
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full  pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full  pointer-events-none" />
 
                 <CardHeader className="p-8 pb-4 relative z-10">
                   <div className="flex items-center justify-between mb-2">
@@ -1348,10 +1348,10 @@ export function NexusPage() {
 
                         <div className="w-full bg-white/10 rounded-full h-3 mb-3 p-0.5 border border-white/5 overflow-hidden">
                           <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(((tokenData?.current_balance || 0) / (tokenData?.monthly_allowance || 100)) * 100, 100)}%` }}
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: Math.min(((tokenData?.current_balance || 0) / (tokenData?.monthly_allowance || 100)), 1) }}
                             transition={{ delay: 0.5, duration: 1 }}
-                            className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                            className="bg-white h-full w-full origin-left rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]"
                           />
                         </div>
 

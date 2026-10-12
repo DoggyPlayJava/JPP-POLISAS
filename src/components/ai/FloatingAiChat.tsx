@@ -1889,7 +1889,7 @@ export function FloatingAiChat() {
           >
             {/* Header */}
             <div className={`p-5 text-white relative shrink-0 flex items-center justify-between bg-gradient-to-r ${themeColors.bg}`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full  -translate-y-1/2 translate-x-1/4 pointer-events-none" />
               <div className="relative z-10">
                 <h3 className="font-black text-lg italic flex items-center gap-2">
                   <Sparkles size={18} className="text-white/80" />

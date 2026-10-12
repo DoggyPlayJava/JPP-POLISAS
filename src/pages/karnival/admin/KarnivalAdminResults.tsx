@@ -172,10 +172,10 @@ export function KarnivalAdminResults() {
                   </div>
                   <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
                     <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: pct / 100 }}
                       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: rank * 0.05 }}
-                      className={`h-full rounded-full ${
+                      className={`h-full w-full origin-left rounded-full ${
                         rank === 0 ? 'bg-gradient-to-r from-yellow-400 to-amber-500' :
                         rank === 1 ? 'bg-gradient-to-r from-slate-300 to-slate-400' :
                         rank === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-600' :

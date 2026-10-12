@@ -123,7 +123,7 @@ export function KlkPublicStats() {
       {/* Glow Effects */}
       
       {/* Hero */}
-      <div className="relative overflow-hidden border-b border-white/5 bg-slate-900/40 backdrop-blur-3xl">
+      <div className="relative overflow-hidden border-b border-white/5 bg-slate-900/40 ">
         <div className="max-w-5xl mx-auto px-6 py-20 text-center relative z-10">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <div
@@ -239,10 +239,10 @@ export function KlkPublicStats() {
                       </div>
                       <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
                         <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(k.count / maxCount) * 100}%` }}
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: (k.count / maxCount) }}
                           transition={{ delay: 0.2 + i * 0.05, duration: 0.8, ease: 'easeOut' }}
-                          className="h-full rounded-full"
+                          className="h-full w-full origin-left rounded-full"
                           style={{ background: i === 0 ? '#EF4444' : i === 1 ? '#F59E0B' : KLS_COLOR }}
                         />
                       </div>

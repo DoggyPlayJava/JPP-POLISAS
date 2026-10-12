@@ -121,7 +121,7 @@ function CustomTooltip({
   return (
     <div
       {...tooltipProps}
-      className="bg-[#0f172a] backdrop-blur-2xl border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-[2rem] p-6 md:p-8 max-w-[420px] w-[calc(100vw-2rem)] flex flex-col gap-4 text-white font-sans relative overflow-hidden"
+      className="bg-[#0f172a]  border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-[2rem] p-6 md:p-8 max-w-[420px] w-[calc(100vw-2rem)] flex flex-col gap-4 text-white font-sans relative overflow-hidden"
     >
       {/* Decorative Glow */}
 

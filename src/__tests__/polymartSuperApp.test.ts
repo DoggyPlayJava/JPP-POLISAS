@@ -109,9 +109,9 @@ describe('PolyMartVendorStorefront Dedicated Merchant Page', () => {
     const storefrontPath = path.resolve(__dirname, '../pages/polymart/PolyMartVendorStorefront.tsx');
     const source = fs.readFileSync(storefrontPath, 'utf-8');
 
-    // Smart Preset Ambient Mesh tokens
+    // Smart Preset Ambient Mesh tokens (blur-3xl dibuang FASA 1b — flat wash sahaja)
     expect(source).toContain('from-amber-950 via-slate-900 to-stone-950');
-    expect(source).toContain('bg-amber-500/15 blur-3xl');
+    expect(source).toContain('bg-amber-500/15');
 
     // Verified badge token
     expect(source).toContain('Peniaga Siswa Sah POLISAS');

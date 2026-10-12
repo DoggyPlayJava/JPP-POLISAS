@@ -434,10 +434,10 @@ export function KarnivalScoreboard() {
                               <div className="mt-3 h-1.5 rounded-full w-full overflow-hidden"
                                 style={{ background: 'rgba(255,255,255,0.08)' }}>
                                 <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${pct}%` }}
+                                  initial={{ scaleX: 0 }}
+                                  animate={{ scaleX: pct / 100 }}
                                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 + i * 0.1 }}
-                                  className="h-full rounded-full"
+                                  className="h-full w-full origin-left rounded-full"
                                   style={{ background: `linear-gradient(90deg, ${medal.barFrom}, ${medal.barTo})` }} />
                               </div>
                               <p className="text-[10px] text-right font-black mt-1" style={{ color: `${medal.color}60` }}>
@@ -468,10 +468,10 @@ export function KarnivalScoreboard() {
                           >
                             {/* Progress bg */}
                             <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pct}%` }}
+                              initial={{ scaleX: 0 }}
+                              animate={{ scaleX: pct / 100 }}
                               transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.4 + i * 0.05 }}
-                              className="absolute inset-y-0 left-0 rounded-2xl"
+                              className="absolute inset-y-0 left-0 right-0 origin-left rounded-2xl"
                               style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.10), transparent)' }} />
 
                             <div className="relative flex items-center gap-4 px-5 py-3.5">

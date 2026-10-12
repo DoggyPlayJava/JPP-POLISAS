@@ -624,7 +624,7 @@ export function JppOverviewPage() {
     <div className="min-h-screen bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5 dark:opacity-8"
+        <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
           style={{ background: themeColor }} />
       </div>
 

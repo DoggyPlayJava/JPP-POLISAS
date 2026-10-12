@@ -42,7 +42,7 @@ export function AiReviewModal({ isOpen, onClose, programId, programName }: AiRev
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl bg-card">
         <DialogHeader className="p-8 bg-gradient-to-r from-emerald-600 to-teal-700 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full  -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <DialogTitle className="text-3xl font-black italic flex items-center gap-3 relative z-10">
             <FileSearch size={32} /> Semakan JPP <span className="text-emerald-200">AI</span>
           </DialogTitle>

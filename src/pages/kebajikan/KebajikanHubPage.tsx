@@ -137,7 +137,7 @@ export function KebajikanHubPage() {
           className="group relative rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-teal-500/20 hover:border-teal-500/40 dark:hover:border-teal-400/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
         >
           {/* Subtle Glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-teal-500/10 dark:bg-teal-500/15 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-teal-500/10 dark:bg-teal-500/15 rounded-full  pointer-events-none group-hover:scale-110 transition-transform duration-500" />
 
           <div className="relative z-10">
             {/* Header Strip */}
@@ -200,7 +200,7 @@ export function KebajikanHubPage() {
           className="group relative rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-amber-500/20 hover:border-amber-500/40 dark:hover:border-amber-400/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
         >
           {/* Subtle Glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 dark:bg-amber-500/15 rounded-full  pointer-events-none group-hover:scale-110 transition-transform duration-500" />
 
           <div className="relative z-10">
             {/* Header Strip */}

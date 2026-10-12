@@ -693,12 +693,11 @@ function App() {
                           return (
                             <motion.div
                               layout
-                              initial={{ opacity: 0, y: -50, scale: 0.3, width: 60, height: 20 }}
+                              initial={{ opacity: 0, y: -50, scale: 0.3 }}
                               animate={{ 
                                 opacity: t.visible ? 1 : 0, 
                                 y: t.visible ? 8 : -50,
                                 scale: t.visible ? 1 : 0.5,
-                                width: 'auto',
                                 }}
                               exit={{ opacity: 0, y: -50, scale: 0.5 }}
                               transition={{ 

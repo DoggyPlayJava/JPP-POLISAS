@@ -79,7 +79,7 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-card">
           <DialogHeader className="p-6 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex flex-col items-start relative shrink-0">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full  -translate-y-1/2 translate-x-1/4" />
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-3">
               <Sparkles size={24} className="text-violet-100" />
             </div>

@@ -477,7 +477,7 @@ export function UrusKelabPage() {
 
             {/* STICKY ACTION BAR */}
             <div className="fixed bottom-[100px] md:bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-6">
-                <div className="glass rounded-[2rem] p-3 flex items-center justify-between gap-4 shadow-2xl border-white/40 ring-1 ring-black/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl">
+                <div className="glass rounded-[2rem] p-3 flex items-center justify-between gap-4 shadow-2xl border-white/40 ring-1 ring-black/5 bg-white/80 dark:bg-slate-900/80 ">
                     <div className="flex items-center gap-3 pl-3">
                         <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
                             <Save size={18} />

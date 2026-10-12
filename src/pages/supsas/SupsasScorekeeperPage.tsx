@@ -318,7 +318,7 @@ export function SupsasScorekeeperPage() {
     return (
       <div className="min-h-screen bg-[#060D17] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
         {/* Background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full  pointer-events-none" />
 
         <div className="w-full max-w-sm space-y-8 z-10">
           <div className="text-center space-y-3">

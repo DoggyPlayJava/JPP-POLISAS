@@ -35,14 +35,14 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
       "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
       karnivalActive
         ? isScrolled
-          ? 'bg-[#0a0018]/80 backdrop-blur-3xl border-b border-pink-500/30 py-3 shadow-[0_4px_40px_rgba(236,72,153,0.3)]'
+          ? 'bg-[#0a0018]/80  border-b border-pink-500/30 py-3 shadow-[0_4px_40px_rgba(236,72,153,0.3)]'
           : 'bg-transparent backdrop-blur-sm'
         : supsasActive
           ? isScrolled
-            ? 'bg-[#0a0500]/80 backdrop-blur-3xl border-b border-amber-500/30 py-3 shadow-[0_4px_40px_rgba(245,158,11,0.3)]'
+            ? 'bg-[#0a0500]/80  border-b border-amber-500/30 py-3 shadow-[0_4px_40px_rgba(245,158,11,0.3)]'
             : 'bg-transparent backdrop-blur-sm'
           : isScrolled
-            ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-b border-black/5 dark:border-white/10 py-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]'
+            ? 'bg-white/80 dark:bg-slate-950/80  border-b border-black/5 dark:border-white/10 py-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]'
             : 'bg-transparent'
     )}>
       <div className="flex items-center gap-4">

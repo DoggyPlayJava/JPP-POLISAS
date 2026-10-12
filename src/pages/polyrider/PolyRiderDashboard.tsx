@@ -1200,8 +1200,8 @@ export function PolyRiderDashboard() {
 
           {!profile.is_active ? (
             <div className="bg-red-50/50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20 rounded-[2rem] p-8 text-center relative overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full  pointer-events-none"></div>
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full  pointer-events-none"></div>
               
               <div className="w-20 h-20 bg-white dark:bg-zinc-900 shadow-xl dark:shadow-none border border-slate-100 dark:border-white/5 rounded-full flex items-center justify-center mx-auto mb-6 relative z-10">
                 <Bike className="w-10 h-10 text-slate-300 dark:text-white/20" />

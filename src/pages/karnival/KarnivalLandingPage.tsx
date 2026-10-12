@@ -51,8 +51,8 @@ export function KarnivalLandingPage() {
       >
         {/* Background glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-violet-600/10 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-purple-600/10 blur-3xl" />
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-violet-600/10 " />
+          <div className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-purple-600/10 " />
         </div>
 
         <div className="relative">

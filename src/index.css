@@ -243,39 +243,6 @@ body.supsas-route {
   color: #ffffff !important;
 }
 
-/* ── Low-End Device Performance Overrides ──────────────────────────
-   BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
-   Kill yang MAHAL sahaja — punca lag sebenar pada GPU lemah:
-     - backdrop-filter (live blur, recompute tiap scroll)  → none
-     - mix-blend-mode (layer compositing berasingan)        → normal
-     - large ambient blur >= 64px (fill-rate killer)        → none
-   KEKAL transition + animation ringan (fade/hover/spin/pulse) — murah,
-   penting untuk UX, bukan punca lag. */
-.low-perf-device * {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  mix-blend-mode: normal !important;
-}
-
-.low-perf-device body::after {
-  display: none !important;
-}
-
-/* Large ambient glow blobs (>=64px). Kekal blur kecil (blur-sm/md/lg,
-   blur-[2px]..[8px]) untuk icon glow + cursor trail yang murah.
-   ponytail: page baru guna blur-[9xpx] besar, tambah selector sini. */
-.low-perf-device .blur-3xl,
-.low-perf-device [class*="blur-[80px]"],
-.low-perf-device [class*="blur-[100px]"],
-.low-perf-device [class*="blur-[120px]"],
-.low-perf-device [class*="blur-[130px]"],
-.low-perf-device [class*="blur-[140px]"],
-.low-perf-device [class*="blur-[150px]"],
-.low-perf-device [class*="blur-[160px]"] {
-  filter: none !important;
-  -webkit-filter: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

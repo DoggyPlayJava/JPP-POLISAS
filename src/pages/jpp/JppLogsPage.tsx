@@ -289,7 +289,7 @@ export function JppLogsPage() {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 transition-colors">
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5" style={{ background: themeColor }} />
+        <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5" style={{ background: themeColor }} />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto space-y-8">

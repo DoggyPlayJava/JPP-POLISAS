@@ -418,7 +418,7 @@ export function PolyMartLayout() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-2xl flex flex-col sm:hidden"
+              className="fixed inset-0 z-[100] bg-background/95  flex flex-col sm:hidden"
             >
               {/* Header */}
               <div className="flex items-center gap-3 p-4 border-b border-border/40 bg-background safe-area-pt">

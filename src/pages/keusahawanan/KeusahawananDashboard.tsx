@@ -584,7 +584,7 @@ export function KeusahawananDashboard() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="bg-emerald-500/10 border border-emerald-500/20 rounded-[1.5rem] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden"
         >
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full " />
           <div className="relative z-10">
             <h3 className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">Perniagaan Tambahan</h3>
             <p className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
@@ -608,7 +608,7 @@ export function KeusahawananDashboard() {
           transition={{ delay: 0.08 }}
           className="relative overflow-hidden rounded-[1.5rem] p-5 sm:p-6 bg-gradient-to-r from-emerald-950/90 via-teal-900/90 to-slate-900/95 border border-emerald-500/30 shadow-xl"
         >
-          <div className="absolute -right-12 -top-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -right-12 -top-12 w-40 h-40 bg-emerald-500/10 rounded-full  pointer-events-none" />
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shrink-0 mt-0.5">
@@ -663,7 +663,7 @@ export function KeusahawananDashboard() {
         >
           {data.polymartProductsCount > 0 ? (
             <div className="rounded-[2rem] p-5 sm:p-6 bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5">
-              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/10 rounded-full  pointer-events-none" />
               <div className="space-y-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
                   <ShoppingBag className="w-3.5 h-3.5" />

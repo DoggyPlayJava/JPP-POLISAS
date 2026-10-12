@@ -2606,7 +2606,7 @@ export function PolyRiderHome() {
             {tripHistory.map(t => (
               <div key={t.id} className="min-w-[240px] w-[240px] shrink-0 snap-center bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 shadow-sm rounded-2xl p-4 flex flex-col relative overflow-hidden">
                 {/* Background decorative blob */}
-                <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full blur-2xl opacity-20 ${t.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full  opacity-20 ${t.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                 
                 <div className="flex justify-between items-start mb-4 relative z-10">
                   <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${

@@ -628,10 +628,10 @@ export function KlkDashboard() {
                   </div>
                   <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
                     <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(k.count / maxKawasanCount) * 100}%` }}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: (k.count / maxKawasanCount) }}
                       transition={{ delay: 0.3 + i * 0.05, duration: 0.6, ease: 'easeOut' }}
-                      className="h-full rounded-full"
+                      className="h-full w-full origin-left rounded-full"
                       style={{ background: i === 0 ? '#EF4444' : i === 1 ? '#F59E0B' : KLS_COLOR }}
                     />
                   </div>

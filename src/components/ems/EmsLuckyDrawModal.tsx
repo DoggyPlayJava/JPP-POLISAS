@@ -324,7 +324,7 @@ export function EmsLuckyDrawModal({
         {/* SPINNING DISPLAY REEL / WHEEL CONTAINER */}
         <div className="relative bg-[#07090F] border-2 border-amber-500/40 rounded-3xl p-8 text-center shadow-inner overflow-hidden flex flex-col items-center justify-center min-h-[220px]">
           {/* Animated Glow Backlight */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full  pointer-events-none" />
 
           {!canManage ? (
             /* Access Denied Card */

@@ -779,8 +779,8 @@ export function EmsJuryPortalPage() {
           <ThemeToggle />
         </div>
 
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-600/15 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-600/15 dark:bg-purple-600/20 rounded-full  pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-600/15 rounded-full  pointer-events-none" />
 
         <div className="w-full max-w-md bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 text-slate-900 dark:text-white">
           <div className="flex flex-col items-center text-center mb-8">

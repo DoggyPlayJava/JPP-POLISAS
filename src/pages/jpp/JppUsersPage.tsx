@@ -233,7 +233,7 @@ export function JppUsersPage() {
     return (
         <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5 dark:opacity-8"
+                <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
                     style={{ background: themeColor }} />
             </div>
 
@@ -329,7 +329,7 @@ export function JppUsersPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
                         <div className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-6 lg:p-8 relative overflow-hidden shadow-sm dark:shadow-none">
                             {/* Subtle warning glow */}
-                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-5 bg-amber-500 pointer-events-none" />
+                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full  opacity-5 bg-amber-500 pointer-events-none" />
                             
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-200 dark:border-white/[0.06] pb-4">
                                 <div className="flex items-center gap-3">

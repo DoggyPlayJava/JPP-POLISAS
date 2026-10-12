@@ -168,7 +168,7 @@ export function KebajikanMyTickets() {
       {/* Background Glow */}
       
       {/* Header */}
-      <div className="sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 backdrop-blur-2xl transition-colors">
+      <div className="sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60  transition-colors">
         <div className="flex items-center gap-3">
           <HeartHandshake className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           <div>

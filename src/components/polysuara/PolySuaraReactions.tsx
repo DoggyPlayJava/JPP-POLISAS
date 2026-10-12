@@ -192,7 +192,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
               zIndex: 9999,
             } : undefined}
             className={cn(
-              "z-[9999] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/15 shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap",
+              "z-[9999] bg-white/95 dark:bg-slate-900/95  border border-slate-200/90 dark:border-white/15 shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap",
               !popoverCoords && "absolute bottom-full mb-2 left-0"
             )}
           >
@@ -257,7 +257,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
               zIndex: 9985,
             } : undefined}
             className={cn(
-              "z-[9985] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/15 shadow-2xl rounded-2xl p-2.5 flex flex-col gap-1 min-w-[190px] max-w-[240px]",
+              "z-[9985] bg-white/95 dark:bg-slate-900/95  border border-slate-200/90 dark:border-white/15 shadow-2xl rounded-2xl p-2.5 flex flex-col gap-1 min-w-[190px] max-w-[240px]",
               !breakdownCoords && "absolute bottom-full mb-2 left-0"
             )}
           >

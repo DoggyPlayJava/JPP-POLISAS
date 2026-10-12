@@ -296,7 +296,7 @@ describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
       expect(html).toContain('dark:bg-slate-900/95');
       expect(html).toContain('border-slate-200/90');
       expect(html).toContain('dark:border-white/15');
-      expect(html).toContain('backdrop-blur-2xl');
+      // backdrop-filter diganti solid surface (FASA 1a) — solid bg sudah diassert di atas.
     });
   });
 });

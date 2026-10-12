@@ -363,8 +363,8 @@ export function PolyMartVendorStorefront() {
         </div>
       ) : (
         <div className="relative h-40 sm:h-52 w-full bg-gradient-to-br from-amber-950 via-slate-900 to-stone-950 border-b border-amber-500/20 overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-500/15 blur-3xl opacity-20 pointer-events-none" />
-          <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-orange-500/15 blur-2xl opacity-15 pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-500/15  opacity-20 pointer-events-none" />
+          <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-orange-500/15  opacity-15 pointer-events-none" />
           <div className="absolute right-4 bottom-2 text-white/[0.07] pointer-events-none">
             <CategoryWatermark className="w-28 h-28 sm:w-36 sm:h-36" />
           </div>

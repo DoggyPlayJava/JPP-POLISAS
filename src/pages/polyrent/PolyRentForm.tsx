@@ -276,9 +276,9 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
         {/* Progress Bar */}
         <div className="h-1 bg-slate-100 dark:bg-slate-800">
           <motion.div 
-            className="h-full bg-teal-500"
-            initial={{ width: '25%' }}
-            animate={{ width: `${(step / 4) * 100}%` }}
+            className="h-full w-full origin-left bg-teal-500"
+            initial={{ scaleX: 0.25 }}
+            animate={{ scaleX: (step / 4) }}
             transition={{ ease: "easeInOut" }}
           />
         </div>

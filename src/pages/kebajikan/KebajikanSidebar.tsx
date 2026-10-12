@@ -112,7 +112,7 @@ export function KebajikanSidebar() {
   return (
     <aside
       className={cn(
-        "tour-kebajikan-sidebar w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-[140] relative border-r transition-colors duration-300",
+        "tour-kebajikan-sidebar w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0  z-[140] relative border-r transition-colors duration-300",
         isDark ? "border-white/5" : "border-teal-200/60"
       )}
       style={{ background: bgGradient }}

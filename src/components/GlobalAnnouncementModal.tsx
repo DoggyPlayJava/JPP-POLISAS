@@ -277,7 +277,7 @@ export function GlobalAnnouncementModal() {
           {/* Image inside scroll so it doesn't steal fixed space */}
           {current.image_url && (
             <div className="w-full relative overflow-hidden bg-black flex items-center justify-center group mb-4">
-              <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-2xl scale-125" />
+              <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20  scale-125" />
               <img src={current.image_url} alt="Poster" className="relative w-full max-h-[35vh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
               <button

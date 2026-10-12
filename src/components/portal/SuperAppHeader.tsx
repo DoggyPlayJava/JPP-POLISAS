@@ -49,8 +49,8 @@ export function SuperAppHeader({
       )}
     >
       {/* Subtle Ambient Decorative Glows */}
-      <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-black/25 blur-3xl pointer-events-none" />
+      <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-white/10  pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-black/25  pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
       {/* Main Header Container */}
