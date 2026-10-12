@@ -91,7 +91,6 @@ export function KebajikanStatsPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Glow Effects */}
-      <div className="absolute top-0 inset-x-0 h-[600px] bg-teal-500/10 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Hero */}
       <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/40 backdrop-blur-3xl transition-colors">

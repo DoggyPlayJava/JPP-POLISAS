@@ -265,9 +265,9 @@ export function FiraMegaBanner({ onClose }: FiraMegaBannerProps) {
           <AnimatePresence>
             {showDetails && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, }}
+                animate={{ opacity: 1, }}
+                exit={{ opacity: 0, }}
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden pt-4 text-left"
               >

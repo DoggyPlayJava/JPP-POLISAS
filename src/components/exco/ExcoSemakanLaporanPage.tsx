@@ -343,9 +343,9 @@ export function ExcoSemakanLaporanPage() {
             <AnimatePresence>
               {showArchived && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0, }}
+                  animate={{ opacity: 1, }}
+                  exit={{ opacity: 0, }}
                   className="space-y-3 overflow-hidden"
                 >
                   {archived.map(report => (

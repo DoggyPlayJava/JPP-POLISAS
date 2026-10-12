@@ -31,7 +31,6 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIGrammarCheck } from '@/components/ai/AIGrammarCheck';
 import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -64,8 +63,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [editTarget, setEditTarget]     = useState<any>(null);
   const [saving, setSaving]             = useState(false);
   
-  const { isLowPerf } = useDevicePerformance();
-  const PAGE_SIZE = isLowPerf ? 10 : 20;
+  const PAGE_SIZE = 20;
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
 
   // Reset limit when filter changes

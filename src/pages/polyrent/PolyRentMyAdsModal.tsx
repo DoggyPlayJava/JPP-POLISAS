@@ -374,9 +374,9 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                         <AnimatePresence>
                           {editingId === listing.id && (
                             <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
+                              initial={{ opacity: 0, }}
+                              animate={{ opacity: 1, }}
+                              exit={{ opacity: 0, }}
                               transition={{ duration: 0.25 }}
                               className="overflow-hidden"
                             >

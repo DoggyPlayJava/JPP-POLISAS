@@ -121,7 +121,6 @@ export function KlkPublicStats() {
   return (
     <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 text-slate-50 relative overflow-hidden">
       {/* Glow Effects */}
-      <div className="absolute top-0 inset-x-0 h-[600px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Hero */}
       <div className="relative overflow-hidden border-b border-white/5 bg-slate-900/40 backdrop-blur-3xl">

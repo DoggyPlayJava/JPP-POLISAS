@@ -31,7 +31,6 @@ import {
 import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkademikClubId } from '@/types';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // Roles yang boleh self-register (Presiden dan MT perlu pilih kelab)
 const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
@@ -41,7 +40,6 @@ type RegisterMode = 'student' | 'leader' | 'staff';
 type Step = 1 | 2;
 
 export function LoginPage() {
-  const { isLowPerf: isLowEnd } = useDevicePerformance();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -354,8 +352,6 @@ export function LoginPage() {
       {/* ── Left Editorial Brand Panel (Authentic POLISAS Structure) ─── */}
       <div className="hidden lg:flex lg:col-span-5 flex-col justify-between relative bg-[#2E3A2F] text-[#F8F6EE] p-12 overflow-hidden border-r border-[#D9C9B2]/20">
         {/* Ambient Organic Glows */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#6B7F5B]/15 rounded-full blur-[120px] -mr-[250px] -mt-[250px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#C96F4F]/15 rounded-full blur-[100px] -ml-[200px] -mb-[200px] pointer-events-none" />
 
         {/* Top Brand Identity */}
         <div className="relative z-10 flex items-center gap-3.5">
@@ -699,9 +695,9 @@ export function LoginPage() {
                     <AnimatePresence>
                       {showManualRegister && (
                         <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
+                          initial={{ opacity: 0, }}
+                          animate={{ opacity: 1, }}
+                          exit={{ opacity: 0, }}
                           className="space-y-3.5 overflow-hidden pt-1"
                         >
                           <div className="space-y-1">
@@ -999,9 +995,9 @@ export function LoginPage() {
                   /* 3. Smooth Expanded Manual Form (Only when clicked) */
                   <AnimatePresence>
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, }}
+                      animate={{ opacity: 1, }}
+                      exit={{ opacity: 0, }}
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                       className="pt-3 border-t border-[#D9C9B2]/60 dark:border-[#3A4A3B] space-y-3.5 overflow-hidden"
                     >

@@ -186,9 +186,9 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
         <AnimatePresence>
           {showAddForm ? (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, }}
+              animate={{ opacity: 1, }}
+              exit={{ opacity: 0, }}
               className="bg-slate-50 dark:bg-zinc-900 rounded-2xl p-4 border border-slate-200 dark:border-white/10 overflow-hidden mb-3"
             >
               <p className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-3">Kenalan Baharu</p>

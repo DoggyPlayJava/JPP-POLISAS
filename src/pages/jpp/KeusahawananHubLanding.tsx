@@ -10,8 +10,6 @@ export function KeusahawananHubLanding() {
   return (
     <div className="min-h-full w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 md:p-12 relative overflow-hidden flex flex-col justify-center items-center transition-colors">
       {/* Background Glows */}
-      <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-4xl z-10">
         <Button 

@@ -35,7 +35,6 @@ function KPICard({ icon: Icon, label, value, sub, color, delay }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
       className="relative rounded-[1.5rem] p-5 overflow-hidden bg-card border border-border/50 hover:shadow-xl transition-all">
-      <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-25 pointer-events-none" style={{ background: color }} />
       <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4" style={{ background: hexToRgba(color, 0.1) }}>
         <Icon className="w-5 h-5" style={{ color }} />
       </div>
@@ -63,7 +62,6 @@ function AdsMarketingWidget({ stats }: { stats: StatsData }) {
       className="relative overflow-hidden rounded-3xl p-5 border border-amber-500/30 bg-amber-500/10 shadow-lg mt-2 mb-4 group cursor-pointer"
       onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya dari tab analisis jualan POS dan berminat untuk langgan slot iklan PolyMart!`, '_blank')}
     >
-      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-colors pointer-events-none" />
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
         <div className="flex items-center gap-4">

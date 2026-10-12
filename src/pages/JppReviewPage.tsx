@@ -555,9 +555,9 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
               <AnimatePresence>
                 {showFeedback && (report as any).admin_feedback && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     className="overflow-hidden"
                   >
                     <div className={cn(

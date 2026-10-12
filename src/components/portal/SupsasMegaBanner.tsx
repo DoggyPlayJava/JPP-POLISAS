@@ -107,7 +107,6 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
         `}</style>
         
         {/* Continuous Shimmer Sweep */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent opacity-50 pointer-events-none z-0" style={{ animation: 'supsas-shimmer-sweep 6s infinite ease-in-out', animationDelay: '1s' }} />
 
         <div className="absolute inset-0 opacity-[0.04] translate-z-[10px]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
         <div className="absolute inset-0 pointer-events-none translate-z-[20px]" style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(245,158,11,0.3) 0%, transparent 65%)' }} />

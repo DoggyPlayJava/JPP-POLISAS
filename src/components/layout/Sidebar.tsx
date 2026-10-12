@@ -39,7 +39,6 @@ import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useKarnivalStatus } from '@/contexts/KarnivalContext';
 import { EXCO_MODULES, getExcoModule } from '@/config/excoModules';
 import { ChevronDown } from 'lucide-react';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 
 
@@ -117,7 +116,6 @@ const EMS_NAV: NavItem[] = [
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
 function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string }) {
-  const { isLowPerf } = useDevicePerformance();
   const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
@@ -416,7 +414,6 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
 function CustomClubSelect({ value, onChange, clubs }: { value: string | null, onChange: (val: string | null) => void, clubs: typeof ALL_CLUBS }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { isLowPerf } = useDevicePerformance();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -55,8 +55,6 @@ export const EmsCertVerifyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 md:p-8 pb-28 md:pb-8 flex flex-col justify-between max-w-5xl mx-auto font-sans relative overflow-hidden transition-colors">
       {/* Background Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Top Header Nav */}
       <div className="relative z-10 flex items-center justify-between gap-4">

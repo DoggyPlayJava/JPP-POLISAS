@@ -2737,8 +2737,8 @@ export function JppFoodBankAdmin() {
                 {/* Banner Pengesahan Terkini Berjaya */}
                 {recentVerifiedRecord && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    initial={{ opacity: 0, }}
+                    animate={{ opacity: 1, }}
                     className="mt-6 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-center gap-2 text-emerald-300 font-bold">

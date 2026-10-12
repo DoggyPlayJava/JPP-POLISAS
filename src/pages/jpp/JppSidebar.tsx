@@ -222,9 +222,9 @@ export function JppSidebar() {
         <AnimatePresence>
           {showPicker && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="overflow-hidden px-4 pb-4"
             >
               <div className="space-y-2 p-3 rounded-2xl bg-white/80 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60 shadow-sm">
@@ -672,9 +672,9 @@ export function JppSidebar() {
                     {hasSubNav && isExpanded && (
                       <motion.div
                         key="subnav"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         transition={{ duration: 0.18, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >

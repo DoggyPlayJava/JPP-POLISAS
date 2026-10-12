@@ -218,9 +218,9 @@ export function KarnivalAdminBooths() {
       <AnimatePresence>
         {showForm && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, }}
+            animate={{ opacity: 1, }}
+            exit={{ opacity: 0, }}
             className="rounded-2xl border border-violet-500/25 bg-violet-600/5 p-5 space-y-4 overflow-hidden"
           >
             <p className="text-xs font-black text-violet-300 uppercase tracking-widest">
@@ -390,9 +390,9 @@ export function KarnivalAdminBooths() {
                   <AnimatePresence>
                     {qrBooth === booth.id && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, }}
+                        animate={{ opacity: 1, }}
+                        exit={{ opacity: 0, }}
                         className="overflow-hidden"
                       >
                         <div className="bg-white p-3 rounded-xl flex flex-col items-center gap-2">

@@ -339,8 +339,6 @@ export function KelabPage() {
                     
                     <CardContent className="p-6 flex flex-col h-full relative">
                       {/* Subtle Background Glow based on Theme Color */}
-                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-[40px] pointer-events-none transition-opacity duration-500 group-hover:opacity-20"
-                           style={{ backgroundColor: club.theme_color || '#0f172a' }} />
 
                       {/* Status badges top right */}
                       <div className="absolute top-5 right-5 flex flex-col gap-1.5 items-end z-10">

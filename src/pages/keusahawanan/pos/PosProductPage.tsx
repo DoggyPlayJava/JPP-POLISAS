@@ -1116,8 +1116,8 @@ export function PosProductPage() {
 
                         <AnimatePresence>
                           {showCost && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }} className="overflow-hidden">
                               <div className="space-y-4 pt-1">
                                 <div>
                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
@@ -1356,8 +1356,8 @@ export function PosProductPage() {
                         </div>
                         {form.publish_to_polymart && (
                           <AnimatePresence>
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }} className="space-y-2.5 overflow-hidden pt-1">
+                            <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }}
+                              exit={{ opacity: 0, }} className="space-y-2.5 overflow-hidden pt-1">
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Lokasi / Booth</p>
                                 <input value={form.polymart_location}

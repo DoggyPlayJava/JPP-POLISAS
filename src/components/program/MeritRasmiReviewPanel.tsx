@@ -364,9 +364,9 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
@@ -492,9 +492,9 @@ function Section({ title, color, count, children, collapsed = false }: any) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, }}
+            animate={{ opacity: 1, }}
+            exit={{ opacity: 0, }}
             className="space-y-3 overflow-hidden"
           >
             {children}

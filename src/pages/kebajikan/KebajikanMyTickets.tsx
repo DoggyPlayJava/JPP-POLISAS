@@ -166,7 +166,6 @@ export function KebajikanMyTickets() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Background Glow */}
-      <div className="absolute top-0 inset-x-0 h-[400px] bg-teal-500/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Header */}
       <div className="sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 backdrop-blur-2xl transition-colors">
@@ -243,9 +242,9 @@ export function KebajikanMyTickets() {
                 <AnimatePresence>
                   {expanded === t.id && (
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       className="overflow-hidden"
                     >
                       <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-slate-100 dark:border-white/[0.06] pt-4 space-y-4">
@@ -351,7 +350,6 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm" onClick={onClose}>
       <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-sm rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden bg-white dark:bg-slate-900" onClick={e => e.stopPropagation()}>
-        <div className="absolute top-0 inset-x-0 h-32 bg-teal-500/10 blur-[50px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="relative z-10">
           {children}
         </div>

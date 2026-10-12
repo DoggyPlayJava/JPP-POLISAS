@@ -127,12 +127,6 @@ function MemberCard({
       layout
       className="relative flex flex-col p-4 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.1] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] shadow-sm dark:shadow-none transition-all group overflow-hidden"
     >
-      {/* Background Glow based on unit/MT */}
-      <div 
-        className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-[40px] opacity-20 pointer-events-none transition-all group-hover:opacity-30" 
-        style={{ background: unitCfg?.color || (isMTPosition ? themeColor : 'rgba(255,255,255,0.1)') }} 
-      />
-
       <div className="flex items-start justify-between mb-3 z-10 relative">
         <Avatar className="h-12 w-12 rounded-xl ring-1 ring-slate-200 dark:ring-white/10 shadow-lg">
           <AvatarFallback

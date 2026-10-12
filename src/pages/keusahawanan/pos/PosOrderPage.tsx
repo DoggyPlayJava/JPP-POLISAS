@@ -511,7 +511,7 @@ export function PosOrderPage() {
       {/* Low stock banner */}
       <AnimatePresence>
         {lowStockItems.length > 0 && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex items-center gap-3 px-5 py-3 bg-amber-500/10 border-b border-amber-500/20">
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">
@@ -726,7 +726,7 @@ export function PosOrderPage() {
                   </button>
                   <AnimatePresence>
                     {discountEnabled && (
-                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                      <motion.div initial={{ }} animate={{ }} exit={{ }} className="overflow-hidden">
                         <div className="p-3 space-y-2 border-t border-border/30">
                           <div className="flex gap-2">
                             <button onClick={() => setDiscountType('PERCENT')}

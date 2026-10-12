@@ -118,7 +118,6 @@ export function KebajikanSidebar() {
       style={{ background: bgGradient }}
     >
       {/* Decorative Glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 blur-[80px] pointer-events-none" />
 
       {/* Header */}
       <div className={cn(

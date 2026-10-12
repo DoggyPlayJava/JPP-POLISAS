@@ -78,17 +78,6 @@ export function SupsasLayout() {
       {/* ── Starfield background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#050A14] via-[#0A1628] to-[#050A14]" />
-        {/* Animated orbs */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.22, 0.12] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-[-20%] left-[10%] w-[60vw] h-[60vw] max-w-4xl rounded-full bg-amber-500/20 blur-[120px]"
-        />
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.08, 0.15, 0.08] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-          className="absolute bottom-[-20%] right-[5%] w-[50vw] h-[50vw] max-w-3xl rounded-full bg-blue-500/15 blur-[100px]"
-        />
         {/* Grid */}
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.025] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
       </div>

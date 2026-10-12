@@ -1408,7 +1408,6 @@ export function NexusPage() {
             {/* Right Section: Upgrade / Action Area */}
             <div className="lg:col-span-7">
               <Card className="border-border/50 shadow-2xl bg-white dark:bg-[#121214] relative overflow-hidden h-full min-h-[600px]">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/[0.03] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
                 <CardHeader className="p-8 pb-4">
                   <div className="flex items-center gap-3 mb-2">

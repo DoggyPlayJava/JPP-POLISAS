@@ -25,8 +25,8 @@ export function CurtainReveal({ karnivalActive, supsasActive }: { karnivalActive
               className="absolute inset-0 bg-[#0a0a0a]"
             >
               <motion.div
-                initial={{ top: '-20%' }}
-                animate={{ top: '120%' }}
+                initial={{ y: '-20vh' }}
+                animate={{ y: '140vh' }}
                 transition={{ duration: 1.5, ease: "easeInOut" }}
                 className="absolute left-0 w-full h-[20vh] bg-gradient-to-b from-transparent via-pink-500/20 to-pink-500/80 border-b-[4px] border-pink-400 shadow-[0_20px_50px_rgba(236,72,153,1)]"
               >

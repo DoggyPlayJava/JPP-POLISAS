@@ -1644,9 +1644,9 @@ export function KebajikanFoodBankPage() {
                 <AnimatePresence>
                   {showManualHmForm && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, }}
+                      animate={{ opacity: 1, }}
+                      exit={{ opacity: 0, }}
                       className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5 overflow-hidden"
                     >
                       <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">

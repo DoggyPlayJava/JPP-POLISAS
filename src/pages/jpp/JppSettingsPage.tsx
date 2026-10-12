@@ -475,8 +475,6 @@ export function JppSettingsPage() {
     return (
         <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 overflow-x-hidden transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[40vw] h-[40vw] rounded-full blur-[100px] opacity-10"
-                    style={{ background: themeColor }} />
             </div>
 
             <div className="relative z-10 max-w-4xl mx-auto space-y-10">

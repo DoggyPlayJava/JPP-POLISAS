@@ -596,9 +596,9 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
       <AnimatePresence>
         {showCreate && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, }}
+            animate={{ opacity: 1, }}
+            exit={{ opacity: 0, }}
             className="overflow-hidden"
           >
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-4">
@@ -700,7 +700,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 </div>
                 
                 {form.use_gps && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="grid grid-cols-2 gap-2 p-3 bg-black/20 rounded-xl">
+                  <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }} className="grid grid-cols-2 gap-2 p-3 bg-black/20 rounded-xl">
                     <div className="col-span-full flex items-center gap-2 mb-1">
                       <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-[10px] font-bold text-emerald-400">Koordinat Pusat Majlis</span>

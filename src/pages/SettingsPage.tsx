@@ -32,7 +32,6 @@ import { getKlkAcademicYear } from '@/utils/klkUtils';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // ── Palette Tokens (05 Earthy Minimal) ────────────────────────
 // #2E3A2F: Primary (Deep Forest Moss Green)
@@ -569,7 +568,6 @@ export function SettingsPage() {
   const { user, profile, refetchProfile, effectiveRole, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const { intake1Month, intake2Month } = useAcademicSession();
-  const { isLowPerf: isLowEnd } = useDevicePerformance();
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -815,14 +813,6 @@ export function SettingsPage() {
         
         {/* Subtle Ambient Mesh Glow */}
         <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className={cn(
-            "absolute top-0 right-1/4 w-[350px] sm:w-[500px] h-[300px] bg-[#6B7F5B]/10 blur-[120px] rounded-full",
-            isLowEnd && "hidden"
-          )} />
-          <div className={cn(
-            "absolute top-1/3 left-[-10%] w-[300px] sm:w-[450px] h-[300px] bg-[#C96F4F]/10 blur-[140px] rounded-full",
-            isLowEnd && "hidden"
-          )} />
         </div>
 
         {/* Top Header Bar */}

@@ -233,7 +233,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                         Pernah tinggal di sini? Beri Rating Kawasan
                       </button>
                     ) : (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
+                      <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }} className="mt-2 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-3">Nilai Kawasan KLK Ini</h4>
                         
                         <div className="flex items-center justify-between mb-3">

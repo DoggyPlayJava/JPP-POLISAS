@@ -45,8 +45,6 @@ export function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
       {/* Background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -mr-80 -mt-40 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px] -ml-80 -mb-40 pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         <Card className="border border-border/60 shadow-2xl bg-card/80 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden">

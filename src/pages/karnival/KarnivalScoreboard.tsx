@@ -158,12 +158,6 @@ export function KarnivalScoreboard() {
 
       {/* ── Ambient background ──────────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[30%] w-[700px] h-[700px] rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(circle, rgba(109,40,217,0.18) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]"
-          style={{ background: 'radial-gradient(circle, rgba(219,39,119,0.10) 0%, transparent 70%)' }} />
-        <div className="absolute top-[40%] left-[-5%] w-[400px] h-[400px] rounded-full blur-[80px]"
-          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%)' }} />
         {/* Grid lines */}
         <div className="absolute inset-0 opacity-[0.025]"
           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '36px 36px' }} />

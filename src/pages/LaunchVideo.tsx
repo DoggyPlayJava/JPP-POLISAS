@@ -2658,7 +2658,7 @@ function PolyRentScene({ mod }: SceneProps) {
           
           {/* Animated height cylinder */}
           <motion.div 
-            initial={{ height: 0 }}
+            initial={{ }}
             animate={{ height: `${height}vw` }}
             transition={{ type: 'spring', stiffness: 85, damping: 11 }}
             className="absolute bottom-0 w-full rounded-t-sm"
@@ -4470,7 +4470,7 @@ function JppHqScene({ mod }: SceneProps) {
                   <p className="text-[0.75vw] text-white/50 mb-[0.8vw] font-bold uppercase tracking-wider">Analitik Keseluruhan</p>
                   <div className="absolute inset-x-0 bottom-0 h-[50%] flex items-end px-[1vw] gap-[0.4vw]">
                     {Array.from({length:15}).map((_,i)=>(
-                      <motion.div key={i} initial={{height:0}} animate={{height:`${30 + Math.random()*60}%`}} transition={{duration:0.8, delay:0.4+i*0.03}} className="flex-1 rounded-t-sm" style={{background:gc+'25'}} />
+                      <motion.div key={i} initial={{}} animate={{height:`${30 + Math.random()*60}%`}} transition={{duration:0.8, delay:0.4+i*0.03}} className="flex-1 rounded-t-sm" style={{background:gc+'25'}} />
                     ))}
                   </div>
                   <div className="relative z-10 flex gap-[2vw]">
@@ -4576,7 +4576,7 @@ function FloatingMockup({ flyAway }: { flyAway:boolean }) {
           <div className="w-[12vw] h-[1.8vw] bg-white/10 rounded-full mb-[2vw]" />
           <div className="flex-1 bg-white/5 rounded-[1vw] border border-white/10 p-[1vw] flex items-end gap-[0.5vw]">
             {[40, 65, 30, 80, 50, 95, 70, 100].map((h, i) => (
-              <motion.div key={i} className="flex-1 bg-indigo-500/20 border border-indigo-500/30 rounded-t-md" initial={{height:0}} animate={{height:`${h}%`}} transition={{duration:1, delay:1.2 + i*0.1}} />
+              <motion.div key={i} className="flex-1 bg-indigo-500/20 border border-indigo-500/30 rounded-t-md" initial={{}} animate={{height:`${h}%`}} transition={{duration:1, delay:1.2 + i*0.1}} />
             ))}
           </div>
         </div>

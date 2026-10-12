@@ -987,8 +987,8 @@ export function CompleteProfileModal() {
               <div className="space-y-3 pt-2">
                 {showWarning && (
                   <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    initial={{ opacity: 0, }}
+                    animate={{ opacity: 1, }}
                     className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium leading-relaxed text-center flex flex-col items-center justify-center gap-1 overflow-hidden"
                   >
                     <div className="flex items-center gap-1.5 font-bold">

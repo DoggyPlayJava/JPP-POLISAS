@@ -504,8 +504,6 @@ export function KeusahawananAdminPanel() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="relative bg-white/[0.03] border border-white/[0.05] rounded-[1.5rem] p-5 overflow-hidden hover:bg-white/[0.06] transition-all"
           >
-            <div className="absolute top-0 right-0 w-20 h-20 rounded-full blur-[40px] opacity-20 pointer-events-none"
-              style={{ background: s.color }} />
             <div className="w-9 h-9 rounded-2xl flex items-center justify-center mb-3"
               style={{ background: s.color + '22' }}>
               <s.icon className="w-4 h-4" style={{ color: s.color }} />

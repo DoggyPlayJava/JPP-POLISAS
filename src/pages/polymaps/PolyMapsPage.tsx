@@ -64,48 +64,34 @@ const buildingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // Smooth GPS follow during navigation
 
-function MapRecenter({ lat, lng, zoom, isLowEnd }: { lat: number, lng: number, zoom: number, isLowEnd: boolean }) {
+function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    if (isLowEnd) {
-      map.setView([lat, lng], zoom, { animate: false });
-    } else {
-      map.flyTo([lat, lng], zoom, { animate: true, duration: 1.5 });
-    }
-  }, [lat, lng, zoom, map, isLowEnd]);
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.5 });
+  }, [lat, lng, zoom, map]);
   return null;
 }
 
 // Smooth GPS follow during navigation
 // Low-end: instant setView (no animation cost). High-end: smooth panTo.
-function MapFollower({ lat, lng, isLowEnd }: { lat: number, lng: number, isLowEnd: boolean }) {
+function MapFollower({ lat, lng }: { lat: number, lng: number }) {
   const map = useMap();
   useEffect(() => {
-    if (isLowEnd) {
-      map.setView([lat, lng], map.getZoom(), { animate: false });
-    } else {
-      map.panTo([lat, lng], { animate: true, duration: 0.5, easeLinearity: 0.5 });
-    }
-  }, [lat, lng, map, isLowEnd]);
+    map.panTo([lat, lng], { animate: true, duration: 0.5, easeLinearity: 0.5 });
+  }, [lat, lng, map]);
   return null;
 }
 
 // One-shot initial zoom when navigation starts: flies once then calls onDone
-function MapFlyOnce({ lat, lng, zoom, onDone, isLowEnd }: { lat: number, lng: number, zoom: number, onDone: () => void, isLowEnd: boolean }) {
+function MapFlyOnce({ lat, lng, zoom, onDone }: { lat: number, lng: number, zoom: number, onDone: () => void }) {
   const map = useMap();
   useEffect(() => {
-    if (isLowEnd) {
-      map.setView([lat, lng], zoom, { animate: false });
-      onDone();
-    } else {
-      map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
-      const t = setTimeout(onDone, 1300);
-      return () => clearTimeout(t);
-    }
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
+    const t = setTimeout(onDone, 1300);
+    return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally empty: run once on mount only
   return null;
@@ -119,11 +105,8 @@ function MapDragDetector({ onDrag }: { onDrag: () => void }) {
   return null;
 }
 
-const getCustomIcon = (code: string, isActive: boolean, lowEnd = false) => {
-  // Low-end: avoid backdrop-filter (creates extra GPU compositing layer per marker)
-  const labelStyle = lowEnd
-    ? `background-color: rgba(15, 23, 42, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`
-    : `background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`;
+const getCustomIcon = (code: string, isActive: boolean) => {
+  const labelStyle = `background-color: rgba(15, 23, 42, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`;
 
   const html = `
     <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
@@ -230,15 +213,11 @@ function mapEventLocationToCoords(locationStr: string | null | undefined, buildi
   return [3.8625 + offsetLat, 103.3153 + offsetLng];
 }
 
-const getEmsMarkerIcon = (title: string, isActive: boolean, lowEnd = false) => {
-  const pingEffect = lowEnd ? '' : '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span></span>';
-  const labelStyle = lowEnd
-    ? `background-color: rgba(180, 83, 9, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(251,191,36,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`
-    : `background-color: rgba(180, 83, 9, 0.9); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 8px rgba(245,158,11,0.5); border: 1px solid rgba(251,191,36,0.8); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
+const getEmsMarkerIcon = (title: string, isActive: boolean) => {
+  const pingEffect = '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span></span>';
+  const labelStyle = `background-color: rgba(180, 83, 9, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(251,191,36,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
 
-  const markerRing = lowEnd
-    ? 'width: 22px; height: 22px; border-radius: 50%; background-color: #f59e0b; border: 3px solid #fbbf24; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;'
-    : 'width: 22px; height: 22px; border-radius: 50%; background-color: #f59e0b; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
+  const markerRing = 'width: 22px; height: 22px; border-radius: 50%; background-color: #f59e0b; border: 3px solid #fbbf24; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
 
   const html = `
     <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer;">
@@ -259,15 +238,11 @@ const getEmsMarkerIcon = (title: string, isActive: boolean, lowEnd = false) => {
   });
 };
 
-const getPolyMartMarkerIcon = (name: string, isActive: boolean, lowEnd = false) => {
-  const pingEffect = lowEnd ? '' : '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>';
-  const labelStyle = lowEnd
-    ? `background-color: rgba(6, 95, 70, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(52,211,153,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`
-    : `background-color: rgba(6, 95, 70, 0.9); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 8px rgba(16,185,129,0.5); border: 1px solid rgba(52,211,153,0.8); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
+const getPolyMartMarkerIcon = (name: string, isActive: boolean) => {
+  const pingEffect = '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>';
+  const labelStyle = `background-color: rgba(6, 95, 70, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(52,211,153,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
 
-  const markerRing = lowEnd
-    ? 'width: 22px; height: 22px; border-radius: 50%; background-color: #10b981; border: 3px solid #34d153; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;'
-    : 'width: 22px; height: 22px; border-radius: 50%; background-color: #10b981; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
+  const markerRing = 'width: 22px; height: 22px; border-radius: 50%; background-color: #10b981; border: 3px solid #34d153; outline: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: ' + (isActive ? 1000 : 20) + '; position: relative; display: flex; align-items: center; justify-content: center;';
 
   const html = `
     <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer;">
@@ -576,7 +551,6 @@ export function PolyMapsPage() {
   // Follow mode: true = map follows user; false = user panned away (show re-center button)
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const { user, profile } = useAuth();
-  const { isLowPerf: isLowEnd } = useDevicePerformance();
   // DragControls lets the sheet scroll freely (iOS) while the HANDLE alone triggers
   // the drag gesture. Attaching drag="y" to the whole sheet made iOS Safari's native
   // scroll swallow the gesture -> sheet never snapped (Android worked, iOS didn't).
@@ -1472,7 +1446,7 @@ export function PolyMapsPage() {
           // but accuracy is NEVER sacrificed.
           enableHighAccuracy: true,
           maximumAge: 0,
-          timeout: isLowEnd ? 10000 : 5000,
+          timeout: 5000,
         }
       );
     }
@@ -1482,7 +1456,7 @@ export function PolyMapsPage() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isNavigating, isLowEnd]);
+  }, [isNavigating]);
 
   useEffect(() => {
     const handleOrientation = (e: DeviceOrientationEvent) => {
@@ -1580,11 +1554,11 @@ export function PolyMapsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="w-10 h-10 rounded-full bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 backdrop-blur-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] flex items-center justify-center text-[#2E3A2F] dark:text-[#F8F6EE] shrink-0 hover:scale-105 active:scale-95 transition-transform"
+              className="w-10 h-10 rounded-full bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] flex items-center justify-center text-[#2E3A2F] dark:text-[#F8F6EE] shrink-0 hover:scale-105 active:scale-95 transition-transform"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="tour-polymaps-search flex-1 bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 backdrop-blur-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] rounded-full px-4 py-2.5 flex items-center gap-3">
+            <div className="tour-polymaps-search flex-1 bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] rounded-full px-4 py-2.5 flex items-center gap-3">
               <Search className="w-5 h-5 text-[#6B7F5B]" />
               <input
                 type="text"
@@ -1599,7 +1573,7 @@ export function PolyMapsPage() {
             </div>
             <button
               onClick={startTour}
-              className="w-10 h-10 rounded-full bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 backdrop-blur-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] text-[#6B7F5B] flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+              className="w-10 h-10 rounded-full bg-[#F8F6EE]/90 dark:bg-[#151D16]/90 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_8px_30px_rgba(46,58,47,0.08)] text-[#6B7F5B] flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
             >
               <HelpCircle className="w-5 h-5" />
             </button>
@@ -1662,7 +1636,7 @@ export function PolyMapsPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-[#F8F6EE]/95 dark:bg-[#151D16]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] overflow-hidden max-h-[40vh] overflow-y-auto"
+                className="bg-[#F8F6EE]/95 dark:bg-[#151D16]/95 rounded-2xl shadow-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] overflow-hidden max-h-[40vh] overflow-y-auto"
               >
                 {searchResults.map((loc) => (
                   <button
@@ -1714,7 +1688,7 @@ export function PolyMapsPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-[#F8F6EE]/95 dark:bg-[#151D16]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] p-4 text-center space-y-3"
+                className="bg-[#F8F6EE]/95 dark:bg-[#151D16]/95 rounded-2xl shadow-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] p-4 text-center space-y-3"
               >
                 <p className="text-[#556453] dark:text-[#A3B39F] text-xs font-bold leading-normal">
                   Tidak jumpa tempat yang anda cari?
@@ -1745,8 +1719,8 @@ export function PolyMapsPage() {
             url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
             maxZoom={20}
             updateWhenZooming={false}       // Only update tiles after zoom ends (saves requests during pinch-zoom)
-            updateWhenIdle={isLowEnd}       // Low-end: only update when map stops moving
-            keepBuffer={isLowEnd ? 1 : 2}  // Low-end: pre-load 1 tile border vs default 2
+            updateWhenIdle={false}          // Update tiles as map moves (responsive)
+            keepBuffer={2}                   // Pre-load 2 tile border
           />
           <ZoomTracker />
 
@@ -1755,7 +1729,6 @@ export function PolyMapsPage() {
               lat={activeBuilding.center_lat - 0.0010}
               lng={activeBuilding.center_lng} 
               zoom={18} 
-              isLowEnd={isLowEnd}
             />
           )}
 
@@ -1770,7 +1743,6 @@ export function PolyMapsPage() {
               lat={userLocation[0]}
               lng={userLocation[1]}
               zoom={19}
-              isLowEnd={isLowEnd}
               onDone={() => {
                 setHasZoomedToNavigation(true);
                 setIsFollowingUser(true); // Activate follow mode after initial zoom
@@ -1779,7 +1751,7 @@ export function PolyMapsPage() {
           )}
           {/* Follow mode: smoothly track user after initial zoom */}
           {isNavigating && userLocation && hasZoomedToNavigation && isFollowingUser && (
-            <MapFollower lat={userLocation[0]} lng={userLocation[1]} isLowEnd={isLowEnd} />
+            <MapFollower lat={userLocation[0]} lng={userLocation[1]} />
           )}
 
           {/* Render walkways with covered & blocked styles */}
@@ -1819,7 +1791,7 @@ export function PolyMapsPage() {
             <Marker 
               key={`zone-${z.zone_name}`}
               position={[z.lat, z.lng]}
-              icon={getCustomIcon(z.zone_name, false, isLowEnd)}
+              icon={getCustomIcon(z.zone_name, false)}
               eventHandlers={{
                 click: () => {
                   // Apabila zon ditekan, auto-zoom in supaya pecah jadi bangunan
@@ -1864,7 +1836,7 @@ export function PolyMapsPage() {
               <Marker 
                 key={b.id}
                 position={[b.center_lat, b.center_lng]}
-                icon={getCustomIcon(b.code, isActive, isLowEnd)}
+                icon={getCustomIcon(b.code, isActive)}
                 eventHandlers={{
                   click: () => handleSelectBuildingMapMarker(b)
                 }}
@@ -1881,7 +1853,7 @@ export function PolyMapsPage() {
               <Marker
                 key={`ems-${evt.id}`}
                 position={[evt.lat, evt.lng]}
-                icon={getEmsMarkerIcon(evt.title, isSelected, isLowEnd)}
+                icon={getEmsMarkerIcon(evt.title, isSelected)}
                 eventHandlers={{
                   click: () => handleSelectEmsEvent(evt)
                 }}
@@ -1895,7 +1867,7 @@ export function PolyMapsPage() {
               <Marker
                 key={`hub-${hub.id}`}
                 position={[hub.lat, hub.lng]}
-                icon={getPolyMartMarkerIcon(hub.name, isSelected, isLowEnd)}
+                icon={getPolyMartMarkerIcon(hub.name, isSelected)}
                 eventHandlers={{
                   click: () => handleSelectPolyMartHub(hub)
                 }}
@@ -1929,14 +1901,12 @@ export function PolyMapsPage() {
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className={isLowEnd
-                ? "absolute inset-0 bg-slate-900/80 z-[10000]"
-                : "absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000]"}
+              className="absolute inset-0 bg-slate-900/80 z-[10000]"
             />
             <motion.div 
-              initial={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
-              animate={isLowEnd ? { opacity: 1 } : { x: 0 }}
-              exit={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="absolute top-0 left-0 bottom-0 w-80 bg-[#F8F6EE] dark:bg-[#151D16] z-[10001] shadow-2xl flex flex-col border-r border-[#D9C9B2]/50 dark:border-[#3A4A3B]"
             >
@@ -1978,7 +1948,7 @@ export function PolyMapsPage() {
                           
                           <AnimatePresence>
                             {isZoneExpanded && (
-                              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white/70 dark:bg-[#151D16]/70 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B] px-3 py-2 space-y-1">
+                              <motion.div initial={{ }} animate={{ }} exit={{ }} className="overflow-hidden bg-white/70 dark:bg-[#151D16]/70 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B] px-3 py-2 space-y-1">
                                 {z.buildings.map(b => (
                                   <button
                                     key={b.id}
@@ -2051,7 +2021,7 @@ export function PolyMapsPage() {
                         
                         <AnimatePresence>
                           {isTypeExpanded && (
-                            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white/70 dark:bg-[#151D16]/70 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B] px-3 py-2 space-y-1">
+                            <motion.div initial={{ }} animate={{ }} exit={{ }} className="overflow-hidden bg-white/70 dark:bg-[#151D16]/70 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B] px-3 py-2 space-y-1">
                               {facilities.map(b => (
                                 <button
                                   key={b.id}
@@ -2108,7 +2078,7 @@ export function PolyMapsPage() {
                 animate={{ opacity: 1, y: 0 }} 
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-                className={`rounded-3xl shadow-2xl border border-blue-400/30 overflow-hidden relative ${isLowEnd ? 'bg-blue-600' : 'bg-blue-600/95 backdrop-blur-xl'}`}
+                className={`rounded-3xl shadow-2xl border border-blue-400/30 overflow-hidden relative bg-blue-600`}
               >
                 {/* ── COLLAPSED: Mini Nav Bar ── */}
                 {!cardExpanded && (
@@ -2368,9 +2338,9 @@ export function PolyMapsPage() {
                               <AnimatePresence>
                                 {showTbtSteps && (
                                   <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
                                     className="border-t border-white/10 max-h-48 overflow-y-auto px-3 py-2 space-y-2.5 bg-black/15 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
                                   >
                                     {navigationSteps.map((step, idx) => {
@@ -2483,9 +2453,7 @@ export function PolyMapsPage() {
                 transition={{ type: 'spring', damping: 25, stiffness: 250 }}
                 className={cn(
                   "rounded-3xl shadow-2xl overflow-hidden relative flex flex-col",
-                  isLowEnd 
-                    ? "bg-white dark:bg-[#151D16] border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B]" 
-                    : "bg-white/95 dark:bg-[#151D16]/95 backdrop-blur-2xl border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_-10px_40px_rgba(46,58,47,0.12)]",
+                  "bg-white dark:bg-[#151D16] border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B]",
                   sheetSnap === 'PEEK' && "max-h-[116px]",
                   sheetSnap === 'HALF' && "max-h-[48vh] overflow-y-auto no-scrollbar",
                   sheetSnap === 'FULL' && "max-h-[85vh] overflow-y-auto"
@@ -2822,7 +2790,7 @@ export function PolyMapsPage() {
                           <button 
                             type="button"
                             onClick={() => setSheetSnap('PEEK')}
-                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 ${!isLowEnd && 'backdrop-blur-md'}`}
+                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 `}
                             title="Lipat ke bawah"
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -2830,7 +2798,7 @@ export function PolyMapsPage() {
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); dismissCard(); }}
-                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 ${!isLowEnd && 'backdrop-blur-md'}`}
+                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 `}
                             title="Tutup maklumat"
                           >
                             <X className="w-4 h-4" />
@@ -2900,14 +2868,14 @@ export function PolyMapsPage() {
                               )}
                               
                               {selectedLocation && (
-                                <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                                <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase  z-10`}>
                                   LOKASI JUMPA
                                 </div>
                               )}
 
                               {/* Media Tabs */}
                               {hasMultipleMedia && (
-                                <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                                <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-full border border-white/10  z-10`}>
                                   {activePanoUrl && (
                                     <button 
                                       onClick={() => setActiveImageTab('360')} 
@@ -3093,7 +3061,7 @@ export function PolyMapsPage() {
         {showFullscreenImage && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className={`fixed inset-0 z-[3000] flex items-center justify-center p-4 ${isLowEnd ? 'bg-black' : 'bg-black/95 backdrop-blur-sm'}`}
+            className={`fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black`}
           >
             <button 
               onClick={() => setShowFullscreenImage(null)}
@@ -3141,7 +3109,7 @@ export function PolyMapsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsReportModalOpen(false)}
-              className={`absolute inset-0 ${isLowEnd ? 'bg-slate-900/90' : 'bg-slate-900/60 backdrop-blur-sm'}`}
+              className={`absolute inset-0 bg-slate-900/90`}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -3198,9 +3166,9 @@ export function PolyMapsPage() {
 
                 {reportForm.building_id === 'new' && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, }}
+                    animate={{ opacity: 1, }}
+                    exit={{ opacity: 0, }}
                   >
                     <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Nama Bangunan Baru / Cadangan

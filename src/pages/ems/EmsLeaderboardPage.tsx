@@ -559,8 +559,6 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         </div>
 
         {/* Ambient Background Lights */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 dark:bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/10 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
@@ -607,8 +605,6 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           </div>
 
           {/* Ambient Background Lights */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 dark:bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/10 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
@@ -666,7 +662,6 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     return (
       <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 pb-32 md:pb-24 relative overflow-hidden select-none font-sans transition-colors">
         {/* Background glow effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-500/10 via-purple-500/10 to-transparent blur-[140px] pointer-events-none" />
 
         {/* Top Navigation & Controls */}
         <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-white/10">

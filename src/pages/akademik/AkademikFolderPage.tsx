@@ -18,7 +18,6 @@ import { zipSync, strToU8 } from 'fflate';
 const THEME = '#818CF8';
 
 // BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
-const isLowEnd = true;
 
 const FOLDER_PRESETS = [
   { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },
@@ -207,7 +206,7 @@ export function InAppDocumentPreviewer({
         "fixed inset-0 z-50 flex justify-center",
         "items-end sm:items-center",
         "p-0 sm:p-4 md:p-6",
-        isLowEnd ? "bg-black/80" : "bg-black/60 dark:bg-black/80 backdrop-blur-md"
+        "bg-black/80"
       )}
     >
       <motion.div
@@ -686,9 +685,9 @@ export function AkademikFolderPage() {
       <AnimatePresence>
         {showCreate && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, }}
+            animate={{ opacity: 1, }}
+            exit={{ opacity: 0, }}
             className="overflow-hidden"
           >
             <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] space-y-4 shadow-xs">
@@ -708,9 +707,9 @@ export function AkademikFolderPage() {
                 <AnimatePresence>
                   {showPresets && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, }}
+                      animate={{ opacity: 1, }}
+                      exit={{ opacity: 0, }}
                       className="overflow-hidden"
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
@@ -795,9 +794,9 @@ export function AkademikFolderPage() {
                 <AnimatePresence>
                   {isOpen && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, }}
+                      animate={{ opacity: 1, }}
+                      exit={{ opacity: 0, }}
                       className="overflow-hidden"
                     >
                       <div className="ml-4 mt-2 space-y-2 pl-4 border-l border-slate-200/80 dark:border-white/[0.06]">

@@ -93,8 +93,6 @@ export function PolyTaskBoard() {
       {/* ── HERO SECTION (Fiverr / TaskRabbit Vibe) ── */}
       <div className="relative pt-12 pb-20 px-4 md:px-8 overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
         {/* Background Effects */}
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[150%] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[150%] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none" />
         
         {/* Help Button */}
         <button 

@@ -74,7 +74,6 @@ export function PolyMapsModal() {
             transition={{ delay: 0.2 }}
             className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center relative shadow-2xl"
           >
-            <div className="absolute inset-0 bg-white/40 rounded-3xl animate-ping opacity-20" />
             <Map className="w-12 h-12 text-white" />
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
               <MapPin className="w-4 h-4 text-amber-900" />

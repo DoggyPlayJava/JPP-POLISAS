@@ -15,7 +15,6 @@ import {
 } from 'recharts';
 import { Smartphone, Monitor, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -40,7 +39,6 @@ function BigStatCard({
   label: string; value: number | string; icon: React.ElementType;
   color: string; sub?: string; delay: number; onClick?: () => void;
 }) {
-  const { isLowPerf } = useDevicePerformance();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -74,7 +72,6 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
   const { isSuperAdmin } = useAuth();
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isLowPerf } = useDevicePerformance();
 
   const fetchSubs = async () => {
     setLoading(true);
@@ -252,7 +249,6 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   });
   const [reviewNote, setReviewNote] = useState('');
   const [processing, setProcessing] = useState(false);
-  const { isLowPerf } = useDevicePerformance();
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -504,7 +500,6 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppOverviewPage() {
   const { isSuperAdmin, isJppMember } = useAuth();
-  const { isLowPerf } = useDevicePerformance();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [stats, setStats]           = useState<SystemStats | null>(null);
@@ -754,7 +749,7 @@ export function JppOverviewPage() {
                         strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorCount)" 
-                        animationDuration={isLowPerf ? 0 : 1500}
+                        animationDuration={1500}
                         animationEasing="ease-in-out"
                       />
                     </AreaChart>
@@ -791,7 +786,7 @@ export function JppOverviewPage() {
                           paddingAngle={5}
                           dataKey="value"
                           stroke="none"
-                          animationDuration={isLowPerf ? 0 : 1500}
+                          animationDuration={1500}
                         >
                           {ticketStats.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />

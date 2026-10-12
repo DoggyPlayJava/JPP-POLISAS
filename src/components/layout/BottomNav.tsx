@@ -12,7 +12,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
 import { PolymartServiceModal } from '../portal/PolymartServiceModal';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 export interface NavLinkData {
   icon: any;
@@ -41,7 +40,6 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
   const [showPolymartModal, setShowPolymartModal] = useState(false);
-  const { isLowPerf } = useDevicePerformance();
   // Drag handle-only swipe-to-dismiss (iOS: whole-menu drag was swallowed by native scroll)
   const quickActionsDragControls = useDragControls();
 
@@ -175,7 +173,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 variants={{
                   hidden: {},
                   visible: {
-                    transition: isLowPerf ? { staggerChildren: 0, delayChildren: 0 } : { staggerChildren: 0.05, delayChildren: 0.05 }
+                    transition: { staggerChildren: 0.05, delayChildren: 0.05 }
                   }
                 }}
               >
@@ -262,21 +260,6 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
             </AnimatePresence>
 
             {/* Breathing Glow Background */}
-            {!isActionsOpen && (
-              <motion.div
-                className={cn("absolute inset-0 rounded-full z-[-1]", theme.fabBg)}
-                animate={{ 
-                  scale: [1, 1.25, 1],
-                  opacity: [0.3, 0.6, 0.3]
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            )}
-
             <button
               onClick={handleFabClick}
               className={cn(
@@ -316,7 +299,6 @@ const BUTTON_VARIANTS: Record<string, string> = {
 
 function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) {
   const bgClass = BUTTON_VARIANTS[color] || color;
-  const { isLowPerf } = useDevicePerformance();
 
   return (
     <motion.button 
@@ -343,12 +325,10 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
     shadow: 'shadow-[0_0_8px_rgba(244,63,94,0.8)]',
     pillBg: 'bg-rose-500/15 dark:bg-rose-400/20'
   };
-  const { isLowPerf } = useDevicePerformance();
 
   return (
     <motion.button
       onClick={onClick}
-      layout={!isLowPerf}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className={cn(
         "flex items-center justify-center gap-1.5 h-10 rounded-full transition-all duration-300 active:scale-95 relative",
@@ -357,16 +337,16 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
           : "w-10 text-slate-600 hover:text-slate-900 dark:text-white/50 dark:hover:text-white/90"
       )}
     >
-      <motion.div layout={!isLowPerf} className="flex items-center justify-center">
+      <motion.div className="flex items-center justify-center">
         <Icon className={cn("shrink-0", isActive ? "w-[1.15rem] h-[1.15rem]" : "w-5 h-5")} strokeWidth={isActive ? 2.5 : 2} />
       </motion.div>
       
       <AnimatePresence mode="popLayout">
         {isActive && (
           <motion.span
-            initial={{ opacity: 0, width: 0, scale: 0.8 }}
-            animate={{ opacity: 1, width: "auto", scale: 1 }}
-            exit={{ opacity: 0, width: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className="text-[11px] font-bold overflow-hidden whitespace-nowrap"
           >

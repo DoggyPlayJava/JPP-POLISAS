@@ -1550,7 +1550,6 @@ export function PolySuaraPage({
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-36 md:pb-32 relative overflow-hidden transition-colors duration-200">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-rose-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="sticky top-0 z-50 bg-white/85 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/5">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">

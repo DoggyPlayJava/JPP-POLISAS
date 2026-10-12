@@ -71,7 +71,7 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
       layout
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      exit={{ opacity: 0, marginBottom: 0 }}
       onClick={onRead}
       className={cn(
         'relative px-4 py-3.5 cursor-pointer transition-colors group',

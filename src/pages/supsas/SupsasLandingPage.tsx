@@ -342,7 +342,6 @@ export function SupsasLandingPage() {
           className="relative overflow-hidden rounded-[2rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/8 via-transparent to-amber-600/5 p-8 md:p-10"
         >
           {/* Decorative glow */}
-          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
             {/* Icon */}

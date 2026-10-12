@@ -1372,9 +1372,9 @@ export function PolyRiderDashboard() {
                           <AnimatePresence>
                             {expandedCarpool === job.id && (
                               <motion.div 
-                                initial={{ height: 0, opacity: 0 }} 
-                                animate={{ height: 'auto', opacity: 1 }} 
-                                exit={{ height: 0, opacity: 0 }}
+                                initial={{ opacity: 0 }} 
+                                animate={{ opacity: 1 }} 
+                                exit={{ opacity: 0 }}
                                 className="overflow-hidden mb-3"
                               >
                                 <div className="space-y-3 bg-slate-50 dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-100 dark:border-white/5">

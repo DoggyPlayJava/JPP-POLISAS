@@ -353,9 +353,9 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
           <AnimatePresence>
             {(isRevealing || isDone) && bracketGroups && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, }}
+                animate={{ opacity: 1, }}
+                exit={{ opacity: 0, }}
                 className={cn('grid gap-2', bracketGroups.numGroups === 4 ? 'grid-cols-4' : 'grid-cols-2')}
               >
                 {bracketGroups.groups.map((entries, g) => (

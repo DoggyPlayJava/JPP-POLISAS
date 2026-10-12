@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 import { supabase } from '@/lib/supabase';
 
 // ── Palette Tokens (05 Earthy Minimal) ────────────────────────
@@ -141,7 +140,7 @@ const MODULES = [
           {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
             <motion.div
               key={i}
-              initial={{ height: 0 }}
+              initial={{ }}
               animate={{ height: `${h}%` }}
               transition={{ delay: 0.3 + (i * 0.1), duration: 0.8 }}
               className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
@@ -525,7 +524,6 @@ export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats
 // ── 3. Centered Bold Hero (<Hero />) ──────────────────────────
 export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
   const navigate = useNavigate();
-  const { isLowPerf } = useDevicePerformance();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
 
@@ -533,13 +531,6 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
     <section className="relative min-h-[85vh] md:min-h-[92vh] flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden">
       {/* Sentuhan Latar Belakang Hangat */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none transform-gpu">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.12, 0.22, 0.12] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85vw] md:w-[65vw] max-w-4xl aspect-square bg-[#6B7F5B]/20 blur-[80px] md:blur-[140px] rounded-full transform-gpu"
-        />
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-[#C96F4F]/10 blur-[80px] md:blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-[#D9C9B2]/20 blur-[80px] md:blur-[120px] rounded-full" />
       </div>
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
@@ -798,7 +789,6 @@ export const NexusAISection: React.FC = () => {
           viewport={{ once: true }}
           className="relative aspect-square max-w-lg mx-auto w-full flex items-center justify-center lg:order-2"
         >
-          <div className="absolute inset-0 bg-[#6B7F5B]/10 rounded-full blur-[80px] pointer-events-none" />
 
           {/* Gelang Orbit */}
           <div className="w-[80%] h-[80%] rounded-full border border-[#D9C9B2] flex items-center justify-center relative">
@@ -922,7 +912,6 @@ export const CtaSection: React.FC = () => {
         viewport={{ once: true }}
         className="w-full max-w-5xl rounded-[2.5rem] md:rounded-[3.5rem] bg-white border border-[#D9C9B2] p-10 md:p-20 text-center space-y-6 md:space-y-8 relative overflow-hidden shadow-lg"
       >
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#6B7F5B]/10 rounded-full blur-[80px] pointer-events-none" />
 
         <h2 className="text-3xl md:text-6xl font-black tracking-tight text-[#2E3A2F] leading-[1.02] relative z-10">
           Gerakan Mahasiswa Bermula Di Sini.

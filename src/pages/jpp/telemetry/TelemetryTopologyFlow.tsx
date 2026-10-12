@@ -515,9 +515,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
           <AnimatePresence>
             {activeNodeId && nodeDetails[activeNodeId] && (
               <motion.div
-                initial={{ opacity: 0, y: -6, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -6, height: 0 }}
+                initial={{ opacity: 0, y: -6, }}
+                animate={{ opacity: 1, y: 0, }}
+                exit={{ opacity: 0, y: -6, }}
                 className="mt-6 pt-4 border-t border-slate-100 rounded-xl bg-slate-50/90 p-4 text-left relative"
               >
                 <button

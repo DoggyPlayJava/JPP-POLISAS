@@ -88,12 +88,6 @@ export function KlkSidebar() {
       className="w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-[140] relative border-r border-white/5"
       style={{ background: 'linear-gradient(180deg, rgba(2,6,23,0.7) 0%, rgba(15,23,42,0.9) 100%)' }}
     >
-      {/* Decorative glow */}
-      <div
-        className="absolute top-0 right-0 w-32 h-32 blur-[80px] pointer-events-none"
-        style={{ background: hexToRgba(KLS_COLOR, 0.08) }}
-      />
-
       {/* Header */}
       <div className="flex-shrink-0 flex flex-col relative z-10 border-b border-white/5 bg-black/10">
         {/* Back to JPP Unit page */}

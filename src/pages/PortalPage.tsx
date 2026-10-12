@@ -405,8 +405,6 @@ export function PortalPage() {
 
       {/* Ambient Mesh Aura (Deep Forest & Terracotta Earthy Glows) */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
-        <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-[#6B7F5B]/[0.08] dark:bg-[#6B7F5B]/[0.05] blur-[130px] rounded-full transform-gpu" />
-        <div className="absolute top-[55%] left-1/4 w-[500px] h-[320px] bg-[#C96F4F]/[0.05] dark:bg-[#C96F4F]/[0.03] blur-[150px] rounded-full transform-gpu" />
       </div>
 
       {/* Modern Super App Header */}

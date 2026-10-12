@@ -77,7 +77,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, height: 0 }}
+      exit={{ opacity: 0, }}
       onClick={onRead}
       className={cn(
         'group relative flex items-start gap-4 px-5 py-4 cursor-pointer',

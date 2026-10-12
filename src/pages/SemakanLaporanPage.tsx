@@ -383,8 +383,6 @@ export function SemakanLaporanPage() {
 
       {/* ── Header Premium ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900 dark:from-black dark:via-slate-950 dark:to-slate-950 p-6 sm:p-8 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5 group">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 group-hover:bg-primary/20 transition-colors duration-1000" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3" />
 
         <div className="space-y-4 relative z-10">
           <Badge className="bg-white/5 text-amber-400 border border-white/10 px-5 py-2 font-black uppercase tracking-widest text-[10px] backdrop-blur-md rounded-2xl shadow-xl">

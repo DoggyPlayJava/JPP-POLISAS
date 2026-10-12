@@ -134,17 +134,24 @@
   }
 }
 
+/* ── BASELINE GPU SERAGAM (2026-10) ───────────────────────────────
+   Tiada backdrop-filter untuk SEMUA device — glassmorphism diganti
+   solid surface + border. Rule global `*` cover BOTH class Tailwind
+   `backdrop-blur-*` DAN inline `backdropFilter:` (framer-motion style). */
+* {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 @layer components {
   .glass {
-    background: var(--glass-background);
-    backdrop-filter: blur(28px) saturate(180%);
-    @apply border border-[var(--glass-border)] shadow-2xl;
+    background: hsl(var(--card) / 0.95);
+    @apply border border-border shadow-2xl;
   }
 
   .glass-premium {
-    background: var(--glass-background);
-    backdrop-filter: blur(32px) saturate(200%);
-    @apply border border-[var(--glass-border)] shadow-2xl ring-1 ring-white/10 dark:ring-white/5;
+    background: hsl(var(--card) / 0.98);
+    @apply border border-border shadow-2xl ring-1 ring-white/10 dark:ring-white/5;
   }
 
   .bento-card {

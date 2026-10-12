@@ -564,7 +564,6 @@ import { AcademicSessionProvider } from './contexts/AcademicSessionContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 import { GlobalPullToUpdate } from '@/components/layout/GlobalPullToUpdate';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 import { CommandPalette } from '@/components/ui/CommandPalette';
 
 function GlobalRedirector() {
@@ -667,7 +666,6 @@ function SeoManager() {
 }
 
 function App() {
-  useDevicePerformance();
 
   return (
     <ErrorBoundary>
@@ -701,8 +699,7 @@ function App() {
                                 y: t.visible ? 8 : -50,
                                 scale: t.visible ? 1 : 0.5,
                                 width: 'auto',
-                                height: 'auto'
-                              }}
+                                }}
                               exit={{ opacity: 0, y: -50, scale: 0.5 }}
                               transition={{ 
                                 type: "spring", 

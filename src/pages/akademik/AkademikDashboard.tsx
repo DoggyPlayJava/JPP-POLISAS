@@ -16,7 +16,6 @@ import {
 const THEME = '#818CF8';
 
 // BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
-const isLowEnd = true;
 
 // ─── Stat Card ───────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, sub, onClick, delay = 0 }: any) {
@@ -78,22 +77,8 @@ function QrScanCta({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="w-full relative overflow-hidden rounded-[2rem] p-5 border border-indigo-200/80 dark:border-indigo-500/25 text-left group transition-all hover:border-indigo-400/40 active:scale-[0.99] min-h-[48px] bg-gradient-to-br from-indigo-50/90 via-indigo-50/50 to-white dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-blue-950/15"
     >
-      {/* Glow orb (disabled on low-end) */}
-      {!isLowEnd && (
-        <div
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-24 h-24 rounded-full opacity-20 blur-2xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #818CF8, #60A5FA)' }}
-        />
-      )}
-
       {/* Pulse ring around QR icon */}
       <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-        {!isLowEnd && (
-          <span
-            className="absolute w-14 h-14 rounded-2xl animate-ping opacity-20"
-            style={{ background: THEME }}
-          />
-        )}
         <div
           className="relative w-12 h-12 rounded-2xl flex items-center justify-center"
           style={{ background: hexToRgba(THEME, 0.25), color: THEME }}
@@ -183,9 +168,9 @@ function TutorialCollapsible() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden"
           >

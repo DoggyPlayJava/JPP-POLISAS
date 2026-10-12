@@ -118,7 +118,6 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
         `}</style>
         
         {/* Continuous Shimmer Sweep */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 pointer-events-none z-0" style={{ animation: 'shimmer-sweep 6s infinite ease-in-out' }} />
 
         <div className="absolute inset-0 opacity-[0.04] translate-z-[10px]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
         <div className="absolute inset-0 pointer-events-none translate-z-[20px]" style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(139,92,246,0.35) 0%, transparent 65%)' }} />

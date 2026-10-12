@@ -127,9 +127,9 @@ export function KarnivalLayout() {
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, }}
+              animate={{ opacity: 1, }}
+              exit={{ opacity: 0, }}
               className="md:hidden border-t border-white/[0.18] bg-[#0d0d1a]"
             >
               <div className="px-4 py-3 flex flex-col gap-1">

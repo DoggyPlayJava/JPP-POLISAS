@@ -144,7 +144,7 @@ export function KebajikanTicketsPage() {
       {/* Filters */}
       <AnimatePresence>
         {showFilter && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-6 z-10 relative">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-hidden mb-6 z-10 relative">
             <div className="space-y-4 p-6 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/70 backdrop-blur-xl shadow-md dark:shadow-2xl">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-700 dark:text-teal-400 mb-3">Status</p>

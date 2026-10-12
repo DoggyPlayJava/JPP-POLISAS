@@ -1251,9 +1251,9 @@ export function PolyMartProductDetail() {
           <AnimatePresence>
             {showReport && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, }}
+                animate={{ opacity: 1, }}
+                exit={{ opacity: 0, }}
                 className="overflow-hidden mt-2"
               >
                 <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 space-y-3">

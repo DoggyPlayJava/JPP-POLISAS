@@ -445,7 +445,6 @@ export function KebajikanSubmitPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Background Glow */}
-      <div className="absolute top-0 inset-x-0 h-[500px] bg-teal-500/10 dark:bg-teal-500/15 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Top Nav */}
       <div

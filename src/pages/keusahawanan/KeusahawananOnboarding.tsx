@@ -81,8 +81,6 @@ export function KeusahawananOnboarding() {
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden pb-28 md:pb-8">
       {/* Background Enhancements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[120px] opacity-20 bg-emerald-700 animate-slow-spin" />
-        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[100px] opacity-10 bg-teal-600" />
       </div>
 
       <div className="z-10 w-full max-w-4xl">

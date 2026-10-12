@@ -630,7 +630,7 @@ export function UrusPerniagaanPage() {
               {/* QR Details */}
               <AnimatePresence>
                 {onlinePayEnabled && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }} exit={{ opacity: 0, }} className="overflow-hidden">
                     <div className="space-y-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/15">
                       <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-2">
                         <Image className="w-3.5 h-3.5" /> Maklumat QR Pembayaran

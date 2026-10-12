@@ -1185,9 +1185,9 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, }}
+                        animate={{ opacity: 1, }}
+                        exit={{ opacity: 0, }}
                         className="overflow-hidden border-b border-border/40 pb-3"
                       >
                         <div className="space-y-1.5 text-xs text-muted-foreground bg-muted/20 p-3 rounded-2xl">

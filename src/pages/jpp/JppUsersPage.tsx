@@ -365,9 +365,9 @@ export function JppUsersPage() {
                             <AnimatePresence>
                                 {showDuplicates && (
                                     <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
+                                        initial={{ opacity: 0, }}
+                                        animate={{ opacity: 1, }}
+                                        exit={{ opacity: 0, }}
                                         className="overflow-hidden"
                                     >
                                         {duplicates.length === 0 ? (

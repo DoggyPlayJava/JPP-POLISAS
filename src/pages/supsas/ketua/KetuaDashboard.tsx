@@ -92,7 +92,7 @@ function TeamCard({
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div
-            initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+            initial={{ }} animate={{ }} exit={{ }}
             className="overflow-hidden border-t border-white/5"
           >
             <div className="px-4 py-3 space-y-2">

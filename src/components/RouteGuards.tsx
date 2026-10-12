@@ -16,14 +16,6 @@ function LoadingScreen() {
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-background gap-6 relative">
       <div className="relative flex flex-col items-center justify-center mb-6 mt-[-5vh]">
-        {/* Latar belakang bercahaya untuk HZ logo (berwarna ungu/oren) */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-orange-500/20 blur-[100px] rounded-full animate-pulse" 
-        />
-        
         {/* Logo HZ dengan animasi masuk ala wayang (Cinematic Intro) */}
         <motion.img 
           initial={{ scale: 0.85, opacity: 0, filter: "blur(15px)" }}

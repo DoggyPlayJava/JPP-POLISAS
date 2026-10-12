@@ -763,9 +763,9 @@ function QuickActionBar({
       <AnimatePresence>
         {quickTarget === 'RESOLVED' && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, }}
+            animate={{ opacity: 1, }}
+            exit={{ opacity: 0, }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
@@ -853,7 +853,6 @@ function EscalationActionPanel({
     <div
       className="relative rounded-3xl border p-5 sm:p-6 backdrop-blur-xl shadow-sm dark:shadow-2xl overflow-hidden bg-red-50/30 dark:bg-red-500/[0.03] border-red-200 dark:border-red-500/25"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 blur-[80px] pointer-events-none bg-red-500/10" />
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
