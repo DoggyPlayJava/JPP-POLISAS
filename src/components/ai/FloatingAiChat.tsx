@@ -476,7 +476,7 @@ export function FloatingAiChat() {
         text: 'text-amber-500',
         border: 'border-amber-500/20',
         tint: 'rgba(217,119,6,0.08)',
-        glow: 'shadow-amber-500/30'
+        glow: ''
       };
     }
     if (p.startsWith('/kebajikan') || p.startsWith('/jpp/unit/kebajikan')) {
@@ -486,7 +486,7 @@ export function FloatingAiChat() {
         text: 'text-[#0d7377]',
         border: 'border-[#0d7377]/20',
         tint: 'rgba(13,115,119,0.08)',
-        glow: 'shadow-teal-500/30'
+        glow: ''
       };
     }
     if (p.startsWith('/polyrent')) {
@@ -496,7 +496,7 @@ export function FloatingAiChat() {
         text: 'text-sky-500',
         border: 'border-sky-500/20',
         tint: 'rgba(14,165,233,0.08)',
-        glow: 'shadow-sky-500/30'
+        glow: ''
       };
     }
     return {
@@ -505,7 +505,7 @@ export function FloatingAiChat() {
       text: 'text-indigo-500',
       border: 'border-indigo-500/20',
       tint: 'rgba(99,102,241,0.08)',
-      glow: 'shadow-indigo-500/30'
+      glow: ''
     };
   }, [location.pathname]);
 
@@ -1851,7 +1851,7 @@ export function FloatingAiChat() {
         whileHover={{ scale: 1.05, opacity: 1, x: 0 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr ${themeColors.bg} flex items-center justify-center shadow-xl ${themeColors.glow} text-white relative overflow-hidden group`}
+        className={cn('w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr flex items-center justify-center shadow-lg text-white relative overflow-hidden group', themeColors.bg)}
       >
         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         <AnimatePresence mode="wait" initial={false}>

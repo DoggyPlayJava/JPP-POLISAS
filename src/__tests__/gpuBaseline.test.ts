@@ -51,4 +51,21 @@ describe('GPU baseline — satu code path, semua device ringan', () => {
       expect(c, `${f} ada reflow animation`).not.toMatch(/animate=\{\{[^}]*width:|animate=\{\{[^}]*height:|animate=\{\{[^}]*boxShadow:/);
     }
   });
+
+  it('BottomNav tiada ambient colored glow (shadow-[color]/30) dan tiada 150px inset vignette', () => {
+    const bottomNav = readFileSync(join(SRC, 'components', 'layout', 'BottomNav.tsx'), 'utf8');
+    expect(bottomNav).not.toMatch(/shadow-[a-z]+-[0-9]+\/30/);
+    expect(bottomNav).not.toMatch(/inset_0_0_150px/);
+  });
+
+  it('BottomNav dock dan menu menggunakan background legap (bukan /60 atau /90)', () => {
+    const bottomNav = readFileSync(join(SRC, 'components', 'layout', 'BottomNav.tsx'), 'utf8');
+    expect(bottomNav).not.toContain('bg-white/60');
+    expect(bottomNav).not.toContain('bg-white/90');
+  });
+
+  it('PortalSidebar menggunakan background legap (bukan /80)', () => {
+    const sidebar = readFileSync(join(SRC, 'components', 'layout', 'PortalSidebar.tsx'), 'utf8');
+    expect(sidebar).not.toContain('bg-white/80');
+  });
 });

@@ -88,7 +88,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
       <aside
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "fixed inset-y-0 left-0 w-80 z-[200] bg-white/80 dark:bg-slate-900/95 backdrop-blur-xl border-r border-black/5 dark:border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out will-change-transform",
+          "fixed inset-y-0 left-0 w-80 z-[200] bg-white dark:bg-slate-900 border-r border-black/5 dark:border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out will-change-transform",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

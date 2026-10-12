@@ -109,10 +109,8 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
     return {
       color: 'text-[#2E3A2F] dark:text-[#84A98C]',
       bg: 'bg-[#2E3A2F] dark:bg-[#6B7F5B]',
-      shadow: 'shadow-[0_0_8px_rgba(46,58,47,0.4)]',
-      fabBg: 'bg-gradient-to-tr from-[#2E3A2F] to-[#6B7F5B] hover:shadow-[#2E3A2F]/30',
+      fabBg: 'bg-gradient-to-tr from-[#2E3A2F] to-[#6B7F5B]',
       pillBg: 'bg-[#6B7F5B]/10 dark:bg-[#6B7F5B]/20',
-      glow: 'shadow-[0_0_20px_rgba(46,58,47,0.3)]'
     };
   };
 
@@ -131,7 +129,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               onClick={() => setIsActionsOpen(false)}
-              className="fixed inset-0 bg-black/60 dark:bg-black/70 z-[110] shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]"
+              className="fixed inset-0 bg-black/75 z-[110]"
             />
             <motion.div
               drag="y"
@@ -157,7 +155,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 scale: 0.85,
                 transition: { duration: 0.2 }
               }}
-              className="quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white/90 dark:bg-zinc-900/90  border border-white/50 dark:border-white/10 rounded-3xl p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]"
+              className="quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl"
             >
               {/* Drag Handle Indicator */}
               <div
@@ -216,7 +214,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
           "tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
         )}
       >
-        <div className="bg-white/60 dark:bg-zinc-950/60  border-t border-white/40 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">
+        <div className="bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-white/10 shadow-lg rounded-full px-2 py-2 flex items-center justify-between relative">
           
           {/* Left Buttons */}
           <div className="flex items-center justify-around flex-1 pr-8">
@@ -288,13 +286,13 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
 
 // Komponen Pembantu
 const BUTTON_VARIANTS: Record<string, string> = {
-  "bg-amber-500": "bg-gradient-to-b from-amber-300 to-amber-500 shadow-amber-500/30",
-  "bg-blue-500": "bg-gradient-to-b from-blue-300 to-blue-600 shadow-blue-500/30",
-  "bg-teal-500": "bg-gradient-to-b from-teal-300 to-teal-600 shadow-teal-500/30",
-  "bg-red-400": "bg-gradient-to-b from-red-400 to-rose-600 shadow-rose-500/30",
-  "bg-green-400": "bg-gradient-to-b from-green-300 to-emerald-600 shadow-emerald-500/30",
-  "bg-orange-500": "bg-gradient-to-b from-orange-300 to-orange-600 shadow-orange-500/30",
-  "bg-indigo-500": "bg-gradient-to-b from-indigo-400 to-indigo-600 shadow-indigo-500/30",
+  "bg-amber-500": "bg-gradient-to-b from-amber-400 to-amber-500",
+  "bg-blue-500": "bg-gradient-to-b from-blue-400 to-blue-600",
+  "bg-teal-500": "bg-gradient-to-b from-teal-400 to-teal-600",
+  "bg-red-400": "bg-gradient-to-b from-red-400 to-rose-600",
+  "bg-green-400": "bg-gradient-to-b from-green-400 to-emerald-600",
+  "bg-orange-500": "bg-gradient-to-b from-orange-400 to-orange-600",
+  "bg-indigo-500": "bg-gradient-to-b from-indigo-400 to-indigo-600",
 };
 
 function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) {
@@ -309,9 +307,9 @@ function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, l
         visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 400, damping: 15 } }
       }}
     >
-      <div className={cn("relative w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-lg transition-transform duration-200 group-active:scale-90", bgClass)}>
-        <div className="absolute inset-0 rounded-[1rem] border border-white/40 dark:border-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-4px_6px_rgba(0,0,0,0.15)] pointer-events-none" />
-        <Icon className="w-5 h-5 relative z-10 drop-shadow-sm" strokeWidth={2.5} />
+      <div className={cn("relative w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-md transition-transform duration-200 group-active:scale-90", bgClass)}>
+        <div className="absolute inset-0 rounded-[1rem] border border-white/30 dark:border-white/20 pointer-events-none" />
+        <Icon className="w-5 h-5 relative z-10" strokeWidth={2.5} />
       </div>
       <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 dark:text-white/60 text-center leading-tight max-w-[60px]">{label}</span>
     </motion.button>

@@ -155,7 +155,7 @@
   }
 
   .bento-card {
-    @apply bg-card/60 backdrop-blur-2xl border border-border/40 rounded-[2.5rem] shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1;
+    @apply bg-card border border-border/40 rounded-[2.5rem] shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1;
   }
 
   .premium-card {
