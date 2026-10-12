@@ -394,7 +394,7 @@ export function VendorCatalogManager({
   return (
     <div className="space-y-4">
       {/* ── Top Header & Direct POS Integration Link ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card/60 backdrop-blur-md border border-border/60 hover:border-amber-400/50 transition-all duration-300 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card/60  border border-border/60 hover:border-amber-400/50 transition-all duration-300 shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
@@ -546,7 +546,7 @@ export function VendorCatalogManager({
             return (
               <div
                 key={p.id}
-                className="p-4 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-card/60 backdrop-blur-md shadow-xs space-y-3.5 transition-all duration-300"
+                className="p-4 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-card/60  shadow-xs space-y-3.5 transition-all duration-300"
               >
                 {/* Header: Image/Icon, Name, Price, Category */}
                 <div className="flex gap-3">

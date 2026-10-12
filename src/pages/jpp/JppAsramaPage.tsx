@@ -467,7 +467,7 @@ export function JppAsramaPage() {
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
+        className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80  border-b border-slate-200/60 dark:border-slate-800/60"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">

@@ -116,7 +116,7 @@ export function LaporanPreviewModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-[99999] bg-black/80  flex items-center justify-center p-4"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -126,7 +126,7 @@ export function LaporanPreviewModal({
           className="relative w-full max-w-4xl h-[92vh] bg-card rounded-3xl overflow-hidden border border-border shadow-2xl flex flex-col"
         >
           {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/95 backdrop-blur-sm shrink-0 gap-3">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/95  shrink-0 gap-3">
             {/* Title */}
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">

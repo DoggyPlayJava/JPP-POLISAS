@@ -52,7 +52,7 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-default"
+          className="fixed inset-0 bg-black/60  transition-opacity cursor-default"
         />
 
         {/* Dialog / Drawer Container */}
@@ -145,7 +145,7 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
                   }}
                   className={cn(
                     'relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer min-h-[44px]',
-                    'bg-gradient-to-br backdrop-blur-md',
+                    'bg-gradient-to-br ',
                     sticker.gradientClass,
                     sticker.borderClass,
                     isSelected && 'ring-2 ring-rose-500 dark:ring-rose-400 shadow-md'

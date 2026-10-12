@@ -208,7 +208,7 @@ export function PolyMartLayout() {
       <div className="min-h-screen bg-background">
 
         {/* ── Top Navbar ─────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-40 bg-background/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-amber-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+        <header className="sticky top-0 z-40 bg-background/90 dark:bg-slate-950/90  border-b border-amber-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
           <div className="max-w-5xl mx-auto px-3 sm:px-5">
 
             {/* Main row */}

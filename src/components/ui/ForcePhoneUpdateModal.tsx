@@ -48,7 +48,7 @@ export function ForcePhoneUpdateModal() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+          className="absolute inset-0 bg-slate-950/90 "
         />
 
         {/* Modal Window */}

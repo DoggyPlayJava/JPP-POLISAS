@@ -131,7 +131,7 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
         }
       }}
       label="Carian Global JPP"
-      overlayClassName="fixed inset-0 z-[200] bg-background/60 backdrop-blur-md transition-opacity duration-200"
+      overlayClassName="fixed inset-0 z-[200] bg-background/60  transition-opacity duration-200"
       contentClassName="fixed left-1/2 top-[12vh] z-[201] w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border/40 bg-card/95 shadow-2xl  p-0 outline-none"
     >
       <DialogPrimitive.Title className="sr-only">Carian Global JPP</DialogPrimitive.Title>

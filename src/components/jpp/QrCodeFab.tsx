@@ -68,7 +68,7 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[300] bg-black/60 "
             />
 
             {/* Panel — slide in dari kanan */}
@@ -86,7 +86,7 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
               )}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 sticky top-0 bg-card/95 backdrop-blur-md z-10">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 sticky top-0 bg-card/95  z-10">
                 <div className="flex items-center gap-2.5">
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center"

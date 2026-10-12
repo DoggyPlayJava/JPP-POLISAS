@@ -267,7 +267,7 @@ export function EmsAudienceScanPage() {
         {/* Card Body */}
         {submittedVisitor ? (
           /* Success / Celebration View */
-          <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-6 backdrop-blur-xl shadow-2xl transition-colors animate-fadeIn text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-6  shadow-2xl transition-colors animate-fadeIn text-slate-900 dark:text-white">
             {submittedVisitor.is_milestone_winner ? (
               /* Milestone Winner Celebration Card */
               <div className="space-y-5">
@@ -339,7 +339,7 @@ export function EmsAudienceScanPage() {
           /* Attendance Registration Form */
           <form
             onSubmit={handleSubmit}
-            className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5 backdrop-blur-xl shadow-2xl transition-colors"
+            className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5  shadow-2xl transition-colors"
           >
             <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-800">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Borang Kehadiran Pengunjung</h2>

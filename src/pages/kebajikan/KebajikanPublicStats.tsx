@@ -97,7 +97,7 @@ export function KebajikanStatsPage() {
         <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20 text-center relative z-10">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <div
-              className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-8 shadow-sm backdrop-blur-md bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-300"
+              className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-8 shadow-sm  bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-300"
             >
               <HeartHandshake className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-[11px] font-black uppercase tracking-[0.25em]">
@@ -164,7 +164,7 @@ export function KebajikanStatsPage() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-3xl p-5 sm:p-6 text-center border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80 backdrop-blur-xl relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+              className="rounded-3xl p-5 sm:p-6 text-center border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80  relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: `linear-gradient(to bottom right, rgba(${hexColorToRgb(card.color)}, 0.4), transparent)` }} />
               <div className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner" style={{ background: isDark ? `rgba(${hexColorToRgb(card.color)}, 0.15)` : `rgba(${hexColorToRgb(card.color)}, 0.1)` }}>
@@ -180,7 +180,7 @@ export function KebajikanStatsPage() {
         {/* Charts Section */}
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           {/* Bar Chart — Monthly */}
-          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl">
+          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl">
             <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">Aduan Bulanan</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">Diterima vs Diselesaikan — 6 bulan lepas</p>
             {monthly.length > 0 ? (
@@ -204,7 +204,7 @@ export function KebajikanStatsPage() {
           </div>
 
           {/* Donut — Categories */}
-          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl flex flex-col">
+          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl flex flex-col">
             <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">Pecahan Kategori</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">Peratus setiap kategori aduan keseluruhan</p>
             {categories.length > 0 ? (
@@ -241,7 +241,7 @@ export function KebajikanStatsPage() {
         </div>
 
         {/* Rating Section */}
-        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl">
+        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl">
           <div className="flex items-start justify-between mb-8">
             <div>
               <h2 className="font-black text-xl text-slate-900 dark:text-slate-100 mb-2">Penilaian Pelajar</h2>

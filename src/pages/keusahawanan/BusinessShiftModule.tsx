@@ -482,7 +482,7 @@ export function BusinessJadual({
           {assignModal && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 "
                 onClick={() => setAssignModal(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -541,7 +541,7 @@ export function BusinessJadual({
           {swapModal && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 "
                 onClick={() => setSwapModal(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -823,7 +823,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
           {openModal && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpenModal(false)} />
+                className="absolute inset-0 bg-black/60 " onClick={() => setOpenModal(false)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -907,7 +907,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
           {closeModal && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCloseModal(false)} />
+                className="absolute inset-0 bg-black/60 " onClick={() => setCloseModal(false)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}

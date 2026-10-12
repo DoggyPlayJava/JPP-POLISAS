@@ -147,7 +147,7 @@ export function CampusServicesGrid({
               className={cn(
                 'flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 p-2 sm:p-3 transition-all',
                 'bg-white hover:bg-slate-50 border border-slate-200/70 hover:border-emerald-400/40 shadow-xs hover:shadow-md rounded-2xl sm:rounded-3xl',
-                'dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:backdrop-blur-md dark:border-white/[0.08] dark:hover:border-emerald-500/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
+                'dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:border-white/[0.08] dark:hover:border-emerald-500/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
                 service.tourClass,
                 !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed hover:scale-100'
               )}

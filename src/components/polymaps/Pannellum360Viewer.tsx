@@ -266,12 +266,12 @@ export function Pannellum360Viewer({
 
       {/* Top Header / Badges */}
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white text-xs font-black shadow-lg uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60  border border-white/15 text-white text-xs font-black shadow-lg uppercase tracking-wider">
           <Compass className="w-3.5 h-3.5 text-emerald-400 animate-spin" style={{ animationDuration: '6s' }} />
           360° Street View
         </span>
         {title && (
-          <span className="hidden sm:inline-block px-3 py-1.5 rounded-full bg-slate-900/70 backdrop-blur-md border border-white/10 text-slate-200 text-xs font-bold shadow-md max-w-xs truncate">
+          <span className="hidden sm:inline-block px-3 py-1.5 rounded-full bg-slate-900/70  border border-white/10 text-slate-200 text-xs font-bold shadow-md max-w-xs truncate">
             {title}
           </span>
         )}
@@ -281,7 +281,7 @@ export function Pannellum360Viewer({
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/15 text-white flex items-center justify-center transition-colors shadow-lg active:scale-95"
+          className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80  border border-white/15 text-white flex items-center justify-center transition-colors shadow-lg active:scale-95"
           title="Tutup 360"
         >
           <X className="w-4 h-4" />
@@ -290,7 +290,7 @@ export function Pannellum360Viewer({
 
       {/* Floating Control Toolbar */}
       {showControls && !hasError && (
-        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/15 p-1 rounded-2xl shadow-xl">
+        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-black/60  border border-white/15 p-1 rounded-2xl shadow-xl">
           {/* Auto-Rotate Toggle */}
           <button
             onClick={toggleAutoRotate}
@@ -325,14 +325,14 @@ export function Pannellum360Viewer({
 
       {/* Touch / Mouse Drag Hint (disappears on interaction) */}
       {!isLoading && !hasError && (
-        <div className="absolute bottom-3 left-3 z-10 pointer-events-none hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-[10px] font-bold text-white/70 border border-white/10 opacity-70 group-hover/pano:opacity-100 transition-opacity">
+        <div className="absolute bottom-3 left-3 z-10 pointer-events-none hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40  text-[10px] font-bold text-white/70 border border-white/10 opacity-70 group-hover/pano:opacity-100 transition-opacity">
           <span>Tarik tetikus / sentuh skrin untuk pusing 360°</span>
         </div>
       )}
 
       {/* Loading Overlay */}
       {isLoading && !hasError && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm text-white">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80  text-white">
           <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-3" />
           <p className="text-xs font-black uppercase tracking-wider text-slate-200">
             Memuatkan Sudut 360°...

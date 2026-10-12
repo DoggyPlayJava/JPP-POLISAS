@@ -14,7 +14,7 @@ export function PendingPage() {
   return (
     <div className="min-h-screen bg-muted/20 flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-        <Card className="max-w-md w-full border-none shadow-2xl rounded-[2rem] overflow-hidden bg-background/60 backdrop-blur-xl">
+        <Card className="max-w-md w-full border-none shadow-2xl rounded-[2rem] overflow-hidden bg-background/60 ">
           <div className="h-2 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
           <CardContent className="p-10 flex flex-col items-center text-center space-y-6">
             <div className="w-24 h-24 rounded-[2rem] bg-amber-100 flex items-center justify-center shadow-inner">

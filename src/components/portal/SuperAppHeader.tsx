@@ -61,7 +61,7 @@ export function SuperAppHeader({
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             {/* JPP Brand Badge */}
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white/10 border border-[#D9C9B2]/30 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-white/10 border border-[#D9C9B2]/30  flex items-center justify-center p-1.5 shadow-sm shrink-0">
                 <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
@@ -75,7 +75,7 @@ export function SuperAppHeader({
             </div>
 
             {/* Campus Location Pill */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-black/25 backdrop-blur-md border border-[#D9C9B2]/20 text-[#F8F6EE] text-xs font-medium shrink-0">
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-black/25  border border-[#D9C9B2]/20 text-[#F8F6EE] text-xs font-medium shrink-0">
               <MapPin className="w-3.5 h-3.5 text-[#84A98C] shrink-0" />
               <span>POLISAS, Semambu</span>
             </div>
@@ -84,12 +84,12 @@ export function SuperAppHeader({
           {/* Right Side: Floating Discrete Action Circles */}
           <div className="flex items-center gap-3 shrink-0">
             {/* 1. ThemeToggle circular button */}
-            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30  shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <ThemeToggle />
             </div>
 
             {/* 2. NotificationBell circular button */}
-            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30 backdrop-blur-md shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30  shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <NotificationBell variant="dark" />
             </div>
 

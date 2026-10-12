@@ -437,7 +437,7 @@ function LayoutInner({
           {isSidebarOpen && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 z-[130] md:hidden bg-black/60 backdrop-blur-sm" />
+              className="fixed inset-0 z-[130] md:hidden bg-black/60 " />
           )}
         </AnimatePresence>
 
@@ -459,7 +459,7 @@ function LayoutInner({
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Global header shared on mobile and desktop */}
-          <header className="flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60 backdrop-blur-xl sticky top-0 z-50">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60  sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}

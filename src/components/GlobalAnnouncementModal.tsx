@@ -217,7 +217,7 @@ export function GlobalAnnouncementModal() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+        className="absolute inset-0 bg-background/80 "
       />
 
       <motion.div
@@ -282,7 +282,7 @@ export function GlobalAnnouncementModal() {
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
               <button
                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(current.image_url); }}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40  border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
               >
                 <Maximize2 size={12} />
                 Papar Skrin Penuh
@@ -354,7 +354,7 @@ export function GlobalAnnouncementModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[210] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
+            className="fixed inset-0 z-[210] bg-black/95  flex items-center justify-center p-4 cursor-zoom-out"
             onClick={() => setFullScreenImage(null)}
           >
             <button

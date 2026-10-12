@@ -196,7 +196,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
   return (
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose} className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm" />
+        onClick={onClose} className="fixed inset-0 bg-black/70 z-50 " />
       <motion.div
         initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
         className="fixed inset-x-4 bottom-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px] z-50 bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] overflow-y-auto"

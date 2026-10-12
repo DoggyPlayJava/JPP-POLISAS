@@ -1270,7 +1270,7 @@ export default function MakmpPublicFormPage() {
 
       <MakmpJppHeader subtitle="Majlis Anugerah Kecemerlangan" />
       {/* Header Bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-30 transition-colors">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60  sticky top-0 z-30 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
@@ -2774,7 +2774,7 @@ export default function MakmpPublicFormPage() {
         )}
       {/* Modal Pemilihan Sijil e-Akademik */}
       {isCertPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80  animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 bg-slate-50/80 dark:bg-slate-950/50">

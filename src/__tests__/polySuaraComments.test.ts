@@ -208,7 +208,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).toContain('text-slate-900 dark:text-white');
       expect(pageContent).toContain('z-[999]');
       expect(pageContent).toContain('pb-8 sm:pb-4');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[990]');
 
       // Drawer close button dual mode
       expect(pageContent).toMatch(/text-slate-500 dark:text-slate-400/);

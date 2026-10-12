@@ -263,7 +263,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                   <PopoverContent
                     align="end"
                     sideOffset={8}
-                    className="w-72 rounded-3xl shadow-xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl p-0 overflow-hidden"
+                    className="w-72 rounded-3xl shadow-xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a0a0a]/95  p-0 overflow-hidden"
                   >
                     <ColorPickerPopover
                       moduleId={module.id}

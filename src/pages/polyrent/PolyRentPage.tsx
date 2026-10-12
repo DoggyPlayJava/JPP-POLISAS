@@ -229,7 +229,7 @@ export function PolyRentPage() {
         {/* Top Right Wishlist Heart */}
         <button 
           onClick={(e) => toggleWishlist(e, listing.id)}
-          className="tour-polyrent-wishlist absolute top-2.5 right-2.5 z-30 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:scale-110 active:scale-90 transition-all border border-white/10"
+          className="tour-polyrent-wishlist absolute top-2.5 right-2.5 z-30 w-8 h-8 rounded-full bg-white/20  flex items-center justify-center hover:scale-110 active:scale-90 transition-all border border-white/10"
         >
           <Heart className={cn("w-4 h-4 transition-colors", isSaved ? "fill-rose-500 text-rose-500" : "text-white")} />
         </button>
@@ -284,7 +284,7 @@ export function PolyRentPage() {
         
         {/* Top Navbar */}
         <div className="relative z-10 flex items-center justify-between p-4 px-6 max-w-7xl mx-auto mb-10">
-          <button onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-colors border border-white/10">
+          <button onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-white/10  flex items-center justify-center text-white hover:bg-white/20 transition-colors border border-white/10">
             <Menu className="w-5 h-5" />
           </button>
           
@@ -292,12 +292,12 @@ export function PolyRentPage() {
             {/* Help (?) button - tour trigger */}
             <button
               onClick={startTour}
-              className="tour-help-button w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors border border-white/10"
+              className="tour-help-button w-10 h-10 rounded-full bg-white/10  flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors border border-white/10"
               title="Panduan PolyRent"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
-            <button onClick={() => setIsCalculatorOpen(true)} className="tour-polyrent-calculator w-10 h-10 rounded-full bg-indigo-500/20 backdrop-blur-md flex items-center justify-center text-indigo-300 hover:bg-indigo-500/30 transition-colors border border-indigo-500/30">
+            <button onClick={() => setIsCalculatorOpen(true)} className="tour-polyrent-calculator w-10 h-10 rounded-full bg-indigo-500/20  flex items-center justify-center text-indigo-300 hover:bg-indigo-500/30 transition-colors border border-indigo-500/30">
               <Calculator className="w-4 h-4" />
             </button>
             <button onClick={() => setIsFormOpen(true)} className="tour-polyrent-add flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-teal-500 text-white font-bold text-sm hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/30">

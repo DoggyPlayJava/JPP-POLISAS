@@ -48,7 +48,7 @@ export function KarnivalAdminLayout() {
     <div className="dark min-h-screen bg-[#0a0a0f] flex flex-col">
 
       {/* ── Admin Header ─────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0a0a0f]/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0a0a0f]/95 ">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
           <div className="flex items-center gap-3">

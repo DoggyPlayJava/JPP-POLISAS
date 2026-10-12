@@ -916,7 +916,7 @@ export function EmsDashboardPage() {
       {/* 1. Modal QR Code Pendaftaran & Kehadiran Pengunjung */}
       {/* ============================================================ */}
       {qrModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-5 shadow-2xl relative text-slate-900 dark:text-white">
             <button
               onClick={() => {
@@ -1016,7 +1016,7 @@ export function EmsDashboardPage() {
       {/* 2. Modal Jana Kod Juri */}
       {/* ============================================================ */}
       {juryModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl my-8 relative text-slate-900 dark:text-white">
             <button
               onClick={() => setJuryModalEvent(null)}
@@ -1339,7 +1339,7 @@ export function EmsDashboardPage() {
       {/* 3. Modal Tie-Breaker (Pemenang Seret) */}
       {/* ============================================================ */}
       {tieModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl relative text-slate-900 dark:text-white">
             <button
               onClick={() => setTieModalEvent(null)}
@@ -1450,7 +1450,7 @@ export function EmsDashboardPage() {
 
       {/* Modal Senarai E-Sijil Acara */}
       {certModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-6 shadow-2xl relative max-h-[85vh] overflow-y-auto text-slate-900 dark:text-white">
             <button
               onClick={() => setCertModalEvent(null)}
@@ -1516,7 +1516,7 @@ export function EmsDashboardPage() {
       {/* 4. Modal Pendaftaran Manual Peserta */}
       {/* ============================================================ */}
       {manualRegModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl my-8 relative text-slate-900 dark:text-white">
             <button
               onClick={() => setManualRegModalEvent(null)}

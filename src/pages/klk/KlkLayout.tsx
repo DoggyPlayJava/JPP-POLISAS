@@ -60,7 +60,7 @@ export function KlkLayout() {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] lg:hidden"
+          className="fixed inset-0 bg-black/60  z-[130] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -78,7 +78,7 @@ export function KlkLayout() {
       {/* Main content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative min-w-0">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl relative z-30">
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80  relative z-30">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}

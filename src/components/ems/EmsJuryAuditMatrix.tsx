@@ -925,7 +925,7 @@ export function EmsJuryAuditMatrix({
 
       {/* SECTION C: MODAL PINDAAN MARKAH PENGARAH PROGRAM (Obsidian SuperApp Styling) */}
       {editingCell && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/80  flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl relative my-8 ring-1 ring-white/10">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">

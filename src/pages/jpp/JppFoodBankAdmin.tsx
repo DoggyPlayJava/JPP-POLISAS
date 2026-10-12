@@ -2154,7 +2154,7 @@ export function JppFoodBankAdmin() {
     <div className="min-h-screen bg-[#faf6f6] dark:bg-[#0b0c10] text-slate-900 dark:text-slate-100 pb-16 transition-colors">
       
       {/* ── 1. HEADER UTAMA & KPI BAR ───────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#0f1117]/80 backdrop-blur-md border-b border-rose-200/60 dark:border-white/10 px-4 sm:px-6 lg:px-8 py-4 transition-colors">
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#0f1117]/80  border-b border-rose-200/60 dark:border-white/10 px-4 sm:px-6 lg:px-8 py-4 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           
           {/* Tajuk & Breadcrumb */}
@@ -2541,7 +2541,7 @@ export function JppFoodBankAdmin() {
                       />
 
                       {/* Scanning Indicator with Animated Pulse */}
-                      <div className="absolute top-4 inset-x-0 mx-auto w-fit z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
+                      <div className="absolute top-4 inset-x-0 mx-auto w-fit z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold  shadow-md">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                         <ScanLine className="w-3.5 h-3.5 text-emerald-400" />
                         <span>{isCameraScanning ? 'HUD Laser Aktif — Menghala ke Kod QR' : 'Pengimbas Bersedia'}</span>
@@ -2583,7 +2583,7 @@ export function JppFoodBankAdmin() {
                   {/* Right Column: Fallback Manual Search & High-Contrast Student Identification Card */}
                   <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
                     {/* Fallback Manual Matric Search Input */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-2">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10  space-y-2">
                       <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                         <Search className="w-3.5 h-3.5 text-emerald-400" />
                         <span>Carian Alternatif / Manual Pelajar</span>
@@ -2621,7 +2621,7 @@ export function JppFoodBankAdmin() {
 
                     {/* High-Contrast Student Identification Card in obsidian glass */}
                     {activeScanStudent ? (
-                      <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/90 border-2 border-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.2)] backdrop-blur-xl relative space-y-4">
+                      <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/90 border-2 border-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.2)]  relative space-y-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
                             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
@@ -3218,7 +3218,7 @@ export function JppFoodBankAdmin() {
                               )}
                               <span
                                 className={cn(
-                                  'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider backdrop-blur-md border flex items-center gap-1 shadow-sm',
+                                  'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider  border flex items-center gap-1 shadow-sm',
                                   catConfig.badge
                                 )}
                               >
@@ -4649,7 +4649,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 5. MODAL PENOLAKAN PERMOHONAN ───────────────────────────────────── */}
       {rejectionModalApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-rose-600" />
@@ -4696,7 +4696,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 6. MODAL BUTIRAN PENUH PERMOHONAN ─────────────────────────────────── */}
       {selectedAppForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div>
@@ -4853,7 +4853,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 7. MODAL TAMBAH / SUNTING ITEM INVENTORI ────────────────────────── */}
       {itemModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">
               {editingItem ? 'Sunting Item Food Bank' : 'Tambah Item Inventori Baharu'}
@@ -4998,7 +4998,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 7.5. MODAL PINDAHAN STOK ANTARA LOKASI FIZIKAL ────────────────────── */}
       {transferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60  animate-fadeIn">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-amber-200 dark:border-white/10 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
               <div className="flex items-center gap-2.5">
@@ -5298,7 +5298,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 8. MODAL PELARASAN BAJET (TAB 3) ─────────────────────────────────── */}
       {budgetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-3">
               Pelarasan / Suntikan Bajet Food Bank
@@ -5380,7 +5380,7 @@ export function JppFoodBankAdmin() {
 
       {/* ── 9. MODAL LOKASI PUSAT PENGAGIHAN (TAB 4) ─────────────────────────── */}
       {locationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">
               {editingLocation ? 'Sunting Lokasi Pengagihan' : 'Tambah Pusat Pengagihan Baharu'}

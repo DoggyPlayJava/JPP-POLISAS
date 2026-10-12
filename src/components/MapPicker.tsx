@@ -109,7 +109,7 @@ export function MapPicker({ position, onPositionChange, onNameChange, label }: M
 
         {/* Instruction badge */}
         <div className="absolute bottom-3 left-0 right-0 z-[10] flex justify-center pointer-events-none">
-          <div className="bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full">
+          <div className="bg-slate-900/80  text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full">
             Ketik pada peta untuk pin lokasi
           </div>
         </div>

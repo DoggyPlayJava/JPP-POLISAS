@@ -106,7 +106,7 @@ export function KebajikanLayout() {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] lg:hidden" 
+          className="fixed inset-0 bg-black/60  z-[130] lg:hidden" 
           onClick={() => setSidebarOpen(false)} 
         />
       )}
@@ -122,7 +122,7 @@ export function KebajikanLayout() {
       </div>
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative min-w-0 transition-colors">
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl relative z-30 transition-colors">
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80  relative z-30 transition-colors">
           <div className="flex items-center gap-2">
 
             <button 

@@ -553,7 +553,7 @@ export function KeusahawananDashboard() {
             style={{ background: color }}
           >
             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-sm text-white shrink-0 relative z-10">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center  shadow-sm text-white shrink-0 relative z-10">
               <Calculator className="w-5 h-5" />
             </div>
             <div className="min-w-0 relative z-10 mt-1">
@@ -568,7 +568,7 @@ export function KeusahawananDashboard() {
             className="group relative flex flex-col items-start justify-between gap-4 p-4 sm:p-5 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full text-left border border-border/40 bg-card"
           >
             <div className="absolute inset-0 bg-muted/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center backdrop-blur-sm shadow-sm text-amber-500 shrink-0 border border-amber-500/10 relative z-10">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center  shadow-sm text-amber-500 shrink-0 border border-amber-500/10 relative z-10">
               <PackageSearch className="w-5 h-5" />
             </div>
             <div className="min-w-0 relative z-10 mt-1">
@@ -626,12 +626,12 @@ export function KeusahawananDashboard() {
 
             <div className="flex items-center shrink-0 self-end md:self-center">
               {isPuskepApproved ? (
-                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
+                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm ">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Ahli PUSKEP Rasmi (Kekal)</span>
                 </div>
               ) : isPuskepPending ? (
-                <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
+                <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm ">
                   <Clock className="w-3.5 h-3.5 text-amber-400" />
                   <span>Permohonan No. Siri PUSKEP Sedang Diproses</span>
                 </div>

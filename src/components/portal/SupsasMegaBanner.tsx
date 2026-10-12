@@ -113,7 +113,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
         <div className="absolute inset-0 pointer-events-none translate-z-[20px]" style={{ background: 'radial-gradient(ellipse at 80% 100%, rgba(180,83,9,0.2) 0%, transparent 50%)' }} />
 
         {/* Live Status Marquee */}
-        <div className="absolute top-0 left-0 right-0 h-7 bg-amber-900/40 border-b border-amber-500/20 overflow-hidden z-20 flex items-center backdrop-blur-md">
+        <div className="absolute top-0 left-0 right-0 h-7 bg-amber-900/40 border-b border-amber-500/20 overflow-hidden z-20 flex items-center ">
           <div className="whitespace-nowrap flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200" style={{ animation: 'supsas-marquee 20s linear infinite', width: '200%' }}>
             <span>🏆 {supsasEdition?.name ?? 'SUPSAS'} MEMBAWA SEMANGAT KESUKANAN!</span>
             <span>🏅 SOKONG KONTINJEN ANDA SEKARANG</span>

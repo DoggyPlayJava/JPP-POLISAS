@@ -106,7 +106,7 @@ export function JppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsMobileOpen(false)}
-            className="fixed inset-0 z-[130] md:hidden bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[130] md:hidden bg-black/70 "
           />
         )}
       </AnimatePresence>
@@ -133,7 +133,7 @@ export function JppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top header (mobile + tablet) */}
-        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/80 dark:bg-[#151D16]/80 backdrop-blur-xl sticky top-0 z-50 text-[#2E3A2F] dark:text-white">
+        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/80 dark:bg-[#151D16]/80  sticky top-0 z-50 text-[#2E3A2F] dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
             className="p-2 -ml-1 rounded-xl text-[#2E3A2F]/70 dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white hover:bg-[#2E3A2F]/5 dark:hover:bg-white/10 transition-all"

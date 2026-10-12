@@ -196,7 +196,7 @@ export function JppNexusPage() {
                                         <h3 className="font-black text-2xl tracking-tighter text-white">Metrik Nexus AI</h3>
                                         <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-1">Guna Pakai Token Bulan ini</p>
                                     </div>
-                                    <div className="px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
+                                    <div className="px-3 py-1.5 bg-white/5  rounded-xl border border-white/10">
                                         <p className="text-[9px] font-black uppercase text-indigo-200 tracking-widest">Sistem Pintar v2.0</p>
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@ export function JppNexusPage() {
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                                        <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Sparkles className="w-4 h-4 text-amber-400 mb-2" />
                                             <p className="text-xl font-black text-white tabular-nums">
                                                 {settings.ai_total_tokens
@@ -233,7 +233,7 @@ export function JppNexusPage() {
                                             </p>
                                             <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Anggaran Panggilan</p>
                                         </div>
-                                        <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                                        <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Activity className={`w-4 h-4 mb-2 ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`} />
                                             <p className={`text-xl font-black uppercase ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                 {settings.allow_ai_chat ? 'Aktif' : 'Ditutup'}

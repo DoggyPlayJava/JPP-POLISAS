@@ -229,7 +229,7 @@ export function KlkResidencyModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/85 backdrop-blur-xl"
+            className="absolute inset-0 bg-slate-950/85 "
           />
 
           {/* Modal */}

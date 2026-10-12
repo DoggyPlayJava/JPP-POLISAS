@@ -209,7 +209,7 @@ export function KebajikanMyTickets() {
               <motion.div
                 key={t.id}
                 layout
-                className="relative rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80 backdrop-blur-xl group hover:border-slate-300 dark:hover:border-white/10 transition-colors"
+                className="relative rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80  group hover:border-slate-300 dark:hover:border-white/10 transition-colors"
               >
                 {/* Status Indicator Bar */}
                 <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: KEBAJIKAN_STATUS_COLORS[t.status].replace(/text-/g, 'bg-').split(' ')[0] || TEAL }} />
@@ -348,7 +348,7 @@ export function KebajikanMyTickets() {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm" onClick={onClose}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 " onClick={onClose}>
       <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-sm rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden bg-white dark:bg-slate-900" onClick={e => e.stopPropagation()}>
         <div className="relative z-10">
           {children}

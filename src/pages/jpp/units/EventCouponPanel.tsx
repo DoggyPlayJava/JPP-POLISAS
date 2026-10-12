@@ -336,7 +336,7 @@ export function EventCouponPanel() {
       {/* ── Modal Cipta / Edit ── */}
       <AnimatePresence>
         {showModal && (
-          <motion.div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          <motion.div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 "
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">

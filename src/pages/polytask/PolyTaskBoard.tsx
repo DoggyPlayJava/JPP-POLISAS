@@ -97,7 +97,7 @@ export function PolyTaskBoard() {
         {/* Help Button */}
         <button 
           onClick={startTour} 
-          className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all backdrop-blur-md border border-white/10"
+          className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all  border border-white/10"
         >
           <HelpCircle className="w-5 h-5" />
         </button>
@@ -117,8 +117,8 @@ export function PolyTaskBoard() {
           
           {/* Main Search Bar */}
           <div className="relative group max-w-xl mx-auto w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-2xl p-2 backdrop-blur-xl shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-2xl  opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
+            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-2xl p-2  shadow-2xl">
               <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
               <input 
                 type="text"

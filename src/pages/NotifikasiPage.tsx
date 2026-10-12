@@ -215,7 +215,7 @@ export function NotifikasiPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-slate-950/90  border-b border-white/[0.06]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button

@@ -104,7 +104,7 @@ export function CampusCampaignCarousel({
 
   return (
     <div className={cn('w-full max-w-full overflow-hidden', className)}>
-      <div className="relative overflow-hidden rounded-3xl border shadow-sm backdrop-blur-md bg-white/40 dark:bg-slate-900/60 transition-all duration-300">
+      <div className="relative overflow-hidden rounded-3xl border shadow-sm  bg-white/40 dark:bg-slate-900/60 transition-all duration-300">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide.id || safeIndex}

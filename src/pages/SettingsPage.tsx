@@ -165,7 +165,7 @@ function ProfileEditRequestSection() {
   };
 
   return (
-    <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden">
+    <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
       <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex items-center gap-4">
         <div className="w-10 h-10 rounded-2xl bg-[#6B7F5B]/15 text-[#6B7F5B] flex items-center justify-center shrink-0 border border-[#6B7F5B]/30">
           <ClipboardEdit className="w-5 h-5" />
@@ -409,7 +409,7 @@ function KediamanSettingsSection() {
 
   if (!isEligible) {
     return (
-      <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden p-8 text-center space-y-3">
+      <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden p-8 text-center space-y-3">
         <div className="w-14 h-14 rounded-3xl bg-[#6B7F5B]/15 flex items-center justify-center mx-auto text-[#6B7F5B] border border-[#6B7F5B]/30">
           <MapPin className="w-7 h-7" />
         </div>
@@ -420,7 +420,7 @@ function KediamanSettingsSection() {
   }
 
   return (
-    <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden">
+    <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
       <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex items-center gap-4">
         <div className="w-10 h-10 rounded-2xl bg-[#6B7F5B]/15 text-[#6B7F5B] flex items-center justify-center shrink-0 border border-[#6B7F5B]/30">
           <MapPin className="w-5 h-5" />
@@ -838,7 +838,7 @@ export function SettingsPage() {
         </div>
 
         {/* ── A. HERO PROFILE CARD ── */}
-        <Card className="bg-white dark:bg-[#1E271F]/80 backdrop-blur-md border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] p-5 sm:p-7 relative overflow-hidden">
+        <Card className="bg-white dark:bg-[#1E271F]/80  border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] p-5 sm:p-7 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Large Avatar with Camera Upload */}
             <div className="relative group shrink-0">
@@ -962,7 +962,7 @@ export function SettingsPage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
                 
                 {/* Maklumat Peribadi */}
-                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden">
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Maklumat Asas & Perhubungan</h3>
@@ -1085,7 +1085,7 @@ export function SettingsPage() {
             <TabsContent value="tema" className="space-y-6 focus-visible:ring-0 mt-0">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
                 
-                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden p-5 sm:p-7">
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden p-5 sm:p-7">
                   <div className="mb-6">
                     <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Pemilih Tema & Paparan</h3>
                     <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Sesuaikan mod warna antara mod cerah, gelap OLED, atau ikut peranti sistem.</p>
@@ -1167,7 +1167,7 @@ export function SettingsPage() {
             <TabsContent value="notifikasi" className="space-y-6 focus-visible:ring-0 mt-0">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                 
-                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden">
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50">
                     <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Tetapan Pemberitahuan & Makluman</h3>
                     <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Urus notifikasi amaran, status pesanan bazar, dan aktiviti kampus.</p>
@@ -1224,7 +1224,7 @@ export function SettingsPage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
                 
                 {/* Tukar Kata Laluan */}
-                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md overflow-hidden">
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Kunci Keselamatan Akaun</h3>
@@ -1374,7 +1374,7 @@ export function SettingsPage() {
                 </div>
 
                 {/* Bahan Rujukan & Garis Panduan */}
-                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 backdrop-blur-md p-5 sm:p-7">
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  p-5 sm:p-7">
                   <h4 className="text-xs font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-4">Katalog Bahan Rujukan Operasi</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
@@ -1413,7 +1413,7 @@ export function SettingsPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 "
                 onClick={() => !loading && setShowOTPModal(false)}
               />
               <motion.div

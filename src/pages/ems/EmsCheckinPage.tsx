@@ -441,7 +441,7 @@ export function EmsCheckinPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 max-w-7xl mx-auto font-sans transition-colors">
       {/* ── Top Header Navigation & Title ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80  p-5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/ems/dashboard')}
@@ -597,7 +597,7 @@ export function EmsCheckinPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Total Registered */}
         <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all" />
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/10 rounded-full  group-hover:bg-blue-500/20 transition-all" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendaftaran</span>
             <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -612,7 +612,7 @@ export function EmsCheckinPage() {
 
         {/* Checked-In Count */}
         <div className="bg-white dark:bg-slate-900/90 border border-emerald-500/30 dark:border-emerald-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-emerald-500/10 rounded-full  group-hover:bg-emerald-500/20 transition-all" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Disahkan Hadir</span>
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -627,7 +627,7 @@ export function EmsCheckinPage() {
 
         {/* Attendance Percentage */}
         <div className="bg-white dark:bg-slate-900/90 border border-purple-500/30 dark:border-purple-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all" />
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-purple-500/10 rounded-full  group-hover:bg-purple-500/20 transition-all" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Peratus Kehadiran</span>
             <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
@@ -647,7 +647,7 @@ export function EmsCheckinPage() {
 
         {/* Pending Count */}
         <div className="bg-white dark:bg-slate-900/90 border border-amber-500/30 dark:border-amber-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-amber-500/10 rounded-full  group-hover:bg-amber-500/20 transition-all" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Belum Hadir</span>
             <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">

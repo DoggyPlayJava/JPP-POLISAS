@@ -448,7 +448,7 @@ export function KebajikanSubmitPage() {
       
       {/* Top Nav */}
       <div
-        className="relative z-10 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/50 backdrop-blur-xl transition-colors"
+        className="relative z-10 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/50  transition-colors"
       >
         <Link to="/portal" className="flex items-center gap-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 transition-colors text-xs font-black uppercase tracking-widest">
           <ChevronLeft className="w-3.5 h-3.5" />Portal JPP
@@ -808,7 +808,7 @@ export function KebajikanSubmitPage() {
             </div>
 
             {/* Mobile Floating Sticky Bottom Summary Capsule */}
-            <div className="sm:hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10">
+            <div className="sm:hidden fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between border border-white/10">
               <div className="flex items-center gap-2.5 min-w-0 pr-2">
                 <div className="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center shrink-0">
                   <HeartHandshake className="w-4 h-4" />
@@ -990,7 +990,7 @@ export function KebajikanSubmitPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => !submitting && setShowReviewModal(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/60 "
             />
 
             {/* Slide-Up Sheet Panel */}

@@ -83,7 +83,7 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 "
       />
 
       <motion.div

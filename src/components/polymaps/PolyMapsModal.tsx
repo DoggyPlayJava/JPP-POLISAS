@@ -47,7 +47,7 @@ export function PolyMapsModal() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/60 "
         onClick={handleClose}
       />
 
@@ -72,7 +72,7 @@ export function PolyMapsModal() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center relative shadow-2xl"
+            className="w-24 h-24 bg-white/20  rounded-3xl flex items-center justify-center relative shadow-2xl"
           >
             <Map className="w-12 h-12 text-white" />
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">

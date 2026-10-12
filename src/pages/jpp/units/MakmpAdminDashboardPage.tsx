@@ -1694,7 +1694,7 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL CRUD ANUGERAH RASMI                                         */}
           {/* ================================================================ */}
           {isAwardModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
               <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -1901,7 +1901,7 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL CRUD KATEGORI ASAS                                          */}
           {/* ================================================================ */}
           {isCategoryModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4">
               <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white">
@@ -2167,7 +2167,7 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL JANA / KEMASKINI PIN JURI (MULTI-CATEGORY)                   */}
           {/* ================================================================ */}
           {isPinModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
               <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -2459,7 +2459,7 @@ export default function MakmpAdminDashboardPage() {
       {/* MODAL PERINCIAN SUBMISSION                                           */}
       {/* ==================================================================== */}
       {activeSub && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-4xl p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
@@ -2772,7 +2772,7 @@ export default function MakmpAdminDashboardPage() {
 
       {/* Modal Edisi (Create & Edit) */}
       {isEditionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4">
           <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base text-slate-900 dark:text-white">

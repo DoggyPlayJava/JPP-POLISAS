@@ -46,7 +46,7 @@ export function SupsasAdminLayout() {
     <div className="min-h-screen bg-[#050A14] text-white flex">
       {/* Sidebar */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-[140] w-64 bg-[#0A1628]/95 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300',
+        'fixed inset-y-0 left-0 z-[140] w-64 bg-[#0A1628]/95  border-r border-white/5 flex flex-col transition-transform duration-300',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0 md:static md:flex'
       )}>
@@ -120,7 +120,7 @@ export function SupsasAdminLayout() {
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar (mobile) */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-4 border-b border-white/5 bg-[#050A14]/80 backdrop-blur-xl sticky top-0 z-30">
+        <div className="md:hidden flex items-center gap-3 px-4 py-4 border-b border-white/5 bg-[#050A14]/80  sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white"

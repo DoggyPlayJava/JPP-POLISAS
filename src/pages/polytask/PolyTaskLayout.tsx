@@ -39,13 +39,13 @@ export function PolyTaskLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] md:hidden"
+            className="fixed inset-0 bg-black/60  z-[130] md:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* Mobile Header */}
-      <div className="md:hidden sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between p-4">
+      <div className="md:hidden sticky top-0 z-50 bg-slate-900/80  border-b border-white/5 flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/portal')} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full text-slate-400">
             <ArrowLeft className="w-4 h-4" />

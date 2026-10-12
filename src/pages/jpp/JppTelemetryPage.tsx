@@ -258,7 +258,7 @@ export function JppTelemetryPage() {
         {/* ── Incident Detail Modal ── */}
         <AnimatePresence>
           {showIncidentModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 ">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

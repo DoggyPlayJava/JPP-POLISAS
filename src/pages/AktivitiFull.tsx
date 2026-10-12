@@ -407,7 +407,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       {loading ? (
         <AktivitiSkeleton />
       ) : filtered.length === 0 ? (
-        <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-muted/30 dark:bg-accent/5 dark:border-accent/20 backdrop-blur-sm relative overflow-hidden group">
+        <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-muted/30 dark:bg-accent/5 dark:border-accent/20  relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <EmptyMedia variant="icon" className="w-16 h-16 rounded-3xl bg-background shadow-xl border border-border group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
             <Activity className="w-8 h-8 text-primary animate-pulse" />

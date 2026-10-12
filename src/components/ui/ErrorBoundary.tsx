@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <Card className="max-w-md w-full border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 backdrop-blur-xl">
+            <Card className="max-w-md w-full border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 ">
               <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none" />
               <CardContent className="p-12 flex flex-col items-center text-center space-y-8">
                 <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center mb-2">

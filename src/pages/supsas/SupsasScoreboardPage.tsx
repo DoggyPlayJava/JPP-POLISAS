@@ -329,7 +329,7 @@ export function SupsasScoreboardPage() {
 
         {/* ── TV mode footer ── */}
         {isTV && (
-          <div className="fixed bottom-0 inset-x-0 flex items-center justify-between px-8 py-4 bg-[#050A14]/80 backdrop-blur-xl border-t border-white/5">
+          <div className="fixed bottom-0 inset-x-0 flex items-center justify-between px-8 py-4 bg-[#050A14]/80  border-t border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
                 <Trophy className="w-4 h-4 text-amber-400" />

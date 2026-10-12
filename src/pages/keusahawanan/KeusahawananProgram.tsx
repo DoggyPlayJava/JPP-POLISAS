@@ -410,11 +410,11 @@ export function KeusahawananProgram() {
                     {isJppMember && (
                       <div className="absolute top-2 right-2">
                         {program.visibility === 'JPP_SAHAJA' ? (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-amber-400 backdrop-blur-sm">
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-amber-400 ">
                             <Lock className="w-2.5 h-2.5" /> JPP Sahaja
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-emerald-400 backdrop-blur-sm">
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-emerald-400 ">
                             <Globe className="w-2.5 h-2.5" /> Awam
                           </span>
                         )}
@@ -517,7 +517,7 @@ export function KeusahawananProgram() {
           {selectedProgram && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 "
                 onClick={() => setSelectedProgram(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -532,7 +532,7 @@ export function KeusahawananProgram() {
                     <img src={selectedProgram.image_url} alt={selectedProgram.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent" />
                     <button onClick={() => setSelectedProgram(null)}
-                      className="absolute top-4 right-4 p-2 rounded-xl bg-black/40 text-white hover:bg-black/60 backdrop-blur-sm transition-all">
+                      className="absolute top-4 right-4 p-2 rounded-xl bg-black/40 text-white hover:bg-black/60  transition-all">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -645,7 +645,7 @@ export function KeusahawananProgram() {
           {showForm && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 "
                 onClick={() => { setShowForm(false); resetForm(); }} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}

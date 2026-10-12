@@ -1439,7 +1439,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
       {/* ── Cancellation Modal ── */}
       <AnimatePresence>
         {cancellingOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 ">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1493,7 +1493,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
       {/* ── Completion Dialog ── */}
       <AnimatePresence>
         {completingOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 ">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

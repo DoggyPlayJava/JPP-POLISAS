@@ -69,7 +69,7 @@ export function TeamPage() {
 
             return (
               <motion.div key={member.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card className="premium-card h-full flex flex-col relative overflow-hidden bg-white/60 backdrop-blur-md">
+                <Card className="premium-card h-full flex flex-col relative overflow-hidden bg-white/60 ">
                   <CardHeader className="p-8 pb-4 relative">
                     <div className="flex items-start justify-between">
                       <Avatar className="h-24 w-24 rounded-[2rem] border-4 border-background shadow-2xl">

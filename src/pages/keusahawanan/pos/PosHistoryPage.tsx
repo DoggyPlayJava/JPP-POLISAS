@@ -156,7 +156,7 @@ export function PosHistoryPage() {
           {selected && (
             <div className="fixed inset-0 z-[9999]">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelected(null)} />
+                className="absolute inset-0 bg-black/60 " onClick={() => setSelected(null)} />
               <motion.div initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 35 }}
                 className="absolute inset-y-0 right-0 w-full max-w-md bg-card border-l border-border shadow-2xl flex flex-col">

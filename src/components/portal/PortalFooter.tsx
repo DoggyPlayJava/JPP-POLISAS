@@ -8,7 +8,7 @@ const FloatingAiChat = lazy(() =>
 export function PortalFooter() {
   return (
     <>
-      <footer className="relative z-10 py-16 px-6 border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B] mt-auto bg-[#F2EDE4]/60 dark:bg-[#151D16]/80 backdrop-blur-lg">
+      <footer className="relative z-10 py-16 px-6 border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B] mt-auto bg-[#F2EDE4]/60 dark:bg-[#151D16]/80 ">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-8">
           <div className="group flex items-center gap-4 opacity-70 hover:opacity-100 transition-all duration-700">
             <img src="/jpp-logo.png" alt="JPP" className="h-8 w-auto object-contain grayscale transition-all duration-300 group-hover:grayscale-0" />

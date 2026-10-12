@@ -355,7 +355,7 @@ export function LoginPage() {
 
         {/* Top Brand Identity */}
         <div className="relative z-10 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-[#D9C9B2]/30 p-2 flex items-center justify-center backdrop-blur-md shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-[#D9C9B2]/30 p-2 flex items-center justify-center  shadow-md">
             <img src="/jpp-logo.png" alt="JPP Logo" className="w-full h-full object-contain" />
           </div>
           <div>
@@ -381,7 +381,7 @@ export function LoginPage() {
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-[#D9C9B2]/30 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-[#D9C9B2]/30 ">
               <Sparkles className="w-3.5 h-3.5 text-[#D9C9B2]" />
               <span className="text-[10px] font-bold text-[#F8F6EE] uppercase tracking-[0.16em]">
                 Sistem Pintar Bersepadu

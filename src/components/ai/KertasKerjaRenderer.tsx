@@ -540,7 +540,7 @@ function PageBreak() {
       <div className="absolute inset-x-0 h-px mt-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
       
       <span
-        className="relative px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 bg-background dark:bg-[#121214] border border-border/50 rounded-full shadow-sm backdrop-blur-sm"
+        className="relative px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 bg-background dark:bg-[#121214] border border-border/50 rounded-full shadow-sm "
       >
         MUKA SURAT BARU
       </span>
@@ -552,7 +552,7 @@ function DocumentFooter() {
   return (
     <div className="mt-10 flex flex-col items-center gap-6 pointer-events-none select-none border-t border-dashed border-border/30 pt-8">
       {/* Oval / Pill Badge */}
-      <div className="px-8 py-2.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-sm flex items-center gap-3 shadow-sm">
+      <div className="px-8 py-2.5 rounded-full border border-indigo-500/20 bg-indigo-500/5  flex items-center gap-3 shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
         <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-500/80">
           Tamat Dokumen

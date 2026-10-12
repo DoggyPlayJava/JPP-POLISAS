@@ -51,7 +51,7 @@ export function KebajikanLiveTrackerCard({
     <div
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-        'bg-white/95 dark:bg-slate-900/90 backdrop-blur-md',
+        'bg-white/95 dark:bg-slate-900/90 ',
         'border border-slate-200/90 dark:border-white/10 shadow-sm hover:shadow-md',
         'space-y-6',
         className

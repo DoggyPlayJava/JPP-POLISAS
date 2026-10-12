@@ -90,7 +90,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
 
         {/* Status badges */}
         {isOut && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-black/60 -[1px] flex items-center justify-center z-10">
             <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
               Habis
             </span>
@@ -105,7 +105,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
 
         {/* Category pill */}
         {!isLowStock && (
-          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-xs text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
+          <div className="absolute top-2 left-2 bg-black/50  text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
             {product.category}
           </div>
         )}
@@ -127,7 +127,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         {/* Wishlist toggle */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80 backdrop-blur-xs border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80  border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
           aria-label="Wishlist"
         >
           <Heart className={`w-3.5 h-3.5 transition-all ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/60'}`} />
@@ -270,7 +270,7 @@ export function ActiveVendorsSheet({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+        className="fixed inset-0 bg-black/60 "
       />
 
       {/* Sheet Modal */}
@@ -487,7 +487,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
               <div className="flex items-center justify-center w-full aspect-[2.5/1] sm:aspect-[3/1] md:aspect-[4/1] overflow-hidden rounded-3xl bg-muted/30 border border-border/50">
                 <img src={ad.image_url} alt={ad.title} loading="lazy" decoding="async" className="w-full h-full object-cover shrink-0 hover:scale-[1.02] transition-transform duration-500" />
               </div>
-              <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 shadow-xl">
+              <div className="absolute top-3 right-3 bg-black/60  px-2 py-0.5 rounded-full border border-white/10 shadow-xl">
                 <p className="text-[8px] font-black text-white uppercase tracking-widest">{ad.type === 'EXTERNAL' ? 'Penaja' : 'Iklan'}</p>
               </div>
             </div>

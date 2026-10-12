@@ -408,7 +408,7 @@ export function AkademikQrScan() {
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-sm bg-slate-900/80 backdrop-blur-xl border border-white/[0.08] rounded-[2.5rem] p-8 space-y-6"
+        className="relative w-full max-w-sm bg-slate-900/80  border border-white/[0.08] rounded-[2.5rem] p-8 space-y-6"
       >
         {/* Badge */}
         <div className="flex justify-center">

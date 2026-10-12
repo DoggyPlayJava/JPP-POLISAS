@@ -359,7 +359,7 @@ export function EmsApprovalPage() {
 
       {/* Reject Reason Modal */}
       {rejectingEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70  p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-6 shadow-2xl relative">
             <button
               onClick={() => {

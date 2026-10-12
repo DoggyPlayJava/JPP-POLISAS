@@ -366,7 +366,7 @@ export const Navbar: React.FC = () => {
             "flex items-center justify-between w-full max-w-6xl px-4 md:px-6 py-3 md:py-2.5 rounded-full border transition-all duration-500",
             isScrolled
               ? "bg-[#F8F6EE]/94  border-[#D9C9B2] shadow-[0_6px_25px_rgba(46,58,47,0.08)]"
-              : "bg-white/85 backdrop-blur-md border-[#D9C9B2]/80 shadow-xs"
+              : "bg-white/85  border-[#D9C9B2]/80 shadow-xs"
           )}
         >
           {/* Logo JPP POLISAS */}
@@ -538,7 +538,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#D9C9B2] backdrop-blur-xl mb-8 md:mb-10 shadow-xs"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#D9C9B2]  mb-8 md:mb-10 shadow-xs"
         >
           <div className="w-2 h-2 rounded-full bg-[#C96F4F] shadow-xs" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#2E3A2F]">

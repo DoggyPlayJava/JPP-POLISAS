@@ -127,7 +127,7 @@ export function KlkPublicStats() {
         <div className="max-w-5xl mx-auto px-6 py-20 text-center relative z-10">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <div
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 shadow-lg backdrop-blur-md"
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 shadow-lg "
               style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}
             >
               <MapPin className="w-5 h-5" style={{ color: KLS_COLOR }} />
@@ -184,7 +184,7 @@ export function KlkPublicStats() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-3xl p-8 text-center border shadow-2xl backdrop-blur-xl relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+              className="rounded-3xl p-8 text-center border shadow-2xl  relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
               style={{ background: `rgba(${hexColorToRgb(card.color)}, 0.03)`, borderColor: `rgba(${hexColorToRgb(card.color)}, 0.15)` }}
             >
               <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: `linear-gradient(to bottom right, rgba(${hexColorToRgb(card.color)}, 0.5), transparent)` }} />
@@ -201,7 +201,7 @@ export function KlkPublicStats() {
         {/* Top Kawasan & Map Section */}
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Peta Hotspot */}
-          <div className="lg:col-span-3 rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col" style={{ minHeight: 450 }}>
+          <div className="lg:col-span-3 rounded-3xl border border-white/[0.05] bg-white/[0.02]  shadow-2xl overflow-hidden flex flex-col" style={{ minHeight: 450 }}>
             <div className="p-6 border-b border-white/[0.04]">
               <h2 className="font-black text-lg text-slate-100 mb-1">Peta Hotspot Taburan</h2>
               <p className="text-xs text-slate-500 font-medium">Kawasan tumpuan pelajar menyewa di sekitar Kuantan</p>
@@ -211,7 +211,7 @@ export function KlkPublicStats() {
                 <KlkHotspotMap data={mapData} />
               </Suspense>
               {mapData.length === 0 && !loading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80  z-10">
                   <MapPin className="w-10 h-10 text-white/20 mb-3" />
                   <p className="text-xs text-white/40 font-medium">Tiada data koordinat sedia ada</p>
                 </div>
@@ -220,7 +220,7 @@ export function KlkPublicStats() {
           </div>
 
           {/* Top Kawasan List */}
-          <div className="lg:col-span-2 rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl shadow-2xl">
+          <div className="lg:col-span-2 rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02]  shadow-2xl">
             <h2 className="font-black text-lg text-slate-100 mb-1">Top Kawasan</h2>
             <p className="text-xs text-slate-500 font-medium mb-8">Pilihan utama pelajar tinggal luar kampus</p>
             
@@ -257,7 +257,7 @@ export function KlkPublicStats() {
         </div>
 
         {/* Jabatan Charts Section */}
-        <div className="rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl shadow-2xl">
+        <div className="rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02]  shadow-2xl">
           <div className="text-center mb-10">
             <h2 className="font-black text-2xl text-slate-100 mb-2">Pecahan Mengikut Jabatan</h2>
             <p className="text-sm text-slate-500 font-medium">Kadar taburan pelajar luar kampus berdasarkan jabatan akademik masing-masing</p>

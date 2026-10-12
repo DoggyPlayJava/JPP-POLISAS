@@ -1551,7 +1551,7 @@ export function PolySuaraPage({
   return (
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-36 md:pb-32 relative overflow-hidden transition-colors duration-200">
 
-      <div className="sticky top-0 z-50 bg-white/85 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/5">
+      <div className="sticky top-0 z-50 bg-white/85 dark:bg-slate-950/80  border-b border-slate-200/80 dark:border-white/5">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/portal')}
@@ -1746,7 +1746,7 @@ export function PolySuaraPage({
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       onClick={() => setComposeModalOpen(false)}
-                      className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]"
+                      className="fixed inset-0 bg-slate-950/70 z-[99990]"
                     />
                     <motion.div
                       key="compose-modal"
@@ -1950,7 +1950,7 @@ export function PolySuaraPage({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={cn(
-                          "bg-white dark:bg-slate-900/70 dark:backdrop-blur-xl border border-slate-200/70 dark:border-white/[0.07] shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-[2rem] p-4 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
+                          "bg-white dark:bg-slate-900/70 border border-slate-200/70 dark:border-white/[0.07] shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-[2rem] p-4 sm:p-6 mb-5 transition-all duration-300 relative overflow-hidden",
                           isTrending && "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
                         )}
                       >
@@ -2287,7 +2287,7 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setReportModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]"
+              className="fixed inset-0 bg-slate-950/60  z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
@@ -2341,7 +2341,7 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setLimitReachedModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200]"
+              className="fixed inset-0 bg-slate-950/80  z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
@@ -2385,7 +2385,7 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setReplyModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]"
+              className="fixed inset-0 bg-slate-950/60  z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
@@ -2453,7 +2453,7 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setAuthorReplyModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200]"
+              className="fixed inset-0 bg-slate-950/60  z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
@@ -2510,7 +2510,7 @@ export function PolySuaraPage({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setCommentDrawerOpen(false)}
-                className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[990]"
+                className="fixed inset-0 bg-slate-950/70 z-[990]"
               />
               <motion.div
                 initial={{ y: '100%' }}

@@ -36,8 +36,9 @@ describe('E-Akademik Light Mode Parity — AkademikLayout.tsx', () => {
     expect(source).toContain('min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans overflow-x-hidden transition-colors duration-200');
   });
 
-  it('contains dual-mode top header styles with backdrop-blur', () => {
-    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl');
+  it('contains dual-mode top header styles (solid, no backdrop-blur)', () => {
+    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80');
+    expect(source).not.toContain('backdrop-blur');
   });
 
   it('mounts ThemeToggle component cleanly in the header', () => {

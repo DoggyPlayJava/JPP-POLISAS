@@ -258,7 +258,7 @@ function PageBreak() {
 function DocumentFooter() {
   return (
     <div className="mt-10 flex flex-col items-center gap-6 pointer-events-none select-none border-t border-dashed border-border/30 pt-8">
-      <div className="px-8 py-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm flex items-center gap-3 shadow-sm">
+      <div className="px-8 py-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/5  flex items-center gap-3 shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         <span className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-500/80">
           Tamat Dokumen

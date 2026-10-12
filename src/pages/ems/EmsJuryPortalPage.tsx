@@ -782,7 +782,7 @@ export function EmsJuryPortalPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-600/15 dark:bg-purple-600/20 rounded-full  pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-600/15 rounded-full  pointer-events-none" />
 
-        <div className="w-full max-w-md bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 text-slate-900 dark:text-white">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl  relative z-10 text-slate-900 dark:text-white">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30 mb-4">
               <Award className="w-8 h-8 text-white" />
@@ -931,7 +931,7 @@ export function EmsJuryPortalPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col pb-28 md:pb-8 transition-colors">
       {/* Event Header Banner */}
-      <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 backdrop-blur-md">
+      <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Event Info */}
@@ -1001,7 +1001,7 @@ export function EmsJuryPortalPage() {
       {/* Main Participant Dashboard */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Sticky Segmented Category Pills Navigation */}
-        <div className="sticky top-[72px] sm:top-[76px] z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md py-3 -my-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="sticky top-[72px] sm:top-[76px] z-20 bg-slate-50/95 dark:bg-slate-950/95  py-3 -my-2 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
             {/* Pill [Semua] */}
             <button
@@ -1312,7 +1312,7 @@ export function EmsJuryPortalPage() {
       {/* SCREEN 3: SEAMLESS TOUCH FEED EVALUATION MODAL */}
       {/* ----------------------------------------------------------------------- */}
       {evalParticipant && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85 backdrop-blur-md flex flex-col justify-end sm:justify-center sm:p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85  flex flex-col justify-end sm:justify-center sm:p-4">
           <div className="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-purple-500/30 w-full max-w-4xl sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col h-[94vh] sm:h-[90vh] overflow-hidden text-slate-900 dark:text-white">
             {/* Modal Header: Candidate Summary & Draft Badge */}
             <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 shrink-0">
@@ -1395,7 +1395,7 @@ export function EmsJuryPortalPage() {
                   {sections.map((sec, secIdx) => (
                     <div key={sec.id} className="space-y-4">
                       {/* Sticky Section Header */}
-                      <div className="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-xs">
+                      <div className="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-900/95  p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-xs">
                         <div className="flex items-center gap-2.5">
                           <span className="w-6 h-6 rounded-lg bg-purple-600 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0">
                             {secIdx + 1}
@@ -1559,7 +1559,7 @@ export function EmsJuryPortalPage() {
             </div>
 
             {/* Sticky Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-xl">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95  border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-xl">
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
                 {/* Progress & Live Weighted % Score */}
                 <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
@@ -1629,7 +1629,7 @@ export function EmsJuryPortalPage() {
       {/* SCREEN 4: POST-SCORING CELEBRATION & NEXT BOOTH TRANSITION DRAWER */}
       {/* ----------------------------------------------------------------------- */}
       {celebrationModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85  flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-purple-500/30 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 duration-200 text-slate-900 dark:text-white">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
               <CheckCircle2 className="w-8 h-8 text-white" />
@@ -1734,7 +1734,7 @@ export function EmsJuryPortalPage() {
       {/* ----------------------------------------------------------------------- */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/80 dark:bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-950/80 dark:bg-slate-950/90  flex items-center justify-center p-4"
           onClick={() => setLightboxImage(null)}
         >
           <div

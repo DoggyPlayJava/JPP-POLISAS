@@ -431,7 +431,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
     <div className="relative mt-2.5 z-[9999]" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={cn("w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest backdrop-blur-md shadow-sm", "transition-all")}
+        className={cn("w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest  shadow-sm", "transition-all")}
       >
         <div className="flex items-center gap-2.5 truncate">
           {selectedClub ? (
@@ -447,7 +447,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95  border border-white/10 rounded-2xl shadow-2xl p-1.5 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
           <button
             onClick={() => { onChange(null); setIsOpen(false); }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors text-left"

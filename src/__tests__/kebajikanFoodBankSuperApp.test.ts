@@ -259,7 +259,7 @@ describe('Task 2: Borang Aduan Fasiliti Ekspres Revamp (KebajikanSubmitPage.tsx)
   it('implements mobile sticky bottom summary capsule with required tokens and Semak & Hantar CTA', () => {
     const content = fs.readFileSync(submitPagePath, 'utf-8');
 
-    const expectedCapsuleTokens = 'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10';
+    const expectedCapsuleTokens = 'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between border border-white/10';
     expect(content).toContain(expectedCapsuleTokens);
     expect(content).toContain('Semak & Hantar');
   });
@@ -340,7 +340,7 @@ describe('Task 3: FoodBank Siswa Revamp — Smart Pantry, Sticky Capsule & QR Pa
   it('implements mobile Sticky Pantry Bottom Capsule with required tokens and text', () => {
     const content = fs.readFileSync(foodbankPagePath, 'utf-8');
     const expectedCapsuleTokens =
-      'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10';
+      'fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between border border-white/10';
     expect(content).toContain(expectedCapsuleTokens);
     expect(content).toContain('Item Dipilih');
     expect(content).toContain('Baki Kuota');

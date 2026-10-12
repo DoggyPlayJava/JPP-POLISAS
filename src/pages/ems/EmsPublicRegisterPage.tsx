@@ -639,7 +639,7 @@ export function EmsPublicRegisterPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 -mt-6 relative z-10">
         {/* Step Indicator (Hide on step 4 completion) */}
         {currentStep < 4 && (
-          <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-xl transition-colors">
+          <div className="bg-white dark:bg-slate-900/90  border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-xl transition-colors">
             <div className="flex items-center justify-between">
               {[
                 { step: 1, label: 'Kategori & Info' },

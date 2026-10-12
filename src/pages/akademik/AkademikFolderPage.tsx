@@ -280,7 +280,7 @@ export function InAppDocumentPreviewer({
         </div>
 
         {/* Sticky Action Footer Capsule */}
-        <div className="p-4 border-t border-slate-200 dark:border-white/[0.08] bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-end gap-3 flex-wrap shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-white/[0.08] bg-white/90 dark:bg-slate-900/90  flex items-center justify-end gap-3 flex-wrap shrink-0">
           <a
             href={downloadUrl}
             target="_blank"

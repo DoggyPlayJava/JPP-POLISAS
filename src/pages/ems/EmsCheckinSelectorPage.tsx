@@ -53,7 +53,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 max-w-7xl mx-auto font-sans transition-colors">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80  p-5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/ems/dashboard')}

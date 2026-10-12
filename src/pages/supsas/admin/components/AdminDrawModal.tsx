@@ -204,7 +204,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/80 "
       />
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}

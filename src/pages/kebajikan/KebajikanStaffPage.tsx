@@ -129,7 +129,7 @@ export function KebajikanStaffPage() {
 
       {/* Add Staff Panel */}
       {isAllowed && (
-        <div className="mb-8 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl p-5 sm:p-6">
+        <div className="mb-8 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl p-5 sm:p-6">
           <p className="text-sm font-black text-slate-900 dark:text-slate-200 mb-4 flex items-center gap-2">
             <UserPlus className="w-4 h-4 text-teal-600 dark:text-teal-400" /> Tambah Staff Baharu
           </p>
@@ -194,7 +194,7 @@ export function KebajikanStaffPage() {
       )}
 
       {/* Staff List */}
-      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl p-5 sm:p-6">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm font-black text-slate-900 dark:text-slate-200">Senarai Aktif <span className="text-teal-600 dark:text-teal-400 ml-2 font-bold">{staff.length}</span></p>
         </div>

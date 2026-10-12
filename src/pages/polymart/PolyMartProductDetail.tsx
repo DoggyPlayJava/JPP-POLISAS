@@ -318,7 +318,7 @@ export function ProductVariationBottomSheet({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 " onClick={onClose} />
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -595,7 +595,7 @@ export function ProductVariationBottomSheet({
               exit={{ opacity: 0, y: 10, x: '-50%' }}
               className="absolute bottom-[130px] left-1/2 z-20 pointer-events-none"
             >
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20 backdrop-blur-sm animate-bounce">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20  animate-bounce">
                 <span>Skrol ke bawah</span>
                 <ChevronDown className="w-3 h-3 animate-pulse" />
               </div>
@@ -604,7 +604,7 @@ export function ProductVariationBottomSheet({
         </AnimatePresence>
 
         {/* Fixed Footer */}
-        <div className="p-4 border-t border-border/40 bg-card/95 backdrop-blur-sm shrink-0">
+        <div className="p-4 border-t border-border/40 bg-card/95  shrink-0">
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-muted-foreground">Jumlah ({qty} unit)</span>
@@ -994,7 +994,7 @@ export function PolyMartProductDetail() {
 
             {/* Dot indicators for multi-image */}
             {allImages.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full z-10">
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40  px-2.5 py-1.5 rounded-full z-10">
                 {allImages.map((_, i) => (
                   <button
                     key={i}
@@ -1018,7 +1018,7 @@ export function PolyMartProductDetail() {
             )}
 
             {/* Category Vector Badge */}
-            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 shadow-sm">
+            <div className="absolute top-3 left-3 bg-black/50  text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 shadow-sm">
               <FallbackIcon className="w-3 h-3 text-amber-400" />
               <span>{product.category}</span>
             </div>
@@ -1357,7 +1357,7 @@ export function PolyMartProductDetail() {
       </div>
 
       {/* Mobile Sticky Bottom Purchase Dock */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 dark:bg-slate-950/95  border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 shadow-lg">
         {/* Left Action Buttons */}
         <div className="flex items-center gap-1 shrink-0">
           <button

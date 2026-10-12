@@ -560,7 +560,7 @@ export default function AnnouncementsPage() {
       {/* View Responses Modal */}
       {viewingResponsesFor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/80 " />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-card rounded-[2rem] border border-border/50 shadow-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/50">
                 <div>

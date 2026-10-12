@@ -89,7 +89,7 @@ export function OfflineIndicator() {
     };
   }, [status, checkConnectivity]);
 
-  const pillBase = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-2xl flex items-center gap-2 border border-white/20';
+  const pillBase = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2  text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-2xl flex items-center gap-2 border border-white/20';
 
   return (
     <AnimatePresence mode="wait">

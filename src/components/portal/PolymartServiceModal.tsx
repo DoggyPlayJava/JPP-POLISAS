@@ -53,7 +53,7 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[200]"
+            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60  z-[200]"
           />
           <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
             <motion.div

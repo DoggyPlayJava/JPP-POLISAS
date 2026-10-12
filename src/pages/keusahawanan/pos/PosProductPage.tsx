@@ -953,7 +953,7 @@ export function PosProductPage() {
           {showForm && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+                className="absolute inset-0 bg-black/60 " onClick={() => setShowForm(false)} />
               <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="relative w-full max-w-lg rounded-3xl bg-card border border-border shadow-2xl max-h-[92vh] overflow-y-auto scrollbar-hide">

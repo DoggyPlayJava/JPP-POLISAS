@@ -106,7 +106,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="snap-start shrink-0 w-[230px] sm:w-[270px] h-[190px] rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/50 dark:bg-slate-900/60 dark:backdrop-blur-md p-3 flex flex-col justify-between animate-pulse"
+              className="snap-start shrink-0 w-[230px] sm:w-[270px] h-[190px] rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/50 dark:bg-slate-900/60 p-3 flex flex-col justify-between animate-pulse"
             >
               <div className="w-full h-24 rounded-xl bg-slate-200 dark:bg-slate-800/80" />
               <div className="space-y-2 mt-2">
@@ -133,7 +133,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
               <div
                 key={evt.id}
                 onClick={() => handleCardClick(evt.id)}
-                className="snap-start shrink-0 w-[230px] sm:w-[270px] bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/80 dark:border-white/[0.08] hover:border-emerald-500/40 dark:hover:border-emerald-500/40 shadow-sm hover:shadow-md transition-all duration-200 rounded-2xl overflow-hidden cursor-pointer flex flex-col group"
+                className="snap-start shrink-0 w-[230px] sm:w-[270px] bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/[0.08] hover:border-emerald-500/40 dark:hover:border-emerald-500/40 shadow-sm hover:shadow-md transition-all duration-200 rounded-2xl overflow-hidden cursor-pointer flex flex-col group"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {

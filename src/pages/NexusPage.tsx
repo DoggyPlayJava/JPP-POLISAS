@@ -564,7 +564,7 @@ export function NexusPage() {
 
       {/* Main Tabs UI */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50 flex-col sm:flex-row overflow-x-auto">
+        <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50  shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50 flex-col sm:flex-row overflow-x-auto">
           <TabsTrigger value="kertas-kerja" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-indigo-400">
             <FileText className="w-4 h-4" />
             <span className="font-bold">Penjana Kertas Kerja</span>
@@ -949,8 +949,8 @@ export function NexusPage() {
             </div>
 
             <div className="lg:col-span-7">
-              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 backdrop-blur-md">
-                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
+              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 ">
+                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between  z-10">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-indigo-400" />
                     <span className="text-sm font-bold tracking-tight text-foreground/80">Dokumen Draf</span>
@@ -1160,7 +1160,7 @@ export function NexusPage() {
                             {images.map((img, idx) => (
                               <div key={idx} className="relative w-14 h-14 rounded-md border overflow-hidden flex-shrink-0 group">
                                 <img src={img.base64} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                                <button onClick={() => removeImage(idx)} className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => removeImage(idx)} className="absolute bg-background/80  inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                   <X className="w-4 h-4 text-rose-500" />
                                 </button>
                               </div>
@@ -1243,8 +1243,8 @@ export function NexusPage() {
 
             {/* ── RIGHT: LIVE PREVIEW ── */}
             <div className="lg:col-span-7">
-              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 backdrop-blur-md">
-                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
+              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 ">
+                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between  z-10">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-emerald-400" />
                     <span className="text-sm font-bold tracking-tight text-foreground/80">Preview Minit Rasmi</span>
@@ -1313,7 +1313,7 @@ export function NexusPage() {
           >
             {/* Left Section: Dashboard & Status */}
             <div className="lg:col-span-5 space-y-8">
-              <Card className="border-indigo-500/10 shadow-2xl overflow-hidden bg-white/80 dark:bg-[#121214]/80 backdrop-blur-xl relative">
+              <Card className="border-indigo-500/10 shadow-2xl overflow-hidden bg-white/80 dark:bg-[#121214]/80  relative">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full  pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full  pointer-events-none" />
 
@@ -1364,7 +1364,7 @@ export function NexusPage() {
                   </div>
 
                   {/* Tier Badge Row */}
-                  <div className="flex flex-wrap gap-4 items-center justify-between p-5 rounded-2xl bg-secondary/30 border border-border/40 backdrop-blur-sm">
+                  <div className="flex flex-wrap gap-4 items-center justify-between p-5 rounded-2xl bg-secondary/30 border border-border/40 ">
                     <span className="text-sm font-bold text-muted-foreground mr-auto text-dark">Tahap Akses</span>
                     <Badge className={cn(
                       "font-black tracking-widest text-[11px] px-4 py-1.5 rounded-full border-none shadow-lg",
@@ -1445,7 +1445,7 @@ export function NexusPage() {
                             <h4 className="text-lg font-black tracking-tight text-foreground">Langganan Token</h4>
                           </div>
 
-                          <div className="p-6 rounded-[2rem] bg-muted/20 dark:bg-background/40 border border-border/40 shadow-inner group backdrop-blur-sm">
+                          <div className="p-6 rounded-[2rem] bg-muted/20 dark:bg-background/40 border border-border/40 shadow-inner group ">
                             <div className="flex flex-col gap-6 items-center">
                               <div className="relative p-4 bg-white rounded-3xl shadow-xl border-4 border-indigo-500/5 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                                 <div className="absolute inset-0 bg-indigo-500/5 animate-[pulse_3s_infinite] pointer-events-none" />

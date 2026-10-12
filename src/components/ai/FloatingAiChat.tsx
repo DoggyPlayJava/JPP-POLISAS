@@ -1806,7 +1806,7 @@ export function FloatingAiChat() {
               fetchChatMessages(popoutMessage.chat);
               setShowPopout(false);
             }}
-            className="absolute bottom-16 md:bottom-20 right-0 w-64 md:w-72 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-rose-500/40 rounded-2xl p-3 shadow-xl cursor-pointer hover:border-rose-500 transition-colors z-[130] flex gap-2.5 items-start select-none"
+            className="absolute bottom-16 md:bottom-20 right-0 w-64 md:w-72 bg-slate-900/95 dark:bg-slate-950/95  border border-rose-500/40 rounded-2xl p-3 shadow-xl cursor-pointer hover:border-rose-500 transition-colors z-[130] flex gap-2.5 items-start select-none"
           >
             {/* Notification Pulsing Red Dot */}
             <span className="absolute top-3.5 left-3.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
@@ -1999,7 +1999,7 @@ export function FloatingAiChat() {
 
                 {/* Pinned Shopee-style Product Banner */}
                 {activeProduct && activeProduct.type === selectedChat.type && (
-                  <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-card/65 backdrop-blur-md border border-border/40 flex items-center justify-between gap-3 shadow-sm select-none animate-in slide-in-from-top duration-200">
+                  <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-card/65  border border-border/40 flex items-center justify-between gap-3 shadow-sm select-none animate-in slide-in-from-top duration-200">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-10 h-10 rounded-xl overflow-hidden bg-muted border border-border/20 flex items-center justify-center shrink-0 text-lg">
                         {activeProduct.image_url ? (
@@ -2111,7 +2111,7 @@ export function FloatingAiChat() {
                         <React.Fragment key={msg.id || i}>
                           {showDateHeader && (
                             <div className="sticky top-2 z-10 flex justify-center my-3 animate-in fade-in duration-200">
-                              <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/[0.04] text-[8px] font-black uppercase text-slate-400 tracking-wider shadow-sm">
+                              <span className="px-3 py-1 rounded-full bg-slate-900/80  border border-white/[0.04] text-[8px] font-black uppercase text-slate-400 tracking-wider shadow-sm">
                                 {msgDateStr}
                               </span>
                             </div>
@@ -2269,7 +2269,7 @@ export function FloatingAiChat() {
                       setUnreadMessagesInFeed(0);
                     }}
                     type="button"
-                    className="absolute bottom-20 right-4 w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm border border-border/50 shadow-lg flex items-center justify-center hover:bg-muted/80 text-foreground z-20 transition-all active:scale-95 duration-100 animate-bounce"
+                    className="absolute bottom-20 right-4 w-7 h-7 rounded-full bg-card/90  border border-border/50 shadow-lg flex items-center justify-center hover:bg-muted/80 text-foreground z-20 transition-all active:scale-95 duration-100 animate-bounce"
                   >
                     <ArrowDown size={12} />
                     {unreadMessagesInFeed > 0 && (
@@ -2499,7 +2499,7 @@ export function FloatingAiChat() {
                 {/* 1. JPP Pinned Announcement Broadcast */}
                 {announcements.length > 0 && (
                   <div className="bg-indigo-500/5 border border-indigo-500/15 p-3 rounded-2xl flex items-start gap-2.5 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full  pointer-events-none" />
                     <Megaphone size={16} className="text-indigo-400 shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">

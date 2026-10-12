@@ -134,7 +134,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
         />
 
         {/* Live Status Marquee with Strobe Effect */}
-        <div className="absolute top-0 left-0 right-0 h-7 bg-violet-900/40 border-b border-violet-500/20 overflow-hidden z-20 flex items-center backdrop-blur-md">
+        <div className="absolute top-0 left-0 right-0 h-7 bg-violet-900/40 border-b border-violet-500/20 overflow-hidden z-20 flex items-center ">
           <div className="whitespace-nowrap flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-violet-200" style={{ animation: 'marquee 20s linear infinite', width: '200%', textShadow: '0 0 8px rgba(192,132,252,0.8), 0 0 20px rgba(192,132,252,0.4)' }}>
             <span className="animate-pulse">🔥 {karnivalStatus?.name} SEDANG BERLANGSUNG!</span>
             <span>🎪 JUALAN MAKANAN DISKAUN 20% DI GERAI JPP!</span>
@@ -150,7 +150,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
             <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-violet-500" /></span>
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-violet-300 drop-shadow-[0_0_5px_rgba(192,132,252,0.8)]">Sedang Berlangsung</span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full backdrop-blur-md" style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', border: '1px solid rgba(139,92,246,0.4)', boxShadow: '0 0 15px rgba(139,92,246,0.3)' }}>🎪 Karnival JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full " style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', border: '1px solid rgba(139,92,246,0.4)', boxShadow: '0 0 15px rgba(139,92,246,0.3)' }}>🎪 Karnival JPP</span>
         </div>
 
         <div className="px-7 pt-5 pb-8 text-center space-y-4 relative z-30" style={{ transform: "translateZ(80px)" }}>

@@ -288,7 +288,7 @@ export function JppUnitDashboard() {
 
             {/* ── Full Unit Dashboard (KPP / Keusahawanan / Akademik) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
-              <div className="bg-white/80 dark:bg-[#0f0f17]/80 backdrop-blur rounded-[2rem] border border-slate-200 dark:border-white/[0.05] p-6 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#0f0f17]/80  rounded-[2rem] border border-slate-200 dark:border-white/[0.05] p-6 shadow-sm">
                 {upperCode === 'KPP'          && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
                 {upperCode === 'AKADEMIK'     && <AkademikUnitDashboard />}

@@ -297,7 +297,7 @@ export function KelabPage() {
       )}
 
       {/* ── FILTER KATEGORI ── */}
-      <div className="flex flex-wrap justify-center gap-1.5 p-1.5 bg-muted/30 backdrop-blur-md rounded-[2rem] border border-border/40 max-w-fit mx-auto">
+      <div className="flex flex-wrap justify-center gap-1.5 p-1.5 bg-muted/30  rounded-[2rem] border border-border/40 max-w-fit mx-auto">
         {categories.map((cat) => {
           const meta = CATEGORY_META[cat];
           const Icon = meta?.icon || LayoutGrid;
@@ -332,7 +332,7 @@ export function KelabPage() {
                   transition={{ delay: index * 0.02 }} className="group">
                   <Card 
                     onClick={() => navigate(`/kelab/${club.id}`)}
-                    className={cn("h-full overflow-hidden cursor-pointer bg-card/80 backdrop-blur-sm hover:bg-card transition-all duration-500 rounded-[2rem] border",
+                    className={cn("h-full overflow-hidden cursor-pointer bg-card/80  hover:bg-card transition-all duration-500 rounded-[2rem] border",
                       status === 'APPROVED' ? "border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/5" :
                         status === 'PENDING' ? "border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/5" :
                           "border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:-translate-y-1")}>
@@ -358,7 +358,7 @@ export function KelabPage() {
                       <div className="mb-5 relative z-10">
                         <div className="relative w-16 h-16">
                           {/* Inner glowing shadow */}
-                          <div className="absolute inset-0 rounded-[1.25rem] blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                          <div className="absolute inset-0 rounded-[1.25rem]  opacity-30 group-hover:opacity-50 transition-opacity duration-500"
                                style={{ backgroundColor: club.theme_color || '#0f172a' }} />
                           <div className="relative w-full h-full rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-sm transition-transform duration-500 group-hover:scale-105 overflow-hidden border border-white/10"
                             style={{ backgroundColor: club.theme_color || '#0f172a' }}>

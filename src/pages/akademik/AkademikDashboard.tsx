@@ -26,7 +26,7 @@ function StatCard({ label, value, icon: Icon, color, sub, onClick, delay = 0 }: 
       transition={{ delay, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
       className={cn(
-        'rounded-[1.75rem] p-5 border border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white shadow-xs flex flex-col gap-3 backdrop-blur-sm min-h-[44px]',
+        'rounded-[1.75rem] p-5 border border-slate-200/80 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white shadow-xs flex flex-col gap-3  min-h-[44px]',
         onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all duration-300 active:scale-[0.99]'
       )}
     >
@@ -316,7 +316,7 @@ export function AkademikDashboard() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-[2rem] border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] text-slate-900 dark:text-white p-5 md:p-6 backdrop-blur-md relative overflow-hidden shadow-xs"
+        className="rounded-[2rem] border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] text-slate-900 dark:text-white p-5 md:p-6  relative overflow-hidden shadow-xs"
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           {/* Left: Student Identity & Academic Profile */}

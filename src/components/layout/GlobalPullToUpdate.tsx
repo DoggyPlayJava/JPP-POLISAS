@@ -131,7 +131,7 @@ export function GlobalPullToUpdate() {
             )}
             
             <div className={cn(
-              "w-10 h-10 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 flex items-center justify-center relative z-10 transition-transform duration-300",
+              "w-10 h-10 rounded-full bg-white/95 dark:bg-zinc-900/95  border border-slate-200 dark:border-white/10 flex items-center justify-center relative z-10 transition-transform duration-300",
               isRefreshing ? "scale-95" : "scale-100"
             )}>
               <RefreshCw 

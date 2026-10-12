@@ -355,7 +355,7 @@ export function PolyMartVendorStorefront() {
           {/* Back button */}
           <button
             onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60  border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
             aria-label="Kembali"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -371,7 +371,7 @@ export function PolyMartVendorStorefront() {
           {/* Back button */}
           <button
             onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60  border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
             aria-label="Kembali"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -381,7 +381,7 @@ export function PolyMartVendorStorefront() {
 
       {/* ── Store Profile Header Card ── */}
       <div className="px-3 sm:px-0 -mt-10 sm:-mt-12 relative z-10">
-        <div className="bg-card/95 backdrop-blur-md border border-border/60 rounded-3xl p-4 sm:p-5 shadow-lg space-y-4">
+        <div className="bg-card/95  border border-border/60 rounded-3xl p-4 sm:p-5 shadow-lg space-y-4">
           <div className="flex items-start gap-3.5">
             {/* Avatar squircle */}
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-white/20 bg-muted/40 shadow-lg overflow-hidden shrink-0 flex items-center justify-center">
@@ -707,7 +707,7 @@ export function PolyMartVendorStorefront() {
 
                         {/* Status badges */}
                         {isOut && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                          <div className="absolute inset-0 bg-black/60 -[1px] flex items-center justify-center z-10">
                             <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
                               Habis
                             </span>
@@ -722,7 +722,7 @@ export function PolyMartVendorStorefront() {
 
                         {/* Category pill */}
                         {!isLowStock && (
-                          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-xs text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
+                          <div className="absolute top-2 left-2 bg-black/50  text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
                             {p.category}
                           </div>
                         )}
@@ -747,7 +747,7 @@ export function PolyMartVendorStorefront() {
                             e.stopPropagation();
                             toggleWishlist(p.id);
                           }}
-                          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80 backdrop-blur-xs border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+                          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80  border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
                           aria-label="Senarai Hajat"
                         >
                           <Heart

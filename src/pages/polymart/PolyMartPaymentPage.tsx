@@ -488,7 +488,7 @@ export function PolyMartPaymentPage() {
                   <div className="relative aspect-[3/4] max-h-72 w-full rounded-xl overflow-hidden border border-border/30 bg-muted/30">
                     <img src={previewUrl} alt="Pratonton Resit" className="w-full h-full object-contain" />
                     {uploading && (
-                      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-white">
+                      <div className="absolute inset-0 bg-black/60  flex flex-col items-center justify-center gap-2 text-white">
                         <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin border-blue-500" />
                         <span className="text-[10px] font-black uppercase tracking-wider">Memuat naik...</span>
                       </div>

@@ -1333,7 +1333,7 @@ export function PolyRiderDashboard() {
                     <div className="h-40 bg-slate-100 relative rounded-t-2xl overflow-hidden">
                       <button
                         onClick={() => setHiddenJobs(prev => [...prev, job.id])}
-                        className="absolute top-3 right-3 z-[1001] w-8 h-8 bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black backdrop-blur-md rounded-full flex items-center justify-center text-slate-600 dark:text-white/80 transition-colors border border-slate-200/50 dark:border-white/10 shadow-sm"
+                        className="absolute top-3 right-3 z-[1001] w-8 h-8 bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black  rounded-full flex items-center justify-center text-slate-600 dark:text-white/80 transition-colors border border-slate-200/50 dark:border-white/10 shadow-sm"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1640,7 +1640,7 @@ export function PolyRiderDashboard() {
       {/* MODALS: WHATSAPP & EXPIRATION */}
       <AnimatePresence>
         {showWhatsappModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 ">
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border border-slate-100 dark:border-white/10 text-center">
               <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="w-8 h-8" />
@@ -1662,7 +1662,7 @@ export function PolyRiderDashboard() {
         )}
 
         {showExpiredWarning && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 ">
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-md shadow-2xl border border-red-100 dark:border-red-500/20">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
@@ -1754,7 +1754,7 @@ function EarningsAnalyticsSheet({ show, onClose, userId }: EarningsAnalyticsShee
     <AnimatePresence>
       {show && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end"
+          className="fixed inset-0 bg-slate-900/60 dark:bg-black/80  z-50 flex flex-col justify-end"
           onClick={onClose}>
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} onClick={(e) => e.stopPropagation()}
             className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto flex flex-col shadow-2xl h-[85vh]">

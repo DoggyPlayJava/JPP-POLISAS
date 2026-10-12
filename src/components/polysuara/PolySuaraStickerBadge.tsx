@@ -55,7 +55,7 @@ export const PolySuaraStickerBadge: React.FC<PolySuaraStickerBadgeProps> = ({
       data-sticker-id={sticker.id}
       data-size={size}
       className={cn(
-        'inline-flex items-center border bg-gradient-to-r shadow-xs backdrop-blur-md transition-all select-none',
+        'inline-flex items-center border bg-gradient-to-r shadow-xs  transition-all select-none',
         sticker.gradientClass,
         sticker.borderClass,
         sizeStyles.container,

@@ -111,7 +111,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
         {/* Profile Section */}
         <div className="p-6">
           <div className="relative group cursor-pointer" onClick={() => navigate('/tetapan')}>
-            <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+            <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity " />
             <div className="relative p-4 rounded-[1.75rem] bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center gap-4 transition-all group-hover:scale-[1.02]">
               <Avatar className="h-12 w-12 rounded-2xl shadow-xl ring-2 ring-black/5 dark:ring-white/10">
                 <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />

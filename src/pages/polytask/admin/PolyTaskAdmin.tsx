@@ -118,7 +118,7 @@ export function PolyTaskAdmin() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 p-4 md:p-6">
+      <div className="sticky top-0 z-40 bg-slate-950/80  border-b border-white/5 p-4 md:p-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 

@@ -264,7 +264,7 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer select-none',
           'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md hover:border-[#2E3A2F]/20 dark:hover:border-[#F8F6EE]/20 backdrop-blur-md',
+          'shadow-sm hover:shadow-md hover:border-[#2E3A2F]/20 dark:hover:border-[#F8F6EE]/20 ',
           'group',
           className
         )}
@@ -411,7 +411,7 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
           'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md backdrop-blur-md',
+          'shadow-sm hover:shadow-md ',
           className
         )}
       >
@@ -497,7 +497,7 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
           'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
+          'shadow-sm hover:shadow-md  space-y-4',
           className
         )}
       >
@@ -663,7 +663,7 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
           'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
+          'shadow-sm hover:shadow-md  space-y-4',
           className
         )}
       >
@@ -762,7 +762,7 @@ export function NextClassBentoCard({
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
         'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-        'shadow-sm hover:shadow-md backdrop-blur-md space-y-4',
+        'shadow-sm hover:shadow-md  space-y-4',
         className
       )}
     >

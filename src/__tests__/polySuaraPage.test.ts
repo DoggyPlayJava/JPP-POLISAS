@@ -164,7 +164,7 @@ describe('PolySuaraPage Suite', () => {
       // Modal dialog elements with z-[99999] elevation and bottom clearance
       expect(pageContent).toContain('Tulis Luahan Rahsia');
       expect(pageContent).toContain('100% Rahsia');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[99990]');
       expect(pageContent).toContain('z-[99999]');
       expect(pageContent).toContain('pb-28 sm:pb-6');
       expect(pageContent).toContain('rounded-t-[2.5rem] sm:rounded-3xl');
@@ -491,7 +491,7 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('document.body');
 
       // Elevation classes for modal and drawer
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[99990]');
       expect(pageContent).toContain('z-[99999]');
 
       // Conditional suppression check

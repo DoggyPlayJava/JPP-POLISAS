@@ -663,7 +663,7 @@ export default function MakmpJuryPortalPage() {
 
       <MakmpJppHeader subtitle="Portal Juri" />
       {/* Header Bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80  sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs shadow-inner">
@@ -943,7 +943,7 @@ export default function MakmpJuryPortalPage() {
       {/* MODAL / SPLIT-VIEW REVIEW WORKBENCH                                  */}
       {/* ==================================================================== */}
       {activeAward && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80  flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-7xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header Dialog */}
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/90 dark:bg-slate-900/90">
@@ -1553,7 +1553,7 @@ export default function MakmpJuryPortalPage() {
       {/* FULLSCREEN LIGHTBOX DOCUMENT VIEWER                                  */}
       {/* ==================================================================== */}
       {isFullscreenPreview && selectedDocUrl && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex flex-col p-3 sm:p-6 animate-fade-in">
+        <div className="fixed inset-0 z-[100] bg-slate-950/95  flex flex-col p-3 sm:p-6 animate-fade-in">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-white shrink-0">
             <div className="flex items-center gap-2">
               <Maximize2 className="w-4 h-4 text-amber-400" />
@@ -1630,7 +1630,7 @@ export default function MakmpJuryPortalPage() {
       {/* DIALOG BUKA SEMULA SEMAKAN (JURI)                                    */}
       {/* ==================================================================== */}
       {showUnlockDialog && activeAward && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/60 dark:bg-slate-950/80  flex items-center justify-center p-4">
           <div className="w-full max-w-md p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>

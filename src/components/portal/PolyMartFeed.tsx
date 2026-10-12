@@ -212,7 +212,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               <div
                 key={item.id}
                 onClick={() => handleCardClick(item.id)}
-                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/80 dark:border-white/[0.08] hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
+                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/[0.08] hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {

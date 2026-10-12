@@ -55,7 +55,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl shadow-2xl p-6', className)}>
+    <div className={cn('rounded-3xl border border-white/[0.05] bg-white/[0.02]  shadow-2xl p-6', className)}>
       {children}
     </div>
   );

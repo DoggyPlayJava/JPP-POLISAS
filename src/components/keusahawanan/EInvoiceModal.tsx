@@ -255,12 +255,12 @@ export function EInvoiceModal({ transaction: txn, onClose }: EInvoiceModalProps)
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        className="fixed inset-0 z-[99999] bg-black/80  flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-4xl h-[90vh] bg-card rounded-3xl overflow-hidden border border-border shadow-2xl flex flex-col">
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur-sm z-10 shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/80  z-10 shrink-0">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">E-Invoice</p>
               <p className="text-sm font-black text-foreground">{data.invoiceNumber}</p>

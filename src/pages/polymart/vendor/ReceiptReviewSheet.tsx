@@ -63,7 +63,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 ">
           {/* Backdrop click dismiss */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -237,7 +237,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
 
             {/* Footer / Dual Ergonomic Thumb Action Buttons */}
             {!paymentVerifiedAt && !paymentRejected && (
-              <div className="p-4 border-t border-border/40 bg-card/95 backdrop-blur-sm grid grid-cols-2 gap-3">
+              <div className="p-4 border-t border-border/40 bg-card/95  grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={onReject}

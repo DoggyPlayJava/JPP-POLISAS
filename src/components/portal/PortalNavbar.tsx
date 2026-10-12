@@ -36,11 +36,11 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
       karnivalActive
         ? isScrolled
           ? 'bg-[#0a0018]/80  border-b border-pink-500/30 py-3 shadow-[0_4px_40px_rgba(236,72,153,0.3)]'
-          : 'bg-transparent backdrop-blur-sm'
+          : 'bg-transparent '
         : supsasActive
           ? isScrolled
             ? 'bg-[#0a0500]/80  border-b border-amber-500/30 py-3 shadow-[0_4px_40px_rgba(245,158,11,0.3)]'
-            : 'bg-transparent backdrop-blur-sm'
+            : 'bg-transparent '
           : isScrolled
             ? 'bg-white/80 dark:bg-slate-950/80  border-b border-black/5 dark:border-white/10 py-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]'
             : 'bg-transparent'
@@ -67,7 +67,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
           <motion.div
             whileHover={{ scale: 1.05, rotate: 2 }}
             className={cn(
-              "w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center p-1.5 shadow-2xl border backdrop-blur-xl transition-all",
+              "w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center p-1.5 shadow-2xl border  transition-all",
               karnivalActive ? "bg-pink-500/10 border-pink-500/30 group-hover:border-pink-400 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.5)]" :
               supsasActive ? "bg-amber-500/10 border-amber-500/30 group-hover:border-amber-400 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.5)]" :
               "bg-black/[0.03] dark:bg-white/5 border-black/5 dark:border-white/10 group-hover:border-emerald-500/30"
@@ -122,7 +122,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
           {/* Dynamic Avatar Aura */}
           <div className="relative">
             {meritPoints > 100 && (
-              <div className="absolute -inset-2 rounded-full bg-yellow-400/20 blur-md animate-pulse pointer-events-none" />
+              <div className="absolute -inset-2 rounded-full bg-yellow-400/20  animate-pulse pointer-events-none" />
             )}
             <div className={cn(
               "relative w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden transition-all duration-500",

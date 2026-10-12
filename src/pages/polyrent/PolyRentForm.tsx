@@ -254,7 +254,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex justify-end">
+    <div className="fixed inset-0 bg-slate-900/60  z-[200] flex justify-end">
       <motion.div
         initial={{ x: '100%' }}
         animate={{ x: 0 }}

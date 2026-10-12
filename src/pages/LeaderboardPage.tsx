@@ -153,7 +153,7 @@ export function LeaderboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar Analytics */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="rounded-[2.5rem] border-none shadow-premium p-6 space-y-6 bg-card/50 backdrop-blur-md">
+          <Card className="rounded-[2.5rem] border-none shadow-premium p-6 space-y-6 bg-card/50 ">
             <h4 className="font-black text-sm uppercase tracking-widest flex items-center gap-2">
               <TrendingUp size={16} className="text-primary"/> Ringkasan
             </h4>
@@ -186,7 +186,7 @@ export function LeaderboardPage() {
             />
           </div>
 
-          <Card className="rounded-[2.5rem] border-none shadow-premium overflow-hidden bg-card/70 backdrop-blur-md">
+          <Card className="rounded-[2.5rem] border-none shadow-premium overflow-hidden bg-card/70 ">
             <CardContent className="p-0">
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">

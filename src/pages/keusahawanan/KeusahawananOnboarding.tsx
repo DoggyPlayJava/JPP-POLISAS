@@ -195,7 +195,7 @@ export function KeusahawananOnboarding() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {businesses.length === 0 && (
-                    <div className="col-span-full p-12 text-center border border-white/10 rounded-3xl bg-white/5 backdrop-blur-lg">
+                    <div className="col-span-full p-12 text-center border border-white/10 rounded-3xl bg-white/5 ">
                        <Store className="w-12 h-12 mx-auto mb-4 opacity-20" />
                        <p className="text-white/50">Tiada perniagaan aktif berdaftar buat masa ini.</p>
                     </div>

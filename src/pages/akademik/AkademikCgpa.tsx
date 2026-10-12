@@ -39,7 +39,7 @@ function CustomTooltip({ active, payload, label }: any) {
   const hpnm = payload.find((p: any) => p.dataKey === 'hpnm')?.value;
   const pnm  = payload.find((p: any) => p.dataKey === 'pnm')?.value;
   return (
-    <div className="px-4 py-3 rounded-2xl bg-white/95 dark:bg-[#0F1629]/95 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl backdrop-blur-xl">
+    <div className="px-4 py-3 rounded-2xl bg-white/95 dark:bg-[#0F1629]/95 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl ">
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2">{label}</p>
       {hpnm != null && (
         <p className="text-sm font-black" style={{ color: HPNM_COLOR }}>

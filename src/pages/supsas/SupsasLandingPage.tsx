@@ -183,7 +183,7 @@ export function SupsasLandingPage() {
         {/* Edition badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 backdrop-blur-md mb-8"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20  mb-8"
         >
           {isLive ? (
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
@@ -261,7 +261,7 @@ export function SupsasLandingPage() {
           </button>
           <button
             onClick={() => navigate('/supsas/jadual')}
-            className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/70 font-black uppercase text-sm tracking-widest hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-md flex items-center gap-2"
+            className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/70 font-black uppercase text-sm tracking-widest hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300  flex items-center gap-2"
           >
             <Calendar className="w-4 h-4" />
             Jadual Pertandingan

@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS: KebajikanSettings = {
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-2xl p-5 sm:p-6 transition-colors', className)}>
+    <div className={cn('rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl p-5 sm:p-6 transition-colors', className)}>
       {children}
     </div>
   );

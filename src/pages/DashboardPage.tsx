@@ -366,7 +366,7 @@ export function DashboardPage() {
       />
 
       {/* ── HEADER ── */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 backdrop-blur-sm">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 ">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-primary rounded-xl text-white"><LayoutDashboard size={20} /></div>
@@ -404,7 +404,7 @@ export function DashboardPage() {
 
       {/* ── CLUB ANALYTICS ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 backdrop-blur-md">
+        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-black italic">Prestasi Tugasan</h3>
@@ -443,7 +443,7 @@ export function DashboardPage() {
           </div>
         </Card>
 
-        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 backdrop-blur-md">
+        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-black italic">Status Aktiviti</h3>
@@ -528,7 +528,7 @@ export function DashboardPage() {
             </Card>
           )}
 
-          <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70 backdrop-blur-md overflow-hidden">
+          <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70  overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
                 {taskView === 'active' ? (isNormalMember ? 'Tugasan Saya' : 'Senarai Tugasan') : 'Arkib Tugasan'}

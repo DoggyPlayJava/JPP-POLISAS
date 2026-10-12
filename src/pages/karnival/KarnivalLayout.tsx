@@ -31,7 +31,7 @@ export function KarnivalLayout() {
   return (
     <div className="min-h-screen bg-[#0d0d1a]">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.18] bg-[#0d0d1a]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/[0.18] bg-[#0d0d1a]/90 ">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           {/* Logo */}
           {/* ← Back to Portal */}

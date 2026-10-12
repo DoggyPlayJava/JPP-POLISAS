@@ -632,7 +632,7 @@ describe('superAppHelpers', () => {
 
       // Deep glass card elevation
       expect(html).toContain('dark:bg-slate-900/60');
-      expect(html).toContain('dark:backdrop-blur-md');
+      expect(html).not.toContain('backdrop-blur');
       expect(html).toContain('dark:border-white/[0.08]');
       expect(html).toContain('dark:hover:border-emerald-500/40');
 

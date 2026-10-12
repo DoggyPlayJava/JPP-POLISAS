@@ -98,7 +98,7 @@ export function PromptDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
-      <DialogContent className="sm:max-w-[460px] rounded-3xl border border-border/80 bg-background/95 backdrop-blur-xl p-6 shadow-2xl">
+      <DialogContent className="sm:max-w-[460px] rounded-3xl border border-border/80 bg-background/95  p-6 shadow-2xl">
         <DialogHeader className="space-y-2 text-left">
           <DialogTitle className="text-lg font-black tracking-tight text-foreground">
             {title}

@@ -90,7 +90,7 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/80 "
             onClick={onClose}
           />
           <motion.div
@@ -117,7 +117,7 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                 {/* Avatar with Glow if Top Tasker */}
                 <div className="relative mb-4">
                   {isTopTasker && (
-                    <div className="absolute inset-0 bg-yellow-500 blur-xl opacity-30 rounded-full" />
+                    <div className="absolute inset-0 bg-yellow-500  opacity-30 rounded-full" />
                   )}
                   <div className={`relative w-24 h-24 rounded-full overflow-hidden border-4 ${isTopTasker ? 'border-yellow-400' : 'border-slate-800'} bg-slate-800 flex items-center justify-center`}>
                     {profile?.avatar_url ? (

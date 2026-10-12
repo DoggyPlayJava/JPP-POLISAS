@@ -139,7 +139,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex flex-col justify-end items-center sm:p-4"
+        className="fixed inset-0 bg-black/60  z-[200] flex flex-col justify-end items-center sm:p-4"
       >
         <motion.div
           initial={{ y: '100%' }}
@@ -159,7 +159,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
                   
                   {images.length > 1 && (
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full">
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/20  px-3 py-1.5 rounded-full">
                       {images.map((_, i) => (
                         <button
                           key={i}
@@ -177,12 +177,12 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                 </div>
               )}
               
-              <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors z-20 border border-white/20">
+              <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/30  flex items-center justify-center text-white hover:bg-white/40 transition-colors z-20 border border-white/20">
                 <X className="w-5 h-5" />
               </button>
 
               <div className="absolute bottom-6 left-6 right-6 z-20">
-                <div className="inline-flex px-3 py-1 mb-3 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest border border-white/20">
+                <div className="inline-flex px-3 py-1 mb-3 rounded-full bg-white/20  text-white text-[10px] font-black uppercase tracking-widest border border-white/20">
                   {listing.jantina_prefer}
                 </div>
                 <h2 className="text-3xl font-black text-white leading-tight drop-shadow-md flex items-center gap-2">

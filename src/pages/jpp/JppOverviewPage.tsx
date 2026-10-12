@@ -119,7 +119,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 " onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -444,7 +444,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
         {reviewModal.open && reviewModal.req && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={undefined}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 "
               onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
             />
             <motion.div
@@ -609,7 +609,7 @@ export function JppOverviewPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#151D16]/95 border border-[#3A4A3B] rounded-xl p-3 shadow-xl backdrop-blur-md">
+        <div className="bg-[#151D16]/95 border border-[#3A4A3B] rounded-xl p-3 shadow-xl ">
           <p className="text-[#A3B39F] text-xs font-bold mb-1">{label}</p>
           <p className="text-[#F8F6EE] font-black text-lg">
             {payload[0].value} <span className="text-xs font-medium text-[#A3B39F]/70">pelajar</span>

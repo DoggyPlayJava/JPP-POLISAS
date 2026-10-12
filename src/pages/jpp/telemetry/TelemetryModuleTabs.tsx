@@ -156,7 +156,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
     : [];
 
   return (
-    <div className="rounded-[2rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-6 shadow-xs backdrop-blur-md space-y-5">
+    <div className="rounded-[2rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-6 shadow-xs  space-y-5">
       {/* ── Tabs Navigation ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
         <div>

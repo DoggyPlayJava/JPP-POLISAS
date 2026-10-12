@@ -107,7 +107,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
       exit={{ opacity: 0, scale: 0.96, y: 8 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
     >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 " onClick={onClose} />
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] overflow-hidden max-h-[90vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
@@ -441,7 +441,7 @@ export function AkademikPencapaian() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setUnlockTarget(null)} />
+            <div className="absolute inset-0 bg-black/70 " onClick={() => setUnlockTarget(null)} />
             <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] p-6 space-y-4 shadow-2xl">
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">

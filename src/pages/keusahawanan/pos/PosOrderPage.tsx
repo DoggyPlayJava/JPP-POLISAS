@@ -527,7 +527,7 @@ export function PosOrderPage() {
         {/* ── LEFT: Product Grid ─────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden border-r border-border/50">
           {/* Search + category filter */}
-          <div className="p-4 space-y-3 border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="p-4 space-y-3 border-b border-border/50 bg-background/80  sticky top-0 z-10">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
               <input
@@ -850,7 +850,7 @@ export function PosOrderPage() {
           {successTxn && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSuccessTxn(null)} />
+                className="absolute inset-0 bg-black/70 " onClick={() => setSuccessTxn(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -909,7 +909,7 @@ export function PosOrderPage() {
           {scannedOrder && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setScannedOrder(null)} />
+                className="absolute inset-0 bg-black/70 " onClick={() => setScannedOrder(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}

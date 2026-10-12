@@ -271,7 +271,7 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                className={`absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center backdrop-blur-md transition-all duration-300 ${
+                className={`absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center  transition-all duration-300 ${
                   hudState.status === 'success' 
                     ? 'bg-emerald-950/90 border-4 border-emerald-500/80 shadow-[inset_0_0_60px_rgba(16,185,129,0.4)]' 
                     : 'bg-rose-950/90 border-4 border-rose-500/80 shadow-[inset_0_0_60px_rgba(244,63,94,0.4)]'

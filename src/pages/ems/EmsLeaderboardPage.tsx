@@ -769,7 +769,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         </header>
 
         {/* Emcee Stepped Reveal Control Dock */}
-        <div className="relative z-20 my-4 p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
+        <div className="relative z-20 my-4 p-3 rounded-2xl bg-white/5 border border-white/10  flex flex-wrap items-center justify-between gap-3 shadow-lg">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
               <Sparkles className="w-3.5 h-3.5" /> Kawalan Pentas:
@@ -866,7 +866,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 2ND PLACE (SILVER) - Left */}
                 {top2 ? (
                   <div className="order-2 md:order-1 flex flex-col items-center">
-                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-slate-800/80 dark:to-slate-900/90 border-2 border-slate-300 dark:border-slate-400/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-slate-800/80 dark:to-slate-900/90 border-2 border-slate-300 dark:border-slate-400/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)]  relative overflow-hidden group hover:scale-[1.02] transition-transform">
                       <div className="absolute top-0 inset-x-0 h-1.5 bg-slate-400 dark:bg-slate-300" />
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-400/20 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-400/30 mb-4 shadow-inner">
                         <Medal className="w-9 h-9" />
@@ -952,7 +952,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 3RD PLACE (BRONZE) - Right */}
                 {top3 ? (
                   <div className="order-3 flex flex-col items-center">
-                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-600/30 dark:border-amber-700/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-600/30 dark:border-amber-700/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)]  relative overflow-hidden group hover:scale-[1.02] transition-transform">
                       <div className="absolute top-0 inset-x-0 h-1.5 bg-amber-700" />
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-700/10 dark:bg-amber-700/20 text-amber-700 dark:text-amber-500 border border-amber-700/20 dark:border-amber-700/30 mb-4 shadow-inner">
                         <Award className="w-9 h-9" />
@@ -1003,7 +1003,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       return (
                         <div
                           key={item.participant.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition shadow-sm dark:shadow-none backdrop-blur-md"
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition shadow-sm dark:shadow-none "
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white font-black text-sm flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0">
@@ -1455,7 +1455,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       {/* MODAL 1: JURY COMMENTS & BREAKDOWN MODAL */}
       {/* ========================================================================= */}
       {selectedParticipantForComments && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70  animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <div>
@@ -1544,7 +1544,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       {/* MODAL 2: TIE BREAKER SELECTION MODAL */}
       {/* ========================================================================= */}
       {showTieBreakerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70  animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2">

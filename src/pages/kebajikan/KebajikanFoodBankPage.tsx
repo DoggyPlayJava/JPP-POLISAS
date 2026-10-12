@@ -2334,7 +2334,7 @@ export function KebajikanFoodBankPage() {
 
       {/* ── Mobile Sticky Pantry Bottom Capsule (sm:hidden) ── */}
       {!activeApplication && !isSessionClosed && (
-        <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between border border-white/10 sm:hidden">
+        <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-900/95 dark:bg-slate-900/95 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between border border-white/10 sm:hidden">
           <div className="flex items-center gap-2.5 truncate mr-2">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-4 h-4" />
@@ -2362,7 +2362,7 @@ export function KebajikanFoodBankPage() {
       {/* ── Slide-Up Pantry Bottom Sheet (Smart Pantry Basket Review) ── */}
       <AnimatePresence>
         {showBasketSheet && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 ">
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2595,7 +2595,7 @@ export function KebajikanFoodBankPage() {
       <AnimatePresence>
         {!identityConfirmed && !isSessionClosed && (
           <motion.div
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 "
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -2662,7 +2662,7 @@ export function KebajikanFoodBankPage() {
       <AnimatePresence>
         {showIdentityModal && (
           <motion.div
-            className="fixed inset-0 z-[61] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[61] flex items-center justify-center p-4 bg-black/60 "
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

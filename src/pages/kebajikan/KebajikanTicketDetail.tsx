@@ -803,7 +803,7 @@ function QuickActionBar({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="relative rounded-3xl border border-slate-200 dark:border-white/[0.05] p-5 sm:p-6 bg-white dark:bg-white/[0.02] backdrop-blur-xl shadow-sm dark:shadow-2xl overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-colors">
+    <div className="relative rounded-3xl border border-slate-200 dark:border-white/[0.05] p-5 sm:p-6 bg-white dark:bg-white/[0.02]  shadow-sm dark:shadow-2xl overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-colors">
       <div className="absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
       <p className="relative z-10 text-[11px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 mb-5">{title}</p>
       <div className="relative z-10">
@@ -851,7 +851,7 @@ function EscalationActionPanel({
 
   return (
     <div
-      className="relative rounded-3xl border p-5 sm:p-6 backdrop-blur-xl shadow-sm dark:shadow-2xl overflow-hidden bg-red-50/30 dark:bg-red-500/[0.03] border-red-200 dark:border-red-500/25"
+      className="relative rounded-3xl border p-5 sm:p-6  shadow-sm dark:shadow-2xl overflow-hidden bg-red-50/30 dark:bg-red-500/[0.03] border-red-200 dark:border-red-500/25"
     >
       <div className="relative z-10">
         {/* Header */}

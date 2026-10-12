@@ -221,7 +221,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex flex-col justify-end items-center sm:p-4"
+            className="fixed inset-0 bg-slate-900/60  z-[200] flex flex-col justify-end items-center sm:p-4"
           >
             <motion.div
               initial={{ y: '100%' }}

@@ -110,7 +110,7 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 " onClick={onClose} />
 
       {/* Modal */}
       <motion.div
@@ -560,7 +560,7 @@ export function KlkDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((s, i) => (
           <motion.a key={s.label} href={s.href} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.06 }}
-            className="block rounded-2xl p-5 border transition-all hover:scale-[1.02] cursor-pointer shadow-lg backdrop-blur-xl relative overflow-hidden group"
+            className="block rounded-2xl p-5 border transition-all hover:scale-[1.02] cursor-pointer shadow-lg  relative overflow-hidden group"
             style={{ background: `rgba(${hexRgb(s.color)}, 0.03)`, borderColor: `rgba(${hexRgb(s.color)}, 0.15)` }}
           >
             <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none"

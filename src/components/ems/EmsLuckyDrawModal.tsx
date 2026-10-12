@@ -247,7 +247,7 @@ export function EmsLuckyDrawModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80  p-4 overflow-y-auto select-none">
       <div className="bg-[#0B0F19] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full space-y-6 shadow-2xl shadow-amber-500/10 text-white my-8 relative">
         {/* Close Button */}
         <button

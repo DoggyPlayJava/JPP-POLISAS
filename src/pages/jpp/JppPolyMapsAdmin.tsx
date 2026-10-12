@@ -72,7 +72,7 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
           <Marker position={[lat, lng]} />
         ) : null}
       </MapContainer>
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
         Sentuh peta untuk tetapkan lokasi
       </div>
     </div>
@@ -233,7 +233,7 @@ function WalkwayDrawingMap({
       </MapContainer>
       
       {isDrawing && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
           {points.length === 0 ? 'Sentuh peta untuk mula melukis jalan' : `Titik dilukis: ${points.length} (Sentuh peta untuk tambah)`}
         </div>
       )}
@@ -1725,7 +1725,7 @@ export function JppPolyMapsAdmin() {
       <AnimatePresence>
         {showBuildingModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBuildingModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBuildingModal(false)} className="absolute inset-0 bg-black/60 " />
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-sky-500 dark:text-sky-400" />
@@ -1984,7 +1984,7 @@ export function JppPolyMapsAdmin() {
       <AnimatePresence>
         {showLocationModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLocationModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLocationModal(false)} className="absolute inset-0 bg-black/60 " />
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <Navigation className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
@@ -2210,7 +2210,7 @@ export function JppPolyMapsAdmin() {
       {/* 360 Panorama Preview Modal */}
       <AnimatePresence>
         {preview360Url && (
-          <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/85 ">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

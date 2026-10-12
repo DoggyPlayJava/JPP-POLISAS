@@ -80,7 +80,7 @@ export function AppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] md:hidden"
+            className="fixed inset-0 bg-black/60  z-[130] md:hidden"
           />
         )}
       </AnimatePresence>
@@ -105,7 +105,7 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
         {/* ── MOBILE HEADER OVERRIDE ── */}
-        <div className="md:hidden flex items-center p-4 border-b bg-background/80 backdrop-blur-md sticky top-0 z-[50]">
+        <div className="md:hidden flex items-center p-4 border-b bg-background/80  sticky top-0 z-[50]">
           <Button
             variant="ghost"
             size="icon"

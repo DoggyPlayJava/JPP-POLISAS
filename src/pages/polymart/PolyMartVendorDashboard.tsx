@@ -695,7 +695,7 @@ export function PolyMartVendorDashboard() {
       </div>
 
       {/* ── Sticky Top Segmented Tab Bar (3 Domains) ─────────────────────────── */}
-      <div className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur-md py-2.5 mb-6 border-b border-border/40">
+      <div className="sticky top-14 sm:top-16 z-30 bg-background/95  py-2.5 mb-6 border-b border-border/40">
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-border/60 shadow-inner">
           {/* Domain 1: Urus Pesanan */}
           <button

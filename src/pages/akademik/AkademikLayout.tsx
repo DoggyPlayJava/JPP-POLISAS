@@ -123,7 +123,7 @@ export function AkademikLayout() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/70  md:hidden"
               onClick={() => setSidebarOpen(false)}
             />
             <motion.div
@@ -148,7 +148,7 @@ export function AkademikLayout() {
       <div className="relative z-10 md:ml-64 flex flex-col min-h-screen">
 
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 ">
           <button
             onClick={() => setSidebarOpen(true)}
             className="tour-mobile-hamburger md:hidden p-2 rounded-xl text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all"
@@ -218,7 +218,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="w-full flex flex-col h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-white/[0.06] overflow-hidden">
+    <div className="w-full flex flex-col h-full bg-white/95 dark:bg-slate-900/95  border-r border-slate-200/80 dark:border-white/[0.06] overflow-hidden">
       {/* Header */}
       <div className="flex flex-col border-b border-slate-200/80 dark:border-white/[0.06]">
         <button

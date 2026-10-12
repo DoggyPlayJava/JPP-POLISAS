@@ -1333,7 +1333,7 @@ export function PolyRiderHome() {
           {showSOSWarningModal && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[300] bg-zinc-950/80 backdrop-blur-md flex items-center justify-center p-4"
+              className="fixed inset-0 z-[300] bg-zinc-950/80  flex items-center justify-center p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
@@ -1800,7 +1800,7 @@ export function PolyRiderHome() {
                       </p>
                     )}
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-1.5">
+                  <div className="bg-white/20  rounded-xl px-3 py-2 flex items-center gap-1.5">
                     <span className="text-white font-black text-xs">Sertai</span>
                     <ChevronRight className="w-4 h-4 text-white" />
                   </div>
@@ -1942,7 +1942,7 @@ export function PolyRiderHome() {
           className="w-full relative overflow-hidden bg-slate-900 dark:bg-zinc-800 rounded-[2rem] p-5 text-left shadow-xl shadow-slate-200/50 dark:shadow-none flex items-center justify-between group transition-all hover:scale-[1.02]"
         >
           <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/10 to-transparent pointer-events-none" />
-          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/20 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/30 transition-all" />
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/20 rounded-full  pointer-events-none group-hover:bg-amber-500/30 transition-all" />
 
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-[1rem] flex items-center justify-center shadow-inner shadow-amber-300/50">
@@ -1958,7 +1958,7 @@ export function PolyRiderHome() {
             </div>
           </div>
 
-          <div className="relative z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+          <div className="relative z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center  group-hover:bg-white/20 transition-colors">
             <span className="text-white font-bold text-sm">→</span>
           </div>
         </button>
@@ -1973,7 +1973,7 @@ export function PolyRiderHome() {
         {joiningCarpool && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex flex-col justify-end"
+            className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70  flex flex-col justify-end"
           >
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
@@ -2192,7 +2192,7 @@ export function PolyRiderHome() {
           return (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex flex-col justify-end"
+              className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70  flex flex-col justify-end"
             >
               <motion.div
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
@@ -2246,7 +2246,7 @@ export function PolyRiderHome() {
           {isSearching && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[300] flex flex-col justify-end bg-slate-900/60 dark:bg-black/80 backdrop-blur-md"
+              className="fixed inset-0 z-[300] flex flex-col justify-end bg-slate-900/60 dark:bg-black/80 "
             >
               <motion.div
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
@@ -2397,7 +2397,7 @@ export function PolyRiderHome() {
         {showReceiptModal && receiptJob && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[350] bg-black/60 backdrop-blur-sm flex items-end justify-center"
+            className="fixed inset-0 z-[350] bg-black/60  flex items-end justify-center"
             onClick={() => setShowReceiptModal(false)}
           >
             <motion.div
@@ -2477,7 +2477,7 @@ export function PolyRiderHome() {
           {activeJob && ['GATHERING', 'CARPOOL_REQUEST'].includes(activeJob.status) && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[300] flex flex-col justify-end bg-slate-900/60 dark:bg-black/80 backdrop-blur-md"
+              className="fixed inset-0 z-[300] flex flex-col justify-end bg-slate-900/60 dark:bg-black/80 "
             >
               <motion.div
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
