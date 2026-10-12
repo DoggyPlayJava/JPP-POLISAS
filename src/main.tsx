@@ -3,6 +3,20 @@ import { Buffer } from 'buffer';
 window.Buffer = window.Buffer || Buffer;
 console.log('Buffer polyfilled');
 
+// Auto-reload bila Service Worker BARU ambil alih (deploy baharu) — elak stale bundle.
+// Tanpa ini, SW baru skipWaiting+claim tapi page terus pegang JS lama dalam memory.
+// Guard `hadController`: hanya reload bila ADA controller lama (update sebenar),
+// bukan semasa first-install (elak reload percuma pada lawatan pertama).
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) {
+      console.info('[SW] New service worker took control — auto-reload for fresh bundle');
+      window.location.reload();
+    }
+  });
+}
+
 // Mencegah aplikasi menjadi "blank white screen" jika pengguna klik pada menu
 // yang mengandungi kod "chunk" JS lama yang telah dipadam dari Coolify server selepas kemas kini.
 // GUARD: Hadkan maksimum 2 kali reload sahaja + min delay 4s antara reload.
