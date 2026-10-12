@@ -131,7 +131,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               onClick={() => setIsActionsOpen(false)}
-              className="fixed inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-md backdrop-grayscale z-[110] shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]"
+              className="fixed inset-0 bg-black/60 dark:bg-black/70 z-[110] shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]"
             />
             <motion.div
               drag="y"
