@@ -193,7 +193,7 @@ export function PolyRentPage() {
   const headerOpacity = useTransform(scrollY, [0, 150], [1, 0]);
   const headerY = useTransform(scrollY, [0, 150], [0, -30]);
   const searchBarY = useTransform(scrollY, [0, 150], [0, -80]);
-  const searchBarWidth = useTransform(scrollY, [0, 150], ['100%', '80%']);
+  const searchBarScale = useTransform(scrollY, [0, 150], [1, 0.8]);
 
   const berbaloiListings = filteredListings.filter(l => averagePrice > 0 && l.sewa_bulanan < (averagePrice * 0.9));
   const normalListings = filteredListings.filter(l => !(averagePrice > 0 && l.sewa_bulanan < (averagePrice * 0.9)));
@@ -319,7 +319,7 @@ export function PolyRentPage() {
           </motion.div>
           
           {/* Parallax Glassmorphic Search Bar */}
-          <motion.div style={{ y: searchBarY, width: searchBarWidth }} className="tour-polyrent-search mx-auto bg-white/10  border border-white/20 p-1.5 rounded-full flex items-center shadow-2xl">
+          <motion.div style={{ y: searchBarY, width: '100%', scaleX: searchBarScale }} className="tour-polyrent-search mx-auto bg-white/10  border border-white/20 p-1.5 rounded-full flex items-center shadow-2xl">
              <div className="flex-1 flex items-center pl-4">
                <Search className="w-4 h-4 text-white mr-3" />
                <input 

@@ -18,8 +18,8 @@ function LoadingScreen() {
       <div className="relative flex flex-col items-center justify-center mb-6 mt-[-5vh]">
         {/* Logo HZ dengan animasi masuk ala wayang (Cinematic Intro) */}
         <motion.img 
-          initial={{ scale: 0.85, opacity: 0, filter: "blur(15px)" }}
-          animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} // smooth spring-like ease out
           src="/HZ.png?v=2" 
           alt="HZ Infinity" 

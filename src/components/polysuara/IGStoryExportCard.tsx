@@ -39,8 +39,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
           left: '-20%',
           width: '600px',
           height: '600px',
-          background: 'rgba(244, 63, 94, 0.15)',
-          filter: 'blur(100px)',
+          background: 'radial-gradient(circle, rgba(244, 63, 94, 0.15) 0%, rgba(244, 63, 94, 0.05) 50%, transparent 70%)',
           borderRadius: '50%'
         }}
       />
@@ -51,8 +50,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
           right: '-20%',
           width: '500px',
           height: '500px',
-          background: 'rgba(99, 102, 241, 0.15)',
-          filter: 'blur(100px)',
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%)',
           borderRadius: '50%'
         }}
       />

@@ -45,6 +45,8 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
     ['rgb(239, 68, 68)', 'rgb(153, 27, 27)'] // From red-500 to red-800
   );
 
+  const trailScaleX = useTransform(x, (val) => (val + knobWidth / 2 + padding) / Math.max(1, containerWidth));
+
   const handleDragEnd = async (event: any, info: any) => {
     if (disabled || isTriggered) return;
 
@@ -109,8 +111,8 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
         
         {/* The active trail behind the knob */}
         <motion.div 
-          className="absolute left-0 top-0 bottom-0 bg-red-500/20 z-0"
-          style={{ width: useTransform(x, (val) => val + knobWidth / 2 + padding) }}
+          className="absolute left-0 top-0 bottom-0 w-full bg-red-500/20 z-0 origin-left"
+          style={{ scaleX: trailScaleX }}
         />
       </div>
     </div>
