@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker, useMapEvents } from 'react-leaflet';
@@ -945,22 +945,85 @@ export function PolyMapsPage() {
     }
   }, [weather?.isRaining]);
 
-  // Reactive handler for deep links when search params change (?room=...)
+  // Reactive handler for deep links (?room=..., ?b=..., ?q=...)
+  const handledSearchParamRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!allLocations || allLocations.length === 0) return;
+    if (!location.search) {
+      handledSearchParamRef.current = null;
+      return;
+    }
+    if (handledSearchParamRef.current === location.search) return;
+
     const searchParams = new URLSearchParams(location.search);
     const rId = searchParams.get('room') || searchParams.get('roomId');
-    if (!rId) return;
+    const bId = searchParams.get('b') || searchParams.get('building') || searchParams.get('buildingId');
+    const queryParam = searchParams.get('q') || searchParams.get('search');
 
-    const targetRoom = resolveRoomLocation(rId, allLocations);
-    if (targetRoom && targetRoom.id !== selectedLocation?.id) {
-      setSelectedLocation(targetRoom);
-      setActiveBuilding(targetRoom.building);
-      const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
-      setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
-      setCardExpanded(true);
+    if (!rId && !bId && !queryParam) return;
+
+    // Handle room deep link (?room=...)
+    if (rId) {
+      if (!allLocations || allLocations.length === 0) return;
+      const targetRoom = resolveRoomLocation(rId, allLocations);
+      if (targetRoom) {
+        handledSearchParamRef.current = location.search;
+        setSelectedLocation(targetRoom);
+        setActiveBuilding(targetRoom.building);
+        const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
+        setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
+        setCardExpanded(true);
+        setSheetSnap('HALF');
+        // Clean URL search params so student can freely close or select another building without being locked
+        navigate(location.pathname, { replace: true });
+      }
+      return;
     }
-  }, [location.search, allLocations, selectedLocation?.id]);
+
+    // Handle building deep link (?b=...)
+    if (bId) {
+      if (!allBuildings || allBuildings.length === 0) return;
+      const bClean = bId.toLowerCase().trim();
+      const targetBuilding = allBuildings.find(b => 
+        b.id === bId || 
+        b.code?.toLowerCase() === bClean || 
+        b.name?.toLowerCase().includes(bClean) || 
+        bClean.includes(b.name?.toLowerCase() || '')
+      );
+      if (targetBuilding) {
+        handledSearchParamRef.current = location.search;
+        setActiveBuilding(targetBuilding);
+        setSelectedLocation(null);
+        const hasActive360 = isBuilding360Active(targetBuilding);
+        setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
+        setCardExpanded(true);
+        setSheetSnap('HALF');
+        navigate(location.pathname, { replace: true });
+      }
+      return;
+    }
+
+    // Handle search query deep link (?q=...)
+    if (queryParam) {
+      if (!allBuildings || allBuildings.length === 0) return;
+      const qClean = queryParam.toLowerCase().trim();
+      const targetBuilding = allBuildings.find(b => 
+        b.code?.toLowerCase() === qClean || 
+        b.name?.toLowerCase().includes(qClean) || 
+        qClean.includes(b.name?.toLowerCase() || '')
+      );
+      if (targetBuilding) {
+        handledSearchParamRef.current = location.search;
+        setActiveBuilding(targetBuilding);
+        setSelectedLocation(null);
+        const hasActive360 = isBuilding360Active(targetBuilding);
+        setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
+        setCardExpanded(true);
+        setSheetSnap('HALF');
+        navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location.search, location.pathname, allLocations, allBuildings, navigate]);
 
   useEffect(() => {
     const zoneMap: Record<string, Building[]> = {};
@@ -1126,59 +1189,6 @@ export function PolyMapsPage() {
           lng: 103.3150
         }
       ]);
-    } else {
-      setEmsEvents(mappedEvents);
-    }
-    
-    // Handle Deep Link (?b=building_id or ?room=room_id or ?q=search or ?building=...)
-    const searchParams = new URLSearchParams(window.location.search);
-    const bId = searchParams.get('b') || searchParams.get('building') || searchParams.get('buildingId');
-    const rId = searchParams.get('room') || searchParams.get('roomId');
-    const queryParam = searchParams.get('q') || searchParams.get('search');
-    
-    if (rId && formatted.length > 0) {
-      // Find the room by ID, code, search_tags (aliases), or prefix normalizer
-      const targetRoom = resolveRoomLocation(rId, formatted);
-      if (targetRoom) {
-        setTimeout(() => {
-          setSelectedLocation(targetRoom);
-          setActiveBuilding(targetRoom.building);
-          const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
-          setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
-          setCardExpanded(true);
-        }, 300);
-      }
-    } else if (bId && bData) {
-      const bClean = bId.toLowerCase().trim();
-      const targetBuilding = bData.find(b => 
-        b.id === bId || 
-        b.code?.toLowerCase() === bClean || 
-        b.name?.toLowerCase().includes(bClean) || 
-        bClean.includes(b.name?.toLowerCase() || '')
-      );
-      if (targetBuilding) {
-        setTimeout(() => {
-          setActiveBuilding(targetBuilding);
-          const hasActive360 = isBuilding360Active(targetBuilding);
-          setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
-          setCardExpanded(true);
-        }, 300);
-      }
-    } else if (queryParam && bData) {
-      const qClean = queryParam.toLowerCase().trim();
-      const targetBuilding = bData.find(b => 
-        b.code?.toLowerCase() === qClean || 
-        b.name?.toLowerCase().includes(qClean) || 
-        qClean.includes(b.name?.toLowerCase() || '')
-      );
-      if (targetBuilding) {
-        setTimeout(() => {
-          setActiveBuilding(targetBuilding);
-          const hasActive360 = isBuilding360Active(targetBuilding);
-          setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
-          setCardExpanded(true);
-        }, 300);
-      }
     }
   };
 
@@ -1325,6 +1335,9 @@ export function PolyMapsPage() {
     setIsSidebarOpen(false);
     setCardExpanded(true);
     setSheetSnap('HALF');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const handleSelectBuildingMapMarker = (b: Building) => {
@@ -1336,6 +1349,9 @@ export function PolyMapsPage() {
     setActiveImageTab(has360 ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
     setCardExpanded(true);
     setSheetSnap('HALF');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const handleSelectEmsEvent = (event: EmsEventItem) => {
@@ -1345,6 +1361,9 @@ export function PolyMapsPage() {
     setSelectedLocation(null);
     setCardExpanded(true);
     setSheetSnap('HALF');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const handleSelectPolyMartHub = (hub: PolyMartHubItem) => {
@@ -1354,6 +1373,9 @@ export function PolyMapsPage() {
     setSelectedLocation(null);
     setCardExpanded(true);
     setSheetSnap('HALF');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const startNavigationToCoords = (lat: number, lng: number, title: string) => {
@@ -1374,6 +1396,9 @@ export function PolyMapsPage() {
     setIsFollowingUser(false);
     setCardExpanded(false);
     setSheetSnap('HALF');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const dismissCard = () => {
@@ -1388,6 +1413,9 @@ export function PolyMapsPage() {
     setIsFollowingUser(false);
     setCardExpanded(false);
     setSheetSnap('PEEK');
+    if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
   };
 
   const startNavigation = () => {
@@ -2463,9 +2491,9 @@ export function PolyMapsPage() {
                   sheetSnap === 'FULL' && "max-h-[85vh] overflow-y-auto"
                 )}
               >
-                {/* Drag Handle Bar & Tactile Snap Controls */}
+                {/* Drag Handle Bar */}
                 <div 
-                  className="w-full pt-2 pb-1.5 flex flex-col items-center justify-center select-none shrink-0 touch-none"
+                  className="w-full pt-3 pb-2 flex flex-col items-center justify-center select-none shrink-0 touch-none cursor-grab active:cursor-grabbing"
                   title="Tarik atau tekan untuk tukar saiz paparan"
                   onPointerDown={(e) => sheetDragControls.start(e)}
                 >
@@ -2473,57 +2501,8 @@ export function PolyMapsPage() {
                     onClick={() => {
                       setSheetSnap(prev => prev === 'PEEK' ? 'HALF' : prev === 'HALF' ? 'FULL' : 'PEEK');
                     }}
-                    className="w-12 h-1.5 bg-[#D9C9B2] dark:bg-[#3A4A3B] rounded-full mx-auto my-1 cursor-grab active:cursor-grabbing touch-none" 
+                    className="w-12 h-1.5 bg-[#D9C9B2] dark:bg-[#3A4A3B] rounded-full mx-auto cursor-grab active:cursor-grabbing touch-none transition-transform active:scale-95" 
                   />
-
-                  {/* 1-Tap Tactile Snap Buttons */}
-                  <div className="flex items-center gap-1 p-0.5 mt-0.5 bg-[#F8F6EE] dark:bg-[#1E271F] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] rounded-full touch-none">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSheetSnap('PEEK');
-                      }}
-                      className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                        sheetSnap === 'PEEK'
-                          ? "bg-[#2E3A2F] text-[#F8F6EE] dark:bg-[#6B7F5B] dark:text-white shadow-xs"
-                          : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]"
-                      )}
-                    >
-                      Ringkas
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSheetSnap('HALF');
-                      }}
-                      className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                        sheetSnap === 'HALF'
-                          ? "bg-[#2E3A2F] text-[#F8F6EE] dark:bg-[#6B7F5B] dark:text-white shadow-xs"
-                          : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]"
-                      )}
-                    >
-                      Separuh
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSheetSnap('FULL');
-                      }}
-                      className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                        sheetSnap === 'FULL'
-                          ? "bg-[#2E3A2F] text-[#F8F6EE] dark:bg-[#6B7F5B] dark:text-white shadow-xs"
-                          : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]"
-                      )}
-                    >
-                      Penuh
-                    </button>
-                  </div>
                 </div>
 
                 {/* ── EMS EVENT PREVIEW ── */}
@@ -2838,13 +2817,25 @@ export function PolyMapsPage() {
                     {/* HALF & FULL Snap Levels */}
                     {(sheetSnap === 'HALF' || sheetSnap === 'FULL') && (
                       <>
-                        {/* Close Button */}
-                        <button 
-                          onClick={() => setSheetSnap('PEEK')}
-                          className={`absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors ${!isLowEnd && 'backdrop-blur-md'}`}
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
+                        {/* Top-Right Controls: Minimize to Peek & Dismiss */}
+                        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                          <button 
+                            type="button"
+                            onClick={() => setSheetSnap('PEEK')}
+                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 ${!isLowEnd && 'backdrop-blur-md'}`}
+                            title="Lipat ke bawah"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                            className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 ${!isLowEnd && 'backdrop-blur-md'}`}
+                            title="Tutup maklumat"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
 
                         {/* Media Area */}
                         {(() => {
@@ -2953,9 +2944,21 @@ export function PolyMapsPage() {
                                   {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
                                 </h2>
                                 {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                                      if (pano) {
+                                        setFullscreen360Url(pano);
+                                        setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[10px] bg-[#6B7F5B]/15 hover:bg-[#6B7F5B]/25 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase transition-colors cursor-pointer active:scale-95"
+                                    title="Buka 360 Panorama Penuh"
+                                  >
                                     <Compass className="w-3 h-3" /> 360 AKTIF
-                                  </span>
+                                  </button>
                                 )}
                               </div>
                               
@@ -3023,20 +3026,6 @@ export function PolyMapsPage() {
 
                           {/* Action Buttons */}
                           <div className="flex flex-col gap-2">
-                            {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
-                              <button
-                                onClick={() => {
-                                  const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
-                                  if (pano) {
-                                    setFullscreen360Url(pano);
-                                    setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                                  }
-                                }}
-                                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-all active:scale-[0.98] bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] text-white shadow-lg shadow-[#2E3A2F]/20"
-                              >
-                                <Compass className="w-4 h-4" /> Buka 360 Panorama Penuh
-                              </button>
-                            )}
                             <button
                               onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                               className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-colors active:scale-[0.98] bg-[#C96F4F] hover:bg-[#B35F41] text-white shadow-lg shadow-[#C96F4F]/25"

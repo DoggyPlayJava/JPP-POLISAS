@@ -187,17 +187,15 @@ describe('Task 4: PolyMaps Draggable Gesture Bottom Sheet & Live Event Overlays'
     expect(source).not.toContain('📍 Anda Telah Sampai!');
   });
 
-  it('implements draggable gesture bottom sheet with Framer Motion drag, touch-none handle, and 1-tap snap buttons', () => {
+  it('implements draggable gesture bottom sheet with Framer Motion drag, touch-none clean drag handle, and multiple snap levels', () => {
     expect(source).toContain('drag="y"');
     expect(source).toContain('dragListener={false}');
     expect(source).toContain('touch-none');
-    expect(source).toContain('Ringkas');
-    expect(source).toContain('Separuh');
-    expect(source).toContain('Penuh');
     expect(source).toContain('sheetSnap');
     expect(source).toContain("'PEEK'");
     expect(source).toContain("'HALF'");
     expect(source).toContain("'FULL'");
+    expect(source).toContain('w-12 h-1.5 bg-[#D9C9B2]');
   });
 
   it('reverts quick filter pills to clean campus amenities and guards EMS/PolyMart overlays', () => {

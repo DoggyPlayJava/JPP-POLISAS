@@ -30,18 +30,23 @@ describe('Task 2: Navigasi Kampus PolyMaps Earthy Minimal System', () => {
     expect(source).toContain('bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]');
   });
 
-  it('implements Earthy Minimal surface and tactile snap controls on Bottom Sheet Container', () => {
+  it('implements Earthy Minimal surface and clean drag controls on Bottom Sheet Container', () => {
     expect(source).toContain('bg-white/95 dark:bg-[#151D16]/95 backdrop-blur-2xl border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-[0_-10px_40px_rgba(46,58,47,0.12)]');
-    expect(source).toContain('bg-[#F8F6EE] dark:bg-[#1E271F] border border-[#D9C9B2]/80 dark:border-[#3A4A3B]');
-    expect(source).toContain('bg-[#2E3A2F] text-[#F8F6EE] dark:bg-[#6B7F5B] dark:text-white');
-    expect(source).toContain('text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]');
+    expect(source).toContain('w-12 h-1.5 bg-[#D9C9B2] dark:bg-[#3A4A3B] rounded-full mx-auto');
+    expect(source).toContain("sheetSnap === 'PEEK'");
+    expect(source).toContain("sheetSnap === 'HALF'");
+    expect(source).toContain("sheetSnap === 'FULL'");
   });
 
-  it('styles Building Sheet with 360 AKTIF badge, Sage Green button, and Terracotta CTA', () => {
+  it('styles Building Sheet with interactive 360 AKTIF badge and primary Terracotta CTA', () => {
     expect(source).toContain('360 AKTIF');
-    expect(source).toContain('bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] text-white shadow-lg shadow-[#2E3A2F]/20');
     expect(source).toContain('bg-[#C96F4F] hover:bg-[#B35F41] text-white shadow-lg shadow-[#C96F4F]/25');
     expect(source).toContain('bg-[#F8F6EE]/60 dark:bg-[#1E271F]/60 border-[#D9C9B2]/60 dark:border-[#3A4A3B]');
+  });
+
+  it('safely handles deep links without sticky state lock and cleans URL search params', () => {
+    expect(source).toContain('handledSearchParamRef');
+    expect(source).toContain('navigate(location.pathname, { replace: true })');
   });
 
   it('applies Earthy Minimal styling to Explore Accordion Sidebar', () => {
