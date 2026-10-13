@@ -2283,7 +2283,7 @@ export function JppFoodBankAdmin() {
                 <p className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
                   Peruntukan Belanjawan Rasmi
                 </p>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono tabular-nums">
                   RM {budgetAllocation.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </h3>
               </div>
@@ -2294,10 +2294,10 @@ export function JppFoodBankAdmin() {
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
               <div className="flex justify-between items-center text-xs mb-1.5 font-bold">
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-400 font-mono tabular-nums">
                   Belanja: RM {currentSpent.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
                 </span>
-                <span className="text-amber-700 dark:text-amber-400">
+                <span className="text-amber-700 dark:text-amber-400 font-mono tabular-nums">
                   {budgetUsedPercentage.toFixed(1)}% Digunakan
                 </span>
               </div>
@@ -2307,7 +2307,7 @@ export function JppFoodBankAdmin() {
                   style={{ width: `${budgetUsedPercentage}%` }}
                 />
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold font-mono tabular-nums">
                 Baki Sedia Ada: RM {remainingBudget.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
               </p>
             </div>
@@ -2321,7 +2321,7 @@ export function JppFoodBankAdmin() {
                   Permohonan Menunggu
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
                     {appMetrics.pending}
                   </h3>
                   <span className="text-xs text-slate-500 font-semibold">pelajar</span>
@@ -2354,7 +2354,7 @@ export function JppFoodBankAdmin() {
                   Diluluskan (Sedia Diambil)
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
                     {appMetrics.approved}
                   </h3>
                   <span className="text-xs text-slate-500 font-semibold">pas aktif</span>
@@ -2387,7 +2387,7 @@ export function JppFoodBankAdmin() {
                   Jumlah Agihan Selesai
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
                     {appMetrics.completed}
                   </h3>
                   <span className="text-xs text-slate-500 font-semibold">penerima</span>
@@ -3570,25 +3570,25 @@ export function JppFoodBankAdmin() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-white/5">
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Peruntukan Asas</span>
-                    <p className="text-base font-black text-slate-900 dark:text-white">
+                    <p className="text-base font-black text-slate-900 dark:text-white font-mono tabular-nums">
                       RM {budgetAllocation.toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Jumlah Digunakan</span>
-                    <p className="text-base font-black text-rose-600 dark:text-rose-400">
+                    <p className="text-base font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">
                       RM {currentSpent.toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Baki Sedia Ada</span>
-                    <p className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                    <p className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
                       RM {remainingBudget.toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Purata Kos / Pelajar</span>
-                    <p className="text-base font-black text-slate-900 dark:text-white">
+                    <p className="text-base font-black text-slate-900 dark:text-white font-mono tabular-nums">
                       RM {appMetrics.completed > 0 ? (currentSpent / appMetrics.completed).toFixed(2) : '0.00'}
                     </p>
                   </div>
@@ -3684,7 +3684,7 @@ export function JppFoodBankAdmin() {
                               </td>
                               <td
                                 className={cn(
-                                  'py-3 px-4 text-right font-black font-mono text-sm',
+                                  'py-3 px-4 text-right font-black font-mono text-sm tabular-nums',
                                   isDeduction
                                     ? 'text-rose-600 dark:text-rose-400'
                                     : 'text-emerald-600 dark:text-emerald-400'

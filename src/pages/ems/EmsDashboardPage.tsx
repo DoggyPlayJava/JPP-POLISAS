@@ -420,7 +420,7 @@ export function EmsDashboardPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border inline-flex items-center gap-1.5 ${
                 activeTab === tab.key
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 shadow-sm'
                   : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >

@@ -166,6 +166,11 @@ Bagi memastikan JPP-POLISAS mencapai kualiti produk taraf flagship antarabangsa 
    - **Sifar Mockup Pelayar Palsu:** Menghapuskan div palsu bertingkap tiga butang merah/kuning/hijau (*fake browser chrome*). Sebaliknya paparkan antaramuka interaktif sebenar.
    - **Pencegahan Kebutaan Banner (Banner Blindness):** Menggabungkan banner berturut-turut yang memakan ketinggian melebihi 600px ke dalam satu `PortalNotificationCenter` kompak (72-80px) dengan navigasi bertitik dan tindakan terus.
    - **Hirarki Tindakan Kemas:** Pada setiap kad acara EMS, elakkan timbunan 10 butang berwarna-warni. Gunakan butang tindakan utama ("Urus Acara & Skor") bersama dropdown menu bagi fungsi pengurusan lain.
+   - **Kekemasan Portal Juri & Modal Pemarkahan (Audit UI/UX):**
+     - Bar tindakan modal (`Docked Modal Footer Action Bar`) wajib didokkan di dalam bekas modal kad (`shrink-0 border-t`) dan bukan terapung bebas seluruh viewport (`fixed bottom-0 left-0 right-0`) agar tidak memecahkan bucu bulat modal dialog (`rounded-3xl`).
+     - Butang pratonton lampiran PDF wajib diposisikan dengan ikon berpusat tanpa pertindihan teks/sempadan (`FileText` dengan tag PDF kemas).
+     - Tab anugerah rubrik pada papan pendahulu EMS menggunakan susun atur fleksibel tanpa sekatan rigid `max-w-md` bagi mengelakkan nama kategori dipotong (cth: "Anugerah Projek Keusahawanan Terbaik").
+     - Tab penapis status pada papan pemuka EMS menggunakan semantik neutral (`bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950`) dan bukannya warna merah/marun amaran.
 
 4. **Fizik Interaksi & Prestasi Skrol:**
    - Navigasi terapung dan bar status wajib menggunakan `useScroll` daripada `framer-motion` dan bukan event listener manual `window.addEventListener('scroll')` bagi mengelakkan kebocoran memori dan jank susun atur.
@@ -443,7 +448,13 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/takwim/EditClassSlotModal.tsx` | Modal penyuntingan pantas satu slot/subjek tunggal dengan semakan pertindihan masa dan integrasi PolyMaps |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
 | `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
-| `supabase/migrations/20261011000002_imaps_missing_reports_dedup_rpc.sql` | RPC pelaporan automatik bilik tiada dalam PolyMaps dengan kaunter deduplikasi atomik selamat RLS |
+| `src/components/jpp/JppCommandPalette.tsx` | Papan perintah global pintas papan kekunci `Ctrl+K` / `⌘K` berasaskan `cmdk` dan Radix Dialog untuk navigasi pantas modul JPP, unit exco, dan pangkalan data kepimpinan |
+| `src/components/ui/SlideOverSheet.tsx` (dan re-export `@/components/jpp/SlideOverSheet`) | Laci slide-over sisi kanan berasaskan Radix UI Dialog & Framer Motion spring physics menggantikan modal tengah terapung bagi borang pendaftaran dan urusan data kepimpinan (`dark:bg-[#1C261D]`) |
+| `src/components/ui/FloatingActionDock.tsx` | Dok terapung bawah beranimasi dengan kaunter berformat `font-mono tabular-nums` dan butang tindakan pantas semasa multi-select pukal (digunakan di Takwim JPP) |
+| `src/pages/jpp/AnnouncementsPage.tsx` | Pusat hebahan global berintegrasi SlideOverSheet respon pelajar, skeleton loader cards, dan tipografi berdisiplin |
+| `src/pages/jpp/JppUsersPage.tsx` | Pengurusan pengguna portal & kohort pelajar dengan 5-baris table pulse skeletons, tona gelap `#1C261D` selaras, dan metrik baki token berformat `font-mono tabular-nums` |
+| `src/pages/jpp/JppFoodBankAdmin.tsx` | Kaunter agihan & lejar audit RM70,000 dengan metrik kewangan terlindung `font-mono tabular-nums` kalis layout-jitter |
+| `src/__tests__/JppPhase2Redesign.test.tsx` | Sut ujian verifikasi Fasa 2: membuktikan skeleton loading, penghapusan kecerunan AI, SlideOverSheet, dan tabular numerals |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 

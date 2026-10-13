@@ -462,6 +462,7 @@ export function JppReviewPage() {
 
 // â”€â”€ Report row sub-component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface ReviewRowProps {
+  key?: any;
   report: ClubReport;
   idx: number;
   onStartReview: (r: ClubReport) => void;

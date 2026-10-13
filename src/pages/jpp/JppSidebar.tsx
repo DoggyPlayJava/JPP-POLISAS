@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BarChart3, Crown, LogOut,
   Lock, ShieldCheck, Palette, Settings, Megaphone,
-  Briefcase, CalendarDays, FileWarning, Sparkles,
+  Briefcase, GraduationCap, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
   ChevronLeft, LayoutGrid, Building2, QrCode, Activity, Map, Award,
   HeartHandshake,
@@ -324,7 +324,7 @@ export function JppSidebar() {
             to={item.href}
             end={item.end}
             className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
               isActive
                 ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
                 : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/5'
@@ -372,7 +372,7 @@ export function JppSidebar() {
               <NavLink
                 to="/jpp/foodbank"
                 className={({ isActive }) => cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
                     ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] shadow-sm'
                     : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-[#A3B39F]/70 dark:hover:text-[#A3B39F] dark:hover:bg-[#6B7F5B]/10'
@@ -393,7 +393,7 @@ export function JppSidebar() {
               <NavLink
                 to="/jpp/demerit"
                 className={({ isActive }) => cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
                     ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] shadow-sm'
                     : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-[#A3B39F]/70 dark:hover:text-[#A3B39F] dark:hover:bg-[#6B7F5B]/10'
@@ -417,17 +417,17 @@ export function JppSidebar() {
               </p>
             </div>
             {[
-              { icon: Briefcase,   label: 'Pelajar',   href: '/jpp/users' },
-              { icon: Sparkles,    label: 'Nexus Hub', href: '/jpp/nexus' },
-              { icon: FileWarning, label: 'Log Audit', href: '/jpp/logs' },
-              { icon: Settings,    label: 'Tetapan',   href: '/jpp/settings' },
+              { icon: GraduationCap, label: 'Pelajar',   href: '/jpp/users' },
+              { icon: Sparkles,      label: 'Nexus Hub', href: '/jpp/nexus' },
+              { icon: FileWarning,   label: 'Log Audit', href: '/jpp/logs' },
+              { icon: Settings,      label: 'Tetapan',   href: '/jpp/settings' },
               ...(isSuperAdmin ? [{ icon: Activity, label: 'Telemetri Sistem', href: '/jpp/telemetry' }] : []),
             ].map(item => (
               <NavLink
                 key={item.href}
                 to={item.href}
                 className={({ isActive }) => cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
                     ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
                     : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/5'

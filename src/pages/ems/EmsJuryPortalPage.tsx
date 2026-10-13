@@ -796,7 +796,10 @@ export function EmsJuryPortalPage() {
           {!pendingJuryCode ? (
             <form onSubmit={handleVerifyCodeSubmit} className="space-y-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="jury-invite-code"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2"
+                >
                   Kod Jemputan Juri
                 </label>
                 <div className="relative">
@@ -804,6 +807,8 @@ export function EmsJuryPortalPage() {
                     <KeyRound className="w-5 h-5" />
                   </div>
                   <input
+                    id="jury-invite-code"
+                    name="jury_invite_code"
                     type="text"
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value.toUpperCase())}
@@ -846,7 +851,10 @@ export function EmsJuryPortalPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="jury-full-name"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
+                >
                   Nama Penuh Juri <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -854,6 +862,8 @@ export function EmsJuryPortalPage() {
                     <User className="w-4 h-4" />
                   </div>
                   <input
+                    id="jury-full-name"
+                    name="jury_full_name"
                     type="text"
                     value={inputJuryName}
                     onChange={(e) => setInputJuryName(e.target.value)}
@@ -865,7 +875,10 @@ export function EmsJuryPortalPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="jury-organization"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
+                >
                   Organisasi / Jabatan / Jawatan <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -873,6 +886,8 @@ export function EmsJuryPortalPage() {
                     <Building2 className="w-4 h-4" />
                   </div>
                   <input
+                    id="jury-organization"
+                    name="jury_organization"
                     type="text"
                     value={inputOrganization}
                     onChange={(e) => setInputOrganization(e.target.value)}
@@ -1197,7 +1212,10 @@ export function EmsJuryPortalPage() {
                           </span>
                         )}
                         {pCategory && (
-                          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-medium rounded-md truncate max-w-[120px]">
+                          <span
+                            className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-medium rounded-md truncate max-w-[200px] sm:max-w-none"
+                            title={pCategory}
+                          >
                             {pCategory}
                           </span>
                         )}
@@ -1242,7 +1260,7 @@ export function EmsJuryPortalPage() {
                         <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
                           Pratonton Dokumen & Media
                         </span>
-                        <div className="flex items-center gap-2 overflow-x-auto">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                           {mediaImages.map((img, idx) => {
                             const isPdf = img.url.toLowerCase().endsWith('.pdf');
                             return (
@@ -1256,13 +1274,15 @@ export function EmsJuryPortalPage() {
                                     setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` });
                                   }
                                 }}
-                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-slate-400 dark:hover:border-slate-600 transition-all flex flex-col items-center justify-center"
-                                title={isPdf ? 'Buka fail PDF di tab baru' : 'Klik untuk besarkan imej'}
+                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-amber-500/50 dark:hover:border-amber-400/50 transition-all flex flex-col items-center justify-center shadow-xs"
+                                title={isPdf ? `Buka dokumen PDF: ${img.label}` : `Buka foto: ${img.label}`}
                               >
                                 {isPdf ? (
-                                  <div className="w-full h-full flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950/40 p-1">
-                                    <FileText className="w-5 h-5 text-rose-500 mb-0.5" />
-                                    <span className="text-[8px] font-bold text-rose-600 dark:text-rose-400">PDF</span>
+                                  <div className="w-full h-full flex flex-col items-center justify-center bg-rose-50/70 dark:bg-rose-950/30 p-1">
+                                    <FileText className="w-5 h-5 text-rose-500 group-hover:scale-110 transition-transform" />
+                                    <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 mt-1 uppercase tracking-wider">
+                                      PDF
+                                    </span>
                                   </div>
                                 ) : (
                                   <>
@@ -1274,11 +1294,11 @@ export function EmsJuryPortalPage() {
                                     <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                       <Eye className="w-4 h-4 text-white" />
                                     </div>
+                                    <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[8px] text-slate-300 text-center py-0.5 truncate px-0.5">
+                                      {img.label}
+                                    </span>
                                   </>
                                 )}
-                                <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[8px] text-slate-300 text-center py-0.5 truncate px-0.5">
-                                  {img.label}
-                                </span>
                               </button>
                             );
                           })}
@@ -1291,10 +1311,10 @@ export function EmsJuryPortalPage() {
                   <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800/80">
                     <button
                       onClick={() => openEvaluationModal(participant)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] ${
                         isScored
-                          ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                          : 'bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 shadow-sm font-bold active:scale-[0.98]'
+                          ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/90 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 font-bold'
+                          : 'bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 shadow-sm font-bold'
                       }`}
                     >
                       <Sliders className="w-4 h-4" />
@@ -1384,7 +1404,7 @@ export function EmsJuryPortalPage() {
             </div>
 
             {/* Continuous Touch Feed Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-32 sm:pb-32 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-6 space-y-6">
               {participantRubrics.length === 0 ? (
                 <div className="p-8 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 text-center text-slate-600 dark:text-slate-400 text-sm space-y-2">
                   <AlertCircle className="w-8 h-8 text-amber-500 dark:text-amber-400 mx-auto" />
@@ -1558,9 +1578,9 @@ export function EmsJuryPortalPage() {
               )}
             </div>
 
-            {/* Sticky Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-xl">
-              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Docked Modal Footer Action Bar */}
+            <div className="shrink-0 bg-slate-50/95 dark:bg-slate-950/95 border-t border-slate-200 dark:border-slate-800 p-3.5 sm:p-4">
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
                 {/* Progress & Live Weighted % Score */}
                 <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
                   <div className="space-y-1">

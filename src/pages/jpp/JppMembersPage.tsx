@@ -13,6 +13,7 @@ import type { JppPosition, JppUnit } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { SlideOverSheet } from '@/components/ui/SlideOverSheet';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
@@ -430,32 +431,16 @@ function AddMemberModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 ">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/[0.08] shadow-2xl rounded-[2rem] p-6 relative flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 dark:text-white/50 hover:text-slate-700 dark:hover:text-white transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10">
-            <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-          </div>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white">Tambah Ahli JPP</h3>
-        </div>
-        <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase tracking-widest font-bold mb-6 ml-11">
-          Cari pelajar dan tetapkan jawatan
-        </p>
-
+    <SlideOverSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title="Tambah Ahli JPP"
+      description="Cari pelajar dan tetapkan jawatan kepimpinan"
+    >
+      <div className="pt-2">
         {!selectedUser ? (
           <div className="space-y-4">
             <div className="relative">
@@ -528,9 +513,9 @@ function AddMemberModal({
                   }}
                   className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                 >
-                  <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
+                  <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
                   {Object.entries(positionLabels).map(([k, v]) => (
-                    <option key={k} value={k} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{v}</option>
+                    <option key={k} value={k} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{v}</option>
                   ))}
                 </select>
               </div>
@@ -543,9 +528,9 @@ function AddMemberModal({
                     onChange={e => setUnit(e.target.value)}
                     className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                   >
-                    <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
+                    <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
                     {Object.keys(unitLabels).map(u => (
-                      <option key={u} value={u} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
+                      <option key={u} value={u} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                     ))}
                   </select>
                 </div>
@@ -596,8 +581,8 @@ function AddMemberModal({
             </div>
           </div>
         )}
-      </motion.div>
-    </div>
+      </div>
+    </SlideOverSheet>
   );
 }
 
@@ -783,95 +768,98 @@ export function JppMembersPage() {
           transition={{ duration: 0.5 }}
           className="space-y-2"
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm"
-              style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}
-            >
-              <Users className="w-5 h-5" style={{ color: themeColor }} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Ahli JPP</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
-                {members.length} ahli didaftarkan
-              </p>
-            </div>
-          </div>
-          {canEdit && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 w-fit shadow-sm dark:shadow-none">
-                <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
-                  Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
-                </span>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-xs bg-emerald-500/10 border border-emerald-500/20"
+              >
+                <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <button
-                onClick={() => setShowResetModal(true)}
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all w-fit group shadow-sm dark:shadow-none"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">
-                  Reset Kohort
-                </span>
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all w-fit group shadow-sm dark:shadow-none"
-              >
-                <Plus className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                  Tambah Ahli
-                </span>
-              </button>
-              <Link 
-                to="/jpp/users"
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-sm dark:shadow-none transition-all w-fit group"
-              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/50 group-hover:text-slate-900 dark:group-hover:text-white/80 transition-colors">
-                  Pangkalan Data Pelajar
-                </span>
-              </Link>
-              <Link 
-                to="/jpp/settings"
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 shadow-sm dark:shadow-none transition-all w-fit group"
-              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
-                  Urus Struktur JPP
-                </span>
-              </Link>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Ahli JPP</h1>
+                  {canEdit && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
+                      Mod Edit
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+                  {members.length} ahli didaftarkan
+                </p>
+              </div>
             </div>
-          )}
+
+            {canEdit && (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Ahli</span>
+                </button>
+                <Link 
+                  to="/jpp/users"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-white/70 shadow-xs dark:shadow-none transition-all"
+                >
+                  <span>Pangkalan Data</span>
+                </Link>
+                <Link 
+                  to="/jpp/settings"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-white/70 shadow-xs dark:shadow-none transition-all"
+                >
+                  <span>Struktur JPP</span>
+                </Link>
+                <button
+                  onClick={() => setShowResetModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all"
+                  title="Reset Kohort"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Reset Kohort</span>
+                </button>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Top Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none flex flex-col justify-center relative overflow-hidden">
             <Crown className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">MT JPP</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{mtMembers.length}</p>
+            <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">{mtMembers.length}</p>
           </div>
-          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none flex flex-col justify-center relative overflow-hidden">
             <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
             <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Exco & Unit</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
+            <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
           </div>
-          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none flex flex-col justify-center relative overflow-hidden">
             <Shield className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
             <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1">Belum Set</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white">{unassigned.length}</p>
+            <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">{unassigned.length}</p>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/25" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Cari nama atau emel ahli..."
-            className="w-full pl-11 pr-4 py-4 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-transparent hover:border-slate-300 dark:hover:border-white/[0.07] focus:bg-white dark:focus:bg-white/[0.06] text-sm text-slate-900 dark:text-white/80 placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-slate-400 dark:focus:border-white/15 shadow-sm dark:shadow-none transition-all font-medium"
-          />
+        {/* Search & Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative w-full sm:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/30" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Cari nama atau emel ahli..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-emerald-500 dark:focus:border-emerald-500/50 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none transition-all font-medium"
+            />
+          </div>
+          <div className="text-right">
+            <span className="text-xs font-bold text-slate-500 dark:text-white/40 tabular-nums">
+              {filtered.length} daripada {members.length} ahli
+            </span>
+          </div>
         </div>
 
         {/* Content */}
@@ -880,10 +868,16 @@ export function JppMembersPage() {
             <Loader2 className="w-8 h-8 animate-spin text-slate-400 dark:text-white/30" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-white/[0.02] rounded-[2rem] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-white/[0.02] rounded-[2rem] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none">
             <UserCheck className="w-10 h-10 text-slate-300 dark:text-white/10 mb-4" />
-            <p className="text-sm font-black text-slate-600 dark:text-white/30 uppercase tracking-widest">Tiada ahli ditemui</p>
-            <p className="text-xs text-slate-400 dark:text-white/20 mt-2 font-medium">Sila cuba carian yang lain.</p>
+            <p className="text-sm font-black text-slate-700 dark:text-white/60 uppercase tracking-widest">
+              {members.length === 0 ? 'Tiada Ahli Didaftarkan' : 'Tiada Padanan Carian'}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-white/30 mt-2 font-medium max-w-sm">
+              {members.length === 0
+                ? 'Belum ada ahli dalam kohort ini. Klik "Tambah Ahli" untuk mula melantik jawatan.'
+                : `Tiada ahli sepadan dengan carian "${search}". Sila semak semula ejaan anda.`}
+            </p>
           </div>
         ) : (
           <div className="space-y-10">

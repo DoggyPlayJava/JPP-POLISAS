@@ -61,7 +61,7 @@ function BigStatCard({
           Sistem
         </span>
       </div>
-      <p className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none">{value}</p>
+      <p className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none font-mono tabular-nums">{value}</p>
       <p className="text-xs font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mt-1">{label}</p>
       {sub && <p className="text-[10px] text-[#556453]/70 dark:text-white/20 mt-1">{sub}</p>}
     </motion.div>
@@ -104,6 +104,15 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
     if (isOpen) fetchSubs();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
   const [revoking, setRevoking] = useState(false);
 
@@ -127,7 +136,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 " onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-xs" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -715,7 +724,7 @@ export function JppOverviewPage() {
                       Trend Pendaftaran Pelajar
                     </h2>
                     <p className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">
-                      {stats?.totalStudents ?? 0} <span className="text-xs text-[#556453] dark:text-[#A3B39F]/70 font-medium">jumlah pelajar</span>
+                      <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#556453] dark:text-[#A3B39F]/70 font-medium font-sans">jumlah pelajar</span>
                     </p>
                     <p className="text-[11px] text-[#556453]/80 dark:text-white/30 font-medium mt-0.5">
                       {chartData.reduce((acc, curr) => acc + curr.count, 0)} baru mendaftar dalam {timeRange === '7d' ? '7' : '30'} hari
@@ -822,8 +831,8 @@ export function JppOverviewPage() {
                   {/* Center Text for Donut */}
                   {!ticketStats.every(t => t.value === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none">
-                        {stats?.totalTickets ?? 0}
+                      <span className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none font-mono tabular-nums">
+                        {(stats?.totalTickets ?? 0).toLocaleString()}
                       </span>
                       <span className="text-[9px] uppercase tracking-widest font-black text-[#556453] dark:text-white/30 mt-1">
                         Tiket
