@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { JPP_MT_POSITIONS } from '@/types';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
+import { FloatingActionDock } from '@/components/ui/FloatingActionDock';
 
 // ── Logo URLs ──
 const LOGO_POLISAS_URL = '/polisas-logo.jpg';
@@ -113,7 +114,7 @@ export function JppTakwimPage() {
       const { error } = await supabase.from('system_settings').update({ value: JSON.stringify(colorInput) }).eq('key', 'jpp_theme_color');
       if (error) { await supabase.from('system_settings').insert({ key: 'jpp_theme_color', value: JSON.stringify(colorInput) }); }
       setThemeColor(colorInput);
-      toast.success('Warna rasmi JPP berjaya dikemaskini!');
+      toast.success('Warna rasmi JPP berjaya dikemaskini.');
     } catch { toast.error('Gagal menyimpan warna.'); }
     finally { setSavingColor(false); }
   };
@@ -156,7 +157,7 @@ export function JppTakwimPage() {
         ? await supabase.from('takwim_pusat').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editTarget.id)
         : await supabase.from('takwim_pusat').insert([payload]);
       if (res.error) throw res.error;
-      toast.success(editTarget ? 'Dikemaskini!' : 'Ditambah!');
+      toast.success(editTarget ? 'Entri berjaya dikemaskini.' : 'Entri berjaya ditambah.');
       if (rbac.userId) logAuditAction({ actionType: editTarget ? 'TAKWIM_UPDATED' : 'TAKWIM_ADDED', module: 'Takwim', entityId: editTarget?.id, description: `Takwim ${editTarget ? 'dikemaskini' : 'ditambah'}: ${form.tajuk} (${TAKWIM_JENIS[form.jenis]?.label || form.jenis})`, actorId: rbac.userId });
       setDialogOpen(false);
       refresh();
@@ -201,7 +202,7 @@ export function JppTakwimPage() {
     try {
       const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
       await sendNotificationToAkademikExco({ title: 'Takwim Dikemaskini', message: 'Takwim POLISAS Berpusat telah dikemaskini. Sila semak.', type: 'GENERAL', module: 'AKADEMIK', link: '/akademik/takwim' });
-      toast.success('Notifikasi dihantar!');
+      toast.success('Notifikasi berjaya dihantar.');
     } catch { toast.error('Gagal hantar notifikasi.'); }
   };
 
@@ -318,25 +319,34 @@ export function JppTakwimPage() {
           {stats.KESELURUHAN > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
         </div>
 
-        {/* ── Bulk Actions Bar ── */}
-        {bulkSelected.size > 0 && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-500/5 border border-rose-500/15">
-            <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">
-              {bulkSelected.size} dipilih
-            </span>
-            <Button onClick={() => setBulkConfirmOpen(true)} disabled={bulkDeleting} variant="outline" className="h-8 rounded-lg border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest">
-              {bulkDeleting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Trash2 className="w-3 h-3 mr-1" />}
-              Padam Semua
-            </Button>
-            <button onClick={() => setBulkSelected(new Set())} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60 ml-auto">
-              Nyahpilih
-            </button>
-          </div>
-        )}
+        {/* ── Floating Bulk Actions Dock ── */}
+        <FloatingActionDock
+          count={bulkSelected.size}
+          onClear={() => setBulkSelected(new Set())}
+          actions={[
+            {
+              label: bulkDeleting ? 'Memadam...' : 'Padam Pukal',
+              onClick: () => setBulkConfirmOpen(true),
+              icon: Trash2,
+              variant: 'destructive',
+              disabled: bulkDeleting,
+            },
+          ]}
+        />
 
         {/* ── Content ── */}
         {loading ? (
-          <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
+          <div className="rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden bg-white/50 dark:bg-white/[0.02] p-4 space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-100 dark:border-white/5 last:border-none animate-pulse">
+                <div className="w-4 h-4 rounded bg-slate-200 dark:bg-white/10" />
+                <div className="w-20 h-4 rounded-full bg-slate-200 dark:bg-white/10" />
+                <div className="flex-1 h-4 rounded bg-slate-200 dark:bg-white/10" />
+                <div className="w-28 h-4 rounded bg-slate-200 dark:bg-white/10" />
+                <div className="w-16 h-4 rounded bg-slate-200 dark:bg-white/10" />
+              </div>
+            ))}
+          </div>
         ) : viewMode === 'table' ? (
           <TakwimTable items={items} rbac={rbac} onEdit={openEdit} onDelete={(item) => setDeleteTargetItem(item)} bulkSelected={bulkSelected} onBulkToggle={setBulkSelected} />
         ) : (
