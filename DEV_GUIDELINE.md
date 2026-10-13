@@ -2472,11 +2472,12 @@ Bagi menjamin kebolehgunaannya pada peranti mudah alih (telefon pintar) di kawas
 
 ### 22.6 Laluan (Routes) & Fail Halaman EMS
 
-Semua 12 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halaman dedicated dalam `src/pages/ems/`:
+Semua 13 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halaman dedicated dalam `src/pages/ems/`:
 
 | Route | Fail Komponen | Mod Akses | Deskripsi |
 |---|---|---|---|
-| `/ems/dashboard` | `src/pages/ems/EmsDashboardPage.tsx` | Protected (AppLayout) | **Hub Acara EMS & Eksplorasi** — EMS Main Management Hub: papan pemuka utama penganjur acara untuk mengurus senarai acara, status kelulusan, jana kod juri, jana pautan QR pendaftaran, tie-breaker, Roda Cabutan Bertuah & pengurusan e-sijil. |
+| `/ems` | Redirect -> `/ems/dashboard` | Public / Protected | **EMS Index Route** — Auto-redirect pantas ke `/ems/dashboard` dalam `src/App.tsx`. |
+| `/ems/dashboard` | `src/pages/ems/EmsDashboardPage.tsx` | Protected (AppLayout) | **Hub Acara EMS & Eksplorasi** — EMS Main Management Hub: papan pemuka utama penganjur acara untuk mengurus senarai acara, status kelulusan, jana kod juri, jana pautan QR pendaftaran, tie-breaker, Roda Cabutan Bertuah & pengurusan e-sijil. Dioptimumkan dengan 5 modal berasingan (`modals/`). |
 | `/ems/event/new` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Borang & Builder Acara** — Event Form & Rubric Builder: pembina borang pendaftaran dinamik (custom fields) & pembina rubrik pemarkahan kriteria juri untuk acara baharu. |
 | `/ems/event/:id/edit` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Borang & Builder Acara Edit** — Event Form & Rubric Builder Edit: kemaskini borang dinamik & rubrik pemarkahan acara sedia ada. |
 | `/ems/approvals` | `src/pages/ems/EmsApprovalPage.tsx` | Protected (SUPER_ADMIN_JPP) | **Semakan HQ Super Admin** — Super Admin Approval Page: semakan & kelulusan penganjuran acara oleh Pentadbir Mutlak (`SUPER_ADMIN_JPP`). |
@@ -3490,6 +3491,45 @@ Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperAp
 3. **Polisi Sifar Raw Emoji (Zero Raw Emoji Standard):**
    - Penyingkiran 100% emoji mentah daripada antaramuka portal juri dan papan audit eksekutif.
    - Semua status indikator, lencana anomali, butang skala Likert, dan templat mesej jemputan pautan WhatsApp telah digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`CheckCircle2`, `XCircle`, `AlertTriangle`, `TrendingUp`, `TrendingDown`, `Layers`, `Filter`, `Sparkles`, `Share2`, dll.).
+
+---
+
+### 29.13.1 Naik Taraf Seni Bina EMS SuperApp: Anti-Slop, Modularisasi Modal & Ergonomik Sentuhan
+
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/ems/EmsDashboardPage.tsx`, `src/components/ems/modals/*`, `src/pages/ems/EmsPublicRegisterPage.tsx`, `src/pages/ems/EmsCertVerifyPage.tsx`, `src/App.tsx`
+
+Sistem Pengurusan Acara (EMS) telah melalui proses penambahbaikan menyeluruh merangkumi penstrukturan semula seni bina komponen, pembasmian reka bentuk generik AI (*anti-slop*), ergonomik sentuhan mudah alih (*mobile touch ergonomics*), serta penguatkuasaan piawaian tipografi dan sifar emoji mentah:
+
+1. **Laluan Indeks EMS Redirect (`/ems` ➔ `/ems/dashboard`):**
+   - Dikonfigurasi dalam `src/App.tsx` (`<Route path="/ems" element={<Navigate to="/ems/dashboard" replace />} />`).
+   - Memastikan pengguna atau krew yang menaip laluan pintas `/ems` terus dialihkan secara lancar ke papan pemuka pengurusan utama tanpa ralat skrin kosong atau 404.
+   - Penyingkiran butang penukar tema berulang (`<ThemeToggle />`) daripada sub-halaman pengurusan EMS yang bernaung di bawah shell `AppLayout` (`EmsApprovalPage.tsx`, `EmsCheckinSelectorPage.tsx`, `EmsEventFormPage.tsx`) untuk mengekalkan keharmonian antaramuka berpusat.
+
+2. **Seni Bina Modularisasi Modal EMS (`src/components/ems/modals/`):**
+   - Fail monolitik `EmsDashboardPage.tsx` yang sebelum ini padat melebihi 1,650 baris telah dipermudah dan dioptimumkan ke paras di bawah 800 baris dengan mengekstrak 5 modal pengurusan teras ke dalam direktori berdedikasi `src/components/ems/modals/`:
+     - **`EmsQrCodeModal.tsx`**: Menjana kod QR pendaftaran acara awam, muat turun imej PNG QR beresolusi tinggi, dan perkongsian pautan pantas ke papan keratan (*clipboard*).
+     - **`EmsJuryCodeModal.tsx`**: Pengurusan kod laluan juri luar/dalaman, penetapan kategori & reruai (booth), penjanaan pautan pantas WhatsApp, serta penukaran status aktif kod juri.
+     - **`EmsTieBreakerModal.tsx`**: Antaramuka penyelesaian skor seri (*tie-break*) antara pasukan bertanding mengikut kriteria rubrik penentu.
+     - **`EmsManualRegModal.tsx`**: Pendaftaran pantas peserta secara manual di kaunter oleh urus setia tanpa melalui wisard awam.
+     - **`EmsEventCertsModal.tsx`**: Penjanaan sijil digital PDF secara pukal untuk peserta, pemenang, dan panel juri beserta log status sijil.
+   - Papan pemuka kini dilengkapi pemuat kerangka (*skeleton loaders*) moden dengan denyutan (`animate-pulse`) semasa pemuatan awal acara bagi menjamin pengalaman visual yang lancar tanpa lonjakan reka letak (*layout shift*).
+
+3. **Sistem Visual & Palet Anti-Slop (Championship Amber & Slate Obsidian):**
+   - **Pembasmian Kecerunan Generik AI**: Menghapuskan 100% kecerunan ungu-indigo generik AI (`from-purple-600 to-indigo-600`, `selection:bg-purple-500`) yang sering mencemarkan reka bentuk templat automatik.
+   - **Palet Kejuaraan Emas Berwibawa**: Mengaplikasikan palet tema berprestij **Championship Amber** (`amber-500`, `amber-600`) berlatarbelakangkan Obsidian Slate (`slate-950`, `slate-900`) untuk mencerminkan taraf penganjuran sukan, akademik, dan inovasi yang eksklusif dan berwibawa.
+
+4. **Ergonomik Sentuhan Mudah Alih (Mobile Touch Ergonomics):**
+   - **Kapsul Tindakan Bawah Lekat (`fixed bottom / sticky bottom`):** Pada wisard pendaftaran awam (`EmsPublicRegisterPage.tsx`), butang navigasi langkah (*Previous / Next / Hantar Pendaftaran*) diletakkan pada kapsul terapung lekat di bahagian bawah skrin mudah alih berserta kesan kabur kaca lembut (`backdrop-blur-md bg-slate-900/90`).
+   - Memastikan sasaran sentuhan (*touch target*) sentiasa berada dalam jangkauan ibu jari (*thumb zone*) tanpa memerlukan pengguna menatal berulang kali ke bawah borang dinamik yang panjang.
+   - Butang interaktif dilengkapi mikro-animasi maklum balas haptik maya seperti `active:scale-[0.98]` dan `touch-manipulation`.
+
+5. **Piawaian Tipografi Data & Pengimbangan Teks:**
+   - **Nombor Monospatial (`tabular-nums font-mono`):** Dikuatkuasakan secara ketat pada semua paparan skor langsung, nombor siri sijil (cth. `CERT-EMS-2026-XXXXX`), nombor matrik, dan kiraan masa untuk mengelakkan getaran jajaran mendatar (*horizontal layout jitter*) semasa kemas kini nilai dinamik.
+   - **Pengimbangan Tajuk & Kad (`[text-wrap:balance]`):** Diterapkan pada tajuk acara, sepanduk pengumuman, dan kad pasukan bagi menghapuskan masalah perkataan tergantung (*widow words*) pada pelbagai lebar skrin responsif.
+
+6. **Penguatkuasaan 100% Sifar Emoji Mentah (Zero Raw Emojis Standard):**
+   - Meliputi kesemua 11 paparan teras dan modal EMS (`EmsAudienceScanPage.tsx`, `EmsCheckinPage.tsx`, `EmsDashboardPage.tsx`, `EmsEventFormPage.tsx`, `EmsLeaderboardPage.tsx`, `EmsPublicRegisterPage.tsx`, `EmsLuckyDrawModal.tsx`, dan kesemua 5 modal dalam `src/components/ems/modals/`).
+   - Semua simbol mentah seperti piala, bintang, jam, amaran, dan medal digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`Trophy`, `Award`, `Sparkles`, `CheckCircle2`, `Clock`, `QrCode`, `AlertTriangle`, `Scale`, dsb.) bagi mengekalkan ketegasan reka bentuk bertaraf korporat.
 
 ---
 
