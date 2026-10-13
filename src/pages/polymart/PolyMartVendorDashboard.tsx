@@ -593,7 +593,7 @@ export function PolyMartVendorDashboard() {
               <ShoppingBag className="w-5 h-5 text-amber-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-mono font-black text-foreground tracking-tight leading-none">
+              <p className="text-lg sm:text-xl font-mono tabular-nums font-black text-foreground tracking-tight leading-none">
                 {stats.todayCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
@@ -622,7 +622,7 @@ export function PolyMartVendorDashboard() {
               <Clock className="w-5 h-5 text-orange-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-mono font-black text-foreground tracking-tight leading-none">
+              <p className="text-lg sm:text-xl font-mono tabular-nums font-black text-foreground tracking-tight leading-none">
                 {stats.pendingCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
@@ -651,7 +651,7 @@ export function PolyMartVendorDashboard() {
               <Package className="w-5 h-5 text-indigo-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-mono font-black text-foreground tracking-tight leading-none">
+              <p className="text-lg sm:text-xl font-mono tabular-nums font-black text-foreground tracking-tight leading-none">
                 {stats.activeCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
@@ -680,7 +680,7 @@ export function PolyMartVendorDashboard() {
               <TrendingUp className="w-5 h-5 text-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-mono font-black text-foreground tracking-tight leading-none">
+              <p className="text-lg sm:text-xl font-mono tabular-nums font-black text-foreground tracking-tight leading-none">
                 RM {stats.revenue.toFixed(2)}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">

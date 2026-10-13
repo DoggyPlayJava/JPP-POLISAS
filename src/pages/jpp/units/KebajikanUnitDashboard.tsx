@@ -41,6 +41,7 @@ const STATUS_META: Record<KebajikanTicketStatus, { color: string; bg: string }> 
   RESOLVED: { color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
   CLOSED: { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
   CANCELLED: { color: '#64748b', bg: 'rgba(100,116,139,0.08)' },
+  PENDING_EXTERNAL: { color: '#a855f7', bg: 'rgba(168,85,247,0.12)' },
 };
 
 const PRIORITY_META: Record<string, { color: string; label: string }> = {
@@ -63,6 +64,7 @@ const TABS: { id: KbjTab; label: string }[] = [
 ];
 
 function SubTabBtn({ id, label, active, badge, onClick }: {
+  key?: React.Key;
   id: string; label: string; active: boolean; badge?: number; onClick: () => void;
 }) {
   return (
@@ -118,7 +120,7 @@ function StatCard({ label, value, icon: Icon, color, sub, delay = 0, onClick }: 
 }
 
 // ─── Ticket row ───────────────────────────────────────────────────────────────
-function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () => void }) {
+function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () => void; key?: React.Key }) {
   const sm = STATUS_META[ticket.status] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
   const pm = PRIORITY_META[ticket.priority] ?? PRIORITY_META.NORMAL;
   return (

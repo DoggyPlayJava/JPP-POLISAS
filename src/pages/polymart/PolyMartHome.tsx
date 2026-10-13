@@ -111,7 +111,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         )}
         {/* Flash sale badge */}
         {isProductOnSale(product) && (
-          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 animate-pulse z-10">
+          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 animate-pulse z-10 font-mono tabular-nums">
             <Zap className="w-2.5 h-2.5 fill-current" />
             <span>-{Math.round((1 - product.sale_price! / product.price) * 100)}%</span>
           </div>
@@ -143,7 +143,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         </p>
 
         {/* Product name */}
-        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem]">
+        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem] [text-wrap:balance]">
           {product.name}
         </h3>
 
@@ -154,17 +154,17 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
             const effPrice = getProductEffectivePrice(product);
             return isOnSale ? (
               <div className="flex items-baseline gap-1">
-                <span className="text-xs sm:text-sm font-black text-rose-500">RM {effPrice.toFixed(2)}</span>
-                <span className="text-[10px] text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
+                <span className="text-xs sm:text-sm font-black text-rose-500 font-mono tabular-nums">RM {effPrice.toFixed(2)}</span>
+                <span className="text-[10px] text-muted-foreground/50 line-through font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
               </div>
             ) : (
-              <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400">RM {product.price.toFixed(2)}</span>
+              <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
             );
           })()}
           {avgRating && avgRating > 0 ? (
             <div className="flex items-center gap-0.5 shrink-0">
               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="text-[10px] font-bold text-muted-foreground">{avgRating.toFixed(1)}</span>
+              <span className="text-[10px] font-bold text-muted-foreground font-mono tabular-nums">{avgRating.toFixed(1)}</span>
             </div>
           ) : null}
         </div>
@@ -460,7 +460,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
                   <s.icon className="w-3 h-3" />
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xs sm:text-sm font-black text-white leading-none">{s.value}</span>
+                  <span className="text-xs sm:text-sm font-black text-white leading-none font-mono tabular-nums">{s.value}</span>
                   <span className="text-[8px] sm:text-[9px] text-white/50 font-medium">{s.label}</span>
                 </div>
               </div>
@@ -760,10 +760,47 @@ export function PolyMartHome() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-          style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
-        <p className="text-sm text-muted-foreground font-medium">Memuatkan PolyMart...</p>
+      <div className="space-y-5 animate-pulse">
+        {/* Hero banner skeleton */}
+        <div className="h-36 sm:h-44 w-full rounded-3xl bg-muted/40 border border-border/40" />
+
+        {/* Vendors bar skeleton */}
+        <div className="space-y-2">
+          <div className="h-4 w-28 bg-muted/50 rounded-md" />
+          <div className="flex gap-3 overflow-hidden pb-1">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="flex flex-col items-center gap-2 shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-muted/40 border border-border/40" />
+                <div className="w-12 h-2.5 rounded bg-muted/30" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Product grid skeleton */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-32 bg-muted/50 rounded-md" />
+            <div className="h-7 w-20 bg-muted/40 rounded-xl" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="rounded-2xl bg-card border border-border/50 overflow-hidden flex flex-col">
+                <div className="aspect-square bg-muted/30" />
+                <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="h-2.5 w-16 bg-muted/40 rounded" />
+                    <div className="h-3.5 w-full bg-muted/50 rounded" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="h-4 w-14 bg-muted/60 rounded" />
+                    <div className="h-3 w-8 bg-muted/40 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

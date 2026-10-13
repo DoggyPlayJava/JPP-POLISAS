@@ -139,7 +139,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               onClick={() => setIsActionsOpen(false)}
-              className="fixed inset-0 bg-black/75 z-[110]"
+              className={cn("fixed inset-0 bg-black/75 z-[110]", !forceShowDesktop && "md:hidden")}
             />
             <motion.div
               drag="y"
@@ -156,7 +156,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               animate={{ 
                 opacity: 1, 
                 y: 0, 
-                scale: 1,
+                scale: 1, 
                 transition: { type: "spring", stiffness: 350, damping: 22 }
               }}
               exit={{ 
@@ -165,7 +165,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 scale: 0.85,
                 transition: { duration: 0.2 }
               }}
-              className="quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl"
+              className={cn("quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl", !forceShowDesktop && "md:hidden")}
             >
               {/* Drag Handle Indicator */}
               <div
@@ -221,7 +221,8 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
         onPointerMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onPointerUp={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         className={cn(
-          "tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+          "tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer",
+          !forceShowDesktop && "md:hidden"
         )}
       >
         <div className="bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-white/10 shadow-lg rounded-full px-2 py-2 flex items-center justify-between relative">

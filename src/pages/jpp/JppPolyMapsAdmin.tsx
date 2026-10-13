@@ -24,6 +24,7 @@ import {
   isLocation360Active
 } from '@/lib/polymaps360Data';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -326,27 +327,47 @@ export function JppPolyMapsAdmin() {
   const [preview360Url, setPreview360Url] = useState<string | null>(null);
   const [preview360Title, setPreview360Title] = useState<string>('');
   const [toggleRevision, setToggleRevision] = useState<number>(0);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    variant?: 'danger' | 'warning' | 'default';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
-  const rejectReport = async (reportId: string) => {
-    if (!window.confirm('Adakah anda pasti mahu menolak laporan ini?')) return;
-    
-    setIsProcessingReport(prev => ({ ...prev, [reportId]: true }));
-    try {
-      const { error } = await supabase
-        .from('imaps_missing_reports')
-        .update({ status: 'rejected' })
-        .eq('id', reportId);
+  const rejectReport = (reportId: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Tolak Laporan',
+      description: 'Adakah anda pasti mahu menolak laporan ini?',
+      confirmLabel: 'Tolak Laporan',
+      variant: 'danger',
+      onConfirm: async () => {
+        setIsProcessingReport(prev => ({ ...prev, [reportId]: true }));
+        try {
+          const { error } = await supabase
+            .from('imaps_missing_reports')
+            .update({ status: 'rejected' })
+            .eq('id', reportId);
 
-      if (error) throw error;
+          if (error) throw error;
 
-      toast.success('Laporan berjaya ditolak.');
-      setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'rejected' } : r));
-    } catch (err: any) {
-      console.error('Error rejecting report:', err);
-      toast.error('Gagal menolak laporan.');
-    } finally {
-      setIsProcessingReport(prev => ({ ...prev, [reportId]: false }));
-    }
+          toast.success('Laporan berjaya ditolak.');
+          setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'rejected' } : r));
+        } catch (err: any) {
+          console.error('Error rejecting report:', err);
+          toast.error('Gagal menolak laporan.');
+        } finally {
+          setIsProcessingReport(prev => ({ ...prev, [reportId]: false }));
+        }
+      },
+    });
   };
 
   const approveReport = (report: MissingReport) => {
@@ -543,28 +564,36 @@ export function JppPolyMapsAdmin() {
     }
   };
 
-  const deleteWalkway = async (id: string) => {
-    if (!window.confirm('Adakah anda pasti mahu memadam laluan ini?')) return;
-    try {
-      const { error } = await supabase.from('imaps_walkways').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Laluan berjaya dipadam.');
-      
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) {
-        logAuditAction({
-          actionType: 'WALKWAY_DELETED',
-          module: 'PolyMaps',
-          entityId: id,
-          description: `Laluan dipadam`,
-          actorId: userId
-        });
-      }
+  const deleteWalkway = (id: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Laluan',
+      description: 'Adakah anda pasti mahu memadam laluan ini? Tindakan ini tidak boleh diundur.',
+      confirmLabel: 'Padam Laluan',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('imaps_walkways').delete().eq('id', id);
+          if (error) throw error;
+          toast.success('Laluan berjaya dipadam.');
+          
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          if (userId) {
+            logAuditAction({
+              actionType: 'WALKWAY_DELETED',
+              module: 'PolyMaps',
+              entityId: id,
+              description: `Laluan dipadam`,
+              actorId: userId
+            });
+          }
 
-      fetchData();
-    } catch (err: any) {
-      toast.error('Gagal memadam laluan');
-    }
+          fetchData();
+        } catch (err: any) {
+          toast.error('Gagal memadam laluan');
+        }
+      },
+    });
   };
 
   const toggleBlockWalkway = async (id: string, currentStatus: boolean) => {
@@ -656,18 +685,26 @@ export function JppPolyMapsAdmin() {
     }
   };
 
-  const deleteBuilding = async (id: string) => {
-    if (!window.confirm('Padam bangunan ini? Semua lokasi di dalamnya juga akan terpadam.')) return;
-    try {
-      const { error } = await supabase.from('imaps_buildings').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Bangunan dipadam');
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: 'BUILDING_DELETED', module: 'PolyMaps', entityId: id, description: `Bangunan dipadam`, actorId: userId });
-      fetchData();
-    } catch (error: any) {
-      toast.error('Gagal memadam bangunan');
-    }
+  const deleteBuilding = (id: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Bangunan',
+      description: 'Padam bangunan ini? Semua lokasi di dalamnya juga akan terpadam.',
+      confirmLabel: 'Padam Bangunan',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('imaps_buildings').delete().eq('id', id);
+          if (error) throw error;
+          toast.success('Bangunan dipadam');
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          if (userId) logAuditAction({ actionType: 'BUILDING_DELETED', module: 'PolyMaps', entityId: id, description: `Bangunan dipadam`, actorId: userId });
+          fetchData();
+        } catch (error: any) {
+          toast.error('Gagal memadam bangunan');
+        }
+      },
+    });
   };
 
   // --- Location Functions ---
@@ -759,18 +796,26 @@ export function JppPolyMapsAdmin() {
     }
   };
 
-  const deleteLocation = async (id: string) => {
-    if (!window.confirm('Padam lokasi ini?')) return;
-    try {
-      const { error } = await supabase.from('imaps_locations').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Lokasi dipadam');
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: 'LOCATION_DELETED', module: 'PolyMaps', entityId: id, description: 'Lokasi dipadam', actorId: userId });
-      fetchData();
-    } catch (error: any) {
-      toast.error('Gagal memadam lokasi');
-    }
+  const deleteLocation = (id: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Lokasi',
+      description: 'Adakah anda pasti mahu memadam lokasi ini?',
+      confirmLabel: 'Padam Lokasi',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('imaps_locations').delete().eq('id', id);
+          if (error) throw error;
+          toast.success('Lokasi dipadam');
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          if (userId) logAuditAction({ actionType: 'LOCATION_DELETED', module: 'PolyMaps', entityId: id, description: 'Lokasi dipadam', actorId: userId });
+          fetchData();
+        } catch (error: any) {
+          toast.error('Gagal memadam lokasi');
+        }
+      },
+    });
   };
 
   const filteredBuildings = buildings.filter(b => {
@@ -2263,6 +2308,16 @@ export function JppPolyMapsAdmin() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant={confirmConfig.variant}
+      />
     </div>
   );
 }

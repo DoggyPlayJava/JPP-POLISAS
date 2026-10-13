@@ -35,6 +35,8 @@ import {
   IdCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
@@ -147,71 +149,93 @@ export default function MakmpAdminDashboardPage() {
   // Buka semula semakan juri (pentadbir sahaja)
   const [unlockingAwardId, setUnlockingAwardId] = useState<string | null>(null);
   const [reviewLog, setReviewLog] = useState<any[]>([]);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    variant?: 'danger' | 'warning' | 'default';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
-  const handleUnlockAward = async (awardApplicationId: string, awardName?: string) => {
-    if (!confirm(`Buka semula semakan untuk anugerah "${awardName || 'ini'}"?\n\nIni akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`)) {
-      return;
-    }
-
-    setUnlockingAwardId(awardApplicationId);
-    try {
-      const res = await unlockJuryAwardReview(awardApplicationId);
-      if (!res.success) {
-        alert('Gagal membuka semula: ' + res.message);
-        return;
-      }
-      alert('Permohonan anugerah telah dibuka semula untuk semakan.');
-      await loadAllData();
-      // Kemaskini activeSub supaya UI reflect status baru
-      setActiveSub((prev) =>
-        prev
-          ? {
-              ...prev,
-              awards: prev.awards?.map((a) =>
-                a.id === awardApplicationId
-                  ? { ...a, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus, total_merit_granted: 0 }
-                  : a
-              ),
-            }
-          : prev
-      );
-    } catch (err: any) {
-      alert('Ralat: ' + err.message);
-    } finally {
-      setUnlockingAwardId(null);
-    }
+  const handleUnlockAward = (awardApplicationId: string, awardName?: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Buka Semula Semakan Juri',
+      description: `Buka semula semakan untuk anugerah "${awardName || 'ini'}"? Ini akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`,
+      confirmLabel: 'Buka Semula',
+      variant: 'warning',
+      onConfirm: async () => {
+        setUnlockingAwardId(awardApplicationId);
+        try {
+          const res = await unlockJuryAwardReview(awardApplicationId);
+          if (!res.success) {
+            toast.error('Gagal membuka semula: ' + res.message);
+            return;
+          }
+          toast.success('Permohonan anugerah telah dibuka semula untuk semakan.');
+          await loadAllData();
+          setActiveSub((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  awards: prev.awards?.map((a) =>
+                    a.id === awardApplicationId
+                      ? { ...a, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus, total_merit_granted: 0 }
+                      : a
+                  ),
+                }
+              : prev
+          );
+        } catch (err: any) {
+          toast.error('Ralat: ' + err.message);
+        } finally {
+          setUnlockingAwardId(null);
+        }
+      },
+    });
   };
 
   // Buka semula SEMUA award terkunci dalam satu submission (untuk butang dalam senarai utama)
-  const handleUnlockSubmission = async (sub: MakmpSubmission) => {
+  const handleUnlockSubmission = (sub: MakmpSubmission) => {
     const lockedAwards = (sub.awards || []).filter(
       (a) => a.status === 'DISAHKAN' || a.status === 'DITOLAK'
     );
     if (lockedAwards.length === 0) return;
 
     const names = lockedAwards.map((a) => a.award?.name || 'anugerah').join(', ');
-    if (!confirm(`Buka semula ${lockedAwards.length} anugerah terkunci untuk ${sub.full_name}?\n\nAnugerah: ${names}\n\nIni akan reset keputusan juri dan menolak semula merit (jika disahkan). Juri perlu menyemak semula.`)) {
-      return;
-    }
-
-    setUnlockingAwardId('__submission__' + sub.id);
-    try {
-      let failed = 0;
-      for (const aw of lockedAwards) {
-        const res = await unlockJuryAwardReview(aw.id);
-        if (!res.success) failed++;
-      }
-      if (failed > 0) {
-        alert(`Selesai dengan ${failed} kegagalan. Sila semak semula.`);
-      } else {
-        alert(`${lockedAwards.length} anugerah telah dibuka semula untuk semakan.`);
-      }
-      await loadAllData();
-    } catch (err: any) {
-      alert('Ralat: ' + err.message);
-    } finally {
-      setUnlockingAwardId(null);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Buka Semula Semua Anugerah Terkunci',
+      description: `Buka semula ${lockedAwards.length} anugerah terkunci untuk ${sub.full_name} (${names})? Ini akan reset keputusan juri dan menolak semula merit (jika disahkan).`,
+      confirmLabel: 'Buka Semula',
+      variant: 'warning',
+      onConfirm: async () => {
+        setUnlockingAwardId('__submission__' + sub.id);
+        try {
+          let failed = 0;
+          for (const aw of lockedAwards) {
+            const res = await unlockJuryAwardReview(aw.id);
+            if (!res.success) failed++;
+          }
+          if (failed > 0) {
+            toast.error(`Selesai dengan ${failed} kegagalan. Sila semak semula.`);
+          } else {
+            toast.success(`${lockedAwards.length} anugerah telah dibuka semula untuk semakan.`);
+          }
+          await loadAllData();
+        } catch (err: any) {
+          toast.error('Ralat: ' + err.message);
+        } finally {
+          setUnlockingAwardId(null);
+        }
+      },
+    });
   };
 
   // Buka perincian submission + load log buka semula untuk semua award
@@ -489,14 +513,14 @@ export default function MakmpAdminDashboardPage() {
     if (!juryName.trim() || !selectedEditionId) return;
 
     if (!user) {
-      alert(
+      toast.error(
         'Akses Ditolak (RLS): Anda belum log masuk ke portal.\n\nPangkalan data memerlukan sesi log masuk Pentadbir JPP yang sah untuk menjana atau mengemas kini kod PIN juri.\n\nSila log masuk di /login terlebih dahulu.'
       );
       return;
     }
 
     if (!isJppOrAdmin) {
-      alert(
+      toast.error(
         `Akses Ditolak (RLS): Akaun anda (${profile?.email || user.email}) mempunyai peranan "${profile?.role || 'Pelajar'}".\n\nUntuk menjana atau mengemas kini PIN juri, akaun anda mestilah mempunyai peranan 'JPP' atau 'SUPER_ADMIN_JPP' dalam pangkalan data.`
       );
       return;
@@ -517,7 +541,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal mengemas kini PIN: ' + error.message);
+        toast.error('Gagal mengemas kini PIN: ' + error.message);
         return;
       }
 
@@ -542,7 +566,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal menjana PIN: ' + error.message);
+        toast.error('Gagal menjana PIN: ' + error.message);
         return;
       }
 
@@ -551,23 +575,28 @@ export default function MakmpAdminDashboardPage() {
     }
   };
 
-  const handleDeletePin = async (pin: MakmpJuryPin) => {
-    const confirmDelete = window.confirm(
-      `Adakah anda pasti mahu memadam PIN juri "${pin.jury_name}" (${pin.pin_code})?`
-    );
-    if (!confirmDelete) return;
+  const handleDeletePin = (pin: MakmpJuryPin) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam PIN Juri',
+      description: `Adakah anda pasti mahu memadam PIN juri "${pin.jury_name}" (${pin.pin_code})?`,
+      confirmLabel: 'Padam PIN',
+      variant: 'danger',
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('makmp_jury_pins')
+          .delete()
+          .eq('id', pin.id);
 
-    const { error } = await supabase
-      .from('makmp_jury_pins')
-      .delete()
-      .eq('id', pin.id);
+        if (error) {
+          toast.error('Gagal memadam PIN: ' + error.message);
+          return;
+        }
 
-    if (error) {
-      alert('Gagal memadam PIN: ' + error.message);
-      return;
-    }
-
-    setPins((prev) => prev.filter((p) => p.id !== pin.id));
+        toast.success(`PIN untuk ${pin.jury_name} berjaya dipadam.`);
+        setPins((prev) => prev.filter((p) => p.id !== pin.id));
+      },
+    });
   };
 
   // Toggle Status Aktif PIN Juri
@@ -641,7 +670,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal mengemas kini kategori: ' + error.message);
+        toast.error('Gagal mengemas kini kategori: ' + error.message);
         return;
       }
       setCategories((prev) => prev.map((c) => (c.id === editingCategory.id ? data : c)));
@@ -655,7 +684,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal menambah kategori: ' + error.message);
+        toast.error('Gagal menambah kategori: ' + error.message);
         return;
       }
       setCategories((prev) => [...prev, data]);
@@ -663,29 +692,32 @@ export default function MakmpAdminDashboardPage() {
     }
   };
 
-  const handleDeleteCategory = async (cat: MakmpCategory) => {
-    const confirmDelete = window.confirm(
-      `Adakah anda pasti mahu memadam kategori asas "${cat.name}"?\n\nTindakan ini tidak boleh diundur.`
-    );
-    if (!confirmDelete) return;
+  const handleDeleteCategory = (cat: MakmpCategory) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Kategori Asas',
+      description: `Adakah anda pasti mahu memadam kategori asas "${cat.name}"? Tindakan ini tidak boleh diundur.`,
+      confirmLabel: 'Padam Kategori',
+      variant: 'danger',
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('makmp_categories')
+          .delete()
+          .eq('id', cat.id);
 
-    const { error } = await supabase
-      .from('makmp_categories')
-      .delete()
-      .eq('id', cat.id);
+        if (error) {
+          if (error.code === '23503' || error.message?.includes('foreign key')) {
+            toast.error(`Tidak dapat memadam "${cat.name}" kerana terdapat rekod permohonan yang merujuk kepada kategori ini.`);
+          } else {
+            toast.error('Gagal memadam kategori: ' + error.message);
+          }
+          return;
+        }
 
-    if (error) {
-      if (error.code === '23503' || error.message?.includes('foreign key')) {
-        alert(
-          `Tidak dapat memadam "${cat.name}" kerana terdapat rekod permohonan yang merujuk kepada kategori ini.`
-        );
-      } else {
-        alert('Gagal memadam kategori: ' + error.message);
-      }
-      return;
-    }
-
-    setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+        toast.success(`Kategori "${cat.name}" telah dipadam.`);
+        setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+      },
+    });
   };
 
   const handleToggleCategoryActive = async (cat: MakmpCategory) => {
@@ -696,7 +728,7 @@ export default function MakmpAdminDashboardPage() {
       .eq('id', cat.id);
 
     if (error) {
-      alert('Gagal menukar status: ' + error.message);
+      toast.error('Gagal menukar status: ' + error.message);
       return;
     }
     setCategories((prev) => prev.map((c) => (c.id === cat.id ? { ...c, is_active: newStatus } : c)));
@@ -736,15 +768,15 @@ export default function MakmpAdminDashboardPage() {
 
   const handleSaveEdition = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editionTitle.trim()) { alert('Sila nyatakan tajuk edisi.'); return; }
-    if (!editionYear) { alert('Sila nyatakan tahun edisi.'); return; }
+    if (!editionTitle.trim()) { toast.error('Sila nyatakan tajuk edisi.'); return; }
+    if (!editionYear) { toast.error('Sila nyatakan tahun edisi.'); return; }
     setSavingEdition(true);
 
     // Convert local datetime -> ISO (UTC). Empty deadline => null.
     let deadlineIso: string | null = null;
     if (editionDeadline) {
       const d = new Date(editionDeadline);
-      if (isNaN(d.getTime())) { alert('Format tarikh tutup tidak sah.'); setSavingEdition(false); return; }
+      if (isNaN(d.getTime())) { toast.error('Format tarikh tutup tidak sah.'); setSavingEdition(false); return; }
       deadlineIso = d.toISOString();
     }
 
@@ -763,7 +795,7 @@ export default function MakmpAdminDashboardPage() {
         .eq('id', editingEdition.id)
         .select()
         .single();
-      if (error) { alert('Gagal mengemas kini edisi: ' + error.message); setSavingEdition(false); return; }
+      if (error) { toast.error('Gagal mengemas kini edisi: ' + error.message); setSavingEdition(false); return; }
       setEditions((prev) => prev.map((e) => (e.id === editingEdition.id ? data : e)));
     } else {
       const { data, error } = await supabase
@@ -771,7 +803,7 @@ export default function MakmpAdminDashboardPage() {
         .insert([payload])
         .select()
         .single();
-      if (error) { alert('Gagal menambah edisi: ' + error.message); setSavingEdition(false); return; }
+      if (error) { toast.error('Gagal menambah edisi: ' + error.message); setSavingEdition(false); return; }
       setEditions((prev) => [...prev, data]);
     }
 
@@ -786,29 +818,34 @@ export default function MakmpAdminDashboardPage() {
       .from('makmp_editions')
       .update({ is_active: newStatus })
       .eq('id', ed.id);
-    if (error) { alert('Gagal menukar status sesi: ' + error.message); return; }
+    if (error) { toast.error('Gagal menukar status sesi: ' + error.message); return; }
     setEditions((prev) => prev.map((e) => (e.id === ed.id ? { ...e, is_active: newStatus } : e)));
   };
 
-  const handleDeleteEdition = async (ed: MakmpEdition) => {
-    const confirmDelete = window.confirm(
-      `Adakah anda pasti mahu memadam edisi "${ed.title}" (${ed.year})?\n\n` +
-      `Ini akan memadam edisi sahaja — kategori, anugerah & permohonan di bawahnya perlu dipadam secara berasingan. Tindakan ini tidak boleh diundur.`
-    );
-    if (!confirmDelete) return;
-    const { error } = await supabase
-      .from('makmp_editions')
-      .delete()
-      .eq('id', ed.id);
-    if (error) {
-      if (error.code === '23503' || error.message?.includes('foreign key')) {
-        alert('Tidak dapat memadam edisi ini kerana masih ada kategori / anugerah / permohonan yang merujuk kepadanya. Sila nyahaktifkan (tutup sesi) sebaliknya.');
-      } else {
-        alert('Gagal memadam edisi: ' + error.message);
-      }
-      return;
-    }
-    setEditions((prev) => prev.filter((e) => e.id !== ed.id));
+  const handleDeleteEdition = (ed: MakmpEdition) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Edisi MAKMP',
+      description: `Adakah anda pasti mahu memadam edisi "${ed.title}" (${ed.year})? Tindakan ini tidak boleh diundur.`,
+      confirmLabel: 'Padam Edisi',
+      variant: 'danger',
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('makmp_editions')
+          .delete()
+          .eq('id', ed.id);
+        if (error) {
+          if (error.code === '23503' || error.message?.includes('foreign key')) {
+            toast.error('Tidak dapat memadam edisi ini kerana masih ada rekod yang merujuk kepadanya. Nyahaktifkan sesi sebaliknya.');
+          } else {
+            toast.error('Gagal memadam edisi: ' + error.message);
+          }
+          return;
+        }
+        toast.success(`Edisi "${ed.title}" telah dipadam.`);
+        setEditions((prev) => prev.filter((e) => e.id !== ed.id));
+      },
+    });
   };
 
   // ============================================================================
@@ -859,7 +896,7 @@ export default function MakmpAdminDashboardPage() {
 
     const group = awardCategoryGroup === 'CUSTOM' ? customCategoryGroup.trim() : awardCategoryGroup;
     if (!group) {
-      alert('Sila tentukan Kumpulan Kategori Anugerah.');
+      toast.error('Sila tentukan Kumpulan Kategori Anugerah.');
       return;
     }
 
@@ -887,7 +924,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal mengemas kini anugerah: ' + error.message);
+        toast.error('Gagal mengemas kini anugerah: ' + error.message);
         return;
       }
       setAwards((prev) => prev.map((a) => (a.id === editingAward.id ? data : a)));
@@ -901,7 +938,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        alert('Gagal menambah anugerah: ' + error.message);
+        toast.error('Gagal menambah anugerah: ' + error.message);
         return;
       }
       setAwards((prev) => [...prev, data]);
@@ -909,29 +946,32 @@ export default function MakmpAdminDashboardPage() {
     }
   };
 
-  const handleDeleteAward = async (aw: MakmpAwardDefinition) => {
-    const confirmDelete = window.confirm(
-      `Adakah anda pasti mahu memadam anugerah "${aw.name}"?\n\nTindakan ini tidak boleh diundur.`
-    );
-    if (!confirmDelete) return;
+  const handleDeleteAward = (aw: MakmpAwardDefinition) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Definisi Anugerah',
+      description: `Adakah anda pasti mahu memadam anugerah "${aw.name}"? Tindakan ini tidak boleh diundur.`,
+      confirmLabel: 'Padam Anugerah',
+      variant: 'danger',
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('makmp_award_definitions')
+          .delete()
+          .eq('id', aw.id);
 
-    const { error } = await supabase
-      .from('makmp_award_definitions')
-      .delete()
-      .eq('id', aw.id);
+        if (error) {
+          if (error.code === '23503' || error.message?.includes('foreign key')) {
+            toast.error(`Tidak dapat memadam "${aw.name}" kerana anugerah ini sudah mempunyai rekod permohonan. Nyahaktifkan sebaliknya.`);
+          } else {
+            toast.error('Gagal memadam anugerah: ' + error.message);
+          }
+          return;
+        }
 
-    if (error) {
-      if (error.code === '23503' || error.message?.includes('foreign key')) {
-        alert(
-          `Tidak dapat memadam "${aw.name}" kerana anugerah ini sudah mempunyai rekod permohonan pelajar.\n\nSila gunakan fungsi Nyahaktif untuk menutup permohonan anugerah ini.`
-        );
-      } else {
-        alert('Gagal memadam anugerah: ' + error.message);
-      }
-      return;
-    }
-
-    setAwards((prev) => prev.filter((a) => a.id !== aw.id));
+        toast.success(`Anugerah "${aw.name}" telah dipadam.`);
+        setAwards((prev) => prev.filter((a) => a.id !== aw.id));
+      },
+    });
   };
 
   const handleToggleAwardActive = async (aw: MakmpAwardDefinition) => {
@@ -942,7 +982,7 @@ export default function MakmpAdminDashboardPage() {
       .eq('id', aw.id);
 
     if (error) {
-      alert('Gagal mengubah status anugerah: ' + error.message);
+      toast.error('Gagal mengubah status anugerah: ' + error.message);
       return;
     }
     setAwards((prev) => prev.map((a) => (a.id === aw.id ? { ...a, is_active: newStatus } : a)));
@@ -951,7 +991,7 @@ export default function MakmpAdminDashboardPage() {
   // Export XLSX Lengkap dengan Pecahan Berbilang Anugerah
   const handleExportCSV = async () => {
     if (submissions.length === 0) {
-      alert('Tiada data untuk dieksport.');
+      toast.error('Tiada data untuk dieksport.');
       return;
     }
 
@@ -1018,7 +1058,7 @@ export default function MakmpAdminDashboardPage() {
         { name: 'Senarai Permohonan', columns, rows },
       ]);
     } catch (err: any) {
-      alert('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
+      toast.error('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
     }
   };
 
@@ -2867,6 +2907,16 @@ export default function MakmpAdminDashboardPage() {
         </div>
       )}
 
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant={confirmConfig.variant}
+      />
     </div>
   );
 }

@@ -67,7 +67,7 @@ export const EmsCertVerifyPage: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1.5">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> Portal Rasmi POLISAS
           </span>
           <ThemeToggle />
@@ -78,12 +78,12 @@ export const EmsCertVerifyPage: React.FC = () => {
       <div className="relative z-10 my-8 w-full max-w-2xl mx-auto space-y-6">
         {/* Verification Search Card */}
         <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-6 sm:p-10 text-slate-900 dark:text-white flex flex-col items-center text-center space-y-6">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shadow-xl shadow-purple-500/10">
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-xl shadow-amber-500/10">
             <Award className="w-10 h-10" />
           </div>
 
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Semakan Ketulenan E-Sijil EMS
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -105,13 +105,13 @@ export const EmsCertVerifyPage: React.FC = () => {
                 placeholder="Contoh: CERT-EMS-2026-P1-12345"
                 value={serialNumber}
                 onChange={(e) => setSerialNumber(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 font-mono text-sm sm:text-base tracking-wider rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-inner"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 font-mono tabular-nums text-sm sm:text-base tracking-wider rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-purple-600/30 text-sm tracking-wide uppercase transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold active:scale-[0.98] shadow-lg shadow-amber-500/20 text-sm tracking-wide uppercase transition-all hover:scale-[1.02]"
             >
               <Search className="w-4 h-4 stroke-[3]" />
               Semak Ketulenan Sijil
@@ -125,9 +125,9 @@ export const EmsCertVerifyPage: React.FC = () => {
           <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 text-slate-900 dark:text-white w-full text-left space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Senarai E-Sijil Berdaftar Anda
+                <Award className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Senarai E-Sijil Berdaftar Anda
               </h2>
-              {loadingCerts && <Loader2 className="w-4 h-4 animate-spin text-purple-600 dark:text-purple-400" />}
+              {loadingCerts && <Loader2 className="w-4 h-4 animate-spin text-amber-600 dark:text-amber-400" />}
             </div>
 
             {userCerts.length === 0 && !loadingCerts ? (
@@ -139,19 +139,19 @@ export const EmsCertVerifyPage: React.FC = () => {
                 {userCerts.map((cert) => (
                   <div
                     key={cert.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-purple-500/40 text-slate-900 dark:text-white transition-all space-y-2"
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-amber-500/40 text-slate-900 dark:text-white transition-all space-y-2"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                         {cert.cert_type}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">{cert.cert_serial}</span>
+                      <span className="text-[10px] font-mono tabular-nums text-slate-500 dark:text-slate-400">{cert.cert_serial}</span>
                     </div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{cert.event_title}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{cert.recipient_name}</p>
                     <button
                       onClick={() => navigate(`/ems/cert/${cert.cert_serial}`)}
-                      className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-purple-600 dark:text-purple-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition shadow-sm"
+                      className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition shadow-sm"
                     >
                       <span>Lihat / Muat Turun Sijil</span> <ExternalLink className="w-3.5 h-3.5" />
                     </button>
@@ -165,7 +165,7 @@ export const EmsCertVerifyPage: React.FC = () => {
         {/* Features / Notice */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-left w-full">
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 space-y-1.5 shadow-sm">
-            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-xs">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
               <CheckCircle2 className="w-4 h-4" /> Pengesahan QR
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400">
@@ -173,7 +173,7 @@ export const EmsCertVerifyPage: React.FC = () => {
             </p>
           </div>
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 space-y-1.5 shadow-sm">
-            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold text-xs">
               <Lock className="w-4 h-4" /> Integriti Rekod
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400">

@@ -7,10 +7,12 @@ import { JPP_POSITION_LABELS, JPP_UNIT_LABELS } from '@/types';
 import { UNIT_CFG, UNIT_ORDER } from './jppConfig';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export function JppStructureSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
     // State for visual overrides
     const [positionLabels, setPositionLabels] = useState<Record<string, string>>({});
@@ -67,8 +69,8 @@ export function JppStructureSettings() {
             });
 
             // Clean up unitConfig to ONLY save text-based overrides, NOT React Component functions (like icon)
-            const cleanUnitConfig = Object.entries(unitConfig).reduce((acc, [key, val]) => {
-                acc[key] = { shortLabel: val.shortLabel, fullLabel: val.fullLabel };
+            const cleanUnitConfig = Object.entries(unitConfig).reduce((acc, [key, val]: [string, any]) => {
+                acc[key] = { shortLabel: val?.shortLabel, fullLabel: val?.fullLabel };
                 return acc;
             }, {} as Record<string, any>);
 
@@ -85,11 +87,10 @@ export function JppStructureSettings() {
         }
     };
 
-    const handleReset = () => {
-        if (confirm("Adakah anda pasti mahu set semula (reset) nama Exco dan Jawatan kepada asal?")) {
-            setPositionLabels({ ...JPP_POSITION_LABELS });
-            setUnitConfig({ ...UNIT_CFG });
-        }
+    const executeReset = () => {
+        setPositionLabels({ ...JPP_POSITION_LABELS });
+        setUnitConfig({ ...UNIT_CFG });
+        toast.success('Struktur berjaya ditetapkan semula kepada tetapan asal.');
     };
 
     if (loading) return null;
@@ -102,7 +103,7 @@ export function JppStructureSettings() {
                     <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Urus Struktur JPP/Exco</h3>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={handleReset} variant="outline" size="sm" className="h-8 text-[10px] uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-50">
+                    <Button onClick={() => setResetDialogOpen(true)} variant="outline" size="sm" className="h-8 text-[10px] uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-50">
                         <Undo className="w-3 h-3 mr-1.5" />
                         Reset
                     </Button>
@@ -185,6 +186,17 @@ export function JppStructureSettings() {
                 </div>
 
             </div>
+
+            <ConfirmDialog
+                open={resetDialogOpen}
+                onOpenChange={setResetDialogOpen}
+                title="Set Semula Struktur JPP / Exco"
+                description="Adakah anda pasti mahu menetapkan semula nama Exco dan Jawatan kepada konfigurasi asal sistem? Sebarang perubahan kustom yang belum disimpan akan dikembalikan."
+                confirmLabel="Set Semula"
+                cancelLabel="Batal"
+                variant="destructive"
+                onConfirm={executeReset}
+            />
         </motion.div>
     );
 }

@@ -52,8 +52,8 @@ describe('SuperAppHeader Balanced Layout Suite', () => {
   it('renders distinct greeting overline and prominent student name in h1', () => {
     const html = renderHeader({ displayName: 'Aiman' });
 
-    // Distinct greeting with waving hand emoji
-    expect(html).toContain('👋');
+    // Distinct greeting with Lucide Sparkles icon (Zero Raw Emojis standard)
+    expect(html).toMatch(/lucide-sparkles/i);
     // Prominent h1 for student name
     expect(html).toContain(
       '<h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">Aiman</h1>'

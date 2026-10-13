@@ -118,7 +118,7 @@ export function SuperAppHeader({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/85 flex items-center gap-1.5">
               <span>{greeting.title}</span>
-              <span aria-hidden="true">👋</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" aria-hidden="true" />
             </span>
             {roleTitle && (
               <span className="inline-flex items-center text-[9px] font-black uppercase bg-[#6B7F5B]/30 text-[#D9C9B2] border border-[#6B7F5B]/40 px-2.5 py-0.5 rounded-full shadow-sm">

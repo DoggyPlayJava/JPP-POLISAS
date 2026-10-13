@@ -51,7 +51,7 @@ const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ de
 const JppMembersPage = lazy(() => import('./pages/jpp/JppMembersPage').then(m => ({ default: m.JppMembersPage })));
 const JppOverviewPage = lazy(() => import('./pages/jpp/JppOverviewPage').then(m => ({ default: m.JppOverviewPage })));
 const JppUnitDashboard = lazy(() => import('./pages/jpp/JppUnitDashboard').then(m => ({ default: m.JppUnitDashboard })));
-const AnnouncementsPage = lazy(() => import('./pages/jpp/AnnouncementsPage').then(m => ({ default: m.default || m.AnnouncementsPage })));
+const AnnouncementsPage = lazy(() => import('./pages/jpp/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage })));
 const JppPolyMapsAdmin = lazy(() => import('./pages/jpp/JppPolyMapsAdmin').then(m => ({ default: m.JppPolyMapsAdmin })));
 
 // ── Exco Reporting System ──
@@ -402,6 +402,7 @@ function AppRoutes() {
 
         {/* ── Event Management System (EMS) ── */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
+          <Route path="/ems" element={<Navigate to="/ems/dashboard" replace />} />
           <Route path="/ems/dashboard"            element={<EmsDashboardPage />} />
           <Route path="/ems/event/new"            element={<EmsEventFormPage />} />
           <Route path="/ems/event/:id/edit"       element={<EmsEventFormPage />} />

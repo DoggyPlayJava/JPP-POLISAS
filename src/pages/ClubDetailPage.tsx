@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, Activity, FileText, ExternalLink, Calendar, ShieldCheck, Award, Lock, LogOut } from 'lucide-react';
+import {
+  ArrowLeft, Users, Activity, Calendar, ShieldCheck, Award, Lock, LogOut,
+  Sparkles, CheckCircle2, ChevronRight, AlertCircle, Building2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusChip } from '@/components/ui/StatusChip';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
+} from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabase';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,26 +22,27 @@ import { toast } from 'react-hot-toast';
 export function ClubDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { profile, user, isSuperAdmin, userClubIds, primaryClubId, refetchProfile } = useAuth();
+  const { user, isSuperAdmin, userClubIds, primaryClubId, refetchProfile } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [club, setClub] = useState<any>(null);
-  const [committee, setCommittee] = useState<any[]>([]); // Unified members
+  const [committee, setCommittee] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+
+  // Dialog pengesahan keluar kelab
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     const fetchAllData = async () => {
       if (!id) return;
       setLoading(true);
       try {
-        const [clubRes, commRes, actsRes, docsRes, profilesRes, membershipRes] = await Promise.all([
-          supabase.from('clubs').select('*').eq('id', id).single(),
-          supabase.from('club_committee').select('*').eq('club_id', id).order('order_index', { ascending: true }),
-          supabase.from('club_activities').select('id, title, status, created_at').eq('club_id', id).order('created_at', { ascending: false }).limit(5),
-          supabase.from('club_reports').select('id').eq('club_id', id).limit(10),
-          supabase.from('profiles').select('full_name, avatar_url, role').eq('club_id', id),
-          // Ambil KESEMUA ahli yang dah APPROVED (bermaksud ahli kelab yang sah)
+        // Query hanya data yang dipaparkan dalam JSX (tiada query membazir)
+        const [clubRes, commRes, actsRes, membershipRes] = await Promise.all([
+          supabase.from('clubs').select('id, name, short_name, category, theme_color, logo_url, description').eq('id', id).single(),
+          supabase.from('club_committee').select('full_name, category, position_title, order_index').eq('club_id', id).order('order_index', { ascending: true }),
+          supabase.from('club_activities').select('id, title, status, created_at').eq('club_id', id).order('created_at', { ascending: false }).limit(6),
           supabase.from('student_club_memberships')
             .select('user_id, role, profiles!inner(full_name, avatar_url)')
             .eq('club_id', id)
@@ -44,59 +51,74 @@ export function ClubDetailPage() {
 
         if (clubRes.error) throw clubRes.error;
 
-        // 🔥 LOGIK GABUNGAN MEMBERSHIP SEBENAR + OVERRIDES (MT/EXCO titles)
         const allMemberships = membershipRes.data || [];
         const overrides = commRes.data || [];
         
         const unifiedMembers: any[] = [];
 
         allMemberships.forEach((m: any) => {
-            const profileInfo = m.profiles as any;
-            const fullName = profileInfo?.full_name;
-            const avatarUrl = profileInfo?.avatar_url;
-            const override = overrides.find(o => o.full_name === fullName);
-            
-            let category = 'AHLI';
-            let position_title = 'Ahli Biasa';
+          const profileInfo = m.profiles as any;
+          const fullName = profileInfo?.full_name;
+          const avatarUrl = profileInfo?.avatar_url;
+          const override = overrides.find(o => o.full_name === fullName);
+          
+          let category = 'AHLI';
+          let position_title = 'Ahli Biasa';
 
-            // Jika dia MT/Presiden, kita cek club_committee table untuk specific tajuk, kalau takde guna default
-            if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_MT') {
-                category = override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO');
-                position_title = override?.position_title || (m.role === 'CLUB_PRESIDENT' ? 'Presiden Kelab' : 'Ahli Jawatankuasa');
-            }
+          if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_MT') {
+            category = override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO');
+            position_title = override?.position_title || (m.role === 'CLUB_PRESIDENT' ? 'Presiden Kelab' : 'Ahli Jawatankuasa');
+          }
 
-            unifiedMembers.push({
-                user_id: m.user_id,
-                full_name: fullName,
-                avatar_url: avatarUrl,
-                role: m.role,
-                category,
-                position_title
-            });
+          unifiedMembers.push({
+            user_id: m.user_id,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            role: m.role,
+            category,
+            position_title
+          });
         });
 
-        // Susun: Presiden -> MT -> EXCO -> AHLI
+        // Susunan: Presiden -> MT -> EXCO -> AHLI
         unifiedMembers.sort((a, b) => {
-            if (a.role === 'CLUB_PRESIDENT' && b.role !== 'CLUB_PRESIDENT') return -1;
-            if (a.role !== 'CLUB_PRESIDENT' && b.role === 'CLUB_PRESIDENT') return 1;
-            if (a.category === 'MT' && b.category !== 'MT') return -1;
-            if (a.category !== 'MT' && b.category === 'MT') return 1;
-            if (a.category === 'EXCO' && b.category === 'AHLI') return -1;
-            if (a.category === 'AHLI' && b.category === 'EXCO') return 1;
-            return 0;
+          if (a.role === 'CLUB_PRESIDENT' && b.role !== 'CLUB_PRESIDENT') return -1;
+          if (a.role !== 'CLUB_PRESIDENT' && b.role === 'CLUB_PRESIDENT') return 1;
+          if (a.category === 'MT' && b.category !== 'MT') return -1;
+          if (a.category !== 'MT' && b.category === 'MT') return 1;
+          if (a.category === 'EXCO' && b.category === 'AHLI') return -1;
+          if (a.category === 'AHLI' && b.category === 'EXCO') return 1;
+          return 0;
         });
 
         setClub(clubRes.data);
         setCommittee(unifiedMembers);
         setActivities(actsRes.data || []);
-        setDocuments(docsRes.data || []);
-      } catch (error) { console.error("Ralat data:", error); } finally { setLoading(false); }
+      } catch (error) {
+        console.error("Ralat memuatkan profil kelab:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchAllData();
   }, [id]);
 
-  if (loading) return <div className="p-32 text-center font-black animate-pulse opacity-20 uppercase tracking-[0.4em]">Menyusun Profil...</div>;
-  if (!club) return <div className="p-20 text-center"><h2 className="text-3xl font-black opacity-30">Kelab Tiada</h2></div>;
+  if (loading) {
+    return <ClubDetailSkeleton />;
+  }
+
+  if (!club) {
+    return (
+      <div className="page-container py-24 text-center space-y-4">
+        <Building2 className="w-12 h-12 text-muted-foreground/50 mx-auto" />
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Kelab Tidak Ditemui</h2>
+        <p className="text-xs text-muted-foreground">Maklumat persatuan ini tidak wujud atau telah dipadamkan.</p>
+        <Button onClick={() => navigate('/kelab')} variant="outline" className="rounded-xl text-xs font-semibold mt-4">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Kembali ke Direktori
+        </Button>
+      </div>
+    );
+  }
 
   const isOwnClub = userClubIds?.includes(club?.id);
   const isPrimary = primaryClubId === club?.id;
@@ -106,67 +128,115 @@ export function ClubDetailPage() {
   const excoMembers = committee.filter(m => m.category === 'EXCO');
   const ahliBiasa = committee.filter(m => m.category === 'AHLI');
 
-  const handleLeaveClub = async () => {
+  const handleConfirmLeave = async () => {
     if (!user) return;
-    if (isPrimary) {
-      if (!window.confirm('Kelab Akademik tidak boleh dibuang terus. Teruskan mohon keluar supaya Penasihat meluluskannya?')) return;
-      const toastId = toast.loading('Menghantar permohonan keluar...');
-      try {
+    setLeaving(true);
+    try {
+      if (isPrimary) {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: club.id, p_is_primary: true });
         if (error) throw error;
-        toast.success('Permohonan keluar dihantar. Sila tunggu kelulusan.', { id: toastId });
+        toast.success('Permohonan keluar kelab Akademik telah dihantar untuk kelulusan Penasihat.');
         refetchProfile();
-      } catch (err: any) {
-        toast.error(err.message || 'Gagal menghantar permohonan', { id: toastId });
-      }
-    } else {
-      if (!window.confirm(`Anda pasti mahu tarik diri dari kelab ${club.name}? Tindakan ini serta-merta.`)) return;
-      const toastId = toast.loading('Memproses penarikan diri...');
-      try {
+      } else {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: club.id, p_is_primary: false });
         if (error) throw error;
-        toast.success('Anda telah berjaya keluar dari kelab ini.', { id: toastId });
+        toast.success(`Anda telah berjaya menarik diri daripada ${club.name}.`);
         refetchProfile();
-        setTimeout(() => navigate('/dashboard'), 1500);
-      } catch (err: any) {
-        toast.error(err.message || 'Gagal menarik diri', { id: toastId });
+        setTimeout(() => navigate('/kelab'), 1200);
       }
+      setShowLeaveModal(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal memproses penarikan diri');
+    } finally {
+      setLeaving(false);
     }
   };
 
-  // 🔥 TENTUKAN WARNA TULISAN HEADER
-  const headerTextColor = getContrastColor(club.theme_color || '#0f172a');
+  const headerTextColor = getContrastColor(club.theme_color || '#1e293b');
 
   return (
-    <div className="page-container space-y-12 pb-24">
-      {/* ── HEADER (Warna Pintar) ── */}
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-        className="relative p-12 md:p-24 rounded-[4rem] shadow-2xl overflow-hidden group"
-        style={{ backgroundColor: club.theme_color || '#0f172a' }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-        <div className="absolute -right-20 -top-20 opacity-10 pointer-events-none rotate-12 transition-transform duration-1000 group-hover:rotate-45 group-hover:scale-110"><ShieldCheck className="w-[30rem] h-[30rem] text-white" /></div>
+    <div className="page-container space-y-8 pb-20 pt-4">
+
+      {/* ── 1. TOP BREADCRUMB & BACK NAVIGATION ── */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          onClick={() => navigate('/kelab')}
+          className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors group py-1"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span>Kembali ke Direktori Kelab</span>
+        </button>
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground/70 font-medium">
+          <span>Portal</span>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <span>Direktori</span>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <span className="text-foreground font-semibold truncate max-w-[200px]">{club.name}</span>
+        </div>
+      </div>
+
+      {/* ── 2. HERO BANNER BERKADAR MODEN ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative p-6 sm:p-10 md:p-14 rounded-3xl shadow-xl overflow-hidden group border border-border/40"
+        style={{ backgroundColor: club.theme_color || '#1e293b' }}
+      >
+        {/* Subtle dark gradient overlay untuk kestabilan kontras dark mode */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute -right-16 -top-16 opacity-5 pointer-events-none rotate-12 transition-transform duration-700 group-hover:rotate-45">
+          <ShieldCheck className="w-96 h-96 text-white" />
+        </div>
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-12 md:gap-16">
-          <motion.div 
-            whileHover={{ y: -10, rotate: -2 }}
-            className="w-56 h-56 rounded-[3.5rem] bg-white/10  border-4 border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-2xl hover:border-white/40 transition-all duration-500">
-            {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.name} /> : <span className="text-7xl font-black">{club.short_name?.slice(0, 2)}</span>}
-          </motion.div>
-          <div className="text-center md:text-left space-y-6 pt-4">
-            <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              <Badge className="bg-white/20 text-inherit border-none uppercase tracking-[0.2em] text-[10px] font-black px-6 py-2  rounded-full">{club.category}</Badge>
-              <Badge className="bg-black/20 text-inherit border-none text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full">Sesi {(() => { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); return m >= 5 ? `${y}/${y+1}` : `${y-1}/${y}`; })()}</Badge>
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 md:gap-10">
+          {/* Logo Kelab */}
+          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-xl group-hover:border-white/40 transition-all duration-300">
+            {club.logo_url ? (
+              <img src={club.logo_url} className="w-full h-full object-cover" alt={club.name} />
+            ) : (
+              <span className="text-4xl sm:text-5xl font-black text-white">{club.short_name?.slice(0, 2) || 'K'}</span>
+            )}
+          </div>
+
+          {/* Maklumat Tajuk & Deskripsi */}
+          <div className="text-center md:text-left space-y-4 flex-1 min-w-0">
+            <div className="flex flex-wrap justify-center md:justify-start gap-2">
+              <Badge className="bg-white/20 text-inherit border-none uppercase tracking-wider text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                {club.category || 'Kelab'}
+              </Badge>
+              <Badge className="bg-black/25 text-inherit border-none text-[11px] font-semibold px-3 py-1 rounded-full">
+                Sesi {(() => { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); return m >= 5 ? `${y}/${y+1}` : `${y-1}/${y}`; })()}
+              </Badge>
+              {isOwnClub && (
+                <Badge className="bg-emerald-500/90 text-white border-none text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Anda Ahli
+                </Badge>
+              )}
             </div>
-            <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.8] mb-4" style={{ color: headerTextColor }}>
+
+            <h1
+              className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-balance"
+              style={{ color: headerTextColor }}
+            >
               {club.name}
             </h1>
-            <p className="font-medium opacity-80 text-base md:text-xl max-w-3xl leading-relaxed italic" style={{ color: headerTextColor }}>
-              "{club.description || `Menerajui aktiviti berkualiti di Polisas.`}"
+
+            <p
+              className="font-normal opacity-90 text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed text-pretty"
+              style={{ color: headerTextColor }}
+            >
+              {club.description || 'Menerajui aktiviti kokurikulum dan perpaduan mahasiswa berkualiti di POLISAS.'}
             </p>
+
             {isOwnClub && !isSuperAdmin && (
               <div className="pt-2">
-                <Button variant="destructive" onClick={handleLeaveClub} className="rounded-full font-black text-[11px] uppercase tracking-widest px-8 shadow-xl bg-rose-500 hover:bg-rose-600 text-white border-none">
-                  <LogOut className="w-4 h-4 mr-2" /> Keluar Kelab
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowLeaveModal(true)}
+                  className="rounded-xl font-bold text-xs px-4 h-9 shadow-md bg-rose-600 hover:bg-rose-700 text-white border-none"
+                >
+                  <LogOut className="w-3.5 h-3.5 mr-1.5" /> Keluar Kelab
                 </Button>
               </div>
             )}
@@ -174,157 +244,241 @@ export function ClubDetailPage() {
         </div>
       </motion.div>
 
-      {/* ── QUICK STATS ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-4">
+      {/* ── 3. METRIK STATISTIK PANTAS (TABULAR NUMS) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatItem label="Jumlah Ahli Aktif" val={committee.length} icon={Users} color="text-primary" />
-        <StatItem label="Aktiviti Berdaftar" val={activities.length} icon={Activity} color="text-emerald-500" />
-        <StatItem label="Barisan MT/Exco" val={mtMembers.length + excoMembers.length} icon={ShieldCheck} color="text-blue-500" />
-        <StatItem label="Ranking Kelab" val="—" icon={Award} color="text-amber-500" />
+        <StatItem label="Aktiviti Terdaftar" val={activities.length} icon={Activity} color="text-emerald-500" />
+        <StatItem label="Barisan MT / Exco" val={mtMembers.length + excoMembers.length} icon={Award} color="text-blue-500" />
+        <StatItem label="Status Kelab" val="Aktif" icon={ShieldCheck} color="text-amber-500" isText />
       </div>
 
-      {/* ── GRID ORGANISASI ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-        <div className="xl:col-span-2 space-y-10">
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Award className="w-4 h-4" /> Majlis Tertinggi</h3>
+      {/* ── 4. KEPIMPINAN & AKTIVITI ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        
+        {/* Lajur Kiri: Jawatankuasa & Ahli (2/3) */}
+        <div className="xl:col-span-2 space-y-8">
+          
+          {/* Majlis Tertinggi */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Award className="w-4 h-4 text-primary" /> Majlis Tertinggi
+              </h3>
+              <span className="text-xs font-mono tabular-nums text-muted-foreground">{mtMembers.length} Jawatan</span>
+            </div>
+
             {mtMembers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {mtMembers.map(member => (
-                    <Card key={member.user_id} className="bento-card border-none bg-card shadow-sm hover:translate-x-1 transition-all">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <Avatar className="w-14 h-14 rounded-2xl border-none shadow-md">
+                  <Card key={member.user_id} className="rounded-2xl border-border/70 bg-card shadow-sm hover:border-primary/40 transition-all">
+                    <CardContent className="p-4 flex items-center gap-3.5">
+                      <Avatar className="w-12 h-12 rounded-xl border border-border/50 shadow-sm shrink-0">
                         <AvatarImage src={member.avatar_url} className="object-cover" />
-                        <AvatarFallback className="bg-muted text-muted-foreground font-black text-sm">{member.full_name?.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{member.position_title}</p>
-                        <h4 className="font-black text-foreground text-sm truncate">{member.full_name}</h4>
-                        </div>
+                        <AvatarFallback className="bg-muted text-muted-foreground font-bold text-xs">{member.full_name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-primary mb-0.5 truncate uppercase tracking-wider">{member.position_title}</p>
+                        <h4 className="font-bold text-foreground text-xs sm:text-sm truncate">{member.full_name}</h4>
+                      </div>
                     </CardContent>
-                    </Card>
+                  </Card>
                 ))}
-                </div>
+              </div>
             ) : (
-                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada rekod Majlis Tertinggi</p>
-                </div>
+              <div className="p-8 text-center rounded-2xl bg-card border border-dashed border-border/80 space-y-2">
+                <Award className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                <p className="text-xs font-semibold text-muted-foreground">Tiada Rekod Majlis Tertinggi</p>
+                <p className="text-[11px] text-muted-foreground/60 max-w-xs mx-auto">
+                  Pelantikan Majlis Tertinggi akan dikemaskini oleh pihak pentadbiran kelab.
+                </p>
+              </div>
             )}
           </section>
 
-          <section className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Users className="w-4 h-4" /> Barisan Exco</h3>
+          {/* Barisan Exco */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-500" /> Barisan Exco & AJK
+              </h3>
+              <span className="text-xs font-mono tabular-nums text-muted-foreground">{excoMembers.length} Orang</span>
+            </div>
+
             {excoMembers.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {excoMembers.map(member => (
-                    <div key={member.user_id} className="p-6 rounded-[2.5rem] bg-card border border-border text-center hover:shadow-xl transition-all flex flex-col items-center gap-4 group">
-                    <Avatar className="w-12 h-12 rounded-xl border-none shadow-inner group-hover:scale-110 transition-transform">
-                        <AvatarImage src={member.avatar_url} className="object-cover" />
-                        <AvatarFallback className="bg-muted text-muted-foreground/40 font-black text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{member.position_title}</p>
-                        <h4 className="font-black text-[11px] leading-tight line-clamp-2">{member.full_name}</h4>
-                    </div>
-                    </div>
-                ))}
-                </div>
-            ) : (
-                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada rekod Exco dikesan</p>
-                </div>
-            )}
-          </section>
-
-          <section className="space-y-6 pt-10">
-            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Users className="w-4 h-4" /> Senarai Ahli Biasa</h3>
-            {ahliBiasa.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-                {ahliBiasa.map(member => (
-                    <div key={member.user_id} className="p-4 rounded-3xl bg-muted/20 border border-border text-center hover:opacity-100 opacity-70 hover:shadow-md hover:bg-card transition-all flex flex-col items-center gap-3">
-                    <Avatar className="w-10 h-10 rounded-[1rem] border-none shadow-sm">
-                        <AvatarImage src={member.avatar_url} className="object-cover" />
-                        <AvatarFallback className="bg-muted text-muted-foreground/40 font-black text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
+                  <div key={member.user_id} className="p-3.5 rounded-2xl bg-card border border-border/70 text-center hover:border-primary/40 transition-all flex flex-col items-center gap-2.5">
+                    <Avatar className="w-10 h-10 rounded-xl border border-border/50 shadow-sm">
+                      <AvatarImage src={member.avatar_url} className="object-cover" />
+                      <AvatarFallback className="bg-muted text-muted-foreground font-bold text-xs">{member.full_name?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="w-full">
-                        <h4 className="font-black text-[10px] leading-none line-clamp-2 uppercase tracking-tighter">{member.full_name}</h4>
-                    </div>
-                    </div>
-                ))}
-                </div>
-            ) : (
-                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada Ahli Biasa</p>
-                </div>
-            )}
-          </section>
-        </div>
-
-        {/* ── PRIVASI AKTIVITI/DOKUMEN ── */}
-        <div className="space-y-8">
-          {canSeePrivateData ? (
-              <Card className="bento-card border-none overflow-hidden bg-card shadow-2xl">
-                <CardHeader className="bg-primary/5 p-8 border-b border-border/40">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-xl font-black italic tracking-tighter flex items-center gap-2">
-                        <Activity className="text-primary" size={24} /> Jejak Aktiviti
-                      </CardTitle>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mt-1">Garis Masa Program Terkini</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wide truncate">{member.position_title}</p>
+                      <h4 className="font-bold text-xs text-foreground truncate mt-0.5">{member.full_name}</h4>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="p-8">
-                  <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-muted-foreground/10">
-                    {activities.length === 0 ? (
-                      <p className="text-center py-10 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Tiada rekod aktiviti setakat ini.</p>
-                    ) : activities.map((act, i) => (
-                      <div key={act.id} className="relative pl-10 group">
-                        <div className={cn(
-                          "absolute left-0 top-1 w-6 h-6 rounded-full border-4 border-background shadow-sm z-10 transition-transform group-hover:scale-125",
-                          act.status === 'selesai' ? "bg-emerald-500" : act.status === 'aktif' ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
-                        )} />
-                        <div className="p-5 rounded-[1.5rem] bg-muted/20 border border-border/50 hover:bg-card hover:shadow-md transition-all">
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div className="space-y-1">
-                              <h4 className="font-black text-xs tracking-tight group-hover:text-primary transition-colors">{act.title}</h4>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
-                                <Calendar size={12} />
-                                {act.created_at ? format(parseISO(act.created_at), 'dd MMM yyyy') : '-'}
-                              </div>
-                            </div>
-                            <StatusChip status={act.status} size="sm" className="shadow-sm" />
-                          </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center rounded-2xl bg-card border border-dashed border-border/80 space-y-2">
+                <Users className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                <p className="text-xs font-semibold text-muted-foreground">Tiada Rekod Exco Dikesan</p>
+                <p className="text-[11px] text-muted-foreground/60 max-w-xs mx-auto">
+                  Barisan biro dan unit aktiviti sedang disusun.
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* Senarai Ahli Biasa */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500" /> Ahli Biasa ({ahliBiasa.length})
+              </h3>
+            </div>
+
+            {ahliBiasa.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {ahliBiasa.map(member => (
+                  <div key={member.user_id} className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center gap-2.5 hover:border-primary/30 transition-colors">
+                    <Avatar className="w-7 h-7 rounded-lg border border-border/40 shrink-0">
+                      <AvatarImage src={member.avatar_url} className="object-cover" />
+                      <AvatarFallback className="bg-muted text-muted-foreground font-bold text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-semibold text-xs text-foreground truncate">{member.full_name}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center rounded-2xl bg-card border border-dashed border-border/80">
+                <p className="text-xs font-semibold text-muted-foreground">Tiada ahli biasa berdaftar.</p>
+              </div>
+            )}
+          </section>
+
+        </div>
+
+        {/* Lajur Kanan: Aktiviti Terkini (1/3) */}
+        <div className="space-y-6">
+          {canSeePrivateData ? (
+            <Card className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
+              <CardHeader className="bg-muted/30 p-5 border-b border-border/60">
+                <CardTitle className="text-sm font-bold tracking-tight flex items-center gap-2 text-foreground">
+                  <Activity className="w-4 h-4 text-primary" /> Jejak Aktiviti & Program
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Program kelab yang diluluskan</p>
+              </CardHeader>
+              <CardContent className="p-5">
+                {activities.length === 0 ? (
+                  <p className="text-center py-8 text-xs font-medium text-muted-foreground">
+                    Tiada rekod program atau aktiviti setakat ini.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {activities.map((act) => (
+                      <div key={act.id} className="p-3.5 rounded-2xl bg-muted/20 border border-border/60 hover:bg-muted/40 transition-colors space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-xs text-foreground leading-snug">{act.title}</h4>
+                          <StatusChip status={act.status} size="sm" />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono tabular-nums text-muted-foreground">
+                          <Calendar className="w-3.5 h-3.5 text-muted-foreground/60" />
+                          <span>{act.created_at ? format(parseISO(act.created_at), 'dd MMM yyyy') : '-'}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
+                )}
+              </CardContent>
+            </Card>
           ) : (
-            <div className="py-20 px-8 rounded-[3.5rem] bg-muted/30 border-4 border-dashed border-border flex flex-col items-center text-center space-y-5">
-              <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center shadow-xl shadow-black/10"><Lock className="w-8 h-8 text-muted-foreground/40" /></div>
-              <h3 className="text-xl font-black tracking-tight text-foreground uppercase">Akses Terhad</h3>
-              <p className="text-xs font-bold text-muted-foreground/60 max-w-[220px] leading-loose uppercase tracking-tighter">Laporan dan dokumen hanya boleh diakses oleh Ahli Kelab & JPP.</p>
+            <div className="p-8 rounded-3xl bg-muted/30 border border-dashed border-border/80 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center mx-auto shadow-sm">
+                <Lock className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <h4 className="font-bold text-sm text-foreground">Akses Aktiviti Terhad</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Log program dan minit mesyuarat hanya dipaparkan kepada ahli kelab yang telah disahkan dan pihak JPP POLISAS.
+              </p>
             </div>
           )}
         </div>
+
       </div>
 
-      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-        <Button onClick={() => navigate('/kelab')} className="rounded-full h-14 px-10 font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl bg-white text-slate-950 border border-slate-200 hover:bg-slate-50 hover:scale-105 transition-all"><ArrowLeft className="w-4 h-4 mr-3" /> Kembali ke Senarai</Button>
-      </div>
+      {/* ── DIALOG PENGESAHAN KELUAR KELAB ── */}
+      <Dialog open={showLeaveModal} onOpenChange={setShowLeaveModal}>
+        <DialogContent className="rounded-3xl max-w-md border-border/80 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-xl tracking-tight text-rose-600 dark:text-rose-400 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              {isPrimary ? 'Mohon Keluar Kelab Akademik' : 'Tarik Diri daripada Kelab'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
+              {isPrimary
+                ? 'Kelab Akademik tertakluk kepada jabatan pengajian anda. Permohonan pelepasan memerlukan sokongan dan kelulusan Penasihat Kelab.'
+                : `Adakah anda pasti ingin menarik diri serta-merta daripada "${club.name}"? Sebarang rekod jawatan dan aktiviti yang sedang berlangsung akan dihentikan.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 pt-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowLeaveModal(false)}
+              className="rounded-xl font-bold text-xs"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleConfirmLeave}
+              disabled={leaving}
+              className="rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {leaving ? 'Memproses...' : (isPrimary ? 'Hantar Permohonan Keluar' : 'Sahkan Tarik Diri')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
 
-function StatItem({ label, val, icon: Icon, color }: any) {
+function StatItem({ label, val, icon: Icon, color, isText = false }: any) {
   return (
-    <div className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm flex flex-col items-center text-center space-y-2 group hover:shadow-lg transition-all">
-      <div className={cn("w-10 h-10 rounded-2xl bg-muted/50 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform", color)}>
-        <Icon size={20} />
+    <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border/70 shadow-sm flex flex-col items-center text-center space-y-1.5 hover:border-primary/40 transition-colors">
+      <div className={cn("w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mb-1", color)}>
+        <Icon size={18} />
       </div>
-      <p className="text-3xl font-black tracking-tighter">{val}</p>
-      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{label}</p>
+      <p className={cn("text-2xl sm:text-3xl font-black tracking-tight text-foreground", !isText && "font-mono tabular-nums")}>
+        {val}
+      </p>
+      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+    </div>
+  );
+}
+
+function ClubDetailSkeleton() {
+  return (
+    <div className="page-container space-y-8 pb-20 pt-4 animate-pulse">
+      <div className="h-5 w-48 bg-muted rounded-lg" />
+      <div className="h-64 sm:h-72 rounded-3xl bg-muted/70" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 rounded-2xl bg-muted" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 space-y-4">
+          <div className="h-5 w-40 bg-muted rounded" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="h-24 rounded-2xl bg-muted" />
+            <div className="h-24 rounded-2xl bg-muted" />
+          </div>
+        </div>
+        <div className="h-64 rounded-3xl bg-muted" />
+      </div>
     </div>
   );
 }

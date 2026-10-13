@@ -44,6 +44,7 @@ function StatCard({
 function UnitCard({
   code, isLocked, delay, onNavigate,
 }: {
+  key?: React.Key;
   code: string; isLocked: boolean; delay: number; onNavigate: (link: string) => void;
 }) {
   const { unitConfig } = useJppConfig();
@@ -129,7 +130,7 @@ function UnitCard({
 }
 
 // ─── Takwim event card ───────────────────────────────────────────────────────
-function TakwimCard({ event, delay }: { event: any; delay: number }) {
+function TakwimCard({ event, delay }: { event: any; delay: number; key?: React.Key }) {
   const isOngoing = event.start_date && event.end_date &&
     isWithinInterval(new Date(), { start: new Date(event.start_date), end: new Date(event.end_date) });
 
@@ -243,23 +244,14 @@ export function JppHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white overflow-x-hidden transition-colors">
-
-      {/* Background glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full  opacity-10"
-          style={{ background: themeColor }} />
-        <div className="absolute top-[50%] -right-[20%] w-[50vw] h-[50vw] rounded-full  opacity-5"
-          style={{ background: themeColor }} />
-      </div>
-
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-10 md:py-14 space-y-12">
+    <div className="w-full text-slate-900 dark:text-white overflow-x-hidden transition-colors">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 py-8 md:py-10 space-y-10">
 
         {/* ── Hero Section ───────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-3"
         >
           {/* Badge */}
@@ -293,14 +285,10 @@ export function JppHomePage() {
           </div>
 
           {/* Greeting */}
-          <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-            Selamat datang,{' '}
-            <span className="text-transparent bg-clip-text"
-              style={{ backgroundImage: `linear-gradient(135deg, ${themeColor}, #e11d48)` }}>
-              {displayName}
-            </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+            Selamat datang, <span style={{ color: themeColor }}>{displayName}</span>
           </h1>
-          <p className="text-slate-600 dark:text-white/40 text-sm font-medium max-w-lg leading-relaxed">
+          <p className="text-slate-600 dark:text-white/60 text-sm font-medium max-w-xl leading-relaxed">
             Portal Ibu Pejabat JPP Politeknik Sultan Haji Ahmad Shah. Urus dan pantau semua unit exco dari sini.
           </p>
         </motion.div>

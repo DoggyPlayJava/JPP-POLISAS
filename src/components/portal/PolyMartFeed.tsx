@@ -251,16 +251,16 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
 
                 {/* Product Info */}
                 <div className="pt-2 flex-1 flex flex-col justify-between space-y-1.5 min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={item.name}>
+                  <h3 className="text-xs sm:text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE] truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={item.name}>
                     {item.name}
                   </h3>
 
                   <div className="flex items-baseline gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                    <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono">
+                    <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums">
                       {formatProductPrice(displayPrice)}
                     </span>
                     {hasSale && (
-                      <span className="text-[10px] text-slate-400 line-through font-mono">
+                      <span className="text-[10px] text-slate-400 line-through font-mono tabular-nums">
                         {formatProductPrice(item.price)}
                       </span>
                     )}

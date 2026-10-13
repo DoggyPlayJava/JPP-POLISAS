@@ -13,15 +13,21 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'react-hot-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { SystemAnnouncement, AnnouncementFormField, AnnouncementPriority, AnnouncementTarget } from '@/types';
 
-export default function AnnouncementsPage() {
+export function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
+
+  // Modal confirmation states
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; imageUrl: string | null } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [broadcastTarget, setBroadcastTarget] = useState<SystemAnnouncement | null>(null);
 
   // Viewing responses state
   const [viewingResponsesFor, setViewingResponsesFor] = useState<SystemAnnouncement | null>(null);
@@ -181,8 +187,10 @@ export default function AnnouncementsPage() {
     }
   };
 
-  const handleDelete = async (id: string, imageUrl: string | null) => {
-    if (!window.confirm('Adakah anda pasti untuk memadam makluman ini? JAWAPAN PELAJAR AKAN TURUT TERPADAM.')) return;
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, imageUrl } = deleteTarget;
+    setDeleting(true);
     
     if (imageUrl) {
       const parts = imageUrl.split('/');
@@ -191,11 +199,14 @@ export default function AnnouncementsPage() {
     }
 
     const { error } = await supabase.from('system_announcements').delete().eq('id', id);
-    if (error) toast.error('Gagal memadam');
-    else {
-      toast.success('Makluman dipadam');
+    if (error) {
+      toast.error('Gagal memadam makluman.');
+    } else {
+      toast.success('Makluman berjaya dipadam.');
+      setDeleteTarget(null);
       fetchAnnouncements();
     }
+    setDeleting(false);
   };
 
   const handleEdit = (a: SystemAnnouncement) => {
@@ -228,11 +239,12 @@ export default function AnnouncementsPage() {
     setFormFields([]);
   };
 
-  const handleManualBroadcast = async (announcement: SystemAnnouncement) => {
-    if (!window.confirm('Adakah anda pasti untuk menghantar Notifikasi Push ini kepada semua pengguna bersasar? Tindakan ini tidak boleh ditarik balik.')) return;
+  const executeBroadcast = async () => {
+    if (!broadcastTarget) return;
+    const announcement = broadcastTarget;
     
     setBroadcastingId(announcement.id);
-    toast.loading('Menghantar Notifikasi Push...', { id: 'broadcast_push' });
+    toast.loading('Menghantar notifikasi push...', { id: 'broadcast_push' });
     
     try {
       const { broadcastAnnouncement } = await import('@/lib/notifications');
@@ -252,7 +264,8 @@ export default function AnnouncementsPage() {
         link: '/portal'
       }, targetRoles);
       
-      toast.success('Hebahan Push Berjaya Dihantar!', { id: 'broadcast_push' });
+      toast.success('Hebahan push berjaya dihantar.', { id: 'broadcast_push' });
+      setBroadcastTarget(null);
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal menghantar hebahan', { id: 'broadcast_push' });
@@ -537,7 +550,7 @@ export default function AnnouncementsPage() {
                      <Switch checked={a.is_active} onCheckedChange={() => toggleActive(a.id, a.is_active)} className="data-[state=checked]:bg-emerald-500" />
                    </div>
                    <Button 
-                     onClick={() => handleManualBroadcast(a)} 
+                     onClick={() => setBroadcastTarget(a)} 
                      disabled={!a.is_active || broadcastingId === a.id}
                      className="h-10 rounded-xl w-full bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                    >
@@ -549,7 +562,7 @@ export default function AnnouncementsPage() {
                    </Button>
                    <Button variant="outline" onClick={() => handleEdit(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold"><Plus size={14} className="mr-2"/> Sunting Notis</Button>
                    <Button variant="outline" onClick={() => handleViewResponses(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> Lihat Respon Pelajar</Button>
-                   <Button variant="ghost" onClick={() => handleDelete(a.id, a.image_url)} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis</Button>
+                   <Button variant="ghost" onClick={() => setDeleteTarget({ id: a.id, imageUrl: a.image_url })} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis</Button>
                  </div>
                </div>
              )
@@ -609,6 +622,32 @@ export default function AnnouncementsPage() {
           </motion.div>
         </div>
       )}
-    </div>
+    
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Padam Makluman Hebahan"
+        description="Adakah anda pasti untuk memadam makluman ini? Semua jawapan borang atau respon pelajar yang berkaitan akan turut terpadam secara kekal."
+        confirmLabel="Padam Makluman"
+        cancelLabel="Batal"
+        variant="destructive"
+        isLoading={deleting}
+        onConfirm={executeDelete}
+      />
+
+      {/* Confirm Broadcast Dialog */}
+      <ConfirmDialog
+        open={Boolean(broadcastTarget)}
+        onOpenChange={(open) => !open && setBroadcastTarget(null)}
+        title="Hantar Notifikasi Push Hebahan"
+        description="Adakah anda pasti mahu menghantar notifikasi push ini kepada semua pengguna bersasar? Tindakan ini akan menyiarkan makluman ke peranti pengguna serta-merta."
+        confirmLabel="Hantar Notifikasi"
+        cancelLabel="Batal"
+        variant="default"
+        isLoading={Boolean(broadcastingId)}
+        onConfirm={executeBroadcast}
+      />
+</div>
   )
 }

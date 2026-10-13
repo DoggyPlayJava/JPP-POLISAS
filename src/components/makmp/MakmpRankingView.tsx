@@ -26,6 +26,7 @@ import { sendEmail } from '@/lib/email';
 import type { MakmpAwardDefinition } from '@/types';
 
 interface MakmpRankingPanelProps {
+  key?: React.Key;
   award: MakmpAwardDefinition;
   pinCode?: string | null; // untuk juri (PIN); admin guna session auth
   isAdmin?: boolean; // admin boleh finalize; juri cuma laras + lihat

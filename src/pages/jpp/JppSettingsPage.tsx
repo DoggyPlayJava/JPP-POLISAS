@@ -1,346 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar, QrCode, ClipboardList, CheckCircle2, XCircle, Clock, ChevronDown, Loader2, User, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar, QrCode, ClipboardList, Loader2 } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { JppStructureSettings } from './JppStructureSettings';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { QrLinkManager } from '@/components/jpp/QrLinkManager';
-
-// ═════════════════════════════════════════════════════════════════════════════
-// Helper: kira semula intake_year & intake_period dari semester yg dikehendaki
-function reverseCalcIntake(targetSem: number): { intake_year: number; intake_period: 1 | 2 } {
-  const now = new Date();
-  const cy = now.getFullYear(), cm = now.getMonth() + 1;
-  const s1 = 7, s2 = 1, maxSem = 6;
-  for (let d = 0; d <= 10; d++) {
-    const y = cy - d;
-    if (y < cy || cm >= s2) {
-      const m2 = (cy - y) * 12 + (cm - s2);
-      if (Math.min(Math.max(1, Math.floor(m2 / 6) + 1), maxSem) === targetSem) return { intake_year: y, intake_period: 2 };
-    }
-    if (y < cy || cm >= s1) {
-      const m1 = (cy - y) * 12 + (cm - s1);
-      if (Math.min(Math.max(1, Math.floor(m1 / 6) + 1), maxSem) === targetSem) return { intake_year: y, intake_period: 1 };
-    }
-  }
-  return { intake_year: cy, intake_period: 1 };
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ProfileEditRequestsSection — Panel semakan pindaan profil pelajar untuk JPP
-// Setiap kelulusan/penolakan direkodkan sebagai Audit Log (reviewed_by, reviewed_at, review_note)
-// ═════════════════════════════════════════════════════════════════════════════
-function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
-  const { user, profile } = useAuth();
-  const [requests, setRequests] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [filter, setFilter] = React.useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  // Modal state
-  const [reviewModal, setReviewModal] = React.useState<{ open: boolean; req: any | null; action: 'APPROVED' | 'REJECTED' | null }>({
-    open: false, req: null, action: null
-  });
-  const [reviewNote, setReviewNote] = React.useState('');
-  const [processing, setProcessing] = React.useState(false);
-
-  const fetchRequests = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profile_edit_requests')
-        .select('*, requester:profiles!profile_edit_requests_user_id_fkey(full_name, matric_no, department, email), reviewer:profiles!profile_edit_requests_reviewed_by_fkey(full_name)')
-        .order('submitted_at', { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      setRequests(data || []);
-    } catch (err: any) {
-      toast.error('Gagal muatkan permintaan: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  React.useEffect(() => { fetchRequests(); }, [fetchRequests]);
-
-  const filtered = requests.filter(r => r.status === filter);
-  const pendingCount = requests.filter(r => r.status === 'PENDING').length;
-
-  const openModal = (req: any, action: 'APPROVED' | 'REJECTED') => {
-    setReviewNote('');
-    setReviewModal({ open: true, req, action });
-  };
-
-  const handleReview = async () => {
-    if (!reviewModal.req || !reviewModal.action || !user || !profile) return;
-    if (reviewModal.action === 'REJECTED' && !reviewNote.trim()) {
-      toast.error('Sila masukkan sebab penolakan.');
-      return;
-    }
-    setProcessing(true);
-    const { req, action } = reviewModal;
-    try {
-      // ── 1. KEMASKINI STATUS PERMINTAAN (Audit Log Fields) ─────────────────
-      const { error: updateErr } = await supabase
-        .from('profile_edit_requests')
-        .update({
-          status: action,
-          reviewed_by: user.id,    // Audit: Siapa yang buat keputusan
-          review_note: reviewNote.trim() || null,
-          // reviewed_at akan dikemaskini automatik oleh trigger DB
-        })
-        .eq('id', req.id);
-      if (updateErr) throw updateErr;
-
-      // ── 2. JIKA DILULUSKAN: kemaskini profiles ────────────────────────────
-      if (action === 'APPROVED') {
-        const profileUpdate: Record<string, any> = {};
-        if (req.field_type === 'matric_no') {
-          profileUpdate.matric_no = req.requested_value;
-        } else if (req.field_type === 'semester') {
-          // Kira semula intake_year & intake_period supaya semester auto-naik ke depan
-          const targetSem = parseInt(req.requested_value, 10);
-          const { intake_year, intake_period } = reverseCalcIntake(targetSem);
-          profileUpdate.intake_year = intake_year;
-          profileUpdate.intake_period = intake_period;
-          profileUpdate.semester_override = null; // Buang freeze, biar auto-kira
-        }
-        const { error: profileErr } = await supabase
-          .from('profiles')
-          .update(profileUpdate)
-          .eq('id', req.user_id);
-        if (profileErr) throw profileErr;
-      }
-
-      // ── 3. NOTIFIKASI KEPADA STUDENT ──────────────────────────────────────
-      const fieldLabel = req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester';
-      const isApproved = action === 'APPROVED';
-      await supabase.from('notifications').insert({
-        user_id: req.user_id,
-        title: isApproved
-          ? `✅ Permintaan Pindaan ${fieldLabel} Diluluskan`
-          : `❌ Permintaan Pindaan ${fieldLabel} Ditolak`,
-        message: isApproved
-          ? `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah diluluskan oleh MT JPP${reviewNote.trim() ? `. Nota: ${reviewNote.trim()}` : '.'}`
-          : `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah ditolak. Sebab: ${reviewNote.trim()}`,
-        type: 'SYSTEM',
-        module: 'EKPP',
-        link: '/tetapan',
-        actor_name: profile.full_name,
-        is_read: false,
-      });
-
-      toast.success(`Permintaan berjaya ${isApproved ? 'diluluskan' : 'ditolak'}. Audit log direkodkan.`);
-      setReviewModal({ open: false, req: null, action: null });
-      setReviewNote('');
-      await fetchRequests();
-    } catch (err: any) {
-      toast.error(err.message || 'Ralat semasa memproses.');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const filterTabs: Array<{ key: 'PENDING' | 'APPROVED' | 'REJECTED'; label: string }> = [
-    { key: 'PENDING', label: 'Menunggu' },
-    { key: 'APPROVED', label: 'Diluluskan' },
-    { key: 'REJECTED', label: 'Ditolak' },
-  ];
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }} className="space-y-6">
-      {/* Header seksyen */}
-      <div className="flex items-center gap-3 px-2">
-        <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
-        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Semakan Pindaan Profil Pelajar</h3>
-        {pendingCount > 0 && (
-          <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400">{pendingCount} PENDING</span>
-        )}
-      </div>
-
-      <div className="rounded-[2rem] overflow-hidden border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm">
-        {/* Filter tabs */}
-        <div className="flex border-b border-slate-200 dark:border-white/10">
-          {filterTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={cn(
-                'flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all',
-                filter === tab.key
-                  ? 'text-slate-900 dark:text-white border-b-2'
-                  : 'text-slate-500 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60'
-              )}
-              style={filter === tab.key ? { borderBottomColor: themeColor, color: themeColor } : {}}
-            >
-              {tab.label}
-              {tab.key === 'PENDING' && pendingCount > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-slate-400 dark:text-white/30 text-xs">
-              <Loader2 className="w-4 h-4 animate-spin" /> Memuatkan...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-10">
-              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-white/10" />
-              <p className="text-slate-500 dark:text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map(req => (
-                <div
-                  key={req.id}
-                  className="p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5"
-                >
-                  {/* Info pelajar & permintaan */}
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
-                        <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
-                      </div>
-                      <p className="text-sm font-black text-slate-900 dark:text-white truncate">{req.requester?.full_name ?? '—'}</p>
-                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-slate-600 dark:text-white/40 bg-slate-200/60 dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
-                    </div>
-
-                    <div className="ml-9">
-                      <p className="text-xs text-slate-600 dark:text-white/60 font-medium">
-                        <span className="text-slate-400 dark:text-white/30">Pindaan:</span>{' '}
-                        <span className="font-bold text-slate-800 dark:text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
-                        {' '}—{' '}
-                        <span className="line-through text-slate-400 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '—'}</span>
-                        {' → '}
-                        <span className="font-black text-slate-900 dark:text-white font-mono">{req.requested_value}</span>
-                      </p>
-                      {req.reason && <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
-                      {req.review_note && <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-white/25">
-                        <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                        {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
-                        {req.reviewer?.full_name && <span>· oleh {req.reviewer.full_name}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Butang tindakan */}
-                  {req.status === 'PENDING' && (
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => openModal(req, 'REJECTED')}
-                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all"
-                      >
-                        <XCircle className="w-3.5 h-3.5 inline mr-1" />Tolak
-                      </button>
-                      <button
-                        onClick={() => openModal(req, 'APPROVED')}
-                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 transition-all border border-emerald-500/30"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />Lulus
-                      </button>
-                    </div>
-                  )}
-
-                  {req.status !== 'PENDING' && (
-                    <div className="shrink-0">
-                      {req.status === 'APPROVED'
-                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
-                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
-                      }
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Modal pengesahan kelulusan/penolakan */}
-      <AnimatePresence>
-        {reviewModal.open && reviewModal.req && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/50 dark:bg-black/70 "
-              onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-md rounded-[2rem] p-6 border bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl z-10"
-            >
-              <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${reviewModal.action === 'APPROVED' ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                    {reviewModal.action === 'APPROVED'
-                      ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                      : <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                    }
-                  </div>
-                  <div>
-                    <p className="font-black text-slate-900 dark:text-white text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
-                    <p className="text-[11px] text-slate-500 dark:text-white/40">
-                      {reviewModal.req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}:
-                      {' '}<span className="font-mono text-slate-600 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
-                      {' → '}<span className="font-mono text-slate-900 dark:text-white font-black">{reviewModal.req.requested_value}</span>
-                    </p>
-                    <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-                    {reviewModal.action === 'REJECTED' ? 'Sebab Penolakan *' : 'Nota Ulasan (Pilihan)'}
-                  </label>
-                  <textarea
-                    value={reviewNote}
-                    onChange={e => setReviewNote(e.target.value)}
-                    rows={3}
-                    placeholder={reviewModal.action === 'REJECTED' ? 'Nyatakan sebab penolakan...' : 'Nota tambahan (jika ada)...'}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-slate-400 dark:focus:border-white/20 shadow-sm"
-                  />
-                  <p className="text-[10px] text-slate-400 dark:text-white/25">⚙ Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setReviewModal({ open: false, req: null, action: null })}
-                    disabled={processing}
-                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleReview}
-                    disabled={processing || (reviewModal.action === 'REJECTED' && !reviewNote.trim())}
-                    className={cn(
-                      'flex-1 h-11 rounded-xl font-black text-xs uppercase tracking-wider transition-all disabled:opacity-40',
-                      reviewModal.action === 'APPROVED'
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25'
-                        : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25'
-                    )}
-                  >
-                    {processing
-                      ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Memproses...</>
-                      : reviewModal.action === 'APPROVED' ? 'Sahkan Kelulusan' : 'Sahkan Penolakan'
-                    }
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
+import { PromptDialog } from '@/components/ui/PromptDialog';
 
 const MONTH_NAMES = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
@@ -445,16 +114,17 @@ export function JppSettingsPage() {
         }
     };
 
-    const updateStaffCode = async () => {
-        const input = window.prompt("Masukkan kod pendaftaran staf baharu. \nPENTING: Kod ini wajib dirahsiakan. Sentiasa gunakan huruf besar (Uppercase) tanpa jarak.", settings.staff_registration_code);
-        if (input === null) return;
-        
+    const [isStaffCodeModalOpen, setIsStaffCodeModalOpen] = useState(false);
+    const [savingStaffCode, setSavingStaffCode] = useState(false);
+
+    const handleConfirmStaffCode = async (input: string) => {
         const newCode = input.trim().toUpperCase();
         if (newCode.length < 5) {
             toast.error("Kod baharu mestilah sekurang-kurangnya 5 aksara.");
             return;
         }
 
+        setSavingStaffCode(true);
         const toastId = toast.loading('Mengemaskini kod staf...');
         try {
             const { data, error } = await supabase.from('system_settings').update({ value: JSON.stringify(newCode) }).eq('key', 'staff_registration_code').select();
@@ -463,17 +133,25 @@ export function JppSettingsPage() {
             
             setSettings(s => ({ ...s, staff_registration_code: newCode }));
             toast.success(`Kod pendaftaran staf berjaya dikemaskini. Kod baharu: ${newCode}`, { id: toastId });
+            setIsStaffCodeModalOpen(false);
         } catch (e: any) {
             toast.error(e.message || 'Gagal kemaskini kod staf', { id: toastId });
+        } finally {
+            setSavingStaffCode(false);
         }
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">Memuatkan Tetapan Sistem...</div>;
+        return (
+            <div className="py-16 flex items-center justify-center text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest font-mono">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Memuatkan Tetapan Sistem...
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 overflow-x-hidden transition-colors">
+        <div className="w-full py-8 px-4 sm:px-8 text-slate-900 dark:text-white transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
             </div>
 
@@ -544,7 +222,7 @@ export function JppSettingsPage() {
                                     <div className="bg-slate-100 dark:bg-black/40 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-600 dark:text-rose-200 border border-slate-200 dark:border-rose-500/20">
                                         {settings.staff_registration_code || '••••••••'}
                                     </div>
-                                    <button onClick={updateStaffCode} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50 transition-all w-full sm:w-auto">
+                                    <button onClick={() => setIsStaffCodeModalOpen(true)} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50 transition-all w-full sm:w-auto">
                                         Tukar Kod
                                     </button>
                                 </div>
@@ -662,6 +340,21 @@ export function JppSettingsPage() {
                 )}
 
             </div>
+
+            <PromptDialog
+                open={isStaffCodeModalOpen}
+                onOpenChange={setIsStaffCodeModalOpen}
+                title="Tukar Kod Pendaftaran Staf"
+                description="PENTING: Kod ini wajib dirahsiakan. Sentiasa gunakan huruf besar (Uppercase) tanpa jarak, minimum 5 aksara."
+                inputLabel="Kod Pendaftaran Baharu"
+                placeholder="cth: POLISAS2026"
+                initialValue={settings.staff_registration_code || ''}
+                confirmLabel="Simpan Kod"
+                cancelLabel="Batal"
+                variant="destructive"
+                isLoading={savingStaffCode}
+                onConfirm={handleConfirmStaffCode}
+            />
         </div>
     );
 }

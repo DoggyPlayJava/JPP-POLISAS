@@ -424,8 +424,12 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
 | `src/pages/AktivitiFull.tsx` | Pengurusan aktiviti kelab e-KPP; menyusun cip penapis status dalam baris tunggal boleh leret mendatar (`overflow-x-auto no-scrollbar`) dengan butang tindakan sebaris "Aktiviti Baru" di atas senarai kad (tanpa FAB) |
+| `src/pages/KelabPage.tsx` | Direktori Kelab & Persatuan POLISAS; menyepadukan grid skeleton kad, penapis kategori boleh leret mendatar (`overflow-x-auto no-scrollbar`), pengesahan had keahlian (tabular nums), modal penyertaan tertapis, serta dialog penarikan diri tersuai (menggantikan `window.confirm`) |
+| `src/pages/ClubDetailPage.tsx` | Profil rasmi kelab; navigasi breadcrumb atas teratur, reka bentuk hero banner berkadar moden dengan penstabilan kontras dark mode, metrik angka `font-mono tabular-nums`, serta pembersihan query membazir |
+| `src/pages/UrusKelabPage.tsx` | Panel pentadbiran identiti & MT kelab; dilengkapi pratonton kad langsung interaktif (Live Card Preview), swatches warna rasmi POLISAS, navigasi SPA tanpa muat semula halaman, serta dialog pengesahan berasaskan input teks untuk reset kohort kepimpinan |
 | `src/pages/akademik/AkademikTakwimPage.tsx` | Halaman Takwim Rasmi Kampus & Jadual Kuliah Siswa dengan penyelarasan URL dua arah via `useSearchParams` (`?tab=pusat` untuk kalendar rasmi & kelab, `?tab=personal` untuk jadual kuliah peribadi) |
-| `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan `window.confirm`. Mengelakkan sekatan pelayar moden |
+| `src/components/ui/ConfirmDialog.tsx` | Modal dialog pengesahan universal (menyokong `open`/`isOpen`, `onClose`/`onOpenChange`, dan variasi `default`, `danger`, `destructive`, `warning`) menggantikan 100% `window.confirm` |
+| `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan pengesahan berinput teks. Mengelakkan sekatan pelayar moden |
 | `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
 | `src/pages/PortalPage.tsx` | Entry portal utama. Mengintegrasikan Campus Super App dan modul rasmi Exco |
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
@@ -2472,11 +2476,12 @@ Bagi menjamin kebolehgunaannya pada peranti mudah alih (telefon pintar) di kawas
 
 ### 22.6 Laluan (Routes) & Fail Halaman EMS
 
-Semua 12 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halaman dedicated dalam `src/pages/ems/`:
+Semua 13 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halaman dedicated dalam `src/pages/ems/`:
 
 | Route | Fail Komponen | Mod Akses | Deskripsi |
 |---|---|---|---|
-| `/ems/dashboard` | `src/pages/ems/EmsDashboardPage.tsx` | Protected (AppLayout) | **Hub Acara EMS & Eksplorasi** — EMS Main Management Hub: papan pemuka utama penganjur acara untuk mengurus senarai acara, status kelulusan, jana kod juri, jana pautan QR pendaftaran, tie-breaker, Roda Cabutan Bertuah & pengurusan e-sijil. |
+| `/ems` | Redirect -> `/ems/dashboard` | Public / Protected | **EMS Index Route** — Auto-redirect pantas ke `/ems/dashboard` dalam `src/App.tsx`. |
+| `/ems/dashboard` | `src/pages/ems/EmsDashboardPage.tsx` | Protected (AppLayout) | **Hub Acara EMS & Eksplorasi** — EMS Main Management Hub: papan pemuka utama penganjur acara untuk mengurus senarai acara, status kelulusan, jana kod juri, jana pautan QR pendaftaran, tie-breaker, Roda Cabutan Bertuah & pengurusan e-sijil. Dioptimumkan dengan 5 modal berasingan (`modals/`). |
 | `/ems/event/new` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Borang & Builder Acara** — Event Form & Rubric Builder: pembina borang pendaftaran dinamik (custom fields) & pembina rubrik pemarkahan kriteria juri untuk acara baharu. |
 | `/ems/event/:id/edit` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Borang & Builder Acara Edit** — Event Form & Rubric Builder Edit: kemaskini borang dinamik & rubrik pemarkahan acara sedia ada. |
 | `/ems/approvals` | `src/pages/ems/EmsApprovalPage.tsx` | Protected (SUPER_ADMIN_JPP) | **Semakan HQ Super Admin** — Super Admin Approval Page: semakan & kelulusan penganjuran acara oleh Pentadbir Mutlak (`SUPER_ADMIN_JPP`). |
@@ -3007,7 +3012,15 @@ Komponen modal dialog berasaskan Radix UI Dialog yang menyediakan:
 - Navigasi papan kekunci lengkap: `Enter` untuk hantar, `Escape` untuk batal, dan perangkap fokus (`focus-trap`).
 - Atribut ARIA penuh (`aria-describedby`, `aria-labelledby`) yang mesra pembaca skrin.
 
-### 28.3 Polisi Sifar Em-Dash (Tanda Sempang Standard Sahaja)
+### 28.3 Komponen Universal `<ConfirmDialog />` (`src/components/ui/ConfirmDialog.tsx`)
+Komponen modal pengesahan tindakan berasaskan Radix UI Dialog & Framer Motion:
+- Menggantikan 100% panggilan `window.confirm()` merentas portal.
+- Dwi-antaramuka serasi ke belakang: menyokong kedua-dua pasangan props `open` / `onOpenChange` dan `isOpen` / `onClose`.
+- Variasi visual fleksibel: `variant="default" | "danger" | "destructive" | "warning"`.
+- Keadaan pemuatan (`loading` / `isLoading`) yang melumpuhkan butang semasa operasi asynchronous dijalankan bagi mencegah dwi-hantar (*double click / race condition*).
+- Sepenuhnya serasi dwi-tema Dark & Light Mode dengan latar belakang `bg-white dark:bg-[#1E291F]` dan sempadan halus `border-slate-200 dark:border-white/10`.
+
+### 28.4 Polisi Sifar Em-Dash (Tanda Sempang Standard Sahaja)
 Untuk mengekalkan konsistensi tipografi antarabangsa dan mengelakkan isu pengekodan aksara pada pelbagai platform:
 - Gunakan tanda sempang standard `-` atau simbol anak panah `->`.
 - Jangan sekali-kali memasukkan aksara em-dash dalam teks antaramuka, tooltip, mesej toast, mahupun komen kod.
@@ -3490,6 +3503,100 @@ Seni bina modul penjurian EMS telah dinaik taraf kepada pengalaman **EMS SuperAp
 3. **Polisi Sifar Raw Emoji (Zero Raw Emoji Standard):**
    - Penyingkiran 100% emoji mentah daripada antaramuka portal juri dan papan audit eksekutif.
    - Semua status indikator, lencana anomali, butang skala Likert, dan templat mesej jemputan pautan WhatsApp telah digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`CheckCircle2`, `XCircle`, `AlertTriangle`, `TrendingUp`, `TrendingDown`, `Layers`, `Filter`, `Sparkles`, `Share2`, dll.).
+
+---
+
+### 29.13.1 Naik Taraf Seni Bina EMS SuperApp: Anti-Slop, Modularisasi Modal & Ergonomik Sentuhan
+
+> Ditambah: Oktober 2026 | Komponen Utama: `src/pages/ems/EmsDashboardPage.tsx`, `src/components/ems/modals/*`, `src/pages/ems/EmsPublicRegisterPage.tsx`, `src/pages/ems/EmsCertVerifyPage.tsx`, `src/App.tsx`
+
+Sistem Pengurusan Acara (EMS) telah melalui proses penambahbaikan menyeluruh merangkumi penstrukturan semula seni bina komponen, pembasmian reka bentuk generik AI (*anti-slop*), ergonomik sentuhan mudah alih (*mobile touch ergonomics*), serta penguatkuasaan piawaian tipografi dan sifar emoji mentah:
+
+1. **Laluan Indeks EMS Redirect (`/ems` ➔ `/ems/dashboard`):**
+   - Dikonfigurasi dalam `src/App.tsx` (`<Route path="/ems" element={<Navigate to="/ems/dashboard" replace />} />`).
+   - Memastikan pengguna atau krew yang menaip laluan pintas `/ems` terus dialihkan secara lancar ke papan pemuka pengurusan utama tanpa ralat skrin kosong atau 404.
+   - Penyingkiran butang penukar tema berulang (`<ThemeToggle />`) daripada sub-halaman pengurusan EMS yang bernaung di bawah shell `AppLayout` (`EmsApprovalPage.tsx`, `EmsCheckinSelectorPage.tsx`, `EmsEventFormPage.tsx`) untuk mengekalkan keharmonian antaramuka berpusat.
+
+2. **Seni Bina Modularisasi Modal EMS (`src/components/ems/modals/`):**
+   - Fail monolitik `EmsDashboardPage.tsx` yang sebelum ini padat melebihi 1,650 baris telah dipermudah dan dioptimumkan ke paras di bawah 800 baris dengan mengekstrak 5 modal pengurusan teras ke dalam direktori berdedikasi `src/components/ems/modals/`:
+     - **`EmsQrCodeModal.tsx`**: Menjana kod QR pendaftaran acara awam, muat turun imej PNG QR beresolusi tinggi, dan perkongsian pautan pantas ke papan keratan (*clipboard*).
+     - **`EmsJuryCodeModal.tsx`**: Pengurusan kod laluan juri luar/dalaman, penetapan kategori & reruai (booth), penjanaan pautan pantas WhatsApp, serta penukaran status aktif kod juri.
+     - **`EmsTieBreakerModal.tsx`**: Antaramuka penyelesaian skor seri (*tie-break*) antara pasukan bertanding mengikut kriteria rubrik penentu.
+     - **`EmsManualRegModal.tsx`**: Pendaftaran pantas peserta secara manual di kaunter oleh urus setia tanpa melalui wisard awam.
+     - **`EmsEventCertsModal.tsx`**: Penjanaan sijil digital PDF secara pukal untuk peserta, pemenang, dan panel juri beserta log status sijil.
+   - Papan pemuka kini dilengkapi pemuat kerangka (*skeleton loaders*) moden dengan denyutan (`animate-pulse`) semasa pemuatan awal acara bagi menjamin pengalaman visual yang lancar tanpa lonjakan reka letak (*layout shift*).
+
+3. **Sistem Visual & Palet Anti-Slop (Championship Amber & Slate Obsidian):**
+   - **Pembasmian Kecerunan Generik AI**: Menghapuskan 100% kecerunan ungu-indigo generik AI (`from-purple-600 to-indigo-600`, `selection:bg-purple-500`) yang sering mencemarkan reka bentuk templat automatik.
+   - **Palet Kejuaraan Emas Berwibawa**: Mengaplikasikan palet tema berprestij **Championship Amber** (`amber-500`, `amber-600`) berlatarbelakangkan Obsidian Slate (`slate-950`, `slate-900`) untuk mencerminkan taraf penganjuran sukan, akademik, dan inovasi yang eksklusif dan berwibawa.
+
+4. **Ergonomik Sentuhan Mudah Alih (Mobile Touch Ergonomics):**
+   - **Kapsul Tindakan Bawah Lekat (`fixed bottom / sticky bottom`):** Pada wisard pendaftaran awam (`EmsPublicRegisterPage.tsx`), butang navigasi langkah (*Previous / Next / Hantar Pendaftaran*) diletakkan pada kapsul terapung lekat di bahagian bawah skrin mudah alih berserta kesan kabur kaca lembut (`backdrop-blur-md bg-slate-900/90`).
+   - Memastikan sasaran sentuhan (*touch target*) sentiasa berada dalam jangkauan ibu jari (*thumb zone*) tanpa memerlukan pengguna menatal berulang kali ke bawah borang dinamik yang panjang.
+   - Butang interaktif dilengkapi mikro-animasi maklum balas haptik maya seperti `active:scale-[0.98]` dan `touch-manipulation`.
+
+5. **Piawaian Tipografi Data & Pengimbangan Teks:**
+   - **Nombor Monospatial (`tabular-nums font-mono`):** Dikuatkuasakan secara ketat pada semua paparan skor langsung, nombor siri sijil (cth. `CERT-EMS-2026-XXXXX`), nombor matrik, dan kiraan masa untuk mengelakkan getaran jajaran mendatar (*horizontal layout jitter*) semasa kemas kini nilai dinamik.
+   - **Pengimbangan Tajuk & Kad (`[text-wrap:balance]`):** Diterapkan pada tajuk acara, sepanduk pengumuman, dan kad pasukan bagi menghapuskan masalah perkataan tergantung (*widow words*) pada pelbagai lebar skrin responsif.
+
+6. **Penguatkuasaan 100% Sifar Emoji Mentah (Zero Raw Emojis Standard):**
+   - Meliputi kesemua 11 paparan teras dan modal EMS (`EmsAudienceScanPage.tsx`, `EmsCheckinPage.tsx`, `EmsDashboardPage.tsx`, `EmsEventFormPage.tsx`, `EmsLeaderboardPage.tsx`, `EmsPublicRegisterPage.tsx`, `EmsLuckyDrawModal.tsx`, dan kesemua 5 modal dalam `src/components/ems/modals/`).
+   - Semua simbol mentah seperti piala, bintang, jam, amaran, dan medal digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`Trophy`, `Award`, `Sparkles`, `CheckCircle2`, `Clock`, `QrCode`, `AlertTriangle`, `Scale`, dsb.) bagi mengekalkan ketegasan reka bentuk bertaraf korporat.
+
+7. **Penyelarasan Palet Semantik Bersasar (Purposeful Semantic Color Discipline):**
+   - **Prinsip "Warna Bersebab"**: Menghapuskan "warna pelangi AI slop" (warna-warni yang tidak mempunyai fungsi semantik seperti kad-kad borang ungu/pink/indigo rawak). Warna hanya digunakan secara terpilih pada perkara kritikal:
+     - **Emerald (`emerald-500` / `emerald-600`)**: Menandakan status *Diluluskan*, *Selesai*, *Disahkan Hadir*, atau sijil disahkan tulen.
+     - **Amber (`amber-500` / `amber-400`)**: Menandakan tindakan utama (*Primary CTA Button*), status *Menunggu Kelulusan (Pending)*, dan pengiktirafan tempat pertama (*Champion/Gold*).
+     - **Rose (`rose-500` / `rose-600`)**: Menandakan status *Ditolak*, amaran skor penilaian juri berlebihan/defisit, dan rekod belum hadir.
+     - **Slate Obsidian (`slate-50` hingga `slate-950`)**: Menguasai seluruh permukaan kad, sempadan pembahagi (*borders*), input carian, dan bekas kandungan bagi memberikan ketenangan visual (*visual calm*) serta merendahkan beban kognitif pengguna.
+   - Meliputi keseluruhan ekosistem: `EmsEventFormPage.tsx`, `EmsApprovalPage.tsx`, `EmsJuryPortalPage.tsx`, `EmsJuryAuditMatrix.tsx`, `EmsCheckinPage.tsx`, `EmsCheckinSelectorPage.tsx`, `StudentSearchCombobox.tsx`, dan `EmsEventsFeed.tsx`.
+
+8. **Peningkatan UX Komprehensif (User Experience & Ergonomik Aliran Kerja):**
+   - **Carian Pantas Papan Pemuka (`EmsDashboardPage.tsx`)**: Bar carian segera membolehkan pentadbir menapis senarai acara mengikut tajuk, lokasi, kategori, atau nama penganjur tanpa perlu menatal secara manual, lengkap dengan butang pengosongan carian pantas (*instant clear*).
+   - **Perlindungan Tindakan Musnah (Destructive Safeguard `EmsCompleteConfirmModal.tsx`)**: Tindakan menanda acara sebagai selesai dilindungi modal pengesahan eksplisit bagi mengelakkan penutupan acara dan penguncian markah juri secara tidak sengaja.
+   - **Navigasi Penunjuk Arah (Wayfinding Breadcrumbs)**: Pautan `[Kembali ke Portal Kampus]` ditambah pada kepala papan pemuka EMS bagi memastikan tiada aliran kerja terputus (*no dead ends*).
+   - **Penambat Navigasi Seksyen Pantas (`EmsEventFormPage.tsx`)**: Bar navigasi lekat di bahagian atas borang cipta/sunting acara membolehkan penganjur melompat terus ke seksyen 1 (Asas), seksyen 2 (Borang), atau seksyen 3 (Rubrik) tanpa keletihan menatal (*scrolling fatigue*).
+   - **Validasi Kriteria Rubrik Terbina**: Menghalang penghantaran borang yang mengandungi baris kriteria rubrik tanpa nama bagi mengelakkan rekod pemarkahan tergantung dalam pangkalan data.
+   - **Kewajipan Sebab Penolakan (`EmsApprovalPage.tsx`)**: Super Admin diwajibkan menyatakan sebab penolakan permohonan acara supaya penganjur menerima maklum balas pembetulan yang jelas.
+
+### 29.13.2 Audit Visual & UX Menyeluruh Modul EMS (Deep UI/UX Audit Polish)
+
+> Ditambah: Oktober 2026 | Berdasarkan Skill `/redesign-existing-projects` & Pengesahan Suite Ujian Vitest
+
+1. **Penstandardan Istilah Linguistik Pecah Seri (*Tie-Breaker Standardization*):**
+   - Membasmi kesilapan ejaan perkataan "seret" (yang bermaksud hela/tarik) kepada istilah teknikal rasmi sukan/akademik **"seri"** dan **"pecah seri"** di seluruh fail `EmsLeaderboardPage.tsx`, `EmsTieBreakerModal.tsx`, dan `src/lib/ems.ts` (termasuk mesej ralat pengecualian dan lencana podium/jadual).
+   - Memastikan ketepatan laras bahasa Bahasa Melayu rasmi bagi pelaporan kepada pihak pengurusan tertinggi POLISAS.
+
+2. **Pembetulan Tipografi Sijil Digital (`EmsCertificatePage.tsx`):**
+   - Membetulkan perkataan `'Pemenang Utam'` kepada tajuk anugerah rasmi `'Pemenang Utama / Anugerah Cemerlang'`.
+   - Membetulkan teks hak cipta kaki sijil daripada `'Hak Cipta Terelihara'` kepada `'Hak Cipta Terpelihara'`.
+
+3. **Pembasmian Antipattern `window.confirm` (`EmsEventFormPage.tsx`):**
+   - Menghapuskan panggilan `window.confirm()` natif pelayar yang membekukan (*freeze*) bebenang utama UI dan memusnahkan ergonomik PWA mudah alih.
+   - Menggantikannya dengan komponen dialog modal interaktif in-page (`presetPrompt`) dengan tiga tindakan jelas:
+     - `Batal`: Menutup dialog tanpa sebarang perubahan.
+     - `Ganti Semua`: Menggantikan rubrik sedia ada dengan templat baharu (iFAMB Showcase / Pitching).
+     - `+ Tambah`: Menambah kriteria templat sebagai kategori baharu secara selamat.
+   - Memperbaiki kesilapan tipografi teks butang ganti daripada `'meanda GANTI SEMUA'` kepada `'untuk GANTI SEMUA'`.
+
+4. **Penyesuaian Adaptif Mod Terang & Gelap Roda Cabutan Bertuah (`EmsLuckyDrawModal.tsx`):**
+   - Menyingkirkan warna latar belakang hitam mutlak yang di-hardcode (`#0B0F19`, `#06080F`, `#07090F`) kepada kelas adaptif Tailwind CSS (`bg-white dark:bg-[#0B0F19]`, `bg-slate-50 dark:bg-[#06080F]`, `bg-amber-50/50 dark:bg-[#07090F]`, dan `text-slate-900 dark:text-white`).
+   - Roda Cabutan Bertuah interaktif kini tampil anggun dan selesa dipandang dalam kedua-dua mod Terang (*Light Mode*) dan Gelap (*Dark Mode*).
+
+5. **Diferensiasi Visual Skala Likert Juri (`EmsJuryPortalPage.tsx`):**
+   - Memisahkan penggayaan aktif Skor 4 dan Skor 3 yang sebelum ini berkongsi warna serupa (`bg-slate-900 dark:bg-slate-700`):
+     - **Skor 4 (Baik):** Menggunakan warna biru langit (*Sky*) `bg-sky-600 dark:bg-sky-500 text-white border-sky-500 ring-2 ring-sky-500/30 shadow-md`.
+     - **Skor 3 (Memuaskan):** Menggunakan palet Slate kelabu `bg-slate-700 dark:bg-slate-600 text-white border-slate-600 ring-2 ring-slate-500/30 shadow-md`.
+   - Menggantikan hardcoded hex `#14151f` dengan token tema slate rasmi `dark:bg-slate-900/60` pada bekas kriteria pemarkahan.
+
+6. **Penjajaran Garis Bawah Kad Acara & Kawalan Had Baris Kod (`EmsDashboardPage.tsx`):**
+   - Memastikan reka letak grid kad acara mempunyai ketinggian seragam dengan menggunakan `flex flex-col h-full`, membungkus kandungan atas dalam `flex-1 flex flex-col`, dan menyematkan baris butang tindakan ke bawah dengan `mt-auto`.
+   - Menambah `[text-wrap:balance]` pada tajuk acara untuk mengelakkan perkataan tergantung.
+   - Mengekalkan saiz fail `EmsDashboardPage.tsx` di bawah had ketat 800 baris (783 baris) mengikut penguatkuasaan suite ujian vitest.
+
+7. **Ketahanan Input Pengimbas & Kebersihan Saluran Masa Nyata (`src/lib/ems.ts` & `EmsCheckinPage.tsx`):**
+   - Menormalkan input pengimbas QR dengan menanggalkan awalan `EMS-PASS::`, memproses payload format JSON, dan mengekstrak UUID daripada pautan web URL pendaftaran (`/ems/pass/...` dan `/ems/e/.../register`).
+   - Memastikan langganan Supabase Realtime di `EmsCheckinPage.tsx` dibersihkan dengan memanggil `pChannel.unsubscribe()` sebelum `supabase.removeChannel(pChannel)`.
 
 ---
 
@@ -4204,6 +4311,38 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
 - **Pengekalan Mod Paparan Lalai (*Default View Persistence*):**
   - Paparan Matriks Grid PDF diaktifkan sebagai lalai (*default*) bagi semua pelajar baru.
   - Pilihan paparan pelajar (`grid` vs `agenda`) disimpan secara automatik dalam `localStorage` (`'jpp_student_timetable_view'`), mengekalkan kebebasan pengguna untuk beralih ke paparan agenda harian bila-bila masa.
+
+---
+
+## 33. Audit Menyeluruh & Penyelarasan Reka Bentuk Portal JPP HQ (`/jpp` & `/jpp/*`)
+
+> Dikemas kini: Oktober 2026 (Audit Pasca-Kompilasi & Pembersihan Sifar Kompromi)
+
+Berdasarkan kemahiran `/redesign-existing-projects`, keseluruhan 25+ fail halaman dan submodul di bawah laluan `/jpp` dan `/jpp/*` telah melalui audit visual, fungsi, dan kestabilan sistem yang mendalam tanpa sebarang kompromi (*unvarnished deep audit*).
+
+### 33.1 Penyelarasan Permukaan Latar Belakang (*Background Surface Cohesion*)
+- **Isu Lapuk:** Halaman-halaman dalaman seperti `JppHomePage`, `KeusahawananHubLanding`, `JppMembersPage`, `JppSettingsPage`, `JppAsramaPage`, `JppFoodBankAdmin`, dan `JppTelemetryPage` menggunakan latar belakang kontras bersilang (`bg-slate-50`, `bg-[#ECEEF2]`, `bg-gray-100`) yang bergeser dengan bekas induk `JppLayout` (`#F8F6EE` pada light mode dan `#151D16` pada dark mode), menghasilkan kesan "kotak terapung berkontras janggal".
+- **Penyelesaian:** Seluruh kanvas halaman diselaraskan kepada `bg-transparent` atau `bg-[#F8F6EE]/60 dark:bg-[#151D16]` dengan sokongan penuh mod gelap rasmi institusi.
+
+### 33.2 Pembasmian 100% Dialog Natif Pelayar (`window.confirm`, `window.alert`, `window.prompt`)
+Pelayar moden dan persekitaran PWA WebView sering kali membisukan atau menyekat modal natif pelayar yang membekukan thread utama UI. Kesemua 35+ panggilan natif telah digantikan secara menyeluruh:
+- **Panggilan `window.confirm()`:** Digantikan dengan `<ConfirmDialog />` (`src/components/ui/ConfirmDialog.tsx`) yang menyokong varian `destructive`, pengunci pemuatan automatik bagi mencegah dwi-klik, dan animasi transisi Radix UI / Framer Motion.
+- **Panggilan `window.prompt()`:** Digantikan dengan `<PromptDialog />` (`src/components/ui/PromptDialog.tsx`) dengan pengesahan input terbina dalam (seperti pengesahan kata laluan staff code di `JppSettingsPage` dan larasan token Nexus di `JppNexusPage`).
+- **Panggilan `window.alert()`:** Digantikan dengan `toast.error()` atau `toast.success()` (`react-hot-toast`) bagi maklum balas visual mesra pengguna dan tidak mengganggu alur kerja.
+
+### 33.3 Pembaikan Laluan Pecah (*Broken Routes & Dead Code Removal*)
+1. **Laluan Pautan Pantas QR `JppLayout.tsx`:**
+   - Membaiki pautan salah `/jpp/ahli` -> `/jpp/members`
+   - Membaiki pautan salah `/jpp/pengumuman` -> `/jpp/announcements`
+2. **Pembersihan Kod Mati (*Dead Code Removal*):**
+   - Mengeluarkan 332 baris kod terbiar dalam `JppSettingsPage.tsx` bagi tab-tab lama yang telah dipindahkan ke modul khusus.
+   - Mengeluarkan kod rujukan fungsi "Match" yang yatim dalam `PolyServicesAdmin.tsx` susulan pemansuhan tab berkenaan.
+
+### 33.4 Pembersihan "AI Slop" & Pengukuhan Tipografi
+- Membuang kecerunan teks buatan AI yang tidak natural (`bg-gradient-to-r text-transparent bg-clip-text`) pada nama pengguna (`{displayName}`) dan tajuk bahagian, menggantikannya dengan tipografi institusi yang bersih (`text-slate-900 dark:text-white`).
+- Menghapuskan sekatan ketinggian arbitrari (`h-10 line-clamp-2`) pada kad yang berisiko memotong teks penting pada saiz paparan yang berbeza.
+- Menyeragamkan status badge dan cip penapis dengan warna separa-lutsinar berasaskan palet hex unit rasmi (`rgba(..., 0.12)`).
+
 
 
 

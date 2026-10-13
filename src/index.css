@@ -187,12 +187,18 @@
 }
 
 /* Hide scrollbar for clean horizontal scrolls */
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+.hide-scrollbar,
+.no-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Page Transitions */

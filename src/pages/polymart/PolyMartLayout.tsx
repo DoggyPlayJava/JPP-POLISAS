@@ -42,8 +42,8 @@ export const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?:
 };
 
 export const CATEGORY_EMOJI: Record<string, string> = {
-  Makanan: '🍔', Minuman: '☕', Aksesori: '💎',
-  Perkhidmatan: '🔧', Pakaian: '👕', Elektronik: '📱', Umum: '📦',
+  Makanan: '', Minuman: '', Aksesori: '',
+  Perkhidmatan: '', Pakaian: '', Elektronik: '', Umum: '',
 };
 
 // ── Shared Context ─────────────────────────────────────────────────────────────
@@ -492,7 +492,9 @@ export function PolyMartLayout() {
 
                     {isSearching && searchResults.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-10 gap-3">
-                        <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
+                          <Search className="w-4 h-4" />
+                        </div>
                         <p className="text-xs text-muted-foreground/60 font-medium">Sedang mencari produk...</p>
                       </div>
                     ) : searchResults.length > 0 ? (
@@ -521,7 +523,7 @@ export function PolyMartLayout() {
                               </p>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-xs font-black text-amber-500">RM {prod.price.toFixed(2)}</p>
+                              <p className="text-xs font-black text-amber-500 font-mono tabular-nums">RM {prod.price.toFixed(2)}</p>
                             </div>
                           </div>
                         ))}

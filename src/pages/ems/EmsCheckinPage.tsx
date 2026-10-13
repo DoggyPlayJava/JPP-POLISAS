@@ -30,6 +30,9 @@ import {
   Award,
   Hash,
   Send,
+  MapPin,
+  Calendar,
+  Trophy,
 } from 'lucide-react';
 import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
@@ -192,7 +195,7 @@ export function EmsCheckinPage() {
           const newVisitor = payload.new as EmsVisitor;
           setVisitors((prev) => [newVisitor, ...prev]);
           if (newVisitor.is_milestone_winner) {
-            toast.success(`🎉 Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
+            toast.success(`Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
               duration: 6000,
             });
           }
@@ -201,6 +204,7 @@ export function EmsCheckinPage() {
       .subscribe();
 
     return () => {
+      pChannel.unsubscribe();
       supabase.removeChannel(pChannel);
     };
   }, [eventId]);
@@ -233,13 +237,22 @@ export function EmsCheckinPage() {
 
     isProcessingRef.current = true;
 
-    // Parse JSON payload or raw string
+    // Parse JSON payload, EMS-PASS:: prefix, or URL format
     let searchKey = cleanInput;
-    try {
-      const parsed = JSON.parse(cleanInput);
-      searchKey = parsed.id || parsed.matrix_no || parsed.email || cleanInput;
-    } catch {
-      // keep cleanInput
+    if (searchKey.startsWith('EMS-PASS::')) {
+      searchKey = searchKey.replace('EMS-PASS::', '').trim();
+    } else if (searchKey.includes('/ems/pass/') || searchKey.includes('/ems/e/')) {
+      const urlMatch = searchKey.match(/\/ems\/(?:pass|e\/[^/]+\/register)\/([a-f0-9-]+)/i);
+      if (urlMatch && urlMatch[1]) {
+        searchKey = urlMatch[1].trim();
+      }
+    } else {
+      try {
+        const parsed = JSON.parse(cleanInput);
+        searchKey = (parsed.id || parsed.matrix_no || parsed.email || cleanInput).trim();
+      } catch {
+        // keep cleanInput
+      }
     }
 
     // Look up participant in local memory first for instant duplicate check
@@ -270,9 +283,7 @@ export function EmsCheckinPage() {
         message: `Telah Disahkan Kehadiran pada ${timeBadge}`,
         timestamp: timeBadge,
       });
-      toast.error(`Peserta "${existing.leader_name}" telah pun mendaftar masuk pada ${timeBadge}`, {
-        icon: '⚠️',
-      });
+      toast.error(`Peserta "${existing.leader_name}" telah pun mendaftar masuk pada ${timeBadge}`);
 
       setTimeout(() => {
         isProcessingRef.current = false;
@@ -416,7 +427,7 @@ export function EmsCheckinPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white transition-colors">
-        <RefreshCw className="w-10 h-10 text-purple-600 dark:text-purple-400 animate-spin mb-4" />
+        <RefreshCw className="w-10 h-10 text-slate-400 dark:text-slate-500 animate-spin mb-4" />
         <p className="text-slate-600 dark:text-slate-300 font-medium animate-pulse">Memuatkan Portal Pengesahan Kehadiran EMS...</p>
       </div>
     );
@@ -430,7 +441,7 @@ export function EmsCheckinPage() {
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">Pautan tidak sah atau acara telah dipadamkan.</p>
         <Link
           to="/ems/dashboard"
-          className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium transition-all shadow-md shadow-purple-600/20"
+          className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold transition-all shadow-sm"
         >
           Kembali ke Dashboard EMS
         </Link>
@@ -452,8 +463,8 @@ export function EmsCheckinPage() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 PORTAL URUS SETIA / CREW
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
@@ -463,10 +474,16 @@ export function EmsCheckinPage() {
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
               {eventDetail.title}
             </h1>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
-              <span>📍 {eventDetail.venue || 'Lokasi tidak ditetapkan'}</span>
-              <span>📅 {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : 'Tarikh -'}</span>
-            </p>
+            <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                {eventDetail.venue || 'Lokasi tidak ditetapkan'}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : 'Tarikh -'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -502,8 +519,8 @@ export function EmsCheckinPage() {
           onClick={() => setActiveCheckinTab('PARTICIPANTS')}
           className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition ${
             activeCheckinTab === 'PARTICIPANTS'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -514,11 +531,11 @@ export function EmsCheckinPage() {
           onClick={() => setActiveCheckinTab('VISITORS')}
           className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition ${
             activeCheckinTab === 'VISITORS'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50'
           }`}
         >
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Sparkles className="w-4 h-4 text-amber-500" />
           <span>Kehadiran Pengunjung ({visitors.length})</span>
         </button>
       </div>
@@ -529,19 +546,19 @@ export function EmsCheckinPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jumlah Pengunjung Free-Flow</span>
-              <p className="text-3xl font-black text-slate-900 dark:text-white">{visitors.length}</p>
+              <p className="text-3xl font-black text-slate-900 dark:text-white tabular-nums font-mono">{visitors.length}</p>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/30 shadow-sm space-y-1">
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
                 <Sparkles className="w-4 h-4" /> Pemenang Milestone
               </span>
-              <p className="text-3xl font-black text-amber-500 dark:text-amber-300">
+              <p className="text-3xl font-black text-amber-600 dark:text-amber-400 tabular-nums font-mono">
                 {visitors.filter((v) => v.is_milestone_winner).length}
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Imbasan Terakhir</span>
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200 tabular-nums font-mono">
                 {visitors[0] ? new Date(visitors[0].scanned_at).toLocaleTimeString('ms-MY') : '-'}
               </p>
             </div>
@@ -551,7 +568,7 @@ export function EmsCheckinPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Senarai Kehadiran Pengunjung Awam
+                <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" /> Senarai Kehadiran Pengunjung Awam
               </h3>
               <span className="text-xs text-slate-500 dark:text-slate-400">Kemaskini Masa Nyata (Realtime)</span>
             </div>
@@ -566,7 +583,7 @@ export function EmsCheckinPage() {
                   <div key={v.id || i} className="py-3 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${v.is_milestone_winner ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
-                        {v.is_milestone_winner ? '🏆' : i + 1}
+                        {v.is_milestone_winner ? <Trophy className="w-4 h-4 text-slate-950" /> : i + 1}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -580,7 +597,7 @@ export function EmsCheckinPage() {
                         <p className="text-xs text-slate-500 dark:text-slate-400">{v.matrix_no || v.email || v.phone || 'Pengunjung Awam'}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-mono text-slate-400 dark:text-slate-500">
+                    <span className="text-xs font-mono text-slate-400 dark:text-slate-500 tabular-nums">
                       {new Date(v.scanned_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </span>
                   </div>
@@ -596,49 +613,46 @@ export function EmsCheckinPage() {
       {/* ── Real-Time Header Stats Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Total Registered */}
-        <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/10 rounded-full  group-hover:bg-blue-500/20 transition-all" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendaftaran</span>
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Users className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">{totalRegistered}</span>
+            <span className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums font-mono">{totalRegistered}</span>
             <span className="text-xs text-slate-400 dark:text-slate-500 ml-1.5">peserta</span>
           </div>
         </div>
 
         {/* Checked-In Count */}
-        <div className="bg-white dark:bg-slate-900/90 border border-emerald-500/30 dark:border-emerald-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-emerald-500/10 rounded-full  group-hover:bg-emerald-500/20 transition-all" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Disahkan Hadir</span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Disahkan Hadir</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <UserCheck className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl md:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{checkedInCount}</span>
+            <span className="text-2xl md:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums font-mono">{checkedInCount}</span>
             <span className="text-xs text-emerald-600/70 dark:text-emerald-500/70 ml-1.5">peserta</span>
           </div>
         </div>
 
         {/* Attendance Percentage */}
-        <div className="bg-white dark:bg-slate-900/90 border border-purple-500/30 dark:border-purple-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-purple-500/10 rounded-full  group-hover:bg-purple-500/20 transition-all" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Peratus Kehadiran</span>
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Peratus Kehadiran</span>
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Flame className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline">
-            <span className="text-2xl md:text-3xl font-extrabold text-purple-700 dark:text-purple-300">{percentageAttendance}%</span>
+            <span className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums font-mono">{percentageAttendance}%</span>
             <div className="ml-3 flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden max-w-[80px]">
               <div
-                className="bg-gradient-to-r from-purple-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                 style={{ width: `${percentageAttendance}%` }}
               />
             </div>
@@ -646,16 +660,15 @@ export function EmsCheckinPage() {
         </div>
 
         {/* Pending Count */}
-        <div className="bg-white dark:bg-slate-900/90 border border-amber-500/30 dark:border-amber-500/20 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-          <div className="absolute -right-3 -top-3 w-16 h-16 bg-amber-500/10 rounded-full  group-hover:bg-amber-500/20 transition-all" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Belum Hadir</span>
-            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Belum Hadir</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Clock className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl md:text-3xl font-extrabold text-amber-600 dark:text-amber-400">{pendingCount}</span>
+            <span className="text-2xl md:text-3xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums font-mono">{pendingCount}</span>
             <span className="text-xs text-slate-400 dark:text-slate-500 ml-1.5">peserta</span>
           </div>
         </div>
@@ -669,8 +682,8 @@ export function EmsCheckinPage() {
               onClick={() => setMode('SCANNER')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-xs md:text-sm transition-all ${
                 mode === 'SCANNER'
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'
               }`}
             >
               <Camera className="w-4 h-4" />
@@ -681,8 +694,8 @@ export function EmsCheckinPage() {
               onClick={() => setMode('MANUAL')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-xs md:text-sm transition-all ${
                 mode === 'MANUAL'
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50'
               }`}
             >
               <Search className="w-4 h-4" />
@@ -691,7 +704,7 @@ export function EmsCheckinPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <ShieldCheck className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <span>Kamera &amp; Pangkalan Data Terhubung</span>
           </div>
         </div>
@@ -703,8 +716,8 @@ export function EmsCheckinPage() {
             <div className="lg:col-span-6 space-y-4">
               <div className="relative bg-slate-50 dark:bg-slate-950 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-inner flex flex-col items-center">
                 <div className="w-full flex items-center justify-between mb-3 text-xs text-slate-500 dark:text-slate-400 px-1">
-                  <span className="flex items-center gap-1.5 font-medium text-purple-600 dark:text-purple-400">
-                    <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                  <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     Kamera Pengimbas QR Active
                   </span>
                   <span>Sudut Imbasan Optimum</span>
@@ -740,7 +753,7 @@ export function EmsCheckinPage() {
                       </>
                     ) : (
                       <>
-                        <Camera className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <Camera className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                         <span>Buka Kamera</span>
                       </>
                     )}
@@ -770,11 +783,11 @@ export function EmsCheckinPage() {
                     value={manualCodeInput}
                     onChange={(e) => setManualCodeInput(e.target.value)}
                     placeholder="Imbas barcode atau taip ID / Matrix No..."
-                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Sahkan</span>
@@ -786,7 +799,7 @@ export function EmsCheckinPage() {
             {/* Right Column: Instant Scan Result Toast / Card */}
             <div className="lg:col-span-6 space-y-4">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <Sparkles className="w-4 h-4 text-amber-500" />
                 Status Keputusan Imbasan Terbaru
               </h3>
 
@@ -848,7 +861,7 @@ export function EmsCheckinPage() {
 
                   <button
                     onClick={() => setScanResult(null)}
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-purple-600/20 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
                   >
                     <RefreshCw className="w-4 h-4" />
                     <span>Imbas Peserta Seterusnya</span>
@@ -867,8 +880,9 @@ export function EmsCheckinPage() {
                     </span>
                   </div>
 
-                  <div className="bg-amber-100/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs font-medium">
-                    ⚠️ Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.
+                  <div className="bg-amber-100/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.</span>
                   </div>
 
                   <div className="space-y-3">
@@ -932,7 +946,7 @@ export function EmsCheckinPage() {
                   value={manualSearchQuery}
                   onChange={(e) => setManualSearchQuery(e.target.value)}
                   placeholder="Cari No. Matrik, Pas Serial, Nama, Booth, atau Emel..."
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-purple-500 shadow-sm"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 />
                 {manualSearchQuery && (
                   <button
@@ -949,11 +963,11 @@ export function EmsCheckinPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500 shadow-sm"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 >
                   <option value="ALL">Semua Status Kehadiran</option>
-                  <option value="PENDING">⏳ Belum Hadir (Pending)</option>
-                  <option value="CHECKED_IN">✅ Disahkan Hadir</option>
+                  <option value="PENDING">Belum Hadir (Pending)</option>
+                  <option value="CHECKED_IN">Disahkan Hadir</option>
                 </select>
               </div>
 
@@ -962,7 +976,7 @@ export function EmsCheckinPage() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500 shadow-sm"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 >
                   <option value="ALL">Semua Kategori</option>
                   {availableCategories.map((cat) => (
@@ -985,7 +999,7 @@ export function EmsCheckinPage() {
         <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" />
               Senarai Kehadiran Peserta Live
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
@@ -1044,10 +1058,10 @@ export function EmsCheckinPage() {
                       {/* Team / Booth */}
                       <td className="p-3.5">
                         {p.team_name ? (
-                          <div className="font-semibold text-purple-600 dark:text-emerald-300">{p.team_name}</div>
+                          <div className="font-semibold text-slate-900 dark:text-white">{p.team_name}</div>
                         ) : null}
                         {p.booth_no ? (
-                          <span className="inline-block mt-0.5 text-[11px] font-mono px-2 py-0.5 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded border border-amber-200 dark:border-amber-500/20">
+                          <span className="inline-block mt-0.5 text-[11px] font-mono px-2 py-0.5 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded border border-amber-200 dark:border-amber-500/20 tabular-nums">
                             Booth {p.booth_no}
                           </span>
                         ) : !p.team_name ? (
@@ -1056,7 +1070,7 @@ export function EmsCheckinPage() {
                       </td>
 
                       {/* Matrix / Email */}
-                      <td className="p-3.5 font-mono text-slate-500 dark:text-slate-400">
+                      <td className="p-3.5 font-mono text-slate-500 dark:text-slate-400 tabular-nums">
                         {p.matrix_no || p.email || p.id.slice(0, 8)}
                       </td>
 
@@ -1068,7 +1082,7 @@ export function EmsCheckinPage() {
                       {/* Time Checked-in badge */}
                       <td className="p-3.5 font-mono">
                         {p.is_checked_in && p.checked_in_at ? (
-                          <span className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800/40">
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800/40 tabular-nums">
                             {new Date(p.checked_in_at).toLocaleTimeString('ms-MY', {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -1088,7 +1102,7 @@ export function EmsCheckinPage() {
                           <button
                             onClick={() => handleManualCheckin(p)}
                             disabled={actionLoadingId === p.id}
-                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-purple-600/20 flex items-center gap-1.5 ml-auto"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ml-auto active:scale-95"
                           >
                             {actionLoadingId === p.id ? (
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />

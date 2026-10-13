@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
+import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Star, Store,
   ChevronRight, MessageCircle, Phone, X, RefreshCw,
-  CreditCard, Handshake, Upload, Image,
+  CreditCard, Handshake, Upload, Image, AlertCircle, Award, ListFilter,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -56,13 +56,13 @@ interface Order {
   selected_variation: string | null;
 }
 
-const STATUS_TABS: { key: OrderStatus | 'all'; label: string; emoji: string }[] = [
-  { key: 'all',       label: 'Semua',    emoji: '📋' },
-  { key: 'PENDING',   label: 'Menunggu', emoji: '⏳' },
-  { key: 'CONFIRMED', label: 'Disahkan', emoji: '✅' },
-  { key: 'READY',     label: 'Siap',     emoji: '🎉' },
-  { key: 'COMPLETED', label: 'Selesai',  emoji: '⭐' },
-  { key: 'CANCELLED', label: 'Batal',    emoji: '❌' },
+const STATUS_TABS: { key: OrderStatus | 'all'; label: string; icon: React.FC<any> }[] = [
+  { key: 'all',       label: 'Semua',    icon: ListFilter },
+  { key: 'PENDING',   label: 'Menunggu', icon: Clock },
+  { key: 'CONFIRMED', label: 'Disahkan', icon: CheckCircle },
+  { key: 'READY',     label: 'Siap',     icon: Truck },
+  { key: 'COMPLETED', label: 'Selesai',  icon: Star },
+  { key: 'CANCELLED', label: 'Batal',    icon: XCircle },
 ];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
@@ -91,7 +91,7 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       comment: comment.trim() || null,
     });
     if (!error) { 
-      toast.success('Terima kasih atas ulasan anda! ⭐'); 
+      toast.success('Terima kasih atas ulasan anda!'); 
       
       // Award merit (Exco Kediaman boleh adjust nilai di pangkalan data kelak)
       const { error: meritErr } = await supabase.rpc('increment_merit_by_source', {
@@ -102,7 +102,7 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       });
       
       if (!meritErr) {
-        toast.success('+1 Merit Kediaman! 🎉', {
+        toast.success('+1 Merit Kediaman!', {
           style: { background: '#f59e0b', color: '#fff', fontWeight: 900 }
         });
       }
@@ -121,23 +121,25 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
         className="relative w-full sm:max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-foreground">Beri Ulasan</h3>
-          <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60">
+          <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 cursor-pointer">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
         <p className="text-sm font-bold text-muted-foreground">{order.business_products?.name}</p>
 
-        <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-2.5 text-center">
-          <p className="text-[11px] font-black text-amber-700">🎁 Ganjaran Ulasan</p>
-          <p className="text-[10px] font-bold text-amber-600/80 mt-0.5 leading-tight">
-            Tinggalkan ulasan bergambar / jujur untuk menerima automatik +1 Merit Kediaman.
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
+          <p className="text-[11px] font-black text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1.5">
+            <Award className="w-3.5 h-3.5" /> Ganjaran Ulasan
+          </p>
+          <p className="text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 mt-0.5 leading-tight">
+            Tinggalkan ulasan jujur untuk menerima automatik +1 Merit Kediaman.
           </p>
         </div>
 
         {/* Star picker */}
         <div className="flex items-center justify-center gap-2 py-3">
           {[1,2,3,4,5].map(s => (
-            <button key={s} onClick={() => setRating(s)}>
+            <button key={s} onClick={() => setRating(s)} className="cursor-pointer">
               <Star className="w-9 h-9 transition-all" style={{ color: s <= rating ? '#f59e0b' : 'hsl(var(--border))', fill: s <= rating ? '#f59e0b' : 'none' }} />
             </button>
           ))}
@@ -148,9 +150,14 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
           className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 resize-none focus:border-amber-500/50 transition-all" />
 
         <button onClick={submit} disabled={submitting}
-          className="w-full h-11 rounded-2xl text-white font-black text-sm disabled:opacity-60"
+          className="w-full h-11 rounded-2xl text-white font-black text-sm disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
           style={{ background: PM_GRADIENT }}>
-          {submitting ? 'Menghantar...' : '⭐ Hantar Ulasan'}
+          {submitting ? 'Menghantar...' : (
+            <>
+              <Star className="w-4 h-4 fill-current" />
+              <span>Hantar Ulasan</span>
+            </>
+          )}
         </button>
       </motion.div>
     </motion.div>
@@ -260,7 +267,7 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
 
       if (updateErr) throw updateErr;
 
-      toast.success('Resit berjaya dimuat naik!', { icon: '📸' });
+      toast.success('Resit berjaya dimuat naik!');
       onUploaded();
     } catch (err: any) {
       toast.error(err.message || 'Gagal muat naik resit');
@@ -271,7 +278,7 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
   return (
     <label className={`w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black cursor-pointer hover:bg-blue-500/10 transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
       <Upload className="w-4 h-4" />
-      {uploading ? 'Memuat naik...' : '📸 Muat Naik Resit Pembayaran'}
+      {uploading ? 'Memuat naik...' : 'Muat Naik Resit Pembayaran'}
       <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
     </label>
   );
@@ -317,7 +324,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
             .select('owner_id').eq('id', order.keusahawanan_businesses.id).single();
           if (bizData?.owner_id) {
             await sendNotificationToUser(bizData.owner_id, {
-              title: '⚠️ Permintaan Pembatalan',
+              title: 'Permintaan Pembatalan',
               message: `Pembeli meminta pembatalan pesanan ${order.business_products?.name}. Sebab: ${finalReason}`,
               type: 'polymart_cancellation_request',
               module: 'POLYMART',
@@ -342,7 +349,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
         className="relative w-full sm:max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-foreground">Batalkan Pesanan</h3>
-          <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60">
+          <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 cursor-pointer">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -350,7 +357,10 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
 
         {order.status === 'CONFIRMED' && (
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-[10px] font-black text-amber-600">⚠ Pesanan sudah disahkan. Pembatalan memerlukan kelulusan vendor.</p>
+            <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>Pesanan sudah disahkan. Pembatalan memerlukan kelulusan vendor.</span>
+            </p>
           </div>
         )}
 
@@ -358,7 +368,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
           <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Sebab Pembatalan</p>
           {CANCEL_REASONS.map(r => (
             <button key={r} onClick={() => setReason(r)}
-              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold border transition-all cursor-pointer ${
                 reason === r
                   ? 'border-rose-500/50 bg-rose-500/10 text-rose-600'
                   : 'border-border/50 bg-muted/20 text-foreground hover:bg-muted/40'
@@ -374,8 +384,8 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
         </div>
 
         <button onClick={handleCancel} disabled={submitting || !reason}
-          className="w-full h-11 rounded-2xl text-white font-black text-sm bg-rose-500 hover:bg-rose-600 disabled:opacity-60 transition-colors">
-          {submitting ? 'Memproses...' : order.status === 'PENDING' ? '❌ Batalkan Sekarang' : '📩 Hantar Permintaan Batal'}
+          className="w-full h-11 rounded-2xl text-white font-black text-sm bg-rose-500 hover:bg-rose-600 disabled:opacity-60 transition-colors cursor-pointer">
+          {submitting ? 'Memproses...' : order.status === 'PENDING' ? 'Batalkan Sekarang' : 'Hantar Permintaan Batal'}
         </button>
       </motion.div>
     </motion.div>
@@ -388,7 +398,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
   const navigate = useNavigate();
   const cfg = STATUS_CONFIG[order.status];
   const StatusIcon = cfg.icon;
-  const emoji = CATEGORY_EMOJI[order.business_products?.category ?? ''] ?? '📦';
+  const FallbackIcon = CATEGORY_ICON_MAP[order.business_products?.category ?? ''] ?? Package;
   const biz = order.keusahawanan_businesses;
 
   const vendorPhone = biz?.owner?.phone;
@@ -408,17 +418,17 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
       <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ background: cfg.bg }}>
         <StatusIcon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
         <span className="text-[11px] font-black" style={{ color: cfg.color }}>{cfg.label}</span>
-        <span className="ml-auto text-[9px] text-muted-foreground/50">
+        <span className="ml-auto text-[9px] text-muted-foreground/50 font-mono tabular-nums">
           {new Date(order.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
       <div className="p-3.5 flex gap-3">
         {/* Product image */}
-        <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
+        <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center" style={{ background: PM_LIGHT }}>
           {order.business_products?.image_url
             ? <img src={order.business_products.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-            : <div className="w-full h-full flex items-center justify-center text-2xl">{emoji}</div>
+            : <FallbackIcon className="w-7 h-7 text-amber-600 dark:text-amber-400" />
           }
         </div>
 
@@ -435,10 +445,10 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             <span className="group-hover:underline">{biz?.name ?? 'Kedai'}</span>
             <ChevronRight className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
           </button>
-          <p className="text-sm font-black text-foreground truncate">{order.business_products?.name}</p>
+          <p className="text-sm font-black text-foreground truncate [text-wrap:balance]">{order.business_products?.name}</p>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs font-black" style={{ color: PM_ACCENT }}>RM {(order.total_price ?? order.unit_price * order.quantity).toFixed(2)}</span>
-            <span className="text-[10px] text-muted-foreground/50">×{order.quantity}</span>
+            <span className="text-xs font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>RM {(order.total_price ?? order.unit_price * order.quantity).toFixed(2)}</span>
+            <span className="text-[10px] text-muted-foreground/50 font-mono tabular-nums">×{order.quantity}</span>
           </div>
           {order.pickup_time && (
             <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1 mt-0.5">
@@ -461,10 +471,10 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
               <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
                 <CreditCard className="w-3 h-3" /> QR Online
                 {order.payment_verified_at
-                  ? <span className="text-emerald-600 ml-1">✔ Disahkan</span>
+                  ? <span className="text-emerald-600 ml-1 inline-flex items-center gap-0.5"><CheckCircle className="w-3 h-3" /> Disahkan</span>
                   : order.payment_receipt_url
-                    ? <span className="text-amber-600 ml-1">⏳ Menunggu Pengesahan</span>
-                    : <span className="text-rose-500 ml-1">⚠ Belum Bayar</span>
+                    ? <span className="text-amber-600 ml-1 inline-flex items-center gap-0.5"><Clock className="w-3 h-3" /> Menunggu Pengesahan</span>
+                    : <span className="text-rose-500 ml-1 inline-flex items-center gap-0.5"><AlertCircle className="w-3 h-3" /> Belum Bayar</span>
                 }
               </span>
             ) : (
@@ -473,7 +483,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
               </span>
             )}
             {order.payment_deadline_at && !order.payment_verified_at && order.status === 'PENDING' && (
-              <span className="text-[9px] text-rose-500 font-bold">
+              <span className="text-[9px] text-rose-500 font-bold font-mono tabular-nums">
                 Had: {new Date(order.payment_deadline_at).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -489,20 +499,23 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
         <div className="px-3.5 pb-3.5">
           {order.payment_receipt_rejected && (
             <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 mb-2">
-              <p className="text-[10px] font-black text-rose-600">⚠ Resit ditolak oleh vendor. Sila muat naik semula.</p>
+              <p className="text-[10px] font-black text-rose-600 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Resit ditolak oleh vendor. Sila muat naik semula.</span>
+              </p>
             </div>
           )}
           {order.payment_receipt_url && !order.payment_receipt_rejected ? (
             <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all">
-              <Image className="w-4 h-4 text-blue-500" />
-              <span>✅ Resit Dihantar — Lihat Butiran Bayaran</span>
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all cursor-pointer">
+              <CheckCircle className="w-4 h-4 text-blue-500" />
+              <span>Resit Dihantar — Lihat Butiran Bayaran</span>
             </button>
           ) : (
             <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all">
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all cursor-pointer">
               <Upload className="w-4 h-4" />
-              <span>📸 Selesaikan Pembayaran (Muat Naik Resit)</span>
+              <span>Selesaikan Pembayaran (Muat Naik Resit)</span>
             </button>
           )}
         </div>
@@ -531,8 +544,8 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
       {(order.status === 'PENDING' || (order.status === 'CONFIRMED' && !order.cancellation_requested_at)) && (
         <div className="px-3.5 pb-2">
           <button onClick={() => onCancel(order)}
-            className="w-full h-9 rounded-xl text-[11px] font-black border border-rose-500/20 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 transition-all">
-            {order.status === 'PENDING' ? '❌ Batalkan Pesanan' : '📩 Minta Pembatalan'}
+            className="w-full h-9 rounded-xl text-[11px] font-black border border-rose-500/20 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer">
+            {order.status === 'PENDING' ? 'Batalkan Pesanan' : 'Minta Pembatalan'}
           </button>
         </div>
       )}
@@ -541,7 +554,10 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
       {order.cancellation_requested_at && order.status !== 'CANCELLED' && (
         <div className="px-3.5 pb-2">
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-[10px] font-black text-amber-600">⏳ Permintaan pembatalan dihantar. Menunggu kelulusan vendor...</p>
+            <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Permintaan pembatalan dihantar. Menunggu kelulusan vendor...</span>
+            </p>
             <p className="text-[9px] text-amber-500/60 mt-0.5">Sebab: {order.cancellation_reason}</p>
           </div>
         </div>
@@ -550,9 +566,10 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
       {order.status === 'COMPLETED' && (
         <div className="px-3.5 pb-3.5">
           <button onClick={() => onReview(order)}
-            className="w-full h-9 rounded-xl text-[11px] font-black transition-all hover:brightness-110"
+            className="w-full h-9 rounded-xl text-[11px] font-black transition-all hover:brightness-110 cursor-pointer flex items-center justify-center gap-1.5"
             style={{ background: PM_LIGHT, color: PM_ACCENT }}>
-            ⭐ Beri Ulasan
+            <Star className="w-3.5 h-3.5 fill-current" />
+            <span>Beri Ulasan</span>
           </button>
         </div>
       )}
@@ -639,9 +656,9 @@ export function PolyMartMyOrders() {
           setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
           
           if (updated.status === 'READY') {
-            toast.success(`Pesanan ${updated.id.slice(0, 8)} sedia diambil! 🎉`);
+            toast.success(`Pesanan ${updated.id.slice(0, 8)} sedia diambil!`);
           } else if (updated.status === 'CONFIRMED') {
-            toast.success(`Pesanan sedang diproses! 📦`);
+            toast.success(`Pesanan sedang diproses!`);
           } else if (updated.status === 'CANCELLED') {
             toast.error(`Pesanan dibatalkan.`);
           }
@@ -673,14 +690,14 @@ export function PolyMartMyOrders() {
               <button
                 onClick={() => loadOrders(true)}
                 disabled={isRefreshing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all disabled:opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all disabled:opacity-60 cursor-pointer"
                 style={{ background: PM_LIGHT, color: PM_ACCENT }}
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Menyemak...' : 'Semak Status'}
               </button>
               {lastRefreshed && (
-                <p className="text-[9px] text-muted-foreground/40 font-bold">
+                <p className="text-[9px] text-muted-foreground/40 font-bold font-mono tabular-nums">
                   Dikemas kini: {lastRefreshed.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
@@ -692,18 +709,19 @@ export function PolyMartMyOrders() {
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
           {STATUS_TABS.map(tab => {
             const count = tab.key === 'all' ? orders.length : tabCounts[tab.key] ?? 0;
+            const Icon = tab.icon;
             return (
               <button key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer"
                 style={activeTab === tab.key
                   ? { background: PM_LIGHT, color: PM_ACCENT, border: `1.5px solid ${PM_ACCENT}40` }
                   : { background: 'transparent', color: 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border)/0.5)' }
                 }>
-                <span>{tab.emoji}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{tab.label}</span>
                 {count > 0 && (
-                  <span className="w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center"
+                  <span className="w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center font-mono tabular-nums"
                     style={{ background: activeTab === tab.key ? PM_ACCENT : 'hsl(var(--muted))', color: activeTab === tab.key ? 'white' : 'hsl(var(--muted-foreground))' }}>
                     {count}
                   </span>
@@ -715,15 +733,31 @@ export function PolyMartMyOrders() {
 
         {/* Orders */}
         {loading ? (
-          <div className="flex items-center justify-center h-40">
-            <div className="w-8 h-8 rounded-full border-3 border-t-transparent animate-spin"
-              style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
+          <div className="space-y-3 animate-pulse">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="rounded-2xl border border-border/50 bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-28 bg-muted/60 rounded" />
+                  <div className="h-3 w-16 bg-muted/40 rounded" />
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/40 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-20 bg-muted/40 rounded" />
+                    <div className="h-4 w-40 bg-muted/60 rounded" />
+                    <div className="h-3 w-24 bg-muted/50 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="text-5xl">📦</div>
-            <p className="text-sm font-bold text-muted-foreground/60">Tiada pesanan</p>
-            <p className="text-xs text-muted-foreground/40">Pesanan anda akan muncul di sini</p>
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-xs">
+              <Package className="w-8 h-8" />
+            </div>
+            <p className="text-sm font-bold text-muted-foreground/80">Tiada pesanan</p>
+            <p className="text-xs text-muted-foreground/50">Pesanan anda akan muncul di sini</p>
           </div>
         ) : (
           <div className="space-y-3">

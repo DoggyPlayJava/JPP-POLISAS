@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
+import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
-import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight } from 'lucide-react';
+import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight, Package } from 'lucide-react';
 import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 interface CartItem {
@@ -179,7 +179,7 @@ export function PolyMartCartPage() {
       // 4. Notify vendor (sekali sahaja per vendor)
       try {
         await sendNotificationToBusinessVendor(businessId, {
-          title: '🛍️ Pesanan Pukal Baharu!',
+          title: 'Pesanan Pukal Baharu',
           message: `${profile?.full_name ?? 'Pelajar'} menempah ${businessItems.length} jenis barang.`,
           type: 'polymart_order_new',
           module: 'POLYMART',
@@ -188,7 +188,7 @@ export function PolyMartCartPage() {
         });
       } catch (e) {}
 
-      toast.success('Pesanan dihantar berjaya!', { icon: '🎉' });
+      toast.success('Pesanan berjaya dihantar');
       
       // Update UI
       setItems(prev => prev.filter(i => i.product.business_id !== businessId));
@@ -209,9 +209,26 @@ export function PolyMartCartPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-          style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
+      <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-6 h-6 rounded-lg bg-amber-500/20" />
+          <div className="h-6 w-32 bg-muted/60 rounded-md" />
+        </div>
+        {[1, 2].map(i => (
+          <div key={i} className="bg-card border border-border/50 rounded-3xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-muted/50" />
+              <div className="h-4 w-32 bg-muted/50 rounded" />
+            </div>
+            <div className="flex gap-3">
+              <div className="w-16 h-16 rounded-xl bg-muted/40 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-48 bg-muted/50 rounded" />
+                <div className="h-4 w-20 bg-muted/60 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -283,16 +300,18 @@ export function PolyMartCartPage() {
                   {groupItems.map(item => {
                     const availableStock = Math.max(0, item.product.stock_quantity - (item.product.reserved_stock || 0));
                     const maxQty = Math.min(availableStock, 10);
-                    const emoji = CATEGORY_EMOJI[item.product.category] ?? '📦';
+                    const FallbackIcon = CATEGORY_ICON_MAP[item.product.category] || Package;
 
                     return (
                       <div key={item.id} className="flex gap-3 relative">
                         {/* Img */}
-                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style={{ background: PM_LIGHT }}>
                           {item.product.image_url ? (
                             <img src={item.product.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl">{emoji}</div>
+                            <div className="w-full h-full flex items-center justify-center text-amber-600 dark:text-amber-400">
+                              <FallbackIcon className="w-7 h-7" />
+                            </div>
                           )}
                         </div>
                         
@@ -312,11 +331,11 @@ export function PolyMartCartPage() {
                               const effPrice = getProductEffectivePrice(item.product);
                               return (
                                 <div className="flex items-baseline gap-1.5 mt-1">
-                                  <span className="text-sm font-black" style={{ color: onSale ? '#f43f5e' : PM_ACCENT }}>
+                                  <span className="text-sm font-black font-mono tabular-nums" style={{ color: onSale ? '#f43f5e' : PM_ACCENT }}>
                                     RM {effPrice.toFixed(2)}
                                   </span>
                                   {onSale && (
-                                    <span className="text-[11px] text-muted-foreground/60 line-through">
+                                    <span className="text-[11px] text-muted-foreground/50 line-through font-mono tabular-nums">
                                       RM {item.product.price.toFixed(2)}
                                     </span>
                                   )}
@@ -329,20 +348,20 @@ export function PolyMartCartPage() {
                             {/* Qty control */}
                             <div className="flex items-center gap-2">
                               <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="w-6 h-6 rounded-md border border-border/60 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50"
+                                className="w-6 h-6 rounded-md border border-border/60 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
                                 disabled={item.quantity <= 1}>
                                 <Minus className="w-3 h-3 text-muted-foreground" />
                               </button>
-                              <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                              <span className="text-xs font-bold w-4 text-center font-mono tabular-nums">{item.quantity}</span>
                               <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="w-6 h-6 rounded-md border border-border/60 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50"
+                                className="w-6 h-6 rounded-md border border-border/60 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
                                 disabled={item.quantity >= maxQty}>
                                 <Plus className="w-3 h-3 text-muted-foreground" />
                               </button>
                             </div>
                             
                             <button onClick={() => removeItem(item.id)}
-                              className="text-rose-500 hover:text-rose-600 transition-colors p-1">
+                              className="text-rose-500 hover:text-rose-600 transition-colors p-1 cursor-pointer">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -358,14 +377,14 @@ export function PolyMartCartPage() {
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Kaedah Pembayaran</p>
                     <div className="grid grid-cols-2 gap-2">
                       <button type="button" onClick={() => setPaymentMethods(prev => ({ ...prev, [bizId]: 'QR_ONLINE' }))}
-                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${currentMethod === 'QR_ONLINE' ? 'border-blue-500 bg-blue-500/5 text-blue-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${currentMethod === 'QR_ONLINE' ? 'border-blue-500 bg-blue-500/5 text-blue-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-black">💳 QR Online</span>
+                        <span className="text-[11px] font-black">QR Online</span>
                       </button>
                       <button type="button" onClick={() => setPaymentMethods(prev => ({ ...prev, [bizId]: 'COD' }))}
-                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${currentMethod === 'COD' ? 'border-amber-500 bg-amber-500/5 text-amber-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${currentMethod === 'COD' ? 'border-amber-500 bg-amber-500/5 text-amber-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
                         <Handshake className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-black">🤝 COD</span>
+                        <span className="text-[11px] font-black">COD (Tunai)</span>
                       </button>
                     </div>
                   </div>
@@ -375,7 +394,7 @@ export function PolyMartCartPage() {
                 <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-muted-foreground">Jumlah</span>
-                    <span className="text-lg font-black" style={{ color: PM_ACCENT }}>
+                    <span className="text-lg font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>
                       RM {subtotal.toFixed(2)}
                     </span>
                   </div>
@@ -387,10 +406,10 @@ export function PolyMartCartPage() {
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {[
-                        { label: '⚡ Segera', value: 'Segera (Bila-bila Siap)' },
-                        { label: '🌅 Rehat Pagi (10 AM)', value: 'Rehat Pagi (~10.00 AM)' },
-                        { label: '☀️ Tengah Hari (1 PM)', value: 'Tengah Hari (~1.00 PM)' },
-                        { label: '🌇 Petang (Lepas 4 PM)', value: 'Petang (Selepas 4.00 PM)' }
+                        { label: 'Segera', value: 'Segera (Bila-bila Siap)' },
+                        { label: 'Rehat Pagi (10 AM)', value: 'Rehat Pagi (~10.00 AM)' },
+                        { label: 'Tengah Hari (1 PM)', value: 'Tengah Hari (~1.00 PM)' },
+                        { label: 'Petang (Lepas 4 PM)', value: 'Petang (Selepas 4.00 PM)' }
                       ].map(sug => {
                         const active = pickupTime[bizId] === sug.value;
                         return (
@@ -398,7 +417,7 @@ export function PolyMartCartPage() {
                             key={sug.value}
                             type="button"
                             onClick={() => setPickupTime(prev => ({ ...prev, [bizId]: sug.value }))}
-                            className="px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all active:scale-95 whitespace-nowrap"
+                            className="px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all active:scale-95 whitespace-nowrap cursor-pointer"
                             style={active
                               ? { background: 'rgba(245,158,11,0.1)', borderColor: PM_ACCENT, color: PM_ACCENT }
                               : { background: 'hsl(var(--muted)/0.3)', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground))' }
@@ -421,9 +440,9 @@ export function PolyMartCartPage() {
                     <button 
                       onClick={() => handleCheckout(bizId)}
                       disabled={checkingOut === bizId}
-                      className="h-10 px-4 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition-all hover:brightness-110 disabled:opacity-60"
+                      className="h-10 px-4 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition-all hover:brightness-110 disabled:opacity-60 cursor-pointer"
                       style={{ background: PM_GRADIENT }}>
-                      {checkingOut === bizId ? '⏳' : 'Checkout'} <ArrowRight className="w-3 h-3" />
+                      {checkingOut === bizId ? 'Memproses...' : 'Checkout'} <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>

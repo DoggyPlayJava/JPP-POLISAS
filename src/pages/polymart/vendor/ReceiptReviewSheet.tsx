@@ -135,7 +135,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                     Jumlah Bayaran
                   </span>
-                  <span className="text-base sm:text-lg font-black text-amber-500 dark:text-amber-400">
+                  <span className="text-base sm:text-lg font-black font-mono tabular-nums text-amber-500 dark:text-amber-400">
                     {formattedAmount}
                   </span>
                 </div>

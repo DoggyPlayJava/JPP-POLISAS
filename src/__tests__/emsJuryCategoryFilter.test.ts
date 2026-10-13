@@ -103,6 +103,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
       'Anugerah Perusahaan Pelajar Terbaik',
     ],
     assigned_booths: [],
+    created_at: new Date().toISOString(),
   };
 
   const projectParticipant: EmsParticipant = {
@@ -115,6 +116,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
     category_name: 'Anugerah Projek Keusahawanan Terbaik',
     booth_no: 'PK-01',
     is_checked_in: true,
+    created_at: new Date().toISOString(),
   };
 
   const enterpriseParticipant: EmsParticipant = {
@@ -127,6 +129,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
     category_name: 'Anugerah Perusahaan Pelajar Terbaik',
     booth_no: 'PP-01',
     is_checked_in: true,
+    created_at: new Date().toISOString(),
   };
 
   it('correctly assigns dual-category jury to both categories', () => {
@@ -155,6 +158,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
       jury_code_id: dualCategoryJury.id,
       rubric_id: r.id,
       score: 4,
+      created_at: new Date().toISOString(),
     }));
 
     const info = getJuryParticipantScoreInfo(projectParticipant, dualCategoryJury, allRubrics, scores);
@@ -174,6 +178,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
       jury_code_id: dualCategoryJury.id,
       rubric_id: r.id,
       score: 5,
+      created_at: new Date().toISOString(),
     }));
 
     const partialInfo = getJuryParticipantScoreInfo(enterpriseParticipant, dualCategoryJury, allRubrics, partialScores);
@@ -189,6 +194,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
       jury_code_id: dualCategoryJury.id,
       rubric_id: r.id,
       score: 5,
+      created_at: new Date().toISOString(),
     }));
 
     const fullInfo = getJuryParticipantScoreInfo(enterpriseParticipant, dualCategoryJury, allRubrics, fullScores);
@@ -211,6 +217,7 @@ describe('EMS Jury Audit Matrix Rubric Scoping & Score Completion', () => {
         category: 'Anugerah Projek Keusahawanan Terbaik',
       },
       is_checked_in: true,
+      created_at: new Date().toISOString(),
     };
 
     const applicable = getApplicableRubrics(customResponseParticipant, dualCategoryJury, allRubrics);

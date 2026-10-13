@@ -12,6 +12,7 @@ import { JPP_MT_POSITIONS } from '@/types';
 import type { JppPosition, JppUnit } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
@@ -35,6 +36,7 @@ function MemberCard({
   onUpdate,
   onRemove,
 }: {
+  key?: React.Key;
   member: JppMember;
   canEdit: boolean;
   themeColor: string;
@@ -48,6 +50,7 @@ function MemberCard({
   const [overseeUnits, setOverseeUnits] = useState<string[]>([]);
   const [loadingOversee, setLoadingOversee] = useState(false);
   const [saving, setSaving]             = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
 
   const initials = (member.full_name ?? member.email ?? '?')
     .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -259,11 +262,7 @@ function MemberCard({
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Simpan'}
               </button>
               <button
-                onClick={() => {
-                  if (confirm(`Adakah anda pasti ingin membuang ${member.full_name} dari JPP?`)) {
-                    onRemove(member.id);
-                  }
-                }}
+                onClick={() => setRemoveConfirmOpen(true)}
                 disabled={saving}
                 className="flex-shrink-0 flex items-center justify-center px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
                 title="Buang Ahli"
@@ -280,6 +279,17 @@ function MemberCard({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={removeConfirmOpen}
+        onOpenChange={setRemoveConfirmOpen}
+        title="Buang Ahli JPP"
+        description={`Adakah anda pasti mahu membuang ${member.full_name || 'ahli ini'} daripada barisan Majlis Perwakilan Pelajar? Tindakan ini akan melucutkan jawatan dan unit beliau.`}
+        confirmLabel="Buang Ahli"
+        cancelLabel="Batal"
+        variant="destructive"
+        onConfirm={() => onRemove(member.id)}
+      />
     </motion.div>
   );
 }
@@ -289,6 +299,7 @@ function GroupSection({
   title, members, canEdit, themeColor,
   onUpdate, onRemove
 }: {
+  key?: React.Key;
   title: string; members: JppMember[]; canEdit: boolean;
   themeColor: string; onUpdate: (id: string, patch: Partial<JppMember>) => void;
   onRemove: (id: string) => void;
@@ -762,14 +773,8 @@ export function JppMembersPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
-      {/* Background glow */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
-          style={{ background: themeColor }} />
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-10 space-y-8">
+    <div className="w-full text-slate-900 dark:text-white transition-colors">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 py-8 space-y-8">
 
         {/* Header */}
         <motion.div

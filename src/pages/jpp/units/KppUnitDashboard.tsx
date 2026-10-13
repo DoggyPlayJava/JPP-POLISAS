@@ -80,22 +80,22 @@ interface InactiveClub {
 
 // ── Status badge colors ───────────────────────────────────────────────────────
 const ACTIVITY_STATUS_COLOR: Record<string, string> = {
-  aktif: 'bg-emerald-100 text-emerald-700',
-  perancangan: 'bg-blue-100 text-blue-700',
-  selesai: 'bg-slate-100 text-slate-600',
-  ditangguh: 'bg-orange-100 text-orange-700',
+  aktif: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+  perancangan: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+  selesai: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
+  ditangguh: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
 };
 const REPORT_STATUS_COLOR: Record<string, string> = {
-  Menunggu: 'bg-yellow-100 text-yellow-700',
-  'Dalam Semakan': 'bg-blue-100 text-blue-700',
-  Diluluskan: 'bg-emerald-100 text-emerald-700',
-  Ditolak: 'bg-red-100 text-red-700',
+  Menunggu: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+  'Dalam Semakan': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+  Diluluskan: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+  Ditolak: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
 };
 
 const KPP_COLOR = UNIT_CFG['KPP']?.color ?? '#F87171';
 
 // ── Sub-tab button ────────────────────────────────────────────────────────────
-function SubTabBtn({ id, label, active, onClick }: { id: string; label: string; active: boolean; onClick: () => void }) {
+function SubTabBtn({ id, label, active, onClick }: { id: string; label: string; active: boolean; onClick: () => void; key?: React.Key }) {
   return (
     <button
       onClick={onClick}
@@ -155,10 +155,10 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="rounded-[2.5rem] max-w-3xl border-none shadow-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col">
-        <div className="bg-indigo-600 p-6 text-white flex items-center justify-between shrink-0">
+        <div className="p-6 text-white flex items-center justify-between shrink-0" style={{ backgroundColor: KPP_COLOR }}>
           <div>
             <h2 className="text-lg font-black tracking-tight">Semakan Aktiviti Kelab</h2>
-            <p className="text-indigo-100 text-[10px] uppercase tracking-widest font-bold mt-1">Aktiviti rentas semua kelab & persatuan</p>
+            <p className="text-white/80 text-[10px] uppercase tracking-widest font-bold mt-1">Aktiviti rentas semua kelab & persatuan</p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={filter} onValueChange={setFilter}>

@@ -355,15 +355,15 @@ export function ProductVariationBottomSheet({
                 <h3 className="text-sm font-black text-foreground leading-tight truncate">{product.name}</h3>
                 <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">{product.keusahawanan_businesses?.name}</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-base font-black" style={{ color: PM_ACCENT }}>
+                  <p className="text-base font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>
                     RM {effectivePrice.toFixed(2)}
                   </p>
                   {isOnSale && (
-                    <span className="text-xs text-muted-foreground/50 line-through">
+                    <span className="text-xs text-muted-foreground/50 line-through font-mono tabular-nums">
                       RM {product.price.toFixed(2)}
                     </span>
                   )}
-                  <span className="text-[10px] text-muted-foreground/60">
+                  <span className="text-[10px] text-muted-foreground/60 font-mono tabular-nums">
                     (Baki stok: {availableStock})
                   </span>
                 </div>
@@ -1065,9 +1065,9 @@ export function PolyMartProductDetail() {
         {/* Product Info */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-foreground leading-tight">{product.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-foreground leading-tight [text-wrap:balance]">{product.name}</h1>
             {product.description && (
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{product.description}</p>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed [text-wrap:pretty]">{product.description}</p>
             )}
           </div>
 
@@ -1076,11 +1076,11 @@ export function PolyMartProductDetail() {
             <div>
               {isOnSale ? (
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-rose-500">RM {effectivePrice.toFixed(2)}</span>
-                  <span className="text-base text-muted-foreground/50 line-through">RM {product.price.toFixed(2)}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-rose-500 font-mono tabular-nums">RM {effectivePrice.toFixed(2)}</span>
+                  <span className="text-base text-muted-foreground/50 line-through font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
                 </div>
               ) : (
-                <span className="text-2xl sm:text-3xl font-black" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
+                <span className="text-2xl sm:text-3xl font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
               )}
               {product.is_preorder && product.preorder_deadline && new Date(product.preorder_deadline) > new Date() && (
                 <p className="text-[10px] font-bold text-indigo-500 mt-1 flex items-center gap-1">
@@ -1093,7 +1093,7 @@ export function PolyMartProductDetail() {
             {reviews.length > 0 && (
               <div className="flex items-center gap-2">
                 <StarRating rating={Math.round(avgRating)} />
-                <span className="text-xs font-bold text-muted-foreground">
+                <span className="text-xs font-bold text-muted-foreground font-mono tabular-nums">
                   {avgRating.toFixed(1)} ({reviews.length} ulasan)
                 </span>
               </div>
@@ -1321,11 +1321,11 @@ export function PolyMartProductDetail() {
                         const relPrice = getProductEffectivePrice(rel);
                         return isRelSale ? (
                           <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-xs font-black text-rose-500">RM {relPrice.toFixed(2)}</span>
-                            <span className="text-[10px] text-muted-foreground/50 line-through">RM {rel.price.toFixed(2)}</span>
+                            <span className="text-xs font-black text-rose-500 font-mono tabular-nums">RM {relPrice.toFixed(2)}</span>
+                            <span className="text-[10px] text-muted-foreground/50 line-through font-mono tabular-nums">RM {rel.price.toFixed(2)}</span>
                           </div>
                         ) : (
-                          <p className="text-xs font-black text-amber-500 mt-1">RM {rel.price.toFixed(2)}</p>
+                          <p className="text-xs font-black text-amber-500 mt-1 font-mono tabular-nums">RM {rel.price.toFixed(2)}</p>
                         );
                       })()}
                     </div>

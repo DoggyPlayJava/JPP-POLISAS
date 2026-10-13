@@ -17,11 +17,15 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
   const isEmsRoute = location.pathname.startsWith('/ems');
   
   const activeClubId = selectedClubId ?? profile?.club_id;
-  const clubName = activeClubId
-    ? (ALL_CLUBS.find(c => c.id === activeClubId)?.name ?? activeClubId.replace('club_', '').toUpperCase())
-    : isSuperAdmin
-      ? 'JPP Admin'
-      : '';
+  const clubName = (() => {
+    if (!activeClubId) return isSuperAdmin ? 'JPP Admin' : '';
+    const found = ALL_CLUBS.find(c => c.id === activeClubId);
+    if (found?.name) return found.name;
+    if (/^[0-9a-fA-F-]{30,}$/.test(activeClubId)) {
+      return isSuperAdmin ? 'Pentadbiran JPP' : 'Kelab Siswa';
+    }
+    return activeClubId.replace('club_', '').toUpperCase();
+  })();
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

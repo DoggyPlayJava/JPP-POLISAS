@@ -108,7 +108,7 @@ export function buildUnifiedTimeline(
     // Clean human readable error message
     let displayTitle = err.message || err.error_type || 'Ralat Runtime dikesan';
     let source = 'Crash & Error Tracker';
-    let badge = err.severity;
+    let badge: string = err.severity;
 
     if (isSlow) {
       // "GET /api/polymart — 2310ms (status 200)"  →  title + friendly source

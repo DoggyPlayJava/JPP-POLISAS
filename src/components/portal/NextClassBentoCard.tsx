@@ -333,7 +333,7 @@ export function NextClassBentoCard({
                     <span className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
                       {stateData.entry.course_name?.trim() || stateData.entry.course_code}
                     </span>
-                    <span className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium">
+                    <span className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium font-mono tabular-nums">
                       ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
                     </span>
                   </div>

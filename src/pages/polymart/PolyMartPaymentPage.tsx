@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
+import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import toast from 'react-hot-toast';
 import {
   CreditCard, ShieldCheck, Clock, Copy, Check, Upload,
   ArrowLeft, AlertTriangle, AlertCircle, Phone, ArrowRight,
-  Sparkles, FileText, Image as ImageIcon, CheckCircle, Info
+  Sparkles, FileText, Image as ImageIcon, CheckCircle, Info, Package
 } from 'lucide-react';
 
 interface PaymentOrder {
@@ -232,7 +232,7 @@ export function PolyMartPaymentPage() {
       if (failed) throw new Error('Gagal mengemaskini status tempahan database.');
 
       setUploadSuccess(true);
-      toast.success('Resit pembayaran berjaya dihantar!', { icon: '✨' });
+      toast.success('Resit pembayaran berjaya dihantar!');
 
       // Clean preview URL memory leak
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -251,10 +251,25 @@ export function PolyMartPaymentPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-          style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
-        <p className="text-xs font-bold text-muted-foreground">Membuka Gerbang Pembayaran...</p>
+      <div className="max-w-xl mx-auto space-y-6 pb-12 px-1 animate-pulse">
+        <div className="h-6 w-36 bg-muted/60 rounded-lg" />
+        <div className="rounded-3xl border border-border/50 bg-card p-6 space-y-4 shadow-sm">
+          <div className="flex justify-between items-center pb-4 border-b border-border/30">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-muted/60" />
+              <div className="space-y-2">
+                <div className="h-3 w-20 bg-muted/60 rounded" />
+                <div className="h-4 w-32 bg-muted/70 rounded" />
+              </div>
+            </div>
+            <div className="h-6 w-24 bg-muted/60 rounded-md" />
+          </div>
+          <div className="h-24 rounded-2xl bg-muted/40" />
+        </div>
+        <div className="rounded-3xl border border-border/50 bg-card p-6 space-y-4 shadow-sm">
+          <div className="h-4 w-32 bg-muted/60 rounded" />
+          <div className="h-48 rounded-2xl bg-muted/30" />
+        </div>
       </div>
     );
   }
@@ -310,7 +325,7 @@ export function PolyMartPaymentPage() {
                 <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
                   <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
                   <div>
-                    <h4 className="text-xs font-black text-rose-600">⚠ Resit Ditolak</h4>
+                    <h4 className="text-xs font-black text-rose-600">Resit Ditolak</h4>
                     <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
                       Resit sebelum ini tidak sah. Sila muat naik resit baharu di bawah. Tempoh pembayaran diteruskan semula.
                     </p>
@@ -336,7 +351,7 @@ export function PolyMartPaymentPage() {
                         <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
                         <span className="text-xs font-bold text-foreground">Selesaikan bayaran dalam tempoh:</span>
                       </div>
-                      <span className="text-sm font-black text-amber-600 font-mono tracking-wider">{timeLeft}</span>
+                      <span className="text-sm font-black text-amber-600 font-mono tracking-wider tabular-nums">{timeLeft}</span>
                     </div>
                   )}
 
@@ -369,7 +384,7 @@ export function PolyMartPaymentPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Jumlah Bayaran</p>
-                  <p className="text-xl font-black" style={{ color: PM_ACCENT }}>RM {totalAmount.toFixed(2)}</p>
+                  <p className="text-xl font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>RM {totalAmount.toFixed(2)}</p>
                 </div>
               </div>
 
@@ -378,15 +393,17 @@ export function PolyMartPaymentPage() {
                 <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Ringkasan Tempahan ({groupOrders.length} Barang)</p>
                 <div className="max-h-36 overflow-y-auto space-y-2 pr-1.5 scrollbar-thin">
                   {groupOrders.map(o => {
-                    const emoji = CATEGORY_EMOJI[o.product?.category ?? ''] ?? '📦';
+                    const FallbackIcon = CATEGORY_ICON_MAP[o.product?.category ?? ''] ?? Package;
                     return (
                       <div key={o.id} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-muted/20 border border-border/20">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-lg shrink-0">{emoji}</span>
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                            <FallbackIcon className="w-3.5 h-3.5" />
+                          </div>
                           <span className="font-bold text-foreground truncate">{o.product?.name || 'Produk'}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted font-bold text-muted-foreground shrink-0">×{o.quantity}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted font-mono tabular-nums font-bold text-muted-foreground shrink-0">×{o.quantity}</span>
                         </div>
-                        <span className="font-bold text-foreground">RM {(o.unit_price * o.quantity).toFixed(2)}</span>
+                        <span className="font-mono tabular-nums font-bold text-foreground">RM {(o.unit_price * o.quantity).toFixed(2)}</span>
                       </div>
                     );
                   })}

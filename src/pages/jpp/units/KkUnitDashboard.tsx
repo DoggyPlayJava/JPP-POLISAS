@@ -23,6 +23,7 @@ import { MeritRasmiReviewPanel } from '@/components/program/MeritRasmiReviewPane
 import { KamsisKlkStatsWidget } from './KamsisKlkStatsWidget';
 import { TAKWIM_JENIS, SESI_OPTIONS } from '@/config/takwim-constants';
 import type { TakwimItem } from '@/config/takwim-constants';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -141,11 +142,14 @@ function UnitAsramaTab() {
     fetchUnitAdmins();
   };
 
-  const handleRemoveAdmin = async (adminId: string, userName: string) => {
-    if (!window.confirm(`Buang ${userName} dari Unit Pengurusan Asrama?`)) return;
-    const { error } = await supabase.from('asrama_unit_admins').delete().eq('id', adminId);
+  const [removeAdminTarget, setRemoveAdminTarget] = useState<{ id: string; name: string } | null>(null);
+  const executeRemoveAdmin = async () => {
+    if (!removeAdminTarget) return;
+    const { id, name } = removeAdminTarget;
+    const { error } = await supabase.from('asrama_unit_admins').delete().eq('id', id);
     if (error) { toast.error('Gagal membuang: ' + error.message); return; }
-    toast.success(`${userName} berjaya dibuang.`);
+    toast.success(`${name} berjaya dibuang.`);
+    setRemoveAdminTarget(null);
     fetchUnitAdmins();
   };
 
@@ -313,7 +317,7 @@ function UnitAsramaTab() {
                 </div>
                 {canManage && (
                   <button
-                    onClick={() => handleRemoveAdmin(a.id, a.user?.full_name)}
+                    onClick={() => setRemoveAdminTarget({ id: a.id, name: a.user?.full_name || 'Pegawai' })}
                     className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -324,6 +328,17 @@ function UnitAsramaTab() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(removeAdminTarget)}
+        onOpenChange={(open) => !open && setRemoveAdminTarget(null)}
+        title="Lucutkan Akses Pengurusan Asrama"
+        description={removeAdminTarget ? `Adakah anda pasti mahu membuang ${removeAdminTarget.name} daripada Unit Pengurusan Asrama?` : ''}
+        confirmLabel="Buang Pegawai"
+        cancelLabel="Batal"
+        variant="destructive"
+        onConfirm={executeRemoveAdmin}
+      />
     </motion.div>
   );
 }
@@ -474,11 +489,15 @@ function TakwimKediamanTab() {
     } catch (e: any) { toast.error(e.message || 'Gagal.'); }
     finally { setSaving(false); }
   };
-  const handleDelete = async (item: TakwimItem) => {
-    if (!window.confirm(`Padam "${item.tajuk}"?`)) return;
+  const [deleteTakwimTarget, setDeleteTakwimTarget] = useState<TakwimItem | null>(null);
+  const executeDeleteTakwim = async () => {
+    if (!deleteTakwimTarget) return;
+    const item = deleteTakwimTarget;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
     if (error) { toast.error('Gagal memadamkan.'); return; }
-    toast.success('Dipadam.'); fetchData();
+    toast.success('Dipadam.');
+    setDeleteTakwimTarget(null);
+    fetchData();
   };
 
   const fmtDate = (d: string) => { try { const dt = new Date(d); return dt.toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return d; } };
@@ -596,7 +615,7 @@ function TakwimKediamanTab() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openEdit(item)} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center transition-all"><Pencil className="w-3 h-3" /></button>
-                          <button onClick={() => handleDelete(item)} className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400/50 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-all"><Trash2 className="w-3 h-3" /></button>
+                          <button onClick={() => setDeleteTakwimTarget(item)} className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400/50 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-all"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </td>
                     </tr>
@@ -675,6 +694,17 @@ function TakwimKediamanTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={Boolean(deleteTakwimTarget)}
+        onOpenChange={(open) => !open && setDeleteTakwimTarget(null)}
+        title="Padam Entri Takwim Asrama"
+        description={deleteTakwimTarget ? `Adakah anda pasti mahu memadam "${deleteTakwimTarget.tajuk}"?` : ''}
+        confirmLabel="Padam"
+        cancelLabel="Batal"
+        variant="destructive"
+        onConfirm={executeDeleteTakwim}
+      />
     </motion.div>
   );
 }

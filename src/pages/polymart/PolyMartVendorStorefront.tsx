@@ -313,12 +313,45 @@ export function PolyMartVendorStorefront() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-72 gap-3">
-        <div
-          className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-          style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }}
-        />
-        <p className="text-xs font-bold text-muted-foreground">Memuatkan etalase kedai...</p>
+      <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6 animate-pulse">
+        {/* Hero Card Skeleton */}
+        <div className="rounded-3xl border border-border/50 bg-card p-6 space-y-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-20 h-20 rounded-2xl bg-muted/60" />
+            <div className="space-y-2 text-center sm:text-left flex-1">
+              <div className="h-6 w-48 bg-muted/60 rounded-md mx-auto sm:mx-0" />
+              <div className="h-4 w-64 bg-muted/40 rounded mx-auto sm:mx-0" />
+              <div className="flex gap-2 justify-center sm:justify-start pt-1">
+                <div className="h-5 w-24 bg-muted/40 rounded-full" />
+                <div className="h-5 w-20 bg-muted/40 rounded-full" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-10 w-24 bg-muted/50 rounded-xl" />
+              <div className="h-10 w-24 bg-muted/50 rounded-xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tab & Filter Bar Skeleton */}
+        <div className="flex justify-between items-center">
+          <div className="h-9 w-48 bg-muted/50 rounded-xl" />
+          <div className="h-9 w-32 bg-muted/40 rounded-full" />
+        </div>
+
+        {/* Product Grid Skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <div key={i} className="rounded-2xl border border-border/40 bg-card p-2.5 space-y-3 shadow-xs">
+              <div className="aspect-square rounded-xl bg-muted/40" />
+              <div className="h-3 w-3/4 bg-muted/50 rounded" />
+              <div className="flex justify-between items-center pt-1">
+                <div className="h-4 w-16 bg-muted/60 rounded" />
+                <div className="h-3 w-8 bg-muted/40 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -760,7 +793,7 @@ export function PolyMartVendorStorefront() {
 
                       {/* Product Info */}
                       <div className="p-2.5 sm:p-3 flex flex-col flex-1 gap-1">
-                        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem]">
+                        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem] [text-wrap:balance]">
                           {p.name}
                         </h3>
 
@@ -768,22 +801,22 @@ export function PolyMartVendorStorefront() {
                         <div className="flex items-center justify-between pt-1 mt-auto">
                           {isOnSale ? (
                             <div className="flex items-baseline gap-1">
-                              <span className="text-xs sm:text-sm font-black text-rose-500">
+                              <span className="text-xs sm:text-sm font-black text-rose-500 font-mono tabular-nums">
                                 RM {effPrice.toFixed(2)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground/50 line-through">
+                              <span className="text-[10px] text-muted-foreground/50 line-through font-mono tabular-nums">
                                 RM {p.price.toFixed(2)}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400">
+                            <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums">
                               RM {p.price.toFixed(2)}
                             </span>
                           )}
 
                           <div className="flex items-center gap-1.5 shrink-0">
                             {p.sales_count && p.sales_count > 0 ? (
-                              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1 font-mono tabular-nums">
                                 <TrendingUp className="w-2.5 h-2.5" />
                                 {p.sales_count} terjual
                               </span>
@@ -791,7 +824,7 @@ export function PolyMartVendorStorefront() {
                             {p.avg_rating && p.avg_rating > 0 ? (
                               <div className="flex items-center gap-0.5">
                                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                <span className="text-[10px] font-bold text-muted-foreground">
+                                <span className="text-[10px] font-bold text-muted-foreground font-mono tabular-nums">
                                   {p.avg_rating.toFixed(1)}
                                 </span>
                               </div>

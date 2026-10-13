@@ -6,6 +6,7 @@ import {
   X, Percent, Banknote, Users
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface EventCoupon {
   id: string;
@@ -41,6 +42,7 @@ export function EventCouponPanel() {
   const [byBusiness, setByBusiness] = useState<BusinessClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [deleteTargetCoupon, setDeleteTargetCoupon] = useState<EventCoupon | null>(null);
   const [editing, setEditing] = useState<EventCoupon | null>(null);
   const [expandedCoupon, setExpandedCoupon] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -161,12 +163,13 @@ export function EventCouponPanel() {
     loadCoupons(eventId);
   };
 
-  const remove = async (c: EventCoupon) => {
-    const ok = window.confirm(`Padam kupon ${c.code}? Rekod claim juga akan dipadam.`);
-    if (!ok) return;
+  const executeRemove = async () => {
+    if (!deleteTargetCoupon) return;
+    const c = deleteTargetCoupon;
     const { error } = await supabase.from('event_coupons').delete().eq('id', c.id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Kupon ${c.code} dipadam.`);
+    toast.success(`Kupon ${c.code} berjaya dipadam.`);
+    setDeleteTargetCoupon(null);
     loadCoupons(eventId); loadClaims(eventId);
   };
 
@@ -280,7 +283,7 @@ export function EventCouponPanel() {
                       className="w-8 h-8 rounded-lg text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] flex items-center justify-center transition-all">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => remove(c)} title="Padam"
+                    <button onClick={() => setDeleteTargetCoupon(c)} title="Padam"
                       className="w-8 h-8 rounded-lg text-rose-500 dark:text-rose-400/70 bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center transition-all">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -431,6 +434,17 @@ export function EventCouponPanel() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={Boolean(deleteTargetCoupon)}
+        onOpenChange={(open) => !open && setDeleteTargetCoupon(null)}
+        title="Padam Kupon Acara"
+        description={deleteTargetCoupon ? `Adakah anda pasti mahu memadam kupon ${deleteTargetCoupon.code}? Rekod penebusan juga akan dipadamkan.` : ''}
+        confirmLabel="Padam Kupon"
+        cancelLabel="Batal"
+        variant="destructive"
+        onConfirm={executeRemove}
+      />
     </div>
   );
 }

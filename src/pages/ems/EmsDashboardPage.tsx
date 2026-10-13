@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import {
   Plus,
@@ -11,30 +10,32 @@ import {
   Scan,
   Award,
   ShieldCheck,
-  Copy,
-  Check,
   Calendar,
   MapPin,
-  Users,
   User,
   RefreshCw,
-  X,
   AlertCircle,
   HelpCircle,
   CheckCircle2,
   Gift,
-  Trash2,
-  Share2,
-  Send,
-  MessageSquare,
   UserPlus,
   MoreVertical,
+  Flame,
+  Search,
+  X,
+  ArrowLeft,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
+import { EmsQrCodeModal } from '@/components/ems/modals/EmsQrCodeModal';
+import { EmsJuryCodeModal } from '@/components/ems/modals/EmsJuryCodeModal';
+import { EmsTieBreakerModal } from '@/components/ems/modals/EmsTieBreakerModal';
+import { EmsManualRegModal } from '@/components/ems/modals/EmsManualRegModal';
+import { EmsEventCertsModal } from '@/components/ems/modals/EmsEventCertsModal';
+import { EmsCompleteConfirmModal } from '@/components/ems/modals/EmsCompleteConfirmModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,21 +45,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   fetchEmsEvents,
-  createJuryCode,
-  resolveTieWinner,
   generateEmsCertificates,
-  fetchEmsLeaderboard,
-  toggleJuryCodeActive,
-  deleteJuryCode,
   completeEmsEvent,
-  fetchEventCertificates,
-  createEmsParticipantManual,
-  EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
 import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
-import type { EmsEvent, EmsJuryCode, EmsCertificate } from '@/types';
-
+import type { EmsEvent } from '@/types';
 
 export function EmsDashboardPage() {
   const navigate = useNavigate();
@@ -79,95 +71,23 @@ export function EmsDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('APPROVED');
   const [syncingBizId, setSyncingBizId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [qrModalEvent, setQrModalEvent] = useState<EmsEvent | null>(null);
-  const [qrModalTab, setQrModalTab] = useState<'PARTICIPANT' | 'AUDIENCE'>('PARTICIPANT');
-  const [copiedLink, setCopiedLink] = useState(false);
-
-  // Jury Code Modal State
   const [juryModalEvent, setJuryModalEvent] = useState<EmsEvent | null>(null);
-  const [juryCodes, setJuryCodes] = useState<EmsJuryCode[]>([]);
-  const [loadingJuryCodes, setLoadingJuryCodes] = useState(false);
-  const [juryForm, setJuryForm] = useState({
-    code: '',
-    jury_name: '',
-    organization: '',
-    assigned_categories: '',
-    assigned_booths: '',
-  });
-  const [isSubmittingJury, setIsSubmittingJury] = useState(false);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
-  const [juryCategories, setJuryCategories] = useState<string[]>([]);
-  const [juryBooths, setJuryBooths] = useState<string[]>([]);
-  const [loadingJuryOptions, setLoadingJuryOptions] = useState(false);
-
-  // Tie Breaker Modal State
   const [tieModalEvent, setTieModalEvent] = useState<EmsEvent | null>(null);
-  const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
-  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
-  const [selectedWinnerId, setSelectedWinnerId] = useState<string>('');
-  const [isResolvingTie, setIsResolvingTie] = useState(false);
-  // Manual Registration Modal State
   const [manualRegModalEvent, setManualRegModalEvent] = useState<EmsEvent | null>(null);
-  const [manualRegForm, setManualRegForm] = useState({
-    leader_name: '',
-    matrix_no: '',
-    email: '',
-    phone: '',
-    team_name: '',
-    booth_no: '',
-    category_name: '',
-    participant_type: 'STUDENT',
-  });
-  const [isSubmittingManualReg, setIsSubmittingManualReg] = useState(false);
+  const [certModalEvent, setCertModalEvent] = useState<EmsEvent | null>(null);
+  const [confirmCompleteEvent, setConfirmCompleteEvent] = useState<EmsEvent | null>(null);
 
-  const openManualRegModal = (event: EmsEvent) => {
-    setManualRegModalEvent(event);
-    setManualRegForm({
-      leader_name: '',
-      matrix_no: '',
-      email: '',
-      phone: '',
-      team_name: '',
-      booth_no: '',
-      category_name: event.category || '',
-      participant_type: 'STUDENT',
-    });
-  };
+  // Lucky Draw Modal State
+  const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
+  const [selectedLuckyDrawEvent, setSelectedLuckyDrawEvent] = useState<EmsEvent | null>(null);
 
-  const handleManualRegistration = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualRegModalEvent) return;
-    if (!manualRegForm.leader_name.trim()) {
-      toast.error('Sila masukkan Nama Ketua / Peserta.');
-      return;
-    }
-
-    try {
-      setIsSubmittingManualReg(true);
-      await createEmsParticipantManual({
-        event_id: manualRegModalEvent.id,
-        participant_type: manualRegForm.participant_type || 'STUDENT',
-        entity_mode: manualRegModalEvent.event_mode || 'INDIVIDUAL',
-        leader_name: manualRegForm.leader_name.trim(),
-        matrix_no: manualRegForm.matrix_no.trim() || undefined,
-        email: manualRegForm.email.trim() || undefined,
-        phone: manualRegForm.phone.trim() || undefined,
-        team_name: manualRegForm.team_name.trim() || undefined,
-        booth_no: manualRegForm.booth_no.trim() || undefined,
-        category_name: manualRegForm.category_name.trim() || undefined,
-      });
-
-      toast.success('Peserta berjaya didaftarkan secara manual!');
-      setManualRegModalEvent(null);
-      loadEvents();
-    } catch (err: any) {
-      toast.error(err?.message || 'Gagal mendaftar peserta');
-    } finally {
-      setIsSubmittingManualReg(false);
-    }
-  };
+  // Cert generation & Completion loading state per event
+  const [generatingCertId, setGeneratingCertId] = useState<string | null>(null);
+  const [completingCertId, setCompletingCertId] = useState<string | null>(null);
 
   // Resolve user id daripada matric/email (guna session admin - boleh nampak semua profile)
   const resolveProfileId = async (
@@ -229,7 +149,6 @@ export function EmsDashboardPage() {
             eventId: event.id,
             teamName: bizName || undefined,
             leaderName: p.leader_name || '',
-            // JANGAN hantar leaderUserId - biar provision resolve pemilik sebenar dari matric/email
             leaderEmail: p.email || undefined,
             leaderMatrixNo: p.participant_type === 'STUDENT' ? p.matrix_no || undefined : undefined,
             members: p.members_list || [],
@@ -241,7 +160,6 @@ export function EmsDashboardPage() {
           continue;
         }
 
-        // Business dah wujud - pastikan memberships OWNER cukup
         const { data: mems } = await supabase
           .from('student_business_memberships')
           .select('user_id')
@@ -287,10 +205,6 @@ export function EmsDashboardPage() {
     }
   };
 
-  // Cert generation & Completion loading state per event
-  const [generatingCertId, setGeneratingCertId] = useState<string | null>(null);
-  const [completingCertId, setCompletingCertId] = useState<string | null>(null);
-
   const handleGenerateCertificates = async (eventId: string) => {
     try {
       setGeneratingCertId(eventId);
@@ -316,29 +230,6 @@ export function EmsDashboardPage() {
     }
   };
 
-  // Lucky Draw Modal State
-  const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
-  const [selectedLuckyDrawEvent, setSelectedLuckyDrawEvent] = useState<EmsEvent | null>(null);
-
-  // Event Certificates List Modal State
-  const [certModalEvent, setCertModalEvent] = useState<EmsEvent | null>(null);
-  const [eventCertList, setEventCertList] = useState<Array<EmsCertificate & { participant?: any; jury?: any; event_title?: string }>>([]);
-  const [loadingEventCerts, setLoadingEventCerts] = useState(false);
-
-  const openCertModal = async (event: EmsEvent) => {
-    setCertModalEvent(event);
-    try {
-      setLoadingEventCerts(true);
-      const certs = await fetchEventCertificates(event.id);
-      setEventCertList(certs);
-    } catch (err) {
-      toast.error('Gagal memuatkan senarai sijil acara.');
-    } finally {
-      setLoadingEventCerts(false);
-    }
-  };
-
-
   const loadEvents = async () => {
     try {
       setLoading(true);
@@ -360,176 +251,31 @@ export function EmsDashboardPage() {
     const isOwner = user?.id && e.created_by === user.id;
     const isManagerOrCreator = canCreateEvent || isOwner;
 
+    // Status Tab check
+    let matchesTab = false;
     if (isManagerOrCreator) {
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'APPROVED') return e.status === 'APPROVED' || e.status === 'ACTIVE';
-      return e.status === activeTab;
+      if (activeTab === 'ALL') matchesTab = true;
+      else if (activeTab === 'APPROVED') matchesTab = e.status === 'APPROVED' || e.status === 'ACTIVE';
+      else matchesTab = e.status === activeTab;
+    } else {
+      if (activeTab === 'COMPLETED') matchesTab = e.status === 'COMPLETED';
+      else matchesTab = e.status === 'APPROVED' || e.status === 'ACTIVE';
     }
 
-    // For Regular Students (!canCreateEvent and not creator):
-    if (activeTab === 'COMPLETED') {
-      return e.status === 'COMPLETED';
+    if (!matchesTab) return false;
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchTitle = e.title?.toLowerCase().includes(q);
+      const matchLoc = e.location?.toLowerCase().includes(q);
+      const matchCat = e.category?.toLowerCase().includes(q);
+      const matchCreator = e.creator?.full_name?.toLowerCase().includes(q);
+      if (!matchTitle && !matchLoc && !matchCat && !matchCreator) return false;
     }
 
-    // 'ALL' tab ("🔥 Acara Berlangsung & Akan Datang"):
-    // returns events where status === 'APPROVED' || status === 'ACTIVE', explicitly excluding COMPLETED
-    return e.status === 'APPROVED' || e.status === 'ACTIVE';
+    return true;
   });
-
-  // Load Jury Codes when modal opens
-  const openJuryModal = async (event: EmsEvent) => {
-    setJuryModalEvent(event);
-    const randomCode = 'JURI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-    setJuryForm({
-      code: randomCode,
-      jury_name: '',
-      organization: '',
-      assigned_categories: '',
-      assigned_booths: '',
-    });
-    try {
-      setLoadingJuryCodes(true);
-      const { data, error } = await supabase
-        .from('ems_jury_codes')
-        .select('*')
-        .eq('event_id', event.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setJuryCodes(data || []);
-    } catch (err: any) {
-      toast.error('Gagal memuatkan senarai kod juri');
-    } finally {
-      // Bugfix: tanpa ini, stuck "Memuatkan kod juri..." selama-lamanya
-      setLoadingJuryCodes(false);
-    }
-    // Load available categories & booths for this event
-    try {
-      setLoadingJuryOptions(true);
-      // Kategori RUBRIK (penilaian) - bukan kategori makanan booth. Ini membolehkan
-      // juri group A ditugaskan ke rubrik "Best Pitching", group B ke "Best Showcase", dsb.
-      const { data: rubrics } = await supabase
-        .from('ems_rubrics')
-        .select('category_name')
-        .eq('event_id', event.id)
-        .not('category_name', 'is', null)
-        .neq('category_name', '');
-      const rubricCats = Array.from(
-        new Set((rubrics || []).map((r: any) => r.category_name).filter(Boolean))
-      ) as string[];
-
-      // Legacy fallback: event tanpa rubrik kategori → guna kategori peserta
-      let cats = rubricCats;
-      if (cats.length === 0) {
-        const { data: participants } = await supabase
-          .from('ems_participants')
-          .select('category_name')
-          .eq('event_id', event.id)
-          .not('category_name', 'is', null)
-          .neq('category_name', '')
-          .order('category_name');
-        cats = Array.from(
-          new Set((participants || []).map((p: any) => p.category_name).filter(Boolean))
-        ) as string[];
-      }
-      setJuryCategories(cats);
-
-      const { data: boothRows } = await supabase
-        .from('ems_participants')
-        .select('team_name')
-        .eq('event_id', event.id)
-        .not('team_name', 'is', null)
-        .neq('team_name', '')
-        .order('team_name');
-      const booths = Array.from(new Set((boothRows || []).map((p: any) => p.team_name).filter(Boolean))) as string[];
-      setJuryBooths(booths);
-    } catch {
-      setJuryCategories([]);
-      setJuryBooths([]);
-    } finally {
-      setLoadingJuryOptions(false);
-    }
-  };
-
-  const handleCreateJuryCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!juryModalEvent) return;
-    if (!juryForm.code.trim()) {
-      toast.error('Sila masukkan kod juri.');
-      return;
-    }
-
-    try {
-      setIsSubmittingJury(true);
-      const categoriesArray = juryForm.assigned_categories
-        ? juryForm.assigned_categories.split(',').map((s) => s.trim()).filter(Boolean)
-        : undefined;
-      const boothsArray = juryForm.assigned_booths
-        ? juryForm.assigned_booths.split(',').map((s) => s.trim()).filter(Boolean)
-        : undefined;
-
-      const created = await createJuryCode(juryModalEvent.id, {
-        code: juryForm.code,
-        jury_name: juryForm.jury_name,
-        organization: juryForm.organization,
-        assigned_categories: categoriesArray,
-        assigned_booths: boothsArray,
-      });
-
-      toast.success(`Kod Juri ${created.code} berjaya dicipta!`);
-      setJuryCodes((prev) => [created, ...prev]);
-
-      // Reset form with new code suggestion
-      const newRandomCode = 'JURI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-      setJuryForm({
-        code: newRandomCode,
-        jury_name: '',
-        organization: '',
-        assigned_categories: '',
-        assigned_booths: '',
-      });
-    } catch (err: any) {
-      toast.error(err?.message || 'Gagal mencipta kod juri');
-    } finally {
-      setIsSubmittingJury(false);
-    }
-  };
-
-  // Open Tie Breaker Modal
-  const openTieModal = async (event: EmsEvent) => {
-    setTieModalEvent(event);
-    setSelectedWinnerId('');
-    try {
-      setLoadingLeaderboard(true);
-      const data = await fetchEmsLeaderboard(event.id);
-      setLeaderboard(data);
-      const tiedWinner = data.find((d) => d.is_tie_winner);
-      if (tiedWinner) {
-        setSelectedWinnerId(tiedWinner.participant.id);
-      }
-    } catch (err: any) {
-      toast.error('Gagal memuatkan papan kedudukan');
-    } finally {
-      setLoadingLeaderboard(false);
-    }
-  };
-
-  const handleResolveTie = async () => {
-    if (!tieModalEvent || !selectedWinnerId) {
-      toast.error('Sila pilih pasukan/peserta pemenang.');
-      return;
-    }
-    try {
-      setIsResolvingTie(true);
-      await resolveTieWinner(tieModalEvent.id, selectedWinnerId);
-      toast.success('Keputusan tie-breaker berjaya dikemaskini!');
-      setTieModalEvent(null);
-      loadEvents();
-    } catch (err: any) {
-      toast.error(err?.message || 'Gagal menetapkan pemenang seret');
-    } finally {
-      setIsResolvingTie(false);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -550,15 +296,24 @@ export function EmsDashboardPage() {
     }
   };
 
-  const registrationUrl = (eventId: string) => `${window.location.origin}/ems/e/${eventId}/register`;
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 transition-colors">
+      {/* Wayfinding Breadcrumb back to Portal */}
+      <div>
+        <button
+          onClick={() => navigate('/portal')}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Kembali ke Portal Kampus</span>
+        </button>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-amber-400 border border-primary/20 dark:border-primary/30">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/30">
               <Trophy className="w-7 h-7" />
             </div>
             <div>
@@ -573,25 +328,24 @@ export function EmsDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           {canCreateEvent && (
             <button
               onClick={() => {
                 setSelectedLuckyDrawEvent(null);
                 setLuckyDrawModalOpen(true);
               }}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all shadow-lg shadow-amber-500/20 active:scale-95 text-xs uppercase tracking-wider"
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 font-semibold transition-all shadow-xs active:scale-[0.98] text-xs"
             >
-              <Gift className="w-4 h-4 text-slate-950" />
-              <span>Cabutan Bertuah 🎰</span>
+              <Gift className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Cabutan Bertuah</span>
             </button>
           )}
           {canCreateEvent && (
             <button
               onClick={() => navigate('/ems/event/new')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold transition-all shadow-sm active:scale-95"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 font-bold transition-all shadow-sm active:scale-[0.98] text-xs"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Cipta Acara Baharu</span>
             </button>
           )}
@@ -600,26 +354,50 @@ export function EmsDashboardPage() {
 
       {/* Super Admin Approval Access Banner */}
       {isSuperAdmin && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-              <ShieldCheck className="w-6 h-6" />
+            <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+              <ShieldCheck className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <h3 className="font-bold text-amber-900 dark:text-amber-200">Semakan Kelulusan Acara HQ (Super Admin)</h3>
-              <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
-                Anda mempunyai akses pentadbir mutlak untuk meneliti dan meluluskan borang acara baharu.
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Semakan Kelulusan Acara HQ</h3>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">Super Admin</span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Akses pentadbir mutlak untuk meneliti permohonan dan meluluskan borang acara baharu.
               </p>
             </div>
           </div>
           <button
             onClick={() => navigate('/ems/approvals')}
-            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-md shrink-0"
+            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 font-bold text-xs transition-all shadow-xs shrink-0 active:scale-[0.98]"
           >
             Semakan Kelulusan HQ
           </button>
         </div>
       )}
+
+      {/* Search Bar & Instant Filtering */}
+      <div className="relative w-full">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Cari acara mengikut nama acara, lokasi atau penganjur..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-xs"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Kosongkan Carian"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
@@ -631,44 +409,87 @@ export function EmsDashboardPage() {
               { key: 'COMPLETED', label: 'Selesai' },
             ]
           : [
-              { key: 'ALL', label: '🔥 Acara Berlangsung & Akan Datang' },
-              { key: 'COMPLETED', label: '🏆 Acara Selesai & Keputusan' },
+              { key: 'ALL', label: 'Acara Berlangsung & Akan Datang', icon: Flame },
+              { key: 'COMPLETED', label: 'Acara Selesai & Keputusan', icon: Trophy },
             ]
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
-              activeTab === tab.key
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        ).map((tab) => {
+          const Icon = 'icon' in tab ? tab.icon : null;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border inline-flex items-center gap-1.5 ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              {Icon && <Icon className="w-3.5 h-3.5 inline mr-1" />}
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Event Cards Grid */}
+      {/* Event Cards Grid / Skeleton Loaders */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-          <RefreshCw className="w-8 h-8 animate-spin mb-3 text-primary dark:text-amber-400" />
-          <p className="text-sm font-semibold">Memuatkan senarai acara...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((n) => (
+            <div
+              key={n}
+              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col justify-between space-y-4 animate-pulse"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                  <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                </div>
+                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-4 w-1/3 bg-amber-500/20 rounded-md" />
+                <div className="space-y-1.5 pt-1">
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/60 rounded" />
+                  <div className="h-3 w-4/5 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                </div>
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <div className="h-3.5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-3.5 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+              </div>
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex gap-2">
+                <div className="h-10 flex-1 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : displayedEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-slate-400 dark:text-slate-600 mb-3" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Tiada Acara Dijumpai</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+            {searchQuery ? 'Tiada Carian Sepadan' : 'Tiada Acara Dijumpai'}
+          </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6">
-            Belum ada acara yang didaftarkan untuk status ini. Sila cipta acara baharu untuk memulakan pengurusan pertandingan.
+            {searchQuery
+              ? `Tiada acara yang sepadan dengan carian "${searchQuery}". Sila cuba kata kunci lain.`
+              : 'Belum ada acara yang didaftarkan untuk status ini. Sila cipta acara baharu untuk memulakan pengurusan pertandingan.'}
           </p>
-          {canCreateEvent && (
+          {searchQuery ? (
             <button
-              onClick={() => navigate('/ems/event/new')}
-              className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm"
+              onClick={() => setSearchQuery('')}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all shadow-sm"
             >
-              + Cipta Acara Baharu
+              Kosongkan Carian
             </button>
+          ) : (
+            canCreateEvent && (
+              <button
+                onClick={() => navigate('/ems/event/new')}
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm"
+              >
+                + Cipta Acara Baharu
+              </button>
+            )
           )}
         </div>
       ) : (
@@ -676,9 +497,9 @@ export function EmsDashboardPage() {
           {displayedEvents.map((event) => (
             <div
               key={event.id}
-              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-primary/40 dark:hover:border-slate-700 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-sm hover:shadow-md space-y-4 text-slate-900 dark:text-white"
+              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-slate-700 rounded-3xl p-6 flex flex-col h-full transition-all shadow-sm hover:shadow-md text-slate-900 dark:text-white"
             >
-              <div>
+              <div className="flex-1 flex flex-col">
                 {/* Status & Mode */}
                 <div className="flex items-center justify-between gap-2 mb-3">
                   {getStatusBadge(event.status)}
@@ -688,9 +509,9 @@ export function EmsDashboardPage() {
                 </div>
 
                 {/* Title & Category */}
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 mb-1">{event.title}</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 mb-1 [text-wrap:balance]">{event.title}</h2>
                 {event.category && (
-                  <span className="inline-block text-xs font-semibold text-primary dark:text-amber-400 mb-3">
+                  <span className="inline-block text-xs font-semibold text-amber-600 dark:text-amber-400 mb-3">
                     {event.category}
                   </span>
                 )}
@@ -703,7 +524,7 @@ export function EmsDashboardPage() {
                 )}
 
                 {/* Metadata */}
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-auto mb-4">
                   {event.event_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
@@ -726,23 +547,23 @@ export function EmsDashboardPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="border-t border-slate-100 dark:border-slate-800/80 pt-4">
+              <div className="border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-auto">
                 {(canCreateEvent || (!!user?.id && event.created_by === user.id)) ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       {/* Primary Action Button: Leaderboard & Management */}
                       <button
                         onClick={() => navigate(`/ems/leaderboard/${event.id}`)}
-                        className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-all shadow-sm active:scale-98"
+                        className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 font-bold text-xs transition-all shadow-xs active:scale-[0.98]"
                       >
-                        <Trophy className="w-3.5 h-3.5 text-amber-300" />
+                        <Trophy className="w-3.5 h-3.5 text-amber-400 dark:text-slate-950" />
                         <span>Urus Acara & Skor</span>
                       </button>
 
                       {/* Quick Action: QR Pendaftaran */}
                       <button
                         onClick={() => setQrModalEvent(event)}
-                        className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all active:scale-95 shrink-0"
+                        className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 transition-all active:scale-[0.98] shrink-0"
                         title="Pautan & QR Pendaftaran"
                       >
                         <QrCode className="w-4 h-4 text-slate-600 dark:text-slate-300" />
@@ -752,7 +573,7 @@ export function EmsDashboardPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all active:scale-95 shrink-0"
+                            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 transition-all active:scale-[0.98] shrink-0"
                             title="Pilihan Pengurusan Acara"
                           >
                             <MoreVertical className="w-4 h-4 text-slate-600 dark:text-slate-300" />
@@ -762,42 +583,42 @@ export function EmsDashboardPage() {
                           {(isSuperAdmin || isJppMember || (user?.id && event.created_by === user.id)) && (
                             <DropdownMenuItem
                               onClick={() => navigate(`/ems/event/${event.id}/edit`)}
-                              className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                              className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                             >
-                              <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                              <Edit3 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                               <span>Sunting Maklumat Acara</span>
                             </DropdownMenuItem>
                           )}
 
                           <DropdownMenuItem
-                            onClick={() => openJuryModal(event)}
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                            onClick={() => setJuryModalEvent(event)}
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                           >
-                            <Key className="w-3.5 h-3.5 text-amber-500" />
+                            <Key className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>Jana Kod Juri</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
                             onClick={() => navigate(`/ems/checkin/${event.id}`)}
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                           >
-                            <Scan className="w-3.5 h-3.5 text-emerald-500" />
+                            <Scan className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>Kaunter Check-In</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() => openTieModal(event)}
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                            onClick={() => setTieModalEvent(event)}
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                           >
-                            <HelpCircle className="w-3.5 h-3.5 text-rose-500" />
+                            <HelpCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>Semak Keputusan Seri</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() => openManualRegModal(event)}
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                            onClick={() => setManualRegModalEvent(event)}
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                           >
-                            <UserPlus className="w-3.5 h-3.5 text-primary" />
+                            <UserPlus className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>+ Daftar Peserta Manual</span>
                           </DropdownMenuItem>
 
@@ -805,9 +626,9 @@ export function EmsDashboardPage() {
                             <DropdownMenuItem
                               onClick={() => handleSyncEmsBusiness(event)}
                               disabled={syncingBizId === event.id}
-                              className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-teal-600 dark:text-teal-400"
+                              className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                             >
-                              <RefreshCw className={cn("w-3.5 h-3.5", syncingBizId === event.id && "animate-spin")} />
+                              <RefreshCw className={cn("w-3.5 h-3.5 text-slate-400 dark:text-slate-500", syncingBizId === event.id && "animate-spin")} />
                               <span>Sync ke e-Keusahawanan</span>
                             </DropdownMenuItem>
                           )}
@@ -817,9 +638,9 @@ export function EmsDashboardPage() {
                               setSelectedLuckyDrawEvent(event);
                               setLuckyDrawModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-600 dark:text-amber-400"
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                           >
-                            <Gift className="w-3.5 h-3.5 text-amber-500" />
+                            <Gift className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span>Roda Cabutan Bertuah</span>
                           </DropdownMenuItem>
 
@@ -828,9 +649,9 @@ export function EmsDashboardPage() {
                               <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                               <DropdownMenuItem
                                 onClick={() => navigate(`/ems/leaderboard/${event.id}?tab=audit`)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400"
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                               >
-                                <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                                <ShieldCheck className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                                 <span>Audit Penjurian</span>
                               </DropdownMenuItem>
                             </>
@@ -840,7 +661,7 @@ export function EmsDashboardPage() {
                             <>
                               <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                               <DropdownMenuItem
-                                onClick={() => handleCompleteEvent(event.id)}
+                                onClick={() => setConfirmCompleteEvent(event)}
                                 disabled={completingCertId === event.id}
                                 className="flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
                               >
@@ -854,18 +675,18 @@ export function EmsDashboardPage() {
                             <>
                               <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                               <DropdownMenuItem
-                                onClick={() => openCertModal(event)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-teal-50 dark:hover:bg-teal-950/40 text-teal-600 dark:text-teal-400"
+                                onClick={() => setCertModalEvent(event)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                               >
-                                <Award className="w-3.5 h-3.5" />
+                                <Award className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                                 <span>Senarai E-Sijil</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleGenerateCertificates(event.id)}
                                 disabled={generatingCertId === event.id}
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                               >
-                                <RefreshCw className={cn("w-3.5 h-3.5", generatingCertId === event.id && "animate-spin")} />
+                                <RefreshCw className={cn("w-3.5 h-3.5 text-slate-400 dark:text-slate-500", generatingCertId === event.id && "animate-spin")} />
                                 <span>Jana Semula E-Sijil</span>
                               </DropdownMenuItem>
                             </>
@@ -878,7 +699,7 @@ export function EmsDashboardPage() {
                     {event.status === 'COMPLETED' && (
                       <div className="flex items-center justify-between pt-1 text-[11px] text-teal-600 dark:text-teal-400">
                         <button
-                          onClick={() => openCertModal(event)}
+                          onClick={() => setCertModalEvent(event)}
                           className="hover:underline flex items-center gap-1 font-semibold"
                         >
                           <Award className="w-3.5 h-3.5" />
@@ -912,530 +733,40 @@ export function EmsDashboardPage() {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* 1. Modal QR Code Pendaftaran & Kehadiran Pengunjung */}
-      {/* ============================================================ */}
-      {qrModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-5 shadow-2xl relative text-slate-900 dark:text-white">
-            <button
-              onClick={() => {
-                setQrModalEvent(null);
-                setCopiedLink(false);
-              }}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Confirmation Modal for Completing Event */}
+      <EmsCompleteConfirmModal
+        event={confirmCompleteEvent}
+        onClose={() => setConfirmCompleteEvent(null)}
+        onConfirm={handleCompleteEvent}
+      />
 
-            <div className="text-center space-y-1">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Kod QR Acara</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{qrModalEvent.title}</p>
-            </div>
+      {/* 5 Modularized EMS Modals */}
+      <EmsQrCodeModal
+        event={qrModalEvent}
+        onClose={() => setQrModalEvent(null)}
+      />
 
-            {/* Tab Selector */}
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <button
-                onClick={() => setQrModalTab('PARTICIPANT')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition ${
-                  qrModalTab === 'PARTICIPANT'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                QR Peserta Pertandingan
-              </button>
-              <button
-                onClick={() => setQrModalTab('AUDIENCE')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition ${
-                  qrModalTab === 'AUDIENCE'
-                    ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                QR Pengunjung / Penonton
-              </button>
-            </div>
+      <EmsJuryCodeModal
+        event={juryModalEvent}
+        onClose={() => setJuryModalEvent(null)}
+      />
 
-            {/* QR Code Render */}
-            <div className="flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-inner border border-slate-100 dark:border-slate-700">
-              <QRCodeSVG
-                value={
-                  qrModalTab === 'AUDIENCE'
-                    ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
-                    : registrationUrl(qrModalEvent.id)
-                }
-                size={200}
-                bgColor="#FFFFFF"
-                fgColor="#0F172A"
-                level="H"
-              />
-              <p className="text-[10px] text-slate-500 font-mono mt-3 text-center break-all">
-                {qrModalTab === 'AUDIENCE'
-                  ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
-                  : registrationUrl(qrModalEvent.id)}
-              </p>
-            </div>
+      <EmsTieBreakerModal
+        event={tieModalEvent}
+        onClose={() => setTieModalEvent(null)}
+        onTieResolved={loadEvents}
+      />
 
-            {/* Copy Link Button */}
-            <button
-              onClick={() => {
-                const targetUrl =
-                  qrModalTab === 'AUDIENCE'
-                    ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
-                    : registrationUrl(qrModalEvent.id);
-                navigator.clipboard.writeText(targetUrl);
-                setCopiedLink(true);
-                toast.success(
-                  qrModalTab === 'AUDIENCE'
-                    ? 'Pautan QR Pengunjung disalin!'
-                    : 'Pautan QR Peserta disalin!'
-                );
-                setTimeout(() => setCopiedLink(false), 2000);
-              }}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                qrModalTab === 'AUDIENCE'
-                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-amber-500/20'
-                  : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20'
-              }`}
-            >
-              {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>
-                {copiedLink
-                  ? 'Berjaya Disalin!'
-                  : qrModalTab === 'AUDIENCE'
-                  ? 'Salin Pautan QR Pengunjung'
-                  : 'Salin Pautan QR Peserta'}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
+      <EmsManualRegModal
+        event={manualRegModalEvent}
+        onClose={() => setManualRegModalEvent(null)}
+        onRegistered={loadEvents}
+      />
 
-      {/* ============================================================ */}
-      {/* 2. Modal Jana Kod Juri */}
-      {/* ============================================================ */}
-      {juryModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl my-8 relative text-slate-900 dark:text-white">
-            <button
-              onClick={() => setJuryModalEvent(null)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div>
-              <div className="flex items-center gap-2 text-amber-500 dark:text-amber-400 mb-1">
-                <Key className="w-5 h-5" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Jana Kod Akses Juri</h3>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Acara: {juryModalEvent.title}</p>
-            </div>
-
-            {/* Form Cipta Kod Juri */}
-            <form onSubmit={handleCreateJuryCode} className="space-y-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Kod Akses Juri <span className="text-rose-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    required
-                    value={juryForm.code}
-                    onChange={(e) => setJuryForm({ ...juryForm, code: e.target.value.toUpperCase() })}
-                    placeholder="Contoh: JURI-101"
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-sm uppercase focus:outline-none focus:border-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const rnd = 'JURI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-                      setJuryForm({ ...juryForm, code: rnd });
-                    }}
-                    className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                  >
-                    Auto
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Juri</label>
-                  <input
-                    type="text"
-                    value={juryForm.jury_name}
-                    onChange={(e) => setJuryForm({ ...juryForm, jury_name: e.target.value })}
-                    placeholder="e.g. Dr. Ahmad Hassan"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Organisasi / Jabatan</label>
-                  <input
-                    type="text"
-                    value={juryForm.organization}
-                    onChange={(e) => setJuryForm({ ...juryForm, organization: e.target.value })}
-                    placeholder="e.g. JTM POLISAS"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Kategori Rubrik (Penilaian)
-                </label>
-                {loadingJuryOptions ? (
-                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan kategori rubrik...</p>
-                ) : juryCategories.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">
-                    Tiada rubrik berdaftar dalam acara ini. Anda boleh taip manual di bawah.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {juryCategories.map((cat) => {
-                      const selected = juryForm.assigned_categories
-                        .split(',')
-                        .map((x) => x.trim())
-                        .filter(Boolean)
-                        .includes(cat);
-                      return (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => {
-                            const current = juryForm.assigned_categories
-                              .split(',')
-                              .map((x) => x.trim())
-                              .filter(Boolean);
-                            const next = selected ? current.filter((x) => x !== cat) : [...current, cat];
-                            setJuryForm({ ...juryForm, assigned_categories: next.join(', ') });
-                          }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                            selected
-                              ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-amber-400 border-primary/30'
-                              : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary dark:hover:text-white'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <input
-                  type="text"
-                  value={juryForm.assigned_categories}
-                  onChange={(e) => setJuryForm({ ...juryForm, assigned_categories: e.target.value })}
-                  placeholder="e.g. Best Pitching, Best Showcase"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary mt-2 placeholder:text-slate-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Booth Ditugaskan
-                </label>
-                {loadingJuryOptions ? (
-                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan booth...</p>
-                ) : juryBooths.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">
-                    Tiada booth berdaftar dalam acara ini. Anda boleh taip manual di bawah.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-                    {juryBooths.map((booth) => {
-                      const selected = juryForm.assigned_booths
-                        .split(',')
-                        .map((x) => x.trim())
-                        .filter(Boolean)
-                        .includes(booth);
-                      return (
-                        <button
-                          key={booth}
-                          type="button"
-                          onClick={() => {
-                            const current = juryForm.assigned_booths
-                              .split(',')
-                              .map((x) => x.trim())
-                              .filter(Boolean);
-                            const next = selected ? current.filter((x) => x !== booth) : [...current, booth];
-                            setJuryForm({ ...juryForm, assigned_booths: next.join(', ') });
-                          }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                            selected
-                              ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-amber-400 border-primary/30'
-                              : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary dark:hover:text-white'
-                          }`}
-                        >
-                          {booth}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <input
-                  type="text"
-                  value={juryForm.assigned_booths}
-                  onChange={(e) => setJuryForm({ ...juryForm, assigned_booths: e.target.value })}
-                  placeholder="e.g. Booth 1, Booth 2"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary mt-2 placeholder:text-slate-400"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmittingJury}
-                className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider transition-all shadow-sm disabled:opacity-50"
-              >
-                {isSubmittingJury ? 'Mencipta Kod Juri...' : '+ Cipta Kod Juri'}
-              </button>
-            </form>
-
-            {/* Senarai Kod Juri Sedia Ada */}
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-                Senarai Kod Juri Aktif ({juryCodes.length})
-              </h4>
-              {loadingJuryCodes ? (
-                <p className="text-xs text-slate-500 animate-pulse">Memuatkan kod juri...</p>
-              ) : juryCodes.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">Belum ada kod juri dicipta.</p>
-              ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {juryCodes.map((j) => (
-                    <div
-                      key={j.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs gap-2"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-primary dark:text-amber-400 text-sm">
-                            {j.code}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
-                              (j.is_active ?? true)
-                                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
-                                : 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30'
-                            }`}
-                          >
-                            {(j.is_active ?? true) ? 'Aktif' : 'Nyahaktif'}
-                          </span>
-                        </div>
-                        {j.jury_name && (
-                          <span className="text-slate-700 dark:text-slate-300 block mt-0.5 font-medium">{j.jury_name}</span>
-                        )}
-                        {j.organization && (
-                          <span className="text-[10px] text-slate-500 block">{j.organization}</span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const newActive = !(j.is_active ?? true);
-                              await toggleJuryCodeActive(j.id, newActive);
-                              setJuryCodes((prev) =>
-                                prev.map((item) =>
-                                  item.id === j.id ? { ...item, is_active: newActive } : item
-                                )
-                              );
-                              toast.success(
-                                `Kod Juri ${j.code} kini ${newActive ? 'Aktif' : 'Nyahaktif'}`
-                              );
-                            } catch (err: any) {
-                              toast.error(err.message || 'Gagal mengubah status kod juri');
-                            }
-                          }}
-                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
-                            (j.is_active ?? true)
-                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 border-amber-500/30'
-                              : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30'
-                          }`}
-                        >
-                          {(j.is_active ?? true) ? 'Nyahaktif' : 'Aktifkan'}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const portalUrl = `${window.location.origin}/ems/juri?code=${encodeURIComponent(j.code)}`;
-                            const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
-                            const org = j.organization ? ` (${j.organization})` : '';
-
-                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
-
-                            navigator.clipboard.writeText(waMsg);
-                            setCopiedCodeId(j.id);
-                            toast.success(`Mesej Jemputan WhatsApp Kod ${j.code} disalin!`);
-                            setTimeout(() => setCopiedCodeId(null), 2000);
-                          }}
-                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-all"
-                          title="Salin Teks Mesej WhatsApp Rasmi"
-                        >
-                          {copiedCodeId === j.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                          <span>{copiedCodeId === j.id ? 'Disalin!' : 'Salin WhatsApp'}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const portalUrl = `${window.location.origin}/ems/juri?code=${encodeURIComponent(j.code)}`;
-                            const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
-                            const org = j.organization ? ` (${j.organization})` : '';
-
-                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
-
-                            window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, '_blank');
-                          }}
-                          className="px-2.5 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] flex items-center gap-1 transition-all shadow-sm"
-                          title="Buka terus di WhatsApp"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>WhatsApp</span>
-                        </button>
-
-
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!window.confirm(`Adakah anda pasti untuk memadam kod juri ${j.code}?`))
-                              return;
-                            try {
-                              await deleteJuryCode(j.id);
-                              setJuryCodes((prev) => prev.filter((item) => item.id !== j.id));
-                              toast.success(`Kod Juri ${j.code} berjaya dipadam!`);
-                            } catch (err: any) {
-                              toast.error(err.message || 'Gagal memadam kod juri');
-                            }
-                          }}
-                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all"
-                          title="Padam Kod Juri"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* 3. Modal Tie-Breaker (Pemenang Seret) */}
-      {/* ============================================================ */}
-      {tieModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl relative text-slate-900 dark:text-white">
-            <button
-              onClick={() => setTieModalEvent(null)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div>
-              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-1">
-                <Trophy className="w-5 h-5" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Penentuan Pemenang (Tie-Breaker)</h3>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pilih pemenang manual bagi pasukan/peserta yang mempunyai keputusan markah terikat.
-              </p>
-            </div>
-
-            {loadingLeaderboard ? (
-              <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400 animate-pulse">
-                Memuatkan kedudukan keputusan...
-              </div>
-            ) : leaderboard.length === 0 ? (
-              <p className="text-xs text-slate-500 italic py-4 text-center">
-                Tiada peserta berdaftar ditemui untuk acara ini.
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                {leaderboard.map((item) => {
-                  const isSelected = selectedWinnerId === item.participant.id;
-                  return (
-                    <div
-                      key={item.participant.id}
-                      onClick={() => setSelectedWinnerId(item.participant.id)}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-primary/10 dark:bg-primary/20 border-primary text-slate-900 dark:text-white shadow-sm'
-                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/40'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">
-                            {item.participant.team_name || item.participant.leader_name}
-                          </span>
-                          {item.is_tied && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30">
-                              Terikat (Tie)
-                            </span>
-                          )}
-                          {item.is_tie_winner && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                              Pemenang Disahkan
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Ketua: {item.participant.leader_name} | Markah Purata: {item.average_score}
-                        </p>
-                      </div>
-
-                      <div
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                          isSelected
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-slate-300 dark:border-slate-600'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3.5 h-3.5" />}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setTieModalEvent(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleResolveTie}
-                disabled={isResolvingTie || !selectedWinnerId}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md shadow-rose-600/20 disabled:opacity-50"
-              >
-                {isResolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <EmsEventCertsModal
+        event={certModalEvent}
+        onClose={() => setCertModalEvent(null)}
+      />
 
       {/* Lucky Draw Wheel Modal */}
       <EmsLuckyDrawModal
@@ -1447,199 +778,6 @@ export function EmsDashboardPage() {
         eventId={selectedLuckyDrawEvent?.id}
         eventTitle={selectedLuckyDrawEvent?.title}
       />
-
-      {/* Modal Senarai E-Sijil Acara */}
-      {certModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-6 shadow-2xl relative max-h-[85vh] overflow-y-auto text-slate-900 dark:text-white">
-            <button
-              onClick={() => setCertModalEvent(null)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Senarai E-Sijil Acara</h3>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{certModalEvent.title} ({eventCertList.length} Sijil Dijana)</p>
-            </div>
-
-            {loadingEventCerts ? (
-              <div className="py-12 flex flex-col items-center justify-center space-y-2">
-                <RefreshCw className="w-8 h-8 text-teal-600 dark:text-teal-400 animate-spin" />
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Memuatkan senarai sijil...</p>
-              </div>
-            ) : eventCertList.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-                <AlertCircle className="w-8 h-8 text-amber-500 dark:text-amber-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Belum Ada E-Sijil Dijana</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Tekan butang &quot;Jana Semula&quot; untuk menjana e-sijil peserta dan juri acara ini.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {eventCertList.map((cert) => {
-                  const recipientName = cert.participant?.team_name || cert.participant?.leader_name || cert.jury?.jury_name || 'Penerima Sijil';
-                  const subtext = cert.participant?.matrix_no || cert.jury?.organization || cert.cert_type;
-
-                  return (
-                    <div key={cert.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-700 dark:text-teal-300">
-                            {cert.cert_type}
-                          </span>
-                          <span className="text-xs font-mono text-slate-500 dark:text-slate-400 truncate">{cert.cert_serial}</span>
-                        </div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{recipientName}</p>
-                        {subtext && <p className="text-xs text-slate-500 dark:text-slate-400">{subtext}</p>}
-                      </div>
-
-                      <button
-                        onClick={() => navigate(`/ems/cert/${cert.cert_serial}`)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-teal-700 dark:text-teal-300 font-semibold text-xs transition border border-slate-200 dark:border-slate-700 shrink-0"
-                      >
-                        Lihat Sijil
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* 4. Modal Pendaftaran Manual Peserta */}
-      {/* ============================================================ */}
-      {manualRegModalEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-slate-950/80  p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl my-8 relative text-slate-900 dark:text-white">
-            <button
-              onClick={() => setManualRegModalEvent(null)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div>
-              <div className="flex items-center gap-2 text-primary dark:text-amber-400 mb-1">
-                <UserPlus className="w-5 h-5" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Pendaftaran Manual Peserta</h3>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Acara: {manualRegModalEvent.title}</p>
-            </div>
-
-            <form onSubmit={handleManualRegistration} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Nama Ketua / Peserta <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={manualRegForm.leader_name}
-                  onChange={(e) => setManualRegForm({ ...manualRegForm, leader_name: e.target.value })}
-                  placeholder="Contoh: Muhammad Ali bin Ahmad"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Matrik (Pilihan)</label>
-                  <input
-                    type="text"
-                    value={manualRegForm.matrix_no}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, matrix_no: e.target.value })}
-                    placeholder="Contoh: 15DKA21F1001"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">E-Mel (Pilihan)</label>
-                  <input
-                    type="email"
-                    value={manualRegForm.email}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, email: e.target.value })}
-                    placeholder="Contoh: peserta@polisas.edu.my"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Telefon (Pilihan)</label>
-                  <input
-                    type="tel"
-                    value={manualRegForm.phone}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, phone: e.target.value })}
-                    placeholder="Contoh: 0123456789"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori (Pilihan)</label>
-                  <input
-                    type="text"
-                    value={manualRegForm.category_name}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, category_name: e.target.value })}
-                    placeholder="Contoh: Inovasi / Sukan"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Pasukan (Pilihan)</label>
-                  <input
-                    type="text"
-                    value={manualRegForm.team_name}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, team_name: e.target.value })}
-                    placeholder="Contoh: Team TechSquad"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Booth (Pilihan)</label>
-                  <input
-                    type="text"
-                    value={manualRegForm.booth_no}
-                    onChange={(e) => setManualRegForm({ ...manualRegForm, booth_no: e.target.value })}
-                    placeholder="Contoh: Booth 12"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-primary placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setManualRegModalEvent(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingManualReg}
-                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm disabled:opacity-50"
-                >
-                  {isSubmittingManualReg ? 'Mendaftarkan...' : 'Daftar Peserta'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

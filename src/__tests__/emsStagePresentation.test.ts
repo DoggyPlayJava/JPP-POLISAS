@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {
   type StageRevealStep,
   getNextRevealStep,
@@ -112,5 +114,32 @@ describe('EMS Jury Portal Local Auto-Save Draft Storage', () => {
     expect(deserializeJuryDraft(null)).toBeNull();
     expect(deserializeJuryDraft('invalid-json')).toBeNull();
     expect(deserializeJuryDraft('{"incomplete": true}')).toBeNull();
+  });
+});
+
+describe('EMS Stage Presentation Visual Fix & Championship Gold Palette', () => {
+  const rootDir = path.resolve(__dirname, '../..');
+  const leaderboardPagePath = path.resolve(rootDir, 'src/pages/ems/EmsLeaderboardPage.tsx');
+  const luckyDrawModalPath = path.resolve(rootDir, 'src/components/ems/EmsLuckyDrawModal.tsx');
+
+  it('ensures no text-slate-900 is applied to the title inside the stage mode header', () => {
+    const content = fs.readFileSync(leaderboardPagePath, 'utf-8');
+    const stageHeaderRegex = /EMS STAGE MODE[\s\S]*?\{event\.title\}[\s\S]*?<\/h1>/;
+    const match = content.match(stageHeaderRegex);
+    expect(match).not.toBeNull();
+    const titleSnippet = match![0];
+    expect(titleSnippet).not.toContain('text-slate-900');
+  });
+
+  it('ensures tabular-nums is used on leaderboard scores for visual stability', () => {
+    const content = fs.readFileSync(leaderboardPagePath, 'utf-8');
+    expect(content).toContain('tabular-nums');
+  });
+
+  it('ensures purple-to-indigo gradient buttons are replaced with Championship Amber tokens', () => {
+    const leaderboardContent = fs.readFileSync(leaderboardPagePath, 'utf-8');
+    const luckyDrawContent = fs.readFileSync(luckyDrawModalPath, 'utf-8');
+    expect(leaderboardContent).not.toContain('from-purple-600 to-indigo-600');
+    expect(luckyDrawContent).not.toContain('to-indigo-600');
   });
 });

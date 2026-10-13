@@ -81,8 +81,8 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     shortText: 'Cemerlang (5/5)',
     icon: Sparkles,
     iconName: 'Sparkles',
-    badgeColor: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50',
-    activeBg: 'bg-emerald-600 text-white border-emerald-400 ring-2 ring-emerald-500/60 shadow-lg shadow-emerald-600/30',
+    badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+    activeBg: 'bg-emerald-600 text-white border-emerald-500 ring-2 ring-emerald-500/30 shadow-md',
     defaultDescriptor: 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.',
   },
   {
@@ -91,8 +91,8 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     shortText: 'Baik (4/5)',
     icon: ThumbsUp,
     iconName: 'ThumbsUp',
-    badgeColor: 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-500/50 hover:bg-blue-100 dark:hover:bg-blue-900/50',
-    activeBg: 'bg-blue-600 text-white border-blue-400 ring-2 ring-blue-500/60 shadow-lg shadow-blue-600/30',
+    badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+    activeBg: 'bg-sky-600 dark:bg-sky-500 text-white border-sky-500 ring-2 ring-sky-500/30 shadow-md',
     defaultDescriptor: 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
   },
   {
@@ -101,8 +101,8 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     shortText: 'Memuaskan (3/5)',
     icon: MinusCircle,
     iconName: 'MinusCircle',
-    badgeColor: 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/50 hover:bg-amber-100 dark:hover:bg-amber-900/50',
-    activeBg: 'bg-amber-600 text-white border-amber-400 ring-2 ring-amber-500/60 shadow-lg shadow-amber-600/30',
+    badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+    activeBg: 'bg-slate-700 dark:bg-slate-600 text-white border-slate-600 ring-2 ring-slate-500/30 shadow-md',
     defaultDescriptor: 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
   },
   {
@@ -111,8 +111,8 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     shortText: 'Sederhana (2/5)',
     icon: AlertCircle,
     iconName: 'AlertCircle',
-    badgeColor: 'bg-orange-50 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-300 dark:border-orange-500/50 hover:bg-orange-100 dark:hover:bg-orange-900/50',
-    activeBg: 'bg-orange-600 text-white border-orange-400 ring-2 ring-orange-500/60 shadow-lg shadow-orange-600/30',
+    badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+    activeBg: 'bg-amber-600 text-white border-amber-500 ring-2 ring-amber-500/30 shadow-md',
     defaultDescriptor: 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.',
   },
   {
@@ -121,8 +121,8 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     shortText: 'Lemah (1/5)',
     icon: XCircle,
     iconName: 'XCircle',
-    badgeColor: 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-500/50 hover:bg-rose-100 dark:hover:bg-rose-900/50',
-    activeBg: 'bg-rose-600 text-white border-rose-400 ring-2 ring-rose-500/60 shadow-lg shadow-rose-600/30',
+    badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+    activeBg: 'bg-rose-600 text-white border-rose-500 ring-2 ring-rose-500/30 shadow-md',
     defaultDescriptor: 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.',
   },
 ];
@@ -763,7 +763,7 @@ export function EmsJuryPortalPage() {
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 transition-colors">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-slate-600 dark:text-slate-400 font-medium animate-pulse">Menghubungkan ke Portal Juri EMS...</p>
       </div>
     );
@@ -779,13 +779,13 @@ export function EmsJuryPortalPage() {
           <ThemeToggle />
         </div>
 
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-600/15 dark:bg-purple-600/20 rounded-full  pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-600/15 rounded-full  pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-80 h-80 bg-slate-500/5 rounded-full pointer-events-none" />
 
-        <div className="w-full max-w-md bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl  relative z-10 text-slate-900 dark:text-white">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 text-slate-900 dark:text-white">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30 mb-4">
-              <Award className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 mb-4">
+              <Award className="w-8 h-8 text-slate-950" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Portal Penilaian Juri</h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5">
@@ -808,7 +808,7 @@ export function EmsJuryPortalPage() {
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                     placeholder="Contoh: JURI-2026-X"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-widest rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 placeholder:font-sans placeholder:tracking-normal uppercase"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-widest rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 focus:border-slate-400 dark:focus:border-slate-600 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 placeholder:font-sans placeholder:tracking-normal uppercase"
                     required
                   />
                 </div>
@@ -820,7 +820,7 @@ export function EmsJuryPortalPage() {
               <button
                 type="submit"
                 disabled={isVerifying}
-                className="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isVerifying ? (
                   <>
@@ -837,11 +837,11 @@ export function EmsJuryPortalPage() {
             </form>
           ) : (
             <form onSubmit={handleSaveJuryDetailsSubmit} className="space-y-5">
-              <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-500/30 rounded-xl p-3.5 mb-2 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-2.5">
-                <BadgeCheck className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-3.5 mb-2 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
+                <BadgeCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-purple-950 dark:text-white block">Kod Disahkan: {pendingJuryCode.juryCode.code}</span>
-                  <span className="text-purple-800 dark:text-slate-300">Acara: {pendingJuryCode.event.title}</span>
+                  <span className="font-semibold text-emerald-950 dark:text-white block font-mono">Kod Disahkan: {pendingJuryCode.juryCode.code}</span>
+                  <span className="text-emerald-800 dark:text-slate-300">Acara: {pendingJuryCode.event.title}</span>
                 </div>
               </div>
 
@@ -858,7 +858,7 @@ export function EmsJuryPortalPage() {
                     value={inputJuryName}
                     onChange={(e) => setInputJuryName(e.target.value)}
                     placeholder="Contoh: Dr. Norazlan Bin Ahmad"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 text-sm"
                     required
                   />
                 </div>
@@ -877,7 +877,7 @@ export function EmsJuryPortalPage() {
                     value={inputOrganization}
                     onChange={(e) => setInputOrganization(e.target.value)}
                     placeholder="Contoh: Universiti Malaysia Pahang / Pensyarah Kanan"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 text-sm"
                     required
                   />
                 </div>
@@ -894,7 +894,7 @@ export function EmsJuryPortalPage() {
                 <button
                   type="submit"
                   disabled={isVerifying}
-                  className="w-2/3 py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  className="w-2/3 py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-sm font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
                   {isVerifying ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -937,7 +937,7 @@ export function EmsJuryPortalPage() {
             {/* Event Info */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-bold rounded-full uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-full uppercase tracking-wider">
                   EMS Portal Juri
                 </span>
                 {eventData.category && (
@@ -952,13 +952,13 @@ export function EmsJuryPortalPage() {
               <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500 dark:text-slate-400">
                 {eventData.event_date && (
                   <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{new Date(eventData.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                   </div>
                 )}
                 {eventData.location && (
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{eventData.location}</span>
                   </div>
                 )}
@@ -967,7 +967,7 @@ export function EmsJuryPortalPage() {
 
             {/* Jury Profile, ThemeToggle & Logout */}
             <div className="flex items-center gap-3 bg-slate-100/80 dark:bg-slate-950/60 p-2.5 sm:px-4 sm:py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 self-start md:self-auto">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-amber-500 flex items-center justify-center text-white dark:text-slate-950 font-bold shrink-0 shadow-sm">
                 {session.jury_name.charAt(0).toUpperCase()}
               </div>
               <div className="text-left">
@@ -975,7 +975,7 @@ export function EmsJuryPortalPage() {
                   <span className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">
                     {session.jury_name}
                   </span>
-                  <span className="text-[10px] font-mono bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-700/50">
+                  <span className="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700">
                     {session.code}
                   </span>
                 </div>
@@ -1008,7 +1008,7 @@ export function EmsJuryPortalPage() {
               onClick={() => setSelectedCategory('ALL')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 ${
                 selectedCategory === 'ALL'
-                  ? 'bg-purple-600 text-white shadow-sm'
+                  ? 'bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950 shadow-sm'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -1042,16 +1042,16 @@ export function EmsJuryPortalPage() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-purple-600 text-white shadow-sm'
+                      ? 'bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950 shadow-sm'
                       : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <CatIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`} />
+                  <CatIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white dark:text-slate-950' : 'text-slate-500 dark:text-slate-400'}`} />
                   <span>{cat}</span>
                   <span
                     className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
                       isSelected
-                        ? 'bg-purple-700 text-purple-100'
+                        ? 'bg-slate-800 text-white dark:bg-amber-600/30 dark:text-slate-950 font-bold'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
@@ -1077,7 +1077,7 @@ export function EmsJuryPortalPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari booth #, pasukan, ketua atau tajuk inovasi..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 focus:border-slate-400 dark:focus:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-600"
               />
               {searchQuery && (
                 <button
@@ -1095,7 +1095,7 @@ export function EmsJuryPortalPage() {
                 onClick={() => setStatusFilter('ALL')}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   statusFilter === 'ALL'
-                    ? 'bg-purple-600 text-white shadow-sm'
+                    ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
@@ -1128,7 +1128,7 @@ export function EmsJuryPortalPage() {
         {/* Participant Cards Grid */}
         {isLoadingDashboard ? (
           <div className="py-16 text-center text-slate-500 dark:text-slate-400 space-y-3">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-purple-600 dark:text-indigo-400" />
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-slate-400 dark:text-slate-500" />
             <p>Memuatkan senarai peserta & pemarkahan...</p>
           </div>
         ) : filteredParticipants.length === 0 ? (
@@ -1179,7 +1179,7 @@ export function EmsJuryPortalPage() {
               return (
                 <div
                   key={participant.id}
-                  className={`bg-white dark:bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between transition-all hover:border-purple-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md text-slate-900 dark:text-white ${
+                  className={`bg-white dark:bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between transition-all hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md text-slate-900 dark:text-white ${
                     isScored ? 'border-emerald-300 dark:border-emerald-500/30' : 'border-slate-200 dark:border-slate-800'
                   }`}
                 >
@@ -1188,7 +1188,7 @@ export function EmsJuryPortalPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {participant.booth_no ? (
-                          <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-mono text-xs font-bold rounded-lg shadow-sm">
+                          <span className="px-3 py-1 bg-slate-900 dark:bg-slate-800 text-white font-mono text-xs font-bold rounded-lg shadow-sm border border-slate-700">
                             BOOTH #{participant.booth_no}
                           </span>
                         ) : (
@@ -1205,7 +1205,7 @@ export function EmsJuryPortalPage() {
 
                       {/* Status Badge */}
                       {isScored ? (
-                        <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono">
+                        <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono tabular-nums">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>{weightedPercentage.toFixed(1)}% ({awardedScore}/{maxPossibleTotal})</span>
                         </span>
@@ -1219,11 +1219,11 @@ export function EmsJuryPortalPage() {
 
                     {/* Team & Product Title */}
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors line-clamp-2">
                         {productTitle}
                       </h3>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-purple-600 dark:text-indigo-400 shrink-0" />
+                        <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                         <span>
                           {participant.team_name ? (
                             <>
@@ -1256,7 +1256,7 @@ export function EmsJuryPortalPage() {
                                     setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` });
                                   }
                                 }}
-                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-purple-500 transition-all flex flex-col items-center justify-center"
+                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-slate-400 dark:hover:border-slate-600 transition-all flex flex-col items-center justify-center"
                                 title={isPdf ? 'Buka fail PDF di tab baru' : 'Klik untuk besarkan imej'}
                               >
                                 {isPdf ? (
@@ -1294,7 +1294,7 @@ export function EmsJuryPortalPage() {
                       className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
                         isScored
                           ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                          : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-600/20 font-bold'
+                          : 'bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 shadow-sm font-bold active:scale-[0.98]'
                       }`}
                     >
                       <Sliders className="w-4 h-4" />
@@ -1312,14 +1312,14 @@ export function EmsJuryPortalPage() {
       {/* SCREEN 3: SEAMLESS TOUCH FEED EVALUATION MODAL */}
       {/* ----------------------------------------------------------------------- */}
       {evalParticipant && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85  flex flex-col justify-end sm:justify-center sm:p-4">
-          <div className="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-purple-500/30 w-full max-w-4xl sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col h-[94vh] sm:h-[90vh] overflow-hidden text-slate-900 dark:text-white">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85 flex flex-col justify-end sm:justify-center sm:p-4">
+          <div className="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 w-full max-w-4xl sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col h-[94vh] sm:h-[90vh] overflow-hidden text-slate-900 dark:text-white">
             {/* Modal Header: Candidate Summary & Draft Badge */}
             <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 shrink-0">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   {evalParticipant.booth_no && (
-                    <span className="px-2.5 py-0.5 bg-purple-600 text-white font-mono text-xs font-bold rounded-md shadow-sm">
+                    <span className="px-2.5 py-0.5 bg-slate-900 dark:bg-slate-800 text-white font-mono text-xs font-bold rounded-md shadow-sm">
                       BOOTH #{evalParticipant.booth_no}
                     </span>
                   )}
@@ -1361,10 +1361,10 @@ export function EmsJuryPortalPage() {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-400 border border-slate-300 dark:border-slate-700 hover:border-purple-400 transition-colors shrink-0 shadow-xs"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-amber-500 dark:hover:text-amber-400 border border-slate-300 dark:border-slate-700 hover:border-amber-400 transition-colors shrink-0 shadow-xs"
                           title="Buka lampiran dalam tab baru"
                         >
-                          {isPdf ? <FileText className="w-3.5 h-3.5 text-rose-500" /> : <Eye className="w-3.5 h-3.5 text-indigo-500" />}
+                          {isPdf ? <FileText className="w-3.5 h-3.5 text-rose-500" /> : <Eye className="w-3.5 h-3.5 text-amber-500" />}
                           <span>{isPdf ? `Dokumen PDF ${idx + 1}` : `Foto ${idx + 1}`}</span>
                           <ExternalLink className="w-3 h-3 opacity-60" />
                         </a>
@@ -1395,9 +1395,9 @@ export function EmsJuryPortalPage() {
                   {sections.map((sec, secIdx) => (
                     <div key={sec.id} className="space-y-4">
                       {/* Sticky Section Header */}
-                      <div className="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-900/95  p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-xs">
+                      <div className="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-900/95 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-xs">
                         <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-lg bg-purple-600 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-lg bg-slate-900 dark:bg-slate-800 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0">
                             {secIdx + 1}
                           </span>
                           <div>
@@ -1409,7 +1409,7 @@ export function EmsJuryPortalPage() {
                             </span>
                           </div>
                         </div>
-                        <span className="px-2.5 py-1 bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700 text-xs font-bold font-mono rounded-lg shrink-0">
+                        <span className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold font-mono rounded-lg shrink-0">
                           Wajaran: {sec.weight}%
                         </span>
                       </div>
@@ -1432,12 +1432,12 @@ export function EmsJuryPortalPage() {
                           return (
                             <div
                               key={r.id}
-                              className="bg-slate-50 dark:bg-[#14151f] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-4 hover:border-purple-300 dark:hover:border-slate-600 transition-all shadow-sm"
+                              className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-4 hover:border-slate-400 dark:hover:border-slate-600 transition-all shadow-sm"
                             >
                               {/* Criterion Title & Weight */}
                               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                                 <div className="flex items-start gap-2.5">
-                                  <span className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                  <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                                     {rIdx + 1}
                                   </span>
                                   <div>
@@ -1445,7 +1445,7 @@ export function EmsJuryPortalPage() {
                                       {r.criteria_name}
                                     </h4>
                                     {r.category_name && (
-                                      <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold block">
+                                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">
                                         Sub-Kategori: {r.category_name}
                                       </span>
                                     )}
@@ -1453,7 +1453,7 @@ export function EmsJuryPortalPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-                                  <span className="px-2.5 py-1 bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700 text-xs font-semibold rounded-lg font-mono">
+                                  <span className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg font-mono">
                                     Pemberat: {weight}%
                                   </span>
                                   {selectedVal > 0 && (
@@ -1508,7 +1508,7 @@ export function EmsJuryPortalPage() {
                                 {activeDisplayVal > 0 ? (
                                   <div className="mt-3 p-3.5 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1 animate-in fade-in duration-150">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[11px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5">
+                                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                                         <HelpCircle className="w-3.5 h-3.5" />
                                         <span>Deskriptor Skor {activeDisplayVal}: {activeOption?.shortText}</span>
                                       </span>
@@ -1541,9 +1541,9 @@ export function EmsJuryPortalPage() {
                   ))}
 
                   {/* General Comments Textarea at Feed Bottom */}
-                  <div className="bg-slate-50 dark:bg-[#14151f] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-purple-600 dark:text-indigo-400" />
+                      <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       <span>Ulasan & Cadangan Penambahbaikan (Pilihan Juri)</span>
                     </label>
                     <textarea
@@ -1551,7 +1551,7 @@ export function EmsJuryPortalPage() {
                       value={generalComments}
                       onChange={(e) => handleCommentsChange(e.target.value)}
                       placeholder="Masukkan ulasan keseluruhan, pujian, atau cadangan penambahbaikan untuk calon ini..."
-                      className="w-full p-3.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                      className="w-full p-3.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     />
                   </div>
                 </>
@@ -1559,7 +1559,7 @@ export function EmsJuryPortalPage() {
             </div>
 
             {/* Sticky Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95  border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-xl">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-xl">
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
                 {/* Progress & Live Weighted % Score */}
                 <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
@@ -1568,13 +1568,13 @@ export function EmsJuryPortalPage() {
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                         {completedCriteriaCount}/{totalCriteriaCount} Kriteria Dilengkapkan
                       </span>
-                      <span className="text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400">
+                      <span className="text-[10px] font-mono font-semibold text-slate-600 dark:text-slate-400">
                         ({progressPercentage}%)
                       </span>
                     </div>
                     <div className="w-32 sm:w-40 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-purple-600 to-emerald-500 h-full transition-all duration-300"
+                        className="bg-emerald-500 h-full transition-all duration-300"
                         style={{ width: `${progressPercentage}%` }}
                       />
                     </div>
@@ -1584,7 +1584,7 @@ export function EmsJuryPortalPage() {
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">
                       Skor Wajaran
                     </span>
-                    <span className="text-base sm:text-lg font-black font-mono text-purple-700 dark:text-emerald-400">
+                    <span className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
                       {liveTotalWeightedScore.toFixed(1)}%
                     </span>
                   </div>
@@ -1604,7 +1604,7 @@ export function EmsJuryPortalPage() {
                     type="button"
                     onClick={handleRubricSubmit}
                     disabled={!isAllCriteriaCompleted || isSubmittingScores}
-                    className="flex-1 sm:flex-initial py-2.5 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all"
+                    className="flex-1 sm:flex-initial py-2.5 px-6 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold disabled:opacity-40 disabled:cursor-not-allowed text-xs rounded-xl shadow-lg shadow-slate-900/20 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
                   >
                     {isSubmittingScores ? (
                       <>
@@ -1629,14 +1629,14 @@ export function EmsJuryPortalPage() {
       {/* SCREEN 4: POST-SCORING CELEBRATION & NEXT BOOTH TRANSITION DRAWER */}
       {/* ----------------------------------------------------------------------- */}
       {celebrationModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85  flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-purple-500/30 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 duration-200 text-slate-900 dark:text-white">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 dark:bg-slate-950/85 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 duration-200 text-slate-900 dark:text-white">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
               <CheckCircle2 className="w-8 h-8 text-white" />
             </div>
 
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 rounded-full text-xs font-semibold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 rounded-full text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>Pemarkahan Berjaya Disimpan</span>
               </div>
@@ -1653,7 +1653,7 @@ export function EmsJuryPortalPage() {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Booth Dinilai:</span>
                 {celebrationModal.participant.booth_no ? (
-                  <span className="px-2 py-0.5 bg-purple-600 text-white font-mono text-xs font-bold rounded">
+                  <span className="px-2 py-0.5 bg-slate-900 dark:bg-slate-800 text-white font-mono text-xs font-bold rounded">
                     BOOTH #{celebrationModal.participant.booth_no}
                   </span>
                 ) : (
@@ -1678,12 +1678,12 @@ export function EmsJuryPortalPage() {
             {/* Next Booth Transition Options */}
             {celebrationModal.nextParticipant ? (
               <div className="space-y-3 pt-1">
-                <div className="p-3 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-500/30 rounded-xl text-left text-xs">
-                  <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 block uppercase tracking-wide">
+                <div className="p-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-left text-xs">
+                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block uppercase tracking-wide">
                     Booth Seterusnya Tersedia:
                   </span>
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
-                    <span className="px-1.5 py-0.5 bg-purple-600 text-white rounded font-mono text-[11px]">
+                    <span className="px-1.5 py-0.5 bg-slate-900 dark:bg-slate-700 text-white rounded font-mono text-[11px]">
                       #{celebrationModal.nextParticipant.booth_no || '-'}
                     </span>
                     <span className="truncate">
@@ -1695,7 +1695,7 @@ export function EmsJuryPortalPage() {
                 <button
                   type="button"
                   onClick={handleStartNextBooth}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
                 >
                   <span>Nilai Booth Seterusnya: #{celebrationModal.nextParticipant.booth_no || ''}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1719,7 +1719,7 @@ export function EmsJuryPortalPage() {
                 <button
                   type="button"
                   onClick={() => setCelebrationModal(null)}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/30 transition-all"
+                  className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-slate-900/20 active:scale-[0.98] transition-all"
                 >
                   Kembali ke Senarai
                 </button>

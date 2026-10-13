@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
+import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import toast from 'react-hot-toast';
-import { Heart, Store, Star, ArrowLeft, Trash2, ShoppingCart, Package } from 'lucide-react';
+import { Heart, Store, Star, ArrowLeft, Trash2, ShoppingCart, Package, ShoppingBag } from 'lucide-react';
 import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 interface WishlistItem {
@@ -66,9 +66,26 @@ export function PolyMartWishlist() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-        style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
+    <div className="max-w-2xl mx-auto space-y-4 pb-4 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-muted/50" />
+        <div className="space-y-1">
+          <div className="h-5 w-32 bg-muted/60 rounded" />
+          <div className="h-3 w-20 bg-muted/40 rounded" />
+        </div>
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="rounded-2xl border border-border/50 bg-card p-3 flex gap-3">
+            <div className="w-20 h-20 rounded-xl bg-muted/40 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-24 bg-muted/40 rounded" />
+              <div className="h-4 w-40 bg-muted/60 rounded" />
+              <div className="h-4 w-20 bg-muted/50 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -77,7 +94,7 @@ export function PolyMartWishlist() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors cursor-pointer">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <div>
@@ -91,13 +108,16 @@ export function PolyMartWishlist() {
       {/* Items */}
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <div className="text-5xl">💕</div>
-          <p className="text-sm font-bold text-muted-foreground/60">Wishlist anda kosong</p>
-          <p className="text-xs text-muted-foreground/40">Tekan ❤️ pada produk untuk menyimpan</p>
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shadow-xs">
+            <Heart className="w-8 h-8" />
+          </div>
+          <p className="text-sm font-bold text-muted-foreground/80">Wishlist anda kosong</p>
+          <p className="text-xs text-muted-foreground/50">Tekan ikon hati pada produk untuk menyimpan</p>
           <button onClick={() => navigate('/polymart')}
-            className="mt-3 px-4 h-9 rounded-xl text-[11px] font-black text-white"
+            className="mt-3 px-4 h-9 rounded-xl text-[11px] font-black text-white flex items-center gap-1.5 transition-all hover:brightness-110 cursor-pointer shadow-md shadow-amber-500/20"
             style={{ background: PM_GRADIENT }}>
-            🛍️ Terokai PolyMart
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Terokai PolyMart</span>
           </button>
         </div>
       ) : (
@@ -106,7 +126,7 @@ export function PolyMartWishlist() {
             {items.map(item => {
               const p = item.business_products;
               if (!p) return null;
-              const emoji = CATEGORY_EMOJI[p.category] ?? '📦';
+              const FallbackIcon = CATEGORY_ICON_MAP[p.category] || Package;
               const isOut = p.stock_quantity <= 0 || !p.is_available;
               const isOnSale = isProductOnSale(p);
               const effPrice = getProductEffectivePrice(p);
@@ -123,13 +143,13 @@ export function PolyMartWishlist() {
                   <div className="flex gap-3 p-3">
                     {/* Image */}
                     <div
-                      className="w-20 h-20 rounded-xl overflow-hidden shrink-0 cursor-pointer"
+                      className="w-20 h-20 rounded-xl overflow-hidden shrink-0 cursor-pointer flex items-center justify-center"
                       style={{ background: PM_LIGHT }}
                       onClick={() => navigate(`/polymart/produk/${p.id}`)}
                     >
                       {p.image_url
                         ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                        : <div className="w-full h-full flex items-center justify-center text-3xl">{emoji}</div>
+                        : <div className="w-full h-full flex items-center justify-center text-amber-600 dark:text-amber-400"><FallbackIcon className="w-8 h-8" /></div>
                       }
                     </div>
 
@@ -138,18 +158,18 @@ export function PolyMartWishlist() {
                       <p className="text-[9px] text-muted-foreground/50 font-bold flex items-center gap-1">
                         <Store className="w-2.5 h-2.5" /> {p.keusahawanan_businesses?.name ?? 'Kedai'}
                       </p>
-                      <p className="text-sm font-black text-foreground truncate cursor-pointer hover:underline"
+                      <p className="text-sm font-black text-foreground truncate cursor-pointer hover:underline [text-wrap:balance]"
                         onClick={() => navigate(`/polymart/produk/${p.id}`)}>
                         {p.name}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         {isOnSale ? (
                           <>
-                            <span className="text-sm font-black text-rose-500">RM {effPrice.toFixed(2)}</span>
-                            <span className="text-[10px] text-muted-foreground/50 line-through">RM {p.price.toFixed(2)}</span>
+                            <span className="text-sm font-black text-rose-500 font-mono tabular-nums">RM {effPrice.toFixed(2)}</span>
+                            <span className="text-[10px] text-muted-foreground/50 line-through font-mono tabular-nums">RM {p.price.toFixed(2)}</span>
                           </>
                         ) : (
-                          <span className="text-sm font-black" style={{ color: PM_ACCENT }}>RM {p.price.toFixed(2)}</span>
+                          <span className="text-sm font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>RM {p.price.toFixed(2)}</span>
                         )}
                       </div>
                       {isOut && (

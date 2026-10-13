@@ -68,15 +68,15 @@ export function AktivitiFull() {
   const { runTour, startTour, closeTour } = useTour('EKPP_AKTIVITI', !!profile);
 
   return (
-    <div className="page-container space-y-8 pb-20">
+    <div className="page-container space-y-8 pb-20 min-w-0 max-w-full">
       {/* HEADER */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
         <div>
           <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border-none">
             {profile?.club_id ? 'Kelab' : 'JPP'}
           </Badge>
-          <h1 className="text-5xl font-black tracking-tighter gradient-text">Aktiviti</h1>
-          <p className="text-muted-foreground mt-1 font-medium">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter gradient-text">Aktiviti</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base font-medium">
             Takwim Rasmi &amp; Aktiviti Harian Kelab
           </p>
         </div>
@@ -89,25 +89,28 @@ export function AktivitiFull() {
       </motion.div>
 
       {/* TABS */}
-      <Tabs defaultValue="aktiviti" className="w-full">
-        <TabsList className="bg-muted/40 p-1.5 rounded-2xl gap-2 border border-border/50 shadow-inner mb-2 flex">
+      <Tabs defaultValue="aktiviti" className="w-full min-w-0">
+        <TabsList className="w-full grid grid-cols-3 bg-muted/40 p-1 sm:p-1.5 rounded-2xl gap-1 sm:gap-2 border border-border/50 shadow-inner mb-4 h-auto">
           <TabsTrigger
             value="aktiviti"
-            className="tour-tab-aktiviti flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-emerald-600 flex items-center gap-2 justify-center"
+            className="tour-tab-aktiviti rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-emerald-600 flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
-            <Zap className="w-3.5 h-3.5" /> Aktiviti Kelab
+            <Zap className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Aktiviti Kelab</span>
           </TabsTrigger>
           <TabsTrigger
             value="takwim"
-            className="tour-tab-takwim flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary flex items-center gap-2 justify-center"
+            className="tour-tab-takwim rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
-            <CalendarDays className="w-3.5 h-3.5" /> Takwim Rasmi
+            <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Takwim Rasmi</span>
           </TabsTrigger>
           <TabsTrigger
             value="statistik"
-            className="tour-tab-statistik flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-violet-600 flex items-center gap-2 justify-center"
+            className="tour-tab-statistik rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-violet-600 flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
-            <Activity className="w-3.5 h-3.5" /> Statistik
+            <Activity className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Statistik</span>
           </TabsTrigger>
         </TabsList>
 
@@ -362,10 +365,10 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
   const { grouped, keys: groupKeys } = groupActivitiesByMonth(filtered);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* STAT BAR + TAMBAH BUTTON */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="overflow-x-auto no-scrollbar flex items-center gap-2 pb-1 sm:pb-0 -mx-1 px-1">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
+        <div className="overflow-x-auto no-scrollbar flex items-center gap-2 py-1 w-full min-w-0">
           {[
             { key: 'semua', label: 'Semua', count: activities.length },
             { key: 'perancangan', label: 'Perancangan', count: statusCounts.perancangan || 0 },
@@ -377,7 +380,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               key={f.key}
               onClick={() => setFilterStatus(f.key)}
               className={cn(
-                'px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shrink-0 whitespace-nowrap',
+                'px-3 sm:px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap',
                 filterStatus === f.key
                   ? 'bg-primary text-white shadow-lg'
                   : 'bg-background border border-border text-muted-foreground hover:border-slate-400'
@@ -385,7 +388,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             >
               {f.label}
               <span className={cn(
-                'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black',
+                'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0',
                 filterStatus === f.key ? 'bg-card/20' : 'bg-muted'
               )}>
                 {f.count}
@@ -396,7 +399,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
         {canManage && (
           <Button
             onClick={openCreate}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 shrink-0"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 dark:shadow-emerald-950/40 transition-all hover:scale-105 active:scale-95 shrink-0"
           >
             <Plus className="w-4 h-4 mr-2" /> Aktiviti Baru
           </Button>
@@ -1128,9 +1131,9 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   }
 
   return (
-    <div className="space-y-12 pb-20 pt-4 bg-muted/30 min-h-[60vh] rounded-[2rem] px-6 py-8">
+    <div className="space-y-8 sm:space-y-12 pb-20 pt-4 bg-muted/30 min-h-[60vh] rounded-[2rem] px-3.5 sm:px-6 py-6 sm:py-8 w-full min-w-0">
       {/* TAKWIM HEADER ROW */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Program Rasmi · Kertas Kerja Diperlukan
@@ -1139,13 +1142,13 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         {canManage && allowAddTakwim && (
           <Button
             onClick={openCreate}
-            className="bg-primary text-white rounded-full h-12 px-6 shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+            className="w-full sm:w-auto bg-primary text-white rounded-full h-11 sm:h-12 px-6 shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="mr-2 h-4 w-4" /> Program Baru
           </Button>
         )}
         {canManage && !allowAddTakwim && (
-          <Button disabled variant="outline" className="rounded-full h-12 px-6 shadow-none font-black text-[10px] uppercase tracking-widest border-border cursor-not-allowed opacity-70">
+          <Button disabled variant="outline" className="w-full sm:w-auto rounded-full h-11 sm:h-12 px-6 shadow-none font-black text-[10px] uppercase tracking-widest border-border cursor-not-allowed opacity-70">
             <Lock className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> Pendaftaran Ditutup
           </Button>
         )}
@@ -1154,11 +1157,11 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       {loading ? (
         <TakwimSkeleton />
       ) : (
-        <div className="space-y-14">
+        <div className="space-y-10 sm:space-y-14">
           {urgentItems.length > 0 && (
             <section className="space-y-5">
               <SectionHeader title="Perhatian Segera" count={urgentItems.length} color="text-rose-500" icon={BellRing} />
-              <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide">
+              <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 hide-scrollbar no-scrollbar scrollbar-hide w-full min-w-0">
                 {urgentItems.map(act => (
                   <ProgramCard key={act.id} act={act} isUrgent canManage={canManage}
                     onEdit={() => openEdit(act)} load={load}
