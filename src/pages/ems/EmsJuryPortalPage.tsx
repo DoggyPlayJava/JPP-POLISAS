@@ -1419,7 +1419,7 @@ export function EmsJuryPortalPage() {
 
                   {/* Candidate Info Drawer / Slide-down Panel */}
                   {showCandidateInfo && (
-                    <div className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-inner animate-in slide-in-from-top-2 duration-150 shrink-0">
+                    <div className="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-inner animate-in slide-in-from-top-2 duration-150 shrink-0 max-h-[45vh] overflow-y-auto">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-3 flex-1 min-w-0">
                           <div>
@@ -1605,6 +1605,8 @@ export function EmsJuryPortalPage() {
                                         <button
                                           key={option.value}
                                           type="button"
+                                          aria-pressed={isSelected}
+                                          aria-label={`${option.shortText} (${option.value} daripada 5)`}
                                           onClick={() => handleScoreSelect(r.id, option.value)}
                                           onMouseEnter={() =>
                                             setHoveredScores((prev) => ({ ...prev, [r.id]: option.value }))
