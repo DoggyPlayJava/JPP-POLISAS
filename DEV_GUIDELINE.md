@@ -430,6 +430,7 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/polyMapsResolver.ts` | Enjin pemadan bilik PolyMaps pintar (search_tags, alias, prefix normalizer) menghubungkan jadual ke lokasi fizikal |
 | `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya dengan countdown masa nyata client-side (tanpa DB polling) dan deep link PolyMaps |
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
+| `src/components/takwim/EditClassSlotModal.tsx` | Modal penyuntingan pantas satu slot/subjek tunggal dengan semakan pertindihan masa dan integrasi PolyMaps |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
 | `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
 | `supabase/migrations/20261011000002_imaps_missing_reports_dedup_rpc.sql` | RPC pelaporan automatik bilik tiada dalam PolyMaps dengan kaunter deduplikasi atomik selamat RLS |
@@ -4046,5 +4047,26 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
   - **Kod Kursus Tanpa Duplikasi:** Sistem menyemak `hasDistinctCourseName`. Sekiranya nama kursus tidak wujud atau sama dengan kod kursus (cth: `DEE30163`), kod kursus hanya dipaparkan sekali sahaja bersama lencana jenis kelas.
 - **Bar Kemajuan Kelas Semasa (*Live Elapsed Progress Bar*):**
   - Apabila kelas sedang berlangsung (`isOngoing = true`), bar kemajuan animasi berwarna zamrud (*emerald*) dipaparkan secara automatik memaparkan nisbah minit yang telah berlalu berbanding baki masa kelas.
+
+### 32.11 Pengoptimuman UX Portal Header, Action Bar 2-Tingkat & Edit Slot Tunggal
+
+- **Penyelarasan Top Header SuperApp (`SuperAppHeader.tsx`):**
+  - Pengecilan ruang menegak di peranti mudah alih (~45% jimat ruang) dengan menyatukan sapaan masa nyata, nama panggilan pelajar, emoji mesra, dan badge peranan ke dalam satu baris `h1` responsif (`flex-wrap`).
+  - Slogan deskripsi portal yang panjang disembunyikan pada skrin telefon pintar (`hidden sm:block`) agar kad jadual dan pintasan aktiviti kampus terus kelihatan tanpa memerlukan tatalan skrol yang panjang.
+  - Kapsul butang carian arahan dipadatkan daripada `h-12` kepada `h-10 sm:h-11` dengan saiz tipografi dan padding yang kemas serta mudah ditekan.
+- **Copywriting Kad Jadual Belum Dimuat Naik (`NextClassBentoCard.tsx`):**
+  - Menggantikan perenggan birokrasi 21 patah perkataan kepada seruan bertindak yang tangkas, mesra dan ada elemen kesegeraan (*urgency*):
+    > *"Takut terlepas kelas? Muat naik jadual sekarang untuk peringatan automatik & panduan lokasi bilik."*
+- **Action Bar 2-Tingkat Pintar & Butang Wira Jadual (`MyTimetableView.tsx`):**
+  - Butang utama dimutakhirkan kepada huruf besar penuh **`MUAT NAIK JADUAL`** dengan tema warna Indigo dan ikon `Upload` yang menonjol.
+  - Pada paparan peranti mudah alih, antaramuka disusun secara 2-tingkat bagi mengelakkan butang terputus atau terbiar bersendirian pada baris baharu:
+    - **Tingkat 1:** Butang wira `MUAT NAIK JADUAL` bersaiz penuh (`w-full`).
+    - **Tingkat 2:** Toolbar utiliti seimbang yang menghimpunkan toggle paparan `[Grid ⊞ | Agenda ☰]` di sebelah kiri serta kelompok butang `Tambah Slot (+)`, `Peringatan (Loceng)`, dan `Padam Semua (Tong Sampah)` di sebelah kanan.
+- **Penyuntingan Slot Subjek Tunggal Berfokus (`EditClassSlotModal.tsx`):**
+  - Kad kelas (`ClassCard`) di paparan Agenda dan Grid kini bersifat interaktif sepenuhnya (`cursor-pointer`, efek apungan hover `-translate-y-0.5`, dan butang pensel `Edit2` khusus).
+  - Menekan kad atau ikon pensel akan membuka modal khusus untuk slot subjek tersebut sahaja (bukan modal 14 baris sekaligus).
+  - Borang merangkumi kod kursus, nama kursus, hari, masa mula/tamat, jenis kelas, bilik kuliah (dengan auto-padanan PolyMaps), kod pensyarah, status online, dan tag warna subjek.
+  - Dilengkapi pengesanan pertindihan masa setempat (*real-time collision detection*) serta pilihan memadam slot tunggal secara selamat dengan kawalan RLS tenant terpelihara.
+
 
 
