@@ -260,14 +260,14 @@ export function EmsLuckyDrawModal({
 
         {/* Modal Header */}
         <div className="text-center space-y-1.5 border-b border-white/10 pb-5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-wider">
             <Gift className="w-4 h-4 text-amber-400" /> Roda Cabutan Bertuah Interaktif
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300">
+          <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 [text-wrap:balance]">
             Roda Cabutan Bertuah EMS
           </h2>
           {eventTitle && (
-            <p className="text-xs font-semibold text-slate-400">Acara: {eventTitle}</p>
+            <p className="text-xs font-semibold text-slate-400 [text-wrap:balance]">Acara: {eventTitle}</p>
           )}
         </div>
 
@@ -280,7 +280,7 @@ export function EmsLuckyDrawModal({
               disabled={isSpinning}
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'ALL'
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
                   : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
               }`}
             >
@@ -291,7 +291,7 @@ export function EmsLuckyDrawModal({
               disabled={isSpinning}
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'VISITORS'
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
                   : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
               }`}
             >
@@ -302,7 +302,7 @@ export function EmsLuckyDrawModal({
               disabled={isSpinning}
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'PARTICIPANTS'
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
                   : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
               }`}
             >
@@ -315,7 +315,7 @@ export function EmsLuckyDrawModal({
               <span className="animate-pulse">Memuatkan...</span>
             ) : (
               <span>
-                Jumlah Calon: <strong className="text-amber-400">{candidates.length}</strong>
+                Jumlah Calon: <strong className="text-amber-400 tabular-nums font-mono">{candidates.length}</strong>
               </span>
             )}
           </div>
@@ -348,7 +348,7 @@ export function EmsLuckyDrawModal({
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                   <span>PEMENANG CABUTAN BERTUAH!</span>
                 </span>
-                <h3 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 leading-tight">
+                <h3 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 leading-tight [text-wrap:balance]">
                   {currentWinner.name}
                 </h3>
                 <p className="text-xs text-slate-300 font-semibold mt-1">
@@ -362,7 +362,7 @@ export function EmsLuckyDrawModal({
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 animate-pulse">
                 {isSpinning ? 'MEMUTAR RODA CABUTAN...' : 'SEDANG MEMILIH PEMENANG'}
               </span>
-              <h3 className={`text-2xl sm:text-3xl font-black text-white ${isSpinning ? 'opacity-90 scale-95 transition-all' : ''}`}>
+              <h3 className={`text-2xl sm:text-3xl font-black text-white [text-wrap:balance] ${isSpinning ? 'opacity-90 scale-95 transition-all' : ''}`}>
                 {displayedCandidate.name}
               </h3>
               <p className="text-xs text-slate-400 font-mono">
@@ -385,7 +385,7 @@ export function EmsLuckyDrawModal({
         <button
           onClick={handleStartSpin}
           disabled={!canManage || isSpinning || candidates.length === 0}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-[0_0_30px_rgba(245,158,11,0.35)] flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+          className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed"
         >
           <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
           <span>{isSpinning ? 'Memutar Roda Cabutan...' : 'Putar Roda Cabutan Bertuah'}</span>
@@ -397,7 +397,7 @@ export function EmsLuckyDrawModal({
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
                 <History className="w-4 h-4 text-amber-400" />
-                Sejarah Pemenang Cabutan Sesi Ini ({winnerHistory.length})
+                Sejarah Pemenang Cabutan Sesi Ini (<span className="tabular-nums font-mono">{winnerHistory.length}</span>)
               </h4>
               <button
                 onClick={() => setWinnerHistory([])}
@@ -414,11 +414,11 @@ export function EmsLuckyDrawModal({
                   className="flex items-center justify-between p-3 rounded-xl bg-[#06080F] border border-white/10 text-xs"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-black text-[10px] flex items-center justify-center border border-amber-500/30">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-black text-[10px] flex items-center justify-center border border-amber-500/30 tabular-nums font-mono">
                       #{winnerHistory.length - idx}
                     </span>
                     <div>
-                      <h5 className="font-bold text-white">{winner.name}</h5>
+                      <h5 className="font-bold text-white [text-wrap:balance]">{winner.name}</h5>
                       <p className="text-[10px] text-slate-400">{winner.subText}</p>
                     </div>
                   </div>
