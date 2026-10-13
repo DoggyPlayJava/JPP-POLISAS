@@ -141,6 +141,31 @@ export function buildPolyMapsRoomUrl(entry: Pick<StudentTimetableEntry, 'locatio
   return `/polymaps?room=${encodeURIComponent(target || '')}`;
 }
 
+/**
+ * Formats timetable location, condensing long building names to campus acronyms (JTMK, JKA, etc.)
+ */
+export function formatCompactLocation(entry: StudentTimetableEntry): string {
+  if (entry.location?.room_code) {
+    const rawBuilding = entry.location.building?.name || entry.location.building?.code || entry.location.building?.short_name;
+    const building = rawBuilding
+      ? rawBuilding
+          .replace(/BANGUNAN TEKNOLOGI MAKLUMAT & KOMUNIKASI/i, 'JTMK')
+          .replace(/BANGUNAN KEJURUTERAAN AWAM/i, 'JKA')
+          .replace(/BANGUNAN KEJURUTERAAN ELEKTRIK/i, 'JKE')
+          .replace(/BANGUNAN KEJURUTERAAN MEKANIKAL/i, 'JKM')
+          .replace(/BANGUNAN PERDAGANGAN/i, 'JP')
+      : '';
+    return building ? `${entry.location.room_code} · ${building}` : entry.location.room_code;
+  }
+  const raw = entry.room_raw || 'Dewan / Bilik Kuliah';
+  return raw
+    .replace(/BANGUNAN TEKNOLOGI MAKLUMAT & KOMUNIKASI/i, 'JTMK')
+    .replace(/BANGUNAN KEJURUTERAAN AWAM/i, 'JKA')
+    .replace(/BANGUNAN KEJURUTERAAN ELEKTRIK/i, 'JKE')
+    .replace(/BANGUNAN KEJURUTERAAN MEKANIKAL/i, 'JKM')
+    .replace(/BANGUNAN PERDAGANGAN/i, 'JP');
+}
+
 export function NextClassBentoCard({
   entries,
   className,
@@ -251,13 +276,7 @@ export function NextClassBentoCard({
 
   // Helper for physical location label
   const getLocationLabel = (entry: StudentTimetableEntry): string => {
-    if (entry.location) {
-      const buildingName = entry.location.building?.name;
-      return buildingName
-        ? `${entry.location.room_code} · ${buildingName}`
-        : entry.location.room_code;
-    }
-    return entry.room_raw || 'Dewan / Bilik Kuliah';
+    return formatCompactLocation(entry);
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -311,7 +330,7 @@ export function NextClassBentoCard({
                 <>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                      {stateData.entry.course_code}
+                      {stateData.entry.course_name?.trim() || stateData.entry.course_code}
                     </span>
                     <span className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium">
                       ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
@@ -338,7 +357,7 @@ export function NextClassBentoCard({
                   </div>
                   {stateData.nextClass && (
                     <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
-                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
                 </>
@@ -349,7 +368,7 @@ export function NextClassBentoCard({
                   </div>
                   {stateData.nextClass && (
                     <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
-                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
                 </>
@@ -389,7 +408,7 @@ export function NextClassBentoCard({
 
             {(stateData.type === 'COMPLETED_TODAY' || stateData.type === 'NO_CLASS_TODAY') && (
               <Link
-                to="/akademik/takwim"
+                to="/akademik/takwim?tab=personal"
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-bold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               >
@@ -496,6 +515,10 @@ export function NextClassBentoCard({
       }
     }
 
+    const displayName = entry.course_name && entry.course_name.trim().length > 0
+      ? entry.course_name.trim()
+      : entry.course_code;
+
     // Check if course_name is identical to course_code to avoid redundant printing
     const hasDistinctCourseName = Boolean(
       entry.course_name && entry.course_name.trim().toUpperCase() !== entry.course_code.trim().toUpperCase()
@@ -541,42 +564,21 @@ export function NextClassBentoCard({
           </button>
         </div>
 
-        {/* Course Details (Non-redundant: only prints code once if no distinct name) */}
-        <div className="space-y-2">
-          {hasDistinctCourseName ? (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE]">
-                  {entry.course_code}
-                </span>
-                <span
-                  className={cn(
-                    'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border',
-                    typeBadge.badgeClass
-                  )}
-                >
-                  {typeBadge.label}
-                </span>
-              </div>
-              <h3 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                {entry.course_name}
-              </h3>
-            </>
-          ) : (
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h3 className="text-xl sm:text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                {entry.course_code}
-              </h3>
-              <span
-                className={cn(
-                  'text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border',
-                  typeBadge.badgeClass
-                )}
-              >
-                {typeBadge.label}
-              </span>
-            </div>
-          )}
+        {/* Course Details (Full Subject Name display: no duplicate course code badge if name present) */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                typeBadge.badgeClass
+              )}
+            >
+              {typeBadge.label}
+            </span>
+          </div>
+          <h3 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-snug">
+            {displayName}
+          </h3>
 
           {/* Meta Chips */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs text-[#556453] dark:text-[#A3B39F]">
@@ -611,7 +613,7 @@ export function NextClassBentoCard({
           {/* Ongoing Class Progress Bar */}
           {isOngoing && (
             <div className="pt-2 space-y-1">
-              <div className="w-full bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 rounded-full h-1 overflow-hidden">
                 <div
                   className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
@@ -650,7 +652,7 @@ export function NextClassBentoCard({
           )}
 
           <Link
-            to="/akademik/takwim"
+            to="/akademik/takwim?tab=personal"
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#2E3A2F]/15 dark:border-[#F8F6EE]/15 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 transition-colors"
           >
             <Calendar className="w-3.5 h-3.5" />
@@ -717,10 +719,7 @@ export function NextClassBentoCard({
                 </span>
               </div>
               <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                {nextClass.entry.course_code}
-                {nextClass.entry.course_name && nextClass.entry.course_name !== nextClass.entry.course_code
-                  ? ` - ${nextClass.entry.course_name}`
-                  : ''}
+                {nextClass.entry.course_name?.trim() || nextClass.entry.course_code}
               </div>
               <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
                 {nextClass.entry.is_online ? (
@@ -748,7 +747,7 @@ export function NextClassBentoCard({
                 </Link>
               )}
               <Link
-                to="/akademik/takwim"
+                to="/akademik/takwim?tab=personal"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
               >
                 <span>Lihat Jadual</span>
@@ -820,10 +819,7 @@ export function NextClassBentoCard({
               </span>
             </div>
             <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-              {nextClass.entry.course_code}
-              {nextClass.entry.course_name && nextClass.entry.course_name.trim().toUpperCase() !== nextClass.entry.course_code.trim().toUpperCase()
-                ? ` - ${nextClass.entry.course_name}`
-                : ''}
+              {nextClass.entry.course_name?.trim() || nextClass.entry.course_code}
             </div>
             <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
               {nextClass.entry.is_online ? (
@@ -851,7 +847,7 @@ export function NextClassBentoCard({
               </Link>
             )}
             <Link
-              to="/akademik/takwim"
+              to="/akademik/takwim?tab=personal"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
             >
               <span>Lihat Jadual</span>
