@@ -11,7 +11,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { LaporanPreviewModal } from '@/components/reports/LaporanPreviewModal';
+
+const LaporanPreviewModal = React.lazy(() =>
+  import('@/components/reports/LaporanPreviewModal').then(m => ({ default: m.LaporanPreviewModal }))
+);
 import { StatusChip } from '@/components/ui/StatusChip';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -560,22 +563,24 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
 
         {/* ── Live PDF Preview Modal ───────────────────────────────── */}
         {isPreviewOpen && (
-          <LaporanPreviewModal
-            clubName={excoLabel}
-            monthYear={monthLabel}
-            activities={previewData}
-            submitterName={profile?.full_name || undefined}
-            submitterRole={submitterRoleLabel}
-            submitterUnit={excoLabel}
-            presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
-            reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
-            reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
-            clubLogoUrl={jppLogoBase64}
-            isExco={true}
-            fileName={`Laporan_${excoUnit}_${targetMonth}`}
-            onClose={() => setIsPreviewOpen(false)}
-            onSubmit={handleConfirmGenerate}
-          />
+          <React.Suspense fallback={null}>
+            <LaporanPreviewModal
+              clubName={excoLabel}
+              monthYear={monthLabel}
+              activities={previewData}
+              submitterName={profile?.full_name || undefined}
+              submitterRole={submitterRoleLabel}
+              submitterUnit={excoLabel}
+              presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
+              reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
+              reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
+              clubLogoUrl={jppLogoBase64}
+              isExco={true}
+              fileName={`Laporan_${excoUnit}_${targetMonth}`}
+              onClose={() => setIsPreviewOpen(false)}
+              onSubmit={handleConfirmGenerate}
+            />
+          </React.Suspense>
         )}
       </div>
     </div>

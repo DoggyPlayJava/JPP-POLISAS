@@ -15,9 +15,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KEBAJIKAN_THEME_COLOR, KEBAJIKAN_CATEGORY_LABELS, KebajikanTicketCategory, KebajikanPic, KebajikanTicket } from '@/types';
 import { cn } from '@/lib/utils';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { KebajikanReportPDF } from '@/components/pdf/KebajikanReportPDF';
-import { KebajikanPicReportPDF, type PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
+import type { PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
+import { toast } from 'react-hot-toast';
 import type ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -550,6 +549,63 @@ export function KebajikanReportPage() {
   // Tab switcher: KK Exco hanya nampak Laporan Bulanan
   const showPicTab = isKebajikanExco || isSuperAdmin || isYdp;
 
+  const [generatingMonthlyPdf, setGeneratingMonthlyPdf] = useState(false);
+  const [generatingPicPdf, setGeneratingPicPdf] = useState(false);
+
+  const exportMonthlyPdf = async () => {
+    if (!data || generatingMonthlyPdf) return;
+    setGeneratingMonthlyPdf(true);
+    const toastId = toast.loading('Menjana PDF laporan bulanan...');
+    try {
+      const [{ pdf }, { KebajikanReportPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/pdf/KebajikanReportPDF'),
+      ]);
+      const blob = await pdf(
+        <KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />
+      ).toBlob();
+      saveAs(blob, `Laporan_Kebajikan_${monthLabel.replace(' ', '_')}.pdf`);
+      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+    } catch (err: any) {
+      console.error('Monthly PDF error:', err);
+      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+    } finally {
+      setGeneratingMonthlyPdf(false);
+    }
+  };
+
+  const exportPicPdf = async () => {
+    if (!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf) return;
+    setGeneratingPicPdf(true);
+    const toastId = toast.loading('Menjana PDF laporan PIC...');
+    try {
+      const [{ pdf }, { KebajikanPicReportPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/pdf/KebajikanPicReportPDF'),
+      ]);
+      const blob = await pdf(
+        <KebajikanPicReportPDF
+          picName={reportPicName}
+          picTitle={reportPicTitle}
+          jabatanLabel={picPresets.find(p => p.id === reportPicId)?.jabatan_label || reportPicName}
+          picEmail={picPresets.find(p => p.id === reportPicId)?.pic_email || undefined}
+          picPhone={picPresets.find(p => p.id === reportPicId)?.pic_phone || undefined}
+          tickets={selectedTickets as PicReportTicket[]}
+          monthLabel={picMonthLabel}
+          generatedAt={generatedAt}
+          generatedBy={generatedByName}
+        />
+      ).toBlob();
+      saveAs(blob, `Laporan_PIC_${reportPicName.replace(/\s+/g, '_') || 'PIC'}_${picMonthLabel.replace(' ', '_')}.pdf`);
+      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+    } catch (err: any) {
+      console.error('PIC PDF error:', err);
+      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+    } finally {
+      setGeneratingPicPdf(false);
+    }
+  };
+
   return (
     <div className="p-8 max-w-6xl mx-auto min-h-screen">
       {/* Header */}
@@ -589,19 +645,15 @@ export function KebajikanReportPage() {
             </button>
             {data ? (
               <div className="flex flex-wrap items-center gap-2">
-                <PDFDownloadLink
-                  document={<KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />}
-                  fileName={`Laporan_Kebajikan_${monthLabel.replace(' ','_')}.pdf`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
+                <button
+                  onClick={exportMonthlyPdf}
+                  disabled={generatingMonthlyPdf}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80 disabled:opacity-50"
                   style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
                 >
-                  {({ loading }) => (
-                    <>
-                      <FileDown className={cn("w-3.5 h-3.5", loading && "animate-bounce")} /> 
-                      {loading ? 'Menjana PDF...' : 'PDF'}
-                    </>
-                  )}
-                </PDFDownloadLink>
+                  <FileDown className={cn("w-3.5 h-3.5", generatingMonthlyPdf && "animate-bounce")} /> 
+                  {generatingMonthlyPdf ? 'Menjana PDF...' : 'PDF'}
+                </button>
                 <button
                   onClick={exportMonthlyExcel}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
@@ -1032,31 +1084,18 @@ export function KebajikanReportPage() {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <PDFDownloadLink
-                  document={
-                    <KebajikanPicReportPDF
-                      picName={reportPicName}
-                      picTitle={reportPicTitle}
-                      jabatanLabel={picPresets.find(p => p.id === reportPicId)?.jabatan_label || reportPicName}
-                      picEmail={picPresets.find(p => p.id === reportPicId)?.pic_email || undefined}
-                      picPhone={picPresets.find(p => p.id === reportPicId)?.pic_phone || undefined}
-                      tickets={selectedTickets as PicReportTicket[]}
-                      monthLabel={picMonthLabel}
-                      generatedAt={generatedAt}
-                      generatedBy={generatedByName}
-                    />
-                  }
-                  fileName={`Laporan_PIC_${reportPicName.replace(/\s+/g,'_') || 'PIC'}_${picMonthLabel.replace(' ','_')}.pdf`}
+                <button
+                  onClick={exportPicPdf}
+                  disabled={!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf}
                   className={cn(
                     'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
-                    !reportPicName.trim() && 'opacity-40 pointer-events-none'
+                    (!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf) && 'opacity-40 pointer-events-none'
                   )}
                   style={{ background: TEAL, color: '#0f172a' }}
                 >
-                  {({ loading: pdfLoading }) => (
-                    <><FileDown className={cn('w-4 h-4', pdfLoading && 'animate-bounce')} />{pdfLoading ? 'Menjana PDF...' : `PDF (${selectedTickets.length} tiket)`}</>
-                  )}
-                </PDFDownloadLink>
+                  <FileDown className={cn('w-4 h-4', generatingPicPdf && 'animate-bounce')} />
+                  {generatingPicPdf ? 'Menjana PDF...' : `PDF (${selectedTickets.length} tiket)`}
+                </button>
                 <button
                   onClick={() => exportPicExcel(selectedTickets)}
                   disabled={selectedTickets.length === 0}

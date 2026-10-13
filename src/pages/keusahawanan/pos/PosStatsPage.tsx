@@ -10,8 +10,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { PosSalesReportPDF } from '@/components/keusahawanan/PosSalesReportPDF';
-import { PosSalesReportModal } from '@/components/keusahawanan/PosSalesReportModal';
+
+const PosSalesReportModal = React.lazy(() =>
+  import('@/components/keusahawanan/PosSalesReportModal').then(m => ({ default: m.PosSalesReportModal }))
+);
 import {
   DollarSign, Receipt, Package, TrendingUp, CalendarDays,
   AlertTriangle, Layers, ShoppingBag, BarChart3, ChevronRight,
@@ -640,16 +642,18 @@ export function PosStatsPage() {
 
       {/* Preview PDF Modal */}
       {stats && selectedBusiness && (
-        <PosSalesReportModal
-          isOpen={showPdfPreview}
-          onClose={() => setShowPdfPreview(false)}
-          stats={stats}
-          selectedBusiness={selectedBusiness}
-          rangeLabel={RANGE_LABELS[range]}
-          dateRangeString={getExactDateRange()}
-          themeColor={color}
-          generatedBy={profile?.full_name || 'Pengurus Perniagaan'}
-        />
+        <React.Suspense fallback={null}>
+          <PosSalesReportModal
+            isOpen={showPdfPreview}
+            onClose={() => setShowPdfPreview(false)}
+            stats={stats}
+            selectedBusiness={selectedBusiness}
+            rangeLabel={RANGE_LABELS[range]}
+            dateRangeString={getExactDateRange()}
+            themeColor={color}
+            generatedBy={profile?.full_name || 'Pengurus Perniagaan'}
+          />
+        </React.Suspense>
       )}
     </div>
   );

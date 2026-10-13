@@ -12,7 +12,10 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { LaporanPreviewModal } from '@/components/reports/LaporanPreviewModal';
+
+const LaporanPreviewModal = React.lazy(() =>
+  import('@/components/reports/LaporanPreviewModal').then(m => ({ default: m.LaporanPreviewModal }))
+);
 import { StatusChip } from '@/components/ui/StatusChip';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -494,21 +497,23 @@ export function LaporanPage() {
 
       {/* ── Live PDF Preview Modal ──────────────────────────── */}
       {isPreviewOpen && (
-        <LaporanPreviewModal
-          clubName={clubName}
-          monthYear={monthLabel}
-          activities={previewData}
-          submitterName={profile?.full_name || undefined}
-          submitterRole={submitterRole}
-          submitterUnit={clubName}
-          presidenName={presidentName}
-          reviewerRole="PRESIDEN"
-          reviewerUnit={clubName}
-          clubLogoUrl={logoData}
-          fileName={`Laporan_${effectiveClubId}_${targetMonth}`}
-          onClose={() => setIsPreviewOpen(false)}
-          onSubmit={handleConfirmGenerate}
-        />
+        <React.Suspense fallback={null}>
+          <LaporanPreviewModal
+            clubName={clubName}
+            monthYear={monthLabel}
+            activities={previewData}
+            submitterName={profile?.full_name || undefined}
+            submitterRole={submitterRole}
+            submitterUnit={clubName}
+            presidenName={presidentName}
+            reviewerRole="PRESIDEN"
+            reviewerUnit={clubName}
+            clubLogoUrl={logoData}
+            fileName={`Laporan_${effectiveClubId}_${targetMonth}`}
+            onClose={() => setIsPreviewOpen(false)}
+            onSubmit={handleConfirmGenerate}
+          />
+        </React.Suspense>
       )}
 
       <SystemTour run={runTour} onClose={closeTour} tourKey="EKPP_LAPORAN" />
