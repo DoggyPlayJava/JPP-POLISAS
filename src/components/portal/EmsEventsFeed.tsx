@@ -172,19 +172,19 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                 {/* Body Content */}
                 <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    <h3 className="text-xs sm:text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE] line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                       {evt.title}
                     </h3>
                   </div>
 
                   <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-white/[0.06]">
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-300">
-                      <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-400" />
-                      <span className="truncate font-medium">{dateStr}</span>
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#556453] dark:text-slate-300">
+                      <Calendar className="w-3.5 h-3.5 shrink-0 text-[#84A98C]" />
+                      <span className="truncate font-medium font-mono tabular-nums">{dateStr}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-300">
-                      <MapPin className="w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-400" />
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#556453] dark:text-slate-300">
+                      <MapPin className="w-3.5 h-3.5 shrink-0 text-[#84A98C]" />
                       <span className="truncate font-medium">{evt.location || 'Kampus POLISAS'}</span>
                     </div>
                   </div>
