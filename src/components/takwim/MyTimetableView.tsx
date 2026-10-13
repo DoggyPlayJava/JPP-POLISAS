@@ -37,6 +37,7 @@ import type {
 } from '@/types';
 import { TimetableUploadModal } from './TimetableUploadModal';
 import { TimetablePreviewModal } from './TimetablePreviewModal';
+import { EditClassSlotModal } from './EditClassSlotModal';
 
 const DAYS = [
   { value: 1, label: 'Isnin', shortLabel: 'Isn' },
@@ -89,6 +90,7 @@ export function MyTimetableView() {
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<StudentTimetableEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch timetable entries, settings, and metadata using Promise.all
@@ -280,109 +282,117 @@ export function MyTimetableView() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Notification bell toggle */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleToggleNotifications}
-            className={cn(
-              'h-9 px-3 rounded-xl text-xs font-bold gap-1.5 transition-all shadow-xs',
-              settings?.notifications_enabled
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
-                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'
-            )}
-            title={
-              settings?.notifications_enabled
-                ? 'Peringatan kelas aktif (30 minit sebelum)'
-                : 'Peringatan kelas dinyahaktifkan'
-            }
-          >
-            {settings?.notifications_enabled ? (
-              <>
-                <Bell className="w-3.5 h-3.5 fill-current text-amber-500" />
-                <span className="hidden sm:inline">Peringatan Aktif</span>
-              </>
-            ) : (
-              <>
-                <BellOff className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Peringatan Mati</span>
-              </>
-            )}
-          </Button>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'p-1.5 rounded-lg transition-all',
-                viewMode === 'grid'
-                  ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
-              )}
-              title="Paparan Grid Mingguan"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('agenda')}
-              className={cn(
-                'p-1.5 rounded-lg transition-all',
-                viewMode === 'agenda'
-                  ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
-              )}
-              title="Paparan Agenda Harian"
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Upload PDF button */}
+        {/* 2-Tier Mobile / Unified Desktop Action Bar */}
+        <div className="flex flex-col md:flex-row md:items-center gap-2.5 w-full md:w-auto">
+          {/* Tier 1 on Mobile: Prominent Hero CTA */}
           <Button
             type="button"
             size="sm"
             onClick={() => setIsUploadModalOpen(true)}
-            className="h-9 px-3 rounded-xl text-xs font-black uppercase tracking-wider gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+            className="w-full md:w-auto h-10 px-4 rounded-xl text-xs font-black uppercase tracking-wider gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs order-1 md:order-2 shrink-0"
           >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Muat Naik PDF</span>
+            <Upload className="w-4 h-4" />
+            <span>MUAT NAIK JADUAL</span>
           </Button>
 
-          {/* Manual Slot button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsPreviewModalOpen(true)}
-            className="h-9 px-3 rounded-xl text-xs font-bold gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Tambah Slot Manual</span>
-          </Button>
+          {/* Tier 2 on Mobile: Balanced Utility Bar */}
+          <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto order-2 md:order-1">
+            {/* View Mode Toggle: [Grid | Agenda] */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                  'p-1.5 rounded-lg transition-all',
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
+                )}
+                title="Paparan Grid Mingguan"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('agenda')}
+                className={cn(
+                  'p-1.5 rounded-lg transition-all',
+                  viewMode === 'agenda'
+                    ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
+                )}
+                title="Paparan Agenda Harian"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
 
-          {/* Clear Timetable button */}
-          {entries.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleClearAllTimetable}
-              disabled={isDeleting}
-              className="h-9 px-2.5 rounded-xl text-xs font-bold gap-1 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-500/10 shadow-xs"
-              title="Padam Semua Jadual"
-            >
-              {isDeleting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Trash2 className="w-3.5 h-3.5" />
+            {/* Quick Tools Cluster */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Tambah Slot (+) button */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsPreviewModalOpen(true)}
+                className="h-9 px-2.5 sm:px-3 rounded-xl text-xs font-bold gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 shadow-xs"
+                title="Tambah Slot Manual"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tambah Slot</span>
+              </Button>
+
+              {/* Notification bell toggle */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleToggleNotifications}
+                className={cn(
+                  'h-9 px-2.5 sm:px-3 rounded-xl text-xs font-bold gap-1.5 transition-all shadow-xs',
+                  settings?.notifications_enabled
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'
+                )}
+                title={
+                  settings?.notifications_enabled
+                    ? 'Peringatan kelas aktif (30 minit sebelum)'
+                    : 'Peringatan kelas dinyahaktifkan'
+                }
+              >
+                {settings?.notifications_enabled ? (
+                  <>
+                    <Bell className="w-3.5 h-3.5 fill-current text-amber-500" />
+                    <span className="hidden sm:inline">Peringatan</span>
+                  </>
+                ) : (
+                  <>
+                    <BellOff className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Peringatan</span>
+                  </>
+                )}
+              </Button>
+
+              {/* Padam Semua (Trash) button */}
+              {entries.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearAllTimetable}
+                  disabled={isDeleting}
+                  className="h-9 px-2.5 rounded-xl text-xs font-bold gap-1 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-500/10 shadow-xs"
+                  title="Padam Semua Jadual"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -419,7 +429,7 @@ export function MyTimetableView() {
               className="rounded-xl text-xs font-black uppercase tracking-wider gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
             >
               <Upload className="w-4 h-4" />
-              Muat Naik Fail Jadual PDF
+              MUAT NAIK JADUAL
             </Button>
             <Button
               type="button"
@@ -492,6 +502,7 @@ export function MyTimetableView() {
                       <ClassCard
                         key={slot.id}
                         entry={slot}
+                        onEdit={() => setEditingSlot(slot)}
                         onDelete={() => handleDeleteSlot(slot.id)}
                       />
                     ))
@@ -604,6 +615,7 @@ export function MyTimetableView() {
                           <ClassCard
                             key={slot.id}
                             entry={slot}
+                            onEdit={() => setEditingSlot(slot)}
                             onDelete={() => handleDeleteSlot(slot.id)}
                             extended
                           />
@@ -627,6 +639,7 @@ export function MyTimetableView() {
                   <ClassCard
                     key={slot.id}
                     entry={slot}
+                    onEdit={() => setEditingSlot(slot)}
                     onDelete={() => handleDeleteSlot(slot.id)}
                     extended
                   />
@@ -686,6 +699,21 @@ export function MyTimetableView() {
           }}
         />
       )}
+      {/* ── Edit Single Class Slot Modal ── */}
+      <EditClassSlotModal
+        isOpen={Boolean(editingSlot)}
+        onClose={() => setEditingSlot(null)}
+        slot={editingSlot}
+        allSlots={entries}
+        onSaveSuccess={() => {
+          fetchTimetableData();
+          setEditingSlot(null);
+        }}
+        onDeleteSuccess={() => {
+          fetchTimetableData();
+          setEditingSlot(null);
+        }}
+      />
     </div>
   );
 }
@@ -694,10 +722,12 @@ export function MyTimetableView() {
 function ClassCard({
   entry,
   onDelete,
+  onEdit,
   extended = false,
 }: {
   entry: StudentTimetableEntry;
   onDelete: () => void;
+  onEdit?: () => void;
   extended?: boolean;
 }) {
   const badgeCfg = CLASS_TYPE_BADGES[entry.class_type] || CLASS_TYPE_BADGES.KULIAH;
@@ -705,7 +735,10 @@ function ClassCard({
 
   return (
     <div
-      className="group relative p-3 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/20 transition-all shadow-xs overflow-hidden"
+      onClick={onEdit}
+      className={cn(
+        'group relative p-3 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.03] cursor-pointer hover:border-indigo-500/40 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all shadow-xs overflow-hidden'
+      )}
       style={{ borderLeftWidth: '4px', borderLeftColor: entry.color || '#3b82f6' }}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -727,15 +760,33 @@ function ClassCard({
           )}
         </div>
 
-        {/* Delete button on hover */}
-        <button
-          type="button"
-          onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
-          title="Padam Slot"
-        >
-          <Trash2 className="w-3 h-3" />
-        </button>
+        {/* Action buttons (Edit & Delete) in top right */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all"
+            title="Kemaskini Slot"
+            aria-label="Kemaskini Slot"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+            title="Padam Slot"
+            aria-label="Padam Slot"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Course Code & Name */}
