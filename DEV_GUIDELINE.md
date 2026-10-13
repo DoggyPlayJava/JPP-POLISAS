@@ -3542,6 +3542,14 @@ Sistem Pengurusan Acara (EMS) telah melalui proses penambahbaikan menyeluruh mer
      - **Slate Obsidian (`slate-50` hingga `slate-950`)**: Menguasai seluruh permukaan kad, sempadan pembahagi (*borders*), input carian, dan bekas kandungan bagi memberikan ketenangan visual (*visual calm*) serta merendahkan beban kognitif pengguna.
    - Meliputi keseluruhan ekosistem: `EmsEventFormPage.tsx`, `EmsApprovalPage.tsx`, `EmsJuryPortalPage.tsx`, `EmsJuryAuditMatrix.tsx`, `EmsCheckinPage.tsx`, `EmsCheckinSelectorPage.tsx`, `StudentSearchCombobox.tsx`, dan `EmsEventsFeed.tsx`.
 
+8. **Peningkatan UX Komprehensif (User Experience & Ergonomik Aliran Kerja):**
+   - **Carian Pantas Papan Pemuka (`EmsDashboardPage.tsx`)**: Bar carian segera membolehkan pentadbir menapis senarai acara mengikut tajuk, lokasi, kategori, atau nama penganjur tanpa perlu menatal secara manual, lengkap dengan butang pengosongan carian pantas (*instant clear*).
+   - **Perlindungan Tindakan Musnah (Destructive Safeguard `EmsCompleteConfirmModal.tsx`)**: Tindakan menanda acara sebagai selesai dilindungi modal pengesahan eksplisit bagi mengelakkan penutupan acara dan penguncian markah juri secara tidak sengaja.
+   - **Navigasi Penunjuk Arah (Wayfinding Breadcrumbs)**: Pautan `[Kembali ke Portal Kampus]` ditambah pada kepala papan pemuka EMS bagi memastikan tiada aliran kerja terputus (*no dead ends*).
+   - **Penambat Navigasi Seksyen Pantas (`EmsEventFormPage.tsx`)**: Bar navigasi lekat di bahagian atas borang cipta/sunting acara membolehkan penganjur melompat terus ke seksyen 1 (Asas), seksyen 2 (Borang), atau seksyen 3 (Rubrik) tanpa keletihan menatal (*scrolling fatigue*).
+   - **Validasi Kriteria Rubrik Terbina**: Menghalang penghantaran borang yang mengandungi baris kriteria rubrik tanpa nama bagi mengelakkan rekod pemarkahan tergantung dalam pangkalan data.
+   - **Kewajipan Sebab Penolakan (`EmsApprovalPage.tsx`)**: Super Admin diwajibkan menyatakan sebab penolakan permohonan acara supaya penganjur menerima maklum balas pembetulan yang jelas.
+
 ---
 
 ### 29.14 Ekosistem E-Kebajikan & FoodBank Siswa SuperApp (/kebajikan & /jpp/foodbank)
