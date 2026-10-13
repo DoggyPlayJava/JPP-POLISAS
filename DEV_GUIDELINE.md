@@ -434,6 +434,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/polyMapsResolver.ts` | Enjin pemadan bilik PolyMaps pintar (search_tags, alias, prefix normalizer) menghubungkan jadual ke lokasi fizikal |
 | `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya pada Portal Siswa; memprioritaskan nama penuh kursus (`course_name`) sebagai tajuk utama, kondensasi akronim bangunan (`JTMK`, `JKA`, dll), bar kemajuan 4px slim, countdown masa nyata client-side (tanpa DB polling), dan deep link PolyMaps |
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
+| `src/components/takwim/TimetableMatrixGrid.tsx` | Komponen matriks jadual mingguan 5-hari x 9-lajur gaya PDF rasmi POLISAS dengan lajur hari melekat (sticky left column) untuk telefon |
+| `src/lib/timetableMatrix.ts` | Enjin koordinat dan pemetaan slot jadual ke grid kolum masa (08:00 - 17:00) |
 | `src/components/takwim/EditClassSlotModal.tsx` | Modal penyuntingan pantas satu slot/subjek tunggal dengan semakan pertindihan masa dan integrasi PolyMaps |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
 | `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
@@ -4187,6 +4189,22 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
     return createPortal(..., document.body);
     ```
   - Memastikan dok terapung `#bottom-nav-dock` kekal berpaut teguh di bahagian bawah skrin (`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`) pada lapisan `z-[120]` tanpa terjejas oleh sebarang susun atur mikro-app bersarang di masa hadapan.
+
+### 32.15 Matriks Mingguan Jadual Kuliah Gaya PDF Rasmi POLISAS (`TimetableMatrixGrid.tsx` & `timetableMatrix.ts`)
+
+- **Falsafah Reka Bentuk & Kebiasaan Pelajar:**
+  - Pelajar politeknik terbiasa membaca jadual kuliah semester dalam bentuk matriks PDF rasmi institusi (`POLISAS-PK-02(1c)`). Format matriks 5-Hari (Isnin–Jumaat) × 9-Lajur Waktu (08:00–17:00) memberikan visibiliti segera terhadap waktu kelas berterusan (lab 2–3 jam), waktu lapang (*gap*), dan waktu rehat rasmi (**1:00 – 2:00 PTG**).
+- **Enjin Koordinat Matriks (`src/lib/timetableMatrix.ts`):**
+  - Mengira kedudukan permulaan lajur 1-indeks (`colStart`) dan durasi rentang (`colSpan`) berdasarkan masa mula dan tamat setiap slot kelas.
+  - Memetakan 9 sel waktu sejam standard: `08:00 - 09:00`, `09:00 - 10:00`, `10:00 - 11:00`, `11:00 - 12:00`, `12:00 - 13:00`, `13:00 - 14:00 (REHAT)`, `14:00 - 15:00`, `15:00 - 16:00`, `16:00 - 17:00`.
+- **Seni Bina Mesra Mudah Alih (Mobile-Responsive Sticky Column Canvas):**
+  - Jadual 10 lajur tidak dipaksa mengecut (*shrink*) pada skrin telefon sempit. Sebaliknya, kanvas disokong dengan tatalan mendatar lancar (`overflow-x-auto scrollbar-thin`).
+  - **Lajur Hari Melekat (*Sticky Left Column*):** Lajur hari (`ISNIN` hingga `JUMAAT`) menggunakan `sticky left-0 z-20` dengan latar belakang legap (`bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xs`), membolehkan pelajar meleret waktu pagi hingga petang tanpa kehilangan konteks hari.
+  - **Lajur Rehat & Solat (13:00–14:00):** Ditandakan dengan warna lembut berjalur dan watermark visual *REHAT / SOLAT* apabila tiada kelas.
+- **Pengekalan Mod Paparan Lalai (*Default View Persistence*):**
+  - Paparan Matriks Grid PDF diaktifkan sebagai lalai (*default*) bagi semua pelajar baru.
+  - Pilihan paparan pelajar (`grid` vs `agenda`) disimpan secara automatik dalam `localStorage` (`'jpp_student_timetable_view'`), mengekalkan kebebasan pengguna untuk beralih ke paparan agenda harian bila-bila masa.
+
 
 
 
