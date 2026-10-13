@@ -1397,7 +1397,7 @@ export function EmsJuryPortalPage() {
                         <span className="hidden sm:inline">Info Calon</span>
                         <span className="sm:hidden">Info</span>
                         {candidateAttachments.length > 0 && (
-                          <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold font-mono">
+                          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold font-mono">
                             {candidateAttachments.length}
                           </span>
                         )}
