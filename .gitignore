@@ -76,3 +76,6 @@ e2e/fixtures/oversized_*.pdf
 
 
 
+
+# tesseract.js loads traineddata from CDN; this is a dead local copy
+eng.traineddata

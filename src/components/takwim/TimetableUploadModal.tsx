@@ -26,10 +26,14 @@ import {
   ArrowRight,
   Layers,
   Sparkles,
+  ImageIcon,
+  ShieldAlert,
+  TriangleAlert,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { scanPdfClasses, parseTimetablePage, type RoomLocationLookup } from '@/lib/timetableParser';
+import { parseTimetableImage, type ImageQualityReport } from '@/lib/imageTimetableParser';
 import type { StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { TimetablePreviewModal } from './TimetablePreviewModal';
 
@@ -57,11 +61,13 @@ export function TimetableUploadModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
+  const [fileKind, setFileKind] = useState<'pdf' | 'image'>('pdf');
   const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [imageQuality, setImageQuality] = useState<ImageQualityReport | null>(null);
 
   const [scannedClasses, setScannedClasses] = useState<ScannedClassOption[]>([]);
   const [selectedPageIndex, setSelectedPageIndex] = useState<number | null>(null);
@@ -101,10 +107,12 @@ export function TimetableUploadModal({
   // Reset state on close
   const handleReset = () => {
     setFile(null);
+    setFileKind('pdf');
     setPdfBuffer(null);
     setIsScanning(false);
     setIsParsing(false);
     setErrorMessage(null);
+    setImageQuality(null);
     setScannedClasses([]);
     setSelectedPageIndex(null);
     setPreviewData(null);
@@ -149,41 +157,50 @@ export function TimetableUploadModal({
     }
   };
 
+  const isPdfFile = (f: File) =>
+    f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf';
+  const isImageFile = (f: File) =>
+    f.type.startsWith('image/') || /\.(png|jpe?g|webp|heic|heif)$/i.test(f.name);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    await handleFileSelection(selected);
+  };
 
-    if (!selected.name.toLowerCase().endsWith('.pdf') && selected.type !== 'application/pdf') {
-      setErrorMessage('Hanya fail berformat PDF (.pdf) diterima.');
+  const handleFileSelection = async (selected: File) => {
+    if (isPdfFile(selected)) {
+      setFileKind('pdf');
+      try {
+        const buffer = await selected.arrayBuffer();
+        await processPdfBuffer(selected, buffer);
+      } catch (err: any) {
+        setErrorMessage('Ralat semasa membaca fail: ' + err.message);
+      }
       return;
     }
 
-    try {
-      const buffer = await selected.arrayBuffer();
-      await processPdfBuffer(selected, buffer);
-    } catch (err: any) {
-      setErrorMessage('Ralat semasa membaca fail: ' + err.message);
+    if (isImageFile(selected)) {
+      setFileKind('image');
+      setFile(selected);
+      setPdfBuffer(null);
+      setScannedClasses([]);
+      setErrorMessage(null);
+      setImageQuality(null);
+      // Auto-OCR image immediately on selection (single-step UX)
+      await runImageParse(selected);
+      return;
     }
+
+    setErrorMessage('Format tidak disokong. Sila pilih fail PDF atau imej (PNG/JPG/WebP).');
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-
     const droppedFile = e.dataTransfer.files?.[0];
     if (!droppedFile) return;
-
-    if (!droppedFile.name.toLowerCase().endsWith('.pdf') && droppedFile.type !== 'application/pdf') {
-      setErrorMessage('Hanya fail berformat PDF (.pdf) diterima.');
-      return;
-    }
-
-    try {
-      const buffer = await droppedFile.arrayBuffer();
-      await processPdfBuffer(droppedFile, buffer);
-    } catch (err: any) {
-      setErrorMessage('Ralat membaca fail yang diseret: ' + err.message);
-    }
+    await handleFileSelection(droppedFile);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -195,7 +212,65 @@ export function TimetableUploadModal({
     setIsDragging(false);
   };
 
+  const runImageParse = async (imageFile: File) => {
+    setIsParsing(true);
+    setErrorMessage(null);
+    try {
+      let mappingsToUse = roomMappings;
+      let locationsToUse = locations;
+      if (locationsToUse.length === 0 || mappingsToUse.length === 0) {
+        const [locsRes, mapRes] = await Promise.all([
+          locationsToUse.length === 0
+            ? supabase.from('imaps_locations').select('id, room_code, search_tags')
+            : Promise.resolve({ data: locationsToUse }),
+          mappingsToUse.length === 0
+            ? supabase.from('imaps_room_mappings').select('*')
+            : Promise.resolve({ data: mappingsToUse }),
+        ]);
+        if (locsRes.data) locationsToUse = locsRes.data as RoomLocationLookup[];
+        if (mapRes.data) mappingsToUse = mapRes.data as ImapsRoomMapping[];
+      }
+
+      const result = await parseTimetableImage(imageFile, mappingsToUse, locationsToUse);
+      setImageQuality(result.quality);
+      setPreviewData(result);
+    } catch (err: any) {
+      console.error('Failed to parse timetable image:', err);
+      if (err?.message === 'RESOLUTION_RENDAH') {
+        setErrorMessage(
+          'Imej terlalu kecil / resolusi rendah. Sila muat naik imej asal (bukan screenshot yang di-compress WhatsApp/Telegram), atau screenshot semula dalam keadaan landskap (mendatar).',
+        );
+        toast.error('Imej resolusi rendah. Muat naik imej asal (landskap).');
+      } else {
+        setErrorMessage('Gagal memproses imej: ' + (err.message || 'Format imej tidak disokong.'));
+        toast.error('Gagal mengekstrak jadual dari imej.');
+      }
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   const handleParseAndPreview = async () => {
+    if (fileKind === 'image') {
+      // Image already parsed on selection; open preview (with reject guard)
+      if (!previewData) {
+        toast.error('Sila tunggu pemprosesan imej selesai.');
+        return;
+      }
+      const quality = imageQuality;
+      if (quality && quality.score < 50) {
+        toast.error(`Ketepatan terlalu rendah (${quality.score}%). Sila muat naik imej yang lebih jelas.`);
+        return;
+      }
+      if (previewData.entries.length === 0) {
+        toast('Tiada slot kuliah dikesan pada imej ini. Sila semak semula atau isi secara manual.');
+      }
+      if (onParsed) onParsed(previewData);
+      setIsPreviewOpen(true);
+      return;
+    }
+
+    // PDF path (existing)
     if (!pdfBuffer || selectedPageIndex === null) {
       toast.error('Sila pilih muka surat atau kelas terlebih dahulu.');
       return;
@@ -280,7 +355,7 @@ export function TimetableUploadModal({
               </DialogTitle>
             </div>
             <DialogDescription className="text-sm text-muted-foreground">
-              Muat naik fail jadual waktu rasmi (.pdf) dari jabatan anda untuk diekstrak secara pintar.
+              Muat naik jadual waktu rasmi (.pdf) atau screenshot (.png/.jpg) — sistem akan ekstrak secara pintar.
             </DialogDescription>
           </DialogHeader>
 
@@ -300,7 +375,7 @@ export function TimetableUploadModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,application/pdf"
+                accept=".pdf,application/pdf,image/png,image/jpeg,image/webp"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -308,10 +383,10 @@ export function TimetableUploadModal({
                 <Upload className="w-6 h-6" />
               </div>
               <p className="text-sm font-semibold mb-1">
-                Pilih fail PDF atau seret ke sini
+                Pilih fail PDF atau screenshot, atau seret ke sini
               </p>
               <p className="text-xs text-muted-foreground">
-                Menyokong fail PDF jadual jabatan (cth: JKE, JTMK, JKM, JP)
+                Menyokong PDF jadual jabatan & screenshot (PNG/JPG/WebP)
               </p>
             </div>
           )}
@@ -321,8 +396,19 @@ export function TimetableUploadModal({
             <div className="p-6 rounded-2xl border bg-muted/40 flex flex-col items-center justify-center gap-3 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Sedang mengimbas kandungan PDF...</p>
+                <p className="text-sm font-medium">Sedang mengimbas kandungan...</p>
                 <p className="text-xs text-muted-foreground">Mencari senarai kelas dan jadual waktu.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Parsing Indicator (image OCR) */}
+          {isParsing && fileKind === 'image' && (
+            <div className="p-6 rounded-2xl border bg-muted/40 flex flex-col items-center justify-center gap-3 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Mengekstrak jadual dari imej...</p>
+                <p className="text-xs text-muted-foreground">Ini mungkin mengambil masa beberapa saat.</p>
               </div>
             </div>
           )}
@@ -341,12 +427,12 @@ export function TimetableUploadModal({
               <div className="flex items-center justify-between p-3 rounded-xl border bg-card">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <FileText className="w-5 h-5" />
+                    {fileKind === 'image' ? <ImageIcon className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024).toFixed(1)} KB
+                      {fileKind === 'image' ? 'Screenshot / Imej · ' : ''}{(file.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
@@ -359,6 +445,65 @@ export function TimetableUploadModal({
                   Tukar Fail
                 </Button>
               </div>
+
+              {/* ── Image accuracy report ── */}
+              {fileKind === 'image' && !isParsing && imageQuality && (
+                <div className="rounded-xl border p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      Anggaran Ketepatan
+                    </span>
+                    <span className={`text-lg font-black ${imageQuality.score >= 75 ? 'text-emerald-600' : imageQuality.score >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                      {imageQuality.score}%
+                    </span>
+                  </div>
+
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${imageQuality.score >= 75 ? 'bg-emerald-500' : imageQuality.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      style={{ width: `${imageQuality.score}%` }}
+                    />
+                  </div>
+
+                  {/* score components — 3 weighted factors, transparent formula */}
+                  <div className="space-y-1.5">
+                    {[
+                      ['Kualiti imej', imageQuality.geoScore, 35],
+                      ['Keyakinan OCR', imageQuality.ocrConfidence, 45],
+                      ['Hari dikesan', Math.round((imageQuality.daysDetected / 5) * 100), 20],
+                    ].map(([label, val, weight]) => (
+                      <div key={label as string} className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground w-24 shrink-0">
+                          {label} <span className="text-muted-foreground/60">({weight}%)</span>
+                        </span>
+                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${(val as number) >= 75 ? 'bg-emerald-500' : (val as number) >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                            style={{ width: `${Math.min(100, val as number)}%` }}
+                          />
+                        </div>
+                        <span className="text-[11px] font-bold w-9 text-right tabular-nums">{val}%</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    {imageQuality.daysDetected}/5 hari dikesan · kelas {imageQuality.daysDetected >= 3 ? 'dijumpai' : 'tidak lengkap'}
+                  </p>
+
+                  {/* mandatory review notice */}
+                  <div className={`rounded-lg px-3 py-2 flex items-start gap-2 text-[11px] font-medium ${imageQuality.score < 50 ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'}`}>
+                    {imageQuality.score < 50 ? <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <TriangleAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+                    <span>
+                      {imageQuality.score < 50
+                        ? 'Ketepatan terlalu rendah. Sila muat naik imej yang lebih jelas atau guna fail PDF.'
+                        : 'Sila semak setiap slot sebelum menyimpan. OCR mungkin tersalah baca kod subjek.'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Multiple classes found */}
               {scannedClasses.length > 1 && (
@@ -432,19 +577,19 @@ export function TimetableUploadModal({
                 type="button"
                 size="sm"
                 onClick={handleParseAndPreview}
-                disabled={isParsing || selectedPageIndex === null}
+                disabled={isParsing || (fileKind === 'pdf' && selectedPageIndex === null) || (fileKind === 'image' && imageQuality !== null && imageQuality.score < 50)}
                 className="w-full sm:w-auto text-xs gap-1.5"
               >
                 {isParsing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Memproses Jadual...
-                  </>
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Memproses Jadual...
+                </>
                 ) : (
-                  <>
-                    Pratonton & Sahkan Jadual
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </>
+                <>
+                  {fileKind === 'image' ? 'Semak & Sahkan Jadual' : 'Pratonton & Sahkan Jadual'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
                 )}
               </Button>
             )}

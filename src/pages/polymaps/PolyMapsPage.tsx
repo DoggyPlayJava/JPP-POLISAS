@@ -105,7 +105,13 @@ function MapDragDetector({ onDrag }: { onDrag: () => void }) {
   return null;
 }
 
+// Cache: divIcon builders are pure functions of their args — building one per render
+// forces react-leaflet to redraw every marker DOM node on any state change.
+const _iconCache = new Map<string, L.DivIcon>();
 const getCustomIcon = (code: string, isActive: boolean) => {
+  const key = `${code}|${isActive}`;
+  const hit = _iconCache.get(key);
+  if (hit) return hit;
   const labelStyle = `background-color: rgba(15, 23, 42, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`;
 
   const html = `
@@ -118,12 +124,14 @@ const getCustomIcon = (code: string, isActive: boolean) => {
       </div>
     </div>
   `;
-  return L.divIcon({
+  const icon = L.divIcon({
     className: '',
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
+  _iconCache.set(key, icon);
+  return icon;
 };
 
 export type OverlayFilter = 'ALL' | 'BUILDINGS' | 'EMS' | 'POLYMART';
@@ -458,7 +466,12 @@ function findShortestPath(
   return pathCoordinates;
 }
 
+const _userIconCache = new Map<string, L.DivIcon>();
 const getUserIcon = (heading: number | null) => {
+  // Round to 5° so compass jitter doesn't rebuild the icon every deviceorientation frame.
+  const rounded = heading === null ? 'null' : String(Math.round(heading / 5) * 5);
+  const hit = _userIconCache.get(rounded);
+  if (hit) return hit;
   const rotation = heading !== null ? heading : 0;
   const html = `
     <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100px; height: 100px;">
@@ -492,12 +505,14 @@ const getUserIcon = (heading: number | null) => {
       </div>
     </div>
   `;
-  return L.divIcon({
+  const icon = L.divIcon({
     className: '',
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
+  _userIconCache.set(rounded, icon);
+  return icon;
 };
 
 interface Location {
@@ -1459,12 +1474,19 @@ export function PolyMapsPage() {
   }, [isNavigating]);
 
   useEffect(() => {
+    let lastHeading = Infinity;
     const handleOrientation = (e: DeviceOrientationEvent) => {
+      let h: number | null = null;
       if ((e as any).webkitCompassHeading !== undefined) {
-        setHeading((e as any).webkitCompassHeading);
+        h = (e as any).webkitCompassHeading;
       } else if (e.alpha !== null) {
-        setHeading(360 - e.alpha);
+        h = 360 - e.alpha;
       }
+      if (h === null) return;
+      // Only commit state when heading moved ≥3° — cuts re-render rate ~10x on compass jitter.
+      if (Math.abs(h - lastHeading) < 3) return;
+      lastHeading = h;
+      setHeading(h);
     };
 
     if (isNavigating) {

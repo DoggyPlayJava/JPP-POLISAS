@@ -719,8 +719,8 @@ export function PosOrderPage() {
                     className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                       <Tag className="w-3.5 h-3.5" /> Diskaun Manual
-                      {appliedPromo && <span className="text-[8px] text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
-                      {appliedEventCoupon && <span className="text-[8px] text-amber-400 normal-case font-black">(tidak aktif — kupon acara digunakan)</span>}
+                      {appliedPromo && <span className="text-[8px] text-rose-600 dark:text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
+                      {appliedEventCoupon && <span className="text-[8px] text-amber-600 dark:text-amber-400 normal-case font-black">(tidak aktif — kupon acara digunakan)</span>}
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${discountEnabled ? 'rotate-180' : ''}`} />
                   </button>

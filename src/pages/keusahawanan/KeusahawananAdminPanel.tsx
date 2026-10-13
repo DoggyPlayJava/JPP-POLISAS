@@ -519,7 +519,7 @@ export function KeusahawananAdminPanel() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-3 bg-amber-500/[0.03] border border-amber-500/15 rounded-2xl px-4 py-3">
           <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-          <p className="text-sm font-black text-amber-400 flex-1">
+          <p className="text-sm font-black text-amber-600 dark:text-amber-400 flex-1">
             {pending} permohonan perniagaan menunggu kelulusan.
           </p>
           <button

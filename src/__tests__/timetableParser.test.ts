@@ -11,6 +11,7 @@ import {
   extractTimetableFromItems,
   matchRoomToLocation,
   normalizeTimetableTime,
+  extractPdfLegend,
   type RoomLocationLookup
 } from '@/lib/timetableParser';
 import type { ImapsRoomMapping } from '@/types';
@@ -614,5 +615,38 @@ describe('Timetable Parser Logic', () => {
     // JTM MSENSORI
     const jtmSensori = parseCell('DMT50454(P) IMAN,NUSRAH MSENSORI');
     expect(jtmSensori.room_raw).toBe('MSENSORI');
+  });
+
+  it('should extract course names from the PDF legend (KOD/NAMA KURSUS table)', () => {
+    // Real DAD.pdf legend layout: PDF.js coords, y bottom-up.
+    // KOD header y=365.7 (top), JUMLAH y=172.9 (bottom), one row per course.
+    const items = [
+      { str: 'KOD', x: 42.4, y: 365.7, width: 0, height: 0 },
+      { str: 'NAMA KURSUS', x: 157.8, y: 365.7, width: 0, height: 0 },
+      { str: 'JAM KREDIT', x: 297.6, y: 365.7, width: 0, height: 0 },
+      { str: 'DBM10163', x: 31.9, y: 349.2, width: 0, height: 0 },
+      { str: 'ENGINEERING MATHEMATICS 1', x: 132.1, y: 349.2, width: 0, height: 0 },
+      { str: '3.0', x: 312.8, y: 349.2, width: 0, height: 0 },
+      { str: 'DBS10042', x: 32.9, y: 333.4, width: 0, height: 0 },
+      { str: 'ENGINEERING SCIENCE', x: 145.2, y: 333.4, width: 0, height: 0 },
+      { str: '2.0', x: 312.8, y: 333.4, width: 0, height: 0 },
+      { str: 'MPU24031', x: 31.9, y: 237.4, width: 0, height: 0 },
+      { str: 'SUKAN 1', x: 168.2, y: 237.4, width: 0, height: 0 },
+      { str: '1.0', x: 312.8, y: 237.4, width: 0, height: 0 },
+      { str: 'PA', x: 45.0, y: 189.4, width: 0, height: 0 },
+      { str: 'PENASIHATAN AKADEMIK', x: 140.9, y: 189.4, width: 0, height: 0 },
+      { str: '0.0', x: 312.8, y: 189.4, width: 0, height: 0 },
+      { str: 'JUMLAH', x: 168.4, y: 172.9, width: 0, height: 0 },
+      { str: '20.0', x: 310.8, y: 172.9, width: 0, height: 0 },
+    ];
+
+    const legend = extractPdfLegend(items);
+    expect(legend.size).toBe(4);
+    expect(legend.get('DBM10163')).toBe('ENGINEERING MATHEMATICS 1');
+    expect(legend.get('DBS10042')).toBe('ENGINEERING SCIENCE');
+    expect(legend.get('MPU24031')).toBe('SUKAN 1');
+    expect(legend.get('PA')).toBe('PENASIHATAN AKADEMIK');
+    // credit column (x>=300) must not leak into the name
+    expect(legend.get('DBM10163')).not.toContain('3.0');
   });
 });

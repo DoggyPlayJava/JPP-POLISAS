@@ -41,13 +41,13 @@ export function ThemeToggle() {
           onClick={() => setTheme('light')}
           className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
         >
-          <Sun size={14} className="text-amber-500" /> Siang
+          <Sun size={14} className="text-amber-500" /> Light Mode
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme('dark')}
           className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
         >
-          <Moon size={14} className="text-blue-500" /> Malam
+          <Moon size={14} className="text-blue-500" /> Dark Mode
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

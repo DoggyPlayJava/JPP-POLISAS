@@ -70,7 +70,7 @@ export const COURSE_PALETTE = [
 ];
 
 export function parseCourseCodeAndType(raw: string): { courseCode: string; classType: ClassType } {
-  const match = raw.match(/^([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+)?)\s*\((L|P|TU|O)\)/i);
+  const match = raw.match(/^([A-Za-z_]+(?:\s+\d[A-Za-z0-9_]*)?|[A-Za-z0-9_]+)\s*\((L|P|TU|O)\)/i);
   if (!match) return { courseCode: raw.trim(), classType: 'LAIN_LAIN' };
   
   const typeMap: Record<string, ClassType> = {
@@ -439,6 +439,55 @@ export function extractTimetableFromItems(
   return { metadata, entries: mergeConsecutiveSlots(entries) };
 }
 
+// ── PDF legend (course name from KOD/NAMA KURSUS table below the grid) ─────
+// PDF text is clean (no OCR), so this is exact — no fuzzy matching needed.
+// Layout: KOD header row, then one row per course: [code @ x<90] [name @ 90..300]
+// [credit @ x>=310]. "JUMLAH" marks the end; the signature block is below that.
+export function extractPdfLegend(items: PdfTextItem[]): Map<string, string> {
+  const kod = items.find((it) => it.str.toUpperCase().trim() === 'KOD');
+  const nama = items.find((it) => it.str.toUpperCase().includes('NAMA'));
+  if (!kod || !nama) return new Map();
+
+  // PDF.js y is bottom-up: header sits ABOVE its rows, so rows have y < header.y.
+  const topY = kod.y;
+  const jumlah = items.find((it) => it.str.toUpperCase().trim() === 'JUMLAH');
+  const bottomY = jumlah ? jumlah.y - 2 : topY - 250;
+
+  const legendItems = items.filter((it) => it.y < topY && it.y > bottomY);
+  const rows = clusterRowsByY(legendItems, 6);
+
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const sorted = row.slice().sort((a, b) => a.x - b.x);
+    const codeItem = sorted.find((it) => it.x < 90);
+    if (!codeItem) continue;
+    const code = codeItem.str.trim().toUpperCase();
+    if (!/^(PA|[A-Z]{2,3}[A-Z0-9]{3,7})$/.test(code)) continue;
+    const name = sorted
+      .filter((it) => it.x >= 90 && it.x < 300)
+      .map((it) => it.str.trim())
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (name) map.set(code, name);
+  }
+  return map;
+}
+
+function applyLegendNames(
+  entries: Omit<StudentTimetableEntry, 'id' | 'user_id'>[],
+  legend: Map<string, string>,
+): void {
+  for (const e of entries) {
+    const codes = e.course_code.split('/').map((c) => c.trim().toUpperCase()).filter(Boolean);
+    const mapped = codes.map((c) => legend.get(c) ?? c);
+    if (mapped.join('|') !== codes.join('|')) {
+      e.course_name = mapped.join(' / ');
+    }
+  }
+}
+
 export async function parseTimetablePage(
   arrayBuffer: ArrayBuffer,
   pageIndex: number,
@@ -452,7 +501,18 @@ export async function parseTimetablePage(
   const page = await pdf.getPage(pageIndex);
   const content = await page.getTextContent();
   const items = toTextItems(content);
-  return extractTimetableFromItems(items, roomMappings, locations);
+  const result = extractTimetableFromItems(items, roomMappings, locations);
+
+  // Fill course_name from the legend (KOD/NAMA KURSUS table below the grid).
+  // PDF text is clean so this is exact; if it fails, course_name stays = code.
+  try {
+    const legend = extractPdfLegend(items);
+    if (legend.size > 0) applyLegendNames(result.entries, legend);
+  } catch (err) {
+    console.warn('[timetable-parser] legend extraction failed, keeping code as name:', err);
+  }
+
+  return result;
 }
 
 export function isOnlineKeyword(token: string): boolean {
@@ -571,7 +631,7 @@ export function parseCell(
     ? cellItems.slice().sort((a, b) => b.y - a.y || a.x - b.x).map((it) => it.str).join(' ').trim()
     : String(cellInput || '').trim();
 
-  const courseRegex = /([A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+)?)\s*\((L|P|TU|O)\)/gi;
+  const courseRegex = /([A-Za-z_]+(?:\s+\d[A-Za-z0-9_]*)?|[A-Za-z0-9_]+)\s*\((L|P|TU|O)\)/gi;
   const courseMatches = Array.from(cellText.matchAll(courseRegex));
 
   let courseCode = '';

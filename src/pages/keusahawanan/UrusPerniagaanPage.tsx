@@ -515,7 +515,7 @@ export function UrusPerniagaanPage() {
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Mentor Penasihat (Maks 5)</p>
                     {isOwner && mentors.length < 5 && (
                       <button type="button" onClick={() => setMentors([...mentors, { name: '', department: '' }])}
-                        className="text-xs text-amber-500 font-bold hover:text-amber-400 flex items-center gap-1 cursor-pointer">
+                        className="text-xs text-amber-600 dark:text-amber-500 font-bold hover:text-amber-700 dark:hover:text-amber-400 flex items-center gap-1 cursor-pointer">
                         <Plus className="w-3 h-3" /> Tambah Mentor
                       </button>
                     )}

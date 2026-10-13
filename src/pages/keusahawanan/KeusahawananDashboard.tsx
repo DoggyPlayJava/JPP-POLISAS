@@ -626,13 +626,13 @@ export function KeusahawananDashboard() {
 
             <div className="flex items-center shrink-0 self-end md:self-center">
               {isPuskepApproved ? (
-                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm ">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm ">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>Ahli PUSKEP Rasmi (Kekal)</span>
                 </div>
               ) : isPuskepPending ? (
-                <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm ">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm ">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>Permohonan No. Siri PUSKEP Sedang Diproses</span>
                 </div>
               ) : (
@@ -1075,7 +1075,7 @@ export function KeusahawananDashboard() {
                   </div>
                   <div className="flex items-center gap-0.5">
                     {[1,2,3,4,5].map(star => (
-                      <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? 'fill-amber-400 text-amber-400' : 'fill-muted text-muted'}`} />
+                      <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? 'fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400' : 'fill-muted text-muted'}`} />
                     ))}
                   </div>
                 </div>
