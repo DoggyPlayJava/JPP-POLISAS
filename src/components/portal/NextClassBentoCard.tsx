@@ -430,8 +430,8 @@ export function NextClassBentoCard({
               <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
                 Jadual Kuliah Belum Dimuat Naik
               </h3>
-              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] max-w-xl">
-                Muat naik fail jadual kelas (PDF) anda di modul e-Akademik untuk semakan kelas masa nyata, kiraan detik automatik, dan navigasi pantas PolyMaps.
+              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] max-w-xl leading-relaxed">
+                Takut terlepas kelas? Muat naik jadual sekarang untuk peringatan automatik & panduan lokasi bilik.
               </p>
             </div>
           </div>
