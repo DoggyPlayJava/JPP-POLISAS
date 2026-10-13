@@ -424,6 +424,9 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
 | `src/pages/AktivitiFull.tsx` | Pengurusan aktiviti kelab e-KPP; menyusun cip penapis status dalam baris tunggal boleh leret mendatar (`overflow-x-auto no-scrollbar`) dengan butang tindakan sebaris "Aktiviti Baru" di atas senarai kad (tanpa FAB) |
+| `src/pages/KelabPage.tsx` | Direktori Kelab & Persatuan POLISAS; menyepadukan grid skeleton kad, penapis kategori boleh leret mendatar (`overflow-x-auto no-scrollbar`), pengesahan had keahlian (tabular nums), modal penyertaan tertapis, serta dialog penarikan diri tersuai (menggantikan `window.confirm`) |
+| `src/pages/ClubDetailPage.tsx` | Profil rasmi kelab; navigasi breadcrumb atas teratur, reka bentuk hero banner berkadar moden dengan penstabilan kontras dark mode, metrik angka `font-mono tabular-nums`, serta pembersihan query membazir |
+| `src/pages/UrusKelabPage.tsx` | Panel pentadbiran identiti & MT kelab; dilengkapi pratonton kad langsung interaktif (Live Card Preview), swatches warna rasmi POLISAS, navigasi SPA tanpa muat semula halaman, serta dialog pengesahan berasaskan input teks untuk reset kohort kepimpinan |
 | `src/pages/akademik/AkademikTakwimPage.tsx` | Halaman Takwim Rasmi Kampus & Jadual Kuliah Siswa dengan penyelarasan URL dua arah via `useSearchParams` (`?tab=pusat` untuk kalendar rasmi & kelab, `?tab=personal` untuk jadual kuliah peribadi) |
 | `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan `window.confirm`. Mengelakkan sekatan pelayar moden |
 | `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
@@ -3530,6 +3533,14 @@ Sistem Pengurusan Acara (EMS) telah melalui proses penambahbaikan menyeluruh mer
 6. **Penguatkuasaan 100% Sifar Emoji Mentah (Zero Raw Emojis Standard):**
    - Meliputi kesemua 11 paparan teras dan modal EMS (`EmsAudienceScanPage.tsx`, `EmsCheckinPage.tsx`, `EmsDashboardPage.tsx`, `EmsEventFormPage.tsx`, `EmsLeaderboardPage.tsx`, `EmsPublicRegisterPage.tsx`, `EmsLuckyDrawModal.tsx`, dan kesemua 5 modal dalam `src/components/ems/modals/`).
    - Semua simbol mentah seperti piala, bintang, jam, amaran, dan medal digantikan dengan ikon vektor Lucide React berdefinisi tinggi (`Trophy`, `Award`, `Sparkles`, `CheckCircle2`, `Clock`, `QrCode`, `AlertTriangle`, `Scale`, dsb.) bagi mengekalkan ketegasan reka bentuk bertaraf korporat.
+
+7. **Penyelarasan Palet Semantik Bersasar (Purposeful Semantic Color Discipline):**
+   - **Prinsip "Warna Bersebab"**: Menghapuskan "warna pelangi AI slop" (warna-warni yang tidak mempunyai fungsi semantik seperti kad-kad borang ungu/pink/indigo rawak). Warna hanya digunakan secara terpilih pada perkara kritikal:
+     - **Emerald (`emerald-500` / `emerald-600`)**: Menandakan status *Diluluskan*, *Selesai*, *Disahkan Hadir*, atau sijil disahkan tulen.
+     - **Amber (`amber-500` / `amber-400`)**: Menandakan tindakan utama (*Primary CTA Button*), status *Menunggu Kelulusan (Pending)*, dan pengiktirafan tempat pertama (*Champion/Gold*).
+     - **Rose (`rose-500` / `rose-600`)**: Menandakan status *Ditolak*, amaran skor penilaian juri berlebihan/defisit, dan rekod belum hadir.
+     - **Slate Obsidian (`slate-50` hingga `slate-950`)**: Menguasai seluruh permukaan kad, sempadan pembahagi (*borders*), input carian, dan bekas kandungan bagi memberikan ketenangan visual (*visual calm*) serta merendahkan beban kognitif pengguna.
+   - Meliputi keseluruhan ekosistem: `EmsEventFormPage.tsx`, `EmsApprovalPage.tsx`, `EmsJuryPortalPage.tsx`, `EmsJuryAuditMatrix.tsx`, `EmsCheckinPage.tsx`, `EmsCheckinSelectorPage.tsx`, `StudentSearchCombobox.tsx`, dan `EmsEventsFeed.tsx`.
 
 ---
 
