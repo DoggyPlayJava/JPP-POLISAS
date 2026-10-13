@@ -443,7 +443,9 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/takwim/EditClassSlotModal.tsx` | Modal penyuntingan pantas satu slot/subjek tunggal dengan semakan pertindihan masa dan integrasi PolyMaps |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
 | `supabase/migrations/20261011000001_timetable_reminder_cron.sql` | RPC semakan notifikasi kelas dan deduplikasi atomik bebas race condition |
-| `supabase/migrations/20261011000002_imaps_missing_reports_dedup_rpc.sql` | RPC pelaporan automatik bilik tiada dalam PolyMaps dengan kaunter deduplikasi atomik selamat RLS |
+| `src/components/jpp/JppCommandPalette.tsx` | Papan perintah global pintas papan kekunci `Ctrl+K` / `⌘K` berasaskan `cmdk` dan Radix Dialog untuk navigasi pantas modul JPP, unit exco, dan pangkalan data kepimpinan |
+| `src/components/ui/SlideOverSheet.tsx` | Laci slide-over sisi kanan berasaskan Radix UI Dialog & Framer Motion spring physics menggantikan modal tengah terapung bagi borang pendaftaran dan urusan data kepimpinan (`dark:bg-[#1C261D]`) |
+| `src/components/ui/FloatingActionDock.tsx` | Dok terapung bawah beranimasi dengan kaunter berformat `font-mono tabular-nums` dan butang tindakan pantas semasa multi-select pukal (digunakan di Takwim JPP) |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 
