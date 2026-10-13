@@ -352,9 +352,9 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] relative overflow-y-auto font-sans">
-      {/* Ambient background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] bg-[#6B7F5B]/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] bg-[#C96F4F]/8 rounded-full blur-[90px] pointer-events-none" />
+      {/* Ambient background glows (radial-gradient = cheap CSS paint, no backdrop filter) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.12)_0%,transparent_70%)]" />
+      <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.10)_0%,transparent_70%)]" />
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
