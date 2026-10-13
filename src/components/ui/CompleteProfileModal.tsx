@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone, Loader2, Sparkles, Building2, Crown, Hash, User,
   GraduationCap, Calendar, AlertTriangle, ChevronDown, LogOut,
+  Lock, Eye, EyeOff, KeyRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,6 +145,10 @@ export function CompleteProfileModal() {
   const [staffRole,        setStaffRole]        = useState<UserRole>('STAFF');
   const [leaderClubId,     setLeaderClubId]     = useState('');
   const [passcode,         setPasscode]         = useState('');
+  const [password,         setPassword]         = useState('');
+  const [confirmPassword,  setConfirmPassword]  = useState('');
+  const [showPassword,     setShowPassword]     = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading,          setLoading]          = useState(false);
   const [showWarning,      setShowWarning]      = useState(false);
 
@@ -445,9 +450,30 @@ export function CompleteProfileModal() {
       }
     }
 
+    // Semakan kata laluan untuk pendaftaran baharu (Google SSO dual-auth)
+    if (!password) {
+      toast.error('Sila cipta kata laluan akaun anda.');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('Kata laluan mesti sekurang-kurangnya 6 aksara.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('Kata laluan dan sahkan kata laluan tidak sepadan.');
+      return;
+    }
+
     setLoading(true);
     try {
       if (!user?.id) { toast.error('Sesi anda telah tamat. Sila log masuk semula.'); setLoading(false); return; }
+
+      // 0. Tetapkan kata laluan dalam Supabase Auth supaya pelajar boleh log masuk manual guna No. Matrik
+      const { error: pwdErr } = await supabase.auth.updateUser({ password: password.trim() });
+      if (pwdErr) {
+        console.error('[CompleteProfile] Gagal kemaskini kata laluan:', pwdErr);
+        throw new Error('Gagal menetapkan kata laluan akaun: ' + pwdErr.message);
+      }
 
       const isLeader  = registerMode === 'leader';
       const isStaff   = registerMode === 'staff';
@@ -920,6 +946,72 @@ export function CompleteProfileModal() {
                         value={phone} onChange={e => setPhone(e.target.value)}
                         className="h-12 pl-11 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-bold tracking-wide border-slate-200 dark:border-white/10"
                       />
+                    </div>
+                  </div>
+
+                  {/* Cipta Kata Laluan Akaun (Untuk Google SSO Dual-Auth) */}
+                  <div className="p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200 dark:border-white/10 space-y-3.5">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Cipta Kata Laluan Akaun</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Cipta kata laluan untuk membolehkan anda log masuk secara manual menggunakan No. Matrik pada masa hadapan (walaupun mendaftar dengan Google).
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Kata Laluan Baharu (Min. 6 Aksara)
+                      </Label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Masukkan kata laluan"
+                          required
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="h-12 pl-11 pr-11 rounded-xl bg-white dark:bg-slate-900 font-bold tracking-wide border-slate-200 dark:border-white/10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                          aria-label={showPassword ? 'Sembunyi kata laluan' : 'Tunjuk kata laluan'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Sahkan Kata Laluan
+                      </Label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                        <Input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder="Ulang kata laluan"
+                          required
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          className="h-12 pl-11 pr-11 rounded-xl bg-white dark:bg-slate-900 font-bold tracking-wide border-slate-200 dark:border-white/10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                          aria-label={showConfirmPassword ? 'Sembunyi kata laluan' : 'Tunjuk kata laluan'}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {confirmPassword && password !== confirmPassword && (
+                        <p className="text-[10px] text-rose-500 font-medium">Kata laluan tidak sepadan.</p>
+                      )}
                     </div>
                   </div>
 

@@ -728,7 +728,9 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
 | `isOnlyMissingPhone` | Ada semua kecuali phone | Phone sahaja |
 | `isOnlyMissingCohort` | Ada matric+dept+phone, tiada programme/intake | Jabatan + Program + Tahun + Intake (+ override) |
 | `isMissingPhoneAndCohort` | Ada matric+dept, tiada phone dan kohort | Phone + Jabatan + Program + Tahun + Intake |
-| Full Registration | Tiada matric | Nama IC + Matrik + Phone + Jabatan + Program + Intake |
+| Full Registration | Tiada matric (pengguna Google SSO baharu) | Nama IC + Matrik + Phone + Kata Laluan & Sahkan Kata Laluan (`supabase.auth.updateUser`) + Jabatan + Program + Intake |
+
+> **Google SSO Dual-Auth (Kemas Kini Oktober 2026):** Pelajar baharu yang mendaftar melalui Google OAuth diwajibkan mencipta kata laluan akaun (`supabase.auth.updateUser({ password })`). Ini membolehkan mereka log masuk sama ada menggunakan butang Google SSO atau log masuk manual menggunakan No. Matrik + Kata Laluan pada bila-bila masa.
 
 > **Pelajar sedia ada (85 orang pada April 2026)** terkena senario `isOnlyMissingCohort` apabila log masuk pertama kali selepas kemaskini ini.
 
@@ -3851,10 +3853,13 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 
 ### 31.4 Laman Log Masuk SSO-First & Penyelarasan Tema Earthy Minimal (`src/pages/LoginPage.tsx`)
 
-1. **Hierarki SSO-First Tanpa Keserabutan (*Frictionless & Uncluttered*):**
+1. **Hierarki SSO-First Tanpa Keserabutan & Susun Atur Berpusat (*Single-Column Centered Amy-App Style*):**
+   - **Susun Atur Berpusat (Single-Column Centered):** Halaman log masuk kini menggunakan susun atur kad tunggal berpusat di tengah-tengah skrin pada paparan desktop dan mudah alih (mobile-first), mengelakkan keserabutan panel sisi yang terlalu sarat.
    - **Tindakan Hero Utama:** Butang **"Teruskan dengan Google"** (`h-14`, rounded-2xl) diletakkan di bahagian paling atas dan paling menonjol pada borang log masuk bagi menghapuskan geseran menaip manual dan mengurangkan isu pelajar terlupa kata laluan.
-   - **Borang Manual Tersembunyi Secara Default (*Collapsible Manual Form*):** Borang log masuk manual disembunyikan secara lalai di sebalik butang togol minimalis *"Log masuk menggunakan Emel / No Matrik"*. Hanya apabila pelajar menekannya, borang manual akan mengembang secara lancar dengan animasi Framer Motion. Ini memastikan fokus visual 100% tertumpu pada Google SSO.
+   - **Pembahagi Bersih ("atau"):** Pembahagi garisan halus yang kemas memisahkan tindakan Google SSO dan log masuk manual.
+   - **Borang Manual Tersembunyi Secara Default (*Collapsible Manual Form*):** Borang log masuk manual disembunyikan secara lalai di sebalik butang togol minimalis *"Log masuk menggunakan Emel / No Matrik"*. Hanya apabila pelajar menekannya, kad beralih secara lancar dengan animasi Framer Motion memaparkan input No. Matrik / Emel, Kata Laluan, dan butang kembali ke skrin utama.
    - **Pintasan Log Masuk Developer (Dev Mode):** Butang pintasan pembangunan (`Pintas Log Masuk (Dev Mode)`) dipaparkan secara langsung di kad utama semasa sesi pembangunan tempatan (`import.meta.env.DEV`), tanpa memerlukan pembukaan borang log masuk manual terlebih dahulu.
+   - **Bimbingan Ralat Akaun Google:** Sekiranya akaun didaftarkan melalui Google dan belum mempunyai kata laluan manual, sistem memaparkan bimbingan mesra: *"Akaun ini didaftarkan melalui Google dan belum mempunyai kata laluan manual. Sila log masuk dengan Google atau klik 'Lupa?' untuk menetapkan kata laluan."*
    - **Pendaftaran Baharu:** Turut mendahulukan kad "Daftar bersama Google" di bahagian atas sebelum togol pendaftaran manual.
 
 2. **Statistik Tulen Institusi POLISAS (*Authentic Institutional Data*):**
@@ -3922,6 +3927,20 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
    - **Sifar Em-Dash:** Tiada sengkang em-dash (`—` / `–`) di dalam teks mahupun komen kod.
    - **Pencegahan Beban Peranti:** Logik `isLowEnd` memelihara kelancaran 60 FPS pada peranti berkapasiti terhad.
    - **Ujian Automatik Sepenuhnya:** Disahkan melalui suite ujian TDD baharu (`settingsEarthyMinimal.test.ts`, `polymapsEarthyMinimal.test.ts`, `jppCockpitEarthyMinimal.test.ts`) dengan 100% lulus merentasi 29 suite ujian (480 ujian).
+
+---
+
+### 31.7 Laman Tetapkan Semula Kata Laluan Berkontras Tinggi (`src/pages/ResetPasswordPage.tsx`)
+
+1. **Penyelarasan Tema & Penjenamaan Institusi:**
+   - Mengaplikasikan palet Earthy Minimal (`#2E3A2F`, `#6B7F5B`, `#D9C9B2`, `#F8F6EE`) dengan kad berpusat dan pencahayaan ambien organik.
+   - Mengintegrasikan logo rasmi JPP POLISAS (`/jpp-logo.png`) berserta lencana pengesahan portal rasmi `Portal Rasmi POLISAS`.
+
+2. **Keterbacaan Unggul Mod Gelap (*High-Contrast Dark Mode*):**
+   - Menghapuskan kelas pudar `muted-foreground/70` yang tidak kelihatan dalam mod gelap.
+   - Menggunakan rona teks kontras tinggi: tajuk utama `text-[#2E3A2F] dark:text-[#F8F6EE]` dan label `text-[#556453] dark:text-[#D9C9B2]`.
+   - Kotak input dilengkapi sokongan togol tunjuk/sembunyi kata laluan (`Eye` dan `EyeOff`) bagi medan kata laluan dan pengesahan kata laluan.
+   - Navigasi kembali ke log masuk (`/login`) dengan ikon anak panah kiri.
 
 ---
 

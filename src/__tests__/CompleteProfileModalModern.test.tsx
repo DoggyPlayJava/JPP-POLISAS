@@ -54,4 +54,11 @@ describe('CompleteProfileModal Modern Institutional Polish', () => {
     expect(content).toContain('isMissingPhoneAndCohort');
     expect(content).toContain('isMissingCoreFields');
   });
+
+  it('requires password creation and updateUser for full registration (Google SSO dual-auth)', () => {
+    expect(content).toContain('supabase.auth.updateUser({ password');
+    expect(content).toContain('Cipta Kata Laluan Akaun');
+    expect(content).toContain('showPassword');
+    expect(content).toContain('confirmPassword');
+  });
 });
