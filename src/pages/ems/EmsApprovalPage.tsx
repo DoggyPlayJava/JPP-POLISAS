@@ -70,7 +70,7 @@ export function EmsApprovalPage() {
         </p>
         <button
           onClick={() => navigate('/ems/dashboard')}
-          className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md shadow-purple-600/20"
+          className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 active:scale-[0.98]"
         >
           Kembali ke Papan Pemuka EMS
         </button>
@@ -122,7 +122,7 @@ export function EmsApprovalPage() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <ShieldCheck className="w-6 h-6 text-slate-700 dark:text-slate-300" />
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 Semakan & Kelulusan Acara EMS
               </h1>
@@ -147,7 +147,7 @@ export function EmsApprovalPage() {
       {/* Main Content Grid */}
       {loading ? (
         <div className="py-20 text-center text-slate-500 dark:text-slate-400 space-y-2">
-          <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mx-auto" />
+          <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
           <p className="text-sm font-semibold">Memuatkan senarai permohonan acara...</p>
         </div>
       ) : pendingEvents.length === 0 ? (
@@ -175,8 +175,8 @@ export function EmsApprovalPage() {
                     onClick={() => setSelectedEvent(ev)}
                     className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-slate-900 dark:text-white shadow-md shadow-purple-600/10'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-300 dark:hover:border-slate-700 shadow-sm'
+                        ? 'bg-slate-100 dark:bg-slate-800/90 border-slate-900 dark:border-amber-400 text-slate-900 dark:text-white shadow-md'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-2">
@@ -189,7 +189,7 @@ export function EmsApprovalPage() {
                     </div>
 
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 mb-1">{ev.title}</h3>
-                    <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">
                       {ev.category || 'Keusahawanan'} •{' '}
                       {ev.event_mode === 'TEAM' ? 'Pasukan' : 'Individu'}
                     </p>
@@ -221,7 +221,7 @@ export function EmsApprovalPage() {
                   <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
                     {selectedEvent.title}
                   </h2>
-                  <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
                     Kategori: {selectedEvent.category || 'Keusahawanan'}
                   </p>
                 </div>
@@ -298,7 +298,7 @@ export function EmsApprovalPage() {
                 {/* Rubrics Preview */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
-                    <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <Award className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     <span>Rubrik Pemarkahan Juri ({selectedEvent.rubrics?.length || 0})</span>
                   </div>
 
@@ -310,7 +310,7 @@ export function EmsApprovalPage() {
                           className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between"
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{r.criteria_name}</span>
-                          <span className="text-xs text-purple-600 dark:text-purple-400 font-mono font-bold">
+                          <span className="text-xs text-slate-600 dark:text-slate-300 font-mono font-bold">
                             Max: {r.max_score} markah (Weight: {r.weight}x)
                           </span>
                         </div>
