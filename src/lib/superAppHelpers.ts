@@ -173,7 +173,7 @@ export function getCampusServicesConfig(params: {
       label: 'Takwim',
       sublabel: 'Kalendar Rasmi',
       description: 'Kalendar Rasmi',
-      routeOrAction: '/akademik/takwim',
+      routeOrAction: '/akademik/takwim?tab=pusat',
       color: 'indigo',
       tourClass: 'tour-qa-polyservices',
     },

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTakwimPusat } from '@/hooks/useTakwimPusat';
@@ -15,7 +16,19 @@ import { MyTimetableView } from '@/components/takwim/MyTimetableView';
 
 export function AkademikTakwimPage() {
   const { profile, userClubIds } = useAuth();
-  const [activeMainTab, setActiveMainTab] = useState<'PERSONAL' | 'PUSAT'>('PERSONAL');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab')?.toLowerCase() === 'pusat' ? 'PUSAT' : 'PERSONAL';
+  const [activeMainTab, setActiveMainTab] = useState<'PERSONAL' | 'PUSAT'>(initialTab);
+
+  // Sync if URL search params change
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')?.toLowerCase();
+    if (tabParam === 'pusat') {
+      setActiveMainTab('PUSAT');
+    } else if (tabParam === 'personal') {
+      setActiveMainTab('PERSONAL');
+    }
+  }, [searchParams]);
   const [filter, setFilter] = useState('KESELURUHAN');
   const [sesi, setSesi] = useState('2026/2027');
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');

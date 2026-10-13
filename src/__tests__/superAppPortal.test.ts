@@ -223,7 +223,7 @@ describe('superAppHelpers', () => {
       expect(serviceMap.polymart.routeOrAction).toBe('/polymart');
       expect(serviceMap.polymart.sublabel).toBe('Pasaran Siswa');
 
-      expect(serviceMap.takwim.routeOrAction).toBe('/akademik/takwim');
+      expect(serviceMap.takwim.routeOrAction).toBe('/akademik/takwim?tab=pusat');
       expect(serviceMap.takwim.sublabel).toBe('Kalendar Rasmi');
       expect(serviceMap.takwim.tourClass).toContain('tour-qa-polyservices');
 

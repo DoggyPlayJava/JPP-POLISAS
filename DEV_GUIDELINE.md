@@ -3036,7 +3036,7 @@ Komponen `src/components/portal/CampusServicesGrid.tsx` menyusun utiliti harian 
 |---|---|---|---|---|---|---|---|
 | 1 | `polysuara` | PolySuara | Suara Siswa | Route: `/polysuara` | - | - | Megaphone |
 | 2 | `polymart` | PolyMart | Pasaran Siswa | Route: `/polymart` | - | - | UtensilsCrossed |
-| 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim` | `tour-qa-polyservices` | - | CalendarDays |
+| 3 | `takwim` | Takwim | Kalendar Rasmi | Route: `/akademik/takwim?tab=pusat` | `tour-qa-polyservices` | - | CalendarDays |
 | 4 | `polymaps` | PolyMaps | Peta Kampus | Route: `/polymaps` | - | - | Map |
 | 5 | `polyrent` | PolyRent | Sewa Rumah | Route: `/polyrent` | - | - | Home |
 | 6 | `kebajikan` | E-Kebajikan | Aduan & Bantuan | Route: `/kebajikan` | `tour-qa-kebajikan` | Bilangan aktif (`kbStats.open`) | HeartHandshake |
