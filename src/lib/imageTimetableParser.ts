@@ -52,7 +52,11 @@ const CANON_H = 842;
 //   NEAREST 3x -> 2-3 entries, day conf ~88 (glyphs too chunky for dense tables)
 //   BILINEAR 4x -> 12 entries, day conf 89-92, ISNIN+KHAMIS readable
 // BILINEAR interpolation is what makes dense subject codes (DEE30163) survive.
-const UPSCALE = 4;
+const BASE_UPSCALE = 4;
+// ponytail: modern phone photos at 4x can exceed browser canvas limits
+// (canvas.toBlob returns null -> FileReader.readAsArrayBuffer crash).
+// Cap the upscaled long edge so large uploads still OCR instead of throwing.
+const MAX_OCR_DIM = 8192;
 
 // Left day-column crop: fraction of image width + extra upscale for legibility.
 // Day labels (ISNIN..JUMAAT) sit in the left ~13%; upscaling them 2x more
@@ -432,6 +436,7 @@ export async function parseTimetableImage(
 ): Promise<ImageTimetableResult> {
   const bitmap = await createImageBitmap(file);
   const { width, height } = bitmap;
+  const upscale = Math.min(BASE_UPSCALE, MAX_OCR_DIM / Math.max(width, height));
 
   const longEdge = Math.max(width, height);
   if (longEdge < RESOLUTION_GATE) {
@@ -452,8 +457,8 @@ export async function parseTimetableImage(
     const cw = rotated ? height : width;
     const ch = rotated ? width : height;
     const canvas = document.createElement('canvas');
-    canvas.width = Math.round(cw * UPSCALE);
-    canvas.height = Math.round(ch * UPSCALE);
+    canvas.width = Math.round(cw * upscale);
+    canvas.height = Math.round(ch * upscale);
     const ctx = canvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = true; // BILINEAR
     ctx.imageSmoothingQuality = 'high';
@@ -468,19 +473,19 @@ export async function parseTimetableImage(
   };
 
   let ocrResult = await ocrOrientation(false);
-  let ocrW = Math.round(width * UPSCALE);
-  let ocrH = Math.round(height * UPSCALE);
+  let ocrW = Math.round(width * upscale);
+  let ocrH = Math.round(height * upscale);
 
   // Retry rotated if portrait and day coverage is poor.
   if (isPortrait) {
     const days0 = detectDays(ocrResult.words, ocrW, ocrH).size;
     if (days0 < 3) {
       const rotResult = await ocrOrientation(true);
-      const days1 = detectDays(rotResult.words, Math.round(height * UPSCALE), Math.round(width * UPSCALE)).size;
+      const days1 = detectDays(rotResult.words, Math.round(height * upscale), Math.round(width * upscale)).size;
       if (days1 > days0 || rotResult.confidence > ocrResult.confidence + 20) {
         ocrResult = rotResult;
-        ocrW = Math.round(height * UPSCALE);
-        ocrH = Math.round(width * UPSCALE);
+        ocrW = Math.round(height * upscale);
+        ocrH = Math.round(width * upscale);
       }
     }
   }
@@ -504,7 +509,7 @@ export async function parseTimetableImage(
     const sctx = src.getContext('2d')!;
     sctx.imageSmoothingEnabled = true;
     sctx.imageSmoothingQuality = 'high';
-    if (ocrW !== Math.round(width * UPSCALE)) {
+    if (ocrW !== Math.round(width * upscale)) {
       // rotated orientation was chosen
       sctx.translate(src.width, 0);
       sctx.rotate(Math.PI / 2);
@@ -597,7 +602,7 @@ export async function parseTimetableImage(
   // Fill course_name from the legend (KOD/NAMA KURSUS table below the grid).
   // If OCR can't read the legend, leave course_name = code (parser default).
   try {
-    const legendMap = await extractLegendNames(bitmap, width, height, isPortrait && ocrW !== Math.round(width * UPSCALE));
+    const legendMap = await extractLegendNames(bitmap, width, height, isPortrait && ocrW !== Math.round(width * upscale));
     for (const e of entries) {
       const name = lookupLegendName(legendMap, e.course_code);
       if (name) e.course_name = name;
