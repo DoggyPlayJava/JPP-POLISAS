@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
@@ -32,6 +33,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowDesktop = false }: BottomNavProps) {
+  const [mounted, setMounted] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const { isSuperAdmin, isJppMember, profile } = useAuth();
@@ -42,6 +44,10 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   const [showPolymartModal, setShowPolymartModal] = useState(false);
   // Drag handle-only swipe-to-dismiss (iOS: whole-menu drag was swallowed by native scroll)
   const quickActionsDragControls = useDragControls();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // -- Auto-hide on Scroll Logic via Framer Motion --
   const { scrollY } = useScroll();
@@ -116,7 +122,11 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
 
   const theme = getTheme();
 
-  return (
+  if (!mounted || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
     <>
       <PolymartServiceModal isOpen={showPolymartModal} onClose={() => setShowPolymartModal(false)} />
       {/* 1. Backdrop & Quick Actions Menu */}
@@ -280,7 +290,8 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
 
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -316,7 +327,7 @@ function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, l
   );
 }
 
-function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: NavLinkData & { theme?: any }) {
+function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: NavLinkData & { theme?: any; key?: React.Key }) {
   const t = theme || {
     color: 'text-rose-600 dark:text-rose-400',
     bg: 'bg-rose-400',
