@@ -40,27 +40,27 @@ function renderHeader(props: React.ComponentProps<typeof SuperAppHeader> = {}) {
   );
 }
 
-describe('SuperAppHeader Compact Layout Suite', () => {
-  it('renders container with reduced mobile padding and compact gap', () => {
+describe('SuperAppHeader Balanced Layout Suite', () => {
+  it('renders container with comfortable mobile padding and balanced gap', () => {
     const html = renderHeader({ displayName: 'Aiman' });
 
-    // Requirement 1: Container padding reduced on mobile & gap tightened
-    expect(html).toContain('pt-3.5 sm:pt-6 pb-4 sm:pb-6');
-    expect(html).toContain('gap-3 sm:gap-5');
+    // Balanced padding & gap
+    expect(html).toContain('pt-5 sm:pt-7 pb-5 sm:pb-6');
+    expect(html).toContain('gap-4 sm:gap-5');
   });
 
-  it('consolidates greeting title, student name, and emoji into a unified h1 element', () => {
+  it('renders distinct greeting overline and prominent student name in h1', () => {
     const html = renderHeader({ displayName: 'Aiman' });
 
-    // Requirement 2: Combined h1 typography and flex classes
-    expect(html).toContain(
-      'text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight flex items-center gap-1.5 flex-wrap'
-    );
-    expect(html).toContain('Aiman');
+    // Distinct greeting with waving hand emoji
     expect(html).toContain('👋');
+    // Prominent h1 for student name
+    expect(html).toContain(
+      '<h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">Aiman</h1>'
+    );
   });
 
-  it('renders role badge inline inside h1 when profile has a role', () => {
+  it('renders role badge in greeting overline when profile has a role', () => {
     const html = renderHeader({
       profile: {
         id: 'user-admin',
@@ -70,12 +70,11 @@ describe('SuperAppHeader Compact Layout Suite', () => {
     });
 
     expect(html).toContain('PENTADBIR UTAMA');
-    // Role badge should be rendered within the h1 structure
     expect(html).toContain('bg-[#6B7F5B]/30');
     expect(html).toContain('text-[#D9C9B2]');
   });
 
-  it('renders Karnival and SUPSAS badges inline inside h1 when active', () => {
+  it('renders Karnival and SUPSAS badges in greeting overline when active', () => {
     const karnivalHtml = renderHeader({
       displayName: 'Aiman',
       karnivalActive: true,
@@ -94,16 +93,16 @@ describe('SuperAppHeader Compact Layout Suite', () => {
   it('hides long campus subtitle on mobile with hidden sm:block', () => {
     const html = renderHeader({ displayName: 'Aiman' });
 
-    // Requirement 3: Campus subtitle hidden on mobile, visible on sm+
+    // Campus subtitle hidden on mobile, visible on sm+
     expect(html).toContain('hidden sm:block text-xs sm:text-sm text-white/80 font-medium max-w-2xl leading-relaxed');
     expect(html).toContain('Pusat sehenti digital untuk semua aktiviti, servis, acara dan kebajikan kampus.');
   });
 
-  it('updates command palette search capsule to compact h-10 sm:h-11 with Ctrl+K shortcut', () => {
+  it('updates command palette search capsule to h-11 sm:h-12 with Ctrl+K shortcut', () => {
     const html = renderHeader({ displayName: 'Aiman' });
 
-    // Requirement 4: Slim search button height and styling
-    expect(html).toContain('h-10 sm:h-11');
+    // Search button height and styling
+    expect(html).toContain('h-11 sm:h-12');
     expect(html).toContain('px-3.5 sm:px-4');
     expect(html).toContain('Cari makanan, runner, servis, acara, merit...');
     expect(html).toContain('Ctrl');
