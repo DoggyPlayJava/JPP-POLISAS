@@ -725,6 +725,7 @@ function ClassCard({
   onEdit,
   extended = false,
 }: {
+  key?: React.Key;
   entry: StudentTimetableEntry;
   onDelete: () => void;
   onEdit?: () => void;
