@@ -446,9 +446,9 @@ export function KebajikanSubmitPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Background Glow */}
       
-      {/* Top Nav */}
+      {/* Top Nav (Desktop only — Mobile is handled uniformly by KebajikanLayout) */}
       <div
-        className="relative z-10 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/50  transition-colors"
+        className="relative z-10 hidden lg:flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/50 transition-colors"
       >
         <Link to="/portal" className="flex items-center gap-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 transition-colors text-xs font-black uppercase tracking-widest">
           <ChevronLeft className="w-3.5 h-3.5" />Portal JPP

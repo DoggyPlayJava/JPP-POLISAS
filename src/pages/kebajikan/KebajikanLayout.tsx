@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { KebajikanSidebar } from './KebajikanSidebar';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
@@ -125,12 +125,23 @@ export function KebajikanLayout() {
         <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80  relative z-30 transition-colors">
           <div className="flex items-center gap-2">
 
-            <button 
-              onClick={() => setSidebarOpen(true)} 
-              className="tour-mobile-hamburger p-2 -ml-2 text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {isSubmitOrChatPage ? (
+              <Link
+                to="/portal"
+                className="p-2 -ml-2 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold"
+                aria-label="Kembali ke Portal"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span className="hidden xs:inline">Portal</span>
+              </Link>
+            ) : (
+              <button 
+                onClick={() => setSidebarOpen(true)} 
+                className="tour-mobile-hamburger p-2 -ml-2 text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
             <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF] ml-1">E-Kebajikan</span>
           </div>
           <div className="flex items-center gap-2">
