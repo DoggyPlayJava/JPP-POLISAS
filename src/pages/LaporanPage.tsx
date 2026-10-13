@@ -62,6 +62,7 @@ export function LaporanPage() {
   const [targetMonth, setTargetMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [endMonth, setEndMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [gabungMode, setGabungMode] = useState(false);
+  const [aktivitiMode, setAktivitiMode] = useState<"auto" | "manual">("auto");
   const [progress, setProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const effectiveClubId = selectedClubId ?? profile?.club_id;
@@ -373,31 +374,61 @@ export function LaporanPage() {
             </Select>
 
             {reportType === 'Laporan Aktiviti' ? (
-              !allowAutoPdf && !isSuperAdmin ? (
-                <div className="bg-rose-500/10 p-8 rounded-[2rem] text-center border-2 border-dashed border-rose-500/20">
-                  <Lock className="w-10 h-10 text-rose-500/50 mx-auto mb-3" />
-                  <p className="text-sm font-black text-rose-600 uppercase tracking-widest leading-tight">Sistem Janaan Ditutup</p>
-                  <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.</p>
+              <div className="space-y-4">
+                {/* Mode toggle: auto vs manual */}
+                <div className="flex gap-2 bg-muted/40 p-1 rounded-xl">
+                  <button type="button" onClick={() => setAktivitiMode('auto')}
+                    className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'auto' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
+                    Jana AutoPDF
+                  </button>
+                  <button type="button" onClick={() => setAktivitiMode('manual')}
+                    className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'manual' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
+                    Muat Naik Manual
+                  </button>
                 </div>
-              ) : (
-                <form onSubmit={handleAutoGenerateTransition} className="space-y-4">
-                  <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.</div>
-                  <div className="flex items-center gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
-                      <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
-                        className="accent-violet-500 w-3.5 h-3.5" />
-                      Gabung bulan
-                    </label>
+
+                {aktivitiMode === 'manual' ? (
+                  <form onSubmit={handleManualSubmit} className="space-y-4">
+                    <div
+                      onClick={() => fileRef.current?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f && validateFile(f)) setFile(f); }}
+                      className={cn("border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all", dragOver ? "border-primary bg-primary/10" : file ? "border-primary/50 bg-primary/10" : "border-border bg-muted/20")}
+                    >
+                      <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
+                      {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
+                    </div>
+                    <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
+                      {submitting ? 'Memuat Naik...' : 'Hantar Laporan Manual'}
+                    </Button>
+                  </form>
+                ) : !allowAutoPdf && !isSuperAdmin ? (
+                  <div className="bg-rose-500/10 p-8 rounded-[2rem] text-center border-2 border-dashed border-rose-500/20">
+                    <Lock className="w-10 h-10 text-rose-500/50 mx-auto mb-3" />
+                    <p className="text-sm font-black text-rose-600 uppercase tracking-widest leading-tight">Sistem Janaan Ditutup</p>
+                    <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Input type="month" value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
-                    {gabungMode && (
-                      <Input type="month" value={endMonth} onChange={e => setEndMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
-                    )}
-                  </div>
-                  <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? 'Memuatkan...' : 'Pratonton & Jana'}</Button>
-                </form>
-              )
+                ) : (
+                  <form onSubmit={handleAutoGenerateTransition} className="space-y-4">
+                    <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.</div>
+                    <div className="flex items-center gap-1.5">
+                      <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
+                        <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
+                          className="accent-violet-500 w-3.5 h-3.5" />
+                        Gabung bulan
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input type="month" value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
+                      {gabungMode && (
+                        <Input type="month" value={endMonth} onChange={e => setEndMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
+                      )}
+                    </div>
+                    <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? 'Memuatkan...' : 'Pratonton & Jana'}</Button>
+                  </form>
+                )}
+              </div>
             ) : (
               <form onSubmit={handleManualSubmit} className="space-y-4">
                 <div
