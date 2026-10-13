@@ -466,6 +466,14 @@ export function EmsEventFormPage() {
       return;
     }
 
+    if (rubrics.length > 0) {
+      const emptyCriteria = rubrics.some((r) => !r.criteria_name.trim());
+      if (emptyCriteria) {
+        toast.error('Sila lengkapkan nama kriteria bagi semua rubrik pemarkahan.');
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
 
@@ -570,12 +578,37 @@ export function EmsEventFormPage() {
 
       </div>
 
+      {/* Quick Section Anchor Navigation Bar */}
+      <div className="sticky top-4 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+        <button
+          type="button"
+          onClick={() => document.getElementById('sec-info')?.scrollIntoView({ behavior: 'smooth' })}
+          className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
+        >
+          1. Maklumat Asas &amp; Tarikh
+        </button>
+        <button
+          type="button"
+          onClick={() => document.getElementById('sec-form-fields')?.scrollIntoView({ behavior: 'smooth' })}
+          className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
+        >
+          2. Borang Pendaftaran
+        </button>
+        <button
+          type="button"
+          onClick={() => document.getElementById('sec-rubrics')?.scrollIntoView({ behavior: 'smooth' })}
+          className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
+        >
+          3. Rubrik Juri
+        </button>
+      </div>
+
       {/* Form Body */}
       <div className="space-y-8">
         {/* ============================================================ */}
         {/* Section 1: Maklumat Asas Acara */}
         {/* ============================================================ */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+        <section id="sec-info" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               <Layers className="w-5 h-5" />
@@ -810,7 +843,7 @@ export function EmsEventFormPage() {
         {/* ============================================================ */}
         {/* Section 2: Pembina Borang Pendaftaran (Registration Form Builder) */}
         {/* ============================================================ */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+        <section id="sec-form-fields" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
@@ -957,7 +990,7 @@ export function EmsEventFormPage() {
         {/* ============================================================ */}
         {/* Section 3: Rubrik Pemarkahan Juri (Scoring Rubric Builder) */}
         {/* ============================================================ */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+        <section id="sec-rubrics" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">

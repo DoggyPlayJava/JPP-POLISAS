@@ -94,9 +94,13 @@ export function EmsApprovalPage() {
 
   const handleConfirmReject = async () => {
     if (!rejectingEvent) return;
+    if (!rejectNote.trim()) {
+      toast.error('Sila nyatakan sebab penolakan permohonan acara.');
+      return;
+    }
     try {
       setIsSubmitting(true);
-      await approveEmsEvent(rejectingEvent.id, 'REJECTED', rejectNote.trim() || undefined);
+      await approveEmsEvent(rejectingEvent.id, 'REJECTED', rejectNote.trim());
       toast.success(`Acara "${rejectingEvent.title}" telah DITOLAK.`);
       setRejectingEvent(null);
       setRejectNote('');
@@ -376,13 +380,14 @@ export function EmsApprovalPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Sebab Penolakan / Catatan (Manakala):
+                Sebab Penolakan / Catatan Pembetulan <span className="text-rose-500">*</span>
               </label>
               <textarea
                 rows={3}
+                required
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
-                placeholder="Contoh: Maklumat lokasi belum lengkap / tarikh bertembung acara rasmi..."
+                placeholder="Contoh: Maklumat lokasi belum lengkap / tarikh bertembung acara rasmi. Sila lengkapkan..."
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-rose-500 resize-none"
               />
             </div>

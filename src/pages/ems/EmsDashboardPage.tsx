@@ -21,6 +21,9 @@ import {
   UserPlus,
   MoreVertical,
   Flame,
+  Search,
+  X,
+  ArrowLeft,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -32,6 +35,7 @@ import { EmsJuryCodeModal } from '@/components/ems/modals/EmsJuryCodeModal';
 import { EmsTieBreakerModal } from '@/components/ems/modals/EmsTieBreakerModal';
 import { EmsManualRegModal } from '@/components/ems/modals/EmsManualRegModal';
 import { EmsEventCertsModal } from '@/components/ems/modals/EmsEventCertsModal';
+import { EmsCompleteConfirmModal } from '@/components/ems/modals/EmsCompleteConfirmModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +71,7 @@ export function EmsDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('APPROVED');
   const [syncingBizId, setSyncingBizId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [qrModalEvent, setQrModalEvent] = useState<EmsEvent | null>(null);
@@ -74,6 +79,7 @@ export function EmsDashboardPage() {
   const [tieModalEvent, setTieModalEvent] = useState<EmsEvent | null>(null);
   const [manualRegModalEvent, setManualRegModalEvent] = useState<EmsEvent | null>(null);
   const [certModalEvent, setCertModalEvent] = useState<EmsEvent | null>(null);
+  const [confirmCompleteEvent, setConfirmCompleteEvent] = useState<EmsEvent | null>(null);
 
   // Lucky Draw Modal State
   const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
@@ -245,17 +251,30 @@ export function EmsDashboardPage() {
     const isOwner = user?.id && e.created_by === user.id;
     const isManagerOrCreator = canCreateEvent || isOwner;
 
+    // Status Tab check
+    let matchesTab = false;
     if (isManagerOrCreator) {
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'APPROVED') return e.status === 'APPROVED' || e.status === 'ACTIVE';
-      return e.status === activeTab;
+      if (activeTab === 'ALL') matchesTab = true;
+      else if (activeTab === 'APPROVED') matchesTab = e.status === 'APPROVED' || e.status === 'ACTIVE';
+      else matchesTab = e.status === activeTab;
+    } else {
+      if (activeTab === 'COMPLETED') matchesTab = e.status === 'COMPLETED';
+      else matchesTab = e.status === 'APPROVED' || e.status === 'ACTIVE';
     }
 
-    if (activeTab === 'COMPLETED') {
-      return e.status === 'COMPLETED';
+    if (!matchesTab) return false;
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchTitle = e.title?.toLowerCase().includes(q);
+      const matchLoc = e.location?.toLowerCase().includes(q);
+      const matchCat = e.category?.toLowerCase().includes(q);
+      const matchCreator = e.creator?.full_name?.toLowerCase().includes(q);
+      if (!matchTitle && !matchLoc && !matchCat && !matchCreator) return false;
     }
 
-    return e.status === 'APPROVED' || e.status === 'ACTIVE';
+    return true;
   });
 
   const getStatusBadge = (status: string) => {
@@ -279,6 +298,17 @@ export function EmsDashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 transition-colors">
+      {/* Wayfinding Breadcrumb back to Portal */}
+      <div>
+        <button
+          onClick={() => navigate('/portal')}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Kembali ke Portal Kampus</span>
+        </button>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
@@ -348,6 +378,27 @@ export function EmsDashboardPage() {
         </div>
       )}
 
+      {/* Search Bar & Instant Filtering */}
+      <div className="relative w-full">
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Cari acara mengikut nama acara, lokasi atau penganjur..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-xs"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Kosongkan Carian"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
         {(canCreateEvent
@@ -415,17 +466,30 @@ export function EmsDashboardPage() {
       ) : displayedEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-slate-400 dark:text-slate-600 mb-3" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Tiada Acara Dijumpai</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+            {searchQuery ? 'Tiada Carian Sepadan' : 'Tiada Acara Dijumpai'}
+          </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6">
-            Belum ada acara yang didaftarkan untuk status ini. Sila cipta acara baharu untuk memulakan pengurusan pertandingan.
+            {searchQuery
+              ? `Tiada acara yang sepadan dengan carian "${searchQuery}". Sila cuba kata kunci lain.`
+              : 'Belum ada acara yang didaftarkan untuk status ini. Sila cipta acara baharu untuk memulakan pengurusan pertandingan.'}
           </p>
-          {canCreateEvent && (
+          {searchQuery ? (
             <button
-              onClick={() => navigate('/ems/event/new')}
-              className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm"
+              onClick={() => setSearchQuery('')}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all shadow-sm"
             >
-              + Cipta Acara Baharu
+              Kosongkan Carian
             </button>
+          ) : (
+            canCreateEvent && (
+              <button
+                onClick={() => navigate('/ems/event/new')}
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm"
+              >
+                + Cipta Acara Baharu
+              </button>
+            )
           )}
         </div>
       ) : (
@@ -597,7 +661,7 @@ export function EmsDashboardPage() {
                             <>
                               <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                               <DropdownMenuItem
-                                onClick={() => handleCompleteEvent(event.id)}
+                                onClick={() => setConfirmCompleteEvent(event)}
                                 disabled={completingCertId === event.id}
                                 className="flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
                               >
@@ -668,6 +732,13 @@ export function EmsDashboardPage() {
           ))}
         </div>
       )}
+
+      {/* Confirmation Modal for Completing Event */}
+      <EmsCompleteConfirmModal
+        event={confirmCompleteEvent}
+        onClose={() => setConfirmCompleteEvent(null)}
+        onConfirm={handleCompleteEvent}
+      />
 
       {/* 5 Modularized EMS Modals */}
       <EmsQrCodeModal
