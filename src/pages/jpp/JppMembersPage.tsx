@@ -13,6 +13,7 @@ import type { JppPosition, JppUnit } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { SlideOverSheet } from '@/components/ui/SlideOverSheet';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
@@ -430,32 +431,16 @@ function AddMemberModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 ">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/[0.08] shadow-2xl rounded-[2rem] p-6 relative flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 dark:text-white/50 hover:text-slate-700 dark:hover:text-white transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10">
-            <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-          </div>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white">Tambah Ahli JPP</h3>
-        </div>
-        <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase tracking-widest font-bold mb-6 ml-11">
-          Cari pelajar dan tetapkan jawatan
-        </p>
-
+    <SlideOverSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title="Tambah Ahli JPP"
+      description="Cari pelajar dan tetapkan jawatan kepimpinan"
+    >
+      <div className="pt-2">
         {!selectedUser ? (
           <div className="space-y-4">
             <div className="relative">
@@ -528,9 +513,9 @@ function AddMemberModal({
                   }}
                   className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                 >
-                  <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
+                  <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
                   {Object.entries(positionLabels).map(([k, v]) => (
-                    <option key={k} value={k} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{v}</option>
+                    <option key={k} value={k} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{v}</option>
                   ))}
                 </select>
               </div>
@@ -543,9 +528,9 @@ function AddMemberModal({
                     onChange={e => setUnit(e.target.value)}
                     className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                   >
-                    <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
+                    <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
                     {Object.keys(unitLabels).map(u => (
-                      <option key={u} value={u} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
+                      <option key={u} value={u} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                     ))}
                   </select>
                 </div>
@@ -596,8 +581,8 @@ function AddMemberModal({
             </div>
           </div>
         )}
-      </motion.div>
-    </div>
+      </div>
+    </SlideOverSheet>
   );
 }
 
