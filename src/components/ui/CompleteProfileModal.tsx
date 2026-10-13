@@ -549,6 +549,23 @@ export function CompleteProfileModal() {
   // ── JSX shared section: cohort fields ────────────────────────────────────
   const CohortFields = ({ required = true }: { required?: boolean }) => (
     <div className="space-y-4">
+      {!isFullRegistration && matricParsed?.isValidFormat && matricParsed.knownProgramme && (
+        <motion.div
+          initial={{ opacity: 0, y: -6, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="p-3.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 space-y-1 shadow-sm"
+        >
+          <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+            <span>Pengesahan Program Automatik</span>
+          </div>
+          <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+            {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
+          </p>
+        </motion.div>
+      )}
+
       {/* Jabatan */}
       <div className="space-y-1.5">
         <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -623,30 +640,32 @@ export function CompleteProfileModal() {
           <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Sesi Pengambilan
           </Label>
-          <div className="grid grid-cols-2 gap-1.5 h-12">
+          <div className="p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl grid grid-cols-2 gap-1 h-12 border border-slate-200/60 dark:border-white/5">
             <button
               type="button"
               onClick={() => setIntakePeriod(1)}
               className={cn(
-                'rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border',
+                'relative rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center leading-tight',
                 intakePeriod === 1
-                  ? 'bg-primary text-white border-primary shadow-md'
-                  : 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 border-transparent hover:border-primary/30'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/50 dark:border-white/10'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              Intake 1<br /><span className="text-[8px] opacity-70">Pertengahan Tahun</span>
+              <span>Intake 1</span>
+              <span className="text-[8px] font-medium opacity-70">Pertengahan Tahun</span>
             </button>
             <button
               type="button"
               onClick={() => setIntakePeriod(2)}
               className={cn(
-                'rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border',
+                'relative rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center leading-tight',
                 intakePeriod === 2
-                  ? 'bg-primary text-white border-primary shadow-md'
-                  : 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 border-transparent hover:border-primary/30'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/50 dark:border-white/10'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              Intake 2<br /><span className="text-[8px] opacity-70">Awal Tahun</span>
+              <span>Intake 2</span>
+              <span className="text-[8px] font-medium opacity-70">Awal Tahun</span>
             </button>
           </div>
         </div>
@@ -708,26 +727,25 @@ export function CompleteProfileModal() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/10 overflow-hidden max-h-[90dvh] overflow-y-auto custom-scrollbar"
         >
-          {/* Header */}
-          <div className="h-32 bg-gradient-to-br from-primary to-accent relative overflow-hidden flex items-center justify-center shrink-0">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)]" />
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.001 }}
-              className="absolute -right-10 -top-10 opacity-30"
-            >
-              <Sparkles className="w-40 h-40 text-white" />
-            </motion.div>
-            <div className="w-16 h-16 bg-white shadow-xl rounded-2xl flex items-center justify-center relative z-10">
-              <img src="/jpp-logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          {/* Refined Institutional Header */}
+          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center px-6 gap-3.5 shrink-0">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)] pointer-events-none" />
+            <div className="flex items-center gap-3.5 z-10">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-2 shadow-sm backdrop-blur-md shrink-0">
+                <img src="/jpp-logo.png" alt="POLISAS Emblem" className="w-full h-full object-contain" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Portal Rasmi POLISAS
+                </span>
+                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">{heading}</h2>
+              </div>
             </div>
           </div>
 
-          <div className="p-8 space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">{heading}</h2>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{subheading}</p>
-            </div>
+          <div className="p-6 sm:p-8 space-y-6">
+            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">{subheading}</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -795,15 +813,15 @@ export function CompleteProfileModal() {
               {isFullRegistration && (
                 <>
                   {/* Role tabs */}
-                  <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl">
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-white/5">
                     <button type="button" onClick={() => setRegisterMode(registerMode === 'leader' ? 'leader' : 'student')}
-                      className={cn('flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all',
-                        (registerMode === 'student' || registerMode === 'leader') ? 'bg-card shadow-md text-foreground' : 'text-muted-foreground hover:text-foreground')}>
-                      <Sparkles className="w-3.5 h-3.5" /> Pelajar
+                      className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
+                        (registerMode === 'student' || registerMode === 'leader') ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> Pelajar
                     </button>
                     <button type="button" onClick={() => setRegisterMode('staff')}
-                      className={cn('flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all',
-                        registerMode === 'staff' ? 'bg-card shadow-md text-emerald-600' : 'text-muted-foreground hover:text-emerald-600')}>
+                      className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
+                        registerMode === 'staff' ? 'bg-white dark:bg-slate-900 shadow-sm text-emerald-600 dark:text-emerald-400 border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400')}>
                       <Building2 className="w-3.5 h-3.5" /> Staf
                     </button>
                   </div>
@@ -864,6 +882,22 @@ export function CompleteProfileModal() {
                             ℹ️ Kod program &quot;{matricParsed.progCode}&quot; tidak dalam senarai semasa. Sila pilih Jabatan dan Program secara manual di bawah.
                           </p>
                         )}
+                        {matricParsed?.isValidFormat && matricParsed.knownProgramme && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                            className="p-3.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 space-y-1 shadow-sm mt-2"
+                          >
+                            <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                              <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                              <span>Pengesahan Program Automatik</span>
+                            </div>
+                            <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+                              {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
+                            </p>
+                          </motion.div>
+                        )}
                         {yearMismatch && (
                           <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
                             <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -893,16 +927,16 @@ export function CompleteProfileModal() {
                   {registerMode !== 'staff' && (
                     <>
                       {/* Student / Leader sub-tabs */}
-                      <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl">
+                      <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-white/5">
                         <button type="button" onClick={() => setRegisterMode('student')}
-                          className={cn('flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all',
-                            registerMode === 'student' ? 'bg-card shadow-md text-foreground' : 'text-muted-foreground hover:text-foreground')}>
+                          className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
+                            registerMode === 'student' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
                           <GraduationCap className="w-3.5 h-3.5" /> Pelajar Biasa
                         </button>
                         <button type="button" onClick={() => setRegisterMode('leader')}
-                          className={cn('flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all',
-                            registerMode === 'leader' ? 'bg-card shadow-md text-foreground' : 'text-muted-foreground hover:text-foreground')}>
-                          <Crown className="w-3.5 h-3.5" /> Pimpinan Kelab
+                          className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
+                            registerMode === 'leader' ? 'bg-white dark:bg-slate-900 shadow-sm text-amber-600 dark:text-amber-400 border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-amber-600 dark:hover:text-amber-400')}>
+                          <Crown className="w-3.5 h-3.5 text-amber-500" /> Pimpinan Kelab
                         </button>
                       </div>
 
@@ -1002,7 +1036,7 @@ export function CompleteProfileModal() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all"
+                  className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-950/20 active:scale-[0.99] transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simpan'}
                 </Button>
