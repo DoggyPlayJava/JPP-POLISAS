@@ -178,13 +178,60 @@ export function JppTelemetryPage() {
           </div>
         )}
 
-        {/* ── Loading State ── */}
+        {/* ── Loading Skeleton Screen ── */}
         {loading && !data && (
-          <div className="flex flex-col items-center justify-center py-36">
-            <Loader2 className="w-9 h-9 animate-spin text-[#FF5B37] mb-3" />
-            <p className="text-xs font-bold text-slate-400">
-              Menghubungkan ke rangkaian SentinelAI & Pangkalan Data POLISAS...
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch animate-pulse">
+            {/* Left Rail Skeleton (3/12) */}
+            <div className="lg:col-span-3 space-y-4">
+              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4">
+                <div className="h-6 w-32 bg-slate-200 dark:bg-white/10 rounded-lg" />
+                <div className="h-28 w-28 bg-slate-200 dark:bg-white/10 rounded-full mx-auto" />
+                <div className="space-y-2 pt-2">
+                  <div className="h-4 w-full bg-slate-200/60 dark:bg-white/5 rounded" />
+                  <div className="h-4 w-3/4 bg-slate-200/60 dark:bg-white/5 rounded" />
+                </div>
+              </div>
+              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
+                <div className="h-4 w-28 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="h-8 w-full bg-slate-200/60 dark:bg-white/5 rounded-xl" />
+              </div>
+            </div>
+
+            {/* Center Topology + Quick Metrics Skeleton (6/12) */}
+            <div className="lg:col-span-6 space-y-5 flex flex-col justify-between">
+              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-6 space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div className="h-5 w-44 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="grid grid-cols-3 gap-4 py-6">
+                  <div className="h-20 bg-slate-200/60 dark:bg-white/5 rounded-2xl" />
+                  <div className="h-20 bg-slate-200/60 dark:bg-white/5 rounded-2xl" />
+                  <div className="h-20 bg-slate-200/60 dark:bg-white/5 rounded-2xl" />
+                </div>
+                <div className="h-4 w-1/2 bg-slate-200/40 dark:bg-white/5 rounded" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((k) => (
+                  <div key={k} className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
+                    <div className="h-3 w-16 bg-slate-200 dark:bg-white/10 rounded" />
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-white/10 rounded font-mono" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Live Timeline Skeleton (3/12) */}
+            <div className="lg:col-span-3">
+              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4 min-h-full">
+                <div className="h-5 w-32 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="space-y-3 pt-2">
+                  {[1, 2, 3, 4, 5].map((t) => (
+                    <div key={t} className="p-3 rounded-xl bg-slate-100/60 dark:bg-white/5 space-y-2">
+                      <div className="h-3 w-20 bg-slate-200 dark:bg-white/10 rounded" />
+                      <div className="h-3 w-full bg-slate-200/60 dark:bg-white/5 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

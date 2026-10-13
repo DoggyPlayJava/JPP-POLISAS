@@ -446,6 +446,10 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/jpp/JppCommandPalette.tsx` | Papan perintah global pintas papan kekunci `Ctrl+K` / `⌘K` berasaskan `cmdk` dan Radix Dialog untuk navigasi pantas modul JPP, unit exco, dan pangkalan data kepimpinan |
 | `src/components/ui/SlideOverSheet.tsx` | Laci slide-over sisi kanan berasaskan Radix UI Dialog & Framer Motion spring physics menggantikan modal tengah terapung bagi borang pendaftaran dan urusan data kepimpinan (`dark:bg-[#1C261D]`) |
 | `src/components/ui/FloatingActionDock.tsx` | Dok terapung bawah beranimasi dengan kaunter berformat `font-mono tabular-nums` dan butang tindakan pantas semasa multi-select pukal (digunakan di Takwim JPP) |
+| `src/pages/jpp/AnnouncementsPage.tsx` | Pusat hebahan global berintegrasi SlideOverSheet respon pelajar, skeleton loader cards, dan tipografi berdisiplin |
+| `src/pages/jpp/JppUsersPage.tsx` | Pengurusan pengguna portal & kohort pelajar dengan 5-baris table pulse skeletons, tona gelap `#1C261D` selaras, dan metrik baki token berformat `font-mono tabular-nums` |
+| `src/pages/jpp/JppFoodBankAdmin.tsx` | Kaunter agihan & lejar audit RM70,000 dengan metrik kewangan terlindung `font-mono tabular-nums` kalis layout-jitter |
+| `src/__tests__/JppPhase2Redesign.test.tsx` | Sut ujian verifikasi Fasa 2: membuktikan skeleton loading, penghapusan kecerunan AI, SlideOverSheet, dan tabular numerals |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 

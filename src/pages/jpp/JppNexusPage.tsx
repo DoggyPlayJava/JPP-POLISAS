@@ -300,29 +300,29 @@ export function JppNexusPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-end">
                                     <div className="space-y-6">
                                         <div>
-                                            <p className="text-5xl font-black tracking-tighter text-white tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
+                                            <p className="text-5xl font-black tracking-tighter text-white font-mono tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60 mt-1">Token Dijana</p>
                                         </div>
                                         <div className="space-y-3">
                                             <div className="flex justify-between text-[10px] font-black text-indigo-200 uppercase tracking-tight">
                                                 <span>Had Token Global</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-white">{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
+                                                    <span className="text-white font-mono tabular-nums">{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
                                                     <div className="w-[1px] h-3 bg-white/20 mx-1" />
                                                     <button onClick={updateAiTokenLimit} className="hover:text-white underline underline-offset-4 decoration-white/30 transition-colors">Laras Had</button>
                                                 </div>
                                             </div>
                                             <div className="h-3 rounded-full bg-black/40 border border-white/5 overflow-hidden">
-                                                <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-300 relative" style={{ width: `${Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)}%` }}></div>
+                                                <div className="h-full bg-emerald-500 relative transition-all duration-500 rounded-full" style={{ width: `${Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)}%` }}></div>
                                             </div>
-                                            <p className="text-[9px] font-medium text-indigo-300/50 uppercase tracking-widest">Kapasiti Server: {(settings.ai_token_limit || 1000000).toLocaleString()} Token</p>
+                                            <p className="text-[9px] font-medium text-indigo-300/50 uppercase tracking-widest font-mono tabular-nums">Kapasiti Server: {(settings.ai_token_limit || 1000000).toLocaleString()} Token</p>
                                         </div>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Sparkles className="w-4 h-4 text-amber-400 mb-2" />
-                                            <p className="text-xl font-black text-white tabular-nums">
+                                            <p className="text-xl font-black text-white font-mono tabular-nums">
                                                 {settings.ai_total_tokens
                                                     ? Math.round(settings.ai_total_tokens / 480).toLocaleString()
                                                     : '—'}

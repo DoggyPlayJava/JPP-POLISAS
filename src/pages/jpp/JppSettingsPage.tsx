@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -143,18 +143,52 @@ export function JppSettingsPage() {
 
     if (loading) {
         return (
-            <div className="py-16 flex items-center justify-center text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest font-mono">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Memuatkan Tetapan Sistem...
+            <div className="w-full py-8 px-4 sm:px-8 text-slate-900 dark:text-white transition-colors">
+                <div className="max-w-4xl mx-auto space-y-10 animate-pulse">
+                    {/* Header Skeleton */}
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/10" />
+                        <div className="space-y-2">
+                            <div className="h-6 w-48 bg-slate-200 dark:bg-white/10 rounded-lg" />
+                            <div className="h-3 w-64 bg-slate-200/70 dark:bg-white/5 rounded-md" />
+                        </div>
+                    </div>
+
+                    {/* Section 1 Skeleton */}
+                    <div className="space-y-4">
+                        <div className="h-4 w-36 bg-slate-200/70 dark:bg-white/5 rounded-md" />
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D]/60 border border-slate-200 dark:border-white/10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/10" />
+                                    <div className="space-y-2">
+                                        <div className="h-4 w-40 bg-slate-200 dark:bg-white/10 rounded-md" />
+                                        <div className="h-3 w-72 bg-slate-200/60 dark:bg-white/5 rounded-md" />
+                                    </div>
+                                </div>
+                                <div className="w-14 h-8 bg-slate-200 dark:bg-white/10 rounded-full" />
+                            </div>
+                        </div>
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D]/60 border border-slate-200 dark:border-white/10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/10" />
+                                    <div className="space-y-2">
+                                        <div className="h-4 w-32 bg-slate-200 dark:bg-white/10 rounded-md" />
+                                        <div className="h-3 w-60 bg-slate-200/60 dark:bg-white/5 rounded-md" />
+                                    </div>
+                                </div>
+                                <div className="h-10 w-28 bg-slate-200 dark:bg-white/10 rounded-xl" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="w-full py-8 px-4 sm:px-8 text-slate-900 dark:text-white transition-colors">
-            <div className="fixed inset-0 pointer-events-none z-0">
-            </div>
-
             <div className="relative z-10 max-w-4xl mx-auto space-y-10">
                 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -171,7 +205,7 @@ export function JppSettingsPage() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
-                        <ShieldCheck className="w-5 h-5 text-violet-500" />
+                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
                         <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Ketetapan Sistem & Akses</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -179,22 +213,22 @@ export function JppSettingsPage() {
 
                         {/* Traditional Registration Toggle */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-violet-900/10 dark:to-violet-900/5 border border-slate-200 dark:border-violet-500/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-violet-900/20 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D] border border-slate-200 dark:border-[#3A4A3B] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-[#4A5E4B] transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
-                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center border border-violet-500/30">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <p className="text-base font-black text-slate-900 dark:text-white">Traditional Registration (Emel & Kata Laluan)</p>
-                                        <p className="text-xs text-slate-500 dark:text-violet-400/70 font-medium">Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.</p>
+                                        <p className="text-xs text-slate-500 dark:text-white/60 font-medium">Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                                     <button
                                         onClick={() => toggleSetting('traditional_registration_enabled', settings.traditional_registration_enabled !== false)}
                                         className={cn(
-                                            "relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                                            settings.traditional_registration_enabled !== false ? "bg-violet-600" : "bg-slate-200 dark:bg-white/10"
+                                            "relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none active:scale-95",
+                                            settings.traditional_registration_enabled !== false ? "bg-emerald-600" : "bg-slate-200 dark:bg-white/10"
                                         )}
                                     >
                                         <span className={cn(
@@ -208,21 +242,21 @@ export function JppSettingsPage() {
 
                         {/* Kod Pendaftaran Staf - Hanya untuk SUPER ADMIN */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-rose-900/10 dark:to-rose-900/5 border border-slate-200 dark:border-rose-500/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-rose-900/20 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D] border border-slate-200 dark:border-[#3A4A3B] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-[#4A5E4B] transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
-                                    <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/30">
+                                    <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20">
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <p className="text-base font-black text-slate-900 dark:text-white">Kod Pendaftaran Staf</p>
-                                        <p className="text-xs text-slate-500 dark:text-rose-400/70 font-medium">Kod rahsia yang digunakan semasa pendaftaran staf/pensyarah.</p>
+                                        <p className="text-xs text-slate-500 dark:text-white/60 font-medium">Kod rahsia yang digunakan semasa pendaftaran staf/pensyarah.</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                                    <div className="bg-slate-100 dark:bg-black/40 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-600 dark:text-rose-200 border border-slate-200 dark:border-rose-500/20">
+                                    <div className="bg-slate-100 dark:bg-black/30 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-600 dark:text-rose-300 border border-slate-200 dark:border-rose-500/20 tabular-nums">
                                         {settings.staff_registration_code || '••••••••'}
                                     </div>
-                                    <button onClick={() => setIsStaffCodeModalOpen(true)} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50 transition-all w-full sm:w-auto">
+                                    <button onClick={() => setIsStaffCodeModalOpen(true)} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white shadow-sm transition-all w-full sm:w-auto">
                                         Tukar Kod
                                     </button>
                                 </div>
@@ -238,14 +272,14 @@ export function JppSettingsPage() {
                             <Calendar className="w-5 h-5 text-amber-500" />
                             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Konfigurasi Takwim Pengambilan</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-amber-900/10 dark:to-amber-900/5 border border-slate-200 dark:border-amber-500/20 shadow-sm space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-amber-900/20 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D] border border-slate-200 dark:border-[#3A4A3B] shadow-2xs space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-[#4A5E4B] transition-all">
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
                                     <Calendar className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <p className="text-base font-black text-slate-900 dark:text-white">Bulan Permulaan Intake</p>
-                                    <p className="text-xs text-slate-500 dark:text-amber-400/70 font-medium mt-1">Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.</p>
+                                    <p className="text-xs text-slate-500 dark:text-white/60 font-medium mt-1">Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.</p>
                                 </div>
                             </div>
 
@@ -257,10 +291,10 @@ export function JppSettingsPage() {
                                         <select
                                             value={intake1Month}
                                             onChange={e => setIntake1Month(Number(e.target.value))}
-                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-amber-500/20 rounded-xl text-sm text-slate-900 dark:text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white/90 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {MONTH_NAMES.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -274,7 +308,7 @@ export function JppSettingsPage() {
                                                 finally { setSavingIntake(false); }
                                             }}
                                             disabled={savingIntake}
-                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 text-white shadow transition-all whitespace-nowrap"
+                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
                                         >
                                             Simpan
                                         </button>
@@ -288,10 +322,10 @@ export function JppSettingsPage() {
                                         <select
                                             value={intake2Month}
                                             onChange={e => setIntake2Month(Number(e.target.value))}
-                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-amber-500/20 rounded-xl text-sm text-slate-900 dark:text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white/90 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {MONTH_NAMES.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -305,7 +339,7 @@ export function JppSettingsPage() {
                                                 finally { setSavingIntake(false); }
                                             }}
                                             disabled={savingIntake}
-                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 text-white shadow transition-all whitespace-nowrap"
+                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
                                         >
                                             Simpan
                                         </button>
@@ -313,7 +347,7 @@ export function JppSettingsPage() {
                                 </div>
                             </div>
 
-                            <p className="text-[10px] text-amber-600 dark:text-amber-500/60 font-medium border-t border-slate-200 dark:border-amber-500/10 pt-4">
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium border-t border-slate-200 dark:border-white/10 pt-4">
                                 ⚠ Ubah nilai ini SEBELUM pengambilan baharu bermula. Sistem akan menghantar notifikasi kepada pentadbir secara automatik sebulan sebelum tarikh yang ditetapkan.
                             </p>
                         </div>
@@ -327,7 +361,7 @@ export function JppSettingsPage() {
                             <QrCode className="w-5 h-5 text-emerald-500" />
                             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Penjana QR Link</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-emerald-900/10 dark:to-emerald-900/5 border border-slate-200 dark:border-emerald-500/20 shadow-sm hover:border-slate-300 dark:hover:from-emerald-900/20 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1C261D] border border-slate-200 dark:border-[#3A4A3B] shadow-2xs hover:border-slate-300 dark:hover:border-[#4A5E4B] transition-all">
                             <QrLinkManager showHeader={false} />
                         </div>
                     </motion.div>

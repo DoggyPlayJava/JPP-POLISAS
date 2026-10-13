@@ -14,6 +14,7 @@ import { toast } from 'react-hot-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { SlideOverSheet } from '@/components/jpp/SlideOverSheet';
 import { SystemAnnouncement, AnnouncementFormField, AnnouncementPriority, AnnouncementTarget } from '@/types';
 
 export function AnnouncementsPage() {
@@ -126,7 +127,7 @@ export function AnnouncementsPage() {
           .eq('id', editingId);
 
         if (dbError) throw dbError;
-        toast.success('Hebahan dikemas kini!');
+        toast.success('Hebahan berjaya dikemas kini.');
       } else {
         const { error: dbError } = await supabase
           .from('system_announcements')
@@ -143,7 +144,7 @@ export function AnnouncementsPage() {
           });
 
         if (dbError) throw dbError;
-        toast.success('Hebahan berjaya dicipta!');
+        toast.success('Hebahan berjaya dicipta.');
 
         // --- Trigger Push Notification ---
         try {
@@ -322,15 +323,17 @@ export function AnnouncementsPage() {
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500 pb-20">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-none">JPP HQ / Hebahan Info</Badge>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 text-foreground">Makluman Global</h1>
-          <p className="text-muted-foreground font-medium max-w-2xl text-lg">Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul *Popout* Bersepadu.</p>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-3">
+            JPP HQ • Hebahan Rasmi
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Makluman Global</h1>
+          <p className="text-muted-foreground font-medium max-w-2xl text-xs sm:text-sm mt-1">Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul Popout Bersepadu.</p>
         </div>
         {!showCreate && (
-          <Button onClick={() => setShowCreate(true)} className="h-12 px-6 rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all font-bold tracking-wide">
-            <Plus className="mr-2" /> Cipta Hebahan Baru
+          <Button onClick={() => setShowCreate(true)} className="h-11 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xs hover:scale-[1.02] active:scale-[0.98] transition-all font-bold text-xs uppercase tracking-wider">
+            <Plus className="mr-2 h-4 w-4" /> Cipta Hebahan Baharu
           </Button>
         )}
       </div>
@@ -511,9 +514,39 @@ export function AnnouncementsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {loading ? (
-             <div className="h-32 flex items-center justify-center text-muted-foreground"><Activity className="animate-spin" /></div>
+             <div className="space-y-4 animate-pulse">
+                {[1, 2, 3].map((n) => (
+                   <div key={n} className="bg-card rounded-[2rem] border border-border/50 p-6 sm:p-8 flex flex-col md:flex-row gap-8">
+                      <div className="flex-1 space-y-3">
+                         <div className="flex gap-2">
+                            <div className="h-5 w-24 bg-muted rounded-full" />
+                            <div className="h-5 w-32 bg-muted rounded-full" />
+                         </div>
+                         <div className="h-7 w-3/4 bg-muted rounded-lg" />
+                         <div className="h-4 w-full bg-muted/60 rounded" />
+                         <div className="h-4 w-2/3 bg-muted/60 rounded" />
+                      </div>
+                      <div className="md:w-64 flex flex-col justify-center gap-2.5 md:border-l border-border/50 md:pl-8">
+                         <div className="h-9 w-full bg-muted rounded-xl" />
+                         <div className="h-9 w-full bg-muted rounded-xl" />
+                         <div className="h-9 w-full bg-muted rounded-xl" />
+                      </div>
+                   </div>
+                ))}
+             </div>
           ) : announcements.length === 0 ? (
-             <div className="text-center p-12 border-2 border-dashed border-border/50 rounded-[2rem] text-muted-foreground">Tiada makluman direkodkan setakat ini.</div>
+             <div className="text-center p-12 rounded-[2rem] border border-dashed border-border/60 bg-muted/10 space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-muted/40 mx-auto flex items-center justify-center text-muted-foreground">
+                   <Megaphone className="w-6 h-6" />
+                </div>
+                <p className="text-base font-bold text-foreground">Tiada makluman direkodkan setakat ini</p>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">Pengumuman global yang dicipta akan disiarkan ke papan pemuka mahasiswa dan portal rasmi.</p>
+                {!showCreate && (
+                   <Button onClick={() => setShowCreate(true)} variant="outline" className="h-9 rounded-xl text-xs font-bold mt-2">
+                      <Plus className="w-3.5 h-3.5 mr-1.5" /> Bina Hebahan Pertama
+                   </Button>
+                )}
+             </div>
           ) : announcements.map((a) => {
              const Icon = PriorityIcon[a.priority];
              return (
@@ -570,58 +603,61 @@ export function AnnouncementsPage() {
         </div>
       )}
 
-      {/* View Responses Modal */}
-      {viewingResponsesFor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/80 " />
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-card rounded-[2rem] border border-border/50 shadow-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/50">
-                <div>
-                  <h2 className="text-2xl font-black tracking-tight text-foreground" style={{wordBreak: "break-word"}}>{viewingResponsesFor.title}</h2>
-                  <p className="text-muted-foreground text-sm">Respons Pelajar bagi makluman ini.</p>
-               </div>
-               <button onClick={() => setViewingResponsesFor(null)} className="p-2 bg-muted/50 rounded-full hover:bg-muted text-muted-foreground"><X size={20}/></button>
+      {/* View Responses Drawer (SlideOverSheet) */}
+      <SlideOverSheet
+        isOpen={Boolean(viewingResponsesFor)}
+        onClose={() => setViewingResponsesFor(null)}
+        title={viewingResponsesFor?.title || 'Respons Pelajar'}
+        subtitle={`Jumlah respons direkodkan: ${responses.length}`}
+        maxWidth="max-w-2xl"
+      >
+        <div className="p-6 space-y-4">
+          {loadingResponses ? (
+            <div className="space-y-3 animate-pulse">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-2">
+                  <div className="h-4 w-32 bg-muted rounded" />
+                  <div className="h-3 w-24 bg-muted/60 rounded" />
+                </div>
+              ))}
             </div>
-            
-            <div className="flex-1 overflow-y-auto min-h-[50vh]">
-               {loadingResponses ? (
-                  <div className="h-full flex items-center justify-center"><Activity className="animate-spin text-muted-foreground" /></div>
-               ) : responses.length === 0 ? (
-                  <div className="text-center p-12 border-2 border-dashed border-border/50 rounded-[2rem] text-muted-foreground">Tiada respon diterima lagi.</div>
-               ) : (
-                  <div className="space-y-4">
-                     {responses.map((r, i) => (
-                        <div key={i} className="bg-muted/30 border border-border/50 p-4 rounded-xl flex flex-col gap-2">
-                           <div className="flex justify-between items-start">
-                              <div>
-                                 <p className="font-bold text-foreground">{r.profiles?.full_name}</p>
-                                 <p className="text-xs text-muted-foreground">{r.profiles?.matric_no}</p>
-                              </div>
-                              <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
-                                 {r.status}
-                              </span>
-                           </div>
-                           {r.form_data && (
-                              <div className="mt-2 bg-background p-3 rounded-lg text-xs space-y-1 font-mono text-muted-foreground">
-                                 {Object.entries(r.form_data).map(([key, value]) => {
-                                    // Find label from form_schema if possible
-                                    const field = viewingResponsesFor.form_schema?.find(f => f.id === key);
-                                    return (
-                                       <div key={key}>
-                                          <span className="font-black text-foreground">{field ? field.label : key}:</span> {String(value)}
-                                       </div>
-                                    )
-                                 })}
-                              </div>
-                           )}
-                        </div>
-                     ))}
+          ) : responses.length === 0 ? (
+            <div className="text-center p-12 border border-dashed border-border/50 rounded-2xl text-muted-foreground space-y-2">
+              <Users className="w-8 h-8 mx-auto text-muted-foreground/50" />
+              <p className="text-sm font-bold text-foreground">Tiada respon diterima setakat ini</p>
+              <p className="text-xs text-muted-foreground">Maklum balas pelajar bagi hebahan ini akan dipaparkan di sini.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {responses.map((r, i) => (
+                <div key={i} className="bg-muted/30 border border-border/50 p-4 rounded-xl flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-foreground text-sm">{r.profiles?.full_name || 'Pelajar'}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{r.profiles?.matric_no || 'Tiada No. Matrik'}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-muted text-muted-foreground'}`}>
+                      {r.status}
+                    </span>
                   </div>
-               )}
+                  {r.form_data && (
+                    <div className="mt-2 bg-background p-3 rounded-lg text-xs space-y-1 font-mono text-muted-foreground border border-border/40">
+                      {Object.entries(r.form_data).map(([key, value]) => {
+                        const field = viewingResponsesFor?.form_schema?.find(f => f.id === key);
+                        return (
+                          <div key={key}>
+                            <span className="font-bold text-foreground">{field ? field.label : key}:</span> {String(value)}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          </motion.div>
+          )}
         </div>
-      )}
+      </SlideOverSheet>
     
       {/* Confirm Delete Dialog */}
       <ConfirmDialog

@@ -597,22 +597,22 @@ export function JppUsersPage() {
                                 <select
                                     value={filterLevel}
                                     onChange={e => setFilterLevel(e.target.value)}
-                                    className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-sm dark:shadow-none transition-all"
+                                    className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">Semua Tahap</option>
-                                    <option value="Junior" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">Junior</option>
-                                    <option value="Senior" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">Senior</option>
-                                    <option value="Asasi" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">Asasi</option>
+                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Semua Tahap</option>
+                                    <option value="Junior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Junior</option>
+                                    <option value="Senior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Senior</option>
+                                    <option value="Asasi" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Asasi</option>
                                 </select>
                                 {/* Program filter */}
                                 <select
                                     value={filterProg}
                                     onChange={e => setFilterProg(e.target.value)}
-                                    className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-sm dark:shadow-none transition-all"
+                                    className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">Semua Program</option>
+                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Semua Program</option>
                                     {uniqueProgs.map(p => (
-                                        <option key={p} value={p} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{p}</option>
+                                        <option key={p} value={p} className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{p}</option>
                                     ))}
                                 </select>
                             </div>
@@ -631,9 +631,48 @@ export function JppUsersPage() {
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-400 dark:text-white/30 text-xs">Memuatkan data...</td></tr>
+                                        [1, 2, 3, 4, 5].map((i) => (
+                                            <tr key={i} className="border-b border-slate-200 dark:border-white/[0.02] last:border-0 animate-pulse">
+                                                <td className="px-5 py-4">
+                                                    <div className="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded mb-1.5" />
+                                                    <div className="h-3 w-48 bg-slate-200/60 dark:bg-white/5 rounded" />
+                                                </td>
+                                                <td className="px-5 py-4">
+                                                    <div className="h-5 w-24 bg-slate-200/60 dark:bg-white/5 rounded-full" />
+                                                </td>
+                                                <td className="px-5 py-4">
+                                                    <div className="h-5 w-20 bg-slate-200/60 dark:bg-white/5 rounded-full" />
+                                                </td>
+                                                <td className="px-5 py-4">
+                                                    <div className="h-4 w-16 bg-slate-200/70 dark:bg-white/5 rounded" />
+                                                </td>
+                                                {(isMTUser || isSuperAdmin) && (
+                                                    <td className="px-5 py-4 text-center">
+                                                        <div className="h-7 w-20 bg-slate-200/60 dark:bg-white/5 rounded-xl mx-auto" />
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))
                                     ) : filteredUsers.length === 0 ? (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-400 dark:text-white/30 text-xs">Tiada pengguna dijumpai.</td></tr>
+                                        <tr>
+                                            <td colSpan={(isMTUser || isSuperAdmin) ? 5 : 4} className="px-5 py-16 text-center">
+                                                <div className="max-w-xs mx-auto space-y-3">
+                                                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 mx-auto flex items-center justify-center text-slate-400 dark:text-white/30">
+                                                        <Users className="w-6 h-6" />
+                                                    </div>
+                                                    <p className="text-sm font-bold text-slate-800 dark:text-white/80">Tiada pengguna dijumpai</p>
+                                                    <p className="text-xs text-slate-500 dark:text-white/40">Tiada rekod sepadan dengan kriteria carian atau penapis kohort semasa.</p>
+                                                    {(searchQuery || filterLevel !== 'all' || filterProg !== 'all') && (
+                                                        <button
+                                                            onClick={() => { setSearchQuery(''); setFilterLevel('all'); setFilterProg('all'); }}
+                                                            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline pt-1 inline-block"
+                                                        >
+                                                            Set Semula Penapis
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ) : (
                                         filteredUsers.slice(0, 100).map((u) => {
                                             const cohort = getUserCohort(u);
@@ -684,9 +723,9 @@ export function JppUsersPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-3.5">
-                                                    <div className="font-mono text-sm text-slate-900 dark:text-white/80">
-                                                        {u.ai_token_balance || 0}
-                                                        <span className="text-[9px] text-slate-400 dark:text-white/30 ml-1">Tk</span>
+                                                    <div className="font-mono text-sm text-slate-900 dark:text-white/80 tabular-nums">
+                                                        {(u.ai_token_balance || 0).toLocaleString()}
+                                                        <span className="text-[9px] text-slate-400 dark:text-white/30 ml-1 font-sans">Tk</span>
                                                     </div>
                                                 </td>
                                                 {(isMTUser || isSuperAdmin) && (
