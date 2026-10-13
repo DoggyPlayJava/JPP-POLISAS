@@ -33,7 +33,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { scanPdfClasses, parseTimetablePage, type RoomLocationLookup } from '@/lib/timetableParser';
-import { parseTimetableImage, type ImageQualityReport } from '@/lib/imageTimetableParser';
+import type { ImageQualityReport } from '@/lib/imageTimetableParser';
 import type { StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { TimetablePreviewModal } from './TimetablePreviewModal';
 
@@ -231,6 +231,7 @@ export function TimetableUploadModal({
         if (mapRes.data) mappingsToUse = mapRes.data as ImapsRoomMapping[];
       }
 
+      const { parseTimetableImage } = await import('@/lib/imageTimetableParser');
       const result = await parseTimetableImage(imageFile, mappingsToUse, locationsToUse);
       setImageQuality(result.quality);
       setPreviewData(result);

@@ -66,6 +66,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
   useEffect(() => {
     if (!karnivalStatus?.endDate) return;
     const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       const diff = new Date(karnivalStatus.endDate!).getTime() - Date.now();
       if (diff <= 0) { setKarnivalCountdown(c => ({ ...c, expired: true })); return; }
       setKarnivalCountdown({
@@ -77,7 +78,14 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
     };
     tick();
     const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
+    const onVisChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisChange);
+    };
   }, [karnivalStatus?.endDate]);
 
   return (

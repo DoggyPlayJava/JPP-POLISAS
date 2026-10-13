@@ -8,8 +8,6 @@ import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import QRCode from 'qrcode';
-import { pdf } from '@react-pdf/renderer';
-import { FoodBankPassPDF } from './FoodBankPassPDF';
 import {
   X,
   Printer,
@@ -172,6 +170,11 @@ export function FoodBankQrPassModal({
         margin: 2,
         color: { dark: '#0f172a', light: '#ffffff' },
       });
+
+      const [{ pdf }, { FoodBankPassPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./FoodBankPassPDF'),
+      ]);
 
       const blob = await pdf(
         <FoodBankPassPDF

@@ -29,8 +29,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import TakwimPusatPDFTemplate from '@/components/reports/TakwimPusatPDFTemplate';
 import { getContrastColor } from '@/lib/color-utils';
 
 const LOGO_POLISAS_URL = '/polisas-logo.jpg';
@@ -351,6 +349,7 @@ function TakwimKediamanTab() {
   // ── Logo (base64 for PDF) ──
   const [logoPolisas, setLogoPolisas] = useState('');
   const [logosLoaded, setLogosLoaded] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   React.useEffect(() => {
     setLogosLoaded(false);
@@ -359,6 +358,41 @@ function TakwimKediamanTab() {
   }, []);
 
   const pdfReady = logosLoaded && items.length > 0;
+
+  const handleDownloadPdf = async () => {
+    if (!pdfReady || generatingPdf) return;
+    setGeneratingPdf(true);
+    const toastId = toast.loading('Menjana PDF rasmi...');
+    try {
+      const [{ pdf }, { default: TakwimPusatPDFTemplate }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/reports/TakwimPusatPDFTemplate'),
+      ]);
+      const blob = await pdf(
+        <TakwimPusatPDFTemplate
+          data={items}
+          themeColor={themeColor}
+          session={sesi}
+          filterLabel="Takwim Kediaman & Kerohanian"
+          logoPolisas={logoPolisas}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Takwim_Kediaman_${sesi.replace('/', '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+    } catch (err: any) {
+      console.error('PDF generation error:', err);
+      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   const fetchData = React.useCallback(async () => {
     setLoading(true);
@@ -501,38 +535,29 @@ function TakwimKediamanTab() {
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Exco KK
         </Button>
         <div className="ml-auto">
-          {pdfReady ? (
-            <PDFDownloadLink
-              document={
-                <TakwimPusatPDFTemplate
-                  data={items}
-                  themeColor={themeColor}
-                  session={sesi}
-                  filterLabel="Takwim Kediaman & Kerohanian"
-                  logoPolisas={logoPolisas}
-                />
-              }
-              fileName={`Takwim_Kediaman_${sesi.replace('/', '-')}.pdf`}
-            >
-              {/* @ts-ignore */}
-              {({ loading: pdfLoading }) => (
-                <Button
-                  disabled={pdfLoading}
-                  className="h-10 rounded-xl font-black tracking-widest uppercase text-[10px] shadow-lg"
-                  style={{ backgroundColor: themeColor, color: textOnTheme }}
-                >
-                  {pdfLoading
-                    ? <span className="animate-pulse">Menjana PDF...</span>
-                    : <><DownloadCloud className="w-3.5 h-3.5 mr-1.5" />Muat Turun PDF</>
-                  }
-                </Button>
-              )}
-            </PDFDownloadLink>
-          ) : (
-            <Button disabled className="h-10 rounded-xl font-black text-[10px] opacity-60">
-              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Logo...
-            </Button>
-          )}
+          <Button
+            disabled={!pdfReady || generatingPdf}
+            onClick={handleDownloadPdf}
+            className="h-10 rounded-xl font-black tracking-widest uppercase text-[10px] shadow-lg"
+            style={{ backgroundColor: themeColor, color: textOnTheme }}
+          >
+            {generatingPdf ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                <span className="animate-pulse">Menjana PDF...</span>
+              </>
+            ) : !pdfReady ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                Logo...
+              </>
+            ) : (
+              <>
+                <DownloadCloud className="w-3.5 h-3.5 mr-1.5" />
+                Muat Turun PDF
+              </>
+            )}
+          </Button>
         </div>
       </div>
 

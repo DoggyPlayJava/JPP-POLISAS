@@ -15,9 +15,12 @@ import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { type BusinessProduct, type BusinessTransactionItem, type BusinessPromotion } from '@/types';
 import toast from 'react-hot-toast';
-import { EInvoiceModal } from '@/components/keusahawanan/EInvoiceModal';
 import { supabase } from '@/lib/supabase';
 import { PosScannerModal } from './PosScannerModal';
+
+const EInvoiceModal = React.lazy(() =>
+  import('@/components/keusahawanan/EInvoiceModal').then(m => ({ default: m.EInvoiceModal }))
+);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -888,7 +891,9 @@ export function PosOrderPage() {
 
       {/* E-Invoice Modal */}
       {showInvoice && successTxn && (
-        <EInvoiceModal transaction={successTxn} onClose={() => { setShowInvoice(false); setSuccessTxn(null); }} />
+        <React.Suspense fallback={null}>
+          <EInvoiceModal transaction={successTxn} onClose={() => { setShowInvoice(false); setSuccessTxn(null); }} />
+        </React.Suspense>
       )}
 
       {/* PolyMart QR Scanner */}

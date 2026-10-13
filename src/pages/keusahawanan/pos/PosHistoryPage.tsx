@@ -11,7 +11,10 @@ import {
   CreditCard, Banknote, QrCode, CheckCircle2, XCircle,
 } from 'lucide-react';
 import { type BusinessTransaction } from '@/types';
-import { EInvoiceModal } from '@/components/keusahawanan/EInvoiceModal';
+
+const EInvoiceModal = React.lazy(() =>
+  import('@/components/keusahawanan/EInvoiceModal').then(m => ({ default: m.EInvoiceModal }))
+);
 
 const fmtRM = (v: number | null | undefined) => v != null ? `RM ${v.toFixed(2)}` : '—';
 const fmtDT = (iso: string) => {
@@ -258,7 +261,9 @@ export function PosHistoryPage() {
 
       {/* Invoice modal */}
       {showInvoice && invoiceData && (
-        <EInvoiceModal transaction={invoiceData} onClose={() => setShowInvoice(false)} />
+        <React.Suspense fallback={null}>
+          <EInvoiceModal transaction={invoiceData} onClose={() => setShowInvoice(false)} />
+        </React.Suspense>
       )}
     </div>
   );

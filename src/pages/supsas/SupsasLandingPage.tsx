@@ -17,6 +17,7 @@ function useCountdown(targetDate: string | null) {
   useEffect(() => {
     if (!targetDate) return;
     const calc = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       const now = Date.now();
       const target = new Date(targetDate).getTime();
       const diff = target - now;
@@ -35,7 +36,14 @@ function useCountdown(targetDate: string | null) {
     };
     calc();
     const id = setInterval(calc, 1000);
-    return () => clearInterval(id);
+    const onVisChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) calc();
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisChange);
+    };
   }, [targetDate]);
 
   return timeLeft;

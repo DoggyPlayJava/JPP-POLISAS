@@ -14,8 +14,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { DownloadCloud, Plus, Trash2, CalendarDays, Palette, Loader2 } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import TakwimJPPPDFTemplate from '../reports/TakwimJPPPDFTemplate';
 import { getContrastColor, formatDateDMY, formatDateRange, DEFAULT_JPP_COLOR } from '@/lib/color-utils';
 import { toast } from 'react-hot-toast';
 
@@ -64,6 +62,7 @@ export default function PemantauanTakwimTab() {
   // Logo (base64)
   const [logoPolisas, setLogoPolisas] = useState('');
   const [logosLoaded, setLogosLoaded] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   // Holiday dialog
   const [holidayDialog, setHolidayDialog] = useState(false);
@@ -195,6 +194,41 @@ export default function PemantauanTakwimTab() {
   const textOnTheme = getContrastColor(themeColor);
   const pdfReady = logosLoaded && !loading;
 
+  // ── Download PDF (on-demand code-split) ──
+  const handleDownloadPdf = async () => {
+    if (!pdfReady || generatingPdf) return;
+    setGeneratingPdf(true);
+    const toastId = toast.loading('Menjana PDF rasmi...');
+    try {
+      const [{ pdf }, { default: TakwimJPPPDFTemplate }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../reports/TakwimJPPPDFTemplate'),
+      ]);
+      const blob = await pdf(
+        <TakwimJPPPDFTemplate
+          data={mergedData}
+          themeColor={themeColor}
+          session={session}
+          logoPolisas={logoPolisas}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Takwim_Rasmi_JPP_POLISAS_${session.replace('/', '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+    } catch (err: any) {
+      console.error('PDF generation error:', err);
+      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-24 text-center flex flex-col items-center gap-4">
@@ -225,37 +259,29 @@ export default function PemantauanTakwimTab() {
           >
             <Plus className="w-4 h-4 mr-2" /> Tambah Cuti
           </Button>
-          {pdfReady ? (
-            <PDFDownloadLink
-              document={
-                <TakwimJPPPDFTemplate
-                  data={mergedData}
-                  themeColor={themeColor}
-                  session={session}
-                  logoPolisas={logoPolisas}
-                />
-              }
-              fileName={`Takwim_Rasmi_JPP_POLISAS_${session.replace('/', '-')}.pdf`}
-            >
-              {/* @ts-ignore */}
-              {({ loading: pdfLoading }) => (
-                <Button
-                  disabled={pdfLoading}
-                  className="rounded-2xl h-12 px-6 font-black tracking-widest uppercase text-xs shadow-lg"
-                  style={{ backgroundColor: themeColor, color: textOnTheme }}
-                >
-                  {pdfLoading
-                    ? <span className="animate-pulse">Menjana PDF...</span>
-                    : <><DownloadCloud className="w-4 h-4 mr-2" />Muat Turun PDF</>
-                  }
-                </Button>
-              )}
-            </PDFDownloadLink>
-          ) : (
-            <Button disabled className="rounded-2xl h-12 px-6 font-black text-xs opacity-60">
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />Memuatkan Logo...
-            </Button>
-          )}
+          <Button
+            disabled={!pdfReady || generatingPdf}
+            onClick={handleDownloadPdf}
+            className="rounded-2xl h-12 px-6 font-black tracking-widest uppercase text-xs shadow-lg"
+            style={{ backgroundColor: themeColor, color: textOnTheme }}
+          >
+            {generatingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <span className="animate-pulse">Menjana PDF...</span>
+              </>
+            ) : !pdfReady ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Memuatkan Logo...
+              </>
+            ) : (
+              <>
+                <DownloadCloud className="w-4 h-4 mr-2" />
+                Muat Turun PDF
+              </>
+            )}
+          </Button>
         </div>
       </div>
 

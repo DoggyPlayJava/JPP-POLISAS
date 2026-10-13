@@ -39,4 +39,38 @@ describe('MyTimetableView & AkademikTakwimPage Unified Tabs', () => {
     expect(content).toContain('setSelectedDay(0)');
     expect(content).toContain('>Semua</span>');
   });
+
+  it('verifies hero CTA button and empty state use uppercase "MUAT NAIK JADUAL"', () => {
+    const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
+    expect(content).toContain('MUAT NAIK JADUAL');
+    expect(content).not.toContain('Muat Naik PDF');
+    expect(content).not.toContain('Muat Naik Fail Jadual PDF');
+  });
+
+  it('verifies 2-tier decluttered mobile action bar and desktop toolbar structure', () => {
+    const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
+    expect(content).toContain('w-full md:w-auto h-10 px-4');
+    expect(content).toContain('bg-indigo-600 hover:bg-indigo-700 text-white');
+    expect(content).toContain('Tambah Slot');
+    expect(content).toContain('Peringatan');
+  });
+
+  it('verifies integration of single-slot editing with EditClassSlotModal', () => {
+    const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
+    expect(content).toContain('EditClassSlotModal');
+    expect(content).toContain('editingSlot');
+    expect(content).toContain('setEditingSlot');
+    expect(content).toContain('onEdit');
+  });
+
+  it('verifies ClassCard click-to-edit interaction and Edit2 pencil icon', () => {
+    const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
+    expect(content).toContain('Edit2');
+    expect(content).toContain('cursor-pointer');
+    expect(content).toContain('hover:border-indigo-500/40');
+    expect(content).toContain('hover:shadow-md');
+    expect(content).toContain('hover:-translate-y-0.5');
+    expect(content).toContain('e.stopPropagation()');
+  });
 });
+
