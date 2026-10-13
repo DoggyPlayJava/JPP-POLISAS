@@ -87,6 +87,7 @@ import {
   FoodBankAuditActionType,
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Link } from 'react-router-dom';
 import { getBuilding360Url } from '@/lib/polymaps360Data';
 import { sendNotificationToUser } from '@/lib/notifications';
@@ -287,6 +288,19 @@ export function JppFoodBankAdmin() {
     is_active: true,
   });
   const [isSavingLocation, setIsSavingLocation] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    variant?: 'danger' | 'warning' | 'default';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   // ── Tab 5: Log Audit States ──────────────────────────────────────────────
   const [auditLogs, setAuditLogs] = useState<FoodBankAuditLog[]>([]);
@@ -1383,19 +1397,25 @@ export function JppFoodBankAdmin() {
     }
   };
 
-  const handleDeleteItem = async (item: FoodBankItem) => {
-    if (!window.confirm(`Adakah anda pasti ingin memadam item "${item.name}" daripada katalog?`)) {
-      return;
-    }
-    try {
-      const { error } = await supabase.from('foodbank_items').delete().eq('id', item.id);
-      if (error) throw error;
-      toast.success(`Item "${item.name}" telah dipadam.`);
-      fetchAllData(true);
-    } catch (err: any) {
-      console.error('Delete item error:', err);
-      toast.error('Gagal memadam item (mungkin terdapat rekod permohonan berkaitan).');
-    }
+  const handleDeleteItem = (item: FoodBankItem) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Padam Item Katalog',
+      description: `Adakah anda pasti ingin memadam item "${item.name}" daripada katalog? Tindakan ini tidak boleh diundur.`,
+      confirmLabel: 'Padam Item',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('foodbank_items').delete().eq('id', item.id);
+          if (error) throw error;
+          toast.success(`Item "${item.name}" telah dipadam.`);
+          fetchAllData(true);
+        } catch (err: any) {
+          console.error('Delete item error:', err);
+          toast.error('Gagal memadam item (mungkin terdapat rekod permohonan berkaitan).');
+        }
+      },
+    });
   };
 
   // ── 7. Tindakan Bajet: Suntikan & Pelarasan ────────────────────────────────
@@ -1794,45 +1814,50 @@ export function JppFoodBankAdmin() {
     }
   };
 
-  const handleRemoveOfficer = async (officer: FoodBankOfficer) => {
+  const handleRemoveOfficer = (officer: FoodBankOfficer) => {
     const officerName = officer.user?.full_name || 'Pegawai';
-    if (!window.confirm(`Adakah anda pasti ingin membatalkan lantikan pegawai "${officerName}"?`)) {
-      return;
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Batalkan Lantikan Pegawai',
+      description: `Adakah anda pasti ingin membatalkan lantikan pegawai "${officerName}"?`,
+      confirmLabel: 'Batalkan Lantikan',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('foodbank_officers')
+            .delete()
+            .eq('id', officer.id);
 
-    try {
-      const { error } = await supabase
-        .from('foodbank_officers')
-        .delete()
-        .eq('id', officer.id);
+          if (error) throw error;
 
-      if (error) throw error;
+          try {
+            await supabase.from('foodbank_audit_logs').insert({
+              actor_id: user?.id,
+              actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
+              action_type: 'OFFICER_REMOVED',
+              location_id: officer.location_id,
+              target_id: officer.user?.matric_no || officer.user?.full_name || officer.id,
+              details: {
+                officer_id: officer.id,
+                officer_name: officerName,
+                role_title: officer.role_title,
+                location_name: officer.location?.name || 'Semua Pusat Edaran (Floating)',
+              },
+            });
+          } catch (auditErr) {
+            console.warn('Audit log note:', auditErr);
+          }
 
-      try {
-        await supabase.from('foodbank_audit_logs').insert({
-          actor_id: user?.id,
-          actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
-          action_type: 'OFFICER_REMOVED',
-          location_id: officer.location_id,
-          target_id: officer.user?.matric_no || officer.user?.full_name || officer.id,
-          details: {
-            officer_id: officer.id,
-            officer_name: officerName,
-            role_title: officer.role_title,
-            location_name: officer.location?.name || 'Semua Pusat Edaran (Floating)',
-          },
-        });
-      } catch (auditErr) {
-        console.warn('Audit log note:', auditErr);
-      }
-
-      setOfficers(prev => prev.filter(o => o.id !== officer.id));
-      toast.success(`Lantikan ${officerName} telah dibatalkan.`);
-    } catch (err: any) {
-      console.error('Delete officer error:', err);
-      setOfficers(prev => prev.filter(o => o.id !== officer.id));
-      toast.success(`(Mod Tempatan) Lantikan ${officerName} telah dibatalkan.`);
-    }
+          setOfficers(prev => prev.filter(o => o.id !== officer.id));
+          toast.success(`Lantikan ${officerName} telah dibatalkan.`);
+        } catch (err: any) {
+          console.error('Delete officer error:', err);
+          setOfficers(prev => prev.filter(o => o.id !== officer.id));
+          toast.success(`(Mod Tempatan) Lantikan ${officerName} telah dibatalkan.`);
+        }
+      },
+    });
   };
 
   // ── Penapis Senarai Permohonan (Tab 1) ─────────────────────────────────────
@@ -2151,7 +2176,7 @@ export function JppFoodBankAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf6f6] dark:bg-[#0b0c10] text-slate-900 dark:text-slate-100 pb-16 transition-colors">
+    <div className="w-full text-slate-900 dark:text-slate-100 pb-16 transition-colors">
       
       {/* ── 1. HEADER UTAMA & KPI BAR ───────────────────────────────────────── */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#0f1117]/80  border-b border-rose-200/60 dark:border-white/10 px-4 sm:px-6 lg:px-8 py-4 transition-colors">
@@ -5572,6 +5597,16 @@ export function JppFoodBankAdmin() {
         roomOrResidence={
           selectedAppForDetail?.housing_type === 'KAMSIS' ? 'KAMSIS POLISAS' : 'Kediaman Luar'
         }
+      />
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmLabel={confirmConfig.confirmLabel}
+        variant={confirmConfig.variant}
       />
     </div>
   );

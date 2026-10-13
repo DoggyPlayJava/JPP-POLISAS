@@ -96,27 +96,27 @@ export function JppTelemetryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#ECEEF2] text-slate-800 p-4 lg:p-6 transition-colors font-sans antialiased">
+    <div className="min-h-screen bg-[#F8F6EE]/60 dark:bg-[#151D16] text-slate-800 dark:text-slate-100 p-4 lg:p-6 transition-colors font-sans antialiased">
       <div className="max-w-[1560px] mx-auto space-y-4">
         {/* ── Top Navigation Bar (Exact SentinelAI Image 3 Style) ── */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs px-5 py-3 flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-2xs px-5 py-3 flex items-center justify-between">
           {/* Left: SentinelAI Logo & Title */}
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#FF5B37] flex items-center justify-center text-white shadow-2xs">
               <span className="font-black text-sm">S</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-black text-slate-900 tracking-tight">
+              <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                 SentinelAI
               </span>
-              <span className="text-[10px] font-bold text-slate-400 hidden sm:inline">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 hidden sm:inline">
                 • JPP Telemetry
               </span>
             </div>
           </div>
 
           {/* Center: Floating Pill Navigation Tabs */}
-          <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-50 border border-slate-200/60">
+          <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/10">
             {(
               [
                 { id: 'overview', label: 'Overview' },
@@ -131,8 +131,8 @@ export function JppTelemetryPage() {
                 className={cn(
                   'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all',
                   currentTab === tab.id
-                    ? 'bg-[#FFEDE7] text-[#FF5B37] font-black shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-[#FFEDE7] dark:bg-[#FF5B37]/20 text-[#FF5B37] font-black shadow-2xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 {tab.label}
@@ -232,21 +232,21 @@ export function JppTelemetryPage() {
 
         {/* ── Tab 3: Key Alerts Modal / View ── */}
         {data && currentTab === 'alerts' && (
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
-            <h3 className="text-base font-black text-slate-900">
+          <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-xs p-6 space-y-4">
+            <h3 className="text-base font-black text-slate-900 dark:text-white">
               Senarai Lengkap Amaran Aktif & Ralat Sistem
             </h3>
             <div className="space-y-2">
               {unifiedTimeline.map((ev, i) => (
                 <div
                   key={i}
-                  className="p-3 rounded-xl border border-slate-200 flex items-center justify-between text-xs"
+                  className="p-3 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-between text-xs"
                 >
                   <div>
-                    <span className="font-bold text-slate-800">{ev.title}</span>
-                    <span className="text-[10px] text-slate-400 block font-mono">{ev.source}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{ev.title}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-white/40 block font-mono">{ev.source}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-700">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300">
                     {ev.badge}
                   </span>
                 </div>
@@ -258,37 +258,37 @@ export function JppTelemetryPage() {
         {/* ── Incident Detail Modal ── */}
         <AnimatePresence>
           {showIncidentModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 ">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4"
+                className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl max-w-lg w-full p-6 space-y-4 text-slate-900 dark:text-white"
               >
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="w-5 h-5 text-[#FF5B37]" />
-                    <h3 className="text-base font-black text-slate-900">
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
                       Perincian Insiden & Tolak-Mata
                     </h3>
                   </div>
                   <button
                     onClick={() => setShowIncidentModal(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-600">Skor Ketahanan:</span>
-                    <span className="text-base font-black text-slate-900">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Skor Ketahanan:</span>
+                    <span className="text-base font-black text-slate-900 dark:text-white">
                       {data?.resilience_score} / 100 ({data?.resilience_rating})
                     </span>
                   </div>
 
-                  <span className="text-[11px] font-black uppercase text-slate-400 block">
+                  <span className="text-[11px] font-black uppercase text-slate-400 dark:text-white/40 block">
                     Penalti Terperinci (Backend Rules):
                   </span>
 
@@ -297,7 +297,7 @@ export function JppTelemetryPage() {
                       {data.resilience_deductions.map((ded, i) => (
                         <div
                           key={i}
-                          className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex justify-between items-center"
+                          className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-xs flex justify-between items-center"
                         >
                           <span className="font-medium">{ded.label}</span>
                           <span className="font-mono font-black">{ded.points}</span>
@@ -305,16 +305,16 @@ export function JppTelemetryPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-emerald-600 font-bold">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
                       Tiada sebarang penalti dikesan pada waktu ini.
                     </p>
                   )}
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex justify-end">
+                <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex justify-end">
                   <button
                     onClick={() => setShowIncidentModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-black bg-slate-900 text-white hover:bg-slate-800"
+                    className="px-4 py-2 rounded-xl text-xs font-black bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                   >
                     Tutup
                   </button>

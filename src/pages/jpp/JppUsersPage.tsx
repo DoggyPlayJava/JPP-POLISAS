@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { hexToRgba, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getSemesterInfo } from '@/types';
@@ -46,6 +47,51 @@ export function JppUsersPage() {
     const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([]);
     const [duplicateLoading, setDuplicateLoading] = useState(false);
     const [showDuplicates, setShowDuplicates] = useState(false);
+
+    // Confirm dialog targets
+    const [mergeTarget, setMergeTarget] = useState<{
+        primaryId: string;
+        secondaryId: string;
+        primaryName: string;
+        secondaryName: string;
+        secondaryEmail: string;
+    } | null>(null);
+    const [merging, setMerging] = useState(false);
+
+    const [tierApproveTarget, setTierApproveTarget] = useState<{
+        requestId: string;
+        userId: string;
+        newTier: string;
+        receipt_url?: string;
+    } | null>(null);
+
+    const [tierRejectTarget, setTierRejectTarget] = useState<{
+        requestId: string;
+        receipt_url?: string;
+        userId: string;
+    } | null>(null);
+
+    const [roleToggleTarget, setRoleToggleTarget] = useState<{
+        id: string;
+        name: string;
+        currentRole: string;
+    } | null>(null);
+
+    const [tierToggleTarget, setTierToggleTarget] = useState<{
+        id: string;
+        name: string;
+        newTier: string;
+    } | null>(null);
+
+    const handleMergeAccounts = (
+        primaryId: string,
+        secondaryId: string,
+        primaryName: string,
+        secondaryName: string,
+        secondaryEmail: string
+    ) => {
+        setMergeTarget({ primaryId, secondaryId, primaryName, secondaryName, secondaryEmail });
+    };
 
     const isMTUser = ['YANG_DIPERTUA', 'NAIB_YANG_DIPERTUA', 'SETIAUSAHA_KEHORMAT', 'BENAHARI_KEHORMAT'].includes(profile?.jpp_position || '');
 
@@ -118,18 +164,10 @@ export function JppUsersPage() {
         }
     };
 
-    const handleMergeAccounts = async (primaryId: string, secondaryId: string, primaryName: string, secondaryName: string, secondaryEmail: string) => {
-        const confirmed = confirm(
-            `⚠️ AMARAN: Tindakan ini TIDAK BOLEH diundur!\n\n` +
-            `Akaun SECONDARY akan DIHAPUSKAN:\n` +
-            `• ${secondaryName} (${secondaryEmail})\n\n` +
-            `Semua data akan dipindahkan ke akaun PRIMARY:\n` +
-            `• ${primaryName}\n\n` +
-            `Termasuk: keahlian kelab, merit, tugasan, notifikasi, & token AI.\n\n` +
-            `Teruskan?`
-        );
-        if (!confirmed) return;
-        
+    const executeMergeAccounts = async () => {
+        if (!mergeTarget) return;
+        const { primaryId, secondaryId, primaryName, secondaryName, secondaryEmail } = mergeTarget;
+        setMerging(true);
         try {
             const { data, error } = await supabase.rpc('admin_merge_duplicate_accounts', {
                 p_primary_id: primaryId,
@@ -139,7 +177,7 @@ export function JppUsersPage() {
                 toast.error('Gagal menggabungkan akaun: ' + error.message);
                 return;
             }
-            toast.success(data?.message || 'Akaun berjaya digabungkan!');
+            toast.success(data?.message || 'Akaun berjaya digabungkan.');
             logAuditAction({
                 actionType: 'ACCOUNT_MERGED',
                 module: 'JPP Admin',
@@ -148,12 +186,14 @@ export function JppUsersPage() {
                 actorId: profile!.id,
                 metadata: { secondary_id: secondaryId }
             });
-            // Refresh data
+            setMergeTarget(null);
             fetchDuplicates();
             fetchUsers(userSearch, filterProg);
             fetchAdminData();
         } catch (err: any) {
             toast.error(err.message || 'Ralat tidak dijangka.');
+        } finally {
+            setMerging(false);
         }
     };
 
@@ -168,40 +208,64 @@ export function JppUsersPage() {
         }
     }, [userSearch, filterProg]);
 
-    const handleTierApprove = async (requestId: string, userId: string, newTier: string, receipt_url: string | null) => {
-        if (!confirm('Adakah anda pasti untuk menaik taraf pengguna ini?')) return;
+    const executeTierApprove = async () => {
+        if (!tierApproveTarget) return;
+        const { requestId, userId, newTier, receipt_url } = tierApproveTarget;
         const { error: rpcError } = await supabase.rpc('update_user_ai_tier', { target_user_id: userId, new_tier: newTier });
         if (rpcError) {
-            toast.error("Gagal kemaskini tier");
+            toast.error("Gagal kemaskini tier.");
             return;
         }
         await supabase.from('ai_tier_requests').update({ status: 'APPROVED' }).eq('id', requestId);
-        toast.success(`Berjaya dinaik taraf ke tier ${newTier.toUpperCase()}`);
+        toast.success(`Berjaya dinaik taraf ke tier ${newTier.toUpperCase()}.`);
         logAuditAction({ actionType: 'AI_TIER_APPROVED', module: 'JPP Admin', entityId: userId, description: `Tier AI diluluskan ke ${newTier.toUpperCase()}`, actorId: profile!.id, metadata: { new_tier: newTier, receipt_url } });
-        if(receipt_url) {
+        if (receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
                 action: 'AI_TIER_APPROVED',
                 details: `Approved tier '${newTier}' for user ${userId}. Receipt: ${receipt_url}`
             }]);
         }
+        setTierApproveTarget(null);
         fetchUsers(userSearch, filterProg);
         fetchAdminData();
     };
 
-    const handleTierReject = async (requestId: string, receipt_url: string | null, userId: string) => {
-        if (!confirm('Tolak permohonan ini?')) return;
+    const executeTierReject = async () => {
+        if (!tierRejectTarget) return;
+        const { requestId, receipt_url, userId } = tierRejectTarget;
         await supabase.from('ai_tier_requests').update({ status: 'REJECTED' }).eq('id', requestId);
-        toast.success("Permohonan ditolak");
+        toast.success("Permohonan ditolak.");
         logAuditAction({ actionType: 'AI_TIER_REJECTED', module: 'JPP Admin', entityId: userId, description: `Permohonan tier AI ditolak`, actorId: profile!.id, metadata: { receipt_url } });
-        if(receipt_url) {
+        if (receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
                 action: 'AI_TIER_REJECTED',
                 details: `Rejected tier request for user ${userId}. Receipt: ${receipt_url}`
             }]);
         }
+        setTierRejectTarget(null);
         fetchUsers(userSearch, filterProg);
+        fetchAdminData();
+    };
+
+    const executeRoleToggle = async () => {
+        if (!roleToggleTarget) return;
+        const { id, name, currentRole } = roleToggleTarget;
+        const { error } = await supabase.rpc('toggle_jpp_role', { p_target_id: id });
+        if (error) { toast.error(error.message); return; }
+        toast.success('Peranan berjaya dikemaskini.');
+        logAuditAction({ actionType: currentRole === 'JPP' ? 'JPP_ROLE_REMOVED' : 'JPP_ROLE_ASSIGNED', module: 'JPP Admin', entityId: id, description: `${name}: ${currentRole === 'JPP' ? 'Diturunkan dari JPP' : 'Dilantik sebagai JPP'}`, actorId: profile!.id });
+        setRoleToggleTarget(null);
+        fetchAdminData();
+    };
+
+    const executeTierToggle = async () => {
+        if (!tierToggleTarget) return;
+        const { id, newTier } = tierToggleTarget;
+        await supabase.rpc('update_user_ai_tier', { target_user_id: id, new_tier: newTier });
+        toast.success(`Tier berjaya dikemaskini ke ${newTier.toUpperCase()}.`);
+        setTierToggleTarget(null);
         fetchAdminData();
     };
 
@@ -231,7 +295,7 @@ export function JppUsersPage() {
     });
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
+        <div className="w-full text-slate-900 dark:text-white transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
                     style={{ background: themeColor }} />
@@ -307,11 +371,11 @@ export function JppUsersPage() {
 
                                         {req.status === 'PENDING' && (
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleTierApprove(req.id, req.user_id, 'pro', req.receipt_url)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
+                                                <button onClick={() => setTierApproveTarget({ requestId: req.id, userId: req.user_id, newTier: 'pro', receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
                                                     <CheckCircle2 className="w-4 h-4" />
                                                     <span className="text-[10px] font-black uppercase tracking-widest">Luluskan</span>
                                                 </button>
-                                                <button onClick={() => handleTierReject(req.id, req.receipt_url, req.user_id)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors">
+                                                <button onClick={() => setTierRejectTarget({ requestId: req.id, userId: req.user_id, receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors">
                                                     <XCircle className="w-4 h-4" />
                                                     <span className="text-[10px] font-black uppercase tracking-widest">Tolak</span>
                                                 </button>
@@ -630,15 +694,7 @@ export function JppUsersPage() {
                                                         <div className="flex items-center justify-center gap-2">
                                                             {u.role !== 'SUPER_ADMIN_JPP' && isYDP && (
                                                                 <button 
-                                                                    onClick={async () => {
-                                                                        if(confirm(u.role === 'JPP' ? `Turunkan pengguna dari JPP ke AHLI biasa?` : `Lantik secara terus sebagai JPP?`)) {
-                                                                            const { error } = await supabase.rpc('toggle_jpp_role', { p_target_id: u.id });
-                                                                            if (error) { toast.error(error.message); return; }
-                                                                            toast.success(`Peranan dikemaskini.`);
-                                                                            logAuditAction({ actionType: u.role === 'JPP' ? 'JPP_ROLE_REMOVED' : 'JPP_ROLE_ASSIGNED', module: 'JPP Admin', entityId: u.id, description: `${u.full_name}: ${u.role === 'JPP' ? 'Diturunkan dari JPP' : 'Dilantik sebagai JPP'}`, actorId: profile!.id });
-                                                                            fetchAdminData();
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => setRoleToggleTarget({ id: u.id, name: u.full_name, currentRole: u.role })}
                                                                     className={cn(
                                                                         "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors",
                                                                         u.role === 'JPP' 
@@ -651,24 +707,14 @@ export function JppUsersPage() {
                                                             )}
                                                             {u.subscription_tier?.toLowerCase() !== 'pro' ? (
                                                                 <button 
-                                                                    onClick={async () => {
-                                                                        if(confirm(`Naik taraf ke PRO?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: u.id, new_tier: 'pro' });
-                                                                            fetchAdminData();
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => setTierToggleTarget({ id: u.id, name: u.full_name, newTier: 'pro' })}
                                                                     className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
                                                                 >
                                                                     PRO
                                                                 </button>
                                                             ) : (
                                                                 <button 
-                                                                    onClick={async () => {
-                                                                        if(confirm(`Turun taraf ke FREE?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: u.id, new_tier: 'free' });
-                                                                            fetchAdminData();
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => setTierToggleTarget({ id: u.id, name: u.full_name, newTier: 'free' })}
                                                                     className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors border border-slate-200 dark:border-white/5"
                                                                 >
                                                                     FREE
@@ -691,6 +737,74 @@ export function JppUsersPage() {
                 </motion.div>
 
             </div>
+
+            {/* Merge Accounts Dialog */}
+            <ConfirmDialog
+                open={Boolean(mergeTarget)}
+                onOpenChange={(open) => !open && setMergeTarget(null)}
+                title="Sahkan Penggabungan Akaun"
+                description={mergeTarget ? (
+                    <span>
+                        Tindakan ini <strong>tidak boleh diundur</strong>. Akaun kedua (<strong>{mergeTarget.secondaryName}</strong> - {mergeTarget.secondaryEmail}) akan dipadamkan dan semua rekod keahlian, merit, dan token AI akan dipindahkan ke akaun utama (<strong>{mergeTarget.primaryName}</strong>).
+                    </span>
+                ) : ''}
+                confirmLabel="Gabungkan Akaun"
+                cancelLabel="Batal"
+                variant="destructive"
+                isLoading={merging}
+                onConfirm={executeMergeAccounts}
+            />
+
+            {/* Tier Approve Dialog */}
+            <ConfirmDialog
+                open={Boolean(tierApproveTarget)}
+                onOpenChange={(open) => !open && setTierApproveTarget(null)}
+                title="Luluskan Permohonan AI Tier"
+                description="Adakah anda pasti mahu menaik taraf akaun pengguna ini ke tier PRO?"
+                confirmLabel="Luluskan"
+                cancelLabel="Batal"
+                variant="default"
+                onConfirm={executeTierApprove}
+            />
+
+            {/* Tier Reject Dialog */}
+            <ConfirmDialog
+                open={Boolean(tierRejectTarget)}
+                onOpenChange={(open) => !open && setTierRejectTarget(null)}
+                title="Tolak Permohonan AI Tier"
+                description="Adakah anda pasti mahu menolak permohonan kuota AI ini?"
+                confirmLabel="Tolak Permohonan"
+                cancelLabel="Batal"
+                variant="destructive"
+                onConfirm={executeTierReject}
+            />
+
+            {/* Role Toggle Dialog */}
+            <ConfirmDialog
+                open={Boolean(roleToggleTarget)}
+                onOpenChange={(open) => !open && setRoleToggleTarget(null)}
+                title="Ubah Peranan JPP"
+                description={roleToggleTarget ? (
+                    roleToggleTarget.currentRole === 'JPP'
+                        ? `Adakah anda pasti mahu melucutkan peranan JPP bagi ${roleToggleTarget.name} dan kembalikan ke status ahli biasa?`
+                        : `Adakah anda pasti mahu melantik ${roleToggleTarget.name} secara terus sebagai barisan kepimpinan JPP?`
+                ) : ''}
+                confirmLabel="Sahkan Peranan"
+                cancelLabel="Batal"
+                variant={roleToggleTarget?.currentRole === 'JPP' ? 'destructive' : 'default'}
+                onConfirm={executeRoleToggle}
+            />
+
+            {/* Tier Toggle Dialog */}
+            <ConfirmDialog
+                open={Boolean(tierToggleTarget)}
+                onOpenChange={(open) => !open && setTierToggleTarget(null)}
+                title="Ubah Kuota AI Pengguna"
+                description={tierToggleTarget ? `Tukar tier langganan AI bagi ${tierToggleTarget.name} kepada ${tierToggleTarget.newTier.toUpperCase()}?` : ''}
+                confirmLabel="Tukar Tier"
+                cancelLabel="Batal"
+                onConfirm={executeTierToggle}
+            />
         </div>
     );
 }

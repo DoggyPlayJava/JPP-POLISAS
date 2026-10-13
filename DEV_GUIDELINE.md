@@ -428,7 +428,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/pages/ClubDetailPage.tsx` | Profil rasmi kelab; navigasi breadcrumb atas teratur, reka bentuk hero banner berkadar moden dengan penstabilan kontras dark mode, metrik angka `font-mono tabular-nums`, serta pembersihan query membazir |
 | `src/pages/UrusKelabPage.tsx` | Panel pentadbiran identiti & MT kelab; dilengkapi pratonton kad langsung interaktif (Live Card Preview), swatches warna rasmi POLISAS, navigasi SPA tanpa muat semula halaman, serta dialog pengesahan berasaskan input teks untuk reset kohort kepimpinan |
 | `src/pages/akademik/AkademikTakwimPage.tsx` | Halaman Takwim Rasmi Kampus & Jadual Kuliah Siswa dengan penyelarasan URL dua arah via `useSearchParams` (`?tab=pusat` untuk kalendar rasmi & kelab, `?tab=personal` untuk jadual kuliah peribadi) |
-| `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan `window.confirm`. Mengelakkan sekatan pelayar moden |
+| `src/components/ui/ConfirmDialog.tsx` | Modal dialog pengesahan universal (menyokong `open`/`isOpen`, `onClose`/`onOpenChange`, dan variasi `default`, `danger`, `destructive`, `warning`) menggantikan 100% `window.confirm` |
+| `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan pengesahan berinput teks. Mengelakkan sekatan pelayar moden |
 | `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
 | `src/pages/PortalPage.tsx` | Entry portal utama. Mengintegrasikan Campus Super App dan modul rasmi Exco |
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
@@ -3011,7 +3012,15 @@ Komponen modal dialog berasaskan Radix UI Dialog yang menyediakan:
 - Navigasi papan kekunci lengkap: `Enter` untuk hantar, `Escape` untuk batal, dan perangkap fokus (`focus-trap`).
 - Atribut ARIA penuh (`aria-describedby`, `aria-labelledby`) yang mesra pembaca skrin.
 
-### 28.3 Polisi Sifar Em-Dash (Tanda Sempang Standard Sahaja)
+### 28.3 Komponen Universal `<ConfirmDialog />` (`src/components/ui/ConfirmDialog.tsx`)
+Komponen modal pengesahan tindakan berasaskan Radix UI Dialog & Framer Motion:
+- Menggantikan 100% panggilan `window.confirm()` merentas portal.
+- Dwi-antaramuka serasi ke belakang: menyokong kedua-dua pasangan props `open` / `onOpenChange` dan `isOpen` / `onClose`.
+- Variasi visual fleksibel: `variant="default" | "danger" | "destructive" | "warning"`.
+- Keadaan pemuatan (`loading` / `isLoading`) yang melumpuhkan butang semasa operasi asynchronous dijalankan bagi mencegah dwi-hantar (*double click / race condition*).
+- Sepenuhnya serasi dwi-tema Dark & Light Mode dengan latar belakang `bg-white dark:bg-[#1E291F]` dan sempadan halus `border-slate-200 dark:border-white/10`.
+
+### 28.4 Polisi Sifar Em-Dash (Tanda Sempang Standard Sahaja)
 Untuk mengekalkan konsistensi tipografi antarabangsa dan mengelakkan isu pengekodan aksara pada pelbagai platform:
 - Gunakan tanda sempang standard `-` atau simbol anak panah `->`.
 - Jangan sekali-kali memasukkan aksara em-dash dalam teks antaramuka, tooltip, mesej toast, mahupun komen kod.
@@ -3549,6 +3558,45 @@ Sistem Pengurusan Acara (EMS) telah melalui proses penambahbaikan menyeluruh mer
    - **Penambat Navigasi Seksyen Pantas (`EmsEventFormPage.tsx`)**: Bar navigasi lekat di bahagian atas borang cipta/sunting acara membolehkan penganjur melompat terus ke seksyen 1 (Asas), seksyen 2 (Borang), atau seksyen 3 (Rubrik) tanpa keletihan menatal (*scrolling fatigue*).
    - **Validasi Kriteria Rubrik Terbina**: Menghalang penghantaran borang yang mengandungi baris kriteria rubrik tanpa nama bagi mengelakkan rekod pemarkahan tergantung dalam pangkalan data.
    - **Kewajipan Sebab Penolakan (`EmsApprovalPage.tsx`)**: Super Admin diwajibkan menyatakan sebab penolakan permohonan acara supaya penganjur menerima maklum balas pembetulan yang jelas.
+
+### 29.13.2 Audit Visual & UX Menyeluruh Modul EMS (Deep UI/UX Audit Polish)
+
+> Ditambah: Oktober 2026 | Berdasarkan Skill `/redesign-existing-projects` & Pengesahan Suite Ujian Vitest
+
+1. **Penstandardan Istilah Linguistik Pecah Seri (*Tie-Breaker Standardization*):**
+   - Membasmi kesilapan ejaan perkataan "seret" (yang bermaksud hela/tarik) kepada istilah teknikal rasmi sukan/akademik **"seri"** dan **"pecah seri"** di seluruh fail `EmsLeaderboardPage.tsx`, `EmsTieBreakerModal.tsx`, dan `src/lib/ems.ts` (termasuk mesej ralat pengecualian dan lencana podium/jadual).
+   - Memastikan ketepatan laras bahasa Bahasa Melayu rasmi bagi pelaporan kepada pihak pengurusan tertinggi POLISAS.
+
+2. **Pembetulan Tipografi Sijil Digital (`EmsCertificatePage.tsx`):**
+   - Membetulkan perkataan `'Pemenang Utam'` kepada tajuk anugerah rasmi `'Pemenang Utama / Anugerah Cemerlang'`.
+   - Membetulkan teks hak cipta kaki sijil daripada `'Hak Cipta Terelihara'` kepada `'Hak Cipta Terpelihara'`.
+
+3. **Pembasmian Antipattern `window.confirm` (`EmsEventFormPage.tsx`):**
+   - Menghapuskan panggilan `window.confirm()` natif pelayar yang membekukan (*freeze*) bebenang utama UI dan memusnahkan ergonomik PWA mudah alih.
+   - Menggantikannya dengan komponen dialog modal interaktif in-page (`presetPrompt`) dengan tiga tindakan jelas:
+     - `Batal`: Menutup dialog tanpa sebarang perubahan.
+     - `Ganti Semua`: Menggantikan rubrik sedia ada dengan templat baharu (iFAMB Showcase / Pitching).
+     - `+ Tambah`: Menambah kriteria templat sebagai kategori baharu secara selamat.
+   - Memperbaiki kesilapan tipografi teks butang ganti daripada `'meanda GANTI SEMUA'` kepada `'untuk GANTI SEMUA'`.
+
+4. **Penyesuaian Adaptif Mod Terang & Gelap Roda Cabutan Bertuah (`EmsLuckyDrawModal.tsx`):**
+   - Menyingkirkan warna latar belakang hitam mutlak yang di-hardcode (`#0B0F19`, `#06080F`, `#07090F`) kepada kelas adaptif Tailwind CSS (`bg-white dark:bg-[#0B0F19]`, `bg-slate-50 dark:bg-[#06080F]`, `bg-amber-50/50 dark:bg-[#07090F]`, dan `text-slate-900 dark:text-white`).
+   - Roda Cabutan Bertuah interaktif kini tampil anggun dan selesa dipandang dalam kedua-dua mod Terang (*Light Mode*) dan Gelap (*Dark Mode*).
+
+5. **Diferensiasi Visual Skala Likert Juri (`EmsJuryPortalPage.tsx`):**
+   - Memisahkan penggayaan aktif Skor 4 dan Skor 3 yang sebelum ini berkongsi warna serupa (`bg-slate-900 dark:bg-slate-700`):
+     - **Skor 4 (Baik):** Menggunakan warna biru langit (*Sky*) `bg-sky-600 dark:bg-sky-500 text-white border-sky-500 ring-2 ring-sky-500/30 shadow-md`.
+     - **Skor 3 (Memuaskan):** Menggunakan palet Slate kelabu `bg-slate-700 dark:bg-slate-600 text-white border-slate-600 ring-2 ring-slate-500/30 shadow-md`.
+   - Menggantikan hardcoded hex `#14151f` dengan token tema slate rasmi `dark:bg-slate-900/60` pada bekas kriteria pemarkahan.
+
+6. **Penjajaran Garis Bawah Kad Acara & Kawalan Had Baris Kod (`EmsDashboardPage.tsx`):**
+   - Memastikan reka letak grid kad acara mempunyai ketinggian seragam dengan menggunakan `flex flex-col h-full`, membungkus kandungan atas dalam `flex-1 flex flex-col`, dan menyematkan baris butang tindakan ke bawah dengan `mt-auto`.
+   - Menambah `[text-wrap:balance]` pada tajuk acara untuk mengelakkan perkataan tergantung.
+   - Mengekalkan saiz fail `EmsDashboardPage.tsx` di bawah had ketat 800 baris (783 baris) mengikut penguatkuasaan suite ujian vitest.
+
+7. **Ketahanan Input Pengimbas & Kebersihan Saluran Masa Nyata (`src/lib/ems.ts` & `EmsCheckinPage.tsx`):**
+   - Menormalkan input pengimbas QR dengan menanggalkan awalan `EMS-PASS::`, memproses payload format JSON, dan mengekstrak UUID daripada pautan web URL pendaftaran (`/ems/pass/...` dan `/ems/e/.../register`).
+   - Memastikan langganan Supabase Realtime di `EmsCheckinPage.tsx` dibersihkan dengan memanggil `pChannel.unsubscribe()` sebelum `supabase.removeChannel(pChannel)`.
 
 ---
 
@@ -4263,6 +4311,38 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
 - **Pengekalan Mod Paparan Lalai (*Default View Persistence*):**
   - Paparan Matriks Grid PDF diaktifkan sebagai lalai (*default*) bagi semua pelajar baru.
   - Pilihan paparan pelajar (`grid` vs `agenda`) disimpan secara automatik dalam `localStorage` (`'jpp_student_timetable_view'`), mengekalkan kebebasan pengguna untuk beralih ke paparan agenda harian bila-bila masa.
+
+---
+
+## 33. Audit Menyeluruh & Penyelarasan Reka Bentuk Portal JPP HQ (`/jpp` & `/jpp/*`)
+
+> Dikemas kini: Oktober 2026 (Audit Pasca-Kompilasi & Pembersihan Sifar Kompromi)
+
+Berdasarkan kemahiran `/redesign-existing-projects`, keseluruhan 25+ fail halaman dan submodul di bawah laluan `/jpp` dan `/jpp/*` telah melalui audit visual, fungsi, dan kestabilan sistem yang mendalam tanpa sebarang kompromi (*unvarnished deep audit*).
+
+### 33.1 Penyelarasan Permukaan Latar Belakang (*Background Surface Cohesion*)
+- **Isu Lapuk:** Halaman-halaman dalaman seperti `JppHomePage`, `KeusahawananHubLanding`, `JppMembersPage`, `JppSettingsPage`, `JppAsramaPage`, `JppFoodBankAdmin`, dan `JppTelemetryPage` menggunakan latar belakang kontras bersilang (`bg-slate-50`, `bg-[#ECEEF2]`, `bg-gray-100`) yang bergeser dengan bekas induk `JppLayout` (`#F8F6EE` pada light mode dan `#151D16` pada dark mode), menghasilkan kesan "kotak terapung berkontras janggal".
+- **Penyelesaian:** Seluruh kanvas halaman diselaraskan kepada `bg-transparent` atau `bg-[#F8F6EE]/60 dark:bg-[#151D16]` dengan sokongan penuh mod gelap rasmi institusi.
+
+### 33.2 Pembasmian 100% Dialog Natif Pelayar (`window.confirm`, `window.alert`, `window.prompt`)
+Pelayar moden dan persekitaran PWA WebView sering kali membisukan atau menyekat modal natif pelayar yang membekukan thread utama UI. Kesemua 35+ panggilan natif telah digantikan secara menyeluruh:
+- **Panggilan `window.confirm()`:** Digantikan dengan `<ConfirmDialog />` (`src/components/ui/ConfirmDialog.tsx`) yang menyokong varian `destructive`, pengunci pemuatan automatik bagi mencegah dwi-klik, dan animasi transisi Radix UI / Framer Motion.
+- **Panggilan `window.prompt()`:** Digantikan dengan `<PromptDialog />` (`src/components/ui/PromptDialog.tsx`) dengan pengesahan input terbina dalam (seperti pengesahan kata laluan staff code di `JppSettingsPage` dan larasan token Nexus di `JppNexusPage`).
+- **Panggilan `window.alert()`:** Digantikan dengan `toast.error()` atau `toast.success()` (`react-hot-toast`) bagi maklum balas visual mesra pengguna dan tidak mengganggu alur kerja.
+
+### 33.3 Pembaikan Laluan Pecah (*Broken Routes & Dead Code Removal*)
+1. **Laluan Pautan Pantas QR `JppLayout.tsx`:**
+   - Membaiki pautan salah `/jpp/ahli` -> `/jpp/members`
+   - Membaiki pautan salah `/jpp/pengumuman` -> `/jpp/announcements`
+2. **Pembersihan Kod Mati (*Dead Code Removal*):**
+   - Mengeluarkan 332 baris kod terbiar dalam `JppSettingsPage.tsx` bagi tab-tab lama yang telah dipindahkan ke modul khusus.
+   - Mengeluarkan kod rujukan fungsi "Match" yang yatim dalam `PolyServicesAdmin.tsx` susulan pemansuhan tab berkenaan.
+
+### 33.4 Pembersihan "AI Slop" & Pengukuhan Tipografi
+- Membuang kecerunan teks buatan AI yang tidak natural (`bg-gradient-to-r text-transparent bg-clip-text`) pada nama pengguna (`{displayName}`) dan tajuk bahagian, menggantikannya dengan tipografi institusi yang bersih (`text-slate-900 dark:text-white`).
+- Menghapuskan sekatan ketinggian arbitrari (`h-10 line-clamp-2`) pada kad yang berisiko memotong teks penting pada saiz paparan yang berbeza.
+- Menyeragamkan status badge dan cip penapis dengan warna separa-lutsinar berasaskan palet hex unit rasmi (`rgba(..., 0.12)`).
+
 
 
 

@@ -181,7 +181,7 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
     <div className="space-y-8">
 
       {/* ── KPI SUMMARY CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard icon={CalendarDays} label="Jumlah Program" value={totalPrograms} color="text-primary" bg="bg-primary/10" />
         <KpiCard icon={Users} label="Jumlah Peserta" value={totalParticipants} color="text-emerald-600" bg="bg-emerald-500/10" />
         <KpiCard icon={TrendingUp} label="Kadar Hadir" value={`${avgAttendRate}%`} color="text-amber-600" bg="bg-amber-500/10" />
@@ -192,11 +192,11 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
       {barData.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="p-6 rounded-[2rem] bg-card border border-border shadow-sm"
+          className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
         >
           <div className="mb-5">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Kehadiran Per Program</p>
-            <h3 className="text-xl font-black tracking-tight">Status Peserta</h3>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight">Status Peserta</h3>
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={barData} barGap={4} barSize={18}>
@@ -213,7 +213,7 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
             </BarChart>
           </ResponsiveContainer>
           {/* Legend manual */}
-          <div className="flex gap-4 mt-3 justify-center">
+          <div className="flex flex-wrap gap-3 sm:gap-4 mt-3 justify-center">
             {[['Hadir','#10b981'],['Daftar','#6366f1'],['Absent','#f43f5e']].map(([l,c]) => (
               <span key={l} className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />
@@ -225,16 +225,16 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
       )}
 
       {/* ── GRID: Pie Chart + Program Table ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
 
         {/* Pie chart jabatan */}
         {jabatan.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="p-6 rounded-[2rem] bg-card border border-border shadow-sm"
+            className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
           >
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Komposisi Peserta</p>
-            <h3 className="text-xl font-black tracking-tight mb-4">Jabatan / Kursus</h3>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">Jabatan / Kursus</h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={jabatan} dataKey="count" nameKey="jabatan" cx="50%" cy="50%" outerRadius={85} innerRadius={45} paddingAngle={3}>
@@ -261,10 +261,10 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
         {summaries.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-            className="p-6 rounded-[2rem] bg-card border border-border shadow-sm"
+            className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
           >
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Butiran Program</p>
-            <h3 className="text-xl font-black tracking-tight mb-4">Senarai Kehadiran</h3>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">Senarai Kehadiran</h3>
             <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
               {summaries.map((p) => {
                 const hadir = p.attended + p.walk_in;
@@ -309,16 +309,16 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
       {totalParticipants > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="grid grid-cols-3 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 min-w-0"
         >
           {[
             { label: 'Pre-Register', value: totalPreReg, color: 'text-indigo-600', bg: 'bg-indigo-500/10', bar: 'bg-indigo-500' },
             { label: 'Hadir', value: totalAttended, color: 'text-emerald-600', bg: 'bg-emerald-500/10', bar: 'bg-emerald-500' },
             { label: 'Tidak Hadir', value: summaries.reduce((s,p) => s + p.absent, 0), color: 'text-rose-500', bg: 'bg-rose-500/10', bar: 'bg-rose-500' },
           ].map(item => (
-            <div key={item.label} className={cn('p-5 rounded-[2rem] border border-border', item.bg)}>
+            <div key={item.label} className={cn('p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border', item.bg)}>
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">{item.label}</p>
-              <p className={cn('text-3xl font-black tracking-tighter', item.color)}>{item.value}</p>
+              <p className={cn('text-2xl sm:text-3xl font-black tracking-tighter', item.color)}>{item.value}</p>
               <div className="mt-2 h-1 rounded-full bg-muted/50 overflow-hidden">
                 <div className={cn('h-full rounded-full', item.bar)} style={{ width: `${totalParticipants > 0 ? Math.round((item.value/totalParticipants)*100) : 0}%` }} />
               </div>
@@ -338,14 +338,14 @@ function KpiCard({ icon: Icon, label, value, color, bg }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-      className="p-5 rounded-[2rem] bg-card border border-border shadow-sm flex items-start gap-4"
+      className="p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] bg-card border border-border shadow-sm flex items-start gap-3 sm:gap-4 min-w-0"
     >
-      <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center shrink-0', bg)}>
+      <div className={cn('w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0', bg)}>
         <Icon size={18} className={color} />
       </div>
-      <div>
-        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{label}</p>
-        <p className={cn('text-2xl font-black tracking-tighter mt-0.5', color)}>{value}</p>
+      <div className="min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground truncate">{label}</p>
+        <p className={cn('text-xl sm:text-2xl font-black tracking-tighter mt-0.5 truncate', color)}>{value}</p>
       </div>
     </motion.div>
   );

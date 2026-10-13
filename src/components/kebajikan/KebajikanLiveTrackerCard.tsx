@@ -30,7 +30,7 @@ export function KebajikanLiveTrackerCard({
   foodbankApp,
   className,
   onViewQrPass,
-}: KebajikanLiveTrackerCardProps): JSX.Element | null {
+}: KebajikanLiveTrackerCardProps): React.ReactNode {
   const isTicketActive = Boolean(
     ticket &&
     ticket.status &&
@@ -51,8 +51,8 @@ export function KebajikanLiveTrackerCard({
     <div
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-        'bg-white/95 dark:bg-slate-900/90 ',
-        'border border-slate-200/90 dark:border-white/10 shadow-sm hover:shadow-md',
+        'bg-white/95 dark:bg-[#1A231B]/95',
+        'border border-[#D9C9B2]/60 dark:border-[#3A4A3B]/60 shadow-sm hover:shadow-md',
         'space-y-6',
         className
       )}
@@ -65,7 +65,7 @@ export function KebajikanLiveTrackerCard({
 
       {/* Divider if both exist */}
       {isTicketActive && isFoodBankActive && (
-        <div className="border-t border-slate-200/80 dark:border-white/10 my-2" />
+        <div className="border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/60 my-2" />
       )}
 
       {/* ── Active FoodBank Application Tracker Section ── */}
@@ -108,11 +108,11 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
             </span>
             Penjejak Aduan Langsung
           </div>
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
             Aduan Fasiliti: {title}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-            No. Rujukan: <span className="font-semibold text-slate-700 dark:text-slate-200">{ticketNo}</span>
+          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
+            No. Rujukan: <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{ticketNo}</span>
           </p>
         </div>
 
@@ -248,11 +248,11 @@ function FoodBankTrackerItem({
             </span>
             Food Bank Siswa
           </div>
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
             Permohonan Food Bank JPP
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-            No. Permohonan: <span className="font-semibold text-slate-700 dark:text-slate-200">{appNo}</span>
+          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
+            No. Permohonan: <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{appNo}</span>
           </p>
         </div>
 

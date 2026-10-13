@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
+import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import { logAuditAction } from '@/lib/auditLogger';
 import {
   Flag, CheckCircle, Trash2, Eye, Store, Package,
-  TrendingUp, AlertTriangle, Shield, X, Megaphone, Plus, PlusCircle,
+  TrendingUp, AlertTriangle, Shield, ShieldCheck, X, Megaphone, Plus, PlusCircle,
   Image as ImageIcon, MoreVertical, Edit, CalendarClock, Link as LinkIcon
 } from 'lucide-react';
 
@@ -53,7 +53,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const product = report.business_products;
-  const emoji = CATEGORY_EMOJI[product?.category ?? ''] ?? '📦';
+  const FallbackIcon = CATEGORY_ICON_MAP[product?.category ?? ''] ?? Package;
 
   const dismiss = async () => {
     setLoading(true);
@@ -77,7 +77,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
     // Notify reporter
     if (report.reporter?.id) {
       await sendNotificationToUser(report.reporter.id, {
-        title: '✅ Laporan Diambil Tindakan',
+        title: 'Laporan Diambil Tindakan',
         message: `Produk "${product.name}" telah dikeluarkan dari PolyMart.`,
         type: 'polymart_report_actioned', module: 'POLYMART',
       });
@@ -103,15 +103,15 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
       <div className="p-3.5 space-y-3">
         {/* Product info */}
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
+          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-border/30" style={{ background: PM_LIGHT }}>
             {product?.image_url
               ? <img src={product.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-              : <div className="w-full h-full flex items-center justify-center text-xl">{emoji}</div>
+              : <div className="w-full h-full flex items-center justify-center text-amber-600 dark:text-amber-400"><FallbackIcon className="w-5 h-5" /></div>
             }
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-black text-foreground">{product?.name ?? 'Produk dipadam'}</p>
-            <p className="text-[10px] text-muted-foreground/50">{product?.keusahawanan_businesses?.name} · RM {product?.price?.toFixed(2)}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-foreground truncate">{product?.name ?? 'Produk dipadam'}</p>
+            <p className="text-[10px] text-muted-foreground/60">{product?.keusahawanan_businesses?.name} · <span className="font-mono tabular-nums">RM {product?.price?.toFixed(2)}</span></p>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ function AdsManagerTab() {
       // Notify creator if exists
       if (ad.created_by) {
         await sendNotificationToUser(ad.created_by, {
-          title: 'Iklan Anda Diluluskan! 🎉',
+          title: 'Iklan Anda Diluluskan',
           message: `Iklan "${ad.title}" telah berada di halaman utama PolyMart.`,
           type: 'polymart_ad_approved',
           module: 'POLYMART'
@@ -285,7 +285,7 @@ function AdsManagerTab() {
         
         if (editingAd.status === 'DRAFT' && status === 'ACTIVE' && editingAd.created_by) {
            await sendNotificationToUser(editingAd.created_by, {
-             title: 'Iklan Anda Diluluskan! 🎉',
+             title: 'Iklan Anda Diluluskan',
              message: `Iklan "${title}" telah berada di halaman utama PolyMart.`,
              type: 'polymart_ad_approved',
              module: 'POLYMART'
@@ -352,7 +352,9 @@ function AdsManagerTab() {
         <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>
       ) : ads.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="text-5xl">🪧</div>
+          <div className="w-16 h-16 rounded-2xl bg-muted/40 border border-border/40 flex items-center justify-center text-muted-foreground/40">
+            <Megaphone className="w-8 h-8" />
+          </div>
           <p className="text-sm font-bold text-muted-foreground">Tiada iklan buat masa ini</p>
         </div>
       ) : (
@@ -595,9 +597,11 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
         <div className="space-y-3">
           {reports.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="text-5xl">✨</div>
-              <p className="text-sm font-bold text-muted-foreground/60">Tiada laporan baharu</p>
-              <p className="text-xs text-muted-foreground/40">PolyMart bersih!</p>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <p className="text-sm font-bold text-foreground">Tiada laporan baharu</p>
+              <p className="text-xs text-muted-foreground/60">Semua produk mematuhi piawaian komuniti PolyMart.</p>
             </div>
           ) : (
             <AnimatePresence>
@@ -625,7 +629,7 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18` }}>
                 <s.icon className="w-5 h-5" style={{ color: s.color }} />
               </div>
-              <p className="text-2xl font-black text-foreground">{s.value}</p>
+              <p className="text-2xl font-black font-mono tabular-nums text-foreground">{s.value}</p>
               <p className="text-[10px] text-muted-foreground/60 font-medium leading-tight">{s.label}</p>
             </div>
           ))}

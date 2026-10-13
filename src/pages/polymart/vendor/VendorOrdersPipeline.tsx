@@ -1004,9 +1004,25 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
 
       {/* ── Order List & Empty States ── */}
       {loading ? (
-        <div className="py-20 text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
-          <p className="text-xs font-bold text-muted-foreground">Memuatkan saluran pesanan...</p>
+        <div className="space-y-3.5 animate-pulse">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-3xl border border-border/50 bg-card p-5 space-y-4 shadow-sm">
+              <div className="flex justify-between items-center pb-3 border-b border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-muted/60" />
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-32 bg-muted/60 rounded" />
+                    <div className="h-3 w-20 bg-muted/40 rounded" />
+                  </div>
+                </div>
+                <div className="h-6 w-24 bg-muted/50 rounded-full" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-5 w-40 bg-muted/40 rounded" />
+                <div className="h-6 w-20 bg-muted/60 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : displayedOrders.length === 0 ? (
         <div className="py-16 text-center space-y-3 bg-card rounded-3xl border border-border/50 p-8 shadow-sm">
@@ -1243,7 +1259,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                          <p className="text-[11px] text-muted-foreground font-mono tabular-nums mt-0.5">
                             {`RM ${item.unit_price.toFixed(2)} x ${item.quantity}`}
                           </p>
                           {item.note && (
@@ -1254,7 +1270,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                         </div>
 
                         <div className="text-right shrink-0">
-                          <span className="text-xs font-mono font-black text-foreground">
+                          <span className="text-xs font-mono tabular-nums font-black text-foreground">
                             {`RM ${item.total_price.toFixed(2)}`}
                           </span>
                         </div>
@@ -1313,7 +1329,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                       <span className="text-[10px] text-muted-foreground font-bold mr-1.5">
                         Jumlah ({totalQty} item):
                       </span>
-                      <span className="text-sm sm:text-base font-mono font-black text-amber-500 dark:text-amber-400">
+                      <span className="text-sm sm:text-base font-mono tabular-nums font-black text-amber-500 dark:text-amber-400">
                         {`RM ${totalAmount.toFixed(2)}`}
                       </span>
                     </div>

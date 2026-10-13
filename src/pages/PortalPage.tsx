@@ -416,7 +416,7 @@ export function PortalPage() {
       />
 
       {/* Main Content Experience */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-8 pt-6 pb-36 sm:pb-32 flex-1 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden w-full max-w-full">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-6 sm:space-y-7 pt-6 pb-36 sm:pb-32 flex-1 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden w-full max-w-full">
         {/* 1. Live Notifications & Campaign Trackers (MAKMP, Kamsis, e-Kebajikan & FoodBank) */}
         <CampusCampaignCarousel
           slides={campaignSlides}
@@ -453,16 +453,16 @@ export function PortalPage() {
         <section aria-label="Modul Rasmi Exco" className="tour-exco-modules space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+              <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight [text-wrap:balance]">
                 Modul Rasmi Exco JPP
               </h2>
-              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F]">
+              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] [text-wrap:balance]">
                 Akses terus ke portal rasmi pengurusan dan pentadbiran mahasiswa
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
             {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i, arr) => {
               let badgeText;
               let notificationCount;

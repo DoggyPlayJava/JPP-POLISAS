@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 type Tab = 'POLYSUARA' | 'ANALITIK';
 
@@ -213,35 +214,46 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     }
   };
 
-  const handleDeleteComment = async (id: string) => {
-    if (!window.confirm('Padam atau sembunyikan ulasan ini secara kekal? (Jika mempunyai balasan di bawahnya, ia akan disembunyikan menggunakan amaran tombstone bagi mengekalkan struktur perbualan)')) return;
+  const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [deleteSuaraId, setDeleteSuaraId] = useState<string | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState(false);
+
+  const executeDeleteComment = async () => {
+    if (!deleteCommentId) return;
+    setDeletingRecord(true);
     try {
       const { data: wasSoftDeleted, error } = await supabase.rpc('soft_or_hard_delete_polysuara_comment', {
-        p_comment_id: id
+        p_comment_id: deleteCommentId
       });
       if (error) throw error;
-      
       if (wasSoftDeleted) {
-        toast.success('Ulasan disembunyikan dengan selamat (tombstoned)');
+        toast.success('Ulasan disembunyikan dengan selamat.');
       } else {
-        toast.success('Ulasan dipadamkan secara kekal');
+        toast.success('Ulasan dipadamkan secara kekal.');
       }
+      setDeleteCommentId(null);
       fetchData();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Gagal memproses pemadaman ulasan');
+    } finally {
+      setDeletingRecord(false);
     }
   };
 
-  const handleDeleteSuara = async (id: string) => {
-    if (!window.confirm('Padam confession ini secara kekal?')) return;
+  const executeDeleteSuara = async () => {
+    if (!deleteSuaraId) return;
+    setDeletingRecord(true);
     try {
-      const { error } = await supabase.from('polysuara_confessions').delete().eq('id', id);
+      const { error } = await supabase.from('polysuara_confessions').delete().eq('id', deleteSuaraId);
       if (error) throw error;
-      toast.success('Confession dipadam');
-      setSuaraList(prev => prev.filter(item => item.id !== id));
+      toast.success('Luahan berjaya dipadam.');
+      setSuaraList(prev => prev.filter(item => item.id !== deleteSuaraId));
+      setDeleteSuaraId(null);
     } catch (err: any) {
-      toast.error('Gagal memadam data');
+      toast.error('Gagal memadam data luahan');
+    } finally {
+      setDeletingRecord(false);
     }
   };
 
@@ -716,7 +728,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <Check className="w-3.5 h-3.5" /> Lepaskan
                         </button>
                         <button
-                          onClick={() => handleDeleteComment(comment.id)}
+                          onClick={() => setDeleteCommentId(comment.id)}
                           className="flex-1 sm:flex-none px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Padam
@@ -849,7 +861,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <span className="hidden sm:inline">Lepaskan</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteSuara(suara.id)}
+                          onClick={() => setDeleteSuaraId(suara.id)}
                           className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -893,7 +905,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <span className="hidden sm:inline">{suara.is_pinned ? "Unpin" : "Pin"}</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteSuara(suara.id)}
+                          onClick={() => setDeleteSuaraId(suara.id)}
                           className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition-colors flex items-center justify-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -976,62 +988,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
               </div>
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredMatch.length === 0 ? (
-              <div className="col-span-full text-center py-20 text-slate-400 dark:text-white/40 font-bold uppercase tracking-widest text-xs">Tiada iklan ditemui.</div>
-            ) : (
-              filteredMatch.map(match => (
-                <div key={match.id} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between group hover:border-slate-300 dark:hover:border-white/10 transition-colors shadow-sm">
-                  <div>
-                    <div className="flex items-start justify-between mb-3">
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5",
-                        "bg-teal-500/10 text-teal-600 dark:text-teal-400"
-                      )}>
-                        <Home className="w-3 h-3" />
-                        SEWA
-                      </span>
-                      <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase bg-indigo-50 dark:bg-indigo-500/10 px-2 rounded-md border border-indigo-200 dark:border-transparent">
-                        {match.profiles?.matric_no || 'UNKNOWN'}
-                      </span>
-                    </div>
-                    <h3 className="text-slate-900 dark:text-white font-black text-lg mb-2">{match.title}</h3>
-                    <p className="text-slate-600 dark:text-white/60 text-sm line-clamp-2 mb-2">Lokasi: {match.lokasi}</p>
-                    <p className="text-slate-600 dark:text-white/60 text-xs font-bold mb-4">RM{match.sewa_bulanan}/bulan • {match.jantina_prefer}</p>
-                    
-                    {match.reports && match.reports.length > 0 && (
-                      <div className="mb-4 space-y-2 border-t border-slate-200 dark:border-white/5 pt-3">
-                        <div className="text-[10px] text-amber-600 dark:text-amber-500 font-bold flex items-center gap-1 mb-2">
-                          <AlertTriangle className="w-3 h-3" />
-                          {match.reports.length} Laporan
-                        </div>
-                        {match.reports.map((r: any, idx: number) => (
-                          <div key={idx} className="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg text-xs text-amber-800 dark:text-amber-200">
-                            <span className="font-bold opacity-70">Sebab:</span> {r.reason}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-t border-slate-200 dark:border-white/5 pt-4">
-                    <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase">
-                      {format(new Date(match.created_at), 'dd MMM yyyy', { locale: ms })}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteMatch(match.id)}
-                      className="p-2 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
-                      title="Padam Iklan"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* JPP Reply Modal */}
@@ -1108,6 +1065,32 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
           elementId={`export-card-${activeExportId}`} 
         />
       )}
+
+      {/* Confirm Delete Comment Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteCommentId)}
+        onOpenChange={(open) => !open && setDeleteCommentId(null)}
+        title="Padam / Sembunyi Ulasan"
+        description="Padam atau sembunyikan ulasan ini secara kekal? Jika mempunyai balasan di bawahnya, sistem akan menyembunyikannya menggunakan tombstone amaran bagi mengekalkan kesinambungan perbualan."
+        confirmLabel="Padam Ulasan"
+        cancelLabel="Batal"
+        variant="destructive"
+        isLoading={deletingRecord}
+        onConfirm={executeDeleteComment}
+      />
+
+      {/* Confirm Delete Confession Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteSuaraId)}
+        onOpenChange={(open) => !open && setDeleteSuaraId(null)}
+        title="Padam Luahan PolySuara"
+        description="Adakah anda pasti mahu memadam luahan confession ini secara kekal? Rekod ini tidak akan dapat dikembalikan."
+        confirmLabel="Padam Luahan"
+        cancelLabel="Batal"
+        variant="destructive"
+        isLoading={deletingRecord}
+        onConfirm={executeDeleteSuara}
+      />
     </div>
   );
 }

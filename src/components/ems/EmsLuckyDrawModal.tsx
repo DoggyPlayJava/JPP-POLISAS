@@ -247,41 +247,41 @@ export function EmsLuckyDrawModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80  p-4 overflow-y-auto select-none">
-      <div className="bg-[#0B0F19] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full space-y-6 shadow-2xl shadow-amber-500/10 text-white my-8 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 dark:bg-black/80  p-4 overflow-y-auto select-none">
+      <div className="bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full space-y-6 shadow-2xl shadow-amber-500/10 text-slate-900 dark:text-white my-8 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isSpinning}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition disabled:opacity-30 cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition disabled:opacity-30 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="text-center space-y-1.5 border-b border-white/10 pb-5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-wider">
-            <Gift className="w-4 h-4 text-amber-400" /> Roda Cabutan Bertuah Interaktif
+        <div className="text-center space-y-1.5 border-b border-slate-200 dark:border-white/10 pb-5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-300 text-xs font-black uppercase tracking-wider">
+            <Gift className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Roda Cabutan Bertuah Interaktif
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 [text-wrap:balance]">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-amber-300 [text-wrap:balance]">
             Roda Cabutan Bertuah EMS
           </h2>
           {eventTitle && (
-            <p className="text-xs font-semibold text-slate-400 [text-wrap:balance]">Acara: {eventTitle}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 [text-wrap:balance]">Acara: {eventTitle}</p>
           )}
         </div>
 
         {/* Filter Toolbar & Candidate Count */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#06080F] p-3.5 rounded-2xl border border-white/10 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100/80 dark:bg-[#06080F] p-3.5 rounded-2xl border border-slate-200 dark:border-white/10 text-xs">
           <div className="flex items-center gap-1.5 overflow-x-auto">
-            <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0 mr-1" />
+            <Filter className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0 mr-1" />
             <button
               onClick={() => setSourceFilter('ALL')}
               disabled={isSpinning}
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'ALL'
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
-                  : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
+                  : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
               Semua Calon
@@ -292,7 +292,7 @@ export function EmsLuckyDrawModal({
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'VISITORS'
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
-                  : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
+                  : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
               Pengunjung Sahaja
@@ -303,55 +303,55 @@ export function EmsLuckyDrawModal({
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                 sourceFilter === 'PARTICIPANTS'
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
-                  : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5'
+                  : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
               Peserta Sahaja
             </button>
           </div>
 
-          <div className="text-right text-slate-400 font-semibold shrink-0">
+          <div className="text-right text-slate-500 dark:text-slate-400 font-semibold shrink-0">
             {loadingCandidates ? (
               <span className="animate-pulse">Memuatkan...</span>
             ) : (
               <span>
-                Jumlah Calon: <strong className="text-amber-400 tabular-nums font-mono">{candidates.length}</strong>
+                Jumlah Calon: <strong className="text-amber-600 dark:text-amber-400 tabular-nums font-mono">{candidates.length}</strong>
               </span>
             )}
           </div>
         </div>
 
         {/* SPINNING DISPLAY REEL / WHEEL CONTAINER */}
-        <div className="relative bg-[#07090F] border-2 border-amber-500/40 rounded-3xl p-8 text-center shadow-inner overflow-hidden flex flex-col items-center justify-center min-h-[220px]">
+        <div className="relative bg-amber-50/50 dark:bg-[#07090F] border-2 border-amber-500/40 rounded-3xl p-8 text-center shadow-inner overflow-hidden flex flex-col items-center justify-center min-h-[220px]">
           {/* Animated Glow Backlight */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full  pointer-events-none" />
 
           {!canManage ? (
             /* Access Denied Card */
             <div className="relative z-10 space-y-3 p-4 text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 mx-auto">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 dark:text-rose-400 mx-auto">
                 <Lock className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-bold text-rose-400">Akses Terhad</h3>
-              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+              <h3 className="text-lg font-bold text-rose-500 dark:text-rose-400">Akses Terhad</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
                 Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.
               </p>
             </div>
           ) : currentWinner ? (
             /* Winner Reveal Celebration Card */
             <div className="relative z-10 space-y-4 animate-scaleUp">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.4)] animate-bounce">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-500 dark:text-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.4)] animate-bounce">
                 <Trophy className="w-10 h-10" />
               </div>
               <div>
-                <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/40 inline-flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/40 inline-flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   <span>PEMENANG CABUTAN BERTUAH!</span>
                 </span>
-                <h3 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 leading-tight [text-wrap:balance]">
+                <h3 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-amber-300 leading-tight [text-wrap:balance]">
                   {currentWinner.name}
                 </h3>
-                <p className="text-xs text-slate-300 font-semibold mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-1">
                   {currentWinner.subText}
                 </p>
               </div>
@@ -359,22 +359,22 @@ export function EmsLuckyDrawModal({
           ) : displayedCandidate ? (
             /* Active Spinning Reel Slot */
             <div className="relative z-10 space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 animate-pulse">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400 animate-pulse">
                 {isSpinning ? 'MEMUTAR RODA CABUTAN...' : 'SEDANG MEMILIH PEMENANG'}
               </span>
-              <h3 className={`text-2xl sm:text-3xl font-black text-white [text-wrap:balance] ${isSpinning ? 'opacity-90 scale-95 transition-all' : ''}`}>
+              <h3 className={`text-2xl sm:text-3xl font-black text-slate-900 dark:text-white [text-wrap:balance] ${isSpinning ? 'opacity-90 scale-95 transition-all' : ''}`}>
                 {displayedCandidate.name}
               </h3>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                 {displayedCandidate.subText}
               </p>
             </div>
           ) : (
             /* Idle Screen */
             <div className="relative z-10 space-y-3">
-              <Sparkles className="w-12 h-12 text-amber-400/70 mx-auto animate-pulse" />
-              <h3 className="text-lg font-bold text-white">Tekan Butang Untuk Memulakan Cabutan</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <Sparkles className="w-12 h-12 text-amber-500/70 dark:text-amber-400/70 mx-auto animate-pulse" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tekan Butang Untuk Memulakan Cabutan</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 Sistem akan memutar senarai calon dan memilih pemenang secara bertuah dan rawak.
               </p>
             </div>
@@ -393,15 +393,15 @@ export function EmsLuckyDrawModal({
 
         {/* Winner History Section */}
         {winnerHistory.length > 0 && (
-          <div className="border-t border-white/10 pt-5 space-y-3">
+          <div className="border-t border-slate-200 dark:border-white/10 pt-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <History className="w-4 h-4 text-amber-400" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                <History className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 Sejarah Pemenang Cabutan Sesi Ini (<span className="tabular-nums font-mono">{winnerHistory.length}</span>)
               </h4>
               <button
                 onClick={() => setWinnerHistory([])}
-                className="text-[11px] text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" /> Bersihkan Sejarah
               </button>
@@ -411,21 +411,21 @@ export function EmsLuckyDrawModal({
               {winnerHistory.map((winner, idx) => (
                 <div
                   key={`${winner.id}-${idx}`}
-                  className="flex items-center justify-between p-3 rounded-xl bg-[#06080F] border border-white/10 text-xs"
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#06080F] border border-slate-200 dark:border-white/10 text-xs"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-black text-[10px] flex items-center justify-center border border-amber-500/30 tabular-nums font-mono">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-black text-[10px] flex items-center justify-center border border-amber-500/30 tabular-nums font-mono">
                       #{winnerHistory.length - idx}
                     </span>
                     <div>
-                      <h5 className="font-bold text-white [text-wrap:balance]">{winner.name}</h5>
-                      <p className="text-[10px] text-slate-400">{winner.subText}</p>
+                      <h5 className="font-bold text-slate-900 dark:text-white [text-wrap:balance]">{winner.name}</h5>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{winner.subText}</p>
                     </div>
                   </div>
 
                   <button
                     onClick={() => removeWinnerFromHistory(winner.id)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
                     title="Padam pemenang"
                   >
                     <X className="w-3.5 h-3.5" />

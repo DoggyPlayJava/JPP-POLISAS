@@ -92,7 +92,7 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     icon: ThumbsUp,
     iconName: 'ThumbsUp',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
-    activeBg: 'bg-slate-900 dark:bg-slate-700 text-white border-slate-700 dark:border-slate-600 ring-2 ring-slate-500/30 shadow-md',
+    activeBg: 'bg-sky-600 dark:bg-sky-500 text-white border-sky-500 ring-2 ring-sky-500/30 shadow-md',
     defaultDescriptor: 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
   },
   {
@@ -102,7 +102,7 @@ export const LIKERT_OPTIONS: LikertOptionItem[] = [
     icon: MinusCircle,
     iconName: 'MinusCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
-    activeBg: 'bg-slate-900 dark:bg-slate-700 text-white border-slate-700 dark:border-slate-600 ring-2 ring-slate-500/30 shadow-md',
+    activeBg: 'bg-slate-700 dark:bg-slate-600 text-white border-slate-600 ring-2 ring-slate-500/30 shadow-md',
     defaultDescriptor: 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
   },
   {
@@ -1432,7 +1432,7 @@ export function EmsJuryPortalPage() {
                           return (
                             <div
                               key={r.id}
-                              className="bg-slate-50 dark:bg-[#14151f] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-4 hover:border-slate-400 dark:hover:border-slate-600 transition-all shadow-sm"
+                              className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-4 hover:border-slate-400 dark:hover:border-slate-600 transition-all shadow-sm"
                             >
                               {/* Criterion Title & Weight */}
                               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
@@ -1541,7 +1541,7 @@ export function EmsJuryPortalPage() {
                   ))}
 
                   {/* General Comments Textarea at Feed Bottom */}
-                  <div className="bg-slate-50 dark:bg-[#14151f] border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       <span>Ulasan & Cadangan Penambahbaikan (Pilihan Juri)</span>

@@ -204,6 +204,7 @@ export function EmsCheckinPage() {
       .subscribe();
 
     return () => {
+      pChannel.unsubscribe();
       supabase.removeChannel(pChannel);
     };
   }, [eventId]);
@@ -236,13 +237,22 @@ export function EmsCheckinPage() {
 
     isProcessingRef.current = true;
 
-    // Parse JSON payload or raw string
+    // Parse JSON payload, EMS-PASS:: prefix, or URL format
     let searchKey = cleanInput;
-    try {
-      const parsed = JSON.parse(cleanInput);
-      searchKey = parsed.id || parsed.matrix_no || parsed.email || cleanInput;
-    } catch {
-      // keep cleanInput
+    if (searchKey.startsWith('EMS-PASS::')) {
+      searchKey = searchKey.replace('EMS-PASS::', '').trim();
+    } else if (searchKey.includes('/ems/pass/') || searchKey.includes('/ems/e/')) {
+      const urlMatch = searchKey.match(/\/ems\/(?:pass|e\/[^/]+\/register)\/([a-f0-9-]+)/i);
+      if (urlMatch && urlMatch[1]) {
+        searchKey = urlMatch[1].trim();
+      }
+    } else {
+      try {
+        const parsed = JSON.parse(cleanInput);
+        searchKey = (parsed.id || parsed.matrix_no || parsed.email || cleanInput).trim();
+      } catch {
+        // keep cleanInput
+      }
     }
 
     // Look up participant in local memory first for instant duplicate check

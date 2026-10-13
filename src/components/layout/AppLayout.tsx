@@ -133,7 +133,7 @@ export function AppLayout() {
         {/* Header Asal (Carian, Profile dll) */}
         <Header onOpenSearch={() => triggerCommandPalette()} />
 
-        <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto overflow-x-hidden bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0">
           <motion.div
               key={location.pathname}
               initial={{ opacity: 0 }}

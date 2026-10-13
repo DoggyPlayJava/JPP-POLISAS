@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Smartphone, Monitor, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -103,15 +104,22 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
     if (isOpen) fetchSubs();
   }, [isOpen]);
 
-  const handleRevoke = async (subId: string) => {
-    if (!window.confirm("Adakah anda pasti untuk batalkan langganan peranti ini?")) return;
+  const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+  const [revoking, setRevoking] = useState(false);
+
+  const handleConfirmRevoke = async () => {
+    if (!revokeTargetId) return;
+    setRevoking(true);
     try {
-      const { error } = await supabase.from('push_subscriptions').delete().eq('id', subId);
+      const { error } = await supabase.from('push_subscriptions').delete().eq('id', revokeTargetId);
       if (error) throw error;
-      toast.success("Langganan berjaya dibuang.");
+      toast.success("Langganan berjaya dibatalkan.");
+      setRevokeTargetId(null);
       fetchSubs();
     } catch (e: any) {
-      toast.error(e.message || "Gagal membuang langganan.");
+      toast.error(e.message || "Gagal membatalkan langganan.");
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -188,7 +196,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
                       {isSuperAdmin && (
                         <button 
-                          onClick={() => handleRevoke(s.id)}
+                          onClick={() => setRevokeTargetId(s.id)}
                           className="w-10 h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center transition-colors border border-red-500/20"
                           title="Buang langganan ini"
                         >
@@ -203,6 +211,18 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
           )}
         </div>
       </motion.div>
+
+      <ConfirmDialog
+        open={Boolean(revokeTargetId)}
+        onOpenChange={(open) => !open && setRevokeTargetId(null)}
+        title="Batalkan Langganan Notifikasi"
+        description="Adakah anda pasti mahu membatalkan langganan peranti ini? Pengguna tidak akan menerima notifikasi tolak (push notification) pada peranti ini lagi."
+        confirmLabel="Batalkan Langganan"
+        cancelLabel="Kembali"
+        variant="destructive"
+        isLoading={revoking}
+        onConfirm={handleConfirmRevoke}
+      />
     </div>
   );
 }

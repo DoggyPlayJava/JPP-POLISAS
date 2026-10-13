@@ -494,18 +494,18 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Handle Resolve Tie Winner
   const handleConfirmTieWinner = async () => {
     if (!eventId || !selectedTieWinnerId) {
-      toast.error('Sila pilih peserta pemenang penentuan seret');
+      toast.error('Sila pilih peserta pemenang penentuan seri');
       return;
     }
 
     try {
       setResolvingTie(true);
       await resolveTieWinner(eventId, selectedTieWinnerId);
-      toast.success('Pemenang penentuan seret berjaya dikemaskini!');
+      toast.success('Pemenang penentuan seri berjaya dikemaskini!');
       setShowTieBreakerModal(false);
       loadData();
     } catch (err: any) {
-      toast.error(`Gagal menetapkan pemenang seret: ${err.message}`);
+      toast.error(`Gagal menetapkan pemenang seri: ${err.message}`);
     } finally {
       setResolvingTie(false);
     }
@@ -892,7 +892,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {top2.is_tie_winner && (
                         <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <Scale className="w-3 h-3" /> Penentuan Seret
+                          <Scale className="w-3 h-3" /> Penentuan Seri
                         </div>
                       )}
                     </div>
@@ -939,7 +939,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {top1.is_tie_winner && (
                         <div className="mt-3 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-500/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                          <Scale className="w-3.5 h-3.5" /> Penentuan Seret Pemenang
+                          <Scale className="w-3.5 h-3.5" /> Penentuan Seri Pemenang
                         </div>
                       )}
                     </div>
@@ -978,7 +978,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {top3.is_tie_winner && (
                         <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <Scale className="w-3 h-3" /> Penentuan Seret
+                          <Scale className="w-3 h-3" /> Penentuan Seri
                         </div>
                       )}
                     </div>
@@ -1224,11 +1224,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Penentuan Seret (Tie-Breaker)
+                    Penentuan Seri (Tie-Breaker)
                   </span>
                   <h4 className="text-sm font-black flex items-center gap-1.5">
                     <Scale className="w-4 h-4 text-amber-500" />
-                    {hasTiedParticipants ? 'Terdapat Peserta Seret!' : 'Tiada Keputusan Seret'}
+                    {hasTiedParticipants ? 'Terdapat Keputusan Seri!' : 'Tiada Keputusan Seri'}
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {hasTiedParticipants
@@ -1239,9 +1239,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                 <button
                   onClick={() => setShowTieBreakerModal(true)}
-                  className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5 active:scale-[0.98]"
                 >
-                  <Scale className="w-4 h-4" /> Urus Seret
+                  <Scale className="w-4 h-4" /> Urus Pecah Seri
                 </button>
               </div>
 
@@ -1421,11 +1421,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           <td className="px-4 py-3.5 text-center">
                             {item.is_tie_winner ? (
                               <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                <Trophy className="w-3 h-3" /> Pemenang Seret
+                                <Trophy className="w-3 h-3" /> Pemenang Seri
                               </span>
                             ) : item.is_tied ? (
                               <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                <Scale className="w-3 h-3" /> Markah Seret
+                                <Scale className="w-3 h-3" /> Markah Seri
                               </span>
                             ) : (
                               <span className="text-[11px] text-slate-400">-</span>
@@ -1550,7 +1550,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="flex items-center gap-2">
                 <Scale className="w-6 h-6 text-amber-500" />
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  Penentuan Pemenang Seret
+                  Penentuan Pemenang Pecah Seri
                 </h3>
               </div>
               <button
@@ -1563,7 +1563,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
             <div className="space-y-3">
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Pilih peserta yang ditentukan sebagai Pemenang Utama bagi keputusan markah seret. Pilihan ini akan mengatasi keutamaan senarai (Tie-Breaker Badge).
+                Pilih peserta yang ditentukan sebagai Pemenang Utama bagi keputusan markah seri. Pilihan ini akan mengatasi keutamaan senarai (Tie-Breaker Badge).
               </p>
 
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -1620,7 +1620,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 disabled={resolvingTie || !selectedTieWinnerId}
                 className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md disabled:opacity-50"
               >
-                {resolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang Seret'}
+                {resolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang Seri'}
               </button>
             </div>
           </div>

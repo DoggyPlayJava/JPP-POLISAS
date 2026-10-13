@@ -338,7 +338,7 @@ export function VendorAnalyticsPromo({
         parsed.unshift(payload);
         localStorage.setItem('mock_vendor_ads', JSON.stringify(parsed));
 
-        toast.success('Permohonan iklan berjaya dihantar! Sila tunggu kelulusan Exco.');
+        toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
         setShowNewAdModal(false);
         resetAdForm();
         fetchAds();
@@ -376,7 +376,7 @@ export function VendorAnalyticsPromo({
       const { error: insertErr } = await supabase.from('polymart_ads').insert(payload);
       if (insertErr) throw insertErr;
 
-      toast.success('Permohonan iklan berjaya dihantar! Sila tunggu kelulusan Exco.');
+      toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
       setShowNewAdModal(false);
       resetAdForm();
       fetchAds();

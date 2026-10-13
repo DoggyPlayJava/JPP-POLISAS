@@ -53,7 +53,7 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
       onTieResolved?.();
       onClose();
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal menetapkan pemenang seret');
+      toast.error(err?.message || 'Gagal menetapkan pemenang seri');
     } finally {
       setIsResolvingTie(false);
     }
@@ -74,7 +74,7 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-1">
             <Trophy className="w-5 h-5" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Penentuan Pemenang (Tie-Breaker)
+              Penentuan Pemenang Pecah Seri (Tie-Breaker)
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -106,7 +106,7 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">
+                      <span className="font-bold text-sm [text-wrap:balance]">
                         {item.participant.team_name || item.participant.leader_name}
                       </span>
                       {item.is_tied && (
@@ -121,7 +121,7 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
                       )}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Ketua: {item.participant.leader_name} | Markah Purata: {item.average_score}
+                      Ketua: {item.participant.leader_name} | Markah Purata: <span className="font-mono tabular-nums font-bold text-slate-900 dark:text-white">{Number(item.average_score).toFixed(1)}%</span>
                     </p>
                   </div>
 
@@ -144,7 +144,7 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all"
+            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all active:scale-[0.98]"
           >
             Batal
           </button>
@@ -152,9 +152,9 @@ export function EmsTieBreakerModal({ event, onClose, onTieResolved }: EmsTieBrea
             type="button"
             onClick={handleResolveTie}
             disabled={isResolvingTie || !selectedWinnerId}
-            className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md shadow-rose-600/20 disabled:opacity-50 active:scale-98"
+            className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md shadow-rose-600/20 disabled:opacity-50 active:scale-[0.98]"
           >
-            {isResolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang'}
+            {isResolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang Seri'}
           </button>
         </div>
       </div>

@@ -505,11 +505,15 @@ export function Sidebar() {
     .toUpperCase();
 
   const activeClubId = selectedClubId ?? profile?.club_id;
-  const clubName = activeClubId
-    ? (ALL_CLUBS.find(c => c.id === activeClubId)?.name ?? activeClubId.replace('club_', '').toUpperCase())
-    : isSuperAdmin
-      ? 'JPP Admin'
-      : '—';
+  const clubName = (() => {
+    if (!activeClubId) return isSuperAdmin ? 'JPP Admin' : '—';
+    const found = ALL_CLUBS.find(c => c.id === activeClubId);
+    if (found?.name) return found.name;
+    if (/^[0-9a-fA-F-]{30,}$/.test(activeClubId)) {
+      return isSuperAdmin ? 'Pentadbiran JPP' : 'Kelab Siswa';
+    }
+    return activeClubId.replace('club_', '').toUpperCase();
+  })();
 
   const getClubColor = (id: string | undefined) => {
     if (!id || id.startsWith('jpp')) return 'bg-rose-500 shadow-[0_0_6px_2px_rgba(244,63,94,0.5)]';

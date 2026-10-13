@@ -281,7 +281,7 @@ export function VendorCatalogManager({
   ) => {
     const newVal = parseInt(valueStr, 10);
     if (isNaN(newVal) || newVal < 0) {
-      toast.error('Masukkan kuantiti stok yang sah!');
+      toast.error('Masukkan kuantiti stok yang sah');
       return;
     }
 
@@ -511,9 +511,19 @@ export function VendorCatalogManager({
 
       {/* ── Products List Content ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 bg-card/20 rounded-2xl border border-border/40">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-          <p className="text-xs font-bold text-muted-foreground">Memuatkan katalog produk...</p>
+        <div className="grid gap-3.5 sm:grid-cols-2 animate-pulse">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="p-4 rounded-2xl border border-border/50 bg-card/60 space-y-3.5 shadow-xs">
+              <div className="flex gap-3">
+                <div className="w-12 h-12 rounded-xl bg-muted/60 shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 w-3/4 bg-muted/60 rounded" />
+                  <div className="h-3 w-1/4 bg-muted/40 rounded" />
+                </div>
+              </div>
+              <div className="h-8 rounded-xl bg-muted/30" />
+            </div>
+          ))}
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 bg-card/20 rounded-2xl border border-border/40 text-center px-4">
@@ -568,7 +578,7 @@ export function VendorCatalogManager({
                       <p className="text-xs sm:text-sm font-black text-foreground truncate" title={p.name}>
                         {p.name}
                       </p>
-                      <span className="text-xs font-black text-amber-500 shrink-0">
+                      <span className="text-xs font-black font-mono tabular-nums text-amber-500 shrink-0">
                         RM {p.price.toFixed(2)}
                       </span>
                     </div>
@@ -653,16 +663,16 @@ export function VendorCatalogManager({
 
                             <div className="flex items-center gap-2">
                               <div className="text-right shrink-0 mr-1">
-                                <p className="font-bold text-[10px] text-foreground">
+                                <p className="font-bold text-[10px] text-foreground font-mono tabular-nums">
                                   Stok Fizikal: {v.stock} unit
                                 </p>
                                 {(v.reserved ?? 0) > 0 && (
-                                  <p className="text-[9px] text-amber-500 font-bold">
+                                  <p className="text-[9px] text-amber-500 font-bold font-mono tabular-nums">
                                     Ditempah: {v.reserved}
                                   </p>
                                 )}
                                 <p
-                                  className={`text-[9.5px] font-black ${
+                                  className={`text-[9.5px] font-black font-mono tabular-nums ${
                                     isLowVar ? 'text-rose-500' : 'text-emerald-500'
                                   }`}
                                 >
@@ -795,17 +805,17 @@ export function VendorCatalogManager({
                         Kuantiti Stok Utama
                       </p>
                       <div className="mt-1 space-y-0.5">
-                        <p className="text-[11px] font-bold text-foreground">
+                        <p className="text-[11px] font-bold text-foreground font-mono tabular-nums">
                           Stok Fizikal: <span className="font-black">{p.stock_quantity ?? 0}</span> unit
                         </p>
                         {(p.reserved_stock ?? 0) > 0 && (
-                          <p className="text-[9.5px] text-amber-500 font-bold flex items-center gap-1">
+                          <p className="text-[9.5px] text-amber-500 font-bold flex items-center gap-1 font-mono tabular-nums">
                             <Clock className="w-3 h-3 shrink-0" />
                             <span>Ditempah: {p.reserved_stock} unit</span>
                           </p>
                         )}
                         <p
-                          className={`text-[10px] font-black flex items-center gap-1 ${
+                          className={`text-[10px] font-black flex items-center gap-1 font-mono tabular-nums ${
                             isLowBase ? 'text-rose-500' : 'text-emerald-500'
                           }`}
                         >

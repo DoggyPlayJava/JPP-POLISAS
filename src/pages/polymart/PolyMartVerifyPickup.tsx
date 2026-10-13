@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
+import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import toast from 'react-hot-toast';
 import {
   Package, CheckCircle, Clock, CreditCard, Handshake,
@@ -124,7 +124,7 @@ export function PolyMartVerifyPickup() {
     if (error) {
       toast.error('Gagal mengemaskini status');
     } else {
-      toast.success('Pesanan ditanda sedia!', { icon: '📦' });
+      toast.success('Pesanan ditanda sedia!');
       setOrder(prev => prev ? { ...prev, status: 'READY' } : prev);
     }
     setReadying(false);
@@ -147,15 +147,26 @@ export function PolyMartVerifyPickup() {
     } else {
       setCompleted(true);
       setOrder(prev => prev ? { ...prev, status: 'COMPLETED' } : prev);
-      toast.success('Pesanan selesai!', { icon: '🎉', style: { borderRadius: '16px', fontWeight: 700 } });
+      toast.success('Pesanan selesai!', { style: { borderRadius: '16px', fontWeight: 700 } });
     }
     setCompleting(false);
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-        style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
+    <div className="max-w-md mx-auto space-y-4 pb-8 animate-pulse">
+      <div className="h-6 w-24 bg-muted/60 rounded-lg" />
+      <div className="p-5 rounded-3xl border border-border/50 bg-card shadow-sm space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-28 bg-muted/60 rounded" />
+          <div className="h-6 w-24 bg-muted/50 rounded-full" />
+        </div>
+        <div className="h-12 bg-muted/30 rounded-2xl" />
+        <div className="h-20 bg-muted/20 rounded-2xl" />
+      </div>
+      <div className="p-5 rounded-3xl border border-border/50 bg-card shadow-sm space-y-3">
+        <div className="h-4 w-32 bg-muted/60 rounded" />
+        <div className="h-10 bg-muted/30 rounded-xl" />
+      </div>
     </div>
   );
 
@@ -181,10 +192,10 @@ export function PolyMartVerifyPickup() {
   );
 
   const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING;
-  const emoji = CATEGORY_EMOJI[order.product?.category ?? ''] ?? '📦';
+  const FallbackIcon = CATEGORY_ICON_MAP[order.product?.category ?? ''] ?? Package;
   const totalAmt = order.total_price ?? (order.unit_price * order.quantity);
   const shortId = order.id.slice(0, 8).toUpperCase();
-  const paymentLabel = order.payment_method === 'QR_ONLINE' ? '💳 QR Online' : '🤝 Bersemuka (COD)';
+  const paymentLabel = order.payment_method === 'QR_ONLINE' ? 'QR DuitNow (Online)' : 'Bayar Semasa Ambil (Tunai/COD)';
   const paymentVerified = !!order.payment_verified_at;
 
   return (
@@ -199,7 +210,7 @@ export function PolyMartVerifyPickup() {
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center gap-3 py-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/5">
           <CheckCircle className="w-14 h-14 text-emerald-500" />
-          <p className="text-lg font-black text-foreground">Pesanan Selesai!</p>
+          <p className="text-lg font-black text-foreground">Pesanan Selesai</p>
           <p className="text-xs text-muted-foreground">Terima kasih. Pesanan telah ditandakan selesai.</p>
         </motion.div>
       )}
@@ -210,7 +221,7 @@ export function PolyMartVerifyPickup() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Pesanan</p>
-            <p className="text-xl font-black text-foreground">#{shortId}</p>
+            <p className="text-xl font-black font-mono tracking-wider text-foreground">#{shortId}</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black"
             style={{ background: statusCfg.bg, color: statusCfg.color }}>
@@ -229,35 +240,43 @@ export function PolyMartVerifyPickup() {
             <span className="text-xs font-bold text-foreground">{paymentLabel}</span>
           </div>
           {order.payment_method === 'QR_ONLINE' && (
-            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+            <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
               paymentVerified
-                ? 'bg-emerald-500/10 text-emerald-600'
-                : 'bg-amber-500/10 text-amber-600'
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
             }`}>
-              {paymentVerified ? '✅ Disahkan' : '⏳ Belum Disahkan'}
+              {paymentVerified ? (
+                <>
+                  <CheckCircle className="w-3 h-3 text-emerald-500" /> Disahkan
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3 h-3 text-amber-500" /> Menunggu Pengesahan
+                </>
+              )}
             </span>
           )}
         </div>
 
         {/* Product */}
         <div className="flex gap-3 p-3 rounded-2xl bg-muted/10 border border-border/20">
-          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
+          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-border/30" style={{ background: PM_LIGHT }}>
             {order.product?.image_url
               ? <img src={order.product.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-              : <div className="w-full h-full flex items-center justify-center text-2xl">{emoji}</div>
+              : <div className="w-full h-full flex items-center justify-center text-amber-600 dark:text-amber-400"><FallbackIcon className="w-6 h-6" /></div>
             }
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-black text-foreground leading-tight truncate">{order.product?.name ?? 'Produk'}</h3>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <p className="text-xs text-muted-foreground">×{order.quantity} @ RM {order.unit_price.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground font-mono tabular-nums">×{order.quantity} @ RM {order.unit_price.toFixed(2)}</p>
               {order.selected_variation && (
                 <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-500">
                   Saiz: {order.selected_variation}
                 </span>
               )}
             </div>
-            <p className="text-base font-black mt-1" style={{ color: PM_ACCENT }}>RM {totalAmt.toFixed(2)}</p>
+            <p className="text-base font-black font-mono tabular-nums mt-1" style={{ color: PM_ACCENT }}>RM {totalAmt.toFixed(2)}</p>
           </div>
         </div>
       </motion.div>
@@ -313,18 +332,18 @@ export function PolyMartVerifyPickup() {
           className="space-y-2">
           {order.status === 'CONFIRMED' && (
             <button onClick={markReady} disabled={readying}
-              className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               {readying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Package className="w-5 h-5" />}
-              {readying ? 'Mengemaskini...' : '📦 Pesanan Sedia Diambil'}
+              {readying ? 'Mengemaskini...' : 'Pesanan Sedia Diambil'}
             </button>
           )}
           {order.status === 'READY' && (
             <button onClick={markCompleted} disabled={completing}
-              className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
               {completing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-              {completing ? 'Mengemaskini...' : '✅ Tandakan Selesai'}
+              {completing ? 'Mengemaskini...' : 'Tandakan Selesai'}
             </button>
           )}
           {(order.status === 'PENDING' || order.status === 'CANCELLED' || order.status === 'COMPLETED') && (

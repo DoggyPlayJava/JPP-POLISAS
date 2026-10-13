@@ -124,6 +124,26 @@ export function EmsEventFormPage() {
   ]);
 
   const [openDescriptors, setOpenDescriptors] = useState<Record<number, boolean>>({});
+  const [presetPrompt, setPresetPrompt] = useState<{
+    isOpen: boolean;
+    title: string;
+    presetName: string;
+    newItems: LocalRubricCriteria[];
+    hasDifferentCategory: boolean;
+  } | null>(null);
+
+  const applyPreset = (mode: 'append' | 'replace') => {
+    if (!presetPrompt) return;
+    const { presetName, newItems } = presetPrompt;
+    if (mode === 'append') {
+      setRubrics((prev) => [...prev, ...newItems]);
+      toast.success(`Templat ${presetName} berjaya ditambah! (+${newItems.length} Rubrik)`);
+    } else {
+      setRubrics(newItems);
+      toast.success(`Templat ${presetName} berjaya menggantikan rubrik sedia ada! (${newItems.length} Rubrik)`);
+    }
+    setPresetPrompt(null);
+  };
 
   const toggleDescriptor = (index: number) => {
     setOpenDescriptors((prev) => ({
@@ -364,28 +384,14 @@ export function EmsEventFormPage() {
       (r) => r.category_name && r.category_name.trim() && r.category_name.trim().toLowerCase() !== targetCategory.toLowerCase()
     );
 
-    if (hasDifferentCategory) {
-      const isAppend = window.confirm(
-        'Kategori rubrik lain dikesan. Adakah anda mahu TAMBAH (+Tambah Kategori) templat iFAMB Best Showcase ke dalam senarai?\n\n- Klik [OK] untuk TAMBAH (+Tambah Kategori)\n- Klik [Cancel] untuk GANTI SEMUA (Replace)'
-      );
-      if (isAppend) {
-        setRubrics((prev) => [...prev, ...newItems]);
-        toast.success('Templat iFAMB Best Showcase berjaya ditambah! (+16 Rubrik)');
-      } else {
-        setRubrics(newItems);
-        toast.success('Templat iFAMB Best Showcase berjaya menggantikan rubrik sedia ada! (16 Rubrik)');
-      }
-    } else if (hasRubrics) {
-      const isAppend = window.confirm(
-        'Rubrik sedia ada dikesan. Adakah anda mahu TAMBAH templat ini atau GANTI SEMUA?\n\n- Klik [OK] untuk TAMBAH (+Tambah Kategori)\n- Klik [Cancel] untuk GANTI SEMUA (Replace)'
-      );
-      if (isAppend) {
-        setRubrics((prev) => [...prev, ...newItems]);
-        toast.success('Templat iFAMB Best Showcase berjaya ditambah!');
-      } else {
-        setRubrics(newItems);
-        toast.success('Templat iFAMB Best Showcase berjaya menggantikan rubrik sedia ada!');
-      }
+    if (hasRubrics) {
+      setPresetPrompt({
+        isOpen: true,
+        title: 'Muat Templat iFAMB Best Showcase',
+        presetName: 'iFAMB Best Showcase',
+        newItems,
+        hasDifferentCategory,
+      });
     } else {
       setRubrics(newItems);
       toast.success('Templat iFAMB Best Showcase berjaya dimuatkan! (16 Rubrik / 4 Seksyen)');
@@ -410,28 +416,14 @@ export function EmsEventFormPage() {
       (r) => r.category_name && r.category_name.trim() && r.category_name.trim().toLowerCase() !== targetCategory.toLowerCase()
     );
 
-    if (hasDifferentCategory) {
-      const isAppend = window.confirm(
-        'Kategori rubrik lain dikesan. Adakah anda mahu TAMBAH (+Tambah Kategori) templat iFAMB Best Pitching ke dalam senarai?\n\n- Klik [OK] untuk TAMBAH (+Tambah Kategori)\n- Klik [Cancel] untuk GANTI SEMUA (Replace)'
-      );
-      if (isAppend) {
-        setRubrics((prev) => [...prev, ...newItems]);
-        toast.success('Templat iFAMB Best Pitching berjaya ditambah! (+10 Rubrik)');
-      } else {
-        setRubrics(newItems);
-        toast.success('Templat iFAMB Best Pitching berjaya menggantikan rubrik sedia ada! (10 Rubrik)');
-      }
-    } else if (hasRubrics) {
-      const isAppend = window.confirm(
-        'Rubrik sedia ada dikesan. Adakah anda mahu TAMBAH templat ini atau GANTI SEMUA?\n\n- Klik [OK] untuk TAMBAH (+Tambah Kategori)\n- Klik [Cancel] meanda GANTI SEMUA (Replace)'
-      );
-      if (isAppend) {
-        setRubrics((prev) => [...prev, ...newItems]);
-        toast.success('Templat iFAMB Best Pitching berjaya ditambah!');
-      } else {
-        setRubrics(newItems);
-        toast.success('Templat iFAMB Best Pitching berjaya menggantikan rubrik sedia ada!');
-      }
+    if (hasRubrics) {
+      setPresetPrompt({
+        isOpen: true,
+        title: 'Muat Templat iFAMB Best Pitching',
+        presetName: 'iFAMB Best Pitching',
+        newItems,
+        hasDifferentCategory,
+      });
     } else {
       setRubrics(newItems);
       toast.success('Templat iFAMB Best Pitching berjaya dimuatkan! (10 Rubrik)');
@@ -1433,6 +1425,63 @@ export function EmsEventFormPage() {
           </button>
         </div>
       </div>
+
+      {/* Rubric Preset Confirmation Dialog */}
+      {presetPrompt?.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {presetPrompt.title}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {presetPrompt.newItems.length} kriteria rubrik akan dimuatkan
+                </p>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+              {presetPrompt.hasDifferentCategory ? (
+                <p>
+                  Kategori rubrik lain dikesan dalam senarai anda. Adakah anda mahu <strong>menambah</strong> templat ini sebagai kategori baharu (cth: berbilang anugerah), atau <strong>menggantikan semua</strong> rubrik sedia ada?
+                </p>
+              ) : (
+                <p>
+                  Rubrik sedia ada dikesan. Adakah anda mahu <strong>menambah</strong> templat ini atau <strong>menggantikan semua</strong> kriteria sedia ada?
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setPresetPrompt(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('replace')}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800/60 transition"
+              >
+                Ganti Semua
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('append')}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition"
+              >
+                + Tambah
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -162,7 +162,7 @@ export const EmsCertificatePage: React.FC = () => {
         recipient_subtext: recipientSubtext,
         event_title: event?.title || 'Program / Acara JPP POLISAS',
         event_date: formattedDate,
-        award_title: cert.cert_type === 'WINNER' ? 'Pemenang Utam / Anugerah Cemerlang' : undefined,
+        award_title: cert.cert_type === 'WINNER' ? 'Pemenang Utama / Anugerah Cemerlang' : undefined,
         qr_code_url: qrCodeDataUrl,
         verification_url: verificationUrl,
       };
@@ -463,7 +463,7 @@ export const EmsCertificatePage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 py-6 bg-white dark:bg-slate-950 text-center text-xs text-slate-500 dark:text-slate-400">
-        <p>© {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS. Hak Cipta Terelihara.</p>
+        <p>© {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS. Hak Cipta Terpelihara.</p>
         <p className="mt-1 text-[11px]">Sistem Pengurusan Acara (EMS) & Generator Sijil Digital</p>
       </footer>
     </div>

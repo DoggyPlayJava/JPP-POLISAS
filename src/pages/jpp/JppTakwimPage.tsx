@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { JPP_MT_POSITIONS } from '@/types';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
 
 // ── Logo URLs ──
@@ -127,6 +128,8 @@ export function JppTakwimPage() {
   const [saving, setSaving] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [deleteTargetItem, setDeleteTargetItem] = useState<TakwimItem | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   const openCreate = () => { setEditTarget(null); setForm({ ...emptyForm, jenis: rbac.allowedJenis[0] || '' }); setDialogOpen(true); };
   const openEdit = (item: TakwimItem) => {
@@ -161,26 +164,37 @@ export function JppTakwimPage() {
     finally { setSaving(false); }
   };
 
-  const handleDelete = async (item: TakwimItem) => {
-    if (!window.confirm(`Padam "${item.tajuk}"?`)) return;
+  const executeSingleDelete = async () => {
+    if (!deleteTargetItem) return;
+    const item = deleteTargetItem;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
-    if (error) toast.error(error.message); else { toast.success('Dipadam!'); if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_DELETED', module: 'Takwim', entityId: item.id, description: `Takwim dipadam: ${item.tajuk}`, actorId: rbac.userId }); refresh(); }
+    if (error) {
+      toast.error(error.message || 'Gagal memadam item takwim.');
+    } else {
+      toast.success('Entri takwim berjaya dipadam.');
+      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_DELETED', module: 'Takwim', entityId: item.id, description: `Takwim dipadam: ${item.tajuk}`, actorId: rbac.userId });
+      setDeleteTargetItem(null);
+      refresh();
+    }
   };
 
-  const handleBulkDelete = async () => {
+  const executeBulkDelete = async () => {
     const ids = Array.from(bulkSelected);
     if (ids.length === 0) return;
-    if (!window.confirm(`Padam ${ids.length} entri yang dipilih?`)) return;
     setBulkDeleting(true);
     try {
       const { error } = await supabase.from('takwim_pusat').delete().in('id', ids);
       if (error) throw error;
-      toast.success(`${ids.length} entri berjaya dipadam!`);
+      toast.success(`${ids.length} entri berjaya dipadam.`);
       if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_BULK_DELETED', module: 'Takwim', description: `${ids.length} entri takwim dipadam secara pukal`, actorId: rbac.userId, metadata: { count: ids.length } });
       setBulkSelected(new Set());
+      setBulkConfirmOpen(false);
       refresh();
-    } catch (e: any) { toast.error(e.message || 'Gagal padam.'); }
-    finally { setBulkDeleting(false); }
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal memadam.');
+    } finally {
+      setBulkDeleting(false);
+    }
   };
 
   const handleNotify = async () => {
@@ -192,7 +206,7 @@ export function JppTakwimPage() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-white">
+    <div className="w-full text-slate-900 dark:text-white">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
@@ -310,7 +324,7 @@ export function JppTakwimPage() {
             <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">
               {bulkSelected.size} dipilih
             </span>
-            <Button onClick={handleBulkDelete} disabled={bulkDeleting} variant="outline" className="h-8 rounded-lg border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest">
+            <Button onClick={() => setBulkConfirmOpen(true)} disabled={bulkDeleting} variant="outline" className="h-8 rounded-lg border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest">
               {bulkDeleting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Trash2 className="w-3 h-3 mr-1" />}
               Padam Semua
             </Button>
@@ -324,7 +338,7 @@ export function JppTakwimPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
         ) : viewMode === 'table' ? (
-          <TakwimTable items={items} rbac={rbac} onEdit={openEdit} onDelete={handleDelete} bulkSelected={bulkSelected} onBulkToggle={setBulkSelected} />
+          <TakwimTable items={items} rbac={rbac} onEdit={openEdit} onDelete={(item) => setDeleteTargetItem(item)} bulkSelected={bulkSelected} onBulkToggle={setBulkSelected} />
         ) : (
           <TakwimCalendar items={items} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
         )}
@@ -425,6 +439,31 @@ export function JppTakwimPage() {
           sesi={sesi}
         />
       )}
+
+      {/* Single Item Delete Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteTargetItem)}
+        onOpenChange={(open) => !open && setDeleteTargetItem(null)}
+        title="Padam Entri Takwim"
+        description={deleteTargetItem ? `Adakah anda pasti mahu memadam "${deleteTargetItem.tajuk}" daripada takwim berpusat?` : ''}
+        confirmLabel="Padam Entri"
+        cancelLabel="Batal"
+        variant="destructive"
+        onConfirm={executeSingleDelete}
+      />
+
+      {/* Bulk Delete Dialog */}
+      <ConfirmDialog
+        open={bulkConfirmOpen}
+        onOpenChange={setBulkConfirmOpen}
+        title="Padam Entri Pukal"
+        description={`Adakah anda pasti mahu memadam ${bulkSelected.size} entri takwim yang dipilih?`}
+        confirmLabel="Padam Semua"
+        cancelLabel="Batal"
+        variant="destructive"
+        isLoading={bulkDeleting}
+        onConfirm={executeBulkDelete}
+      />
     </div>
   );
 }

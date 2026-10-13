@@ -17,6 +17,7 @@ import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { JPP_MT_POSITIONS } from '@/types';
 import { DemeritManager } from '@/pages/akademik/DemeritManager';
 import MakmpAdminDashboardPage from './MakmpAdminDashboardPage';
+import { PromptDialog } from '@/components/ui/PromptDialog';
 
 const THEME = '#818CF8';
 
@@ -147,6 +148,21 @@ function PencapaianReviewPanel() {
   const [filter, setFilter]   = useState<'MENUNGGU' | 'SEMUA'>('MENUNGGU');
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [customMerits, setCustomMerits] = useState<Record<string, number>>({});
+  const [promptConfig, setPromptConfig] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    inputLabel?: string;
+    placeholder?: string;
+    initialValue?: string;
+    variant?: 'default' | 'destructive';
+    onConfirm: (val: string) => void;
+  }>({
+    open: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -362,12 +378,22 @@ function PencapaianReviewPanel() {
                       <button
                         onClick={() => {
                           if (merit < defaultMerit) {
-                            const reason = prompt(`Sila nyatakan sebab pengurangan markah merit untuk "${item.nama_pencapaian}":`);
-                            if (!reason || !reason.trim()) {
-                              toast.error('Sebab pengurangan wajib diisi!');
-                              return;
-                            }
-                            handleVerify(item.id, 'DISAHKAN', merit, reason.trim());
+                            setPromptConfig({
+                              open: true,
+                              title: 'Sebab Pengurangan Markah',
+                              description: `Sila nyatakan sebab pengurangan markah merit untuk "${item.nama_pencapaian}":`,
+                              inputLabel: 'Sebab Pengurangan',
+                              placeholder: 'cth: Sijil penyertaan peringkat zon, bukan kebangsaan',
+                              variant: 'destructive',
+                              onConfirm: (reason) => {
+                                if (!reason || !reason.trim()) {
+                                  toast.error('Sebab pengurangan wajib diisi!');
+                                  return;
+                                }
+                                handleVerify(item.id, 'DISAHKAN', merit, reason.trim());
+                                setPromptConfig(p => ({ ...p, open: false }));
+                              },
+                            });
                           } else {
                             handleVerify(item.id, 'DISAHKAN', merit);
                           }
@@ -380,8 +406,18 @@ function PencapaianReviewPanel() {
                       </button>
                       <button
                         onClick={() => {
-                          const reason = prompt(`Sebab penolakan untuk "${item.nama_pencapaian}":`);
-                          if (reason !== null) handleVerify(item.id, 'DITOLAK', 0, reason);
+                          setPromptConfig({
+                            open: true,
+                            title: 'Tolak Pencapaian',
+                            description: `Sebab penolakan untuk "${item.nama_pencapaian}":`,
+                            inputLabel: 'Sebab Penolakan',
+                            placeholder: 'cth: Bukti penyertaan tidak jelas',
+                            variant: 'destructive',
+                            onConfirm: (reason) => {
+                              handleVerify(item.id, 'DITOLAK', 0, reason.trim());
+                              setPromptConfig(p => ({ ...p, open: false }));
+                            },
+                          });
                         }}
                         disabled={reviewing === item.id}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
@@ -404,6 +440,19 @@ function PencapaianReviewPanel() {
           })}
         </div>
       )}
+      <PromptDialog
+        open={promptConfig.open}
+        onOpenChange={(open) => setPromptConfig(p => ({ ...p, open }))}
+        title={promptConfig.title}
+        description={promptConfig.description}
+        inputLabel={promptConfig.inputLabel}
+        placeholder={promptConfig.placeholder}
+        initialValue={promptConfig.initialValue}
+        variant={promptConfig.variant || 'default'}
+        confirmLabel="Simpan"
+        cancelLabel="Batal"
+        onConfirm={promptConfig.onConfirm}
+      />
     </div>
   );
 }
@@ -413,6 +462,22 @@ function UnlockRequestsPanel() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [acting, setActing]     = useState<string | null>(null);
+  const [unlockPromptConfig, setUnlockPromptConfig] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    inputLabel?: string;
+    placeholder?: string;
+    initialValue?: string;
+    inputType?: 'text' | 'number';
+    variant?: 'default' | 'destructive';
+    onConfirm: (val: string) => void;
+  }>({
+    open: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -540,7 +605,7 @@ function UnlockRequestsPanel() {
   const pending = requests.filter(r => r.status === 'MENUNGGU');
   const done    = requests.filter(r => r.status !== 'MENUNGGU');
 
-  const RequestCard = ({ req }: { req: any }) => (
+  const RequestCard = ({ req }: { req: any; key?: React.Key }) => (
     <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4 space-y-3 shadow-sm">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${THEME}15`, color: THEME }}>
@@ -575,17 +640,26 @@ function UnlockRequestsPanel() {
             onClick={() => {
               const oldMerit = req.pencapaian.merit_override ?? req.pencapaian.merit_auto ?? 0;
               const maxMerit = req.pencapaian.merit_auto ?? 0;
-              const newMeritStr = prompt(`Pencapaian: ${req.pencapaian.nama_pencapaian}\nMarkah sedia ada: ${oldMerit}\nHad maksimum: ${maxMerit}\nMasukkan markah baharu:`);
-              if (newMeritStr !== null) {
-                const newMerit = parseInt(newMeritStr);
-                if (isNaN(newMerit) || newMerit < 0) {
-                  toast.error('Markah tidak sah.');
-                } else if (newMerit > maxMerit) {
-                  toast.error(`Markah tidak boleh melebihi had maksimum (${maxMerit}).`);
-                } else {
-                  handleEditMerit(req, newMerit);
-                }
-              }
+              setUnlockPromptConfig({
+                open: true,
+                title: 'Pelarasan Markah Merit',
+                description: `Pencapaian: ${req.pencapaian.nama_pencapaian}\nMarkah sedia ada: ${oldMerit} (Had maksimum: ${maxMerit})`,
+                inputLabel: 'Markah Baharu',
+                placeholder: `0 - ${maxMerit}`,
+                initialValue: String(oldMerit),
+                inputType: 'number',
+                onConfirm: (newMeritStr) => {
+                  const newMerit = parseInt(newMeritStr);
+                  if (isNaN(newMerit) || newMerit < 0) {
+                    toast.error('Markah tidak sah.');
+                  } else if (newMerit > maxMerit) {
+                    toast.error(`Markah tidak boleh melebihi had maksimum (${maxMerit}).`);
+                  } else {
+                    handleEditMerit(req, newMerit);
+                    setUnlockPromptConfig(p => ({ ...p, open: false }));
+                  }
+                },
+              });
             }}
             disabled={acting === req.id}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 transition-all"
@@ -594,8 +668,18 @@ function UnlockRequestsPanel() {
           </button>
           <button
             onClick={() => {
-              const note = prompt('Nota penolakan:');
-              if (note !== null) handleDecision(req, 'DITOLAK', note);
+              setUnlockPromptConfig({
+                open: true,
+                title: 'Tolak Permohonan Buka Kunci',
+                description: 'Nyatakan nota penolakan permohonan buka kunci merit:',
+                inputLabel: 'Nota Penolakan',
+                placeholder: 'cth: Maklumat yang diberikan tidak mencukupi',
+                variant: 'destructive',
+                onConfirm: (note) => {
+                  handleDecision(req, 'DITOLAK', note.trim());
+                  setUnlockPromptConfig(p => ({ ...p, open: false }));
+                },
+              });
             }}
             disabled={acting === req.id}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
@@ -636,6 +720,21 @@ function UnlockRequestsPanel() {
           )}
         </>
       )}
+
+      <PromptDialog
+        open={unlockPromptConfig.open}
+        onOpenChange={(open) => setUnlockPromptConfig(p => ({ ...p, open }))}
+        title={unlockPromptConfig.title}
+        description={unlockPromptConfig.description}
+        inputLabel={unlockPromptConfig.inputLabel}
+        placeholder={unlockPromptConfig.placeholder}
+        initialValue={unlockPromptConfig.initialValue}
+        inputType={unlockPromptConfig.inputType || 'text'}
+        variant={unlockPromptConfig.variant || 'default'}
+        confirmLabel="Simpan"
+        cancelLabel="Batal"
+        onConfirm={unlockPromptConfig.onConfirm}
+      />
     </div>
   );
 }

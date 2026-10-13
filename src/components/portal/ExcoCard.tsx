@@ -166,7 +166,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
       onClick={handleClick}
       className={cn(
         `tour-mod-${module.id}`,
-        "group relative cursor-pointer overflow-hidden rounded-[2rem] p-8 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
+        "group relative cursor-pointer overflow-hidden rounded-3xl p-6 sm:p-7 transition-all duration-500 min-h-[230px] sm:min-h-[250px] flex flex-col justify-between",
         "border shadow-sm hover:shadow-2xl dark:shadow-none",
         !canAccess && "opacity-60 grayscale-[0.8] cursor-not-allowed",
         isEventMode 
@@ -294,7 +294,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
         <div>
           <h2 className={cn(
-            "text-xl font-bold mb-1.5 transition-colors", 
+            "text-lg sm:text-xl font-black tracking-tight mb-1.5 transition-colors [text-wrap:balance]", 
             !canAccess && "opacity-70",
             isEventMode ? "text-white" : "text-[#2E3A2F] dark:text-[#F8F6EE]"
           )}>

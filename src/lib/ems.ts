@@ -490,9 +490,26 @@ export async function checkinEmsParticipant(
   eventId: string,
   searchInput: string
 ): Promise<EmsParticipant> {
-  const cleanInput = searchInput.trim();
+  let cleanInput = searchInput.trim();
   if (!cleanInput) {
     throw new Error('Sila masukkan No. Matrik, ID, atau Emel peserta.');
+  }
+
+  // Support DEV_GUIDELINE 22.4 Smart Routing payload protocols (e.g. EMS-PASS::<id>, URLs, JSON)
+  if (cleanInput.startsWith('EMS-PASS::')) {
+    cleanInput = cleanInput.replace('EMS-PASS::', '').trim();
+  } else if (cleanInput.startsWith('{') && cleanInput.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(cleanInput);
+      cleanInput = (parsed.id || parsed.matrix_no || parsed.email || cleanInput).trim();
+    } catch {
+      // ignore JSON parse error
+    }
+  } else if (cleanInput.includes('/ems/pass/') || cleanInput.includes('/ems/e/')) {
+    const urlMatch = cleanInput.match(/\/ems\/(?:pass|e\/[^/]+\/register)\/([a-f0-9-]+)/i);
+    if (urlMatch && urlMatch[1]) {
+      cleanInput = urlMatch[1].trim();
+    }
   }
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
@@ -833,7 +850,7 @@ export async function resolveTieWinner(
     .eq('event_id', eventId);
 
   if (fetchErr || !participants) {
-    throw new Error(`Gagal memproses penentuan pemenang seret: ${fetchErr?.message}`);
+    throw new Error(`Gagal memproses penentuan pemenang seri: ${fetchErr?.message}`);
   }
 
   const updateTasks = participants.map((p) => {

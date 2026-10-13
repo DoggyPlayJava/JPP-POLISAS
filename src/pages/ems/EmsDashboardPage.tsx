@@ -497,9 +497,9 @@ export function EmsDashboardPage() {
           {displayedEvents.map((event) => (
             <div
               key={event.id}
-              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-slate-700 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-sm hover:shadow-md space-y-4 text-slate-900 dark:text-white"
+              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/40 dark:hover:border-slate-700 rounded-3xl p-6 flex flex-col h-full transition-all shadow-sm hover:shadow-md text-slate-900 dark:text-white"
             >
-              <div>
+              <div className="flex-1 flex flex-col">
                 {/* Status & Mode */}
                 <div className="flex items-center justify-between gap-2 mb-3">
                   {getStatusBadge(event.status)}
@@ -509,7 +509,7 @@ export function EmsDashboardPage() {
                 </div>
 
                 {/* Title & Category */}
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 mb-1">{event.title}</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 mb-1 [text-wrap:balance]">{event.title}</h2>
                 {event.category && (
                   <span className="inline-block text-xs font-semibold text-amber-600 dark:text-amber-400 mb-3">
                     {event.category}
@@ -524,7 +524,7 @@ export function EmsDashboardPage() {
                 )}
 
                 {/* Metadata */}
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-auto mb-4">
                   {event.event_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
@@ -547,7 +547,7 @@ export function EmsDashboardPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="border-t border-slate-100 dark:border-slate-800/80 pt-4">
+              <div className="border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-auto">
                 {(canCreateEvent || (!!user?.id && event.created_by === user.id)) ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Sparkles, Brain, ShieldCheck, AlertTriangle, Lock, Shield, CheckCheck, Activity, Settings as SettingsIcon } from 'lucide-react';
+import { Sparkles, Brain, ShieldCheck, AlertTriangle, Lock, Shield, CheckCheck, Activity, Settings as SettingsIcon, Loader2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PromptDialog } from '@/components/ui/PromptDialog';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
@@ -73,95 +75,189 @@ export function JppNexusPage() {
         }
     };
 
-    const updateAiTokenLimit = async () => {
-        const input = window.prompt("Masukkan kuota limit pemerhatian token (Dalam angka, cth: 1000000)", settings.ai_token_limit?.toString());
-        if (!input) return;
-        const newLimit = parseInt(input);
-        if (isNaN(newLimit) || newLimit < 1000) { toast.error("Nilai had token mesti lebih daripada 1000."); return; }
-        const toastId = toast.loading('Mengemaskini had token...');
-        try {
-            const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'ai_token_limit').select();
-            if (error) throw error;
-            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_limit', value: newLimit });
-            setSettings(s => ({ ...s, ai_token_limit: newLimit }));
-            toast.success(`Had token baharu: ${newLimit.toLocaleString()}`, { id: toastId });
-        } catch (e: any) { toast.error(e.message || 'Gagal kemaskini', { id: toastId }); }
+    // Dialog states
+    const [promptConfig, setPromptConfig] = useState<{
+        open: boolean;
+        title: string;
+        description?: string;
+        inputLabel?: string;
+        placeholder?: string;
+        initialValue?: string;
+        inputType?: 'text' | 'number';
+        isLoading?: boolean;
+        onConfirm: (val: string) => void | Promise<void>;
+    }>({
+        open: false,
+        title: '',
+        onConfirm: () => {},
+    });
+
+    const [banConfirmState, setBanConfirmState] = useState<{
+        open: boolean;
+        userId: string;
+        action: 'unban' | 'permanent_ban';
+        userName?: string;
+        loading?: boolean;
+    }>({
+        open: false,
+        userId: '',
+        action: 'unban',
+    });
+
+    const updateAiTokenLimit = () => {
+        setPromptConfig({
+            open: true,
+            title: 'Ketetapan Had Token Pemerhatian',
+            description: 'Masukkan kuota had token keseluruhan untuk pemantauan sistem kecerdasan buatan.',
+            inputLabel: 'Had Token (Angka)',
+            placeholder: 'cth: 1000000',
+            initialValue: settings.ai_token_limit?.toString() || '1000000',
+            inputType: 'number',
+            onConfirm: async (input) => {
+                const newLimit = parseInt(input);
+                if (isNaN(newLimit) || newLimit < 1000) {
+                    toast.error('Nilai had token mesti sekurang-kurangnya 1,000.');
+                    return;
+                }
+                const toastId = toast.loading('Mengemaskini had token...');
+                try {
+                    const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'ai_token_limit').select();
+                    if (error) throw error;
+                    if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_limit', value: newLimit });
+                    setSettings(s => ({ ...s, ai_token_limit: newLimit }));
+                    toast.success(`Had token baharu: ${newLimit.toLocaleString()}`, { id: toastId });
+                    setPromptConfig(prev => ({ ...prev, open: false }));
+                } catch (e: any) {
+                    toast.error(e.message || 'Gagal kemaskini', { id: toastId });
+                }
+            }
+        });
     };
 
-    const updateAiTokenAllowance = async (tier: 'free_tier_tokens' | 'pro_tier_tokens', label: string) => {
+    const updateAiTokenAllowance = (tier: 'free_tier_tokens' | 'pro_tier_tokens', label: string) => {
         const currentSettings = settings.ai_token_settings || { free_tier_tokens: 200, pro_tier_tokens: 1000, costs: {} };
         const currentLimit = currentSettings[tier] || 0;
-        const input = window.prompt(`Masukkan bekalan token sebulan untuk pengguna ${label}:`, currentLimit.toString());
-        if (!input) return;
-        const newLimit = parseInt(input);
-        if (isNaN(newLimit) || newLimit < 0) { toast.error("Sila masukkan nilai nombor sah."); return; }
-        const toastId = toast.loading(`Mengemaskini...`);
-        try {
-            const newSettings = { ...currentSettings, [tier]: newLimit };
-            const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
-            if (error) throw error;
-            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
-            setSettings(s => ({ ...s, ai_token_settings: newSettings }));
-            toast.success(`Berjaya dinaik taraf.`, { id: toastId });
-        } catch (e: any) { toast.error(e.message, { id: toastId }); }
+        setPromptConfig({
+            open: true,
+            title: `Bekalan Token Bulanan: ${label}`,
+            description: `Tetapkan jumlah kuota token yang diperuntukkan setiap bulan untuk pengguna akaun ${label}.`,
+            inputLabel: 'Jumlah Token Sebulan',
+            placeholder: 'cth: 500',
+            initialValue: currentLimit.toString(),
+            inputType: 'number',
+            onConfirm: async (input) => {
+                const newLimit = parseInt(input);
+                if (isNaN(newLimit) || newLimit < 0) {
+                    toast.error('Sila masukkan nilai nombor yang sah.');
+                    return;
+                }
+                const toastId = toast.loading('Mengemaskini kuota token...');
+                try {
+                    const newSettings = { ...currentSettings, [tier]: newLimit };
+                    const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
+                    if (error) throw error;
+                    if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
+                    setSettings(s => ({ ...s, ai_token_settings: newSettings }));
+                    toast.success('Kuota token berjaya dikemaskini.', { id: toastId });
+                    setPromptConfig(prev => ({ ...prev, open: false }));
+                } catch (e: any) {
+                    toast.error(e.message, { id: toastId });
+                }
+            }
+        });
     };
 
-    const updateAiTokenCost = async (serviceKey: string, label: string) => {
+    const updateAiTokenCost = (serviceKey: string, label: string) => {
         const currentSettings = settings.ai_token_settings || { free_tier_tokens: 200, pro_tier_tokens: 1000, costs: {} };
         const currentCost = currentSettings.costs?.[serviceKey] || 0;
-        const input = window.prompt(`Masukkan harga kos (token) untuk servis ${label} (Mesti nombor angka. Set '0' untuk jadikannya percuma):`, currentCost.toString());
-        if (!input) return;
-        const newCost = parseInt(input);
-        if (isNaN(newCost) || newCost < 0) { toast.error("Sila masukkan nilai nombor."); return; }
-        const toastId = toast.loading(`Mengemaskini...`);
-        try {
-            const newSettings = { ...currentSettings, costs: { ...currentSettings.costs, [serviceKey]: newCost } };
-            const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
-            if (error) throw error;
-            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
-            setSettings(s => ({ ...s, ai_token_settings: newSettings }));
-            toast.success(`Selesai dikemaskini.`, { id: toastId });
-        } catch (e: any) { toast.error(e.message, { id: toastId }); }
+        setPromptConfig({
+            open: true,
+            title: `Harga Kos Servis: ${label}`,
+            description: 'Masukkan kos penggunaan token bagi servis ini. Tetapkan 0 untuk perkhidmatan percuma.',
+            inputLabel: 'Kos Token (Per Request)',
+            placeholder: '0',
+            initialValue: currentCost.toString(),
+            inputType: 'number',
+            onConfirm: async (input) => {
+                const newCost = parseInt(input);
+                if (isNaN(newCost) || newCost < 0) {
+                    toast.error('Sila masukkan nilai angka yang sah.');
+                    return;
+                }
+                const toastId = toast.loading('Mengemaskini kos servis...');
+                try {
+                    const newSettings = { ...currentSettings, costs: { ...currentSettings.costs, [serviceKey]: newCost } };
+                    const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
+                    if (error) throw error;
+                    if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
+                    setSettings(s => ({ ...s, ai_token_settings: newSettings }));
+                    toast.success('Kos servis berjaya dikemaskini.', { id: toastId });
+                    setPromptConfig(prev => ({ ...prev, open: false }));
+                } catch (e: any) {
+                    toast.error(e.message, { id: toastId });
+                }
+            }
+        });
     };
 
-    const updateSpamThreshold = async (type: 'warning' | 'block') => {
+    const updateSpamThreshold = (type: 'warning' | 'block') => {
         const currentRateLimit = settings.ai_rate_limit || { warning_threshold: 50, block_threshold: 65 };
-        const label = type === 'warning' ? 'Amaran (Amaran selepas X chat)' : 'Sekatan (Sekat selepas X chat)';
+        const label = type === 'warning' ? 'Amaran (Bilangan mesej)' : 'Sekatan Automatik (Bilangan mesej)';
         const currentVal = type === 'warning' ? currentRateLimit.warning_threshold : currentRateLimit.block_threshold;
-        const input = window.prompt(`Masukkan had ${label}:`, currentVal?.toString());
-        if (!input) return;
-        const newLimitValue = parseInt(input);
-        if (isNaN(newLimitValue) || newLimitValue < 1) { toast.error("Nilai mesti nombor melebihi 0."); return; }
-        const toastId = toast.loading('Mengemaskini had keselamatan...');
-        try {
-            const newRateLimit = { ...currentRateLimit, [type === 'warning' ? 'warning_threshold' : 'block_threshold']: newLimitValue };
-            const { error } = await supabase.from('system_settings').upsert({ key: 'ai_rate_limit', value: newRateLimit }, { onConflict: 'key' });
-            if (error) throw error;
-            setSettings(s => ({ ...s, ai_rate_limit: newRateLimit }));
-            toast.success(`Had dikemaskini`, { id: toastId });
-        } catch (e: any) { toast.error(e.message, { id: toastId }); }
+        setPromptConfig({
+            open: true,
+            title: `Ketetapan Had Laju: ${type === 'warning' ? 'Amaran' : 'Sekatan'}`,
+            description: `Tetapkan had mesej seminit/sejam sebelum sistem mengeluarkan ${type === 'warning' ? 'amaran' : 'sekatan automatik'}.`,
+            inputLabel: 'Had Mesej',
+            placeholder: '50',
+            initialValue: currentVal?.toString() || '50',
+            inputType: 'number',
+            onConfirm: async (input) => {
+                const newLimitValue = parseInt(input);
+                if (isNaN(newLimitValue) || newLimitValue < 1) {
+                    toast.error('Nilai mestilah nombor melebihi 0.');
+                    return;
+                }
+                const toastId = toast.loading('Mengemaskini keselamatan...');
+                try {
+                    const newRateLimit = { ...currentRateLimit, [type === 'warning' ? 'warning_threshold' : 'block_threshold']: newLimitValue };
+                    const { error } = await supabase.from('system_settings').upsert({ key: 'ai_rate_limit', value: newRateLimit }, { onConflict: 'key' });
+                    if (error) throw error;
+                    setSettings(s => ({ ...s, ai_rate_limit: newRateLimit }));
+                    toast.success('Had keselamatan berjaya dikemaskini.', { id: toastId });
+                    setPromptConfig(prev => ({ ...prev, open: false }));
+                } catch (e: any) {
+                    toast.error(e.message, { id: toastId });
+                }
+            }
+        });
     };
 
-    const handleActionSpamUser = async (userId: string, action: 'unban' | 'permanent_ban') => {
-        const confirmMsg = action === 'unban' ? 'Lepaskan akses AI untuk pengguna ini?' : 'SEKAT SELAMANYA pengguna ini daripada AI?';
-        if (!window.confirm(confirmMsg)) return;
-        const toastId = toast.loading('Memproses tindakan...');
+    const executeActionSpamUser = async () => {
+        const { userId, action } = banConfirmState;
+        if (!userId) return;
+        setBanConfirmState(prev => ({ ...prev, loading: true }));
+        const toastId = toast.loading('Memproses status AI pengguna...');
         const newStatus = action === 'unban' ? 'active' : 'permanent_ban';
         const updates = action === 'unban' ? { ai_status: newStatus, ai_daily_usage: 0 } : { ai_status: newStatus };
         try {
             const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
             if (error) throw error;
-            toast.success(`Status AI dikemaskini.`, { id: toastId });
+            toast.success('Status AI pengguna berjaya dikemaskini.', { id: toastId });
+            setBanConfirmState({ open: false, userId: '', action: 'unban', loading: false });
             fetchData();
-        } catch (e: any) { toast.error(e.message, { id: toastId }); }
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal memproses', { id: toastId });
+            setBanConfirmState(prev => ({ ...prev, loading: false }));
+        }
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">Memuatkan Nexus Hub...</div>;
+        return <div className="py-16 flex items-center justify-center text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest font-mono"><Loader2 className="w-5 h-5 animate-spin mr-2" />Memuatkan Nexus Hub...</div>;
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white overflow-x-hidden transition-colors">
+        <div className="w-full text-slate-900 dark:text-white overflow-x-hidden transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5"
                     style={{ background: themeColor }} />
@@ -415,12 +511,12 @@ export function JppNexusPage() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
-                                                <button onClick={() => handleActionSpamUser(u.id, 'unban')} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'unban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
                                                     Pulihkan Akses
                                                 </button>
                                             )}
                                             {u.ai_status !== 'permanent_ban' && (
-                                                <button onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'permanent_ban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
                                                     Sekat Berterusan
                                                 </button>
                                             )}
@@ -431,6 +527,38 @@ export function JppNexusPage() {
                         )}
                     </div>
                 </motion.div>
+
+            {/* PromptDialog for configuration inputs */}
+            <PromptDialog
+                open={promptConfig.open}
+                onOpenChange={(open) => setPromptConfig(p => ({ ...p, open }))}
+                title={promptConfig.title}
+                description={promptConfig.description}
+                inputLabel={promptConfig.inputLabel}
+                placeholder={promptConfig.placeholder}
+                initialValue={promptConfig.initialValue}
+                inputType={promptConfig.inputType || 'number'}
+                confirmLabel="Simpan"
+                cancelLabel="Batal"
+                onConfirm={promptConfig.onConfirm}
+            />
+
+            {/* ConfirmDialog for unban/ban user */}
+            <ConfirmDialog
+                open={banConfirmState.open}
+                onOpenChange={(open) => !open && setBanConfirmState(p => ({ ...p, open: false }))}
+                title={banConfirmState.action === 'unban' ? 'Pulihkan Akses AI Pengguna' : 'Sekat Kekal Akses AI Pengguna'}
+                description={
+                    banConfirmState.action === 'unban'
+                        ? `Adakah anda pasti mahu memulihkan akses AI untuk ${banConfirmState.userName || 'pengguna ini'}? Kuota harian beliau akan ditetapkan semula ke 0.`
+                        : `Adakah anda pasti mahu menyekat pengguna ${banConfirmState.userName || 'ini'} secara kekal daripada menggunakan pembantu kecerdasan buatan?`
+                }
+                confirmLabel={banConfirmState.action === 'unban' ? 'Pulihkan Akses' : 'Sekat Pengguna'}
+                cancelLabel="Batal"
+                variant={banConfirmState.action === 'unban' ? 'default' : 'destructive'}
+                isLoading={banConfirmState.loading}
+                onConfirm={executeActionSpamUser}
+            />
             </div>
         </div>
     );

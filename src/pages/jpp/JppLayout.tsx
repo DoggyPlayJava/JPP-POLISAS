@@ -21,8 +21,8 @@ function getCurrentAcademicSession(): string {
 
 const JPP_UNIT_LINKS = [
   { label: 'Dashboard JPP HQ', path: '/jpp' },
-  { label: 'Senarai Ahli JPP', path: '/jpp/ahli' },
-  { label: 'Pengumuman JPP', path: '/jpp/pengumuman' },
+  { label: 'Senarai Ahli JPP', path: '/jpp/members' },
+  { label: 'Pengumuman JPP', path: '/jpp/announcements' },
   { label: 'Takwim JPP', path: '/jpp/takwim' },
   { label: 'NEXUS (Tugasan)', path: '/jpp/nexus' },
 ];
@@ -64,15 +64,17 @@ export function JppLayout() {
       .eq('user_id', user.id)
       .eq('is_active', true)
       .maybeSingle()
-      .then(({ data }) => {
-        if (isMounted) {
-          if (data) setIsFbOfficer(true);
-          setCheckingFbOfficer(false);
+      .then(
+        ({ data }) => {
+          if (isMounted) {
+            if (data) setIsFbOfficer(true);
+            setCheckingFbOfficer(false);
+          }
+        },
+        () => {
+          if (isMounted) setCheckingFbOfficer(false);
         }
-      })
-      .catch(() => {
-        if (isMounted) setCheckingFbOfficer(false);
-      });
+      );
     return () => {
       isMounted = false;
     };
