@@ -169,10 +169,19 @@ export function NextClassBentoCard({
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const updateTime = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       setNow(getMalaysianNow());
-    }, 30000);
-    return () => clearInterval(timer);
+    };
+    const timer = setInterval(updateTime, 30000);
+    const onVisChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) updateTime();
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisChange);
+    };
   }, []);
 
   const activeEntries = useMemo(() => {

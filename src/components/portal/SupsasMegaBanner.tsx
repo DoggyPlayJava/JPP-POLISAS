@@ -54,6 +54,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
     if (!supsasEdition?.start_date) return;
     const target = new Date(supsasEdition.start_date).getTime();
     const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       const diff = target - Date.now();
       if (diff <= 0) {
         setSupsasCountdown({ days: 0, hours: 0, mins: 0, secs: 0, expired: true });
@@ -69,7 +70,14 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
     };
     tick();
     const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
+    const onVisChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisChange);
+    };
   }, [supsasEdition?.start_date]);
 
   return (

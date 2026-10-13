@@ -51,6 +51,7 @@ function useCountdown(targetDate: string | null) {
     const target = new Date(targetDate).getTime();
 
     const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       const now = Date.now();
       const diff = target - now;
       if (diff <= 0) {
@@ -68,7 +69,14 @@ function useCountdown(targetDate: string | null) {
 
     tick();
     const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
+    const onVisChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisChange);
+    };
   }, [targetDate]);
 
   return timeLeft;
