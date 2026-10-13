@@ -144,7 +144,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                 }}
               >
                 {/* Banner / Poster Header */}
-                <div className="relative h-28 w-full overflow-hidden bg-gradient-to-br from-rose-500/20 via-pink-500/10 to-indigo-950/30 flex items-center justify-center">
+                <div className="relative h-28 w-full overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   {bannerUrl ? (
                     <img
                       src={bannerUrl}
@@ -153,9 +153,9 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                       loading="lazy"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-rose-500/15 via-rose-600/10 to-purple-900/20 p-2 text-center">
-                      <Trophy className="w-8 h-8 text-rose-500/40 mb-1" />
-                      <span className="text-[10px] font-bold text-rose-600/70 dark:text-rose-400/70 uppercase tracking-widest line-clamp-1">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800/90 p-2 text-center">
+                      <Trophy className="w-8 h-8 text-amber-500/50 mb-1" />
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest line-clamp-1">
                         {evt.category || 'Acara POLISAS'}
                       </span>
                     </div>

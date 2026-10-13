@@ -133,10 +133,10 @@ export function StudentSearchCombobox({
             if (results.length > 0) setIsOpen(true);
           }}
           placeholder={placeholder}
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-9 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-9 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition"
         />
         {loading ? (
-          <RefreshCw className="absolute right-3 w-4 h-4 text-indigo-400 animate-spin" />
+          <RefreshCw className="absolute right-3 w-4 h-4 text-amber-400 animate-spin" />
         ) : query ? (
           <button
             type="button"
@@ -156,7 +156,7 @@ export function StudentSearchCombobox({
               <div
                 key={student.id}
                 onClick={() => handleSelect(student)}
-                className="p-3 flex items-center justify-between gap-3 hover:bg-indigo-600/15 cursor-pointer transition text-left group"
+                className="p-3 flex items-center justify-between gap-3 hover:bg-slate-800/80 cursor-pointer transition text-left group"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {student.avatar_url ? (
@@ -166,12 +166,12 @@ export function StudentSearchCombobox({
                       className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
                       <User className="w-4 h-4" />
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-indigo-300 truncate">
+                    <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-amber-400 truncate">
                       {student.full_name}
                     </p>
                     {student.email && (
@@ -181,7 +181,7 @@ export function StudentSearchCombobox({
                 </div>
 
                 {student.matrix_no && (
-                  <span className="shrink-0 bg-slate-950 group-hover:bg-indigo-950/80 border border-slate-800 group-hover:border-indigo-500/40 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold text-indigo-300 transition">
+                  <span className="shrink-0 bg-slate-950 group-hover:bg-slate-800 border border-slate-800 group-hover:border-slate-700 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold text-slate-300 transition">
                     {student.matrix_no}
                   </span>
                 )}

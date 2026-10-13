@@ -1364,7 +1364,7 @@ export function EmsJuryPortalPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-amber-500 dark:hover:text-amber-400 border border-slate-300 dark:border-slate-700 hover:border-amber-400 transition-colors shrink-0 shadow-xs"
                           title="Buka lampiran dalam tab baru"
                         >
-                          {isPdf ? <FileText className="w-3.5 h-3.5 text-rose-500" /> : <Eye className="w-3.5 h-3.5 text-indigo-500" />}
+                          {isPdf ? <FileText className="w-3.5 h-3.5 text-rose-500" /> : <Eye className="w-3.5 h-3.5 text-amber-500" />}
                           <span>{isPdf ? `Dokumen PDF ${idx + 1}` : `Foto ${idx + 1}`}</span>
                           <ExternalLink className="w-3 h-3 opacity-60" />
                         </a>
