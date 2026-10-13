@@ -167,6 +167,10 @@ Bagi memastikan JPP-POLISAS mencapai kualiti produk taraf flagship antarabangsa 
    - **Pencegahan Kebutaan Banner (Banner Blindness):** Menggabungkan banner berturut-turut yang memakan ketinggian melebihi 600px ke dalam satu `PortalNotificationCenter` kompak (72-80px) dengan navigasi bertitik dan tindakan terus.
    - **Hirarki Tindakan Kemas:** Pada setiap kad acara EMS, elakkan timbunan 10 butang berwarna-warni. Gunakan butang tindakan utama ("Urus Acara & Skor") bersama dropdown menu bagi fungsi pengurusan lain.
    - **Kekemasan Portal Juri & Modal Pemarkahan (Audit UI/UX):**
+     - **Modal Header Kompak 1-Baris (Compact 1-Line Bar)**: Pengepala modal penilaian juri menggunakan bar kompak mendatar satu baris (`px-3.5 sm:px-5 py-2.5 sm:py-3 shrink-0`) yang menggabungkan lencana booth, tajuk produk calon terpotong kemas (`truncate max-w-[200px] sm:max-w-md`), mikrolencana status autosave (`Draf Disimpan`), butang togol info calon (`showCandidateInfo`), dan butang tutup modal (`X`), mengelakkan pembaziran ruang menegak skrin peranti tablet/mudah alih.
+     - **Laci Maklumat Calon & Lampiran Berasingan (`showCandidateInfo`)**: Maklumat perincian calon, ketua/ahli pasukan, serta senarai lampiran dokumen/PDF diasingkan ke dalam laci gelongsor boleh buka-tutup (*collapsible slide-down drawer*) yang tertutup secara lalai (`showCandidateInfo = false`). Ini memastikan kriteria rubrik pemarkahan utama dapat dilihat dan diakses serta-merta sebaik sahaja modal dibuka tanpa perlu skrol ke bawah.
+     - **Pengepala Seksyen Rubrik Melekat Padu (Solid Sticky Headers)**: Pengepala seksyen rubrik yang melekat (`sticky top-0 z-10`) **WAJIB** menggunakan latar belakang padu/opaque (`bg-slate-100 dark:bg-slate-900`) dan bukannya lutsinar kabur (`backdrop-blur` / `bg-card/80`) bagi menghapuskan pertindihan teks (*text bleed-through*) semasa juri menskrol kriteria rubrik yang panjang.
+     - **Tipografi & Sasaran Sentuhan Likert**: Butang skala Likert (1 - 5) dan kad rubrik menggunakan tipografi berkontras tinggi, saiz sasaran ergonomik tablet (`touch-manipulation`), dan gelang penunjuk pilihan aktif (`ring-2 ring-primary`) yang jelas tanpa pembalutan teks yang canggung.
      - Bar tindakan modal (`Docked Modal Footer Action Bar`) wajib didokkan di dalam bekas modal kad (`shrink-0 border-t`) dan bukan terapung bebas seluruh viewport (`fixed bottom-0 left-0 right-0`) agar tidak memecahkan bucu bulat modal dialog (`rounded-3xl`).
      - Butang pratonton lampiran PDF wajib diposisikan dengan ikon berpusat tanpa pertindihan teks/sempadan (`FileText` dengan tag PDF kemas).
      - Tab anugerah rubrik pada papan pendahulu EMS menggunakan susun atur fleksibel tanpa sekatan rigid `max-w-md` bagi mengelakkan nama kategori dipotong (cth: "Anugerah Projek Keusahawanan Terbaik").
@@ -2537,6 +2541,33 @@ Semua 13 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halam
    - **Helper Pencetus Programatik**: Fungsi `triggerCommandPalette()` di `src/lib/commandPalette.ts` membolehkan bar carian di `Header.tsx`, `PortalNavbar.tsx`, dan `BottomNav.tsx` membuka dialog carian dengan satu klik.
    - **Aksesibiliti & Dialog Radix**: Dilengkapi dengan `DialogPrimitive.Title` dan `DialogPrimitive.Description` (`sr-only`) untuk mematuhi piawaian ARIA serta mengelakkan sebarang amaran hydration pelayar.
    - **Capaian Pantas EMS**: Menyediakan carian segera ke Papan Pemuka EMS, Kaunter Imbasan QR, Portal Juri, Semakan Sijil, Kelulusan Acara, dan pautan langsung ke pentas acara aktif yang diambil secara dinamik daripada jadual `ems_events`.
+
+### 22.8 Redesain Modal Penilaian Juri & Ergonomik Pemarkahan Skrin Penuh (Jury Modal Redesign)
+
+> **Komponen Rujukan**: `src/pages/ems/EmsJuryPortalPage.tsx`  
+> **Suite Ujian Kontrak**: `src/__tests__/emsJuryModalRedesign.test.ts`
+
+Bagi memaksimumkan ergonomik penilaian juri di atas peranti tablet dan telefon pintar semasa acara berlangsung (tanpa pembaziran ruang skrin menegak atau kekeliruan visual):
+
+1. **Pengepala Kompak 1-Baris (Single-Row Compact Header)**:
+   - Menggantikan susun atur lama yang memakan ketinggian menegak melebihi 180px dengan bar kompak tunggal flex row (`px-3.5 sm:px-5 py-2.5 sm:py-3 shrink-0`).
+   - **Bahagian Kiri**: Lencana Booth (`BOOTH #...` font mono hitam/slate padu), tajuk projek/inovasi dengan pengehadan teks kemas (`truncate max-w-[200px] sm:max-w-md`), serta status draf automatik (`Draf Disimpan` bersama ikon semakan hijau).
+   - **Bahagian Kanan**: Butang togol maklumat calon (`showCandidateInfo`) bersama lencana bilangan lampiran dokumen/media (`candidateAttachments.length`), dan butang tutup modal (`X`).
+
+2. **Laci Maklumat Calon & Lampiran Berasingan (`showCandidateInfo`)**:
+   - Panel gelongsor laci maklumat (*slide-down drawer panel*) di bawah pengepala modal yang dikawal oleh keadaan Boolean `showCandidateInfo`.
+   - Keadaan awal ditetapkan kepada `false` (`setShowCandidateInfo(false)`) setiap kali juri membuka modal penilaian mana-mana peserta supaya kawasan rubrik pemarkahan utama dapat dilihat dan dicapai serta-merta tanpa perlu skrol melepasi butiran panjang calon.
+   - Apabila dibuka, memaparkan kad kategori, nama ketua dan ahli pasukan, serta senarai lampiran calon (pautan PDF tab baharu dengan ikon `ExternalLink` dan pratinjau imej lightbox modal dengan ikon `Eye`).
+
+3. **Pengepala Kumpulan Seksyen Melekat Padu (Solid Opaque Sticky Headers)**:
+   - Seksyen rubrik menggunakan susunan melekat (`sticky top-0 z-10`).
+   - **Piawaian Latar Belakang**: Wajib menggunakan warna latar belakang padu dan legap sepenuhnya (`bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800`).
+   - **Larangan Keras**: Dilarang sama sekali menggunakan kelas lutsinar separa atau penapis kabur seperti `bg-card/80 backdrop-blur-md` kerana menyebabkan teks rubrik di bawahnya bertindih (*bleed-through*) dan sukar dibaca semasa skrol pantas.
+
+4. **Piawaian Tipografi & Butang Skala Likert (1 - 5)**:
+   - Butang skala Likert (1 hingga 5) direkabentuk dengan petak grid 5-kolum ergonomik sentuhan (`touch-manipulation active:scale-[0.98]`).
+   - Nilai skor terpilih (`selectedVal`) ditandakan dengan cincin fokus berkontras tinggi (`ring-2 ring-primary` / amber aksen), perubahan latar belakang ketara, dan deskriptor tahap kualiti (cth: *Sangat Lemah*, *Cemerlang*).
+   - Pengiraan wajaran langsung dan peratusan skor (`selectedVal/maxScore * weight`) dipaparkan secara langsung pada lencana status kriteria.
 
 ---
 
