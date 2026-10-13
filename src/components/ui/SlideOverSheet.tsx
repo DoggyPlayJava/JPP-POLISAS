@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export interface SlideOverSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onClose?: () => void;
   title: string;
   description?: string;
   children: React.ReactNode;
@@ -15,16 +17,26 @@ export interface SlideOverSheetProps {
 
 export function SlideOverSheet({
   open,
+  isOpen,
   onOpenChange,
+  onClose,
   title,
   description,
   children,
   className,
 }: SlideOverSheetProps) {
+  const isSheetOpen = open ?? isOpen ?? false;
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange?.(nextOpen);
+    if (!nextOpen && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root open={isSheetOpen} onOpenChange={handleOpenChange}>
       <AnimatePresence>
-        {open && (
+        {isSheetOpen && (
           <DialogPrimitive.Portal forceMount>
             <DialogPrimitive.Overlay asChild>
               <motion.div

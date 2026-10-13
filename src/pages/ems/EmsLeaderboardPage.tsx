@@ -360,7 +360,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Rubric award tabs - shared render between Stage Mode & Leaderboard Mode
   const rubricTabs =
     rubricCategories.length > 1 ? (
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto max-w-md">
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setRubricFilter('ALL')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
@@ -1269,7 +1269,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             {/* Rubric Award Tabs (papan anugerah berasingan) */}
             {rubricTabs && (
-              <div className="w-full md:w-auto overflow-x-auto">
+              <div className="w-full md:flex-1 md:min-w-0 overflow-x-auto no-scrollbar">
                 {rubricTabs}
               </div>
             )}

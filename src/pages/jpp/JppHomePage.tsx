@@ -71,15 +71,24 @@ function StatCardSkeleton() {
 
 // ─── Unit card ───────────────────────────────────────────────────────────────
 function UnitCard({
-  code, isLocked, delay, onNavigate,
+  code, isLocked, delay, onNavigate, stats
 }: {
   key?: React.Key;
   code: string; isLocked: boolean; delay: number; onNavigate: (link: string) => void;
+  stats?: { jppMembers: number; totalClubs: number; totalActivities: number; totalBusinesses: number; totalTickets: number };
 }) {
   const { unitConfig } = useJppConfig();
   const cfg = unitConfig[code];
   if (!cfg) return null;
   const canOpen = cfg.isActive && !isLocked;
+
+  const unitMetric = useMemo(() => {
+    if (!stats || !canOpen) return null;
+    if (code === 'KPP') return `${stats.totalClubs} Kelab Berdaftar`;
+    if (code === 'KEUSAHAWANAN') return `${stats.totalBusinesses} Peniaga Kampus`;
+    if (code === 'KEBAJIKAN') return `${stats.totalTickets} Aduan E-Bantu`;
+    return null;
+  }, [code, stats, canOpen]);
 
   return (
     <motion.div
@@ -88,12 +97,12 @@ function UnitCard({
       transition={{ delay, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => canOpen && onNavigate(`/jpp/unit/${code.toLowerCase()}`)}
       className={cn(
-        'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5 shadow-sm dark:shadow-none',
+        'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5 shadow-xs dark:shadow-none flex flex-col justify-between',
         canOpen
           ? 'cursor-pointer border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/15 hover:shadow-md group'
           : 'cursor-default bg-slate-50 dark:bg-white/[0.015] border-slate-200 dark:border-white/[0.03] opacity-60'
       )}
-      style={{ minHeight: 140 }}
+      style={{ minHeight: 160 }}
     >
       {/* Hover gradient */}
       {canOpen && (
@@ -134,7 +143,7 @@ function UnitCard({
           </div>
         </div>
 
-        <div>
+        <div className="flex-1">
           <h3 className={cn(
             'font-black text-base leading-tight',
             canOpen ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40'
@@ -146,8 +155,15 @@ function UnitCard({
           </p>
         </div>
 
+        {unitMetric && (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[10px] font-bold text-slate-600 dark:text-white/60 w-fit">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+            {unitMetric}
+          </div>
+        )}
+
         {canOpen && (
-          <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 group-hover:gap-3"
+          <div className="mt-auto pt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 group-hover:gap-3"
             style={{ color: cfg.color }}>
             <span>Buka Modul</span>
             <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -311,7 +327,7 @@ export function JppHomePage() {
 
           {/* Greeting */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-            Selamat datang, <span style={{ color: themeColor }}>{displayName}</span>
+            Selamat datang, <span className="text-emerald-600 dark:text-emerald-400 font-black">{displayName}</span>
           </h1>
           <p className="text-slate-600 dark:text-white/60 text-sm font-medium max-w-xl leading-relaxed">
             Portal Ibu Pejabat JPP Politeknik Sultan Haji Ahmad Shah. Urus dan pantau semua unit exco dari sini.
@@ -330,7 +346,7 @@ export function JppHomePage() {
               </>
             ) : (
               <>
-                {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color={themeColor} delay={0.1} subtitle="Aktif Sesi Ini" />}
+                {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color="#10B981" delay={0.1} subtitle="Aktif Sesi Ini" />}
                 {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle="Berdaftar" />}
                 {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle="Beroperasi" />}
                 {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle="Dipantau" />}
@@ -369,6 +385,7 @@ export function JppHomePage() {
                     code={code}
                     isLocked={!hasDirectAccess}
                     delay={0.05 * i}
+                    stats={stats}
                     onNavigate={(link) => navigate(link)}
                   />
                 );

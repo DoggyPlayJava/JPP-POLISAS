@@ -400,8 +400,8 @@ describe('EMS Jury Portal SuperApp Revamp — EmsJuryPortalPage.tsx Compliance',
     expect(portalContent).toContain('Draf Disimpan');
   });
 
-  it('includes Sticky Bottom Action Bar tokens and Sahkan & Hantar Markah button', () => {
-    expect(portalContent).toContain('fixed bottom-0 left-0 right-0 z-40');
+  it('includes Modal Action Bar tokens and Sahkan & Hantar Markah button', () => {
+    expect(portalContent).toContain('Docked Modal Footer Action Bar');
     expect(portalContent).toContain('Sahkan & Hantar Markah');
     expect(portalContent).toContain('Batal / Tutup');
     expect(portalContent).toContain('Kriteria Dilengkapkan');

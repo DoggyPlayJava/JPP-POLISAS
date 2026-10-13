@@ -662,9 +662,9 @@ export function JppUsersPage() {
                                                     </div>
                                                     <p className="text-sm font-bold text-slate-800 dark:text-white/80">Tiada pengguna dijumpai</p>
                                                     <p className="text-xs text-slate-500 dark:text-white/40">Tiada rekod sepadan dengan kriteria carian atau penapis kohort semasa.</p>
-                                                    {(searchQuery || filterLevel !== 'all' || filterProg !== 'all') && (
+                                                    {(userSearch || filterLevel !== 'all' || filterProg !== 'all') && (
                                                         <button
-                                                            onClick={() => { setSearchQuery(''); setFilterLevel('all'); setFilterProg('all'); }}
+                                                            onClick={() => { setUserSearch(''); setFilterLevel('all'); setFilterProg('all'); }}
                                                             className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline pt-1 inline-block"
                                                         >
                                                             Set Semula Penapis

@@ -59,10 +59,9 @@ export function InstallAppPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Bagi iOS (atau Development Mode untuk tujuan pengujian), kita panggil secara manual
-    // Memandangkan PWA sangat ketat di Localhost, ini membenarkan anda tes UI nya!
-    if (isIOSDevice || import.meta.env.DEV) {
-      console.log('[PWA Prompt] Bypass trigger starting countdown (4s)...');
+    // Hanya trigger manual jika peranti mudah alih (iOS) dan bukan standalone
+    if (isIOSDevice) {
+      console.log('[PWA Prompt] iOS device detected, scheduling prompt...');
       setTimeout(() => setIsOpen(true), 4000);
     }
 
@@ -78,9 +77,7 @@ export function InstallAppPrompt() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      if (import.meta.env.DEV) {
-        alert("Mod Development 🚧: Butang ini berfungsi dengan baik, namun browser anda di tahap ini belum sepenuhnya mencetuskan (trigger) prapemasangan PWA sebenar.\n\nDi alam persekitaran sistem (Production), apabila ditekan, sistem akan buka tetingkap pengesahan tulen daripada Browser/Chrome.");
-      }
+      setIsOpen(false);
       return;
     }
 
@@ -105,20 +102,20 @@ export function InstallAppPrompt() {
         if (!open) handleDismiss();
       }}
     >
-      <DrawerContent className="glass dark:bg-slate-900/90 rounded-t-[2rem] border-t border-white/20 shadow-2xl">
-        <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-slate-300 dark:bg-slate-700" />
+      <DrawerContent className="bg-white dark:bg-[#151D16] border-t border-slate-200 dark:border-white/10 shadow-2xl rounded-t-[2rem]">
+        <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-slate-300 dark:bg-white/20" />
 
         <DrawerHeader className="text-left pt-6 pb-2 px-6">
           <div className="flex items-center gap-4">
-            <div className="bg-blue-600/10 dark:bg-blue-500/20 p-3.5 rounded-2xl ring-1 ring-blue-600/20 dark:ring-blue-500/30">
-              <Download className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <div className="bg-emerald-500/10 dark:bg-emerald-500/20 p-3.5 rounded-2xl ring-1 ring-emerald-500/20 dark:ring-emerald-500/30">
+              <Download className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <DrawerTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Install Aplikasi JPP
+              <DrawerTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                Pasang Aplikasi JPP
               </DrawerTitle>
-              <DrawerDescription className="text-sm mt-1 font-medium text-slate-600 dark:text-slate-400">
-                Rasai kuasa penuh portal JPP dengan lebih pantas dan lancar terus dari <i>Home Screen</i> anda.
+              <DrawerDescription className="text-sm mt-1 font-medium text-slate-600 dark:text-white/60">
+                Akses pantas portal JPP terus dari skrin utama peranti anda tanpa perlu membuka pelayar web setiap kali.
               </DrawerDescription>
             </div>
           </div>
@@ -126,24 +123,23 @@ export function InstallAppPrompt() {
 
         <div className="px-6 py-4">
           {isIOS ? (
-            <div className="bg-slate-100/80 dark:bg-slate-800/60 rounded-2xl p-5 flex flex-col gap-3.5 border border-slate-200 dark:border-slate-700">
-              <p className="text-[13px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mb-1">
+            <div className="bg-slate-100/80 dark:bg-white/5 rounded-2xl p-5 flex flex-col gap-3.5 border border-slate-200 dark:border-white/10">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40 text-center mb-1">
                 Langkah Pemasangan iOS
               </p>
-              <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-300">
-                <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-slate-700 shadow-sm font-bold text-xs text-blue-600 dark:text-blue-400">1</span>
-                <span>Tekan butang <MoreHorizontal className="w-5 h-5 inline-block mx-0.5 text-slate-800 dark:text-slate-200" /> (Menu) di bawah, kemudian tekan <Share className="w-4 h-4 inline-block ml-1 mr-0.5 text-slate-800 dark:text-slate-200" /> <b>Share</b>.</span>
+              <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <span className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-xs font-bold text-xs text-emerald-600 dark:text-emerald-400">1</span>
+                <span>Tekan butang <MoreHorizontal className="w-5 h-5 inline-block mx-0.5 text-slate-800 dark:text-white" /> (Menu), kemudian pilih <Share className="w-4 h-4 inline-block ml-1 mr-0.5 text-slate-800 dark:text-white" /> <b>Share</b>.</span>
               </div>
-              <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-300">
-                <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-slate-700 shadow-sm font-bold text-xs text-blue-600 dark:text-blue-400">2</span>
-                <span>Tatal ke atas dan pilih <PlusSquare className="w-5 h-5 inline-block mx-1 text-slate-800 dark:text-slate-200" /> <b>Add to Home Screen</b>.</span>
+              <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <span className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-xs font-bold text-xs text-emerald-600 dark:text-emerald-400">2</span>
+                <span>Tatal ke bawah dan pilih <PlusSquare className="w-5 h-5 inline-block mx-1 text-slate-800 dark:text-white" /> <b>Add to Home Screen</b>.</span>
               </div>
             </div>
           ) : (
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-100 dark:border-blue-800/50">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-300 text-center">
-                Rasai kuasa penuh portal JPP dengan lebih pantas dan lancar terus dari <i>Home Screen</i> anda.
-              </p>
+            <div className="bg-emerald-500/10 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center gap-3">
+              <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Pemasangan segera disokong untuk pelayar Chrome dan Edge di telefon pintar anda.</span>
             </div>
           )}
         </div>
@@ -152,7 +148,7 @@ export function InstallAppPrompt() {
           {!isIOS && (
             <Button
               onClick={handleInstallClick}
-              className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide h-12 text-sm shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.02]"
+              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold tracking-wide h-12 text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.01]"
             >
               Pasang Sekarang
             </Button>
@@ -160,10 +156,10 @@ export function InstallAppPrompt() {
           <DrawerClose asChild>
             <Button
               variant="ghost"
-              className="w-full rounded-xl mt-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold h-12"
+              className="w-full rounded-xl mt-2 text-slate-500 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold h-12"
               onClick={handleDismiss}
             >
-              Nanti
+              Nanti Sahaja
             </Button>
           </DrawerClose>
         </DrawerFooter>
