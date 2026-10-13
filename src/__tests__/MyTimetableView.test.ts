@@ -33,10 +33,11 @@ describe('MyTimetableView & AkademikTakwimPage Unified Tabs', () => {
     }
   });
 
-  it('verifies default view mode is listing/agenda with "Semua" option', () => {
+  it('verifies default view mode is grid matrix with localStorage persistence', () => {
     const content = fs.readFileSync(myTimetableViewPath, 'utf-8');
-    expect(content).toContain("useState<'grid' | 'agenda'>('agenda')");
-    expect(content).toContain('setSelectedDay(0)');
+    expect(content).toContain("jpp_student_timetable_view");
+    expect(content).toContain("TimetableMatrixGrid");
+    expect(content).toContain("setSelectedDay(0)");
     expect(content).toContain('>Semua</span>');
   });
 
@@ -73,4 +74,3 @@ describe('MyTimetableView & AkademikTakwimPage Unified Tabs', () => {
     expect(content).toContain('e.stopPropagation()');
   });
 });
-

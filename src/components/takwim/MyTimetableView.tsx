@@ -38,6 +38,7 @@ import type {
 import { TimetableUploadModal } from './TimetableUploadModal';
 import { TimetablePreviewModal } from './TimetablePreviewModal';
 import { EditClassSlotModal } from './EditClassSlotModal';
+import { TimetableMatrixGrid } from './TimetableMatrixGrid';
 
 const DAYS = [
   { value: 1, label: 'Isnin', shortLabel: 'Isn' },
@@ -82,8 +83,28 @@ export function MyTimetableView() {
   const [entries, setEntries] = useState<StudentTimetableEntry[]>([]);
   const [settings, setSettings] = useState<StudentTimetableSettings | null>(null);
   const [metadata, setMetadata] = useState<StudentTimetableMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'agenda'>('agenda');
+  const [viewMode, setViewModeState] = useState<'grid' | 'agenda'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('jpp_student_timetable_view');
+        if (saved === 'grid' || saved === 'agenda') return saved;
+      } catch {
+        // Ignore localStorage error in restricted environments
+      }
+    }
+    return 'grid'; // Default to grid matrix view
+  });
+
+  const setViewMode = (mode: 'grid' | 'agenda') => {
+    setViewModeState(mode);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('jpp_student_timetable_view', mode);
+      } catch {
+        // Ignore localStorage error
+      }
+    }
+  };
 
   // Default to 0 ("Semua" / All days) for continuous week scroll, or specific day when selected
   const [selectedDay, setSelectedDay] = useState<number>(0);
@@ -443,75 +464,12 @@ export function MyTimetableView() {
           </div>
         </motion.div>
       ) : viewMode === 'grid' ? (
-        /* ── Weekly 5-Day Desktop Grid ── */
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5">
-          {DAYS.map(day => {
-            const dayEntries = entriesByDay[day.value] || [];
-            const isToday = new Date().getDay() === day.value;
-
-            return (
-              <div
-                key={day.value}
-                className={cn(
-                  'rounded-2xl border p-3.5 flex flex-col min-h-[350px] transition-all',
-                  isToday
-                    ? 'border-indigo-500/40 bg-indigo-500/[0.03] shadow-xs'
-                    : 'border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]'
-                )}
-              >
-                {/* Column Day Header */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-white/5">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black',
-                        isToday
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white'
-                      )}
-                    >
-                      {day.shortLabel}
-                    </span>
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                        {day.label}
-                      </h4>
-                      {isToday && (
-                        <span className="text-[9px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                          Hari Ini
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Badge className="bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 border-none text-[10px] font-bold px-2 py-0.5">
-                    {dayEntries.length}
-                  </Badge>
-                </div>
-
-                {/* Day Slots List */}
-                <div className="space-y-2.5 flex-1">
-                  {dayEntries.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-40 text-center text-slate-400 dark:text-white/20">
-                      <Clock className="w-5 h-5 mb-1.5 stroke-[1.5]" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Tiada kelas
-                      </span>
-                    </div>
-                  ) : (
-                    dayEntries.map(slot => (
-                      <ClassCard
-                        key={slot.id}
-                        entry={slot}
-                        onEdit={() => setEditingSlot(slot)}
-                        onDelete={() => handleDeleteSlot(slot.id)}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        /* ── Weekly 5-Day PDF Matrix Grid ── */
+        <TimetableMatrixGrid
+          entries={entries}
+          onSlotClick={slot => setEditingSlot(slot)}
+          onSlotDelete={handleDeleteSlot}
+        />
       ) : (
         /* ── Daily Agenda List (Mobile Segmented) ── */
         <div className="space-y-4">
