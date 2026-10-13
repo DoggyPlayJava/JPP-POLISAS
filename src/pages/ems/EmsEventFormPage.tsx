@@ -24,7 +24,6 @@ import {
   Store,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
 import type { EmsEventMode, EmsEventType, EmsFormField, EmsRubricCriteria } from '@/types';
 import { IFAMB_SHOWCASE_PRESET, IFAMB_PITCHING_PRESET } from '@/config/emsRubricTemplates';
@@ -568,9 +567,7 @@ export function EmsEventFormPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-        </div>
+
       </div>
 
       {/* Form Body */}

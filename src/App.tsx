@@ -402,6 +402,7 @@ function AppRoutes() {
 
         {/* ── Event Management System (EMS) ── */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
+          <Route path="/ems" element={<Navigate to="/ems/dashboard" replace />} />
           <Route path="/ems/dashboard"            element={<EmsDashboardPage />} />
           <Route path="/ems/event/new"            element={<EmsEventFormPage />} />
           <Route path="/ems/event/:id/edit"       element={<EmsEventFormPage />} />

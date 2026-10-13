@@ -12,7 +12,6 @@ import {
   UserCheck,
   RefreshCw,
 } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { fetchEmsEvents } from '@/lib/ems';
 import type { EmsEvent } from '@/types';
 
@@ -74,7 +73,6 @@ export const EmsCheckinSelectorPage: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-3 self-start md:self-auto">
-          <ThemeToggle />
           <button
             onClick={loadEvents}
             disabled={loading}
