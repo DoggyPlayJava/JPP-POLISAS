@@ -115,6 +115,11 @@ describe('NextClassBentoCard Location Formatter', () => {
     };
     expect(formatCompactLocation(entry as StudentTimetableEntry)).toBe('BK4 · JTMK');
   });
+
+  it('handles undefined or empty entry defensively', () => {
+    expect(formatCompactLocation(undefined)).toBe('Dewan / Bilik Kuliah');
+    expect(formatCompactLocation({})).toBe('Dewan / Bilik Kuliah');
+  });
 });
 
 describe('NextClassBentoCard Full Subject Name & Expanded Streamline', () => {

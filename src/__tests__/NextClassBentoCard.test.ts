@@ -161,7 +161,7 @@ describe('NextClassBentoCard Implementation & Parity', () => {
     // Direct action buttons in compact bar stop propagation
     expect(content).toContain('onClick={(e) => e.stopPropagation()}');
     // Prevents redundant header repetitions
-    expect(content).toContain('hasDistinctCourseName');
+    expect(content).toContain('displayName');
     // Includes ongoing progress bar
     expect(content).toContain('progressPercent');
   });

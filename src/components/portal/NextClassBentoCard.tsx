@@ -144,9 +144,10 @@ export function buildPolyMapsRoomUrl(entry: Pick<StudentTimetableEntry, 'locatio
 /**
  * Formats timetable location, condensing long building names to campus acronyms (JTMK, JKA, etc.)
  */
-export function formatCompactLocation(entry: StudentTimetableEntry): string {
+export function formatCompactLocation(entry?: Pick<StudentTimetableEntry, 'location' | 'room_raw'>): string {
+  if (!entry) return 'Dewan / Bilik Kuliah';
   if (entry.location?.room_code) {
-    const rawBuilding = entry.location.building?.name || entry.location.building?.code || entry.location.building?.short_name;
+    const rawBuilding = entry.location.building?.name || entry.location.building?.code;
     const building = rawBuilding
       ? rawBuilding
           .replace(/BANGUNAN TEKNOLOGI MAKLUMAT & KOMUNIKASI/i, 'JTMK')
@@ -518,11 +519,6 @@ export function NextClassBentoCard({
     const displayName = entry.course_name && entry.course_name.trim().length > 0
       ? entry.course_name.trim()
       : entry.course_code;
-
-    // Check if course_name is identical to course_code to avoid redundant printing
-    const hasDistinctCourseName = Boolean(
-      entry.course_name && entry.course_name.trim().toUpperCase() !== entry.course_code.trim().toUpperCase()
-    );
 
     return (
       <div
