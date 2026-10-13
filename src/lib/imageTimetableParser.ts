@@ -53,10 +53,11 @@ const CANON_H = 842;
 //   BILINEAR 4x -> 12 entries, day conf 89-92, ISNIN+KHAMIS readable
 // BILINEAR interpolation is what makes dense subject codes (DEE30163) survive.
 const BASE_UPSCALE = 4;
-// ponytail: modern phone photos at 4x can exceed browser canvas limits
-// (canvas.toBlob returns null -> FileReader.readAsArrayBuffer crash).
-// Cap the upscaled long edge so large uploads still OCR instead of throwing.
-const MAX_OCR_DIM = 8192;
+// ponytail: canvas.toBlob() returns null once canvas AREA exceeds the browser
+// limit (iOS Safari ~16.7M px, some Android lower) -> tesseract worker calls
+// readAsArrayBuffer(null) and throws. Long-edge caps are NOT enough (a 4x
+// 2312px screenshot is 40M px). Cap by AREA so every device stays under limit.
+const MAX_CANVAS_AREA = 16_000_000;
 
 // Left day-column crop: fraction of image width + extra upscale for legibility.
 // Day labels (ISNIN..JUMAAT) sit in the left ~13%; upscaling them 2x more
@@ -225,8 +226,9 @@ function renderUpscaled(
   scale: number,
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(width * scale);
-  canvas.height = Math.round(height * scale);
+  const clamp = Math.min(1, Math.sqrt(MAX_CANVAS_AREA / (width * height * scale * scale)));
+  canvas.width = Math.max(1, Math.round(width * scale * clamp));
+  canvas.height = Math.max(1, Math.round(height * scale * clamp));
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = true; // BILINEAR — NEAREST makes dense codes chunky
   ctx.imageSmoothingQuality = 'high';
@@ -327,8 +329,9 @@ async function ocrColumnLines(
   extra: number,
 ): Promise<string[]> {
   const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(sw * extra));
-  c.height = Math.max(1, Math.round(sh * extra));
+  const clamp = Math.min(1, Math.sqrt(MAX_CANVAS_AREA / (sw * sh * extra * extra)));
+  c.width = Math.max(1, Math.round(sw * extra * clamp));
+  c.height = Math.max(1, Math.round(sh * extra * clamp));
   const ctx = c.getContext('2d')!;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
@@ -436,7 +439,7 @@ export async function parseTimetableImage(
 ): Promise<ImageTimetableResult> {
   const bitmap = await createImageBitmap(file);
   const { width, height } = bitmap;
-  const upscale = Math.min(BASE_UPSCALE, MAX_OCR_DIM / Math.max(width, height));
+  const upscale = Math.min(BASE_UPSCALE, Math.sqrt(MAX_CANVAS_AREA / (width * height)));
 
   const longEdge = Math.max(width, height);
   if (longEdge < RESOLUTION_GATE) {
