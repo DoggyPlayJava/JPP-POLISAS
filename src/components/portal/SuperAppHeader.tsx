@@ -54,7 +54,7 @@ export function SuperAppHeader({
       <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
       {/* Main Header Container */}
-      <div className="relative z-10 px-4 sm:px-6 md:px-8 pt-3.5 sm:pt-6 pb-4 sm:pb-6 max-w-7xl mx-auto flex flex-col gap-3 sm:gap-5">
+      <div className="relative z-10 px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-5 sm:pb-6 max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5">
         {/* Top Action Bar: Brand Logo & Location (Left) + Floating Discrete Action Circles (Right) */}
         <div className="flex items-center justify-between gap-3">
           {/* Left Side: Prominent JPP Logo & Campus Location Pill */}
@@ -114,12 +114,14 @@ export function SuperAppHeader({
 
         {/* Hero Greeting Section */}
         <div className="flex flex-col gap-1 sm:gap-1.5">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight flex items-center gap-1.5 flex-wrap">
-            <span>{greeting.title}</span>
-            <span>{nameToDisplay}</span>
-            <span aria-hidden="true">👋</span>
+          {/* Overline Greeting & Role Badge */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/85 flex items-center gap-1.5">
+              <span>{greeting.title}</span>
+              <span aria-hidden="true">👋</span>
+            </span>
             {roleTitle && (
-              <span className="inline-flex items-center text-[9px] font-black uppercase bg-[#6B7F5B]/30 text-[#D9C9B2] border border-[#6B7F5B]/40 px-2 py-0.5 rounded-full shadow-sm">
+              <span className="inline-flex items-center text-[9px] font-black uppercase bg-[#6B7F5B]/30 text-[#D9C9B2] border border-[#6B7F5B]/40 px-2.5 py-0.5 rounded-full shadow-sm">
                 {roleTitle}
               </span>
             )}
@@ -134,6 +136,11 @@ export function SuperAppHeader({
                 <span>SUPSAS Langsung</span>
               </span>
             ) : null}
+          </div>
+
+          {/* Student Name */}
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+            {nameToDisplay}
           </h1>
 
           <p className="hidden sm:block text-xs sm:text-sm text-white/80 font-medium max-w-2xl leading-relaxed">
@@ -150,11 +157,11 @@ export function SuperAppHeader({
           <button
             type="button"
             onClick={() => triggerCommandPalette(true)}
-            className="w-full h-10 sm:h-11 px-3.5 sm:px-4 rounded-full bg-white hover:bg-[#F8F6EE] text-[#2E3A2F] shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-[#D9C9B2]/60 flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] group cursor-pointer"
+            className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-full bg-white hover:bg-[#F8F6EE] text-[#2E3A2F] shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-[#D9C9B2]/60 flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] group cursor-pointer"
             aria-label="Cari makanan, runner, servis, acara, merit..."
           >
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-7 h-7 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Search className="w-3.5 h-3.5" />
               </div>
               <span className="text-xs sm:text-sm text-[#556453] group-hover:text-[#2E3A2F] font-medium truncate">
