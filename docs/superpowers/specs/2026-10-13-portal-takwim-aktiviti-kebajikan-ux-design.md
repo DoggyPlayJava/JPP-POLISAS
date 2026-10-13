@@ -40,12 +40,12 @@ Berdasarkan audit terperinci daripada tangkapan skrin dan maklum balas pengguna:
 
 ### 2.3 Modul Kelab: Pembersihan Penapis Halaman Aktiviti (`AktivitiFull.tsx`)
 - **Fail:** `src/pages/AktivitiFull.tsx`.
-- **Reka Bentuk Berdasarkan Pilihan Pengguna (Pilihan 1):**
+- **Reka Bentuk Berdasarkan Pilihan Pengguna (Pilihan C - Butang Setempat di Atas Kad, Tiada FAB):**
   - **Horizontal Scrollable Filter Bar:** Tukar susunan 5 cip status (`Semua`, `Perancangan`, `Aktif`, `Selesai`, `Ditangguh`) daripada bungkus berbilang baris (`flex-wrap`) kepada satu baris mendatar yang boleh di-swipe dengan lancar (`overflow-x-auto no-scrollbar flex-nowrap shrink-0`).
-  - **Floating Action Button (FAB) Mudah Alih:**
-    - Butang `+ Aktiviti Baru` di bahagian atas ditukar kepada `hidden md:inline-flex`.
-    - Di peranti mudah alih (`< md`), butang `+` bertukar menjadi butang bulat terapung (FAB) di sudut kanan bawah (`fixed bottom-24 right-5 z-40 rounded-full shadow-2xl bg-emerald-600 text-white w-13 h-13 flex items-center justify-center`).
-    - Kesan: Skrin mudah alih serta-merta menjimatkan ~45% ketinggian vertikal, membolehkan kad aktiviti pertama terus kelihatan sebaik sahaja halaman dibuka.
+  - **Butang '+ Aktiviti Baru' Setempat (Di Atas Senarai Kad):**
+    - **TIADA butang FAB:** Untuk mengelakkan risiko bertindih dengan AI Chat dan BottomNav, serta memastikan ahli/pimpinan kelab dapat melihat butang dengan jelas, butang `+ Aktiviti Baru` diletakkan sebagai butang tindakan kemas betul-betul di atas senarai kad aktiviti.
+    - Rekaan butang kemas: `w-full sm:w-auto h-11 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center justify-center gap-2`.
+    - Kesan: Penapis status tidak lagi bersepah 3 baris di telefon, susunan logikal daripada Carian → Status → Butang Tindakan → Senarai Kad Aktiviti.
 
 ### 2.4 Navigasi Pintas Takwim di Portal & Tab Segerak
 - **Fail:** `src/lib/superAppHelpers.ts`, `src/pages/PortalPage.tsx`, `src/pages/akademik/AkademikTakwimPage.tsx`.
