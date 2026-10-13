@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { JppSidebar } from './JppSidebar';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { JppCommandPalette } from '@/components/jpp/JppCommandPalette';
 
 // Auto-calculate current academic session
 function getCurrentAcademicSession(): string {
@@ -31,6 +32,7 @@ export function JppLayout() {
   const { user, isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const [isFbOfficer, setIsFbOfficer] = useState(false);
   const [checkingFbOfficer, setCheckingFbOfficer] = useState(true);
 
@@ -151,7 +153,14 @@ export function JppLayout() {
               {getCurrentAcademicSession()}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCmdOpen(true)}
+              className="p-2 rounded-xl text-[#2E3A2F]/70 dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white hover:bg-[#2E3A2F]/5 dark:hover:bg-white/10 transition-all"
+              title="Cari atau Buka Perintah (Ctrl+K)"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <ThemeToggle />
             <NotificationBell />
           </div>
@@ -181,6 +190,9 @@ export function JppLayout() {
 
         {/* Floating Mobile Navigation Dock */}
         <BottomNav onOpenSidebar={() => setIsMobileOpen(true)} />
+
+        {/* Global Command Palette (Ctrl+K) */}
+        <JppCommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       </div>
     </div>
   );
