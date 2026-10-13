@@ -418,9 +418,13 @@ npm run lint:css     # Stylelint sahaja
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
 | `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
 | `src/store/useNotificationStore.ts` | Zustand store. Guna atomic selector — jangan destructure keseluruhan store |
+| `src/components/layout/BottomNav.tsx` | Dok navigasi mudah alih berpusat; menggunakan React `createPortal(..., document.body)` bersama pengawal SSR client-mounted bagi melepaskan dok daripada sebarang stacking context ibu CSS (`transform-gpu`, `perspective`), `overflow-hidden`, dan bekas skrol mikro-app |
+| `src/components/profile/CompleteProfileModal.tsx` | Modal onboarding dan pelengkap profil institusi; menyepadukan kad pengesahan pintar automatik bagi kod jabatan, program, dan sesi kemasukan berasaskan penghuraian no matrik pelajar |
 | `src/components/exco/ExcoAktivitiPage.tsx` | **Template universal** aktiviti exco — jangan duplicate logik ini |
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
+| `src/pages/AktivitiFull.tsx` | Pengurusan aktiviti kelab e-KPP; menyusun cip penapis status dalam baris tunggal boleh leret mendatar (`overflow-x-auto no-scrollbar`) dengan butang tindakan sebaris "Aktiviti Baru" di atas senarai kad (tanpa FAB) |
+| `src/pages/akademik/AkademikTakwimPage.tsx` | Halaman Takwim Rasmi Kampus & Jadual Kuliah Siswa dengan penyelarasan URL dua arah via `useSearchParams` (`?tab=pusat` untuk kalendar rasmi & kelab, `?tab=personal` untuk jadual kuliah peribadi) |
 | `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan `window.confirm`. Mengelakkan sekatan pelayar moden |
 | `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
 | `src/pages/PortalPage.tsx` | Entry portal utama. Mengintegrasikan Campus Super App dan modul rasmi Exco |
@@ -428,7 +432,7 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/portal/SuperAppHeader.tsx` | Header pintar Super App berorientasikan gaya hidup pelajar kampus |
 | `src/lib/timetableParser.ts` | Enjin parser PDF jadual waktu berasaskan koordinat grid client-side (`pdfjs-dist`) |
 | `src/lib/polyMapsResolver.ts` | Enjin pemadan bilik PolyMaps pintar (search_tags, alias, prefix normalizer) menghubungkan jadual ke lokasi fizikal |
-| `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya dengan countdown masa nyata client-side (tanpa DB polling) dan deep link PolyMaps |
+| `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya pada Portal Siswa; memprioritaskan nama penuh kursus (`course_name`) sebagai tajuk utama, kondensasi akronim bangunan (`JTMK`, `JKA`, dll), bar kemajuan 4px slim, countdown masa nyata client-side (tanpa DB polling), dan deep link PolyMaps |
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
 | `src/components/takwim/EditClassSlotModal.tsx` | Modal penyuntingan pantas satu slot/subjek tunggal dengan semakan pertindihan masa dan integrasi PolyMaps |
 | `supabase/migrations/20261011000000_create_student_timetables.sql` | Skema DB jadual kuliah peribadi, tetapan notifikasi, dan pemetaan bilik PolyMaps |
@@ -716,7 +720,7 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
 2. **Tiada** migration database diperlukan — `programme_code` adalah `TEXT` bebas
 3. Kemaskini jadual senarai program di §14.3 dokumen ini
 
-### 14.7 Aliran `CompleteProfileModal` (4 Senario)
+### 14.7 Aliran `CompleteProfileModal` (4 Senario) & Reka Bentuk Institusi Terkini
 
 | Senario | Syarat | Medan yang Ditunjukkan |
 |---|---|---|
@@ -727,6 +731,17 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
 | Full Registration | Tiada matric | Nama IC + Matrik + Phone + Jabatan + Program + Intake |
 
 > **Pelajar sedia ada (85 orang pada April 2026)** terkena senario `isOnlyMissingCohort` apabila log masuk pertama kali selepas kemaskini ini.
+
+#### Reka Bentuk Semula Institusi & Kad Pengesahan Program Automatik
+- **Reka Bentuk Berwibawa Institusi:**
+  - Menggantikan elemen visual kecerunan ungu/murky lama dengan gaya korporat institusi POLISAS berprestij.
+  - Menggunakan palet zamrud institusi (`bg-emerald-600 hover:bg-emerald-700`, aksen `emerald-500`, latar belakang kontras tinggi `dark:bg-slate-900 border border-slate-200/50 dark:border-white/10`).
+  - Butang penukaran peranan (Pelajar vs Staf, dan Pelajar Biasa vs Pimpinan Kelab) diperkemas dengan susunan tab kapsul moden dwi-tona berserta ikonografi yang jelas (`Sparkles`, `Building2`, `GraduationCap`, `Crown`).
+- **Kad Pengesahan Program Automatik (*Automated Matric Parsing Validation Card*):**
+  - Mengintegrasikan fungsi utiliti pintar `parseMatricNumber(matric)` (`src/lib/utils.ts`) untuk menghuraikan struktur no matrik (cth: `04DAT24F1001` dihuraikan kepada Jabatan Perdagangan, Diploma Akauntansi, Kohort 2024 Sesi 1).
+  - Sekiranya format matrik sah dan program padanan ditemui dalam katalog rasmi (`matricParsed?.isValidFormat && matricParsed.knownProgramme`), sistem menyuntik kad pengesahan beranimasi lembut (`framer-motion`) berwarna hijau zamrud (`bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300`).
+  - Kad mengesahkan secara visual: `JABATAN · Program [KOD] · Sesi Kemasukan [TAHUN]`.
+  - Mengisi medan Jabatan dan Program secara automatik, menghapuskan beban pemilihan manual pelajar dan mengurangkan ralat pendaftaran ke sifar.
 
 ### 14.8 Notifikasi Automatik Intake
 
@@ -2141,23 +2156,46 @@ Bagi mempercepatkan dan menstabilkan binaan (*build*) aplikasi di pelayan Coolif
 
 ## 13. Piawaian UI/UX Mudah Alih & Hierarki Z-Index
 
-Bagi mengekalkan ciri 'Native-App Feel' dan mengelakkan pertindihan visual (UI overlap) pada peranti mudah alih, kod UI harus mematuhi hierarki Z-Index dan amalan prestasi berikut:
+Bagi mengekalkan ciri 'Native-App Feel' dan mengelakkan pertindihan visual (UI overlap) pada peranti mudah alih, kod UI harus mematuhi hierarki Z-Index, seni bina portal, dan amalan prestasi berikut:
 
 ### Hierarki Z-Index Global
 Semua komponen utama mestilah dipetakan mengikut lapisan Z-Index yang ketat ini (Dari Bawah ke Atas):
 
 1. **z-[0] hingga z-[40]**: Kandungan halaman biasa dan elemen terapung tahap rendah.
-2. **z-[112]**: BottomNav (Bar Navigasi Bawah Mudah Alih).
-3. **z-[120]**: FloatingAiChat (Butang Terapung AI Nexus).
-4. **z-[130]**: Backdrop (Latar gelap) untuk mana-mana Sidebar Modul (JPP, KLK, Kebajikan, dll).
-5. **z-[140]**: Sidebar (Kandungan sebenar menu navigasi tepi). *Ini memastikan Sidebar yang ditarik dari tepi sentiasa menutup BottomNav.*
-6. **z-[999]**: Semua Pop-out Shadcn (Drawer, Dialog, Sheet, AlertDialog). *Ini memastikan sebarang tetingkap timbul sentiasa berada di atas komponen susun atur.*
-7. **z-[9999]**: Notifikasi 
-eact-hot-toast (ditetapkan ke 	op-center) dan Penunjuk Mod Luar Talian (OfflineIndicator).
+2. **z-[110]**: Quick Actions Backdrop untuk BottomNav (`BottomNav.tsx`).
+3. **z-[111]**: Quick Actions Action Drawer / Menu BottomNav.
+4. **z-[120]**: Dok Terapung Navigasi Bawah (`#bottom-nav-dock` di `BottomNav.tsx`) dan Butang Terapung AI Nexus (`FloatingAiChat`).
+5. **z-[130]**: Backdrop (Latar gelap) untuk mana-mana Sidebar Modul (JPP, KLK, Kebajikan, dll).
+6. **z-[140]**: Sidebar (Kandungan sebenar menu navigasi tepi). *Ini memastikan Sidebar yang ditarik dari tepi sentiasa menutup BottomNav.*
+7. **z-[999]**: Semua Pop-out Shadcn (Drawer, Dialog, Sheet, AlertDialog). *Ini memastikan sebarang tetingkap timbul sentiasa berada di atas komponen susun atur.*
+8. **z-[9999]**: Notifikasi `react-hot-toast` (ditetapkan ke `top-center`) dan Penunjuk Mod Luar Talian (`OfflineIndicator`).
+
+### Teleportasi React Portal & Pelepasan Konteks CSS (`BottomNav.tsx`)
+Bagi mengelakkan isu dok navigasi terapung di tengah-tengah skrin (*floating mid-screen dock bug*), `BottomNav.tsx` kini diteleportasikan terus ke `document.body` menggunakan React `createPortal(..., document.body)`:
+
+- **Punca Masalah Stacking Context:**
+  Dalam spesifikasi piawaian CSS (W3C CSS Transforms Module Level 1), sebarang elemen leluhur (parent element) yang mempunyai sifat `transform` (seperti `transform-gpu`, `translate3d`, animasi Framer Motion), `perspective`, atau `filter` akan mewujudkan **Local Containing Block** baharu bagi semua keturunan (descendants).
+  Akibatnya, elemen anak yang menggunakan `position: fixed; bottom: 0` tidak lagi berpandukan kepada tetingkap paparan pelayar (*viewport*), sebaliknya terperangkap di dalam sempadan elemen ibu tersebut. Apabila pengguna menatal skrin atau apabila susun atur mikro-app menggunakan `overflow-hidden` / `overflow-y-auto`, dok navigasi akan terapung terputus di tengah-tengah kandungan skrin.
+- **Penyelesaian Seni Bina (React Portal):**
+  Dengan membungkus seluruh nod BottomNav dan mendail terus ke `document.body` melalui `createPortal(<...>, document.body)`, hierarki DOM dok dialihkan terus ke nod tertinggi dokumen. Ini melepaskan `BottomNav` secara kekal daripada sebarang parent CSS transforms, filter, perspective, `overflow-hidden`, atau bekas skrol bersarang merentasi semua susun atur mikro-app (Portal, e-Akademik, PolySuara, dsb.).
+- **Pengawal SSR Client-Mounted (SSR Guard):**
+  Untuk menjamin keserasian dengan Server-Side Rendering (SSR) dan ujian automasi tanpa pelayar (seperti Vitest `renderToString`), `BottomNav` menyertakan pengawal:
+  ```tsx
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(..., document.body);
+  ```
+  Ini menghalang cubaan akses kepada `document.body` semasa render fasa pertama atau sebelum hidrasi klien selesai.
 
 ### Prestasi Navigasi (Mobile Performance)
-- **Elakkan React State untuk Scroll**: Gunakan Manipulasi DOM secara terus (
-avRef.current.classList.add) untuk kesan scroll (seperti Hide/Shrink BottomNav) bagi menjimatkan kitaran *re-render* dan menjaga kelancaran 60 FPS pada peranti spesifikasi rendah.
+- **Elakkan React State untuk Scroll**: Gunakan Manipulasi DOM secara terus (`navRef.current.classList.add`) untuk kesan scroll (seperti Hide/Shrink BottomNav) bagi menjimatkan kitaran *re-render* dan menjaga kelancaran 60 FPS pada peranti spesifikasi rendah.
 - **Fat Finger Rule**: Apabila mengecilkan (shrink) saiz butang, jangan gunakan scale yang terlalu kecil. Had yang ideal adalah scale-[0.85] untuk memastikan ia kekal mesra-ibujari.
 - **Haptic Feedback**: Panggil `navigator.vibrate(30)` untuk tindakan mikro (micro-interactions) bagi memberi rasa mekanikal/premium (cth: klik FAB atau besarkan navigasi).
 
@@ -4041,12 +4079,21 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
   - Keseluruhan kawasan kad boleh ditekan (*clickable surface*) untuk mengembangkan atau mengecilkan kad secara lancar.
 - **Aksi Satu Sentuhan Pantas (*One-Tap Quick Action*):**
   - Butang terus **"Tunjuk Arah"** (PolyMaps) atau **"Sertai"** (Microsoft Teams) disepadukan terus ke dalam bar kompak bersama pengendali `e.stopPropagation()`. Pelajar boleh terus bernavigasi ke bilik kuliah tanpa perlu mengembangkan kad terlebih dahulu.
-- **Penghapusan Maklumat Berulang (*Zero UI Clutter / Redundancy*):**
+- **Keutamaan Nama Kursus Penuh & Penghapusan Duplikasi Visual:**
+  - **Nama Subjek Sebagai Tajuk Utama:** Kad memprioritaskan `course_name` penuh sebagai tajuk utama `h3` (`displayName = entry.course_name?.trim() || entry.course_code`), memberikan kejelasan pantas subjek apa yang bakal dihadiri. Sekiranya nama subjek wujud, lencana kod kursus duplikasi disingkirkan daripada tajuk.
   - **Tajuk Pertindihan Dibuang:** Lencana statik *"KELAS SETERUSNYA HARI INI"* digugurkan kerana lencana dinamik masa nyata (*"Dalam 2 jam"* / *"Sedang berlangsung"*) sudah jelas menyatakan status kelas.
-  - **Pautan Gandar Dimansuhkan:** Pautan teks *"Lihat Jadual Penuh"* di penjuru atas dibuang memandangkan butang tindakan penuh sudah tersedia di bahagian bawah kad.
-  - **Kod Kursus Tanpa Duplikasi:** Sistem menyemak `hasDistinctCourseName`. Sekiranya nama kursus tidak wujud atau sama dengan kod kursus (cth: `DEE30163`), kod kursus hanya dipaparkan sekali sahaja bersama lencana jenis kelas.
-- **Bar Kemajuan Kelas Semasa (*Live Elapsed Progress Bar*):**
+  - **Pautan Gandar Dimansuhkan:** Pautan teks *"Lihat Jadual Penuh"* di penjuru atas dibuang memandangkan butang tindakan penuh sudah tersedia di bahagian bawah kad, menghala terus ke `/akademik/takwim?tab=personal`.
+- **Pemampatan Akronim Lokasi Bangunan Kampus (`formatCompactLocation`):**
+  - Memampatkan nama panjang bangunan jabatan politeknik kepada akronim rasmi POLISAS bagi mengelakkan teks melimpah (*truncate/wrap*) pada skrin telefon pintar:
+    - `BANGUNAN TEKNOLOGI MAKLUMAT & KOMUNIKASI` → `JTMK`
+    - `BANGUNAN KEJURUTERAAN AWAM` → `JKA`
+    - `BANGUNAN KEJURUTERAAN ELEKTRIK` → `JKE`
+    - `BANGUNAN KEJURUTERAAN MEKANIKAL` → `JKM`
+    - `BANGUNAN PERDAGANGAN` → `JP`
+  - Memformatkan label lokasi secara kemas: `[KOD_BILIK] · [AKRONIM]` (cth: `EA303 · JKA` atau `MA102 · JTMK`).
+- **Bar Kemajuan Kelas Semasa 4px Langsing (*4px Slim Elapsed Progress Bar*):**
   - Apabila kelas sedang berlangsung (`isOngoing = true`), bar kemajuan animasi berwarna zamrud (*emerald*) dipaparkan secara automatik memaparkan nisbah minit yang telah berlalu berbanding baki masa kelas.
+  - Menggunakan ketebalan langsing 4px (`h-1` / 4px slim progress bar) menggantikan bar 6px lama demi ketelitian visual bertaraf tinggi (*high-end precision feel*).
 
 ### 32.11 Pengoptimuman UX Portal Header, Action Bar 2-Tingkat & Edit Slot Tunggal
 
@@ -4067,6 +4114,60 @@ Sistem ini membolehkan setiap mahasiswa POLISAS memuat naik jadual kuliah rasmi 
   - Menekan kad atau ikon pensel akan membuka modal khusus untuk slot subjek tersebut sahaja (bukan modal 14 baris sekaligus).
   - Borang merangkumi kod kursus, nama kursus, hari, masa mula/tamat, jenis kelas, bilik kuliah (dengan auto-padanan PolyMaps), kod pensyarah, status online, dan tag warna subjek.
   - Dilengkapi pengesanan pertindihan masa setempat (*real-time collision detection*) serta pilihan memadam slot tunggal secara selamat dengan kawalan RLS tenant terpelihara.
+
+### 32.12 Penyelarasan Tab URL Takwim Kampus & Jadual Kuliah (`AkademikTakwimPage.tsx`)
+
+- **Sinkronisasi Parameter URL Dwiarah (`useSearchParams`):**
+  - Laman `/akademik/takwim` kini diselaraskan secara dinamik dengan URL parameter pencarian:
+    - `?tab=pusat`: Membuka tab **Takwim Rasmi Kampus & Kelab** (`PUSAT`), memaparkan kalendar aktiviti institusi, mesyuarat, dan program rasmi.
+    - `?tab=personal`: Membuka tab **Jadual Kuliah Saya** (`PERSONAL`), memaparkan agenda kuliah mingguan dan harian siswa.
+  - Inisialisasi membaca terus parameter:
+    ```tsx
+    const [searchParams] = useSearchParams();
+    const initialTab = searchParams.get('tab')?.toLowerCase() === 'pusat' ? 'PUSAT' : 'PERSONAL';
+    const [activeMainTab, setActiveMainTab] = useState<'PERSONAL' | 'PUSAT'>(initialTab);
+    ```
+  - `useEffect` memantau `[searchParams]` bagi memastikan pertukaran URL (melalui navigasi deep-link atau butang back/forward pelayar) mengemas kini tab aktif secara masa nyata tanpa perlu muat semula halaman.
+- **Integrasi Pintar Antara Modul:**
+  - **Butang Takwim Portal (`CampusServicesGrid.tsx`):** Dihalakan terus ke `/akademik/takwim?tab=pusat` bagi membolehkan mahasiswa menyemak kalendar acara rasmi kampus dalam satu sentuhan.
+  - **Widget NextClassBentoCard:** Semua butang "Lihat Jadual" dihalakan terus ke `/akademik/takwim?tab=personal` bagi memastikan pelajar dibawa terus ke jadual kuliah peribadi mereka.
+
+### 32.13 Penstrukturan Semula Cip Penapis Boleh Leret & Butang Tindakan Sebaris e-KPP (`AktivitiFull.tsx`)
+
+- **Cip Penapis Status Satu Baris Boleh Leret (*Single-Row Swipeable Filter Chips*):**
+  - Menggantikan susunan lama `flex-wrap` (yang pecah ke pelbagai baris pada skrin telefon pintar dan menolak senarai kad ke bawah) kepada satu baris mendatar yang kemas dan boleh dileret:
+    ```tsx
+    <div className="overflow-x-auto no-scrollbar flex items-center gap-2 pb-1 sm:pb-0 -mx-1 px-1">
+      {/* Cip status dengan shrink-0 whitespace-nowrap */}
+    </div>
+    ```
+  - Setiap cip status menggunakan `shrink-0 whitespace-nowrap` merangkumi 5 status utama kelab: `semua`, `perancangan`, `aktif`, `selesai`, dan `ditangguh`.
+  - Memelihara kelancaran tatalan mendatar semula jadi pada iOS dan Android tanpa sebarang bar skrol hodoh (`no-scrollbar`).
+- **Butang Tindakan Sebaris Berfokus (*Inline Action Button*):**
+  - Butang **"Aktiviti Baru"** disusun secara sebaris (*inline*) terus di atas senarai kad aktiviti (`w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 shrink-0`).
+  - Menghapuskan penggunaan Floating Action Button (FAB) terapung bagi mengelakkan pertindihan visual, pertembungan z-index, atau kesilapan sentuhan dengan bar navigasi bawah sistem (`BottomNav`).
+
+### 32.14 Teleportasi Dok Navigasi Bawah Bebas Konteks CSS (`BottomNav.tsx`)
+
+- **Isu Konteks CSS Bersarang (CSS Stacking Context Trapping):**
+  - Pada susun atur mikro-app atau elemen dengan sifat CSS `transform` (seperti `transform-gpu`, animasi `motion.div`), `perspective`, `filter`, atau bekas dengan `overflow-hidden` dan `overflow-y-auto`, elemen `position: fixed` secara automatik terikat kepada bekas induk tersebut (*containing block*) dan bukannya kepada tetingkap paparan pelayar (*viewport*).
+  - Ini mengakibatkan dok navigasi bawah mudah alih terapung di tengah-tengah skrin (*floating mid-screen*) atau terpotong apabila kandungan halaman ditatal.
+- **Penyelesaian Teleportasi React Portal (`createPortal`):**
+  - Komponen `BottomNav.tsx` kini diteleportasikan terus ke nod `document.body` menggunakan React `createPortal(..., document.body)`.
+  - Dilengkapi pengawal SSR client-mounted:
+    ```tsx
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+      setMounted(true);
+    }, []);
+
+    if (!mounted || typeof document === 'undefined') {
+      return null;
+    }
+
+    return createPortal(..., document.body);
+    ```
+  - Memastikan dok terapung `#bottom-nav-dock` kekal berpaut teguh di bahagian bawah skrin (`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`) pada lapisan `z-[120]` tanpa terjejas oleh sebarang susun atur mikro-app bersarang di masa hadapan.
 
 
 
