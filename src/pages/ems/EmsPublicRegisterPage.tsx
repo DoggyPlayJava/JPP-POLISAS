@@ -1518,7 +1518,7 @@ export function EmsPublicRegisterPage() {
                           <div>
                             {member.hasAccount ? (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                <span>🟢</span>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Akaun POLISAS Aktif</span>
                                 <span className="hidden md:inline text-[11px] font-normal text-emerald-600/80 dark:text-emerald-300/80">
                                   (Mempunyai Akses Penuh Dashboard Perniagaan)
@@ -1526,7 +1526,7 @@ export function EmsPublicRegisterPage() {
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                <span>⚠️</span>
+                                <AlertCircle className="w-3.5 h-3.5" />
                                 <span>Belum Berdaftar di Portal</span>
                               </span>
                             )}

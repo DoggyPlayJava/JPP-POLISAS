@@ -29,6 +29,7 @@ import {
   MessageSquare,
   UserPlus,
   MoreVertical,
+  Flame,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -371,7 +372,7 @@ export function EmsDashboardPage() {
       return e.status === 'COMPLETED';
     }
 
-    // 'ALL' tab ("🔥 Acara Berlangsung & Akan Datang"):
+    // 'ALL' tab ("Acara Berlangsung & Akan Datang"):
     // returns events where status === 'APPROVED' || status === 'ACTIVE', explicitly excluding COMPLETED
     return e.status === 'APPROVED' || e.status === 'ACTIVE';
   });
@@ -583,7 +584,7 @@ export function EmsDashboardPage() {
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all shadow-lg shadow-amber-500/20 active:scale-95 text-xs uppercase tracking-wider"
             >
               <Gift className="w-4 h-4 text-slate-950" />
-              <span>Cabutan Bertuah 🎰</span>
+              <span>Cabutan Bertuah</span>
             </button>
           )}
           {canCreateEvent && (
@@ -631,22 +632,26 @@ export function EmsDashboardPage() {
               { key: 'COMPLETED', label: 'Selesai' },
             ]
           : [
-              { key: 'ALL', label: '🔥 Acara Berlangsung & Akan Datang' },
-              { key: 'COMPLETED', label: '🏆 Acara Selesai & Keputusan' },
+              { key: 'ALL', label: 'Acara Berlangsung & Akan Datang', icon: Flame },
+              { key: 'COMPLETED', label: 'Acara Selesai & Keputusan', icon: Trophy },
             ]
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
-              activeTab === tab.key
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        ).map((tab) => {
+          const Icon = 'icon' in tab ? tab.icon : null;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border inline-flex items-center gap-1.5 ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              {Icon && <Icon className="w-3.5 h-3.5 inline mr-1" />}
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Event Cards Grid */}
@@ -1270,7 +1275,7 @@ export function EmsDashboardPage() {
                             const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
                             const org = j.organization ? ` (${j.organization})` : '';
 
-                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+                            const waMsg = `*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n*${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n- *Nama Juri:* ${j.jury_name || '-'}\n- *Organisasi:* ${j.organization || '-'}\n- *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
 
                             navigator.clipboard.writeText(waMsg);
                             setCopiedCodeId(j.id);
@@ -1295,7 +1300,7 @@ export function EmsDashboardPage() {
                             const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
                             const org = j.organization ? ` (${j.organization})` : '';
 
-                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+                            const waMsg = `*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n*${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n- *Nama Juri:* ${j.jury_name || '-'}\n- *Organisasi:* ${j.organization || '-'}\n- *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
 
                             window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, '_blank');
                           }}

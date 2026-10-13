@@ -232,7 +232,7 @@ export function EmsLuckyDrawModal({
         setWinnerHistory((prev) => [finalWinner, ...prev]);
         setIsSpinning(false);
         triggerWinnerConfetti();
-        toast.success(`🎉 Tahniah kepada ${finalWinner.name}!`);
+        toast.success(`Tahniah kepada ${finalWinner.name}!`);
       }
     };
 
@@ -344,8 +344,9 @@ export function EmsLuckyDrawModal({
                 <Trophy className="w-10 h-10" />
               </div>
               <div>
-                <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/40 inline-block mb-2">
-                  🏆 PEMENANG CABUTAN BERTUAH!
+                <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/40 inline-flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>PEMENANG CABUTAN BERTUAH!</span>
                 </span>
                 <h3 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 leading-tight">
                   {currentWinner.name}
@@ -387,7 +388,7 @@ export function EmsLuckyDrawModal({
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-[0_0_30px_rgba(245,158,11,0.35)] flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
         >
           <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
-          <span>{isSpinning ? 'Memutar Roda Cabutan...' : 'Putar Roda Cabutan Bertuah 🎰'}</span>
+          <span>{isSpinning ? 'Memutar Roda Cabutan...' : 'Putar Roda Cabutan Bertuah'}</span>
         </button>
 
         {/* Winner History Section */}

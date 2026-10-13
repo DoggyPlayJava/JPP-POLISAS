@@ -30,6 +30,9 @@ import {
   Award,
   Hash,
   Send,
+  MapPin,
+  Calendar,
+  Trophy,
 } from 'lucide-react';
 import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
@@ -192,7 +195,7 @@ export function EmsCheckinPage() {
           const newVisitor = payload.new as EmsVisitor;
           setVisitors((prev) => [newVisitor, ...prev]);
           if (newVisitor.is_milestone_winner) {
-            toast.success(`🎉 Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
+            toast.success(`Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
               duration: 6000,
             });
           }
@@ -270,9 +273,7 @@ export function EmsCheckinPage() {
         message: `Telah Disahkan Kehadiran pada ${timeBadge}`,
         timestamp: timeBadge,
       });
-      toast.error(`Peserta "${existing.leader_name}" telah pun mendaftar masuk pada ${timeBadge}`, {
-        icon: '⚠️',
-      });
+      toast.error(`Peserta "${existing.leader_name}" telah pun mendaftar masuk pada ${timeBadge}`);
 
       setTimeout(() => {
         isProcessingRef.current = false;
@@ -463,10 +464,16 @@ export function EmsCheckinPage() {
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
               {eventDetail.title}
             </h1>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
-              <span>📍 {eventDetail.venue || 'Lokasi tidak ditetapkan'}</span>
-              <span>📅 {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : 'Tarikh -'}</span>
-            </p>
+            <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                {eventDetail.venue || 'Lokasi tidak ditetapkan'}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : 'Tarikh -'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -566,7 +573,7 @@ export function EmsCheckinPage() {
                   <div key={v.id || i} className="py-3 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${v.is_milestone_winner ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
-                        {v.is_milestone_winner ? '🏆' : i + 1}
+                        {v.is_milestone_winner ? <Trophy className="w-4 h-4 text-slate-950" /> : i + 1}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -867,8 +874,9 @@ export function EmsCheckinPage() {
                     </span>
                   </div>
 
-                  <div className="bg-amber-100/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs font-medium">
-                    ⚠️ Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.
+                  <div className="bg-amber-100/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.</span>
                   </div>
 
                   <div className="space-y-3">
@@ -952,8 +960,8 @@ export function EmsCheckinPage() {
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500 shadow-sm"
                 >
                   <option value="ALL">Semua Status Kehadiran</option>
-                  <option value="PENDING">⏳ Belum Hadir (Pending)</option>
-                  <option value="CHECKED_IN">✅ Disahkan Hadir</option>
+                  <option value="PENDING">Belum Hadir (Pending)</option>
+                  <option value="CHECKED_IN">Disahkan Hadir</option>
                 </select>
               </div>
 

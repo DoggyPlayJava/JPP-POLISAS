@@ -133,7 +133,7 @@ export function EmsAudienceScanPage() {
         if (dup) {
           setSubmitting(false);
           const t = new Date(dup.scanned_at).toLocaleTimeString('ms-MY');
-          toast.error(`Kehadiran anda telah direkodkan pada ${t}. Tidak boleh scan berulang!`, { icon: '⚠️' });
+          toast.error(`Kehadiran anda telah direkodkan pada ${t}. Tidak boleh scan berulang!`);
           setSubmittedVisitor(dup as unknown as EmsVisitor);
           return;
         }
@@ -179,7 +179,7 @@ export function EmsAudienceScanPage() {
       if (error) {
         // Race-condition: unique index (event_id + matric/email/phone) tangkap double-scan
         if (error.code === '23505') {
-          toast.error('Kehadiran anda telah direkodkan. Tidak boleh scan berulang!', { icon: '⚠️' });
+          toast.error('Kehadiran anda telah direkodkan. Tidak boleh scan berulang!');
           return;
         }
         throw error;
@@ -190,7 +190,7 @@ export function EmsAudienceScanPage() {
 
       if (isMilestoneWinner) {
         triggerConfettiExplosion();
-        toast.success(`🎉 TAHNIAH! Anda Pengunjung Ke-${currentVisitorCount}!`);
+        toast.success(`Tahniah! Anda Pengunjung Ke-${currentVisitorCount}!`);
       } else {
         toast.success('Kehadiran anda berjaya direkodkan!');
       }
@@ -276,8 +276,9 @@ export function EmsAudienceScanPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/30 inline-block">
-                    🎉 PEMENANG PENGUNJUNG BERTUAH!
+                  <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/30 inline-flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    PEMENANG PENGUNJUNG BERTUAH!
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-300">
                     TAHNIAH!

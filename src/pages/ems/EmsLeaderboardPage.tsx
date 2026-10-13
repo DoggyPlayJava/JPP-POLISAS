@@ -677,7 +677,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/30 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
-                  KEMAS KINI MASA-NYATA 🟢
+                  KEMAS KINI MASA-NYATA
                 </span>
                 <span className="text-xs text-slate-500 dark:text-white/50 font-bold uppercase tracking-wider">
                   EMS STAGE MODE
@@ -741,7 +741,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] transition flex items-center gap-2"
               >
                 <Gift className="w-4 h-4 text-amber-300" />
-                Cabutan Bertuah 🎰
+                Cabutan Bertuah
               </button>
             )}
 
@@ -751,7 +751,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.4)] transition flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 fill-slate-950" />
-              Bunga Api 🎉
+              Bunga Api
             </button>
 
             {/* Stage Mode ThemeToggle */}
@@ -831,7 +831,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Johan (Emas) 🏆
+                Johan (Emas)
               </button>
             </div>
           </div>
@@ -872,7 +872,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         <Medal className="w-9 h-9" />
                       </div>
                       <span className="px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-400/20 text-slate-700 dark:text-slate-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-slate-300 dark:border-slate-400/30">
-                        TEMPAT KE-2 🥈
+                        TEMPAT KE-2
                       </span>
                       <div className="text-xs font-black text-amber-600 dark:text-amber-400/90 tracking-widest mb-1 uppercase">
                         STAN #{top2.participant.booth_no || top2.participant.custom_responses?.booth_no || top2.participant.custom_responses?.booth_number || '-'}
@@ -914,7 +914,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       </div>
 
                       <span className="px-4 py-1 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-400/40 shadow-sm">
-                        CHAMPION 🥇 JOHAN
+                        CHAMPION - JOHAN
                       </span>
 
                       <div className="text-xs font-black text-amber-700 dark:text-amber-300 tracking-widest mb-1 uppercase">
@@ -958,7 +958,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         <Award className="w-9 h-9" />
                       </div>
                       <span className="px-3 py-0.5 rounded-full bg-amber-700/10 dark:bg-amber-700/20 text-amber-800 dark:text-amber-400 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-700/20 dark:border-amber-700/30">
-                        TEMPAT KE-3 🥉
+                        TEMPAT KE-3
                       </span>
                       <div className="text-xs font-black text-amber-700 dark:text-amber-500/90 tracking-widest mb-1 uppercase">
                         STAN #{top3.participant.booth_no || top3.participant.custom_responses?.booth_no || top3.participant.custom_responses?.booth_number || '-'}
@@ -1067,7 +1067,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Masa-Nyata 🟢
+              Masa-Nyata
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
@@ -1087,7 +1087,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-purple-600/20 transition flex items-center gap-2"
             >
               <Gift className="w-4 h-4 text-amber-300" />
-              Cabutan Bertuah 🎰
+              Cabutan Bertuah
             </button>
           )}
 
@@ -1161,7 +1161,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             }`}
           >
             <Shield className="w-4 h-4 text-purple-300" />
-            🕵️ Audit & Pemantauan Juri
+            Audit & Pemantauan Juri
           </button>
         )}
       </div>
@@ -1189,7 +1189,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                     <h4 className="text-sm font-black">
-                      {event.is_leaderboard_public ? 'Status Awam: Didedahkan 👁️' : 'Status Awam: Disembunyikan 🔒'}
+                      {event.is_leaderboard_public ? 'Status Awam: Didedahkan' : 'Status Awam: Disembunyikan'}
                     </h4>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -1228,7 +1228,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   </span>
                   <h4 className="text-sm font-black flex items-center gap-1.5">
                     <Scale className="w-4 h-4 text-amber-500" />
-                    {hasTiedParticipants ? 'Terdapat Peserta Seret! ⚠️' : 'Tiada Keputusan Seret'}
+                    {hasTiedParticipants ? 'Terdapat Peserta Seret!' : 'Tiada Keputusan Seret'}
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {hasTiedParticipants
@@ -1367,19 +1367,19 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       if (rank === 1) {
                         rankBadge = (
                           <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md shadow-amber-500/30">
-                            🥇 1
+                            <Trophy className="w-3.5 h-3.5 text-slate-950" /> 1
                           </span>
                         );
                       } else if (rank === 2) {
                         rankBadge = (
                           <span className="px-2.5 py-1 rounded-full bg-slate-300 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
-                            🥈 2
+                            <Medal className="w-3.5 h-3.5 text-slate-950" /> 2
                           </span>
                         );
                       } else if (rank === 3) {
                         rankBadge = (
                           <span className="px-2.5 py-1 rounded-full bg-amber-700 text-white font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
-                            🥉 3
+                            <Award className="w-3.5 h-3.5 text-white" /> 3
                           </span>
                         );
                       }

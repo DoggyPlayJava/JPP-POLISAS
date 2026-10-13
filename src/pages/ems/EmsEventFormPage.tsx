@@ -721,7 +721,7 @@ export function EmsEventFormPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>🛍️</span> Pautan E-Keusahawanan (Program Siswapreneur)
+                        <Store className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Pautan E-Keusahawanan (Program Siswapreneur)
                       </h3>
                       {isSiswapreneur && (
                         <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
@@ -980,7 +980,7 @@ export function EmsEventFormPage() {
                 className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md active:scale-95"
               >
                 <Plus className="w-4 h-4" />
-                <span>📂 + Tambah Kategori Baharu</span>
+                <span>Tambah Kategori Baharu</span>
               </button>
               <button
                 type="button"
@@ -1008,7 +1008,7 @@ export function EmsEventFormPage() {
                 <div className="flex items-center gap-2.5 text-left">
                   <Package className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-slate-900 dark:text-white font-extrabold">📦 ➕ Tambah Templat iFAMB Best Showcase</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">Tambah Templat iFAMB Best Showcase</div>
                     <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(4 Seksyen / 16 Rubrik)</div>
                   </div>
                 </div>
@@ -1022,7 +1022,7 @@ export function EmsEventFormPage() {
                 <div className="flex items-center gap-2.5 text-left">
                   <Mic className="w-5 h-5 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-slate-900 dark:text-white font-extrabold">🎤 ➕ Tambah Templat iFAMB Best Pitching</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">Tambah Templat iFAMB Best Pitching</div>
                     <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(10 Rubrik)</div>
                   </div>
                 </div>
@@ -1056,11 +1056,11 @@ export function EmsEventFormPage() {
                       <span className="text-base font-bold text-slate-900 dark:text-white">Status Nisbah Kategori:</span>
                       {allCategoriesBalanced ? (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Semua Kategori 100% Seimbang ✅
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Semua Kategori 100% Seimbang
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Kategori Tidak Seimbang ⚠️
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Kategori Tidak Seimbang
                         </span>
                       )}
                     </div>
@@ -1166,7 +1166,7 @@ export function EmsEventFormPage() {
                           title={`Tambah Seksyen ke ${group.categoryName}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>📑 + Tambah Seksyen</span>
+                          <span>Tambah Seksyen</span>
                         </button>
                         <button
                           type="button"
@@ -1175,7 +1175,7 @@ export function EmsEventFormPage() {
                           title={`Tambah Kriteria ke ${group.categoryName}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>📝 + Tambah Kriteria</span>
+                          <span>Tambah Kriteria</span>
                         </button>
                       </div>
                     </div>
