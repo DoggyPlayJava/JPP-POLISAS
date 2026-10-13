@@ -205,7 +205,7 @@ export function EmsAudienceScanPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 transition-colors">
-        <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-600 dark:border-purple-400/20 dark:border-t-purple-400 rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/50 animate-pulse">
           Memuatkan Portal Kehadiran Pengunjung...
         </p>
@@ -223,7 +223,7 @@ export function EmsAudienceScanPage() {
         </p>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition shadow-lg shadow-purple-600/30"
+          className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/20 active:scale-[0.98]"
         >
           Kembali ke Halaman Utama
         </button>
@@ -243,21 +243,21 @@ export function EmsAudienceScanPage() {
       <div className="relative z-10 max-w-md w-full space-y-6">
         {/* Header Branding */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 text-[11px] font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-black uppercase tracking-wider">
             <QrCode className="w-3.5 h-3.5" /> Portal Imbasan Kehadiran Awam
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-indigo-200">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200">
             {event.title}
           </h1>
           <div className="flex items-center justify-center gap-4 text-xs text-slate-600 dark:text-slate-400">
             {event.location && (
               <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {event.location}
+                <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> {event.location}
               </span>
             )}
             {event.event_date && (
               <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 {new Date(event.event_date).toLocaleDateString('ms-MY')}
               </span>
             )}
@@ -349,8 +349,8 @@ export function EmsAudienceScanPage() {
 
             {/* Account Status Badge if Logged In */}
             {user && (
-              <div className="p-3 rounded-xl bg-purple-50 dark:bg-indigo-500/10 border border-purple-200 dark:border-indigo-500/20 text-xs text-purple-700 dark:text-indigo-300 flex items-center gap-2">
-                <User className="w-4 h-4 text-purple-600 dark:text-indigo-400 shrink-0" />
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                <User className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Log masuk sebagai <strong>{profile?.full_name || user.email}</strong></span>
               </div>
             )}
@@ -368,7 +368,7 @@ export function EmsAudienceScanPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ahmad bin Ali"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
@@ -380,7 +380,7 @@ export function EmsAudienceScanPage() {
                 onClick={() => setIsStudent(true)}
                 className={`flex-1 py-2 rounded-xl text-xs font-bold transition border ${
                   isStudent
-                    ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
+                    ? 'bg-amber-500 text-slate-950 font-bold border-amber-500 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -391,7 +391,7 @@ export function EmsAudienceScanPage() {
                 onClick={() => setIsStudent(false)}
                 className={`flex-1 py-2 rounded-xl text-xs font-bold transition border ${
                   !isStudent
-                    ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
+                    ? 'bg-amber-500 text-slate-950 font-bold border-amber-500 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -410,7 +410,7 @@ export function EmsAudienceScanPage() {
                     value={matrixNo}
                     onChange={(e) => setMatrixNo(e.target.value.toUpperCase())}
                     placeholder="e.g. 01DIT22F1001"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs uppercase font-mono placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs uppercase font-mono tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export function EmsAudienceScanPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. email@polisas.edu.my"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
@@ -441,7 +441,7 @@ export function EmsAudienceScanPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. 0123456789"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
@@ -449,7 +449,7 @@ export function EmsAudienceScanPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+              className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
             >
               {submitting ? (
                 <>
