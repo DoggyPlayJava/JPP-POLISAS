@@ -42,8 +42,8 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
         whileTap={{ scale: 0.95 }}
         className={cn(
           'fixed z-[200] w-11 h-11 rounded-2xl shadow-xl',
-          'bottom-56 right-5 md:bottom-32 md:right-8',
-          'flex items-center justify-center',
+          'hidden md:flex md:bottom-32 md:right-8',
+          'items-center justify-center',
           'border border-white/10',
           'transition-shadow hover:shadow-2xl',
         )}

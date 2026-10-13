@@ -17,6 +17,8 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { format, isValid } from 'date-fns';
+import { ms } from 'date-fns/locale';
 import { fetchEmsEvents, approveEmsEvent } from '@/lib/ems';
 import type { EmsEvent, EmsFormField, EmsRubricCriteria } from '@/types';
 
@@ -155,12 +157,28 @@ export function EmsApprovalPage() {
           <p className="text-sm font-semibold">Memuatkan senarai permohonan acara...</p>
         </div>
       ) : pendingEvents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center p-6 shadow-sm">
-          <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-3" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Tiada Permohonan Pending</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
-            Semua permohonan acara EMS telah disemak dan diluluskan.
+        <div className="flex flex-col items-center justify-center py-16 px-6 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center shadow-sm max-w-2xl mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 mb-4">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">Tiada Permohonan Menunggu</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-6">
+            Semua permohonan penganjuran acara pertandingan EMS telah disemak dan diluluskan sepenuhnya.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/ems/dashboard')}
+              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all shadow-sm"
+            >
+              Kembali ke Hub Acara
+            </button>
+            <button
+              onClick={() => navigate('/ems/event/new')}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
+            >
+              + Cipta Acara Baharu
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -246,9 +264,15 @@ export function EmsApprovalPage() {
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span>
                         Tarikh:{' '}
-                        {selectedEvent.event_date
-                          ? new Date(selectedEvent.event_date).toLocaleString('ms-MY')
-                          : 'Belum ditetapkan'}
+                        {(() => {
+                          if (!selectedEvent.event_date) return 'Belum ditetapkan';
+                          try {
+                            const d = new Date(selectedEvent.event_date);
+                            return isValid(d) ? format(d, 'd MMM yyyy, h:mm a', { locale: ms }) : selectedEvent.event_date;
+                          } catch {
+                            return selectedEvent.event_date;
+                          }
+                        })()}
                       </span>
                     </div>
 

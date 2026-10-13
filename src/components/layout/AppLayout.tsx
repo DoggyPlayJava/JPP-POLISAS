@@ -87,7 +87,8 @@ export function AppLayout() {
 
       {/* ── 2. SIDEBAR (RESPONSIVE) ── */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out bg-sidebar",
+        "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out",
+        activeExco.id === 'ems' ? "bg-slate-950" : "bg-sidebar",
         "md:relative md:translate-x-0 md:flex-shrink-0",
         isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
       )}>

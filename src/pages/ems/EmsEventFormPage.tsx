@@ -571,7 +571,7 @@ export function EmsEventFormPage() {
       </div>
 
       {/* Quick Section Anchor Navigation Bar */}
-      <div className="sticky top-4 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+      <div className="sticky top-4 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-md flex items-center gap-1.5 overflow-x-auto scrollbar-none ring-1 ring-black/5 dark:ring-white/5">
         <button
           type="button"
           onClick={() => document.getElementById('sec-info')?.scrollIntoView({ behavior: 'smooth' })}
