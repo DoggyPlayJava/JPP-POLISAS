@@ -364,8 +364,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
   return (
     <div className="space-y-6">
       {/* STAT BAR + TAMBAH BUTTON */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="overflow-x-auto no-scrollbar flex items-center gap-2 pb-1 sm:pb-0 -mx-1 px-1">
           {[
             { key: 'semua', label: 'Semua', count: activities.length },
             { key: 'perancangan', label: 'Perancangan', count: statusCounts.perancangan || 0 },
@@ -377,7 +377,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               key={f.key}
               onClick={() => setFilterStatus(f.key)}
               className={cn(
-                'px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2',
+                'px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shrink-0 whitespace-nowrap',
                 filterStatus === f.key
                   ? 'bg-primary text-white shadow-lg'
                   : 'bg-background border border-border text-muted-foreground hover:border-slate-400'
@@ -396,7 +396,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
         {canManage && (
           <Button
             onClick={openCreate}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 shrink-0"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 shrink-0"
           >
             <Plus className="w-4 h-4 mr-2" /> Aktiviti Baru
           </Button>
