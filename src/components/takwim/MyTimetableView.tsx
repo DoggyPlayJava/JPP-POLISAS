@@ -83,6 +83,7 @@ export function MyTimetableView() {
   const [entries, setEntries] = useState<StudentTimetableEntry[]>([]);
   const [settings, setSettings] = useState<StudentTimetableSettings | null>(null);
   const [metadata, setMetadata] = useState<StudentTimetableMetadata | null>(null);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewModeState] = useState<'grid' | 'agenda'>(() => {
     if (typeof window !== 'undefined') {
       try {
