@@ -168,18 +168,15 @@ export function JppLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 bg-[#F8F6EE] dark:bg-[#151D16]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="h-full"
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+            className="h-full"
+          >
+            <Outlet />
+          </motion.div>
         </main>
 
         {/* Global Floating AI Chat for JPP HQ */}
