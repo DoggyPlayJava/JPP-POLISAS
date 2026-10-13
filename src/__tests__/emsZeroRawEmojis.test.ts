@@ -12,6 +12,11 @@ describe('EMS 100% Zero Raw Emojis Cleanse', () => {
     'src/pages/ems/EmsLeaderboardPage.tsx',
     'src/pages/ems/EmsPublicRegisterPage.tsx',
     'src/components/ems/EmsLuckyDrawModal.tsx',
+    'src/components/ems/modals/EmsQrCodeModal.tsx',
+    'src/components/ems/modals/EmsJuryCodeModal.tsx',
+    'src/components/ems/modals/EmsTieBreakerModal.tsx',
+    'src/components/ems/modals/EmsManualRegModal.tsx',
+    'src/components/ems/modals/EmsEventCertsModal.tsx',
   ];
 
   const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]|\p{Extended_Pictographic}/u;
