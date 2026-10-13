@@ -17,9 +17,19 @@ import { useJppConfig } from '@/contexts/JppConfigContext';
 
 // ─── Stat card ───────────────────────────────────────────────────────────────
 function StatCard({
-  label, value, icon: Icon, color, delay,
+  label,
+  value,
+  icon: Icon,
+  color,
+  delay,
+  subtitle,
 }: {
-  label: string; value: number | string; icon: React.ElementType; color: string; delay: number;
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: string;
+  delay: number;
+  subtitle?: string;
 }) {
   return (
     <motion.div
@@ -28,15 +38,34 @@ function StatCard({
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:bg-white/[0.06] shadow-sm dark:shadow-none transition-all"
     >
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-        style={{ background: hexToRgba(color, 0.15) }}
-      >
-        <Icon className="w-4 h-4" style={{ color }} />
+      <div className="flex items-center justify-between mb-3">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: hexToRgba(color, 0.15) }}
+        >
+          <Icon className="w-4 h-4" style={{ color }} />
+        </div>
+        {subtitle && (
+          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full">
+            {subtitle}
+          </span>
+        )}
       </div>
-      <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
-      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/40 mt-1">{label}</p>
+      <p className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none tracking-tight">
+        {value}
+      </p>
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/40 mt-1.5">{label}</p>
     </motion.div>
+  );
+}
+
+function StatCardSkeleton() {
+  return (
+    <div className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/50 dark:bg-white/[0.02] animate-pulse">
+      <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/10 mb-3" />
+      <div className="h-6 w-14 bg-slate-200 dark:bg-white/10 rounded mb-2" />
+      <div className="h-3 w-20 bg-slate-200 dark:bg-white/10 rounded" />
+    </div>
   );
 }
 
@@ -173,6 +202,7 @@ export function JppHomePage() {
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
   const [stats, setStats] = useState({ jppMembers: 0, totalClubs: 0, totalActivities: 0, totalBusinesses: 0, totalTickets: 0 });
   const [takwim, setTakwim] = useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const jppPosition = profile?.jpp_position as string | undefined;
   const jppUnit     = profile?.jpp_unit as string | undefined;
@@ -201,26 +231,30 @@ export function JppHomePage() {
   // Fetch page data
   useEffect(() => {
     const fetchData = async () => {
-      const [jppRes, clubRes, actRes, bizRes, tickRes, takwimRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
-        supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('club_activities').select('id', { count: 'exact', head: true }).eq('is_archived', false),
-        supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
-        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
-        supabase.from('club_activities')
-          .select('id, title, start_date, end_date')
-          .gte('end_date', new Date().toISOString())
-          .order('start_date', { ascending: true })
-          .limit(5),
-      ]);
-      setStats({
-        jppMembers: jppRes.count ?? 0,
-        totalClubs: clubRes.count ?? 0,
-        totalActivities: actRes.count ?? 0,
-        totalBusinesses: bizRes.count ?? 0,
-        totalTickets: tickRes.count ?? 0,
-      });
-      setTakwim(takwimRes.data ?? []);
+      try {
+        const [jppRes, clubRes, actRes, bizRes, tickRes, takwimRes] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
+          supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('club_activities').select('id', { count: 'exact', head: true }).eq('is_archived', false),
+          supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
+          supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
+          supabase.from('club_activities')
+            .select('id, title, start_date, end_date')
+            .gte('end_date', new Date().toISOString())
+            .order('start_date', { ascending: true })
+            .limit(5),
+        ]);
+        setStats({
+          jppMembers: jppRes.count ?? 0,
+          totalClubs: clubRes.count ?? 0,
+          totalActivities: actRes.count ?? 0,
+          totalBusinesses: bizRes.count ?? 0,
+          totalTickets: tickRes.count ?? 0,
+        });
+        setTakwim(takwimRes.data ?? []);
+      } finally {
+        setIsLoadingData(false);
+      }
     };
     fetchData();
   }, []);
@@ -273,15 +307,6 @@ export function JppHomePage() {
               <span>{posLabel}</span>
               {jppUnit && <span className="opacity-60">· {jppUnit}</span>}
             </div>
-
-            {/* Git Hash Badge */}
-            <div
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-500 shadow-sm dark:shadow-none"
-              title="Current Build Hash"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-              <span>Build {__GIT_HASH__}</span>
-            </div>
           </div>
 
           {/* Greeting */}
@@ -293,13 +318,24 @@ export function JppHomePage() {
           </p>
         </motion.div>
 
-        {/* ── Quick Stats ──────────────────────────────────────────────── */}
+        {/* ── Quick Stats (Asymmetric Bento Grid) ────────────────────────── */}
         {(isYDP || (isMT && (assignedUnits.includes('KPP') || assignedUnits.includes('KEUSAHAWANAN') || assignedUnits.includes('KEBAJIKAN')))) && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color={themeColor} delay={0.1} />}
-            {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} />}
-            {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} />}
-            {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} />}
+            {isLoadingData ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color={themeColor} delay={0.1} subtitle="Aktif Sesi Ini" />}
+                {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle="Berdaftar" />}
+                {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle="Beroperasi" />}
+                {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle="Dipantau" />}
+              </>
+            )}
           </div>
         )}
 
