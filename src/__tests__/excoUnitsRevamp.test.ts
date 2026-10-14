@@ -69,4 +69,20 @@ describe('JPP EXCO Units Revamp — Kontrak Sistem & Integriti Dashboard', () =>
       expect(content, `${file} mesti menggunakan Promise.all untuk data fetch berbilang sumber`).toContain('Promise.all');
     }
   });
+
+  it('MultimediaUnitDashboard bersambung secara live dengan system_announcements dan menyediakan Brandkit DAM', () => {
+    const content = readFileSync(join(UNITS_DIR, 'MultimediaUnitDashboard.tsx'), 'utf8');
+    expect(content).toContain('system_announcements');
+    expect(content).toContain('BRANDKIT_LOGOS');
+    expect(content).toContain('BRANDKIT_COLORS');
+    expect(content).toContain('copyWhatsApp');
+  });
+
+  it('KolaborasiUnitDashboard bersambung secara live dengan ems_events dan sistem sijil EMS', () => {
+    const content = readFileSync(join(UNITS_DIR, 'KolaborasiUnitDashboard.tsx'), 'utf8');
+    expect(content).toContain('ems_events');
+    expect(content).toContain('ems_certificates');
+    expect(content).toContain('/ems/checkin');
+    expect(content).toContain('/ems/verify');
+  });
 });
