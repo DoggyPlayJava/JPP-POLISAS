@@ -19,13 +19,17 @@
     "lint": "bun run lint:types && bun run lint:js && bun run lint:css && bun run check:css-vars && bun run check:css-classes",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "cleanup:storage": "node scripts/storage-cleanup.js"
+    "cleanup:storage": "node scripts/storage-cleanup.js",
+    "remotion:studio": "remotion studio remotion/index.ts",
+    "remotion:render": "remotion render remotion/index.ts JppIntroVideo out/jpp-intro.mp4"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
+    "@remotion/cli": "^4.0.535",
     "@types/canvas-confetti": "^1.9.0",
     "@types/leaflet": "^1.9.21",
     "@vitest/ui": "^4.1.2",
+    "remotion": "^4.0.535",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
     "vitest": "^4.1.2",
