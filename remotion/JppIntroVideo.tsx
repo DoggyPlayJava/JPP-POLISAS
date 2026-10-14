@@ -27,6 +27,17 @@ import {
   MessageSquare,
   FileCheck,
   Award,
+  Star,
+  ShoppingCart,
+  Store,
+  TrendingUp,
+  Package,
+  QrCode,
+  Flame,
+  Vote,
+  Users,
+  Wrench,
+  Activity,
 } from 'lucide-react';
 import { JppIntroVideoProps } from './schema';
 
@@ -1596,182 +1607,2739 @@ const Scene1PolyMaps: React.FC<Scene1Props> = ({ nextClass }) => {
 // CLEAN TYPE-SAFE SEQUENCE STUBS FOR SCENES 2, 3, 4, 5, 6
 // ============================================================================
 
-// Scene 2: PolyMart Stub (Frames 315 to 510)
-const Scene2Stub: React.FC<{ polyMart: JppIntroVideoProps['polyMart'] }> = ({ polyMart }) => {
+// ============================================================================
+// SCENE 2: SISTEM KEUSAHAWANAN DIGITAL SISWA — POLYMART (Frames 315 to 510)
+// ============================================================================
+interface Scene2Props {
+  polyMart: JppIntroVideoProps['polyMart'];
+}
+
+const Scene2PolyMart: React.FC<Scene2Props> = ({ polyMart }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+
+  // Entrance springs
+  const headerSpring = spring({
+    frame: Math.max(0, frame - 2),
+    fps,
+    config: { damping: 14, mass: 0.8, stiffness: 90 },
+  });
+
+  const featuredSpring = spring({
+    frame: Math.max(0, frame - 8),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  const sideColSpring = spring({
+    frame: Math.max(0, frame - 16),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  const metricsSpring = spring({
+    frame: Math.max(0, frame - 24),
+    fps,
+    config: { damping: 16, mass: 0.9, stiffness: 80 },
+  });
+
+  // Exit interpolation at local frames 168 to 195
+  const exitProgress = interpolate(frame, [168, 195], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const sceneOpacity = (1 - exitProgress) * interpolate(headerSpring, [0, 1], [0, 1]);
+  const sceneTranslateY = interpolate(exitProgress, [0, 1], [0, -30]);
+
+  // Card Y animations
+  const featuredY = interpolate(featuredSpring, [0, 1], [32, 0]);
+  const sideColY = interpolate(sideColSpring, [0, 1], [36, 0]);
+
+  // Dynamic counter calculations
+  const animatedProducts = Math.floor(
+    Number(
+      interpolate(metricsSpring, [0, 1], [0, polyMart.productsCount], {
+        extrapolateRight: 'clamp',
+      })
+    )
+  );
+  const animatedOrders = Math.floor(
+    Number(
+      interpolate(metricsSpring, [0, 1], [0, polyMart.ordersCount], {
+        extrapolateRight: 'clamp',
+      })
+    )
+  );
+
+  // Subtle continuous motion
+  const buttonSheen = Math.sin(frame / 6) * 4;
+  const steamOffset = (frame * 1.5) % 40;
+
   return (
     <AbsoluteFill
       style={{
-        opacity,
+        opacity: sceneOpacity,
+        transform: `translateY(${sceneTranslateY}px)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px',
-        textAlign: 'center',
+        padding: '60px 90px',
+        justifyContent: 'space-between',
       }}
     >
+      {/* 1. SCENE HEADER */}
       <div
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 20px',
-          borderRadius: '9999px',
-          backgroundColor: 'rgba(201, 111, 79, 0.12)',
-          border: '1px solid rgba(201, 111, 79, 0.3)',
-          marginBottom: '20px',
+          transform: `translateY(${interpolate(headerSpring, [0, 1], [20, 0])}px)`,
+          opacity: headerSpring,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '26px',
         }}
       >
-        <ShoppingBag size={16} color={PALETTE.ACCENT} />
-        <span
+        <div>
+          {/* Category Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              backgroundColor: 'rgba(201, 111, 79, 0.12)',
+              border: `1px solid rgba(201, 111, 79, 0.3)`,
+              marginBottom: '10px',
+            }}
+          >
+            <ShoppingBag size={14} color={PALETTE.ACCENT} />
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                color: PALETTE.ACCENT,
+                textTransform: 'uppercase',
+              }}
+            >
+              PASARAN DIGITAL SISWA
+            </span>
+          </div>
+
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '46px',
+              fontWeight: 900,
+              letterSpacing: '-0.03em',
+              color: PALETTE.PRIMARY,
+              lineHeight: 1.1,
+            }}
+          >
+            PolyMart: Memperkasa Usahawan Kampus
+          </h2>
+          <p
+            style={{
+              margin: '6px 0 0 0',
+              fontSize: '19px',
+              fontWeight: 500,
+              color: PALETTE.SECONDARY,
+            }}
+          >
+            Platform e-dagang rasmi mahasiswa — sokong perniagaan rakan sekampus secara selamat & terus.
+          </p>
+        </div>
+
+        {/* Live Vendor & Payment Telemetry Badge */}
+        <div
           style={{
-            fontSize: '13px',
-            fontWeight: 800,
-            letterSpacing: '0.16em',
-            color: PALETTE.ACCENT,
-            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 18px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            border: `1px solid ${PALETTE.TERTIARY}`,
+            boxShadow: '0 4px 14px rgba(46, 58, 47, 0.04)',
           }}
         >
-          BABAK 02 • KEUSAHAWANAN DIGITAL SISWA
-        </span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: PALETTE.SECONDARY,
+              boxShadow: `0 0 8px ${PALETTE.SECONDARY}`,
+            }}
+          />
+          <div style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              JPP PAY ESCROW • BEBAS TUNAI
+            </div>
+            <div
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              100% Usahawan Sah Mahasiswa
+            </div>
+          </div>
+        </div>
       </div>
-      <h2
+
+      {/* 2. BENTO LAYOUT */}
+      <div
         style={{
-          fontSize: '54px',
-          fontWeight: 900,
-          color: PALETTE.PRIMARY,
-          letterSpacing: '-0.03em',
-          margin: '0 0 16px 0',
+          display: 'flex',
+          gap: '32px',
+          flex: 1,
+          alignItems: 'stretch',
+          minHeight: 0,
         }}
       >
-        PolyMart Kampus
-      </h2>
-      <p style={{ fontSize: '22px', color: PALETTE.SECONDARY, maxWidth: '700px', margin: 0 }}>
-        Platform pasaran rasmi usahawan mahasiswa — {polyMart.productsCount}+ produk aktif,{' '}
-        {polyMart.ordersCount}+ pesanan selesai melalui JPP Pay.
-      </p>
+        {/* CARD A: FEATURED PRODUCT SHOWCASE */}
+        <div
+          style={{
+            flex: '0 0 600px',
+            transform: `translateY(${featuredY}px)`,
+            opacity: featuredSpring,
+            backgroundColor: PALETTE.CARD_BG,
+            borderRadius: '24px',
+            border: `1.5px solid ${PALETTE.TERTIARY}`,
+            boxShadow: PALETTE.SHADOW_SOFT,
+            padding: '30px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Subtle accent corner glow */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '180px',
+              height: '180px',
+              background:
+                'radial-gradient(circle at 100% 0%, rgba(201, 111, 79, 0.1) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          <div>
+            {/* Top Product Header Row */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                  border: `1px solid rgba(201, 111, 79, 0.3)`,
+                }}
+              >
+                <Flame size={13} color={PALETTE.ACCENT} />
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    color: PALETTE.ACCENT,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  PILIHAN TERHANGAT
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                <div
+                  style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    backgroundColor: PALETTE.SECONDARY,
+                  }}
+                />
+                <span>Sedia Diambil</span>
+              </div>
+            </div>
+
+            {/* Product Visual Canvas (Modern Swiss Graphic with Steam Animation) */}
+            <div
+              style={{
+                height: '240px',
+                borderRadius: '18px',
+                backgroundColor: '#F7F4EC',
+                border: `1px solid ${PALETTE.TERTIARY}`,
+                position: 'relative',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '20px',
+              }}
+            >
+              <svg width="100%" height="100%" viewBox="0 0 540 240" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <linearGradient id="popcorn-box" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#C96F4F" />
+                    <stop offset="100%" stopColor="#A85235" />
+                  </linearGradient>
+                  <linearGradient id="popcorn-crisp" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#F5B942" />
+                    <stop offset="100%" stopColor="#DF9326" />
+                  </linearGradient>
+                </defs>
+
+                {/* Background decorative soft circles */}
+                <circle cx="270" cy="120" r="95" fill="rgba(217, 201, 178, 0.25)" />
+                <circle cx="270" cy="120" r="75" fill="rgba(255, 255, 255, 0.7)" />
+
+                {/* Rising Steam trails */}
+                {[230, 260, 290, 310].map((x, i) => {
+                  const steamY = 75 - ((steamOffset + i * 10) % 40);
+                  const steamOp = 1 - ((steamOffset + i * 10) % 40) / 40;
+                  return (
+                    <path
+                      key={i}
+                      d={`M ${x} ${steamY + 15} Q ${x + Math.sin((frame + i * 10) / 5) * 6} ${steamY + 7}, ${x} ${steamY}`}
+                      fill="none"
+                      stroke={PALETTE.ACCENT}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      opacity={steamOp * 0.6}
+                    />
+                  );
+                })}
+
+                {/* Popcorn Chicken Box Container */}
+                <g transform="translate(195, 80)">
+                  {/* Golden crispy popcorn clusters overflowing */}
+                  <circle cx="45" cy="18" r="22" fill="url(#popcorn-crisp)" />
+                  <circle cx="75" cy="12" r="24" fill="#F8C358" />
+                  <circle cx="105" cy="18" r="22" fill="url(#popcorn-crisp)" />
+                  <circle cx="30" cy="32" r="20" fill="#E6A12E" />
+                  <circle cx="60" cy="28" r="25" fill="#F8C358" />
+                  <circle cx="90" cy="28" r="24" fill="#E6A12E" />
+                  <circle cx="120" cy="32" r="20" fill="url(#popcorn-crisp)" />
+
+                  {/* Sesame / Herb seasoning specks */}
+                  <circle cx="55" cy="22" r="1.5" fill="#2E3A2F" />
+                  <circle cx="78" cy="18" r="1.5" fill="#2E3A2F" />
+                  <circle cx="92" cy="26" r="1.5" fill="#2E3A2F" />
+                  <circle cx="68" cy="30" r="1.5" fill="#6B7F5B" />
+
+                  {/* Red/Terracotta Takeaway Box */}
+                  <polygon points="15,45 135,45 120,125 30,125" fill="url(#popcorn-box)" />
+                  <polygon points="25,45 125,45 113,120 37,120" fill="#B35A3D" />
+
+                  {/* Label strip on box */}
+                  <rect x="42" y="70" width="66" height="28" rx="6" fill="#FFFFFF" />
+                  <text
+                    x="75"
+                    y="84"
+                    textAnchor="middle"
+                    fontSize="9"
+                    fontWeight="900"
+                    fill={PALETTE.PRIMARY}
+                    letterSpacing="0.08em"
+                  >
+                    POLY
+                  </text>
+                  <text
+                    x="75"
+                    y="93"
+                    textAnchor="middle"
+                    fontSize="7"
+                    fontWeight="800"
+                    fill={PALETTE.ACCENT}
+                    letterSpacing="0.08em"
+                  >
+                    MART
+                  </text>
+                </g>
+              </svg>
+
+              {/* Floating review star badge */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  boxShadow: '0 4px 12px rgba(46, 58, 47, 0.08)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                }}
+              >
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={12} fill="#E5A93C" color="#E5A93C" />
+                  ))}
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: PALETTE.PRIMARY }}>
+                  4.9
+                </span>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: PALETTE.SECONDARY }}>
+                  (128)
+                </span>
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <div style={{ marginBottom: '8px' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  color: PALETTE.SECONDARY,
+                  textTransform: 'uppercase',
+                }}
+              >
+                KATEGORI: MAKANAN & SNEK SEGAR
+              </div>
+              <h3
+                style={{
+                  margin: '4px 0 6px 0',
+                  fontSize: '28px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {polyMart.featuredProduct}
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: PALETTE.SECONDARY,
+                }}
+              >
+                <Store size={15} color={PALETTE.SECONDARY} />
+                <span>Vendor:</span>
+                <span style={{ color: PALETTE.PRIMARY, fontWeight: 800 }}>
+                  {polyMart.vendorName}
+                </span>
+                <div
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(107, 127, 91, 0.15)',
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    color: PALETTE.PRIMARY,
+                  }}
+                >
+                  ✓ VERIFIED
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Price & Purchase Row */}
+          <div
+            style={{
+              paddingTop: '18px',
+              borderTop: `1px solid ${PALETTE.TERTIARY}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  color: PALETTE.SECONDARY,
+                  textTransform: 'uppercase',
+                }}
+              >
+                HARGA KAMPUS
+              </div>
+              <div
+                style={{
+                  fontSize: '34px',
+                  fontWeight: 900,
+                  fontFamily: 'monospace',
+                  color: PALETTE.ACCENT,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {polyMart.price}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '14px 28px',
+                borderRadius: '14px',
+                backgroundColor: PALETTE.ACCENT,
+                color: '#FFFFFF',
+                boxShadow: '0 8px 20px -4px rgba(201, 111, 79, 0.35)',
+              }}
+            >
+              <ShoppingCart size={18} />
+              <span style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '0.04em' }}>
+                Pesan Terus • JPP Pay
+              </span>
+              <ArrowRight
+                size={16}
+                style={{ transform: `translateX(${buttonSheen}px)` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: SECOND PRODUCT + METRICS + SAFETY GUARANTEE */}
+        <div
+          style={{
+            flex: 1,
+            transform: `translateY(${sideColY}px)`,
+            opacity: sideColSpring,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          {/* CARD B1: SECOND PRODUCT (Lanyard Rasmi JPP POLISAS) */}
+          <div
+            style={{
+              backgroundColor: PALETTE.CARD_BG,
+              borderRadius: '22px',
+              border: `1.5px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              padding: '24px',
+              display: 'flex',
+              gap: '24px',
+              alignItems: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Lanyard Vector Art */}
+            <div
+              style={{
+                width: '160px',
+                height: '140px',
+                borderRadius: '16px',
+                backgroundColor: '#F7F4EC',
+                border: `1px solid ${PALETTE.TERTIARY}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="100%" height="100%" viewBox="0 0 160 140">
+                {/* Woven Strap Curves */}
+                <path
+                  d="M 40 10 C 60 40, 80 50, 80 90"
+                  fill="none"
+                  stroke={PALETTE.PRIMARY}
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 120 10 C 100 40, 80 50, 80 90"
+                  fill="none"
+                  stroke={PALETTE.SECONDARY}
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                />
+                {/* Gold Metal Clasp & Ring */}
+                <circle cx="80" cy="95" r="10" fill="none" stroke="#D4A346" strokeWidth="3" />
+                {/* ID Badge Holder */}
+                <rect
+                  x="56"
+                  y="105"
+                  width="48"
+                  height="30"
+                  rx="4"
+                  fill="#FFFFFF"
+                  stroke={PALETTE.TERTIARY}
+                  strokeWidth="1.5"
+                />
+                <rect x="62" y="112" width="16" height="16" rx="2" fill="rgba(46, 58, 47, 0.15)" />
+                <line x1="84" y1="116" x2="98" y2="116" stroke={PALETTE.PRIMARY} strokeWidth="2" />
+                <line x1="84" y1="122" x2="94" y2="122" stroke={PALETTE.SECONDARY} strokeWidth="1.5" />
+              </svg>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '6px',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: PALETTE.PRIMARY,
+                  color: '#FFFFFF',
+                  fontSize: '8px',
+                  fontWeight: 900,
+                  letterSpacing: '0.1em',
+                }}
+              >
+                MERCHANDISE
+              </div>
+            </div>
+
+            {/* Lanyard Info */}
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '6px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '3px 10px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    color: PALETTE.SECONDARY,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  <Sparkles size={11} color={PALETTE.SECONDARY} />
+                  <span>Koleksi Terhad</span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: PALETTE.SECONDARY,
+                  }}
+                >
+                  Baki 42 Unit
+                </div>
+              </div>
+
+              <h4
+                style={{
+                  margin: '0 0 4px 0',
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Lanyard Rasmi JPP POLISAS
+              </h4>
+              <p
+                style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: PALETTE.SECONDARY,
+                }}
+              >
+                Koperasi Siswa & Merchandise JPP • Cetakan Woven Mewah
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span
+                  style={{
+                    fontSize: '26px',
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    color: PALETTE.PRIMARY,
+                  }}
+                >
+                  RM 15.00
+                </span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: PALETTE.SECONDARY,
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(46, 58, 47, 0.05)',
+                  }}
+                >
+                  ★ 5.0 (240 Terjual)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD B2: LIVE METRICS BENTO (3 TELEMETRY COLUMNS) */}
+          <div
+            style={{
+              backgroundColor: PALETTE.CARD_BG,
+              borderRadius: '22px',
+              border: `1.5px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              padding: '24px 28px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.14em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              STATISTIK PERDAGANGAN DIGITAL KAMPUS
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+              }}
+            >
+              {/* Metric 1 */}
+              <div
+                style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.7)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <Package size={16} color={PALETTE.SECONDARY} />
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      color: PALETTE.SECONDARY,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    PRODUK SISWA
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '32px',
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    color: PALETTE.PRIMARY,
+                    lineHeight: 1,
+                  }}
+                >
+                  {animatedProducts}+
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: PALETTE.SECONDARY,
+                    marginTop: '6px',
+                  }}
+                >
+                  Katalog Aktif Kampus
+                </div>
+              </div>
+
+              {/* Metric 2 */}
+              <div
+                style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.7)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <TrendingUp size={16} color={PALETTE.ACCENT} />
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      color: PALETTE.ACCENT,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    PESANAN KAMPUS
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '32px',
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    color: PALETTE.ACCENT,
+                    lineHeight: 1,
+                  }}
+                >
+                  {animatedOrders}+
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: PALETTE.SECONDARY,
+                    marginTop: '6px',
+                  }}
+                >
+                  Pesanan Berjaya Selesai
+                </div>
+              </div>
+
+              {/* Metric 3 */}
+              <div
+                style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.7)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <Store size={16} color={PALETTE.PRIMARY} />
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      color: PALETTE.PRIMARY,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    USAHAWAN SISWA
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '32px',
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    color: PALETTE.PRIMARY,
+                    lineHeight: 1,
+                  }}
+                >
+                  100%
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: PALETTE.SECONDARY,
+                    marginTop: '6px',
+                  }}
+                >
+                  Milik Penuh Pelajar
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD B3: SAFETY GUARANTEE PILL */}
+          <div
+            style={{
+              padding: '16px 24px',
+              borderRadius: '18px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.14)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ShieldCheck size={20} color={PALETTE.SECONDARY} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: PALETTE.PRIMARY,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  JPP Pay Selamat • Imbas & Ambil
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: PALETTE.SECONDARY }}>
+                  Dana dipegang secara escrow — dilepaskan serta-merta selepas kod pesanan diimbas.
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(46, 58, 47, 0.05)',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              <QrCode size={14} color={PALETTE.ACCENT} />
+              <span>QR VERIFIKASI</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
 
-// Scene 3: PolySuara Stub (Frames 510 to 705)
-const Scene3Stub: React.FC<{ polySuara: JppIntroVideoProps['polySuara'] }> = ({ polySuara }) => {
+// ============================================================================
+// SCENE 3: RUANG SUARA & EKSPRESI SISWA — POLYSUARA (Frames 510 to 705)
+// ============================================================================
+interface Scene3Props {
+  polySuara: JppIntroVideoProps['polySuara'];
+}
+
+const Scene3PolySuara: React.FC<Scene3Props> = ({ polySuara }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+
+  // Entrance springs
+  const headerSpring = spring({
+    frame: Math.max(0, frame - 2),
+    fps,
+    config: { damping: 14, mass: 0.8, stiffness: 90 },
+  });
+
+  const pollCardSpring = spring({
+    frame: Math.max(0, frame - 8),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  const feedCardSpring = spring({
+    frame: Math.max(0, frame - 16),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  // Animated poll progress
+  const pollSpring = spring({
+    frame: Math.max(0, frame - 22),
+    fps,
+    config: { damping: 16, mass: 0.9, stiffness: 80 },
+  });
+
+  // Floating staggered reaction chips
+  const heartSpring = spring({
+    frame: Math.max(0, frame - 32),
+    fps,
+    config: { damping: 12, mass: 0.6, stiffness: 120 },
+  });
+  const fireSpring = spring({
+    frame: Math.max(0, frame - 38),
+    fps,
+    config: { damping: 12, mass: 0.6, stiffness: 120 },
+  });
+  const trophySpring = spring({
+    frame: Math.max(0, frame - 44),
+    fps,
+    config: { damping: 12, mass: 0.6, stiffness: 120 },
+  });
+  const sparklesSpring = spring({
+    frame: Math.max(0, frame - 50),
+    fps,
+    config: { damping: 12, mass: 0.6, stiffness: 120 },
+  });
+
+  // Exit interpolation at local frames 168 to 195
+  const exitProgress = interpolate(frame, [168, 195], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const sceneOpacity = (1 - exitProgress) * interpolate(headerSpring, [0, 1], [0, 1]);
+  const sceneTranslateY = interpolate(exitProgress, [0, 1], [0, -30]);
+
+  // Card Y animations
+  const pollCardY = interpolate(pollCardSpring, [0, 1], [32, 0]);
+  const feedCardY = interpolate(feedCardSpring, [0, 1], [36, 0]);
+
+  // Dynamic poll values
+  const animatedPercentA = Math.round(
+    Number(
+      interpolate(pollSpring, [0, 1], [0, polySuara.percentageA], {
+        extrapolateRight: 'clamp',
+      })
+    )
+  );
+  const animatedPercentB = Math.round(
+    Number(
+      interpolate(pollSpring, [0, 1], [0, polySuara.percentageB], {
+        extrapolateRight: 'clamp',
+      })
+    )
+  );
+  const animatedVotes = Math.round(
+    Number(
+      interpolate(pollSpring, [0, 1], [0, polySuara.totalVotes], {
+        extrapolateRight: 'clamp',
+      })
+    )
+  );
+
   return (
     <AbsoluteFill
       style={{
-        opacity,
+        opacity: sceneOpacity,
+        transform: `translateY(${sceneTranslateY}px)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px',
-        textAlign: 'center',
+        padding: '60px 90px',
+        justifyContent: 'space-between',
       }}
     >
+      {/* 1. SCENE HEADER */}
       <div
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 20px',
-          borderRadius: '9999px',
-          backgroundColor: 'rgba(107, 127, 91, 0.12)',
-          border: '1px solid rgba(107, 127, 91, 0.3)',
-          marginBottom: '20px',
+          transform: `translateY(${interpolate(headerSpring, [0, 1], [20, 0])}px)`,
+          opacity: headerSpring,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '26px',
         }}
       >
-        <MessageSquare size={16} color={PALETTE.SECONDARY} />
-        <span
+        <div>
+          {/* Category Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              backgroundColor: 'rgba(107, 127, 91, 0.12)',
+              border: `1px solid rgba(107, 127, 91, 0.3)`,
+              marginBottom: '10px',
+            }}
+          >
+            <MessageSquare size={14} color={PALETTE.SECONDARY} />
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                color: PALETTE.PRIMARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              HAB KOMUNITI MAHASISWA
+            </span>
+          </div>
+
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '46px',
+              fontWeight: 900,
+              letterSpacing: '-0.03em',
+              color: PALETTE.PRIMARY,
+              lineHeight: 1.1,
+            }}
+          >
+            PolySuara: Ruang Suara & Ekspresi Siswa
+          </h2>
+          <p
+            style={{
+              margin: '6px 0 0 0',
+              fontSize: '19px',
+              fontWeight: 500,
+              color: PALETTE.SECONDARY,
+            }}
+          >
+            Saluran pendemokrasian kampus — undian masa nyata, idea bernas dan suara komuniti yang telus.
+          </p>
+        </div>
+
+        {/* Live Voting Telemetry Badge */}
+        <div
           style={{
-            fontSize: '13px',
-            fontWeight: 800,
-            letterSpacing: '0.16em',
-            color: PALETTE.PRIMARY,
-            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 18px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            border: `1px solid ${PALETTE.TERTIARY}`,
+            boxShadow: '0 4px 14px rgba(46, 58, 47, 0.04)',
           }}
         >
-          BABAK 03 • SUARA & ASPIRASI SISWA
-        </span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: PALETTE.ACCENT,
+              boxShadow: `0 0 8px ${PALETTE.ACCENT}`,
+            }}
+          />
+          <div style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              UNDIAN DEMOKRASI • SINGLE SIGN-ON
+            </div>
+            <div
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              1 Pelajar = 1 Undi Sah Terpelihara
+            </div>
+          </div>
+        </div>
       </div>
-      <h2
+
+      {/* 2. BENTO DUAL CARD SYSTEM */}
+      <div
         style={{
-          fontSize: '54px',
-          fontWeight: 900,
-          color: PALETTE.PRIMARY,
-          letterSpacing: '-0.03em',
-          margin: '0 0 16px 0',
+          display: 'flex',
+          gap: '32px',
+          flex: 1,
+          alignItems: 'stretch',
+          minHeight: 0,
         }}
       >
-        PolySuara & Undian Langsung
-      </h2>
-      <p style={{ fontSize: '22px', color: PALETTE.SECONDARY, maxWidth: '700px', margin: 0 }}>
-        Ruang perkongsian idea, perbincangan sihat & undian komuniti — {polySuara.totalVotes} undian
-        direkodkan secara telus dan adil.
-      </p>
+        {/* CARD A: LIVE CAMPUS POLL CARD */}
+        <div
+          style={{
+            flex: '0 0 620px',
+            transform: `translateY(${pollCardY}px)`,
+            opacity: pollCardSpring,
+            backgroundColor: PALETTE.CARD_BG,
+            borderRadius: '24px',
+            border: `1.5px solid ${PALETTE.TERTIARY}`,
+            boxShadow: PALETTE.SHADOW_SOFT,
+            padding: '32px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Subtle Sage glow */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '180px',
+              height: '180px',
+              background:
+                'radial-gradient(circle at 100% 0%, rgba(107, 127, 91, 0.1) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          <div>
+            {/* Top Status & Badge */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '18px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '5px 14px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                  border: `1px solid rgba(201, 111, 79, 0.3)`,
+                }}
+              >
+                <Radio size={13} color={PALETTE.ACCENT} />
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.14em',
+                    color: PALETTE.ACCENT,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  UNDIAN LANGSUNG AKTIF
+                </span>
+              </div>
+
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                  color: PALETTE.SECONDARY,
+                }}
+              >
+                BERAKHIR DALAM 48 JAM
+              </span>
+            </div>
+
+            {/* Poll Category & Question */}
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+                marginBottom: '4px',
+              }}
+            >
+              ASPIRASI & KEBAJIKAN SISWA • SESI 2026/2027
+            </div>
+
+            <h3
+              style={{
+                margin: '0 0 8px 0',
+                fontSize: '26px',
+                fontWeight: 900,
+                color: PALETTE.PRIMARY,
+                lineHeight: 1.3,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {polySuara.pollTitle || 'Cadangan Penambahbaikan Menu Kafeteria Sesi 2026/2027'}
+            </h3>
+
+            <p
+              style={{
+                margin: '0 0 24px 0',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: PALETTE.SECONDARY,
+              }}
+            >
+              Pilihan majoriti akan dijadikan usul rasmi pertemuan MPP bersama pihak pengurusan kafeteria POLISAS.
+            </p>
+
+            {/* Poll Options (A & B) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Option A: Winning Option */}
+              <div
+                style={{
+                  padding: '20px 22px',
+                  borderRadius: '18px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.08)',
+                  border: `2px solid ${PALETTE.SECONDARY}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Animated Percentage Fill Bar */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    width: `${animatedPercentA}%`,
+                    backgroundColor: 'rgba(107, 127, 91, 0.16)',
+                    pointerEvents: 'none',
+                    transition: 'width 0.1s linear',
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    zIndex: 2,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: PALETTE.SECONDARY,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <CheckCircle2 size={18} color="#FFFFFF" />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span
+                          style={{
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            color: PALETTE.PRIMARY,
+                          }}
+                        >
+                          {polySuara.optionA}
+                        </span>
+                        <div
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: 'rgba(201, 111, 79, 0.15)',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            color: PALETTE.ACCENT,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Pilihan Teratas ★
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: PALETTE.SECONDARY,
+                          marginTop: '2px',
+                        }}
+                      >
+                        Pilihan Sihat & Sayuran Segar Harian
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: '32px',
+                        fontWeight: 900,
+                        fontFamily: 'monospace',
+                        color: PALETTE.PRIMARY,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {animatedPercentA}%
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        fontFamily: 'monospace',
+                        color: PALETTE.SECONDARY,
+                        marginTop: '4px',
+                      }}
+                    >
+                      {Math.round((animatedVotes * polySuara.percentageA) / 100)} Undian
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Option B: Alternative Option */}
+              <div
+                style={{
+                  padding: '20px 22px',
+                  borderRadius: '18px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.8)',
+                  border: `1.5px solid ${PALETTE.TERTIARY}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Animated Percentage Fill Bar */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    width: `${animatedPercentB}%`,
+                    backgroundColor: 'rgba(217, 201, 178, 0.35)',
+                    pointerEvents: 'none',
+                    transition: 'width 0.1s linear',
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    zIndex: 2,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: `2px solid ${PALETTE.TERTIARY}`,
+                        backgroundColor: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          backgroundColor: PALETTE.TERTIARY,
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: 800,
+                          color: PALETTE.PRIMARY,
+                        }}
+                      >
+                        {polySuara.optionB}
+                      </span>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: PALETTE.SECONDARY,
+                          marginTop: '2px',
+                        }}
+                      >
+                        Pek Sarapan Pantas & Ringkas
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: '32px',
+                        fontWeight: 900,
+                        fontFamily: 'monospace',
+                        color: PALETTE.SECONDARY,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {animatedPercentB}%
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        fontFamily: 'monospace',
+                        color: PALETTE.SECONDARY,
+                        marginTop: '4px',
+                      }}
+                    >
+                      {Math.round((animatedVotes * polySuara.percentageB) / 100)} Undian
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Live Voting Tally */}
+          <div
+            style={{
+              paddingTop: '20px',
+              borderTop: `1px solid ${PALETTE.TERTIARY}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Vote size={18} color={PALETTE.ACCENT} />
+              <span
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                {animatedVotes} Undian Sah Disahkan
+              </span>
+            </div>
+
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: PALETTE.SECONDARY,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <ShieldCheck size={15} color={PALETTE.SECONDARY} />
+              <span>Sistem Undian Telus & Bebas Manipulasi</span>
+            </div>
+          </div>
+        </div>
+
+        {/* CARD B: STUDENT COMMUNITY FEED & FLOATING REACTION CHIPS */}
+        <div
+          style={{
+            flex: 1,
+            transform: `translateY(${feedCardY}px)`,
+            opacity: feedCardSpring,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          {/* Main Community Post Card */}
+          <div
+            style={{
+              backgroundColor: PALETTE.CARD_BG,
+              borderRadius: '24px',
+              border: `1.5px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              flex: 1,
+            }}
+          >
+            <div>
+              {/* Post Header: Codename & Verified Badge */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '16px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  {/* Anonymous Tech Cat Avatar */}
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '14px',
+                      backgroundColor: 'rgba(46, 58, 47, 0.08)',
+                      border: `1.5px solid ${PALETTE.TERTIARY}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '22px',
+                    }}
+                  >
+                    🐱
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        style={{
+                          fontSize: '17px',
+                          fontWeight: 900,
+                          color: PALETTE.PRIMARY,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        KucingTekno #204
+                      </span>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: 'rgba(107, 127, 91, 0.15)',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          color: PALETTE.PRIMARY,
+                        }}
+                      >
+                        <CheckCircle2 size={11} color={PALETTE.SECONDARY} />
+                        <span>SISWA SAH POLISAS</span>
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: PALETTE.SECONDARY,
+                        marginTop: '2px',
+                      }}
+                    >
+                      30 minit lepas • Dataran Siswa Semambu
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: PALETTE.ACCENT,
+                  }}
+                >
+                  TOPIK HANGAT 🔥
+                </div>
+              </div>
+
+              {/* Post Snippet Box */}
+              <div
+                style={{
+                  padding: '20px 24px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.9)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                  marginBottom: '20px',
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    color: PALETTE.PRIMARY,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  “Kafeteria Blok B dah tambah stesen air mineral percuma & pilihan menu sihat!
+                  Terbaik respon pantas MPP & Pengurusan POLISAS bila kita suarakan dalam PolySuara 👏🌿”
+                </p>
+              </div>
+
+              {/* Floating Reaction Chips popping with staggered spring physics */}
+              <div style={{ marginBottom: '14px' }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    color: PALETTE.SECONDARY,
+                    textTransform: 'uppercase',
+                    marginBottom: '10px',
+                  }}
+                >
+                  REAKSI KOMUNITI MAHASISWA
+                </div>
+
+                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                  {[
+                    {
+                      label: '❤️ Kasih Siswa',
+                      count: '84',
+                      spring: heartSpring,
+                      color: '#E04F5F',
+                      bg: 'rgba(224, 79, 95, 0.1)',
+                      border: 'rgba(224, 79, 95, 0.3)',
+                    },
+                    {
+                      label: '🔥 Padu / Mantap',
+                      count: '56',
+                      spring: fireSpring,
+                      color: PALETTE.ACCENT,
+                      bg: 'rgba(201, 111, 79, 0.1)',
+                      border: 'rgba(201, 111, 79, 0.3)',
+                    },
+                    {
+                      label: '🏆 Terbaik JPP',
+                      count: '39',
+                      spring: trophySpring,
+                      color: '#D4A346',
+                      bg: 'rgba(212, 163, 70, 0.12)',
+                      border: 'rgba(212, 163, 70, 0.35)',
+                    },
+                    {
+                      label: '✨ Inspirasi',
+                      count: '72',
+                      spring: sparklesSpring,
+                      color: PALETTE.SECONDARY,
+                      bg: 'rgba(107, 127, 91, 0.12)',
+                      border: 'rgba(107, 127, 91, 0.3)',
+                    },
+                  ].map((chip, idx) => {
+                    const bobY = Math.sin((frame + idx * 8) / 5) * 3;
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          transform: `scale(${chip.spring}) translateY(${bobY}px)`,
+                          opacity: chip.spring,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          borderRadius: '9999px',
+                          backgroundColor: chip.bg,
+                          border: `1.5px solid ${chip.border}`,
+                          boxShadow: '0 4px 12px rgba(46, 58, 47, 0.05)',
+                        }}
+                      >
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: PALETTE.PRIMARY }}>
+                          {chip.label}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 900,
+                            fontFamily: 'monospace',
+                            color: chip.color,
+                            padding: '2px 6px',
+                            borderRadius: '6px',
+                            backgroundColor: '#FFFFFF',
+                          }}
+                        >
+                          +{chip.count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Engagement Telemetry Strip */}
+            <div
+              style={{
+                paddingTop: '16px',
+                borderTop: `1px solid ${PALETTE.TERTIARY}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: PALETTE.SECONDARY,
+              }}
+            >
+              <span>💬 18 Komen Bernas</span>
+              <span>•</span>
+              <span>🔄 42 Perkongsian Aspirasi</span>
+              <span>•</span>
+              <span style={{ color: PALETTE.PRIMARY, fontWeight: 800 }}>
+                🛡️ 100% Moderasi Komuniti Harmoni
+              </span>
+            </div>
+          </div>
+
+          {/* Privacy & Safe Space Assurance Banner */}
+          <div
+            style={{
+              padding: '16px 24px',
+              borderRadius: '18px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Users size={18} color={PALETTE.SECONDARY} />
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: PALETTE.PRIMARY }}>
+                  Identiti Terpelihara • Kebebasan Bersuara Beradab
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: 500, color: PALETTE.SECONDARY }}>
+                  Platform beretika bebas buli siber demi kemajuan seluruh mahasiswa POLISAS.
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(46, 58, 47, 0.05)',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              POLISUARA VERIFIED
+            </div>
+          </div>
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
 
-// Scene 4: E-Aduan Stub (Frames 705 to 900)
-const Scene4Stub: React.FC<{ eAduan: JppIntroVideoProps['eAduan'] }> = ({ eAduan }) => {
+// ============================================================================
+// SCENE 4: SISTEM KEBAJIKAN & E-ADUAN (Frames 705 to 900)
+// ============================================================================
+interface Scene4Props {
+  eAduan: JppIntroVideoProps['eAduan'];
+}
+
+const Scene4EAduan: React.FC<Scene4Props> = ({ eAduan }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+
+  // Entrance springs
+  const headerSpring = spring({
+    frame: Math.max(0, frame - 2),
+    fps,
+    config: { damping: 14, mass: 0.8, stiffness: 90 },
+  });
+
+  const ticketCardSpring = spring({
+    frame: Math.max(0, frame - 8),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  const trackerCardSpring = spring({
+    frame: Math.max(0, frame - 16),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  // Exit interpolation at local frames 168 to 195
+  const exitProgress = interpolate(frame, [168, 195], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const sceneOpacity = (1 - exitProgress) * interpolate(headerSpring, [0, 1], [0, 1]);
+  const sceneTranslateY = interpolate(exitProgress, [0, 1], [0, -30]);
+
+  // Card Y animations
+  const ticketCardY = interpolate(ticketCardSpring, [0, 1], [32, 0]);
+  const trackerCardY = interpolate(trackerCardSpring, [0, 1], [36, 0]);
+
+  // Step 3 Radar Glow Pulse (Concentric rings)
+  const ringPulse1 = (frame * 1.5) % 36;
+  const ringRadius1 = 16 + (ringPulse1 / 36) * 24;
+  const ringOpacity1 = 1 - ringPulse1 / 36;
+
+  const ringPulse2 = ((frame * 1.5) + 18) % 36;
+  const ringRadius2 = 16 + (ringPulse2 / 36) * 24;
+  const ringOpacity2 = 1 - ringPulse2 / 36;
+
+  const connectorDashOffset = -frame * 3;
+
   return (
     <AbsoluteFill
       style={{
-        opacity,
+        opacity: sceneOpacity,
+        transform: `translateY(${sceneTranslateY}px)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px',
-        textAlign: 'center',
+        padding: '60px 90px',
+        justifyContent: 'space-between',
       }}
     >
+      {/* 1. SCENE HEADER */}
       <div
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 20px',
-          borderRadius: '9999px',
-          backgroundColor: 'rgba(201, 111, 79, 0.12)',
-          border: '1px solid rgba(201, 111, 79, 0.3)',
-          marginBottom: '20px',
+          transform: `translateY(${interpolate(headerSpring, [0, 1], [20, 0])}px)`,
+          opacity: headerSpring,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '26px',
         }}
       >
-        <FileCheck size={16} color={PALETTE.ACCENT} />
-        <span
+        <div>
+          {/* Category Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              backgroundColor: 'rgba(201, 111, 79, 0.12)',
+              border: `1px solid rgba(201, 111, 79, 0.3)`,
+              marginBottom: '10px',
+            }}
+          >
+            <FileCheck size={14} color={PALETTE.ACCENT} />
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                color: PALETTE.ACCENT,
+                textTransform: 'uppercase',
+              }}
+            >
+              SISTEM KEBAJIKAN & PRIHATIN
+            </span>
+          </div>
+
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '46px',
+              fontWeight: 900,
+              letterSpacing: '-0.03em',
+              color: PALETTE.PRIMARY,
+              lineHeight: 1.1,
+            }}
+          >
+            E-Aduan: Respon Pantas Kebajikan Siswa
+          </h2>
+          <p
+            style={{
+              margin: '6px 0 0 0',
+              fontSize: '19px',
+              fontWeight: 500,
+              color: PALETTE.SECONDARY,
+            }}
+          >
+            Penjejakan aduan telus, tindakan pantas berperingkat & pemantauan kebajikan mahasiswa secara komprehensif.
+          </p>
+        </div>
+
+        {/* Live SLA Telemetry Badge */}
+        <div
           style={{
-            fontSize: '13px',
-            fontWeight: 800,
-            letterSpacing: '0.16em',
-            color: PALETTE.ACCENT,
-            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 18px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            border: `1px solid ${PALETTE.TERTIARY}`,
+            boxShadow: '0 4px 14px rgba(46, 58, 47, 0.04)',
           }}
         >
-          BABAK 04 • KEBAJIKAN & E-ADUAN
-        </span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: PALETTE.ACCENT,
+              boxShadow: `0 0 8px ${PALETTE.ACCENT}`,
+            }}
+          />
+          <div style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              SLA PIAGAM PELANGGAN
+            </div>
+            <div
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              Tindakan Dalam {eAduan.slaHours}
+            </div>
+          </div>
+        </div>
       </div>
-      <h2
+
+      {/* 2. BENTO DUAL CARD SYSTEM */}
+      <div
         style={{
-          fontSize: '54px',
-          fontWeight: 900,
-          color: PALETTE.PRIMARY,
-          letterSpacing: '-0.03em',
-          margin: '0 0 16px 0',
+          display: 'flex',
+          gap: '32px',
+          flex: 1,
+          alignItems: 'stretch',
+          minHeight: 0,
         }}
       >
-        Penjejakan Aduan Telus
-      </h2>
-      <p style={{ fontSize: '22px', color: PALETTE.SECONDARY, maxWidth: '700px', margin: 0 }}>
-        Tiket #{eAduan.ticketNo} • Tindakan pantas di bawah SLA {eAduan.slaHours} demi kebajikan
-        seluruh warga mahasiswa POLISAS.
-      </p>
+        {/* CARD A: ACTIVE TICKET DETAILS CARD */}
+        <div
+          style={{
+            flex: '0 0 580px',
+            transform: `translateY(${ticketCardY}px)`,
+            opacity: ticketCardSpring,
+            backgroundColor: PALETTE.CARD_BG,
+            borderRadius: '24px',
+            border: `1.5px solid ${PALETTE.TERTIARY}`,
+            boxShadow: PALETTE.SHADOW_SOFT,
+            padding: '32px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Subtle accent corner glow */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '180px',
+              height: '180px',
+              background:
+                'radial-gradient(circle at 100% 0%, rgba(201, 111, 79, 0.1) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          <div>
+            {/* Top Ticket Header: Ticket ID & SLA Badge */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '18px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                  border: `1px solid rgba(201, 111, 79, 0.3)`,
+                }}
+              >
+                <FileCheck size={16} color={PALETTE.ACCENT} />
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 900,
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.04em',
+                    color: PALETTE.ACCENT,
+                  }}
+                >
+                  #{eAduan.ticketNo}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                <Clock size={12} color={PALETTE.SECONDARY} />
+                <span>SLA: {eAduan.slaHours}</span>
+              </div>
+            </div>
+
+            {/* Category Title */}
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+                marginBottom: '4px',
+              }}
+            >
+              KATEGORI ADUAN
+            </div>
+            <h3
+              style={{
+                margin: '0 0 16px 0',
+                fontSize: '26px',
+                fontWeight: 900,
+                color: PALETTE.PRIMARY,
+                lineHeight: 1.25,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {eAduan.category}
+            </h3>
+
+            {/* Priority & Metadata Pills */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <div
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: PALETTE.ACCENT,
+                  textTransform: 'uppercase',
+                }}
+              >
+                KEUTAMAAN: TINGGI
+              </div>
+              <div
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(46, 58, 47, 0.06)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                Lokasi: DKU Zon B
+              </div>
+            </div>
+
+            {/* Ticket Report Details Box */}
+            <div
+              style={{
+                padding: '18px 20px',
+                borderRadius: '16px',
+                backgroundColor: 'rgba(248, 246, 238, 0.9)',
+                border: `1px solid ${PALETTE.TERTIARY}`,
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  letterSpacing: '0.1em',
+                  color: PALETTE.SECONDARY,
+                  textTransform: 'uppercase',
+                  marginBottom: '6px',
+                }}
+              >
+                BUTIRAN ADUAN
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: PALETTE.PRIMARY,
+                  lineHeight: 1.45,
+                }}
+              >
+                Unit pendingin hawa Dewan Kuliah Utama tidak sejuk sepenuhnya sebelum sesi taklimat mahasiswa
+                gabungan 300 pelajar petang ini.
+              </p>
+            </div>
+
+            {/* Quick Action Dispatch Tag */}
+            <div
+              style={{
+                padding: '14px 18px',
+                borderRadius: '14px',
+                backgroundColor: 'rgba(107, 127, 91, 0.1)',
+                border: `1px solid rgba(107, 127, 91, 0.3)`,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={16} color={PALETTE.SECONDARY} />
+                <span style={{ fontSize: '12px', fontWeight: 800, color: PALETTE.PRIMARY }}>
+                  Disemak & Diluluskan Exco Kebajikan JPP
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: PALETTE.SECONDARY,
+                  marginTop: '4px',
+                }}
+              >
+                Arahan Kerja #UPF-2026-M119 dihantar terus kepada Unit Pembangunan & Fasiliti.
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Status Summary */}
+          <div
+            style={{
+              paddingTop: '18px',
+              borderTop: `1px solid ${PALETTE.TERTIARY}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={16} color={PALETTE.ACCENT} />
+              <span style={{ fontSize: '13px', fontWeight: 800, color: PALETTE.PRIMARY }}>
+                Status: Fasa 3 Tindakan Tapak
+              </span>
+            </div>
+
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: PALETTE.SECONDARY,
+              }}
+            >
+              DIHANTAR: HARI INI • 08:30 AM
+            </span>
+          </div>
+        </div>
+
+        {/* CARD B: LIVE 4-STEP STEPPER TRACKER & WELFARE METRICS */}
+        <div
+          style={{
+            flex: 1,
+            transform: `translateY(${trackerCardY}px)`,
+            opacity: trackerCardSpring,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          {/* STEPPER TRACKER MAIN CARD */}
+          <div
+            style={{
+              backgroundColor: PALETTE.CARD_BG,
+              borderRadius: '24px',
+              border: `1.5px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              flex: 1,
+            }}
+          >
+            <div>
+              {/* Stepper Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '28px',
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '0.14em',
+                      color: PALETTE.SECONDARY,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    PENJEJAKAN STATUS PROSES
+                  </div>
+                  <h4
+                    style={{
+                      margin: '4px 0 0 0',
+                      fontSize: '22px',
+                      fontWeight: 900,
+                      color: PALETTE.PRIMARY,
+                    }}
+                  >
+                    Aliran Tindakan E-Aduan Telus
+                  </h4>
+                </div>
+
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 14px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: PALETTE.ACCENT,
+                  }}
+                >
+                  <Clock size={13} color={PALETTE.ACCENT} />
+                  <span>Baki SLA: 38 Jam 45 Minit</span>
+                </div>
+              </div>
+
+              {/* 4-Step Stepper Component */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  position: 'relative',
+                  marginBottom: '32px',
+                  padding: '0 20px',
+                }}
+              >
+                {/* Stepper Vector Connectors (Underlay) */}
+                <svg
+                  style={{
+                    position: 'absolute',
+                    top: '24px',
+                    left: '50px',
+                    right: '50px',
+                    width: 'calc(100% - 100px)',
+                    height: '8px',
+                    overflow: 'visible',
+                    zIndex: 0,
+                  }}
+                >
+                  {/* Step 1 to Step 2: Completed line */}
+                  <line
+                    x1="0%"
+                    y1="4"
+                    x2="33.3%"
+                    y2="4"
+                    stroke={PALETTE.SECONDARY}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  {/* Step 2 to Step 3: Active animated dash line */}
+                  <line
+                    x1="33.3%"
+                    y1="4"
+                    x2="66.6%"
+                    y2="4"
+                    stroke={PALETTE.ACCENT}
+                    strokeWidth="4"
+                    strokeDasharray="8 6"
+                    strokeDashoffset={connectorDashOffset}
+                    strokeLinecap="round"
+                  />
+                  {/* Step 3 to Step 4: Pending line */}
+                  <line
+                    x1="66.6%"
+                    y1="4"
+                    x2="100%"
+                    y2="4"
+                    stroke={PALETTE.TERTIARY}
+                    strokeWidth="4"
+                    strokeDasharray="6 6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* 4 Step Nodes */}
+                {[
+                  {
+                    step: 1,
+                    title: 'Dihantar',
+                    desc: '08:30 AM • Tiket Masuk',
+                    state: 'completed',
+                  },
+                  {
+                    step: 2,
+                    title: 'Disemak JPP',
+                    desc: '09:15 AM • Diluluskan Exco',
+                    state: 'completed',
+                  },
+                  {
+                    step: 3,
+                    title: 'Tindakan Fasiliti',
+                    desc: '11:00 AM • Pasukan Di Tapak',
+                    state: 'active',
+                  },
+                  {
+                    step: 4,
+                    title: 'Selesai',
+                    desc: 'Pengesahan Pelajar',
+                    state: 'pending',
+                  },
+                ].map((item, idx) => {
+                  const isActive = item.state === 'active';
+                  const isCompleted = item.state === 'completed';
+
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        zIndex: 2,
+                        position: 'relative',
+                        width: '160px',
+                      }}
+                    >
+                      {/* Node Circle Wrapper with Radar Ring if Active */}
+                      <div
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '12px',
+                        }}
+                      >
+                        {isActive && (
+                          <svg
+                            style={{
+                              position: 'absolute',
+                              top: '-20px',
+                              left: '-20px',
+                              width: '88px',
+                              height: '88px',
+                              pointerEvents: 'none',
+                            }}
+                          >
+                            <circle
+                              cx="44"
+                              cy="44"
+                              r={ringRadius1}
+                              fill="none"
+                              stroke={PALETTE.ACCENT}
+                              strokeWidth="2"
+                              opacity={ringOpacity1}
+                            />
+                            <circle
+                              cx="44"
+                              cy="44"
+                              r={ringRadius2}
+                              fill="none"
+                              stroke={PALETTE.ACCENT}
+                              strokeWidth="1.5"
+                              opacity={ringOpacity2}
+                            />
+                          </svg>
+                        )}
+
+                        <div
+                          style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '50%',
+                            backgroundColor: isCompleted
+                              ? PALETTE.SECONDARY
+                              : isActive
+                              ? PALETTE.ACCENT
+                              : '#FFFFFF',
+                            border: `2.5px solid ${
+                              isCompleted
+                                ? PALETTE.SECONDARY
+                                : isActive
+                                ? PALETTE.ACCENT
+                                : PALETTE.TERTIARY
+                            }`,
+                            boxShadow: isActive
+                              ? '0 0 16px rgba(201, 111, 79, 0.4)'
+                              : '0 4px 10px rgba(46, 58, 47, 0.06)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: isCompleted || isActive ? '#FFFFFF' : PALETTE.SECONDARY,
+                            fontWeight: 900,
+                            fontSize: '15px',
+                          }}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 size={22} color="#FFFFFF" />
+                          ) : isActive ? (
+                            <Wrench size={20} color="#FFFFFF" />
+                          ) : (
+                            <span>{item.step}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Title & Desc */}
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: isActive ? 900 : 800,
+                          color: isActive ? PALETTE.ACCENT : PALETTE.PRIMARY,
+                          marginBottom: '3px',
+                        }}
+                      >
+                        {item.title}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          color: PALETTE.SECONDARY,
+                        }}
+                      >
+                        {item.desc}
+                      </div>
+                      {isActive && (
+                        <div
+                          style={{
+                            marginTop: '6px',
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            backgroundColor: 'rgba(201, 111, 79, 0.15)',
+                            fontSize: '9px',
+                            fontWeight: 900,
+                            letterSpacing: '0.08em',
+                            color: PALETTE.ACCENT,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          SEDANG DIJALANKAN
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* On-Site Dispatch Technician Callout */}
+              <div
+                style={{
+                  padding: '16px 20px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(248, 246, 238, 0.9)',
+                  border: `1.5px solid ${PALETTE.TERTIARY}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(201, 111, 79, 0.14)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Wrench size={22} color={PALETTE.ACCENT} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '0.1em',
+                      color: PALETTE.ACCENT,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    LAPORAN TINDAKAN TAPAK UPF
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 800,
+                      color: PALETTE.PRIMARY,
+                      marginTop: '2px',
+                    }}
+                  >
+                    Juruteknik UPF En. Razak sedang menggantikan kapasitor motor penghembus hawa di lokasi.
+                  </div>
+                </div>
+                <div
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(107, 127, 91, 0.15)',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: PALETTE.PRIMARY,
+                  }}
+                >
+                  Anggaran Siap: 2 Jam
+                </div>
+              </div>
+            </div>
+
+            {/* Stepper Footer */}
+            <div
+              style={{
+                paddingTop: '16px',
+                borderTop: `1px solid ${PALETTE.TERTIARY}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: PALETTE.SECONDARY,
+              }}
+            >
+              <span>Notifikasi SMS & Emel Dihantar Automatik</span>
+              <span>•</span>
+              <span style={{ color: PALETTE.PRIMARY, fontWeight: 800 }}>
+                Pengadu Akan Menerima Permintaan Pengesahan Selepas Siap
+              </span>
+            </div>
+          </div>
+
+          {/* CAMPUS WELFARE SUMMARY PILL */}
+          <div
+            style={{
+              padding: '16px 24px',
+              borderRadius: '18px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${PALETTE.TERTIARY}`,
+              boxShadow: PALETTE.SHADOW_SOFT,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.14)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ShieldCheck size={20} color={PALETTE.SECONDARY} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: PALETTE.PRIMARY,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Prihatin Mahasiswa • Pantas & Telus
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: PALETTE.SECONDARY }}>
+                  98.2% Aduan Selesai Bawah SLA • Sokongan Tabung Prihatin Siswa & Foodbank Aktif.
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(46, 58, 47, 0.05)',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              <CheckCircle2 size={13} color={PALETTE.SECONDARY} />
+              <span>SISTEM DIJAMIN TELUS</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
@@ -1997,17 +4565,17 @@ export const JppIntroVideo: React.FC<JppIntroVideoProps> = ({
 
       {/* 4. SCENE 2: PolyMart Keusahawanan Digital (Frames 315 to 510 / 6.5s) */}
       <Sequence from={315} durationInFrames={195} name="Scene 2: PolyMart Siswa">
-        <Scene2Stub polyMart={polyMart} />
+        <Scene2PolyMart polyMart={polyMart} />
       </Sequence>
 
       {/* 5. SCENE 3: PolySuara & Undian Siswa (Frames 510 to 705 / 6.5s) */}
       <Sequence from={510} durationInFrames={195} name="Scene 3: PolySuara">
-        <Scene3Stub polySuara={polySuara} />
+        <Scene3PolySuara polySuara={polySuara} />
       </Sequence>
 
       {/* 6. SCENE 4: E-Aduan & Kebajikan Mahasiswa (Frames 705 to 900 / 6.5s) */}
       <Sequence from={705} durationInFrames={195} name="Scene 4: E-Aduan Kebajikan">
-        <Scene4Stub eAduan={eAduan} />
+        <Scene4EAduan eAduan={eAduan} />
       </Sequence>
 
       {/* 7. SCENE 5: EMS Kehadiran & Sijil Digital (Frames 900 to 1095 / 6.5s) */}
