@@ -427,8 +427,10 @@ npm run lint:css     # Stylelint sahaja
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
 | `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
 | `src/store/useNotificationStore.ts` | Zustand store. Guna atomic selector — jangan destructure keseluruhan store |
-| `src/components/layout/BottomNav.tsx` | Dok navigasi mudah alih berpusat; menggunakan React `createPortal(..., document.body)` bersama pengawal SSR client-mounted bagi melepaskan dok daripada sebarang stacking context ibu CSS (`transform-gpu`, `perspective`), `overflow-hidden`, dan bekas skrol mikro-app |
-| `src/components/profile/CompleteProfileModal.tsx` | Modal onboarding dan pelengkap profil institusi; menyepadukan kad pengesahan pintar automatik bagi kod jabatan, program, dan sesi kemasukan berasaskan penghuraian no matrik pelajar |
+| `src/pages/jpp/units/MultimediaUnitDashboard.tsx` | Dashboard rasmi Exco Multimedia: Hab Poster, Kalendar Hebahan, Inventori Siaraya PA, dan Aktiviti/Laporan |
+| `src/pages/jpp/units/KolaborasiUnitDashboard.tsx` | Dashboard rasmi Exco Kolaborasi: Direktori Rakan MoU, Pangkalan Data Sukarelawan, Program Impak CSR, dan Aktiviti/Laporan |
+| `src/pages/jpp/units/KlsUnitDashboard.tsx` | Dashboard rasmi Exco Kediaman Luar Kampus: Analitik taburan hotspot residensi Semambu/IM/Beserah, nisbah luar/kamsis, integrasi PolyRent & PolyRider |
+| `src/__tests__/excoUnitsRevamp.test.ts` | Test suite pengesahan kontrak sistem & integriti 9 unit exco JPP, pematuhan GPU baseline, dan standardisasi token Tailwind |
 | `src/components/exco/ExcoAktivitiPage.tsx` | **Template universal** aktiviti exco — jangan duplicate logik ini |
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
@@ -465,13 +467,20 @@ npm run lint:css     # Stylelint sahaja
 
 ---
 
-## 12. Sistem Laporan Exco JPP Universal ⭐ BACA INI
+## 12. Sistem Dashboard & Laporan Exco JPP Universal ⭐ BACA INI
 
-> Semua unit exco JPP (kecuali KPP dan Keusahawanan yang punya dashboard penuh) menggunakan **templat universal berasaskan komponen** untuk fungsi Aktiviti, Laporan, dan Semakan.
-
-### Falsafah Reka Bentuk
-
-Daripada membina satu komponen besar per-unit (yang menyebabkan kod berulang), kami menggunakan **tiga komponen template universal** yang dikonfigurasikan secara dinamik melalui URL params.
+> **Semua 9 unit exco JPP** kini mempunyai komponen dashboard khusus berdomain spesifik (`FULL_DASHBOARD_UNITS` di `/jpp/unit/:code`):
+> - `KPP`: `KppUnitDashboard.tsx` (Keahlian, karnival, direktori, merit/demerit)
+> - `KEUSAHAWANAN`: `KeusahawananUnitDashboard.tsx` (PUSKEP, PolyMart, kupon kafeteria)
+> - `AKADEMIK`: `AkademikUnitDashboard.tsx` (MAKMP, merit config, CGPA)
+> - `KK`: `KkUnitDashboard.tsx` (Asrama kamsis, kerohanian, merit/demerit)
+> - `KEBAJIKAN`: `KebajikanUnitDashboard.tsx` (E-Bantu, FoodBank, tabung kebajikan)
+> - `SRK`: `SrkUnitDashboard.tsx` (SUPSAS, kontinjen sukan, medal tally)
+> - `KLS`: `KlsUnitDashboard.tsx` (Analitik hotspot residensi Semambu/IM/Beserah, PolyRent, PolyRider)
+> - `MULTIMEDIA`: `MultimediaUnitDashboard.tsx` (Hab poster rasmi, kalendar hebahan, inventori siaraya PA)
+> - `KOLAB`: `KolaborasiUnitDashboard.tsx` (Direktori rakan MoU, pangkalan sukarelawan, impak CSR)
+>
+> Manakala bagi fungsi borang aktiviti, muat naik laporan dan semakan MT, semua unit memanfaatkan **tiga komponen template universal** berasaskan URL params.
 
 ```
 URL                                  → Komponen
