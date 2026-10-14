@@ -100,8 +100,8 @@ function SubTabBtn({ id, label, active, onClick }: { id: string; label: string; 
     <button
       onClick={onClick}
       className={cn(
-        'px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0',
-        active ? 'text-white shadow-md' : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white/70 shadow-sm'
+        'px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0 active:scale-[0.98]',
+        active ? 'text-white shadow-xs' : 'bg-white dark:bg-white/[0.02] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.05] hover:text-slate-900 dark:hover:text-white/70 shadow-xs'
       )}
       style={active ? { backgroundColor: KPP_COLOR } : {}}
     >{label}</button>
@@ -114,14 +114,14 @@ function StatCard({ label, value, icon: Icon, color, sub }: { label: string; val
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-[1.5rem] p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all"
+      className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 flex flex-col gap-3 shadow-xs hover:border-slate-300 dark:hover:border-white/10 transition-all"
     >
-      <div className="w-9 h-9 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/35 mb-1">{label}</p>
-        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+        <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none tracking-tight">{value}</p>
         {sub && <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{sub}</p>}
       </div>
     </motion.div>
@@ -486,15 +486,15 @@ export function KppUnitDashboard() {
           SUB-TAB: RINGKASAN
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'ringkasan' && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Kelab Tidak Aktif Alert */}
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Kelab Tidak Aktif Alert - Semantic Warning Preserved */}
           {inactiveClubs.length > 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-400/30 rounded-2xl px-4 py-3">
-              <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
-              <p className="text-sm font-black text-orange-700 dark:text-orange-400 flex-1">
-                {inactiveClubs.length} kelab tiada aktiviti dalam 30 hari lepas.
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 bg-amber-500/10 dark:bg-amber-500/10 border border-amber-500/20 rounded-2xl px-4 py-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <p className="text-sm font-black text-amber-700 dark:text-amber-400 flex-1">
+                <span className="font-mono tabular-nums">{inactiveClubs.length}</span> kelab tiada aktiviti dalam 30 hari lepas.
               </p>
-              <button onClick={() => setKppSubTab('kelab')} className="text-[10px] font-black uppercase tracking-widest text-orange-600 hover:text-orange-800 transition-colors whitespace-nowrap">Semak →</button>
+              <button onClick={() => setKppSubTab('kelab')} className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors whitespace-nowrap">Semak →</button>
             </motion.div>
           )}
 
@@ -506,11 +506,11 @@ export function KppUnitDashboard() {
             <StatCard label="Keahlian Tertunggak" value={pendingMembersCount} icon={Users} color="#A78BFA" />
           </div>
 
-          {/* Pengurusan Karnival JPP - Quick Links */}
-          <div className="rounded-[2.5rem] bg-gradient-to-br from-violet-600/10 to-transparent p-6 sm:p-8 border border-violet-500/20 shadow-sm">
+          {/* Pengurusan Karnival JPP - Neutralized from decorative violet to KPP-aligned tokens */}
+          <div className="rounded-2xl bg-white dark:bg-white/[0.02] p-5 sm:p-6 border border-slate-200 dark:border-white/[0.06] shadow-xs">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500 text-white rounded-2xl shadow-sm">
+                <div className="p-3 bg-red-500/10 dark:bg-red-500/15 text-red-500 dark:text-red-400 rounded-xl border border-red-500/20 shadow-xs">
                   <PartyPopper className="w-6 h-6" />
                 </div>
                 <div>
@@ -520,7 +520,7 @@ export function KppUnitDashboard() {
                   </p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/karnival')} variant="outline" className="h-10 rounded-xl border-violet-500/30 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-xs font-black uppercase shadow-sm">
+              <Button onClick={() => navigate('/karnival')} variant="outline" className="h-10 rounded-xl border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 text-xs font-black uppercase tracking-wider shadow-xs">
                 Buka Portal Karnival
               </Button>
             </div>
@@ -531,8 +531,8 @@ export function KppUnitDashboard() {
                 { label: 'Booth & QR', path: '/karnival/admin/booths', icon: QrCode },
                 { label: 'Scoreboard LCD', path: '/karnival/scoreboard', icon: Building2 },
               ].map(link => (
-                <button key={link.path} onClick={() => navigate(link.path)} className="flex items-center gap-2 bg-white dark:bg-card border border-slate-200 dark:border-border/40 p-3 rounded-2xl hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-left shadow-sm">
-                  <link.icon className="w-4 h-4 text-violet-500 shrink-0" />
+                <button key={link.path} onClick={() => navigate(link.path)} className="flex items-center gap-2 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] p-3 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition-all text-left shadow-xs">
+                  <link.icon className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
                   <span className="text-[11px] font-black text-slate-900 dark:text-foreground truncate">{link.label}</span>
                 </button>
               ))}
@@ -540,13 +540,14 @@ export function KppUnitDashboard() {
           </div>
 
           {/* Kelulusan Keahlian (Merged into Ringkasan) */}
-          <div className="rounded-[2rem] border border-slate-200 dark:border-border/50 bg-white dark:bg-card p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 sm:p-6 shadow-xs">
             <div className="flex items-center justify-between mb-6">
                <div>
                   <h3 className="font-black text-lg text-slate-900 dark:text-foreground">Tindakan Menunggu (Keahlian)</h3>
                   <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium mt-1">Sahkan kemasukan pendaftaran kelab baru.</p>
                </div>
-               <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/30 text-orange-600 flex items-center justify-center font-black text-lg border border-orange-500/20">
+               {/* Semantic Pending Warning Badge with tabular-nums */}
+               <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black font-mono tabular-nums text-lg border border-amber-500/20">
                   {pendingMembersCount}
                </div>
             </div>
@@ -557,12 +558,12 @@ export function KppUnitDashboard() {
                 value={memberSearch}
                 onChange={e => setMemberSearch(e.target.value)}
                 placeholder="Cari nama pengguna..."
-                className="w-full bg-slate-50 dark:bg-background border border-slate-200 dark:border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:ring-2 focus:ring-orange-500/30 outline-none"
+                className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 outline-none transition-all"
               />
             </div>
 
             {kppLoading ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-orange-500" /></div>
+              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-red-500" /></div>
             ) : allMemberships.length === 0 ? (
               <p className="text-center text-sm text-slate-500 dark:text-muted-foreground py-8">✅ Tiada pendaftaran baru.</p>
             ) : (
@@ -573,9 +574,9 @@ export function KppUnitDashboard() {
                     const p = m.profiles;
                     const club = ALL_CLUBS.find(c => c.id === m.club_id);
                     return (
-                      <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50/70 dark:bg-background border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all shadow-sm">
+                      <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-xl px-4 py-3 hover:border-slate-300 dark:hover:border-white/10 transition-all shadow-xs">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-black text-sm flex-shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center font-black text-sm flex-shrink-0 border border-red-500/20">
                             {p?.full_name?.[0] || '?'}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -583,8 +584,9 @@ export function KppUnitDashboard() {
                             <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-border/30">
-                          <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl flex-shrink-0">{m.role}</span>
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-white/[0.04]">
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-white/70 border border-slate-200 dark:border-white/[0.08] px-2.5 py-1 rounded-lg flex-shrink-0">{m.role}</span>
+                          {/* Semantic Action Buttons Preserved */}
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => handleMembershipAction(m.user_id, m.club_id, 'APPROVED')} className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 transition-colors">
                               <CheckCheck className="w-4 h-4" />
@@ -609,18 +611,18 @@ export function KppUnitDashboard() {
       {kppSubTab === 'rekod' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-white dark:bg-card border border-slate-200 dark:border-border/50 rounded-2xl p-4 shadow-sm">
-             {/* Toggle */}
-             <div className="flex items-center bg-slate-100 dark:bg-background rounded-xl p-1 border border-slate-200 dark:border-border/40">
-                <button onClick={() => setRekodView('aktiviti')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'aktiviti' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted')}>Aktiviti</button>
-                <button onClick={() => setRekodView('laporan')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'laporan' ? 'bg-violet-500 text-white shadow-sm' : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted')}>Laporan</button>
+          <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-4 shadow-xs">
+             {/* Toggle - Unified tokens */}
+             <div className="flex items-center bg-slate-100 dark:bg-white/[0.04] rounded-xl p-1 border border-slate-200 dark:border-white/[0.06]">
+                <button onClick={() => setRekodView('aktiviti')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98]', rekodView === 'aktiviti' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'text-slate-600 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/[0.05]')}>Aktiviti</button>
+                <button onClick={() => setRekodView('laporan')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98]', rekodView === 'laporan' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'text-slate-600 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/[0.05]')}>Laporan</button>
              </div>
 
              {/* Filter Kelab */}
              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-black text-slate-500 dark:text-muted-foreground hidden sm:block">Tapis:</span>
+                <span className="text-[10px] uppercase font-black text-slate-500 dark:text-white/40 hidden sm:block">Tapis:</span>
                 <Select value={kppClubFilter} onValueChange={setKppClubFilter}>
-                  <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-background border-slate-200 dark:border-border/50 text-xs font-bold text-slate-900 dark:text-white">
+                  <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] text-xs font-bold text-slate-900 dark:text-white">
                     <SelectValue placeholder="Semua Kelab" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl max-h-60">
@@ -637,7 +639,7 @@ export function KppUnitDashboard() {
           {rekodView === 'aktiviti' && (
              <div className="space-y-4">
                 {kppLoading ? (
-                  <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
+                  <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-red-500" /></div>
                 ) : allActivities.length === 0 ? (
                   <div className="text-center py-16 text-slate-500 dark:text-muted-foreground text-sm">Tiada rekod aktiviti.</div>
                 ) : (
@@ -645,7 +647,7 @@ export function KppUnitDashboard() {
                     {allActivities.map(a => {
                       const club = ALL_CLUBS.find(c => c.id === a.club_id);
                       return (
-                        <div key={a.id} className="flex items-center gap-4 bg-white dark:bg-card border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-indigo-300 transition-all shadow-sm">
+                        <div key={a.id} className="flex items-center gap-4 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-xl px-4 py-3 hover:border-slate-300 dark:hover:border-white/10 transition-all shadow-xs">
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#6366f1' }} />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{a.title}</p>
@@ -669,17 +671,17 @@ export function KppUnitDashboard() {
                     value={reportSearch}
                     onChange={e => setReportSearch(e.target.value)}
                     placeholder="Cari tajuk laporan..."
-                    className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none shadow-sm"
+                    className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none shadow-xs"
                   />
                 </div>
                 {kppLoading ? (
-                  <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-violet-500" /></div>
+                  <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-red-500" /></div>
                 ) : (
                   <div className="space-y-2">
                     {allReports.filter(r => !reportSearch || r.title?.toLowerCase().includes(reportSearch.toLowerCase())).map(r => {
                         const club = ALL_CLUBS.find(c => c.id === r.club_id);
                         return (
-                          <div key={r.id} className="flex items-center gap-4 bg-white dark:bg-card border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-violet-300 transition-all shadow-sm">
+                          <div key={r.id} className="flex items-center gap-4 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-xl px-4 py-3 hover:border-slate-300 dark:hover:border-white/10 transition-all shadow-xs">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#7c3aed' }} />
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{r.title}</p>
@@ -692,9 +694,9 @@ export function KppUnitDashboard() {
                   </div>
                 )}
 
-                <button onClick={() => navigate('/semakan-laporan')} className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-violet-400/30 bg-violet-50 dark:bg-violet-950/20 hover:bg-violet-100 transition-all group mt-6 shadow-sm">
-                  <span className="text-xs font-black text-violet-700 dark:text-violet-400">Buka Halaman Semakan Laporan Penuh</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400" />
+                <button onClick={() => navigate('/semakan-laporan')} className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all group mt-6 shadow-xs">
+                  <span className="text-xs font-black text-red-600 dark:text-red-400">Buka Halaman Semakan Laporan Penuh</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
                 </button>
              </div>
           )}
@@ -706,14 +708,14 @@ export function KppUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'kelab' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="rounded-[2rem] bg-gradient-to-br from-teal-600 to-cyan-700 p-7 text-white relative overflow-hidden shadow-xl">
+          <div className="rounded-2xl bg-slate-900 dark:bg-white/[0.04] p-6 text-white border border-slate-200 dark:border-white/[0.06] relative overflow-hidden shadow-xs">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-200 mb-1">Direktori</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-300 mb-1">Direktori</p>
               <h2 className="text-2xl font-black">Senarai Kelab & Persatuan</h2>
-              <p className="text-teal-100/70 text-xs mt-1">{ALL_CLUBS.length} kelab berdaftar dalam sistem</p>
+              <p className="text-slate-300 dark:text-white/60 text-xs mt-1"><span className="font-mono tabular-nums">{ALL_CLUBS.length}</span> kelab berdaftar dalam sistem</p>
             </div>
-            <Building2 className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+            <Building2 className="absolute bottom-4 right-8 w-20 h-20 text-white/5" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -721,22 +723,23 @@ export function KppUnitDashboard() {
               const isInactive = inactiveClubs.some(ic => ic.id === c.id);
               return (
                 <div key={c.id} className={cn(
-                  'bg-white dark:bg-card border rounded-2xl p-4 hover:shadow-sm transition-all shadow-sm',
-                  isInactive ? 'border-orange-300/50 bg-orange-50/30 dark:bg-orange-950/10' : 'border-slate-200 dark:border-border/40 hover:border-teal-300'
+                  'bg-white dark:bg-white/[0.02] border rounded-xl p-4 hover:shadow-xs transition-all shadow-xs',
+                  isInactive ? 'border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/10'
                 )}>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm" style={{ backgroundColor: c.color || '#0d9488' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-xs" style={{ backgroundColor: c.color || '#0d9488' }}>
                       {c.shortName?.[0] || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-slate-900 dark:text-foreground truncate">{c.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-bold uppercase tracking-widest">{c.shortName}</p>
+                      <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{c.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest">{c.shortName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-lg border border-teal-500/20">{c.category}</span>
+                    <span className="text-[10px] font-black bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-white/70 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08]">{c.category}</span>
+                    {/* Semantic Inactive Warning Preserved */}
                     {isInactive && (
-                      <span className="text-[9px] font-black bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg border border-orange-500/20 ml-auto">Tidak Aktif</span>
+                      <span className="text-[9px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md border border-amber-500/20 ml-auto">Tidak Aktif</span>
                     )}
                   </div>
                 </div>
@@ -750,7 +753,7 @@ export function KppUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'merit-rasmi' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="rounded-[2rem] border p-6 bg-white dark:bg-card border-slate-200 dark:border-border/50 shadow-sm">
+          <div className="rounded-2xl border p-5 sm:p-6 bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] shadow-xs">
             <MeritRasmiReviewPanel reviewerUnit="KPP" themeColor={KPP_COLOR} />
           </div>
         </div>
@@ -761,7 +764,7 @@ export function KppUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'demerit' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="rounded-[2rem] border p-6 bg-white dark:bg-card border-slate-200 dark:border-border/50 shadow-sm">
+          <div className="rounded-2xl border p-5 sm:p-6 bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] shadow-xs">
             <DemeritManager sourceOverride="KELAB" />
           </div>
         </div>
@@ -773,7 +776,7 @@ export function KppUnitDashboard() {
       {kppSubTab === 'tetapan' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(KPP_COLOR, 0.1), borderColor: hexToRgba(KPP_COLOR, 0.2), color: KPP_COLOR }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center border" style={{ background: hexToRgba(KPP_COLOR, 0.1), borderColor: hexToRgba(KPP_COLOR, 0.2), color: KPP_COLOR }}>
                   <SettingsIcon className="w-6 h-6" />
               </div>
               <div>
@@ -789,9 +792,9 @@ export function KppUnitDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Laporan Auto PDF */}
-                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col justify-between group hover:border-violet-500/30 transition-all shadow-sm">
+                <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] flex flex-col justify-between group hover:border-red-500/20 transition-all shadow-xs">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center border border-violet-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20">
                             <FileText className="w-5 h-5" />
                         </div>
                         <div>
@@ -800,14 +803,14 @@ export function KppUnitDashboard() {
                         </div>
                     </div>
                     <button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)}
-                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
+                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-xs',
                             settings.allow_auto_pdf ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400')}>
                         {settings.allow_auto_pdf ? 'ON' : 'OFF'}
                     </button>
                 </div>
 
                 {/* Tambah Takwim */}
-                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col justify-between group hover:border-blue-500/30 transition-all shadow-sm">
+                <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] flex flex-col justify-between group hover:border-blue-500/20 transition-all shadow-xs">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
                             <CalendarRange className="w-5 h-5" />
@@ -818,16 +821,16 @@ export function KppUnitDashboard() {
                         </div>
                     </div>
                     <button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)}
-                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
+                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-xs',
                             settings.allow_add_takwim ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400')}>
                         {settings.allow_add_takwim ? 'ON' : 'OFF'}
                     </button>
                 </div>
 
                 {/* Had Keahlian */}
-                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-indigo-500/30 transition-all shadow-sm">
+                <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-white/10 transition-all shadow-xs">
                     <div className="flex items-center gap-4 text-center sm:text-left w-full sm:w-auto flex-col sm:flex-row">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/20">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20">
                             <Users className="w-6 h-6" />
                         </div>
                         <div>
@@ -835,25 +838,25 @@ export function KppUnitDashboard() {
                             <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium">Maksimum pendaftaran kelab untuk pelajar biasa.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 bg-slate-100 dark:bg-muted/50 p-2 rounded-2xl border border-slate-200 dark:border-border/50">
+                    <div className="flex items-center gap-4 bg-slate-100 dark:bg-white/[0.04] p-2 rounded-xl border border-slate-200 dark:border-white/[0.06]">
                         <button onClick={() => updateClubLimit(-1)} disabled={Number(settings.max_clubs_per_student) <= 1}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white dark:bg-background hover:bg-slate-200 dark:hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors shadow-sm">
+                            className="h-10 w-10 flex items-center justify-center rounded-lg font-black text-lg bg-white dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 transition-colors shadow-xs">
                             −
                         </button>
-                        <span className="font-black text-3xl text-slate-900 dark:text-foreground w-10 text-center tabular-nums">
+                        <span className="font-black font-mono tabular-nums text-3xl text-slate-900 dark:text-foreground w-10 text-center">
                             {settings.max_clubs_per_student ?? 2}
                         </span>
                         <button onClick={() => updateClubLimit(1)} disabled={Number(settings.max_clubs_per_student) >= 10}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white dark:bg-background hover:bg-slate-200 dark:hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors shadow-sm">
+                            className="h-10 w-10 flex items-center justify-center rounded-lg font-black text-lg bg-white dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 transition-colors shadow-xs">
                             +
                         </button>
                     </div>
                 </div>
 
                 {/* Form Tambah Kelab Baharu */}
-                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 space-y-6 hover:border-teal-500/20 transition-all mt-6 md:col-span-2 shadow-sm">
+                <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] space-y-6 transition-all mt-6 md:col-span-2 shadow-xs">
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center border border-red-500/20">
                             <Building2 className="w-5 h-5" />
                         </div>
                         <div>
@@ -873,7 +876,7 @@ export function KppUnitDashboard() {
                                     value={newClubName}
                                     onChange={(e) => setNewClubName(e.target.value)}
                                     placeholder="Cth: Kelab Sukan Elektronik POLISAS"
-                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all"
                                 />
                             </div>
 
@@ -886,7 +889,7 @@ export function KppUnitDashboard() {
                                     value={newClubShortName}
                                     onChange={(e) => setNewClubShortName(e.target.value)}
                                     placeholder="Cth: E-Sport"
-                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all"
                                 />
                             </div>
 
@@ -897,7 +900,7 @@ export function KppUnitDashboard() {
                                     value={newClubCategory}
                                     onValueChange={(val: any) => setNewClubCategory(val)}
                                 >
-                                    <SelectTrigger className="h-11 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                                    <SelectTrigger className="h-11 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all">
                                         <SelectValue placeholder="Pilih Kategori" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -917,14 +920,14 @@ export function KppUnitDashboard() {
                                         type="color"
                                         value={newClubColor}
                                         onChange={(e) => setNewClubColor(e.target.value)}
-                                        className="w-12 h-11 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background cursor-pointer p-1"
+                                        className="w-12 h-11 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] cursor-pointer p-1"
                                     />
                                     <input
                                         type="text"
                                         value={newClubColor}
                                         onChange={(e) => setNewClubColor(e.target.value)}
                                         placeholder="#8B1A1A"
-                                        className="flex-1 h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase"
+                                        className="flex-1 h-11 px-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all uppercase"
                                     />
                                 </div>
                             </div>
@@ -936,7 +939,7 @@ export function KppUnitDashboard() {
                                     value={newClubDesc}
                                     onChange={(e) => setNewClubDesc(e.target.value)}
                                     placeholder="Terangkan serba sedikit tentang fokus atau fungsi kelab ini..."
-                                    className="w-full min-h-[80px] p-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
+                                    className="w-full min-h-[80px] p-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all resize-y"
                                 />
                             </div>
                         </div>
@@ -945,7 +948,7 @@ export function KppUnitDashboard() {
                             <Button
                                 type="submit"
                                 disabled={addingClub}
-                                className="h-10 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-md px-6 bg-teal-600 hover:bg-teal-700 disabled:opacity-50"
+                                className="h-10 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-xs px-6 bg-red-600 hover:bg-red-700 disabled:opacity-50"
                             >
                                 {addingClub ? (
                                     <>

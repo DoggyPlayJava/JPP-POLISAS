@@ -18,9 +18,13 @@ import { ExcoGenericDashboard }      from './units/ExcoGenericDashboard';
 import { KebajikanUnitDashboard }    from './units/KebajikanUnitDashboard';
 import { SrkUnitDashboard }          from './units/SrkUnitDashboard';
 import { KlsUnitDashboard }          from './units/KlsUnitDashboard';
+import { MultimediaUnitDashboard }   from './units/MultimediaUnitDashboard';
+import { KolaborasiUnitDashboard }   from './units/KolaborasiUnitDashboard';
 
 // ── Units that have a full dedicated dashboard component ─────────────────────
-const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN', 'AKADEMIK', 'KK', 'KEBAJIKAN', 'SRK', 'KLS']);
+const FULL_DASHBOARD_UNITS = new Set([
+  'KPP', 'KEUSAHAWANAN', 'AKADEMIK', 'KK', 'KEBAJIKAN', 'SRK', 'KLS', 'MULTIMEDIA', 'KOLAB'
+]);
 
 
 
@@ -286,9 +290,9 @@ export function JppUnitDashboard() {
               </div>
             </motion.div>
 
-            {/* ── Full Unit Dashboard (KPP / Keusahawanan / Akademik) ─── */}
+            {/* ── Full Unit Dashboard (Semua 9 Unit Exco) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
-              <div className="bg-white/80 dark:bg-[#0f0f17]/80  rounded-[2rem] border border-slate-200 dark:border-white/[0.05] p-6 shadow-sm">
+              <div className="bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/[0.06] p-5 sm:p-6 shadow-xs">
                 {upperCode === 'KPP'          && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
                 {upperCode === 'AKADEMIK'     && <AkademikUnitDashboard />}
@@ -296,6 +300,8 @@ export function JppUnitDashboard() {
                 {upperCode === 'KEBAJIKAN'    && <KebajikanUnitDashboard />}
                 {upperCode === 'SRK'          && <SrkUnitDashboard />}
                 {upperCode === 'KLS'          && <KlsUnitDashboard />}
+                {upperCode === 'MULTIMEDIA'   && <MultimediaUnitDashboard />}
+                {upperCode === 'KOLAB'        && <KolaborasiUnitDashboard />}
               </div>
             ) : (
               /* ── Exco Generic Dashboard untuk semua unit aktif lain ─── */
