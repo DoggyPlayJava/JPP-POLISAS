@@ -4344,142 +4344,1663 @@ const Scene4EAduan: React.FC<Scene4Props> = ({ eAduan }) => {
   );
 };
 
-// Scene 5: EMS Stub (Frames 900 to 1095)
-const Scene5Stub: React.FC<{ ems: JppIntroVideoProps['ems'] }> = ({ ems }) => {
+// ============================================================================
+// SCENE 5: EVENT MANAGEMENT SYSTEM (EMS) & E-SIJIL DIGITAL (Frames 900 to 1095 / 6.5s)
+// ============================================================================
+interface Scene5Props {
+  ems: JppIntroVideoProps['ems'];
+}
+
+// Micro-confetti particles radiating in Earthy Minimal tones for scan celebration
+const CONFETTI_BURST_PARTICLES = [
+  { angle: 0, dist: 105, color: PALETTE.ACCENT, size: 7, shape: 'circle' as const },
+  { angle: 22, dist: 135, color: PALETTE.SECONDARY, size: 9, shape: 'rect' as const },
+  { angle: 45, dist: 88, color: PALETTE.TERTIARY, size: 6, shape: 'circle' as const },
+  { angle: 68, dist: 125, color: PALETTE.PRIMARY, size: 8, shape: 'rect' as const },
+  { angle: 90, dist: 145, color: PALETTE.ACCENT, size: 7, shape: 'circle' as const },
+  { angle: 112, dist: 98, color: PALETTE.SECONDARY, size: 9, shape: 'rect' as const },
+  { angle: 135, dist: 130, color: '#E28D70', size: 6, shape: 'circle' as const },
+  { angle: 158, dist: 92, color: PALETTE.PRIMARY, size: 8, shape: 'rect' as const },
+  { angle: 180, dist: 140, color: PALETTE.ACCENT, size: 7, shape: 'circle' as const },
+  { angle: 202, dist: 108, color: PALETTE.SECONDARY, size: 9, shape: 'rect' as const },
+  { angle: 225, dist: 125, color: PALETTE.TERTIARY, size: 6, shape: 'circle' as const },
+  { angle: 248, dist: 98, color: PALETTE.PRIMARY, size: 8, shape: 'rect' as const },
+  { angle: 270, dist: 145, color: PALETTE.ACCENT, size: 7, shape: 'circle' as const },
+  { angle: 292, dist: 112, color: PALETTE.SECONDARY, size: 9, shape: 'rect' as const },
+  { angle: 315, dist: 130, color: '#E28D70', size: 6, shape: 'circle' as const },
+  { angle: 338, dist: 95, color: PALETTE.PRIMARY, size: 8, shape: 'rect' as const },
+  { angle: 12, dist: 155, color: PALETTE.ACCENT, size: 5, shape: 'circle' as const },
+  { angle: 78, dist: 160, color: PALETTE.SECONDARY, size: 7, shape: 'rect' as const },
+  { angle: 168, dist: 150, color: PALETTE.PRIMARY, size: 6, shape: 'circle' as const },
+  { angle: 255, dist: 165, color: '#E28D70', size: 7, shape: 'rect' as const },
+];
+
+const Scene5Ems: React.FC<Scene5Props> = ({ ems }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+
+  // Entrance springs
+  const headerSpring = spring({
+    frame: Math.max(0, frame - 2),
+    fps,
+    config: { damping: 14, mass: 0.8, stiffness: 90 },
+  });
+
+  const passCardSpring = spring({
+    frame: Math.max(0, frame - 7),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  const certCardSpring = spring({
+    frame: Math.max(0, frame - 16),
+    fps,
+    config: { damping: 15, mass: 0.85, stiffness: 85 },
+  });
+
+  // Verification timeline moment (frame 68 = ~2.25s)
+  const SCAN_COMPLETE_FRAME = 68;
+  const isScanned = frame >= SCAN_COMPLETE_FRAME;
+
+  // Spring physics for celebratory checkmark popup and micro-confetti burst
+  const checkSpring = spring({
+    frame: Math.max(0, frame - SCAN_COMPLETE_FRAME),
+    fps,
+    config: { damping: 11, mass: 0.5, stiffness: 160 },
+  });
+
+  const confettiSpring = spring({
+    frame: Math.max(0, frame - SCAN_COMPLETE_FRAME),
+    fps,
+    config: { damping: 14, mass: 0.6, stiffness: 100 },
+  });
+
+  const statusSpring = spring({
+    frame: Math.max(0, frame - SCAN_COMPLETE_FRAME),
+    fps,
+    config: { damping: 14, mass: 0.7, stiffness: 120 },
+  });
+
+  const sealSpring = spring({
+    frame: Math.max(0, frame - (SCAN_COMPLETE_FRAME + 10)),
+    fps,
+    config: { damping: 12, mass: 0.6, stiffness: 130 },
+  });
+
+  // Terracotta Laser Scanner Beam animation across the QR code
+  // Sweeps vertically while frame < SCAN_COMPLETE_FRAME
+  const laserProgress = (frame % 28) / 28;
+  const laserY = interpolate(
+    Math.sin(laserProgress * Math.PI * 2),
+    [-1, 1],
+    [8, 92]
+  );
+
+  // Holographic foil shimmer sweep across certificate (frames 78 to 145)
+  const foilTranslateX = interpolate(frame, [78, 145], [-120, 240], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Exit interpolation at local frames 168 to 195
+  const exitProgress = interpolate(frame, [168, 195], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const sceneOpacity = (1 - exitProgress) * interpolate(headerSpring, [0, 1], [0, 1]);
+  const sceneTranslateY = interpolate(exitProgress, [0, 1], [0, -30]);
+
+  // Card Y animations
+  const passCardY = interpolate(passCardSpring, [0, 1], [32, 0]);
+  const certCardY = interpolate(certCardSpring, [0, 1], [36, 0]);
+
   return (
     <AbsoluteFill
       style={{
-        opacity,
+        opacity: sceneOpacity,
+        transform: `translateY(${sceneTranslateY}px)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px',
-        textAlign: 'center',
+        padding: '60px 90px',
+        justifyContent: 'space-between',
       }}
     >
+      {/* 1. SCENE HEADER */}
       <div
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 20px',
-          borderRadius: '9999px',
-          backgroundColor: 'rgba(107, 127, 91, 0.12)',
-          border: '1px solid rgba(107, 127, 91, 0.3)',
-          marginBottom: '20px',
+          transform: `translateY(${interpolate(headerSpring, [0, 1], [20, 0])}px)`,
+          opacity: headerSpring,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '26px',
         }}
       >
-        <Award size={16} color={PALETTE.SECONDARY} />
-        <span
+        <div>
+          {/* Category Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              backgroundColor: 'rgba(201, 111, 79, 0.12)',
+              border: `1px solid rgba(201, 111, 79, 0.3)`,
+              marginBottom: '10px',
+            }}
+          >
+            <Award size={14} color={PALETTE.ACCENT} />
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                color: PALETTE.ACCENT,
+                textTransform: 'uppercase',
+              }}
+            >
+              PENGURUSAN ACARA & ATURCARA PINTAR
+            </span>
+          </div>
+
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '46px',
+              fontWeight: 900,
+              letterSpacing: '-0.03em',
+              color: PALETTE.PRIMARY,
+              lineHeight: 1.1,
+            }}
+          >
+            EMS: Imbas Kehadiran & Sijil Digital Segera
+          </h2>
+          <p
+            style={{
+              margin: '6px 0 0 0',
+              fontSize: '19px',
+              fontWeight: 500,
+              color: PALETTE.SECONDARY,
+            }}
+          >
+            Pengalaman acara siswa tanpa kertas: imbas QR pantas, kumpul merit dan jana e-Sijil rasmi serta-merta.
+          </p>
+        </div>
+
+        {/* Live EMS System Telemetry Badge */}
+        <div
           style={{
-            fontSize: '13px',
-            fontWeight: 800,
-            letterSpacing: '0.16em',
-            color: PALETTE.PRIMARY,
-            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 18px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.92)',
+            border: `1px solid ${PALETTE.TERTIARY}`,
+            boxShadow: '0 4px 14px rgba(46, 58, 47, 0.04)',
           }}
         >
-          BABAK 05 • EVENT MANAGEMENT SYSTEM & E-SIJIL
-        </span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: isScanned ? '#4E7D55' : PALETTE.ACCENT,
+              boxShadow: `0 0 10px ${isScanned ? '#4E7D55' : PALETTE.ACCENT}`,
+            }}
+          />
+          <div style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                color: PALETTE.SECONDARY,
+                textTransform: 'uppercase',
+              }}
+            >
+              ENJIN E-SIJIL PINTAR
+            </div>
+            <div
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: PALETTE.PRIMARY,
+              }}
+            >
+              {isScanned ? 'STATUS: SIJIL DIJANA & SAH' : 'STATUS: MENUNGGU IMBASAN'}
+            </div>
+          </div>
+        </div>
       </div>
-      <h2
+
+      {/* 2. BENTO DUAL CARD SYSTEM */}
+      <div
         style={{
-          fontSize: '54px',
-          fontWeight: 900,
-          color: PALETTE.PRIMARY,
-          letterSpacing: '-0.03em',
-          margin: '0 0 16px 0',
+          display: 'flex',
+          gap: '32px',
+          flex: 1,
+          alignItems: 'stretch',
+          minHeight: 0,
         }}
       >
-        Imbas QR & Sijil Digital Automatik
-      </h2>
-      <p style={{ fontSize: '22px', color: PALETTE.SECONDARY, maxWidth: '700px', margin: 0 }}>
-        Pendaftaran acara sepantas imbasan kamera dan sijil digital sah dengan nombor siri rasmi{' '}
-        {ems.certSerial}.
-      </p>
+        {/* CARD A: STUDENT VIP EVENT PASS & QR LASER SCANNER */}
+        <div
+          style={{
+            flex: '0 0 540px',
+            transform: `translateY(${passCardY}px)`,
+            opacity: passCardSpring,
+            backgroundColor: PALETTE.CARD_BG,
+            borderRadius: '24px',
+            border: `1.5px solid ${PALETTE.TERTIARY}`,
+            boxShadow: PALETTE.SHADOW_SOFT,
+            padding: '28px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Subtle Terracotta Background Glow */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '200px',
+              height: '200px',
+              background:
+                'radial-gradient(circle at 100% 0%, rgba(201, 111, 79, 0.12) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          <div>
+            {/* Top Pass Header: VIP Pass Pill & Active Access Badge */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
+                  border: `1px solid rgba(201, 111, 79, 0.3)`,
+                }}
+              >
+                <Sparkles size={15} color={PALETTE.ACCENT} />
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    letterSpacing: '0.14em',
+                    color: PALETTE.ACCENT,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  VIP EVENT PASS
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                <Activity size={12} color={PALETTE.SECONDARY} />
+                <span>AKSES RASMI MAHASISWA</span>
+              </div>
+            </div>
+
+            {/* Event Title Block */}
+            <div style={{ marginBottom: '14px' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.14em',
+                  color: PALETTE.SECONDARY,
+                  textTransform: 'uppercase',
+                  marginBottom: '4px',
+                }}
+              >
+                ACARA PILIHAN UTAMA
+              </div>
+              <h3
+                style={{
+                  margin: '0 0 6px 0',
+                  fontSize: '21px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  lineHeight: 1.25,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {ems.eventTitle}
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: PALETTE.SECONDARY,
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Calendar size={13} color={PALETTE.SECONDARY} />
+                  18 OKTOBER 2026
+                </span>
+                <span>•</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Clock size={13} color={PALETTE.SECONDARY} />
+                  8:00 PM – 11:00 PM
+                </span>
+                <span>•</span>
+                <span>DEWAN JUBLI PERAK</span>
+              </div>
+            </div>
+
+            {/* Perforated VIP Ticket Divider */}
+            <div
+              style={{
+                position: 'relative',
+                margin: '14px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '-40px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  backgroundColor: PALETTE.BACKGROUND,
+                  borderRight: `1.5px solid ${PALETTE.TERTIARY}`,
+                }}
+              />
+              <div
+                style={{
+                  width: '100%',
+                  borderTop: `2px dashed ${PALETTE.TERTIARY}`,
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '-40px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  backgroundColor: PALETTE.BACKGROUND,
+                  borderLeft: `1.5px solid ${PALETTE.TERTIARY}`,
+                }}
+              />
+            </div>
+
+            {/* Student Credential Row */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(46, 58, 47, 0.03)',
+                border: `1px solid rgba(217, 201, 178, 0.5)`,
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    backgroundColor: PALETTE.PRIMARY,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  <GraduationCap size={18} color="#FFFFFF" />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 900,
+                      color: PALETTE.PRIMARY,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {ems.studentName}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      fontFamily: 'monospace',
+                      color: PALETTE.ACCENT,
+                    }}
+                  >
+                    MATRIK: {ems.matricNo}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                  textAlign: 'right',
+                }}
+              >
+                JABATAN TMK
+              </div>
+            </div>
+
+            {/* Central QR Code Scanner Container with Viewfinder Marks */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                margin: '6px 0 16px 0',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '200px',
+                  height: '200px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  border: `1.5px solid rgba(217, 201, 178, 0.85)`,
+                  padding: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 8px 24px rgba(46, 58, 47, 0.05)',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* 4 Camera Viewfinder Corner Brackets */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '6px',
+                    left: '6px',
+                    width: '16px',
+                    height: '16px',
+                    borderTop: `3px solid ${PALETTE.ACCENT}`,
+                    borderLeft: `3px solid ${PALETTE.ACCENT}`,
+                    borderTopLeftRadius: '4px',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '6px',
+                    right: '6px',
+                    width: '16px',
+                    height: '16px',
+                    borderTop: `3px solid ${PALETTE.ACCENT}`,
+                    borderRight: `3px solid ${PALETTE.ACCENT}`,
+                    borderTopRightRadius: '4px',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '6px',
+                    left: '6px',
+                    width: '16px',
+                    height: '16px',
+                    borderBottom: `3px solid ${PALETTE.ACCENT}`,
+                    borderLeft: `3px solid ${PALETTE.ACCENT}`,
+                    borderBottomLeftRadius: '4px',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '6px',
+                    right: '6px',
+                    width: '16px',
+                    height: '16px',
+                    borderBottom: `3px solid ${PALETTE.ACCENT}`,
+                    borderRight: `3px solid ${PALETTE.ACCENT}`,
+                    borderBottomRightRadius: '4px',
+                  }}
+                />
+
+                {/* High-Precision SVG QR Code Vector Matrix */}
+                <svg
+                  width="170"
+                  height="170"
+                  viewBox="0 0 170 170"
+                  style={{ opacity: isScanned ? 0.35 : 1, transition: 'opacity 0.2s' }}
+                >
+                  {/* Top-Left Position Pattern */}
+                  <rect x="6" y="6" width="44" height="44" rx="7" fill={PALETTE.PRIMARY} />
+                  <rect x="13" y="13" width="30" height="30" rx="4" fill="#FFFFFF" />
+                  <rect x="20" y="20" width="16" height="16" rx="3" fill={PALETTE.PRIMARY} />
+
+                  {/* Top-Right Position Pattern */}
+                  <rect x="120" y="6" width="44" height="44" rx="7" fill={PALETTE.PRIMARY} />
+                  <rect x="127" y="13" width="30" height="30" rx="4" fill="#FFFFFF" />
+                  <rect x="134" y="20" width="16" height="16" rx="3" fill={PALETTE.PRIMARY} />
+
+                  {/* Bottom-Left Position Pattern */}
+                  <rect x="6" y="120" width="44" height="44" rx="7" fill={PALETTE.PRIMARY} />
+                  <rect x="13" y="127" width="30" height="30" rx="4" fill="#FFFFFF" />
+                  <rect x="20" y="134" width="16" height="16" rx="3" fill={PALETTE.PRIMARY} />
+
+                  {/* Alignment Pattern Bottom-Right */}
+                  <rect x="116" y="116" width="28" height="28" rx="5" fill={PALETTE.PRIMARY} />
+                  <rect x="122" y="122" width="16" height="16" rx="3" fill="#FFFFFF" />
+                  <rect x="127" y="127" width="6" height="6" rx="1.5" fill={PALETTE.PRIMARY} />
+
+                  {/* Timing Patterns */}
+                  <line x1="28" y1="56" x2="28" y2="114" stroke={PALETTE.PRIMARY} strokeWidth="4" strokeDasharray="5 5" />
+                  <line x1="56" y1="28" x2="114" y2="28" stroke={PALETTE.PRIMARY} strokeWidth="4" strokeDasharray="5 5" />
+
+                  {/* Data Blocks Matrix Grid */}
+                  {/* Row 1 */}
+                  <rect x="58" y="10" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="74" y="10" width="16" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="98" y="10" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Row 2 */}
+                  <rect x="66" y="22" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="82" y="22" width="8" height="14" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="106" y="22" width="6" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Row 3 */}
+                  <rect x="58" y="38" width="14" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="78" y="42" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="94" y="38" width="18" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Row 4 (Middle) */}
+                  <rect x="10" y="58" width="8" height="12" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="22" y="74" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="38" y="66" width="12" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="56" y="58" width="16" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="98" y="58" width="14" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="122" y="58" width="8" height="12" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="138" y="66" width="12" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="154" y="58" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Row 5 */}
+                  <rect x="10" y="98" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="38" y="90" width="8" height="18" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="58" y="74" width="8" height="16" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="106" y="74" width="18" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="138" y="86" width="8" height="16" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="154" y="94" width="8" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Row 6 */}
+                  <rect x="58" y="98" width="16" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="82" y="98" width="14" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="104" y="90" width="8" height="16" rx="2" fill={PALETTE.PRIMARY} />
+                  {/* Center Insignia Box */}
+                  <rect x="68" y="68" width="34" height="34" rx="8" fill="#FFFFFF" stroke={PALETTE.TERTIARY} strokeWidth="1.5" />
+                  <rect x="74" y="74" width="22" height="22" rx="5" fill={PALETTE.PRIMARY} />
+                  <circle cx="85" cy="85" r="4.5" fill="#FFFFFF" />
+                  {/* Row 7 Bottom Data */}
+                  <rect x="58" y="122" width="8" height="18" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="74" y="116" width="16" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="98" y="122" width="10" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="74" y="138" width="8" height="14" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="90" y="144" width="18" height="8" rx="2" fill={PALETTE.PRIMARY} />
+                  <rect x="152" y="126" width="8" height="18" rx="2" fill={PALETTE.PRIMARY} />
+                </svg>
+
+                {/* Animated Terracotta Laser Scan Beam (Active before scan completion) */}
+                {!isScanned && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '8px',
+                      right: '8px',
+                      top: `${laserY}%`,
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {/* Glowing Laser Curtain Sweep */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: '2px',
+                        height: '24px',
+                        background:
+                          'linear-gradient(0deg, rgba(201, 111, 79, 0.28) 0%, transparent 100%)',
+                      }}
+                    />
+                    {/* Intense Laser Line */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '3px',
+                        background:
+                          'linear-gradient(90deg, transparent, rgba(201, 111, 79, 0.4) 15%, #C96F4F 35%, #FFAB91 50%, #C96F4F 65%, rgba(201, 111, 79, 0.4) 85%, transparent)',
+                        boxShadow: '0 0 12px #C96F4F, 0 0 24px rgba(201, 111, 79, 0.6)',
+                        borderRadius: '2px',
+                      }}
+                    />
+                    {/* Side Glowing Pins */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '-2px',
+                        top: '-3px',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: PALETTE.ACCENT,
+                        boxShadow: '0 0 8px #C96F4F',
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '-2px',
+                        top: '-3px',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: PALETTE.ACCENT,
+                        boxShadow: '0 0 8px #C96F4F',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Verification Celebration Moment: Checkmark Pop & Micro-Confetti Burst */}
+                {isScanned && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {/* Radiating Micro-Confetti Particles */}
+                    {CONFETTI_BURST_PARTICLES.map((particle, idx) => {
+                      const rad = (particle.angle * Math.PI) / 180;
+                      const currentDist = confettiSpring * particle.dist;
+                      const x = Math.cos(rad) * currentDist;
+                      const y = Math.sin(rad) * currentDist;
+                      const particleOpacity = interpolate(
+                        confettiSpring,
+                        [0, 0.15, 0.75, 1],
+                        [0, 1, 0.85, 0]
+                      );
+                      const particleScale = interpolate(
+                        confettiSpring,
+                        [0, 0.3, 1],
+                        [0.4, 1.25, 0.5]
+                      );
+                      const rotation = (particle.angle + frame * 4) % 360;
+
+                      return (
+                        <div
+                          key={`confetti-${idx}`}
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            width: `${particle.size}px`,
+                            height: particle.shape === 'rect' ? `${particle.size * 0.55}px` : `${particle.size}px`,
+                            borderRadius: particle.shape === 'circle' ? '50%' : '2px',
+                            backgroundColor: particle.color,
+                            opacity: particleOpacity,
+                            transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${particleScale})`,
+                            boxShadow: `0 0 6px ${particle.color}`,
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Celebratory Checkmark Pop Circle */}
+                    <div
+                      style={{
+                        transform: `scale(${checkSpring})`,
+                        width: '76px',
+                        height: '76px',
+                        borderRadius: '50%',
+                        backgroundColor: PALETTE.PRIMARY,
+                        border: '3.5px solid #FFFFFF',
+                        boxShadow: '0 14px 38px rgba(46, 58, 47, 0.35)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 10,
+                      }}
+                    >
+                      <CheckCircle2 size={46} color="#A7D49B" strokeWidth={2.8} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Verification Status Badge */}
+          <div
+            style={{
+              padding: '12px 18px',
+              borderRadius: '14px',
+              backgroundColor: isScanned ? PALETTE.PRIMARY : 'rgba(201, 111, 79, 0.08)',
+              border: `1.5px solid ${isScanned ? PALETTE.PRIMARY : 'rgba(201, 111, 79, 0.3)'}`,
+              boxShadow: isScanned ? '0 6px 20px rgba(46, 58, 47, 0.16)' : 'none',
+              transform: `scale(${interpolate(statusSpring, [0, 1], [0.98, 1])})`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'background-color 0.25s, color 0.25s',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {isScanned ? (
+                <div
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <CheckCircle2 size={16} color="#A7D49B" strokeWidth={2.8} />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: PALETTE.ACCENT,
+                    boxShadow: '0 0 10px #C96F4F',
+                  }}
+                />
+              )}
+
+              <div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 900,
+                    color: isScanned ? '#FFFFFF' : PALETTE.PRIMARY,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {isScanned ? 'Kehadiran Disahkan • Merit +10' : 'Sedia Untuk Diimbas'}
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: isScanned ? 'rgba(255, 255, 255, 0.8)' : PALETTE.SECONDARY,
+                  }}
+                >
+                  {isScanned
+                    ? 'Direkod serta-merta ke dalam pengkalan data EMS HEP'
+                    : 'Arahkan kamera ke kod QR pas siswa'}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                backgroundColor: isScanned ? 'rgba(255, 255, 255, 0.16)' : 'rgba(46, 58, 47, 0.06)',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: isScanned ? '#A7D49B' : PALETTE.PRIMARY,
+              }}
+            >
+              {isScanned ? 'DISAHKAN' : 'STATUS: LIVE'}
+            </div>
+          </div>
+        </div>
+
+        {/* CARD B: OFFICIAL DIGITAL E-CERTIFICATE GENERATION */}
+        <div
+          style={{
+            flex: 1,
+            transform: `translateY(${certCardY}px) scale(${interpolate(certCardSpring, [0, 1], [0.97, 1])})`,
+            opacity: certCardSpring,
+            backgroundColor: '#FFFFFF',
+            borderRadius: '24px',
+            border: `1.5px solid ${PALETTE.TERTIARY}`,
+            boxShadow: PALETTE.SHADOW_SOFT,
+            padding: '34px 44px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Inner Architectural Border with Corner Registration Marks */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: '14px',
+              border: `1.5px solid rgba(217, 201, 178, 0.65)`,
+              borderRadius: '16px',
+              pointerEvents: 'none',
+            }}
+          >
+            {/* Top-Left Corner Plus Marker */}
+            <span
+              style={{
+                position: 'absolute',
+                top: '4px',
+                left: '6px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: PALETTE.ACCENT,
+                fontWeight: 900,
+              }}
+            >
+              +
+            </span>
+            {/* Top-Right Corner Plus Marker */}
+            <span
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '6px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: PALETTE.ACCENT,
+                fontWeight: 900,
+              }}
+            >
+              +
+            </span>
+            {/* Bottom-Left Corner Plus Marker */}
+            <span
+              style={{
+                position: 'absolute',
+                bottom: '4px',
+                left: '6px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: PALETTE.ACCENT,
+                fontWeight: 900,
+              }}
+            >
+              +
+            </span>
+            {/* Bottom-Right Corner Plus Marker */}
+            <span
+              style={{
+                position: 'absolute',
+                bottom: '4px',
+                right: '6px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: PALETTE.ACCENT,
+                fontWeight: 900,
+              }}
+            >
+              +
+            </span>
+          </div>
+
+          {/* Holographic Security Foil Shimmer Sweep */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              width: '180px',
+              left: `${foilTranslateX}%`,
+              background:
+                'linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, rgba(201, 111, 79, 0.15) 58%, transparent 75%)',
+              transform: 'skewX(-20deg)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Certificate Header Row */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 2,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '50%',
+                  backgroundColor: PALETTE.PRIMARY,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(46, 58, 47, 0.12)',
+                }}
+              >
+                <Img
+                  src={staticFile('jpp-logo.png')}
+                  alt="POLISAS Emblem"
+                  style={{ width: '34px', height: '34px', objectFit: 'contain' }}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    letterSpacing: '0.22em',
+                    color: PALETTE.PRIMARY,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  POLITEKNIK SULTAN HAJI AHMAD SHAH
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                    color: PALETTE.SECONDARY,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  JABATAN HAL EHWAL PELAJAR & JAWATANKUASA PERWAKILAN PELAJAR
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Timestamp Chip */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(107, 127, 91, 0.1)',
+                border: `1px solid rgba(107, 127, 91, 0.25)`,
+              }}
+            >
+              <ShieldCheck size={14} color={PALETTE.SECONDARY} />
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  fontFamily: 'monospace',
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '0.08em',
+                }}
+              >
+                EMS-SIJIL-BERTAULIAH
+              </span>
+            </div>
+          </div>
+
+          {/* Certificate Main Body */}
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '10px 20px',
+              position: 'relative',
+              zIndex: 2,
+            }}
+          >
+            {/* Title */}
+            <div
+              style={{
+                display: 'inline-block',
+                marginBottom: '4px',
+              }}
+            >
+              <h2
+                style={{
+                  margin: '0 0 4px 0',
+                  fontSize: '32px',
+                  fontWeight: 900,
+                  letterSpacing: '0.08em',
+                  color: PALETTE.PRIMARY,
+                  textTransform: 'uppercase',
+                }}
+              >
+                SIJIL PENYERTAAN RASMI
+              </h2>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.24em',
+                  color: PALETTE.ACCENT,
+                  textTransform: 'uppercase',
+                  marginBottom: '14px',
+                }}
+              >
+                DENGAN INI DIPERAKUKAN BAHAWA
+              </div>
+            </div>
+
+            {/* Awarded Recipient Student Name */}
+            <div style={{ marginBottom: '14px' }}>
+              <div
+                style={{
+                  fontSize: '36px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.15,
+                }}
+              >
+                {ems.studentName}
+              </div>
+              <div
+                style={{
+                  width: '260px',
+                  height: '2px',
+                  backgroundColor: PALETTE.ACCENT,
+                  margin: '6px auto 8px auto',
+                  borderRadius: '2px',
+                }}
+              />
+              <div
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  fontFamily: 'monospace',
+                  color: PALETTE.SECONDARY,
+                  letterSpacing: '0.06em',
+                }}
+              >
+                NO. KAD PENGENALAN / MATRIK: {ems.matricNo}
+              </div>
+            </div>
+
+            {/* Event Achievement Text */}
+            <div style={{ maxWidth: '780px', margin: '0 auto 12px auto' }}>
+              <p
+                style={{
+                  margin: '0 0 6px 0',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: 'rgba(46, 58, 47, 0.78)',
+                  lineHeight: 1.4,
+                }}
+              >
+                Telah menghadiri serta menyempurnakan dengan jayanya penglibatan rasmi dalam program kepimpinan siswa:
+              </p>
+              <div
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '-0.01em',
+                  marginBottom: '8px',
+                }}
+              >
+                "{ems.eventTitle}"
+              </div>
+
+              {/* Merit Tag */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 18px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(107, 127, 91, 0.12)',
+                  border: `1px solid rgba(107, 127, 91, 0.3)`,
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                }}
+              >
+                <Award size={14} color={PALETTE.SECONDARY} />
+                <span>10 MATA MERIT KEPIMPINAN & KOKURIKULUM DIIKTIRAF OLEH HEP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Certificate Footer Row: Signatures & Cryptographic Seal */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
+              position: 'relative',
+              zIndex: 2,
+              paddingTop: '10px',
+              borderTop: `1px solid rgba(217, 201, 178, 0.5)`,
+            }}
+          >
+            {/* Signature Left: Pengarah / Timbalan Pengarah HEP */}
+            <div style={{ textAlign: 'left', flex: 1 }}>
+              <div
+                style={{
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '4px',
+                }}
+              >
+                <svg width="140" height="34" viewBox="0 0 140 34" fill="none">
+                  <path
+                    d="M10 26C25 10 35 30 50 12C60 2 75 32 95 16C105 8 120 18 135 12"
+                    stroke={PALETTE.PRIMARY}
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M30 22C45 22 70 20 85 24"
+                    stroke={PALETTE.PRIMARY}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                TN. HJ. AHMAD FAHMI BIN KASSIM
+              </div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: PALETTE.SECONDARY,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Pengarah / Timb. Pengarah (HEP) POLISAS
+              </div>
+            </div>
+
+            {/* Center Cryptographic Verification Seal */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 20px',
+              }}
+            >
+              {/* Gold / Terracotta Seal Badge */}
+              <div
+                style={{
+                  transform: `scale(${sealSpring}) rotate(${interpolate(sealSpring, [0, 1], [-20, 0])}deg)`,
+                  width: '84px',
+                  height: '84px',
+                  borderRadius: '50%',
+                  border: `2px dashed ${PALETTE.ACCENT}`,
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: 'rgba(201, 111, 79, 0.05)',
+                  boxShadow: '0 8px 24px rgba(201, 111, 79, 0.15)',
+                  marginBottom: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    border: `1.5px solid ${PALETTE.ACCENT}`,
+                    backgroundColor: '#FFFFFF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px',
+                  }}
+                >
+                  <ShieldCheck size={28} color={PALETTE.ACCENT} strokeWidth={2.4} />
+                  <span
+                    style={{
+                      fontSize: '7.5px',
+                      fontWeight: 900,
+                      letterSpacing: '0.08em',
+                      color: PALETTE.PRIMARY,
+                      textTransform: 'uppercase',
+                      marginTop: '2px',
+                    }}
+                  >
+                    DISAHKAN SAH
+                  </span>
+                </div>
+              </div>
+
+              {/* Cryptographic Verification Statement */}
+              <div
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 800,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '0.04em',
+                  textAlign: 'center',
+                  marginBottom: '4px',
+                }}
+              >
+                Disahkan Secara Digital oleh JPP & HEP POLISAS
+              </div>
+
+              {/* Official Serial Badge */}
+              <div
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(46, 58, 47, 0.05)',
+                  border: `1px solid ${PALETTE.TERTIARY}`,
+                  fontSize: '11px',
+                  fontWeight: 900,
+                  fontFamily: 'monospace',
+                  color: PALETTE.ACCENT,
+                  letterSpacing: '0.08em',
+                }}
+              >
+                NO. SIRI: {ems.certSerial}
+              </div>
+            </div>
+
+            {/* Signature Right: Yang Dipertua JPP POLISAS */}
+            <div style={{ textAlign: 'right', flex: 1 }}>
+              <div
+                style={{
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  marginBottom: '4px',
+                }}
+              >
+                <svg width="140" height="34" viewBox="0 0 140 34" fill="none">
+                  <path
+                    d="M15 20C30 8 45 32 65 14C80 4 95 28 115 16C122 12 130 18 135 15"
+                    stroke={PALETTE.PRIMARY}
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M50 24C65 24 90 22 110 26"
+                    stroke={PALETTE.PRIMARY}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  color: PALETTE.PRIMARY,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                MUHAMMAD AMMAR BIN ZULKIFLI
+              </div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: PALETTE.SECONDARY,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Yang Dipertua JPP POLISAS Sesi 2026/2027
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
 
-// Scene 6: Outro Stub (Frames 1095 to 1200)
-const Scene6Stub: React.FC<{
+// ============================================================================
+// SCENE 6: GRAND OUTRO & INSTITUTIONAL CLOSING (Frames 1095 to 1200 / 3.5s)
+// ============================================================================
+interface Scene6Props {
   institutionName: string;
+  councilName: string;
+  sessionLabel: string;
   sloganLine1: string;
   sloganLine2: string;
   portalUrl: string;
-}> = ({ institutionName, sloganLine1, sloganLine2, portalUrl }) => {
+}
+
+const Scene6Outro: React.FC<Scene6Props> = ({
+  institutionName,
+  councilName,
+  sessionLabel,
+  sloganLine1,
+  sloganLine2,
+  portalUrl,
+}) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+
+  // Entrance springs with balanced damping
+  const emblemSpring = spring({
+    frame: Math.max(0, frame - 4),
+    fps,
+    config: { damping: 14, mass: 0.85, stiffness: 85 },
+  });
+
+  const titleSpring = spring({
+    frame: Math.max(0, frame - 15),
+    fps,
+    config: { damping: 15, mass: 0.9, stiffness: 85 },
+  });
+
+  const sloganSpring = spring({
+    frame: Math.max(0, frame - 26),
+    fps,
+    config: { damping: 14, mass: 0.85, stiffness: 90 },
+  });
+
+  const pillarsSpring = spring({
+    frame: Math.max(0, frame - 38),
+    fps,
+    config: { damping: 15, mass: 0.8, stiffness: 85 },
+  });
+
+  const buttonSpring = spring({
+    frame: Math.max(0, frame - 50),
+    fps,
+    config: { damping: 14, mass: 0.8, stiffness: 95 },
+  });
+
+  const footerSpring = spring({
+    frame: Math.max(0, frame - 62),
+    fps,
+    config: { damping: 15, mass: 0.8, stiffness: 85 },
+  });
+
+  // Smooth final fade-out into warm porcelain milk (#F8F6EE) at frames 88 to 105
+  const finalFadeProgress = interpolate(frame, [88, 105], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const sceneOpacity = finalFadeProgress * interpolate(emblemSpring, [0, 1], [0, 1]);
+
+  // Subtle breathing oscillation for the call-to-action button arrow
+  const arrowOscillation = Math.sin((frame / 14) * Math.PI * 2) * 3;
+
+  // Slogan underline expansion
+  const lineWidth = interpolate(titleSpring, [0, 1], [0, 260]);
+
   return (
     <AbsoluteFill
       style={{
-        opacity,
+        opacity: sceneOpacity,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '80px',
+        padding: '80px 120px',
         textAlign: 'center',
       }}
     >
+      {/* 1. CENTRAL JPP EMBLEM WITH ELEVATION & DIFFUSED SOFT SHADOW */}
       <div
         style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          backgroundColor: PALETTE.PRIMARY,
+          transform: `translateY(${interpolate(emblemSpring, [0, 1], [36, 0])}px) scale(${interpolate(emblemSpring, [0, 1], [0.78, 1])})`,
+          opacity: emblemSpring,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '26px',
+        }}
+      >
+        <div
+          style={{
+            width: '116px',
+            height: '116px',
+            borderRadius: '50%',
+            backgroundColor: PALETTE.PRIMARY,
+            border: `3px solid ${PALETTE.TERTIARY}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow:
+              '0 26px 64px rgba(46, 58, 47, 0.22), 0 0 0 10px rgba(107, 127, 91, 0.12)',
+          }}
+        >
+          <Img
+            src={staticFile('jpp-logo.png')}
+            alt="JPP POLISAS"
+            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+          />
+        </div>
+      </div>
+
+      {/* 2. INSTITUTIONAL TYPOGRAPHY */}
+      <div
+        style={{
+          transform: `translateY(${interpolate(titleSpring, [0, 1], [22, 0])}px)`,
+          opacity: titleSpring,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}
+      >
+        <div
+          style={{
+            fontSize: '16px',
+            fontWeight: 800,
+            letterSpacing: '0.28em',
+            color: PALETTE.SECONDARY,
+            textTransform: 'uppercase',
+            marginBottom: '6px',
+          }}
+        >
+          {institutionName}
+        </div>
+        <div
+          style={{
+            fontSize: '22px',
+            fontWeight: 900,
+            letterSpacing: '0.14em',
+            color: PALETTE.PRIMARY,
+            textTransform: 'uppercase',
+            marginBottom: '12px',
+          }}
+        >
+          {councilName}
+        </div>
+
+        {/* Elegant Center Double Rule with Accent Diamond */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            width: `${lineWidth}px`,
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', backgroundColor: PALETTE.TERTIARY }} />
+          <div
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '1px',
+              backgroundColor: PALETTE.ACCENT,
+              transform: 'rotate(45deg)',
+            }}
+          />
+          <div style={{ flex: 1, height: '1px', backgroundColor: PALETTE.TERTIARY }} />
+        </div>
+      </div>
+
+      {/* 3. BOLD INSTITUTIONAL SLOGAN */}
+      <div
+        style={{
+          transform: `translateY(${interpolate(sloganSpring, [0, 1], [26, 0])}px)`,
+          opacity: sloganSpring,
+          marginBottom: '20px',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '62px',
+            fontWeight: 900,
+            color: PALETTE.PRIMARY,
+            letterSpacing: '-0.035em',
+            lineHeight: 1.1,
+            margin: '0 0 12px 0',
+          }}
+        >
+          {sloganLine1}{' '}
+          <span style={{ color: PALETTE.ACCENT }}>{sloganLine2}</span>
+        </h1>
+      </div>
+
+      {/* 4. STRATEGIC PILLARS STRIP */}
+      <div
+        style={{
+          transform: `translateY(${interpolate(pillarsSpring, [0, 1], [20, 0])}px)`,
+          opacity: pillarsSpring,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '24px',
-          boxShadow: '0 8px 24px rgba(46, 58, 47, 0.15)',
-        }}
-      >
-        <Img
-          src={staticFile('jpp-logo.png')}
-          alt="JPP POLISAS"
-          style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-        />
-      </div>
-      <h2
-        style={{
-          fontSize: '60px',
-          fontWeight: 900,
-          color: PALETTE.PRIMARY,
-          letterSpacing: '-0.03em',
-          margin: '0 0 10px 0',
-        }}
-      >
-        {sloganLine1} <span style={{ color: PALETTE.ACCENT }}>{sloganLine2}</span>
-      </h2>
-      <p
-        style={{
-          fontSize: '18px',
+          gap: '14px',
+          fontSize: '12px',
           fontWeight: 800,
           letterSpacing: '0.2em',
           color: PALETTE.SECONDARY,
           textTransform: 'uppercase',
-          marginBottom: '24px',
+          marginBottom: '32px',
         }}
       >
-        {institutionName}
-      </p>
+        <span>KEPIMPINAN PROGRESIF</span>
+        <span style={{ color: PALETTE.ACCENT }}>◆</span>
+        <span>KEBAJIKAN MAHASISWA</span>
+        <span style={{ color: PALETTE.ACCENT }}>◆</span>
+        <span>KEUSAHAWANAN SISWA</span>
+        <span style={{ color: PALETTE.ACCENT }}>◆</span>
+        <span>EKOSISTEM DIGITAL</span>
+      </div>
+
+      {/* 5. OFFICIAL PORTAL ADDRESS BUTTON / PILL */}
       <div
         style={{
-          padding: '10px 24px',
-          borderRadius: '9999px',
-          backgroundColor: '#FFFFFF',
-          border: `1.5px solid ${PALETTE.TERTIARY}`,
-          fontSize: '16px',
-          fontWeight: 800,
-          fontFamily: 'monospace',
-          color: PALETTE.ACCENT,
+          transform: `translateY(${interpolate(buttonSpring, [0, 1], [24, 0])}px) scale(${interpolate(buttonSpring, [0, 1], [0.94, 1])})`,
+          opacity: buttonSpring,
+          marginBottom: '36px',
         }}
       >
-        {portalUrl}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '14px 36px',
+            borderRadius: '9999px',
+            backgroundColor: '#FFFFFF',
+            border: `2px solid ${PALETTE.TERTIARY}`,
+            boxShadow:
+              '0 16px 40px rgba(46, 58, 47, 0.1), 0 2px 6px rgba(46, 58, 47, 0.04)',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '22px',
+              fontWeight: 900,
+              fontFamily: 'monospace',
+              letterSpacing: '0.04em',
+              color: PALETTE.ACCENT,
+            }}
+          >
+            {portalUrl}
+          </span>
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              backgroundColor: PALETTE.ACCENT,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: `translateX(${arrowOscillation}px)`,
+              boxShadow: '0 4px 12px rgba(201, 111, 79, 0.35)',
+            }}
+          >
+            <ArrowRight size={20} color="#FFFFFF" strokeWidth={2.8} />
+          </div>
+        </div>
+      </div>
+
+      {/* 6. INSTITUTIONAL METADATA FOOTER */}
+      <div
+        style={{
+          transform: `translateY(${interpolate(footerSpring, [0, 1], [16, 0])}px)`,
+          opacity: footerSpring,
+          fontSize: '11px',
+          fontWeight: 700,
+          letterSpacing: '0.18em',
+          color: 'rgba(46, 58, 47, 0.48)',
+          textTransform: 'uppercase',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+        }}
+      >
+        <div>{sessionLabel} • KUANTAN, PAHANG DARUL MAKMUR</div>
+        <div>HAK CIPTA TERPELIHARA © MAJLIS PERWAKILAN PELAJAR POLISAS</div>
       </div>
     </AbsoluteFill>
   );
@@ -4580,13 +6101,15 @@ export const JppIntroVideo: React.FC<JppIntroVideoProps> = ({
 
       {/* 7. SCENE 5: EMS Kehadiran & Sijil Digital (Frames 900 to 1095 / 6.5s) */}
       <Sequence from={900} durationInFrames={195} name="Scene 5: EMS & Sijil Digital">
-        <Scene5Stub ems={ems} />
+        <Scene5Ems ems={ems} />
       </Sequence>
 
       {/* 8. SCENE 6: Penutup Agung Outro (Frames 1095 to 1200 / 3.5s) */}
       <Sequence from={1095} durationInFrames={105} name="Scene 6: Grand Outro">
-        <Scene6Stub
+        <Scene6Outro
           institutionName={institutionName}
+          councilName={councilName}
+          sessionLabel={sessionLabel}
           sloganLine1={sloganLine1}
           sloganLine2={sloganLine2}
           portalUrl={portalUrl}
