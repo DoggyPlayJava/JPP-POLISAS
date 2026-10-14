@@ -2781,33 +2781,36 @@ Walaupun sistem menyediakan kiraan automatik, budi bicara juri dihormati sepenuh
 
 ## 24. Modul Persembahan Eksekutif Berasaskan Web (`WEBSITE/`)
 
-Persembahan slaid eksekutif berasaskan web yang berasingan di dalam direktori `WEBSITE/` direka khas untuk pembentangan aras tinggi kepada pihak pengurusan kanan dan Pegawai JHEP POLISAS.
+Persembahan slaid eksekutif berasaskan web yang berasingan di dalam direktori `WEBSITE/` direka khas untuk pembentangan aras tinggi kepada pihak pengurusan kanan, Pegawai JHEP POLISAS, dan pihak luar/penaja.
 
 ### 24.1 Senibina Modular & Ciri Utama
-- **Fail Kendiri:** `WEBSITE/index.html`, `WEBSITE/app.js`, `WEBSITE/style.css`, dan `WEBSITE/assets/`.
-- **Tema Visual:** Modern Tech Minimalist (Light Theme) berteraskan reka bentuk Double-Bezel ala Apple/Linear.
-- **Navigasi Slaid:** Enjin slaid native JavaScript berasaskan hash URL (`#slide-1` hingga `#slide-11`), papan kekunci (`ArrowRight`, `Space`, `Enter`, `ArrowLeft`, `F` untuk Fullscreen, `P` untuk Cetak/PDF, `M` untuk Slide Drawer, `1-9` untuk lompat slaid).
-- **Bar Kawalan Terapung:** `#floating-nav` dan `#progress-bar` memaparkan penunjuk slaid semasa (`01 / 11`) dan kawalan interaktif pantas.
+- **Fail Kendiri:** `WEBSITE/index.html`, `WEBSITE/app.js`, `WEBSITE/style.css`, dan `WEBSITE/assets/` (mengandungi tangkapan skrin sebenar beresolusi tinggi).
+- **Tema Visual:** Modern Tech Minimalist (Institutional Executive) berteraskan reka bentuk Double-Bezel ala Apple/Linear.
+- **Navigasi Slaid:** Enjin slaid native JavaScript berasaskan hash URL (`#slide-1` hingga `#slide-15`), papan kekunci (`ArrowRight`, `Space`, `Enter`, `ArrowLeft`, `F` untuk Fullscreen, `P` untuk Cetak/PDF, `M` untuk Slide Drawer, `1-9` untuk lompat slaid).
+- **Bar Kawalan Terapung:** `#floating-nav` memaparkan penunjuk slaid semasa (`01 / 15`), kawalan interaktif pantas, butang drawer modal (`M`), skrin penuh (`F`), dan cetak (`P`).
+- **Skrip Eksport PDF:** `node scripts/export_presentation_pdf.mjs` menjana `JPP POLISAS — Pembentangan Transformasi Digital & Ekosistem Pintar Kampus (Terkini 2026).pdf` berformat A4 Landskap tepat tanpa elemen navigasi terapung.
 
-### 24.2 Senarai 11 Slaid Eksekutif & Komponen Interaktif
-1. **Slaid 1 (Muka Depan):** Identiti berkembar POLISAS & JPP, lencana inisiatif kampus pintar JHEP.
-2. **Slaid 2 (Impak & Angka Sebenar):** Kaunter metrik beranimasi disahkan pangkalan data (2,733+ Pelajar, 60 Bisnes Usahawan Siswa, 276 Produk PolyMart, 850 Push Subscribers, 21 Kelab, 1,500 kapasiti serentak) dengan suis togol tangkapan skrin sebenar JPP HQ & Gambaran Sistem Portal.
-3. **Slaid 3 (PolyMaps):** Navigasi satelit kampus pintar (`real_polymaps.jpg`), penukar laluan berbumbung hujan & carian blok zon jabatan.
-4. **Slaid 4 (PolyMart & POS):** Marketplace siswa (`real_polymart.png`) dan terminal juruwang Web POS (`real_pos.png`) imbas kod bar serta resit digital.
-5. **Slaid 5 (E-Kebajikan):** Perbandingan Google Form dulu vs Sistem Tiket Sebenar (`real_kebajikan.png`, SLA < 24-48j) berserta simulasi sembang langsung 2-hala.
-6. **Slaid 6 (E-Akademik):** Rekod HPNM sebenar 3.97 Cemerlang (`real_akademik_hpnm.png`), kalkulator CGPA unjuran graduasi & pemuat turun e-Sijil digital terverifikasi.
-7. **Slaid 7 (EMS & Kehakiman):** Papan pemuka pengurusan acara sebenar (`real_ems_events.png` - Gema Merdeka, Siswapreneur Showcase, iFAMB), check-in QR, kalkulator rubrik live berkod PIN juri & penjanaan e-sijil berkod QR.
-8. **Slaid 8 (Laporan Auto-Generate):** Pusat Dokumen Kelab Mechanical Student Society (`real_laporan_auto.png`) dengan enjin penjanaan laporan bulanan automatik berstatus DILULUSKAN dalam 60 saat serta kelulusan berperingkat.
-9. **Slaid 9 (MAKMP):** Pencalonan Terbuka MAKMP 2026 Multi-Award (`real_makmp_awards.png`), kalkulator skor merit rasmi (Antarabangsa 100m, Kebangsaan 80m, Negeri 60m, Daerah 40m, Politeknik 20m) dan portal juri berjejak audit.
-10. **Slaid 10 (Nexus AI & Dual-RBAC):** Pembantu pintar draf kertas kerja berkuasa Gemini API, matriks hierarki 4 peranan (Super Admin, Majlis Tertinggi, Exco, Pelajar) dan pengasingan data PostgreSQL Row Level Security (`(SELECT auth.uid())`).
-11. **Slaid 11 (Rumusan Eksekutif, ROI & Hala Tuju Strategik — Tanpa Q&A):** Reka bentuk Hero Showcase Split (40/60) berprestij: Ruang kiri memaparkan 3 metrik nombor besar (2,733+ Pelajar Sah, 59 Usahawan Siswa, < 24 Jam SLA Respon) & Lencana Penghantaran Exco KPP (100% Sedia); Ruang kanan memaparkan tingkap pelayar uncompressed UI sebenar Hab Eksekutif JPP HQ (`real_jpp_pengurusan.png`) dengan suis ke Laman Utama (`real_mainpage.png`), 3 cip lencana terapung, dan Lightbox zoom.
+### 24.2 Senarai 15 Slaid Eksekutif & Kandungan Bersepadu
+1. **Slaid 1 (Muka Depan):** Identiti berkembar POLISAS & JPP, lencana inisiatif kampus pintar JHEP, tajuk rasmi dan mock-up komputer riba serta telefon bimbit.
+2. **Slaid 2 (Impak & Angka Sebenar):** Kaunter metrik (2,733+ Pelajar, 60+ Usahawan Siswa, SLA < 24-48j, 1,500 Pengguna Serentak) dan paparan Hab Eksekutif JPP HQ.
+3. **Slaid 3 (Jadual Transformasi Operasi):** Jadual perbandingan 6 dimensi komprehensif antara Kaedah Tradisional (Sebelum) vs Ekosistem Pintar JPP (Kini) berserta impak penjimatan.
+4. **Slaid 4 (Pilar 1: PolyMaps & Jadual Kuliah):** Navigasi satelit 28 bangunan & 200+ bilik (`Polymap View Phone.png`) berserta integrasi pintar pautan lokasi terus dari jadual waktu kuliah (`Integrated Jadual Akademik View.png`).
+5. **Slaid 5 (Pilar 2: PolyMart & Web POS):** Marketplace siswa dan paparan perincian produk (`Polymart View Phone.png` & `Inside Polymart View Phone.png`), transaksi kod bar & DuitNow QR sifar komisen.
+6. **Slaid 6 (Pilar 3: e-Kebajikan):** Sistem tiket aduan kerosakan kamsis (#KBJ-xxxx) dengan SLA < 24-48j, bukti gambar, penjejakan 4 peringkat dan sembang langsung (`Aduan Kebajikan Status Portal View.png`).
+7. **Slaid 7 (Pilar 4: Food Bank Mahasiswa):** Pusat Kawalan Pentadbir Food Bank JPP (`Foodbank Admin Preview.png`) memantau baki inventori makanan asnaf/B40 dan tuntutan telus bermaruah.
+8. **Slaid 8 (Pilar 5: e-Akademik & Merit KAMSIS):** Simulasi unjuran gred HPNM/CGPA Anugerah Ketua Jabatan (`Automated E-akademik integration view.png`), e-Folder sijil digital ber-QR sepanjang hayat, dan sistem merit KAMSIS terverifikasi.
+9. **Slaid 9 (Pilar 6: EMS Acara):** Papan pemuka pengurusan acara (`Event Management System (EMS) Preview.png`), borang dinamik, dan pengimbas kod QR pas kehadiran krew (2-saat check-in).
+10. **Slaid 10 (Pilar 7: EMS Kehakiman & E-Sijil):** Portal juri jemputan kod PIN tanpa pendaftaran akaun (`EMS Juri Preview.png`), rubrik penilaian live (`EMS Juri Penjurian Preview.png`), dan penjanaan e-sijil berkod QR kalis pemalsuan.
+11. **Slaid 11 (Pilar 8: Tadbir Urus Sifar Kertas):** Pusat Dokumen Kelab (`Kelab Preview.png`) dan enjin auto-laporan 60-saat berpiawaian format rasmi JHEP dengan kelulusan digital 1-klik.
+12. **Slaid 12 (Pilar 9 & 10: e-KLK, PolyRider & MAKMP):** Direktori rumah sewa selamat dipantau JHEP (`KLK.png`), platform carpool selamat beridentiti matrik sah, dan sistem anugerah kecemerlangan telus.
+13. **Slaid 13: Keselamatan Maklumat Aras Institusi:** Kawalan akses berasaskan 4 hierarki peranan rasmi, jejak audit (audit trail) tidak boleh diubah suai, dan notifikasi tolak Web Push 1-saat kepada 850+ pelajar.
+14. **Slaid 14: Jadual Analisis Pulangan Pelaburan (ROI):** Penjimatan kos kertas & toner RM 12,000–RM 15,000/tahun, penjimatan percetakan sijil ber-QR, dan pengurangan masa semakan fail sehingga 80%.
+15. **Slaid 15: Rumusan Eksekutif & Komitmen JPP:** Penegasan kesiapsiagaan sistem 100% beroperasi penuh bersama foto autentik mahasiswa (`POLISAS Student View.png`) bagi memacu POLISAS sebagai kampus pintar TVET negara.
 
-### 24.3 Standard Visual & Kad Before-After (Slaid 3–10)
-- **Format 2-Bullet Ringkas:** Setiap kad *SEBELUM* (Rose) dan *SELEPAS* (Emerald) menggunakan format senarai berpoin tajuk tebal (bold keywords) 1-baris tanpa teks perenggan berjela-jela, menjamin imbasan eksekutif pantas dalam masa 3 saat tanpa kesesakan teks (*word cluttered*).
-- **Pengesyoran Cetakan PDF (`@media print`):**
-  - Konfigurasi `@page { size: 297mm 210mm landscape; margin: 0; }`.
-  - Setiap `.slide` diformat sebagai satu mukasurat landskap tepat dengan `break-after: page;` dan `page-break-inside: avoid;`.
-  - Elemen terapung `.no-print`, `#floating-nav`, `#progress-bar`, `#slide-drawer`, `#toast-container` disembunyikan secara automatik semasa cetakan PDF.
+### 24.3 Standard Cetakan PDF (@media print)
+- **Konfigurasi:** `@page { size: 297mm 210mm landscape; margin: 0; }`.
+- **Setiap Slaid:** Diformat tepat sebagai satu mukasurat landskap A4 (`page-break-after: always; break-after: page;`).
+- **Pembersihan Automatik:** Elemen navigasi `#floating-nav`, `#slide-drawer`, dan `.no-print` disembunyikan sepenuhnya semasa eksport PDF.
 
 ---
 
@@ -4392,9 +4395,80 @@ Pelayar moden dan persekitaran PWA WebView sering kali membisukan atau menyekat 
 ### 33.4 Pembersihan "AI Slop" & Pengukuhan Tipografi
 - Membuang kecerunan teks buatan AI yang tidak natural (`bg-gradient-to-r text-transparent bg-clip-text`) pada nama pengguna (`{displayName}`) dan tajuk bahagian, menggantikannya dengan tipografi institusi yang bersih (`text-slate-900 dark:text-white`).
 - Menghapuskan sekatan ketinggian arbitrari (`h-10 line-clamp-2`) pada kad yang berisiko memotong teks penting pada saiz paparan yang berbeza.
-- Menyeragamkan status badge dan cip penapis dengan warna separa-lutsinar berasaskan palet hex unit rasmi (`rgba(..., 0.12)`).
+---
 
+## 34. Pembentangan Ekosistem Pintar Kampus & Dek Slaid Interaktif (`WEBSITE/`)
 
+> Dikemas kini: Oktober 2026 (Modernisasi Dek Slaid Eksekutif & Format Cetakan A4 Landskap)
 
+Bagi pembentangan kepada pihak pengurusan kanan POLISAS, JHEP, dan agensi luar, slaid pembentangan digital telah distruktur semula secara komprehensif daripada format PDF lama kepada aplikasi slaid web responsif berskala penuh (`WEBSITE/index.html`) yang menyokong eksport cetakan A4 landskap (1 slaid = tepat 1 muka surat):
 
+### 34.1 Domain Rasmi & Keseragaman URL
+- **Domain Rasmi:** `jpp.cipher-node.org` diselaraskan pada semua paparan bar alamat pelayar laptop/telefon, slaid penutup, kod QR, dan pautan langsung.
+
+### 34.2 Arkitektur Visual, Dekluter & Bebas Potongan (Zero-Crop Mockups)
+1. **Bingkai Laptop Eksekutif (Muka Hadapan / Slaid 1):**
+   - Menggunakan mock-up komputer riba aluminium lebar penuh (`laptop-screen-frame`) dengan bar alamat pelayar interaktif `jpp.cipher-node.org` dan tapak aluminium realistik.
+   - Menggandingkan tangkap layar portal desktop (1918×867) bersama telefon pintar terapung (`cover-phone-frame`) dengan tetapan `object-fit: contain` tanpa sebarang pemotongan status bar atau bar dok bawah.
+2. **Kesesuaian Nisbah Aspek Tangkap Layar (`.screenshot-frame` & `.mobile-frame`):**
+   - Menetapkan ketinggian 355px dengan `object-fit: contain !important; object-position: center !important;` pada tangkap layar desktop (1918×870) dan 185px × 395px (serta 245px untuk paparan lebar) pada telefon pintar. Menjamin 100% kawasan UI termasuk bar navigasi, ikon dan status kekal jelas tanpa terpotong (*zero clipping*).
+3. **Dekluter & Anjakan Paradigma Slaid 3:**
+   - Menukar tajuk dan orientasi slaid kepada *Anjakan Paradigma: Dari Kebergantungan Manual ke Tadbir Urus Pintar Bersepadu*.
+   - Menggantikan jadual spreadsheet yang sesak dengan 3 Kad Pilar Eksekutif (`.transformation-grid`):
+     - **Pilar 01:** Kecekapan Pentadbiran (Tadbir Urus Sifar Kertas, semakan < 24j, jimat >15,000 kertas/sesi).
+     - **Pilar 02:** Kebajikan & Maruah (Sistem Proaktif & Food Bank Bermaruah, jaminan SLA < 24-48j).
+     - **Pilar 03:** Dinamisme Siswa (Pengurusan Acara Automasi, Web POS, 100% Tanpa Tunai).
+   - Menyeragamkan label perbandingan kepada aras institusi: *✕ Amalan Konvensional* vs *✓ Ekosistem Bersepadu*.
+4. **Dwi-Telefon PolyMart (Slaid 5) & e-Kebajikan (Slaid 6):**
+   - Slaid 5: Dua telefon pintar bersebelahan memaparkan katalog PolyMart (`Polymart View Phone.png`) dan perincian pesanan menu loaded fries & POS (`Inside Polymart View Phone.png`).
+   - Slaid 6: Dua telefon pintar bersebelahan memaparkan penjejakan tiket aduan kebajikan (#KBJ-xxxx) dengan SLA < 24-48j (`Aduan Kebajikan Status Portal View.png`) serta modul sembang langsung sulit dua-hala (`Chat Kebajikan.png`).
+5. **Dwi-Kolum Penjurian Bersepadu (Slaid 10):**
+   - Menggantikan paparan bertingkat sempit dengan susun atur 2-kolum seimbang (`.juri-step-grid`): Langkah 01 (Portal Penjurian Bebas Kod PIN) dan Langkah 02 (Rubrik Penjurian Langsung Likert & Penjanaan E-Sijil QR).
+6. **Dekluter Slaid 14 (Executive ROI Bento Grid):**
+   - Menghapuskan jadual teks 20-sel dan menggantikannya dengan 4 Kad Metrik Bento Berwarna (`.roi-bento-grid`):
+     - **RM 15,000+** (Kewangan & Cetakan: Jimat kertas & toner pejabat)
+     - **< 5 Minit** (Produktiviti Pegawai: Semakan laporan standard JHEP)
+     - **RM 0 Kos** (Percetakan Sijil: E-Sijil digital ber-QR kalis pemalsuan)
+     - **< 48 Jam** (Penyelenggaraan Kamsis: Tindakan aduan kerosakan fasiliti)
+
+### 34.3 Skrip Eksport PDF Rasmi (`scripts/export_presentation_pdf.mjs`)
+- Menggunakan Chromium Headless (Playwright) untuk menjana fail PDF berdimensi A4 Landskap (`landscape: true`, `printBackground: true`, `preferCSSPageSize: true`).
+- Menghapuskan jidar pelayar (`margin: 0`) bagi memastikan setiap 1 slaid mengisi tepat 1 halaman PDF (15 slaid = tepat 15 muka surat).
+- Lokasi fail keluaran rasmi: `JPP POLISAS — Pembentangan Transformasi Digital & Ekosistem Pintar Kampus (Terkini 2026).pdf`.
+
+---
+
+## 35. Video Pengenalan Sinematik Remotion (`remotion/`)
+
+> Dikemas kini: Oktober 2026 (Pelancaran Video Pengenalan Rasmi Remotion 4.x)
+
+Bagi tujuan montaj pembukaan rasmi, paparan kiosk orientasi, dan demonstrasi keupayaan digital mahasiswa, sistem ini dilengkapi dengan enjin penjanaan video teraturcara berasaskan **Remotion v4** dalam folder `remotion/`.
+
+### 35.1 Arkitektur Fail & Kawalan Dinamik
+- **`remotion/schema.ts`:** Menakrifkan skema Zod (`JppIntroVideoSchema`) bagi penyesuaian teks, nama acara, subjek kelas, dan data produk secara langsung melalui panel kawalan (Sidebar UI) Remotion Studio tanpa mengubah kod sumber.
+- **`remotion/JppIntroVideo.tsx`:** Komposisi video utama 100% *self-contained* yang merangkumi animasi fizik *spring*, tipografi Swiss berwibawa, dan susun atur kad bento.
+- **`remotion/Root.tsx`:** Pendaftaran komposisi `<Composition id="JppIntroVideo">` (1920×1080 @ 30 FPS, 1,200 frame / 40 saat).
+- **`remotion/index.ts`:** Titik masuk rasmi untuk enjin Remotion CLI dan Studio.
+
+### 35.2 Palet Warna Rasmi (05 Earthy Minimal / Anti-Slop Directive)
+Mematuhi piawaian reka bentuk institusi `design-taste-frontend`:
+- **Primary (`#2E3A2F`):** Deep Forest Moss Green (Tipografi tajuk utama, garis struktur).
+- **Secondary (`#6B7F5B`):** Sage Olive Green (Sub-tajuk, lencana kelulusan, penunjuk aktif).
+- **Tertiary (`#D9C9B2`):** Warm Sand Linen (Sempadan kad bento, garis pemisah halus).
+- **Accent (`#C96F4F`):** Terracotta Clay Orange (Titik fokus, alur laser imbasan, butang tindakan).
+- **Background (`#F8F6EE`):** Warm Milk Porcelain (Kanvas mewah bertekstur kertas lembut).
+
+### 35.3 Pecahan 7 Babak Sinematik
+1. **Babak 0 (Frame 0–120):** Pembukaan Rasmi & Lambang JPP POLISAS — Slogan rasmi: *“Perpaduan Progresif Demi Mahasiswa”*.
+2. **Babak 1 (Frame 120–315):** Integrasi Jadual Kuliah & PolyMaps — Kad kelas seterusnya (`DIT3013`) berhubung terus ke peta 2D kampus dengan laluan berpandu masa nyata.
+3. **Babak 2 (Frame 315–510):** Pasaran Digital Siswa PolyMart — Produk siswa (*CHICKEN POPCORN*, *Lanyard JPP*), kaunter jualan masa nyata, dan lencana transaksi selamat JPP Pay.
+4. **Babak 3 (Frame 510–705):** Sosial Media Kampus PolySuara — Undian langsung (*Live Poll: 68% vs 32%*), suapan komuniti siswa, dan lencana mikro-reaksi beranimasi.
+5. **Babak 4 (Frame 705–900):** E-Aduan & Kebajikan Siswa — Penjejakan 4 peringkat status aduan (`#KBJ-2026-0842`) dengan SLA pantas < 48 jam.
+6. **Babak 5 (Frame 900–1095):** EMS (Event Management System) — Pas acara VIP siswa, imbasan laser QR, letupan konfeti perayaan, dan penjanaan Sijil Digital (*e-Certificate*) rasmi bertandatangan.
+7. **Babak 6 (Frame 1095–1200):** Penutup Agung Outro — Logo JPP POLISAS, 4 Pilar Strategik, dan alamat portal `jpp.polisas.edu.my`.
+
+### 35.4 Perintah CLI Rasmi
+- **Buka Remotion Studio (Interaktif):** `npm run remotion:studio`
+- **Render Video MP4 Penuh:** `npm run remotion:render`
+- **Render Sampel Frame (Still):** `npx remotion still remotion/index.ts JppIntroVideo --frame=<nombor> out/frame.png`
 
