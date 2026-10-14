@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { format, isValid } from 'date-fns';
+import { ms } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
@@ -485,7 +487,7 @@ export function EmsDashboardPage() {
             canCreateEvent && (
               <button
                 onClick={() => navigate('/ems/event/new')}
-                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm"
+                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 font-bold text-xs transition-all shadow-sm active:scale-[0.98]"
               >
                 + Cipta Acara Baharu
               </button>
@@ -528,7 +530,14 @@ export function EmsDashboardPage() {
                   {event.event_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-                      <span>{new Date(event.event_date).toLocaleString('ms-MY')}</span>
+                      <span>{(() => {
+                        try {
+                          const d = new Date(event.event_date);
+                          return isValid(d) ? format(d, 'd MMM yyyy, h:mm a', { locale: ms }) : event.event_date;
+                        } catch {
+                          return event.event_date;
+                        }
+                      })()}</span>
                     </div>
                   )}
                   {event.location && (

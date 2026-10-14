@@ -115,7 +115,7 @@ const EMS_NAV: NavItem[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
-function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string }) {
+function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string; key?: React.Key }) {
   const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
@@ -531,7 +531,12 @@ export function Sidebar() {
   const clubColorClass = getClubColor(activeClubId);
 
   return (
-    <aside className="w-64 h-screen flex flex-col z-50 select-none sidebar-jpp">
+    <aside className={cn(
+      "w-64 h-screen flex flex-col z-50 select-none",
+      activeExco === 'ems' 
+        ? "bg-slate-950 border-r border-slate-800/80 text-slate-100 shadow-2xl" 
+        : "sidebar-jpp"
+    )}>
 
       {/* ── Header: Logo + Brand + Balik ke Portal ── */}
       <div className="h-auto flex flex-col border-b border-white/10">
