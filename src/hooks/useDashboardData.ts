@@ -103,10 +103,9 @@ export function useDashboardData() {
       ] = await Promise.all([
         // 1. Pengumuman
         supabase
-          .from('announcements')
+          .from('club_announcements')
           .select('content')
           .eq('club_id', clubId)
-          .eq('is_active', true)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),

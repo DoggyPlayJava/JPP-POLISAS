@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
+import { insertNotifications } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS,
@@ -539,7 +540,7 @@ export function CompleteProfileModal() {
         const { data: admins } = await supabase.from('profiles').select('id')
           .in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
         if (admins?.length) {
-          await supabase.from('notifications').insert(
+          await insertNotifications(
             admins.map(a => ({
               user_id: a.id,
               title:   'Pendaftaran Pimpinan Baharu (Google OAuth)',

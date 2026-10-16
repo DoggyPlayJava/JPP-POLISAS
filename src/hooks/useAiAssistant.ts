@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { insertNotifications } from '@/lib/notifications';
 import { toast } from 'react-hot-toast';
 import { API_BASE_URL } from '@/lib/utils';
 
@@ -623,7 +624,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
               title: '🚨 Kerosakan Sistem AI',
               message: `Sistem AI tergendala: ${errorMsg.substring(0, 200)}... Sila semak kuota Gemini API.`,
             }));
-            await supabase.from('notifications').insert(payload);
+            await insertNotifications(payload);
           }
         } catch (logErr) {
           console.error("Gagal menghantar notifikasi ralat: ", logErr);

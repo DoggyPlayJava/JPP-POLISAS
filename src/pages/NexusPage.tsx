@@ -19,6 +19,7 @@ import rehypeRaw from 'rehype-raw';
 import { KertasKerjaRenderer, type KertasKerjaData } from '@/components/ai/KertasKerjaRenderer';
 import { MinitMesyuaratRenderer, type MinitMesyuaratData } from '@/components/ai/MinitMesyuaratRenderer';
 import { supabase } from '@/lib/supabase';
+import { insertNotifications } from '@/lib/notifications';
 import { Buffer } from 'buffer';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -248,7 +249,7 @@ export function NexusPage() {
           content: `Terdapat resit pembayaran langganan PRO Tier baharu daripada ${profile?.full_name || 'Pelajar'} untuk disemak.`,
           is_read: false
         }));
-        await supabase.from('notifications').insert(notifications);
+        await insertNotifications(notifications);
       }
 
       toast.success('Permohonan berjaya dihantar! Admin akan menyemak resit anda.', { id: toastId });

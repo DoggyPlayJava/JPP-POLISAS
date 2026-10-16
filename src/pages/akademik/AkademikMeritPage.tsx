@@ -54,7 +54,7 @@ export function AkademikMeritPage() {
         .limit(100),
       supabase
         .from('student_merit_cohorts')
-        .select('id, cohort_id, total_merit, merit_kelab, merit_akademik, merit_asrama, source, created_at')
+        .select('id, cohort_id, total_merit, merit_kelab, merit_akademik, merit_asrama, created_at')
         .eq('user_id', profile.id)
         .order('created_at', { ascending: false }),
       supabase

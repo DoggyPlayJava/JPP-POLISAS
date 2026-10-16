@@ -41,7 +41,7 @@ interface KppActivity {
 interface KppReport {
   id: string;
   title: string;
-  type: string;
+  report_type: string;
   status: string;
   club_id: string;
   created_at: string;
@@ -313,7 +313,7 @@ export function KppUnitDashboard() {
         setAllActivities((data || []) as KppActivity[]);
       } else {
         let q = supabase.from('club_reports')
-            .select('id, title, type, status, club_id, created_at, file_name')
+            .select('id, title, report_type, status, club_id, created_at, file_name')
             .or('is_archived.is.null,is_archived.eq.false')
             .order('created_at', { ascending: false })
             .limit(100);
@@ -685,7 +685,7 @@ export function KppUnitDashboard() {
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#7c3aed' }} />
                             <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{r.title}</p>
-                              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {r.type} · {new Date(r.created_at).toLocaleDateString('ms-MY')}</p>
+                              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {r.report_type} · {new Date(r.created_at).toLocaleDateString('ms-MY')}</p>
                             </div>
                             <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', REPORT_STATUS_COLOR[r.status] || 'bg-slate-100 text-slate-600')}>{r.status}</span>
                           </div>

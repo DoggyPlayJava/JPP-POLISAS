@@ -119,9 +119,13 @@ export function JppLogsPage() {
 
   const sendAnomalyEmail = async (alerts: AnomalyAlert[]) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       await fetch(`${API_BASE_URL}/api/notify-anomaly`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ alerts, sentAt: new Date().toISOString() })
       });
       sessionStorage.setItem('anomaly_email_sent', '1');

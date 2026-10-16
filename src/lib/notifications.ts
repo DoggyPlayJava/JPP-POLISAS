@@ -34,6 +34,38 @@ export interface AppNotification {
   created_at: string;
 }
 
+// ─── Insert notifikasi (service-role via server + fallback direct) ───────────
+// Sebelum ini insert terus ke Supabase terkena RLS 403 apabila pelajar
+// menghantar notifikasi kepada user_id lain (contoh: laporan kelab → KPP Exco).
+// Kini guna endpoint /api/notify yang insert dengan service role.
+export async function insertNotifications(input: any | any[]): Promise<{ error: any }> {
+    const rows = (Array.isArray(input) ? input : [input]).map((r: any) => ({
+        ...r,
+        message: r.message ?? r.content ?? '',
+        title: r.title ?? '',
+    }));
+    if (rows.length === 0) return { error: null };
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+            const res = await fetch(`${API_BASE_URL}/api/notify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ rows }),
+            });
+            if (res.ok) return { error: null };
+        }
+    } catch (_) { /* fallback ke direct insert */ }
+
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) console.error('[notify] Fallback direct insert error:', error.message);
+    return { error: error || null };
+}
+
 // ─── Send push notification via Edge Function ─────────────────────────────────
 async function firePush(user_id: string, payload: NotificationPayload): Promise<void> {
   try {
@@ -91,7 +123,7 @@ export async function sendNotificationToUser(
   user_id: string,
   payload: NotificationPayload
 ): Promise<void> {
-  const { error } = await supabase.from('notifications').insert({
+  const { error } = await insertNotifications({
     user_id,
     ...payload,
     is_read: false,
@@ -130,7 +162,7 @@ export async function sendNotificationToKebajikanExco(
       is_read: false,
     }));
 
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) {
       console.error('[sendNotificationToKebajikanExco] Error:', error.message);
       return;
@@ -161,7 +193,7 @@ export async function sendNotificationToKebajikanStaff(
       is_read: false,
     }));
 
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) {
       console.error('[sendNotificationToKebajikanStaff] Error:', error.message);
       return;
@@ -198,7 +230,7 @@ export async function sendNotificationToKKExco(
       is_read: false,
     }));
 
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) {
       console.error('[sendNotificationToKKExco] Error:', error.message);
       return;
@@ -234,7 +266,7 @@ export async function sendNotificationToKeusahawananExco(
       is_read: false,
     }));
 
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) { console.error('[sendNotificationToKeusahawananExco] Error:', error.message); return; }
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {
@@ -261,7 +293,7 @@ export async function sendNotificationToBusinessVendor(
     if (userIds.size === 0) return;
 
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) { console.error('[sendNotificationToBusinessVendor] Error:', error.message); return; }
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {
@@ -294,7 +326,7 @@ export async function broadcastAnnouncement(
     }));
     
     // Batch insert untuk prestasi (Supabase API auto-batch jika besar)
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) { console.error('[broadcastAnnouncement] Error:', error.message); return; }
     
     // Fire push to all users async
@@ -322,7 +354,7 @@ export async function sendNotificationToAkademikExco(
     if (userIds.size === 0) return;
     
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -346,7 +378,7 @@ export async function sendNotificationToKppExco(
     if (userIds.size === 0) return;
     
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -370,7 +402,7 @@ export async function sendNotificationToKamsisAdmin(
     if (userIds.size === 0) return;
     
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -394,7 +426,7 @@ export async function sendNotificationToClubMT(
     const userIds = mtMembers.map(m => m.user_id);
     const rows = userIds.map(user_id => ({ user_id, ...payload, is_read: false }));
     
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -425,7 +457,7 @@ export async function sendNotificationToKLSExco(
     if (userIds.size === 0) return;
     
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -456,7 +488,7 @@ export async function sendNotificationToActivePolyRiders(
     const userIds = activeRiders.map(r => r.user_id);
     const rows = userIds.map(user_id => ({ user_id, ...payload, is_read: false }));
     
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
@@ -503,7 +535,7 @@ export async function sendNotificationToJppAndSuperAdmin(
     if (userIds.size === 0) return;
     
     const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
-    const { error } = await supabase.from('notifications').insert(rows);
+    const { error } = await insertNotifications(rows);
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {

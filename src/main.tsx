@@ -79,9 +79,14 @@ import './index.css'
     } catch (_) { /* ignore */ }
   };
 
+  const isExtensionSrc = (src?: string) =>
+    !!src && (src.startsWith('chrome-extension://') || src.startsWith('moz-extension://') || src.startsWith('safari-web-extension://'));
+
   window.addEventListener('error', (e) => {
     // Hanya tangkap runtime error, bukan resource load error (tiada e.message utk resource)
     if (!e.message) return;
+    // Abaikan ralat dari browser extension (bukan daripada aplikasi JPP)
+    if (isExtensionSrc(e.filename)) return;
     // filename = asal script. Kalau cross-origin tanpa crossorigin, browser bagi 'Script error.'
     // tanpa detail. Log filename supaya kita tahu script mana yang throw.
     send({
@@ -97,6 +102,8 @@ import './index.css'
 
   window.addEventListener('unhandledrejection', (e) => {
     const r = e.reason;
+    // Abaikan rejection dari browser extension (bukan daripada aplikasi JPP)
+    if (r && r.stack && (r.stack.includes('chrome-extension://') || r.stack.includes('moz-extension://'))) return;
     send({
       message: (r && r.message) ? r.message : String(r),
       stack: (r && r.stack) ? r.stack : null,
@@ -112,7 +119,11 @@ import './index.css'
   window.fetch = async (...args) => {
     const res = await _origFetch(...args);
     try {
-      const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
+      const req = args[0];
+      const url = typeof req === 'string' ? req
+        : req instanceof Request ? req.url
+        : req instanceof URL ? req.href
+        : '';
       if (res && res.status >= 400 && url && !url.includes('/api/system-errors')) {
         const key = res.status + '|' + url;
         const now = Date.now();

@@ -275,6 +275,13 @@ const anomalyNotifyLimiter = createUserRateLimiter(
     'Terlalu banyak amaran anomali. Sila cuba lagi selepas 15 minit.'
 );
 
+// Limit untuk create notifications — 30 req per 15 min per pengguna
+const notifyLimiter = createUserRateLimiter(
+    30,
+    15,
+    'Terlalu banyak notifikasi. Sila cuba lagi selepas 15 minit.'
+);
+
 // ==========================================
 // 1. AI Assistant Endpoint
 // ==========================================
@@ -1921,6 +1928,41 @@ app.post('/api/polyrider-sos', requireAuth, sosRateLimiter, async (req, res) => 
         });
     } catch (err) {
         console.error('[polyrider-sos] Error:', err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 8a. Create Notifications Endpoint (service-role)
+//     Guna supabaseAdmin supaya fan-out notifikasi pelajar→JPP tidak
+//     dihalang RLS (sebelum ini 403 bila user_id != auth.uid()).
+// ==========================================
+app.post('/api/notify', requireAuth, notifyLimiter, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin not initialized.');
+        const input = req.body && (req.body.rows || req.body.row);
+        const rows = (Array.isArray(input) ? input : [input]).filter(Boolean);
+        if (rows.length === 0) return res.status(400).json({ error: 'Tiada data notifikasi.' });
+        if (rows.length > 200) return res.status(400).json({ error: 'Maksimum 200 notifikasi setiap permintaan.' });
+
+        const clean = rows.map(r => ({
+            user_id: r.user_id || null,
+            title: String(r.title || '').slice(0, 200),
+            message: String(r.message || r.content || '').slice(0, 2000),
+            type: String(r.type || 'SYSTEM').slice(0, 50),
+            module: String(r.module || 'SYSTEM').slice(0, 50),
+            link: r.link ? String(r.link).slice(0, 500) : null,
+            reference_id: r.reference_id ? String(r.reference_id).slice(0, 100) : null,
+            actor_name: r.actor_name ? String(r.actor_name).slice(0, 200) : null,
+            target_role: r.target_role ? String(r.target_role).slice(0, 50) : null,
+            is_read: false,
+        }));
+
+        const { error } = await supabaseAdmin.from('notifications').insert(clean);
+        if (error) throw error;
+        return res.status(200).json({ ok: true, inserted: clean.length });
+    } catch (err) {
+        console.error('[notify] Error:', err.message);
         return res.status(500).json({ error: err.message });
     }
 });

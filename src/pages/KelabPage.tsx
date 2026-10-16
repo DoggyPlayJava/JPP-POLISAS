@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { insertNotifications } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -159,7 +160,7 @@ export function KelabPage() {
             type: 'SYSTEM',
             is_read: false
           }));
-          await supabase.from('notifications').insert(notifs);
+          await insertNotifications(notifs);
         }
       } else {
         try {
