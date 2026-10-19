@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format, isValid } from 'date-fns';
 import { ms } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
@@ -55,6 +56,7 @@ import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
 import type { EmsEvent } from '@/types';
 
 export function EmsDashboardPage() {
+  const { t } = useTranslation(['ems', 'common']);
   const navigate = useNavigate();
   const {
     isSuperAdmin,
@@ -320,10 +322,10 @@ export function EmsDashboardPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                Pengurusan Acara & Pertandingan (EMS)
+                {t('event_hub')}
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Papan pemuka pengurusan acara, penjanaan kod juri, QR pendaftaran & e-sijil.
+                {t('module_subtitle')}
               </p>
             </div>
           </div>
@@ -401,36 +403,42 @@ export function EmsDashboardPage() {
         )}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
-        {(canCreateEvent
-          ? [
-              { key: 'APPROVED', label: 'Diluluskan / Aktif' },
-              { key: 'PENDING_APPROVAL', label: 'Pending Kelulusan' },
-              { key: 'DRAFT', label: 'Draf' },
-              { key: 'COMPLETED', label: 'Selesai' },
-            ]
-          : [
-              { key: 'ALL', label: 'Acara Berlangsung & Akan Datang', icon: Flame },
-              { key: 'COMPLETED', label: 'Acara Selesai & Keputusan', icon: Trophy },
-            ]
-        ).map((tab) => {
-          const Icon = 'icon' in tab ? tab.icon : null;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border inline-flex items-center gap-1.5 ${
-                activeTab === tab.key
-                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 shadow-sm'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {Icon && <Icon className="w-3.5 h-3.5 inline mr-1" />}
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Filter Tabs & Schedule Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+          {(canCreateEvent
+            ? [
+                { key: 'APPROVED', label: 'Diluluskan / Aktif' },
+                { key: 'PENDING_APPROVAL', label: 'Pending Kelulusan' },
+                { key: 'DRAFT', label: 'Draf' },
+                { key: 'COMPLETED', label: 'Selesai' },
+              ]
+            : [
+                { key: 'ALL', label: 'Acara Berlangsung & Akan Datang', icon: Flame },
+                { key: 'COMPLETED', label: 'Acara Selesai & Keputusan', icon: Trophy },
+              ]
+          ).map((tab) => {
+            const Icon = 'icon' in tab ? tab.icon : null;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border inline-flex items-center gap-1.5 ${
+                  activeTab === tab.key
+                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {Icon && <Icon className="w-3.5 h-3.5 inline mr-1" />}
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 shrink-0 px-1 py-1">
+          <Calendar className="w-3.5 h-3.5 text-amber-500" />
+          <span>{t('event_schedule')}</span>
+        </div>
       </div>
 
       {/* Event Cards Grid / Skeleton Loaders */}
@@ -530,6 +538,7 @@ export function EmsDashboardPage() {
                   {event.event_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{t('event_schedule')}:</span>
                       <span>{(() => {
                         try {
                           const d = new Date(event.event_date);

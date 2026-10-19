@@ -38,6 +38,7 @@ import {
   MinusCircle,
   ThumbsUp,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   verifyJuryCode,
@@ -149,6 +150,7 @@ export const getCategoryIcon = (categoryName: string): React.ComponentType<{ cla
 };
 
 export function EmsJuryPortalPage() {
+  const { t } = useTranslation(['ems', 'common']);
   // Session & Auth State
   const [session, setSession] = useState<JurySession | null>(null);
   const [juryCodeData, setJuryCodeData] = useState<EmsJuryCode | null>(null);
@@ -156,7 +158,14 @@ export function EmsJuryPortalPage() {
   const [rubrics, setRubrics] = useState<EmsRubricCriteria[]>([]);
 
   // Page Load / Verification State
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [isInitializing, setIsInitializing] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return Boolean(localStorage.getItem('ems_jury_session'));
+    } catch {
+      return false;
+    }
+  });
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [inputCode, setInputCode] = useState<string>('');
 
@@ -792,10 +801,19 @@ export function EmsJuryPortalPage() {
             <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 mb-4">
               <Award className="w-8 h-8 text-slate-950" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Portal Penilaian Juri</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              {t('jury_portal')}
+            </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5">
-              Event Management System (EMS) POLISAS
+              {t('module_subtitle')}
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-2">
+              <span>{t('jury_rubric')}</span>
+              <span>•</span>
+              <span>{t('submit_score')}</span>
+              <span>•</span>
+              <span>{t('score_locked')}</span>
+            </div>
           </div>
 
           {!pendingJuryCode ? (
@@ -958,7 +976,7 @@ export function EmsJuryPortalPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                  EMS Portal Juri
+                  {t('jury_portal')}
                 </span>
                 {eventData.category && (
                   <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium rounded-full">
@@ -1222,7 +1240,7 @@ export function EmsJuryPortalPage() {
                       {isScored ? (
                         <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono tabular-nums">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>{weightedPercentage.toFixed(1)}% ({awardedScore}/{maxPossibleTotal})</span>
+                          <span>{t('score_locked')} • {weightedPercentage.toFixed(1)}%</span>
                         </span>
                       ) : (
                         <span className="px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
@@ -1742,7 +1760,7 @@ export function EmsJuryPortalPage() {
                     ) : (
                       <>
                         <Send className="w-3.5 h-3.5" />
-                        <span>Sahkan & Hantar Markah</span>
+                        <span>{t('submit_score')}</span>
                       </>
                     )}
                   </button>

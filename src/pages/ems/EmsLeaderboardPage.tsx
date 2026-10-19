@@ -29,6 +29,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import { EmsJuryAuditMatrix } from '@/components/ems/EmsJuryAuditMatrix';
@@ -50,6 +51,7 @@ interface DetailedScore extends EmsScore {
 }
 
 export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?: boolean }) {
+  const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -527,7 +529,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 transition-colors">
         <div className="w-14 h-14 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/50 animate-pulse">
-          Memuatkan Papan Pendahulu EMS...
+          {t('live_leaderboard')} • {t('stage_presentation')}...
         </p>
       </div>
     );
@@ -537,8 +539,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 transition-colors">
         <AlertTriangle className="w-16 h-16 text-rose-500 mb-4 animate-bounce" />
-        <h2 className="text-2xl font-black mb-2">Acara Tidak Ditemui</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">Sila pastikan ID acara adalah sah.</p>
+        <h2 className="text-2xl font-black mb-2">{t('live_leaderboard')}</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{t('stage_presentation')}</p>
         <button
           onClick={() => navigate('/ems/dashboard')}
           className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/20 active:scale-[0.98]"
@@ -680,7 +682,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   KEMAS KINI MASA-NYATA
                 </span>
                 <span className="text-xs text-slate-500 dark:text-white/50 font-bold uppercase tracking-wider">
-                  EMS STAGE MODE
+                  {t('stage_presentation')}
                 </span>
               </div>
               <h1 className="text-xl md:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-400 [text-wrap:balance]">
@@ -1072,7 +1074,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3 [text-wrap:balance]">
             <Trophy className="w-8 h-8 text-amber-500" />
-            Papan Pendahulu: {event.title}
+            {t('live_leaderboard')}: {event.title}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Penilaian masa-nyata juri, pengiraan purata markah, dan kawalan paparan skrin pentas.
@@ -1111,7 +1113,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
             >
               <ExternalLink className="w-4 h-4" />
-              Buka Mod Skrin Pentas (Stage View)
+              {t('stage_presentation')}
             </button>
           )}
         </div>
@@ -1131,7 +1133,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           }`}
         >
           <Trophy className={`w-4 h-4 ${activeTab === 'LEADERBOARD' ? 'text-slate-950' : 'text-amber-400'}`} />
-          Papan Kedudukan
+          {t('live_leaderboard')}
         </button>
 
         <button
@@ -1145,7 +1147,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           }`}
         >
           <ExternalLink className="w-4 h-4 text-amber-500" />
-          Mod Pentas
+          {t('stage_presentation')}
         </button>
 
         {canAccessAuditTab && (

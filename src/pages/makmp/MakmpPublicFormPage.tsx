@@ -44,6 +44,7 @@ import {
   X,
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { StudentSearchCombobox, StudentSelectData } from '@/components/ems/StudentSearchCombobox';
@@ -99,6 +100,7 @@ interface CertFormItem {
 }
 
 export default function MakmpPublicFormPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
@@ -135,7 +137,7 @@ export default function MakmpPublicFormPage() {
   };
 
   // Data Edisi, Kategori & Definisi Anugerah
-  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(false);
   const [edition, setEdition] = useState<MakmpEdition | null>(null);
   const [categories, setCategories] = useState<MakmpCategory[]>([]);
   const [awards, setAwards] = useState<MakmpAwardDefinition[]>([]);
@@ -682,9 +684,9 @@ export default function MakmpPublicFormPage() {
     if (nUpper.includes('JOHAN') && !nUpper.includes('NAIB')) mappedType = 'JOHAN';
     else if (nUpper.includes('NAIB JOHAN') || nUpper.includes('KEDUA')) mappedType = 'NAIB_JOHAN';
     else if (nUpper.includes('KETIGA')) mappedType = 'KETIGA';
-    else if (nUpper.includes('EMAS') || nUpper.includes('GOLD')) mappedType = 'PINGAT_EMAS';
-    else if (nUpper.includes('PERAK') || nUpper.includes('SILVER')) mappedType = 'PINGAT_PERAK';
-    else if (nUpper.includes('GANGSA') || nUpper.includes('BRONZE')) mappedType = 'PINGAT_GANGSA';
+    else if (nUpper.includes('EMAS') || nUpper.includes('GOLD')) mappedType = 'EMAS';
+    else if (nUpper.includes('PERAK') || nUpper.includes('SILVER')) mappedType = 'PERAK';
+    else if (nUpper.includes('GANGSA') || nUpper.includes('BRONZE')) mappedType = 'GANGSA';
 
     const merit = calculateSuggestedMerit(mappedPeringkat, mappedType);
 
@@ -1204,10 +1206,14 @@ export default function MakmpPublicFormPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 text-center transition-colors">
         <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Pencalonan Belum Dibuka</h1>
-        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">
-          Tiada edisi Majlis Anugerah Kecemerlangan Mahasiswa POLISAS (MAKMP) yang dibuka pada masa ini.
+        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('nomination_portal')}</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-4">
+          {t('module_subtitle')}
         </p>
+        <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1 mb-6 max-w-lg">
+          <p>{t('award_categories')} • {t('submit_portfolio')} • {t('merit_matrix')}</p>
+          <p>{t('academic_cgpa')} • {t('co_curriculum_points')} • {t('leadership_points')} • {t('community_service')} • {t('supporting_documents')}</p>
+        </div>
         <Link
           to="/"
           className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
@@ -1329,14 +1335,42 @@ export default function MakmpPublicFormPage() {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold mb-3">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Pencalonan Terbuka Rasmi Pelajar & Kelab POLISAS</span>
+                <span>{t('nomination_portal')}</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                 {edition.title}
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-                Anda boleh memohon lebih daripada satu anugerah serentak. Hantar sijil pencapaian, portfolio, atau laporan projek keusahawanan/kelab anda untuk dinilai oleh pegawai penilai POLISAS.
+                {t('module_subtitle')}
               </p>
+
+              {/* Merit Matrix & Requirements Criteria Bar */}
+              <div className="mt-4 p-4 rounded-xl bg-white/80 dark:bg-slate-950/70 border border-amber-500/20 shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Award className="w-4 h-4" /> {t('merit_matrix')}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">{t('submit_portfolio')}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">{t('academic_cgpa')}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">HPNM &ge; 3.50</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">{t('co_curriculum_points')}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">Maks 50 Merit</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">{t('leadership_points')}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">JPP & Kelab</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block">{t('community_service')}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{t('supporting_documents')}</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Step indicator */}
               <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800/80">
@@ -1874,7 +1908,7 @@ export default function MakmpPublicFormPage() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Award className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                    Pilih Jenis Anugerah Kecemerlangan
+                    {t('award_categories')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Anda boleh memilih lebih daripada satu anugerah. Tanda anugerah yang ingin dimohon mengikut kategori di bawah.
@@ -2085,7 +2119,7 @@ export default function MakmpPublicFormPage() {
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                  Muat Naik Dokumen Sijil & Laporan
+                  {t('submit_portfolio')} • {t('supporting_documents')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Pilih tab anugerah di bawah untuk memuat naik dokumen yang diperlukan bagi setiap anugerah yang anda mohon.

@@ -30,11 +30,13 @@ import {
 } from 'lucide-react';
 import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, submitMakmpWinnerInfo, MakmpClaimResult } from '@/lib/makmp';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 export default function MakmpStatusTrackingPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const { user, profile, refetchProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -279,42 +281,42 @@ export default function MakmpStatusTrackingPage() {
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>DISAHKAN & LULUS</span>
+            <span>{t('verdict_qualified')}</span>
           </span>
         );
       case 'DIJEMPUT':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>DIJEMPUT KE MAKMP</span>
+            <span>{t('verdict_qualified')}</span>
           </span>
         );
       case 'DITOLAK':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20">
             <XCircle className="w-3.5 h-3.5" />
-            <span>PERMOHONAN DITOLAK</span>
+            <span>{t('verdict_ineligible')}</span>
           </span>
         );
       case 'DALAM_SEMAKAN':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>DALAM SEMAKAN JURI</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
       case 'KIV':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>DALAM SIMPANAN (KIV)</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>MENUNGGU SEMAKAN</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
     }
@@ -323,7 +325,7 @@ export default function MakmpStatusTrackingPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
-      <MakmpJppHeader subtitle="Semakan Status Permohonan" />
+      <MakmpJppHeader subtitle={t('verification_status')} />
       {/* Header Bar */}
       <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60  sticky top-0 z-30 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
@@ -351,7 +353,7 @@ export default function MakmpStatusTrackingPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Search className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-              Semak Status Penyerahan Sijil
+              {t('verification_status')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Masukkan kod rujukan rasmi (contoh: <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">MAKMP-2026-XXXXX</span>) yang diberikan semasa anda menghantar borang.
@@ -381,6 +383,21 @@ export default function MakmpStatusTrackingPage() {
               <span>Cari</span>
             </button>
           </form>
+
+          {/* Verdict Legend Chip Guide */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5" /> {t('verdict_qualified')}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+              <Clock className="w-3.5 h-3.5" /> {t('verdict_pending')}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold">
+              <XCircle className="w-3.5 h-3.5" /> {t('verdict_ineligible')}
+            </span>
+          </div>
         </div>
 
         {/* Error Notification */}
@@ -516,7 +533,7 @@ export default function MakmpStatusTrackingPage() {
 
                 <div className="flex flex-col sm:items-end gap-1.5">
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                    Status Keseluruhan
+                    {t('verification_status')}
                   </div>
                   {getStatusBadge(submission.status)}
                 </div>
