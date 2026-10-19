@@ -43,7 +43,7 @@ export function LanguageToggle({ className }: { className?: string }) {
           className="rounded-xl flex items-center justify-between px-3 py-2 text-xs font-bold cursor-pointer focus:bg-primary/10"
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm">🇬🇧</span>
+            <span className="text-sm" aria-hidden="true">🇬🇧</span>
             <span>English</span>
           </div>
           {currentLang === 'en' && <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />}
@@ -54,7 +54,7 @@ export function LanguageToggle({ className }: { className?: string }) {
           className="rounded-xl flex items-center justify-between px-3 py-2 text-xs font-bold cursor-pointer focus:bg-primary/10"
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm">🇲🇾</span>
+            <span className="text-sm" aria-hidden="true">🇲🇾</span>
             <span>Bahasa Melayu</span>
           </div>
           {currentLang === 'ms' && <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />}

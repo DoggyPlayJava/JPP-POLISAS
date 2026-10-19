@@ -845,8 +845,8 @@ export function SettingsPage() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Hab Tetapan</h1>
-              <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] font-medium">Urus profil, keselamatan & paparan super app.</p>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:page_title', 'Hab Tetapan')}</h1>
+              <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] font-medium">{t('settings:page_subtitle', 'Urus profil, keselamatan & paparan super app.')}</p>
             </div>
           </div>
 
@@ -1169,8 +1169,8 @@ export function SettingsPage() {
 
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden p-5 sm:p-7">
                   <div className="mb-6">
-                    <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Pemilih Tema & Paparan</h3>
-                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Sesuaikan mod warna antara mod cerah, gelap OLED, atau ikut peranti sistem.</p>
+                    <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:theme_section_title', 'Pemilih Tema & Paparan')}</h3>
+                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">{t('settings:theme_section_desc', 'Sesuaikan mod warna antara mod cerah, gelap OLED, atau ikut peranti sistem.')}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

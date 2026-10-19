@@ -64,6 +64,9 @@ export const resources = {
 } as const;
 
 const initialLang = detectLanguage();
+if (typeof document !== 'undefined' && document?.documentElement) {
+  document.documentElement.lang = initialLang;
+}
 
 i18n
   .use(initReactI18next)
