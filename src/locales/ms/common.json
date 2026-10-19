@@ -159,5 +159,13 @@
   "view": "Lihat",
   "view_all": "Lihat Semua",
   "warning": "Amaran",
-  "yes": "Ya"
+  "yes": "Ya",
+  "priority": "Keutamaan",
+  "priority_low": "Rendah",
+  "priority_medium": "Sederhana",
+  "priority_high": "Tinggi",
+  "overdue": "Lewat",
+  "unassigned": "Tiada Nama",
+  "archive": "Arkib",
+  "latest": "Terkini"
 }

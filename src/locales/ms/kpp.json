@@ -226,5 +226,7 @@
   "view_file": "Lihat Fail",
   "jpp_rejection_notes": "Nota Penolakan JPP",
   "submit_transfer_request": "Hantar Permohonan Pindah",
-  "confirm_leave_club": "Sahkan Tarik Diri"
+  "confirm_leave_club": "Sahkan Tarik Diri",
+  "unlock_reason_label": "Sebab Permohonan",
+  "objective_and_desc": "Objektif / Deskripsi Program"
 }
