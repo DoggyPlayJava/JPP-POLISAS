@@ -1,0 +1,17 @@
+{
+  "module_title": "SUPSAS — Polytechnic Sports Championship",
+  "module_subtitle": "Inter-department sports tournament, match fixtures, live medal standing, and athlete registration.",
+  "fixtures_results": "Match Fixtures & Live Results",
+  "medal_tally": "Official Medal Standing",
+  "sports_categories": "Sports & Athletics Disciplines",
+  "athlete_roster": "Department Athlete Roster",
+  "gold_medals": "Gold",
+  "silver_medals": "Silver",
+  "bronze_medals": "Bronze",
+  "total_points": "Total Championship Points",
+  "match_venue": "Match Venue / Court",
+  "match_time": "Match Scheduled Time",
+  "team_vs_team": "Team vs Team",
+  "match_winner": "Winner Declared",
+  "championship_champion": "Overall Champion Department"
+}

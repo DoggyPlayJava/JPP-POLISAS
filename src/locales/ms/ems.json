@@ -1,0 +1,21 @@
+{
+  "module_title": "EMS — Sistem Pengurusan Acara & Pemarkahan",
+  "module_subtitle": "Pengurusan kejohanan, borang markah juri digital, papan markah langsung, dan sijil digital boleh sah.",
+  "event_hub": "Hab Pusat Acara EMS",
+  "jury_portal": "Portal Pemarkahan Juri Digital",
+  "stage_presentation": "Mod Paparan Pentas / Arena",
+  "certificate_generator": "Portal Sijil Berpengesahan QR",
+  "audience_scanner": "Pengimbas Kehadiran & Pas QR",
+  "verify_certificate": "Sahkan Kesahihan Sijil",
+  "event_schedule": "Jadual Acara & Braket Pertandingan",
+  "live_leaderboard": "Papan Markah Pertandingan Langsung",
+  "jury_rubric": "Rubrik & Kriteria Penilaian",
+  "submit_score": "Sahkan & Hantar Markah",
+  "score_locked": "Markah Dimuktamadkan & Dikunci",
+  "certificate_valid": "Sijil Sah Berjaya Disahkan",
+  "certificate_invalid": "Rekod Sijil Tidak Ditemui",
+  "recipient_name": "Nama Penuh Peserta",
+  "awarded_title": "Pencapaian / Gelaran Anugerah",
+  "organizer": "Jawatankuasa Penganjur",
+  "qr_scan_prompt": "Halakan kamera ke kod QR pas peserta"
+}

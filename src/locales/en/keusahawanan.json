@@ -1,0 +1,23 @@
+{
+  "module_title": "e-Entrepreneurship & Student Commerce",
+  "module_subtitle": "Point of Sale (POS), inventory stock tracking, and student business onboarding.",
+  "pos_terminal": "POS Cashier Terminal",
+  "inventory_management": "Inventory Stock Control",
+  "business_onboarding": "Student Business Registration",
+  "sales_analytics": "Sales & Revenue Analytics",
+  "new_transaction": "New Checkout Sale",
+  "product_catalog": "Product Catalog",
+  "stock_in": "Stock In / Restock",
+  "low_stock_warning": "Low Stock Warning",
+  "daily_sales": "Today's Total Sales",
+  "monthly_revenue": "Monthly Revenue",
+  "receipt_preview": "Official Sales Receipt",
+  "payment_method_cash": "Cash Payment",
+  "payment_method_qr": "DuitNow QR Code",
+  "payment_method_card": "Debit / Credit Card",
+  "business_name": "Business / Enterprise Name",
+  "owner_matric": "Student Entrepreneur Matric No.",
+  "business_category": "Business Sector",
+  "approval_status": "Approval Status",
+  "register_business": "Register New Business"
+}
