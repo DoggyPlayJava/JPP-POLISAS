@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -44,6 +45,7 @@ function MemberCard({
   onUpdate: (id: string, patch: Partial<JppMember>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { positionLabels, unitLabels, unitConfig, unitOrder } = useJppConfig();
   const [editing, setEditing]           = useState(false);
   const [position, setPosition]         = useState<string>(member.jpp_position ?? '');
@@ -260,7 +262,7 @@ function MemberCard({
                 disabled={saving}
                 className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold"
               >
-                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Simpan'}
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t('common:save')}
               </button>
               <button
                 onClick={() => setRemoveConfirmOpen(true)}
@@ -274,7 +276,7 @@ function MemberCard({
                 onClick={() => setEditing(false)}
                 className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/15 hover:text-slate-900 dark:hover:text-white transition-all text-xs font-bold"
               >
-                Batal
+                {t('common:cancel')}
               </button>
             </div>
           </div>
@@ -675,6 +677,7 @@ function ResetKohortModal({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppMembersPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const { unitLabels, unitOrder } = useJppConfig();
 
@@ -777,7 +780,9 @@ export function JppMembersPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Ahli JPP</h1>
+                  <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                    {t('jpp:members_management')}
+                  </h1>
                   {canEdit && (
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
                       Mod Edit
@@ -785,7 +790,7 @@ export function JppMembersPage() {
                   )}
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
-                  {members.length} ahli didaftarkan
+                  {t('jpp:active_council')} • {members.length} {t('common:all', 'ahli')}
                 </p>
               </div>
             </div>
@@ -797,7 +802,7 @@ export function JppMembersPage() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Tambah Ahli</span>
+                  <span>{t('jpp:add_member')}</span>
                 </button>
                 <Link 
                   to="/jpp/users"
@@ -851,13 +856,13 @@ export function JppMembersPage() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Cari nama atau emel ahli..."
+              placeholder={`${t('common:search')}...`}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-emerald-500 dark:focus:border-emerald-500/50 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none transition-all font-medium"
             />
           </div>
           <div className="text-right">
             <span className="text-xs font-bold text-slate-500 dark:text-white/40 tabular-nums">
-              {filtered.length} daripada {members.length} ahli
+              {filtered.length} daripada {members.length} {t('common:all', 'ahli')}
             </span>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -528,10 +529,23 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppOverviewPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { isSuperAdmin, isJppMember } = useAuth();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
-  const [stats, setStats]           = useState<SystemStats | null>(null);
+  const [stats, setStats]           = useState<SystemStats>({
+    totalJpp: 0,
+    totalClubs: 0,
+    activeClubs: 0,
+    totalActivities: 0,
+    totalReports: 0,
+    totalStudents: 0,
+    totalBusinesses: 0,
+    totalProducts: 0,
+    totalTickets: 0,
+    totalSports: 0,
+    pushSubscribers: 0,
+  });
   const [loading, setLoading]       = useState(true);
   const [showSubsModal, setShowSubsModal] = useState(false);
 
@@ -674,7 +688,9 @@ export function JppOverviewPage() {
               <BarChart3 className="w-5 h-5" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">Gambaran Sistem</h1>
+              <h1 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">
+                {t('jpp:cross_club_oversight')}
+              </h1>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">
                 Data keseluruhan portal JPP
               </p>
@@ -682,32 +698,32 @@ export function JppOverviewPage() {
           </div>
         </motion.div>
 
+        {/* ── Main Stats Grid ─── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <BigStatCard 
+            label="Push Subscribers" 
+            value={stats.pushSubscribers}  
+            icon={BellRing}  
+            color={themeColor} 
+            delay={0.05} 
+            sub={`daripada ${stats.totalStudents} pelajar`}
+            onClick={() => setShowSubsModal(true)} 
+          />
+          <BigStatCard label={t('jpp:total_students')} value={stats.totalStudents} icon={Users} color="#60A5FA" delay={0.10} />
+          <BigStatCard label="Jumlah Kelab"      value={stats.totalClubs}      icon={Flag}      color="#4ADE80" delay={0.15} />
+          <BigStatCard label="Bisnes"            value={stats.totalBusinesses} icon={Store}     color="#F59E0B"    delay={0.20} />
+          <BigStatCard label="Produk PolyMart"   value={stats.totalProducts}   icon={ShoppingBag} color="#EC4899" delay={0.25} />
+          <BigStatCard label="Aduan Kebajikan"   value={stats.totalTickets}    icon={Heart}     color="#EF4444"    delay={0.30} />
+          <BigStatCard label="Acara Sukan"       value={stats.totalSports}     icon={Trophy}    color="#EAB308"    delay={0.35} />
+          <BigStatCard label="Laporan & Kadar Penyerahan" value={stats.totalReports} icon={FileText} color="#A78BFA" delay={0.40} sub="Kadar Penyerahan Laporan Kelab" />
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-8 h-8 animate-spin text-[#556453] dark:text-white/20" />
           </div>
         ) : (
           <>
-            {/* ── Main Stats Grid ─── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <BigStatCard 
-                label="Push Subscribers" 
-                value={stats?.pushSubscribers ?? 0}  
-                icon={BellRing}  
-                color={themeColor} 
-                delay={0.05} 
-                sub={`daripada ${stats?.totalStudents ?? 0} pelajar`}
-                onClick={() => setShowSubsModal(true)} 
-              />
-              <BigStatCard label="Pelajar Berdaftar" value={stats?.totalStudents ?? 0}   icon={Users}     color="#60A5FA"    delay={0.10} />
-              <BigStatCard label="Jumlah Kelab"      value={stats?.totalClubs ?? 0}      icon={Flag}      color="#4ADE80" delay={0.15} />
-              <BigStatCard label="Bisnes"            value={stats?.totalBusinesses ?? 0} icon={Store}     color="#F59E0B"    delay={0.20} />
-              <BigStatCard label="Produk PolyMart"   value={stats?.totalProducts ?? 0}   icon={ShoppingBag} color="#EC4899" delay={0.25} />
-              <BigStatCard label="Aduan Kebajikan"   value={stats?.totalTickets ?? 0}    icon={Heart}     color="#EF4444"    delay={0.30} />
-              <BigStatCard label="Acara Sukan"       value={stats?.totalSports ?? 0}     icon={Trophy}    color="#EAB308"    delay={0.35} />
-              <BigStatCard label="Laporan"           value={stats?.totalReports ?? 0}    icon={FileText}  color="#A78BFA"    delay={0.40} />
-            </div>
-
             {/* ── Charts Grid ─── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               

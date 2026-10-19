@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { ShieldAlert, Search, ShieldCheck, AlertTriangle, Activity, Trash2, User, Clock, Sparkles, RefreshCw, HardDrive } from 'lucide-react';
+import { ShieldAlert, Search, ShieldCheck, AlertTriangle, Activity, Trash2, User, Clock, Sparkles, RefreshCw, HardDrive, Download } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn, API_BASE_URL } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { exportXlsx } from '@/lib/exportXlsx';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 
@@ -72,6 +74,7 @@ function scanAnomalies(logs: LogEntry[]): { flagged: Set<string>; alerts: Anomal
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function JppLogsPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile } = useAuth();
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,33 @@ export function JppLogsPage() {
 
   const [storageLoading, setStorageLoading] = useState(false);
   const [storageResult, setStorageResult] = useState<any>(null);
+
+  const handleExportAuditLogs = async () => {
+    try {
+      const columns = [
+        { header: 'ID', width: 25 },
+        { header: 'Timestamp', width: 22 },
+        { header: 'Tindakan', width: 20 },
+        { header: 'Modul', width: 18 },
+        { header: 'Pengguna', width: 25 },
+        { header: 'Peranan', width: 15 },
+        { header: 'Butiran', width: 40 },
+      ];
+      const rows = logs.map(l => [
+        l.id,
+        new Date(l.created_at).toLocaleString('ms-MY'),
+        l.action_type || '',
+        l.entity_type || '',
+        l.full_name || '',
+        l.role || '',
+        l.details || '',
+      ]);
+      await exportXlsx('jpp_audit_logs', [{ name: 'Audit Trail', columns, rows }]);
+      toast.success('Log audit berjaya dieksport.');
+    } catch (err: any) {
+      toast.error('Gagal mengeksport log: ' + err.message);
+    }
+  };
 
   useEffect(() => {
     supabase.from('portal_settings').select('color').eq('exco_module', JPP_MODULE_ID).maybeSingle()
@@ -280,11 +310,7 @@ export function JppLogsPage() {
     return <span className="flex items-center flex-wrap gap-1">{text} {clubBadge}</span>;
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">
-      Memuat Audit Trail...
-    </div>
-  );
+
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 transition-colors">
@@ -302,11 +328,18 @@ export function JppLogsPage() {
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Audit & Pemantauan Sistem</h1>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">Jejak aktiviti pentadbiran dan keselamatan</p>
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                  {t('jpp:audit_logs')}
+                </h1>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">
+                  {t('jpp:activity_feed')}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleExportAuditLogs} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs font-bold">
+                <Download className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:export_audit_report')}
+              </Button>
               <Button variant="outline" size="sm" onClick={handleStorageAudit} disabled={storageLoading} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
                 <HardDrive className="w-3.5 h-3.5 mr-1.5" /> {storageLoading ? 'Mengimbas...' : 'Semak Storage'}
               </Button>
@@ -425,7 +458,7 @@ export function JppLogsPage() {
           className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/30" />
-            <Input placeholder="Cari log..." value={logSearch} onChange={e => setLogSearch(e.target.value)}
+            <Input placeholder={`${t('common:search')}...`} value={logSearch} onChange={e => setLogSearch(e.target.value)}
               className="pl-11 h-11 bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl text-sm font-medium shadow-sm" />
           </div>
           <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
@@ -468,7 +501,14 @@ export function JppLogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {filteredLogs.length === 0 ? (
+                {loading ? (
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
+                    <div className="flex flex-col items-center gap-3">
+                      <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
+                      <p className="text-[10px] uppercase tracking-widest font-black">Memuat Audit Trail...</p>
+                    </div>
+                  </td></tr>
+                ) : filteredLogs.length === 0 ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
                     <div className="flex flex-col items-center gap-3">
                       <ShieldCheck className="w-8 h-8 opacity-50" />
