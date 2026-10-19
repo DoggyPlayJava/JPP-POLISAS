@@ -440,6 +440,25 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(html).toContain('Completed');
     });
 
+    it('renders localized QR code status and evidence upload text in AktivitiFull', async () => {
+      await changeLanguage('en');
+      expect(i18n.t('kpp:scan_qr_instruction')).toBe('Participants scan QR code for attendance');
+      expect(i18n.t('kpp:qr_open_at')).toBe('Open QR At');
+      expect(i18n.t('kpp:qr_close_at')).toBe('Close QR At');
+      expect(i18n.t('kpp:upload_proof_images')).toBe('Upload Proof Photos (Max 2)');
+      expect(i18n.t('kpp:qr_token_not_generated')).toBe('QR token not generated yet. Edit and re-save this activity to generate token.');
+      expect(i18n.t('kpp:ai_draft_helper')).toBe('Generate draft or correct format with AI assistance.');
+
+      const pagesDir = path.resolve(__dirname, '../pages');
+      const aktSrc = fs.readFileSync(path.join(pagesDir, 'AktivitiFull.tsx'), 'utf8');
+      expect(aktSrc).toContain("t('kpp:scan_qr_instruction'");
+      expect(aktSrc).toContain("t('kpp:qr_open_at'");
+      expect(aktSrc).toContain("t('kpp:qr_close_at'");
+      expect(aktSrc).toContain("t('kpp:upload_proof_images'");
+      expect(aktSrc).toContain("t('kpp:qr_token_not_generated'");
+      expect(aktSrc).toContain("t('kpp:ai_draft_helper'");
+    });
+
     it('renders LaporanPage document management headers in English', () => {
       const html = renderToString(
         <MemoryRouter>
@@ -538,6 +557,16 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(html).toContain('Akan Datang');
       expect(html).toContain('Sedang Berlangsung');
       expect(html).toContain('Selesai');
+    });
+
+    it('renders localized QR code status and evidence upload text in AktivitiFull in Bahasa Melayu', async () => {
+      await changeLanguage('ms');
+      expect(i18n.t('kpp:scan_qr_instruction')).toBe('Peserta scan QR untuk daftar hadir');
+      expect(i18n.t('kpp:qr_open_at')).toBe('Buka QR Pada');
+      expect(i18n.t('kpp:qr_close_at')).toBe('Tutup QR Pada');
+      expect(i18n.t('kpp:upload_proof_images')).toBe('Muat Naik Gambar Bukti (Maks 2)');
+      expect(i18n.t('kpp:qr_token_not_generated')).toBe('QR token belum dijana. Edit dan simpan semula aktiviti ini untuk jana token.');
+      expect(i18n.t('kpp:ai_draft_helper')).toBe('Jana draf atau betulkan format dengan bantuan AI.');
     });
 
     it('renders LaporanPage document management headers in Bahasa Melayu', () => {

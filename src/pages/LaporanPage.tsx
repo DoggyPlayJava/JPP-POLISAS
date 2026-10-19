@@ -413,7 +413,7 @@ export function LaporanPage() {
                       className={cn("border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all", dragOver ? "border-primary bg-primary/10" : file ? "border-primary/50 bg-primary/10" : "border-border bg-muted/20")}
                     >
                       <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
-                      {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
+                      {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">{t('kpp:click_drag_pdf', 'Klik atau seret PDF di sini')}</p>}
                     </div>
                     <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
                       {submitting ? t('common:loading') : t('kpp:submit_report')}
@@ -423,11 +423,11 @@ export function LaporanPage() {
                   <div className="bg-rose-500/10 p-8 rounded-[2rem] text-center border-2 border-dashed border-rose-500/20">
                     <Lock className="w-10 h-10 text-rose-500/50 mx-auto mb-3" />
                     <p className="text-sm font-black text-rose-600 uppercase tracking-widest leading-tight">Sistem Janaan Ditutup</p>
-                    <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.</p>
+                    <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">{t('kpp:auto_pdf_disabled_notice', 'Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.')}</p>
                   </div>
                 ) : (
                   <form onSubmit={handleAutoGenerateTransition} className="space-y-4">
-                    <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.</div>
+                    <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">{t('kpp:auto_pdf_info', "Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.")}</div>
                     <div className="flex items-center gap-1.5">
                       <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
                         <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
@@ -455,7 +455,7 @@ export function LaporanPage() {
                   className={cn("border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all", dragOver ? "border-primary bg-primary/10" : file ? "border-primary/50 bg-primary/10" : "border-border bg-muted/20")}
                 >
                   <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
-                  {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
+                  {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">{t('kpp:click_drag_pdf', 'Klik atau seret PDF di sini')}</p>}
                 </div>
                 <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
                   {submitting ? t('common:loading') : t('kpp:submit_report')}
@@ -499,9 +499,9 @@ export function LaporanPage() {
                 <FileText className="w-8 h-8" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Rekod Di {filterTab === 'aktif' ? 'Semasa' : 'Arkib'}</EmptyTitle>
+                <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:no_records_in', 'Tiada Rekod Di')} {filterTab === 'aktif' ? t('kpp:current_reports', 'Semasa') : t('common:archive', 'Arkib')}</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  {filterTab === 'aktif' ? 'Sila hantar laporan manual atau jana laporan bulanan.' : 'Tiada dokumen yang diarkibkan untuk kohort lepas.'}
+                  {filterTab === 'aktif' ? t('kpp:no_active_reports_desc', 'Sila hantar laporan manual atau jana laporan bulanan.') : t('kpp:no_archived_reports_desc', 'Tiada dokumen yang diarkibkan untuk kohort lepas.')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -517,19 +517,19 @@ export function LaporanPage() {
                           <div>
                             <div className="flex items-center gap-2">
                                <p className="font-bold text-sm">{r.file_name}</p>
-                               {r.is_archived && <Badge variant="outline" className="text-[9px] uppercase">Arkib</Badge>}
+                               {r.is_archived && <Badge variant="outline" className="text-[9px] uppercase">{t('common:archive', 'Arkib')}</Badge>}
                             </div>
                             <p className="text-[10px] opacity-50 uppercase tracking-widest font-black mt-1">{format(new Date(r.created_at), 'dd MMM yyyy, h:mm a')}</p>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           <StatusChip status={r.status} size="sm" />
-                          <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">LIHAT FAIL</a>
+                          <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">{t('kpp:view_file', 'LIHAT FAIL')}</a>
                         </div>
                       </div>
                       {r.status === 'Ditolak' && r.admin_feedback && !r.is_archived && (
                         <div className="mt-1 p-3 bg-rose-50/50 border border-rose-100/50 rounded-xl">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Nota Penolakan JPP</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">{t('kpp:jpp_rejection_notes', 'Nota Penolakan JPP')}</p>
                           <p className="text-xs font-semibold text-rose-700 italic">{r.admin_feedback}</p>
                         </div>
                       )}

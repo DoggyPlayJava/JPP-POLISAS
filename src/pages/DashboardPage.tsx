@@ -46,6 +46,7 @@ import {
 
 // --- 1. KOMPONEN KECIL: ITEM TUGASAN ---
 function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onReject, onVerify }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'COMPLETED';
 
   return (
@@ -53,15 +54,15 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
       <div className="space-y-1.5 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-bold text-base text-foreground">{task.title}</h4>
-          {isOverdue && <Badge className="bg-rose-600 text-white border-none text-[10px] font-black uppercase animate-pulse">Lewat</Badge>}
-          {task.approval_status === 'WAITING' && <Badge className="bg-amber-500/10 text-amber-600 border-none text-[10px] font-black uppercase">Menunggu Kelulusan Penasihat</Badge>}
-          {task.status === 'COMPLETED' && <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-black uppercase">Selesai</Badge>}
+          {isOverdue && <Badge className="bg-rose-600 text-white border-none text-[10px] font-black uppercase animate-pulse">{t('common:overdue', 'Lewat')}</Badge>}
+          {task.approval_status === 'WAITING' && <Badge className="bg-amber-500/10 text-amber-600 border-none text-[10px] font-black uppercase">{t('kpp:waiting_advisor_approval', 'Menunggu Kelulusan Penasihat')}</Badge>}
+          {task.status === 'COMPLETED' && <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-black uppercase">{t('common:completed', 'Selesai')}</Badge>}
         </div>
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold">
           <span className="flex items-center gap-1"><Clock size={12} /> {format(parseISO(task.due_date), 'dd MMM yyyy')}</span>
           {!isNormalMember && (
             <span className="flex items-center gap-1 text-primary uppercase">
-              <Users size={12} /> {task.assigned_to?.full_name || 'Tiada Nama'}
+              <Users size={12} /> {task.assigned_to?.full_name || t('common:unassigned', 'Tiada Nama')}
             </span>
           )}
         </div>
@@ -69,14 +70,14 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
       <div className="flex gap-2 w-full sm:w-auto">
         {canApprove && task.approval_status === 'WAITING' && (
           <>
-            <Button onClick={() => onApprove(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-emerald-600 rounded-xl flex-1 sm:flex-none">Luluskan</Button>
-            <Button onClick={() => onReject(task)} size="sm" variant="destructive" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">Tolak</Button>
+            <Button onClick={() => onApprove(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-emerald-600 rounded-xl flex-1 sm:flex-none">{t('common:approve', 'Luluskan')}</Button>
+            <Button onClick={() => onReject(task)} size="sm" variant="destructive" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">{t('common:reject', 'Tolak')}</Button>
           </>
         )}
         {canApprove && task.status === 'COMPLETED' && task.approval_status === 'APPROVED' && !task.is_archived && (
-          <Button onClick={() => onVerify(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-indigo-600 rounded-xl flex-1 sm:flex-none">Sahkan & Beri Merit</Button>
+          <Button onClick={() => onVerify(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-indigo-600 rounded-xl flex-1 sm:flex-none">{t('kpp:verify_award_merit', 'Sahkan & Beri Merit')}</Button>
         )}
-        <Button onClick={onOpen} variant="secondary" size="sm" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">Buka</Button>
+        <Button onClick={onOpen} variant="secondary" size="sm" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">{t('common:open', 'Buka')}</Button>
       </div>
     </div>
   );
@@ -84,6 +85,7 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
 
 // --- 2. KOMPONEN KECIL: JEJAK PROGRAM (KERTAS KERJA) ---
 function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onUnlock: (p: any) => void }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const isPending = program.status === 'PENDING_APPROVAL' || program.status === 'PENDING_POSTMORTEM';
   const isConfirmed = program.status === 'CONFIRMED';
   const isRejected = program.status === 'DRAFT' && program.jpp_remarks;
@@ -108,7 +110,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
               )}>
                 {program.status.replace('_', ' ')}
               </Badge>
-              {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">Perlu Pindaan</span>}
+              {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">{t('kpp:report_status_rejected', 'Perlu Pindaan')}</span>}
             </div>
           </div>
         </div>
@@ -116,7 +118,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
         <div className="flex items-center gap-2 shrink-0">
           {isConfirmed && (
             <Button onClick={() => onUnlock(program)} variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-black uppercase text-indigo-500 hover:bg-indigo-500/10 rounded-lg gap-1 hidden sm:flex">
-              <Unlock size={12} /> Unlock
+              <Unlock size={12} /> {t('kpp:audit_unlock', 'Unlock')}
             </Button>
           )}
           <ChevronRight size={18} className="text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
@@ -125,7 +127,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
       
       {program.jpp_remarks && (
         <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-xl">
-          <p className="text-[9px] font-black uppercase tracking-widest text-rose-500 mb-0.5">Ulasan / Nota</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-rose-500 mb-0.5">{t('kpp:notes_remarks', 'Ulasan / Nota')}</p>
           <p className="text-[10px] text-rose-800 font-bold italic line-clamp-2">{program.jpp_remarks}</p>
         </div>
       )}
@@ -508,7 +510,7 @@ export function DashboardPage() {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
                     <FileCheck className="text-primary" size={24} /> {t('kpp:upcoming_activities')}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Status Kertas Kerja di JPP</p>
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('kpp:working_paper_status_jpp', 'Status Kertas Kerja di JPP')}</p>
                 </div>
                 <Button onClick={() => navigate('/aktiviti')} size="sm" className="w-full sm:w-auto rounded-xl font-black text-[10px] uppercase h-10 bg-slate-900 px-6">
                   <Send className="w-3 h-3 mr-2" /> {t('kpp:register_program', 'Daftar Program')}
@@ -525,7 +527,7 @@ export function DashboardPage() {
                       <EmptyHeader>
                         <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:audit_no_programs', 'Tiada Program Ditemui')}</EmptyTitle>
                         <EmptyDescription className="text-xs">
-                          Anda belum mendaftarkan sebarang program rasmi untuk kitaran ini.
+                          {t('kpp:no_registered_programs_cycle', 'Anda belum mendaftarkan sebarang program rasmi untuk kitaran ini.')}
                         </EmptyDescription>
                       </EmptyHeader>
                       <Button onClick={() => navigate('/aktiviti')} variant="outline" size="sm" className="rounded-xl font-black text-[10px] uppercase h-10 px-6">
@@ -543,12 +545,12 @@ export function DashboardPage() {
           <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70  overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs') : `${t('kpp:my_clubs')} - Tugasan`) : 'Arkib Tugasan'}
+                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs') : `${t('kpp:my_clubs')} - ${t('kpp:tasks', 'Tugasan')}`) : t('kpp:task_archive', 'Arkib Tugasan')}
                 {taskView === 'archive' && <Archive size={20} className="text-muted-foreground" />}
               </CardTitle>
               <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 w-full sm:w-auto">
-                <button onClick={() => setTaskView('active')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Aktif</button>
-                <button onClick={() => setTaskView('archive')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Arkib</button>
+                <button onClick={() => setTaskView('active')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>{t('common:active', 'Aktif')}</button>
+                <button onClick={() => setTaskView('archive')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>{t('common:archive', 'Arkib')}</button>
               </div>
             </CardHeader>
             <CardContent className="p-5 sm:p-8 space-y-4">
@@ -560,7 +562,7 @@ export function DashboardPage() {
                   <EmptyHeader>
                     <EmptyTitle className="text-sm font-black uppercase tracking-widest">{tPortal('portal:all_completed', 'Semua Selesai!')}</EmptyTitle>
                     <EmptyDescription className="text-xs">
-                      {tPortal('portal:no_tasks', 'Tiada tugasan')} {taskView === 'active' ? 'aktif' : 'dalam arkib'} buat masa ini.
+                      {tPortal('portal:no_tasks', 'Tiada tugasan')} {taskView === 'active' ? t('common:active', 'aktif').toLowerCase() : t('kpp:in_archive', 'dalam arkib')} {t('kpp:at_this_moment', 'buat masa ini.')}
                     </EmptyDescription>
                   </EmptyHeader>
                   {isMT && taskView === 'active' && <AddTaskModal onTaskAdded={fetchData} />}
@@ -588,7 +590,7 @@ export function DashboardPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-black uppercase tracking-widest text-white/60">{tPortal('portal:advisor_address', 'Amanat Penasihat')}</h4>
-                    <p className="text-[10px] font-bold text-white/40 uppercase">Terkini</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase">{t('common:latest', 'Terkini')}</p>
                   </div>
                 </div>
                 {isAdvisor && (
@@ -637,12 +639,12 @@ export function DashboardPage() {
 
       <PromptDialog
         open={rejectDialog.open}
-        title="Tolak Tugasan"
-        description="Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan."
-        inputLabel="Sebab Penolakan"
+        title={t('kpp:reject_task', 'Tolak Tugasan')}
+        description={t('kpp:reject_task_desc', 'Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan.')}
+        inputLabel={t('kpp:rejection_reason_label', 'Sebab Penolakan')}
         inputType="textarea"
         placeholder="Contoh: Lampiran minit mesyuarat tidak lengkap..."
-        confirmLabel="Tolak Tugasan"
+        confirmLabel={t('kpp:reject_task', 'Tolak Tugasan')}
         variant="destructive"
         isLoading={isProcessingAction}
         onConfirm={executeRejectTask}
@@ -651,12 +653,12 @@ export function DashboardPage() {
 
       <PromptDialog
         open={unlockDialog.open}
-        title="Mohon Buka Semula Program"
-        description="Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan."
-        inputLabel="Sebab Permohonan"
+        title={t('kpp:request_unlock_program', 'Mohon Buka Semula Program')}
+        description={t('kpp:request_unlock_desc', 'Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan.')}
+        inputLabel={t('kpp:rejection_reason_label', 'Sebab Permohonan')}
         inputType="textarea"
         placeholder="Contoh: Perlu mengemas kini perincian bajet dan tentatif program..."
-        confirmLabel="Hantar Permohonan"
+        confirmLabel={t('kpp:submit_application', 'Hantar Permohonan')}
         isLoading={isProcessingAction}
         onConfirm={executeRequestUnlock}
         onCancel={() => setUnlockDialog({ open: false, program: null })}
@@ -664,12 +666,12 @@ export function DashboardPage() {
 
       <PromptDialog
         open={lateVerifyDialog.open}
-        title="Pengesahan Tugasan Lewat"
+        title={t('kpp:late_task_verification', 'Pengesahan Tugasan Lewat')}
         description={`Tugasan "${lateVerifyDialog.task?.title || ''}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: ${lateVerifyDialog.task?.merit_points || 0} pts.`}
-        inputLabel="Mata Merit Diberikan (Boleh Negatif)"
+        inputLabel={t('kpp:merit_points_awarded', 'Mata Merit Diberikan (Boleh Negatif)')}
         inputType="number"
         initialValue={String(lateVerifyDialog.task?.merit_points || 0)}
-        confirmLabel="Sahkan Tugasan"
+        confirmLabel={t('kpp:confirm_task', 'Sahkan Tugasan')}
         isLoading={isProcessingAction}
         onConfirm={(val) => {
           const num = Number(val);

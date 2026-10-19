@@ -477,7 +477,7 @@ export function SemakanLaporanPage() {
                                     p.status === 'PENDING_APPROVAL' ? "bg-amber-500/10 text-amber-500" :
                                       p.status === 'CONFIRMED' ? "bg-emerald-500/10 text-emerald-500" :
                                         "bg-muted text-muted-foreground")}>
-                                {isRejectedPostmortem ? 'POSTMORTEM (REJECTED)' : p.status.replace('_', ' ')}
+                                {isRejectedPostmortem ? t('kpp:postmortem_rejected', 'POSTMORTEM (REJECTED)') : p.status.replace('_', ' ')}
                               </Badge>
                               {club && (
                                 <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 border-none font-bold text-[10px] px-2 py-0.5 uppercase tracking-widest transition-colors">
@@ -488,11 +488,11 @@ export function SemakanLaporanPage() {
                           );
                         })()}
                         <h3 className="font-black text-xl text-foreground leading-tight">{p.nama_program}</h3>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={12} /> {t('kpp:updated', 'Dikemaskini')} {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
 
                         {p.jpp_remarks && (
                           <div className="mt-2 p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 flex flex-col gap-1 max-w-[400px]">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Nota Semasa / Alasan</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t('kpp:current_note_reason', 'Nota Semasa / Alasan')}</span>
                             <span className="text-xs font-semibold text-foreground/80 italic break-words">{p.jpp_remarks}</span>
                           </div>
                         )}
@@ -618,10 +618,10 @@ export function SemakanLaporanPage() {
             <div className="flex flex-wrap gap-2 w-full xl:w-auto bg-muted/50 p-1.5 rounded-2xl">
               {[
                 { key: 'Semua', label: t('common:all', 'Semua') },
-                { key: 'Menunggu', label: t('kpp:stats_pending', 'Menunggu') },
+                { key: 'Menunggu', label: t('kpp:status_pending', 'Menunggu') },
                 { key: 'Dalam Semakan', label: t('common:in_progress', 'Dalam Semakan') },
                 { key: 'Diluluskan', label: t('kpp:report_status_approved', 'Diluluskan') },
-                { key: 'Ditolak', label: t('kpp:report_status_rejected', 'Ditolak') },
+                { key: 'Ditolak', label: t('kpp:status_rejected', 'Ditolak') },
               ].map(s => (
                 <button
                   key={s.key}
@@ -680,7 +680,7 @@ export function SemakanLaporanPage() {
                                 r.status === 'Ditolak' ? 'bg-rose-500/10 text-rose-500' :
                                   'bg-muted text-muted-foreground'
                             )}>
-                              {r.status}
+                              {r.status === 'Diluluskan' ? t('kpp:report_status_approved', 'Diluluskan') : r.status === 'Ditolak' ? t('kpp:status_rejected', 'Ditolak') : r.status === 'Menunggu' ? t('kpp:status_pending', 'Menunggu') : r.status}
                             </Badge>
 
                             <div className="flex items-center gap-2">
@@ -875,7 +875,7 @@ export function SemakanLaporanPage() {
           </DialogHeader>
           <div className="space-y-3 py-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
-              {t('kpp:audit_rejection_reason', 'Alasan Penolakan (Opsyenal tetapi digalakkan)')}
+              {t('kpp:audit_rejection_reason_optional', 'Alasan Penolakan (Opsyenal tetapi digalakkan)')}
             </Label>
             <Textarea
               value={reportRemarks}
@@ -886,7 +886,7 @@ export function SemakanLaporanPage() {
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
             <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">{t('common:cancel', 'Batal')}</Button>
-            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">{t('kpp:audit_reject', 'Sahkan Tolak')}</Button>
+            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">{t('kpp:audit_confirm_reject', 'Sahkan Tolak')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
