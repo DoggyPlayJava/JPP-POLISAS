@@ -60,6 +60,7 @@ window.addEventListener('vite:preloadError', () => {
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
+import './lib/i18n'
 import App from './App'
 import './index.css'
 
@@ -112,7 +113,7 @@ import './index.css'
   window.fetch = async (...args) => {
     const res = await _origFetch(...args);
     try {
-      const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
+      const url = typeof args[0] === 'string' ? args[0] : (args[0] && ((args[0] as any).url || (args[0] as any).href)) || '';
       if (res && res.status >= 400 && url && !url.includes('/api/system-errors')) {
         const key = res.status + '|' + url;
         const now = Date.now();
