@@ -132,16 +132,16 @@ export function LoginPage() {
     }
     const { data, error } = await supabase.rpc('resolve_login_identifier', { p_identifier: trimmed });
     if (error) return { email: null, error: error.message };
-    if (!data || data.length === 0) return { email: null, error: 'Tiada akaun dijumpai dengan maklumat ini.' };
+    if (!data || data.length === 0) return { email: null, error: t('auth:no_account_found') };
     const result = data[0];
     if (result.match_type === 'matric_no_duplicate') {
-      return { email: null, error: `Terdapat ${result.match_count} akaun dengan no matrik yang sama. Sila log masuk menggunakan emel anda, atau hubungi JPP untuk bantuan.` };
+      return { email: null, error: t('auth:multiple_accounts_found') };
     }
     if (result.match_type === 'full_name_duplicate') {
-      return { email: null, error: `Terdapat ${result.match_count} akaun dengan nama yang sama. Sila gunakan emel atau no matrik untuk log masuk.` };
+      return { email: null, error: t('auth:multiple_accounts_found') };
     }
     if (result.match_type === 'not_found') {
-      return { email: null, error: 'Tiada akaun dijumpai. Sila semak ejaan atau daftar akaun baru.' };
+      return { email: null, error: t('auth:no_account_found') };
     }
     return { email: result.email, error: null };
   };
@@ -168,9 +168,9 @@ export function LoginPage() {
           body: JSON.stringify({ email: resolved.email }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Gagal menghantar emel reset.');
+        if (!response.ok) throw new Error(data.error || t('auth:password_reset_failed'));
         setResetSent(true);
-        toast.success('Pautan tetapan semula telah dihantar ke emel anda.');
+        toast.success(t('auth:password_reset_sent'));
       } else {
         const resolved = await resolveIdentifier(email);
         if (resolved.error || !resolved.email) {
@@ -185,7 +185,7 @@ export function LoginPage() {
             const { data: providers } = await supabase.rpc('get_auth_providers', { p_email: resolvedEmail });
             if (providers && providers.includes('google') && !providers.includes('email')) {
               toast.error(
-                'Akaun ini didaftarkan melalui Google dan belum mempunyai kata laluan manual. Sila log masuk dengan Google atau klik "Lupa?" untuk menetapkan kata laluan.',
+                t('auth:google_account_no_password'),
                 { duration: 8000 }
               );
               setIsLoading(false);
@@ -199,9 +199,9 @@ export function LoginPage() {
     } catch (error: any) {
       const msg: Record<string, string> = {
         'Invalid login credentials': t('auth:login_failed'),
-        'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
-        'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
-        'Email not confirmed': 'Sila sahkan emel anda dahulu.',
+        'User already registered': t('auth:user_already_registered'),
+        'Password should be at least 6 characters': t('auth:password_min_length'),
+        'Email not confirmed': t('auth:email_not_confirmed'),
       };
       toast.error(msg[error.message] || error.message || t('auth:login_failed'));
     } finally {
@@ -224,44 +224,44 @@ export function LoginPage() {
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || 'Gagal menyambung ke Google.');
+      toast.error(error.message || t('auth:google_login_failed'));
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
-      toast.error('Sila lengkapkan semua maklumat asas.');
+      toast.error(t('auth:fill_all_basic_info'));
       return;
     }
 
     if (registerMode !== 'staff' && !matricNo.trim().startsWith('02')) {
-      toast.error('No. Matrik pelajar mestilah bermula dengan "02".');
+      toast.error(t('auth:matric_starts_with_02'));
       return;
     }
 
     if (registerMode !== 'staff' && email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
-      toast.error('Sila guna emel peribadi. Emel pelajar @student.polisas.edu.my tidak dapat menerima kotak pengesahan.');
+      toast.error(t('auth:student_personal_email_warning'));
       return;
     }
 
     if (registerMode === 'staff') {
       const { data: isValid, error: rpcError } = await supabase.rpc('verify_staff_code', { p_code: passcode });
       if (rpcError || !isValid) {
-        toast.error('Kod pengesahan staf tidak sah.');
+        toast.error(t('auth:invalid_staff_code'));
         return;
       }
       if (staffRole === 'CLUB_ADVISOR' && !leaderClubId) {
-        toast.error('Sila pilih kelab yang dinasihati.');
+        toast.error(t('auth:select_club'));
         return;
       }
     } else {
       if (!jabatan) {
-        toast.error('Sila pilih jabatan anda.');
+        toast.error(t('auth:select_department'));
         return;
       }
       if (registerMode === 'leader' && !leaderClubId) {
-        toast.error('Sila pilih kelab anda.');
+        toast.error(t('auth:select_club'));
         return;
       }
     }
@@ -271,7 +271,7 @@ export function LoginPage() {
       if (registerMode !== 'staff') {
         const { data: matricCheck, error: matricErr } = await supabase.rpc('check_matric_registered', { p_matric_no: matricNo.trim() });
         if (matricErr) {
-          toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+          toast.error(t('auth:matric_verify_error', 'Tidak dapat mengesahkan no matrik. Sila cuba lagi.'));
           setIsLoading(false);
           return;
         }
@@ -348,10 +348,10 @@ export function LoginPage() {
     } catch (error: any) {
       localStorage.removeItem('is_new_register');
       const msg: Record<string, string> = {
-        'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
-        'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
+        'User already registered': t('auth:user_already_registered'),
+        'Password should be at least 6 characters': t('auth:password_min_length'),
       };
-      toast.error(msg[error.message] || error.message || 'Pendaftaran gagal. Cuba lagi.');
+      toast.error(msg[error.message] || error.message || t('common:action_failed', 'Pendaftaran gagal. Cuba lagi.'));
     } finally {
       setIsLoading(false);
     }
@@ -436,9 +436,9 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">Sahkan Emel Anda</p>
+              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">{t('auth:verify_your_email', 'Sahkan Emel Anda')}</p>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed mt-1">
-                Akaun anda berjaya didaftarkan. Sila klik butang di bawah untuk menerima pautan pengesahan ke{' '}
+                {t('auth:check_email_verification')}{' '}
                 <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{registeredEmail}</span>.
               </p>
             </div>
@@ -459,29 +459,29 @@ export function LoginPage() {
                     const data = await resp.json();
                     if (resp.ok) {
                       setEmailSentOnce(true);
-                      toast.success(data.message || 'Emel pengesahan berjaya dihantar! Sila semak peti masuk anda.');
+                      toast.success(data.message || t('auth:check_email_verification'));
                     } else {
-                      toast.error(data.error || 'Gagal menghantar emel pengesahan.');
+                      toast.error(data.error || t('common:action_failed', 'Gagal menghantar emel pengesahan.'));
                     }
                   } catch {
-                    toast.error('Gagal menghubungi pelayan. Sila cuba lagi.');
+                    toast.error(t('common:network_error', 'Gagal menghubungi pelayan. Sila cuba lagi.'));
                   } finally {
                     setResendLoading(false);
                   }
                 }}
               >
                 {resendLoading ? (
-                  'Menghantar...'
+                  t('auth:sending', 'Menghantar...')
                 ) : emailSentOnce ? (
-                  <span className="inline-flex items-center gap-2"><Send className="w-3.5 h-3.5" /> Hantar Semula</span>
+                  <span className="inline-flex items-center gap-2"><Send className="w-3.5 h-3.5" /> {t('auth:resend', 'Hantar Semula')}</span>
                 ) : (
-                  <span className="inline-flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Hantar Emel Pengesahan</span>
+                  <span className="inline-flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {t('auth:send_verification_email', 'Hantar Emel Pengesahan')}</span>
                 )}
               </Button>
               {emailSentOnce && (
                 <div className="inline-flex items-center justify-center gap-1.5 text-xs text-[#6B7F5B] font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Emel telah dihantar. Semak peti masuk dan folder spam anda.</span>
+                  <span>{t('auth:email_sent_check_inbox', 'Emel telah dihantar. Semak peti masuk dan folder spam anda.')}</span>
                 </div>
               )}
               <Button
@@ -499,9 +499,9 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">Semak Emel Anda</p>
+              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">{t('auth:check_your_email', 'Semak Emel Anda')}</p>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed mt-1">
-                Pautan tetapan semula telah dihantar ke <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{email}</span>.
+                {t('auth:password_reset_sent')} (<span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{email}</span>).
               </p>
             </div>
             <Button
@@ -875,13 +875,13 @@ export function LoginPage() {
                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
                     <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                   </svg>
-                  <span>Teruskan dengan Google</span>
+                  <span>{t('auth:sign_in_with_google', 'Teruskan dengan Google')}</span>
                 </button>
 
                 {/* 2. Microscopic Clean Divider */}
                 <div className="flex items-center gap-3 py-1">
                   <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
-                  <span className="text-xs font-medium text-[#556453]/70 dark:text-[#A3B39F]/70">atau</span>
+                  <span className="text-xs font-medium text-[#556453]/70 dark:text-[#A3B39F]/70">{t('common:or', 'atau')}</span>
                   <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
                 </div>
 
@@ -892,7 +892,7 @@ export function LoginPage() {
                   className="w-full h-14 rounded-2xl bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#58694B] text-[#F8F6EE] font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   <Mail className="w-4 h-4 opacity-90" />
-                  <span>Log masuk menggunakan Emel / No Matrik</span>
+                  <span>{t('auth:login_with_email_matric', 'Log masuk menggunakan Emel / No Matrik')}</span>
                 </button>
               </motion.div>
             ) : (
@@ -911,7 +911,7 @@ export function LoginPage() {
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors cursor-pointer mb-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Kembali ke Pilihan Log Masuk</span>
+                    <span>{t('auth:back_to_login_options', 'Kembali ke Pilihan Log Masuk')}</span>
                   </button>
 
                   <form onSubmit={handleLogin} className="space-y-3.5">
@@ -999,7 +999,7 @@ export function LoginPage() {
               </button>
             ) : (
               <div>
-                <span>{isSignUp ? 'Sudah mempunyai akaun? ' : 'Belum mempunyai akaun? '}</span>
+                <span>{isSignUp ? t('auth:already_have_account') + ' ' : t('auth:dont_have_account') + ' '}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -1009,7 +1009,7 @@ export function LoginPage() {
                   }}
                   className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE] underline underline-offset-4 hover:text-[#6B7F5B] cursor-pointer"
                 >
-                  {isSignUp ? 'Log masuk' : 'Daftar sekarang'}
+                  {isSignUp ? t('auth:login_button') : t('auth:register_now')}
                 </button>
               </div>
             )}
@@ -1025,7 +1025,7 @@ export function LoginPage() {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors"
           >
             <PhoneCall className="w-3 h-3 text-[#6B7F5B]" />
-            <span>Hubungi JPP jika ada masalah</span>
+            <span>{t('auth:contact_support', 'Hubungi JPP jika ada masalah')}</span>
           </a>
         </div>
       </motion.div>

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -46,14 +47,14 @@ interface MatricParseResult {
   errorMessage?: string;
 }
 
-function parseAndValidateMatric(rawMatric: string): MatricParseResult {
+function parseAndValidateMatric(rawMatric: string, t?: (key: string, def?: string) => string): MatricParseResult {
   const clean = rawMatric.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
 
   if (!clean.startsWith('02')) {
     return {
       isValidFormat: false,
       cleanMatric: clean,
-      errorMessage: 'No. Matrik pelajar mestilah bermula dengan "02".',
+      errorMessage: t ? t('auth:matric_starts_with_02', 'No. Matrik pelajar mestilah bermula dengan "02".') : 'No. Matrik pelajar mestilah bermula dengan "02".',
     };
   }
 
@@ -63,7 +64,7 @@ function parseAndValidateMatric(rawMatric: string): MatricParseResult {
     return {
       isValidFormat: false,
       cleanMatric: clean,
-      errorMessage: 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037',
+      errorMessage: t ? t('auth:invalid_matric_format', 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037') : 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037',
     };
   }
 
@@ -85,7 +86,7 @@ function parseAndValidateMatric(rawMatric: string): MatricParseResult {
       year2Digit,
       fullYear,
       isYearValid: false,
-      errorMessage: `Tahun kemasukan pada no. matrik (${fullYear}) tidak sah (julat sah: ${minYear} - ${maxYear}).`,
+      errorMessage: t ? t('auth:invalid_matric_year', `Tahun kemasukan pada no. matrik (${fullYear}) tidak sah (julat sah: ${minYear} - ${maxYear}).`) : `Tahun kemasukan pada no. matrik (${fullYear}) tidak sah (julat sah: ${minYear} - ${maxYear}).`,
     };
   }
 
@@ -127,6 +128,7 @@ function computeSemDisplay(
 // ─── Modal ───────────────────────────────────────────────────────────────────
 
 export function CompleteProfileModal() {
+  const { t } = useTranslation(['auth', 'common']);
   const { profile, user, refetchProfile } = useAuth();
 
   // ── Form state ──────────────────────────────────────────────────────────
@@ -153,7 +155,7 @@ export function CompleteProfileModal() {
   const [showWarning,      setShowWarning]      = useState(false);
 
   // Semakan matric parsing & live mismatch
-  const matricParsed = registerMode !== 'staff' && matricNo.trim() ? parseAndValidateMatric(matricNo.trim()) : null;
+  const matricParsed = registerMode !== 'staff' && matricNo.trim() ? parseAndValidateMatric(matricNo.trim(), t) : null;
   const yearMismatch = !!(
     matricParsed?.isValidFormat &&
     matricParsed.fullYear &&
@@ -171,7 +173,7 @@ export function CompleteProfileModal() {
     setMatricNo(clean);
 
     // Smart Auto-fill: auto-fill NOT auto-lock
-    const res = parseAndValidateMatric(clean);
+    const res = parseAndValidateMatric(clean, t);
     if (res.isValidFormat) {
       if (res.knownProgramme) {
         setJabatan(res.knownProgramme.jabatan);
@@ -199,7 +201,7 @@ export function CompleteProfileModal() {
   const handleLogout = async () => {
     if (!profile?.matric_no?.trim()) {
       const confirmDelete = window.confirm(
-        "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem."
+        t('auth:confirm_cancel_registration', "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem.")
       );
       if (!confirmDelete) return;
 
@@ -209,7 +211,7 @@ export function CompleteProfileModal() {
         if (rpcError) throw rpcError;
         
         await supabase.auth.signOut();
-        toast.success("Pendaftaran dibatalkan dan akaun berjaya dipadamkan.");
+        toast.success(t('auth:registration_cancelled_success', "Pendaftaran dibatalkan dan akaun berjaya dipadamkan."));
         window.location.href = '/login';
       } catch (err: any) {
         toast.error("Ralat memadam akaun: " + (err.message || "Sila cuba lagi."));
@@ -405,9 +407,9 @@ export function CompleteProfileModal() {
     }
 
     if (registerMode !== 'staff') {
-      const matricValidation = parseAndValidateMatric(matricNo.trim());
+      const matricValidation = parseAndValidateMatric(matricNo.trim(), t);
       if (!matricValidation.isValidFormat) {
-        toast.error(matricValidation.errorMessage || 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037');
+        toast.error(matricValidation.errorMessage || t('auth:invalid_matric_format'));
         return;
       }
     }
@@ -437,36 +439,36 @@ export function CompleteProfileModal() {
 
     if (registerMode === 'staff') {
       const { data: isValid } = await supabase.rpc('verify_staff_code', { p_code: passcode });
-      if (!isValid) { toast.error('Kod pengesahan staf tidak sah.'); return; }
+      if (!isValid) { toast.error(t('auth:invalid_staff_code')); return; }
       if (staffRole === 'CLUB_ADVISOR' && !leaderClubId) {
-        toast.error('Sila pilih kelab yang dinasihati.'); return;
+        toast.error(t('auth:select_club')); return;
       }
     } else {
-      if (!jabatan) { toast.error('Sila pilih jabatan akademik.'); return; }
+      if (!jabatan) { toast.error(t('auth:select_department')); return; }
       if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
       if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
       if (registerMode === 'leader' && !leaderClubId) {
-        toast.error('Sila pilih kelab.'); return;
+        toast.error(t('auth:select_club')); return;
       }
     }
 
     // Semakan kata laluan untuk pendaftaran baharu (Google SSO dual-auth)
     if (!password) {
-      toast.error('Sila cipta kata laluan akaun anda.');
+      toast.error(t('auth:create_account_password', 'Sila cipta kata laluan akaun anda.'));
       return;
     }
     if (password.length < 6) {
-      toast.error('Kata laluan mesti sekurang-kurangnya 6 aksara.');
+      toast.error(t('auth:password_min_length'));
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Kata laluan dan sahkan kata laluan tidak sepadan.');
+      toast.error(t('auth:passwords_do_not_match'));
       return;
     }
 
     setLoading(true);
     try {
-      if (!user?.id) { toast.error('Sesi anda telah tamat. Sila log masuk semula.'); setLoading(false); return; }
+      if (!user?.id) { toast.error(t('common:session_expired')); setLoading(false); return; }
 
       // 0. Tetapkan kata laluan dalam Supabase Auth supaya pelajar boleh log masuk manual guna No. Matrik
       const { error: pwdErr } = await supabase.auth.updateUser({ password: password.trim() });

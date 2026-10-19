@@ -44,5 +44,13 @@
   "suggest_uiux_desc": "Idea penambahbaikan visual",
   "supsas": "Sukan SUPSAS",
   "switch_language": "Tukar Bahasa",
-  "whatsapp_support": "WhatsApp JPP Support"
+  "whatsapp_support": "WhatsApp JPP Support",
+  "ai_greeting": "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!",
+  "ai_suggestion_opinion": "Berikan Pendapat",
+  "ai_suggestion_analysis": "Analisis Hari Ini",
+  "ai_suggestion_urgent": "Tiket Urgent",
+  "ai_suggestion_draft": "Draft Balasan",
+  "ai_suggestion_sales": "Ringkasan Jualan",
+  "ai_suggestion_pos": "Cara Guna POS",
+  "ai_suggestion_shift": "Urus Syif"
 }

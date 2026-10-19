@@ -19,6 +19,7 @@ import rehypeRaw from 'rehype-raw';
 import { getMalaysianNickname, cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // ─── Storage helpers for AI Chat History ────────────────────────────────────
 const STORAGE_KEY = 'nexus_chat_history_v1';
@@ -182,6 +183,7 @@ function getQuickReplies(type: string): string[] {
 }
 
 export function FloatingAiChat() {
+  const { t } = useTranslation(['common', 'nav']);
   const { profile, user } = useAuth();
   const { allowAiChat } = useAiSettings();
   const { positionLabels, unitLabels } = useJppConfig();
@@ -1211,7 +1213,7 @@ export function FloatingAiChat() {
         }
       } catch (err) {
         console.error('Failed to open/create conversation:', err);
-        toast.error('Gagal membuka perbualan');
+        toast.error(t('common:action_failed', 'Gagal membuka perbualan'));
       }
     };
 
@@ -1638,7 +1640,7 @@ export function FloatingAiChat() {
       
     } catch (err) {
       console.error('Failed to send message:', err);
-      toast.error('Gagal menghantar mesej');
+      toast.error(t('common:action_failed', 'Gagal menghantar mesej'));
       setChatInput(content);
     } finally {
       setIsSendingMessage(false);
@@ -1728,7 +1730,7 @@ export function FloatingAiChat() {
         {
           id: generateId(),
           role: 'error',
-          content: 'Sistem sedang sibuk. Sila cuba lagi sebentar!',
+          content: t('common:action_failed', 'Sistem sedang sibuk. Sila cuba lagi sebentar!'),
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -1755,20 +1757,20 @@ export function FloatingAiChat() {
   const EXCO_CHIPS: { icon: string; label: string; prompt: string }[] = [
     {
       icon: '💬',
-      label: 'Berikan Pendapat',
+      label: t('nav:ai_suggestion_opinion', 'Berikan Pendapat'),
       prompt: chatContext?.kebajikanInfo?.currentTicket
         ? `Saya sedang melihat tiket ini:\n${chatContext.kebajikanInfo.currentTicket}\n\nBerikan pendapat anda: apakah punca masalah yang paling munasabah dan apakah langkah-langkah konkrit untuk menyelesaikannya?`
         : 'Berdasarkan situasi semasa, berikan pendapat anda tentang apa yang perlu saya lakukan sekarang sebagai Exco Kebajikan.',
     },
-    { icon: '📊', label: 'Analisis Hari Ini', prompt: 'Bagi saya ringkasan situasi tiket hari ini dan cadangan tindakan segera.' },
-    { icon: '⚠️', label: 'Tiket Urgent', prompt: 'Senaraikan tiket yang paling kritikal dan cadangkan tindakan yang perlu diambil.' },
-    { icon: '📝', label: 'Draft Balasan', prompt: 'Bantu saya draf balasan profesional untuk tiket yang masih belum dibalas.' },
+    { icon: '📊', label: t('nav:ai_suggestion_analysis', 'Analisis Hari Ini'), prompt: 'Bagi saya ringkasan situasi tiket hari ini dan cadangan tindakan segera.' },
+    { icon: '⚠️', label: t('nav:ai_suggestion_urgent', 'Tiket Urgent'), prompt: 'Senaraikan tiket yang paling kritikal dan cadangkan tindakan yang perlu diambil.' },
+    { icon: '📝', label: t('nav:ai_suggestion_draft', 'Draft Balasan'), prompt: 'Bantu saya draf balasan profesional untuk tiket yang masih belum dibalas.' },
   ];
 
   const KEUSAHAWANAN_CHIPS: { icon: string; label: string; prompt: string }[] = [
-    { icon: '💰', label: 'Ringkasan Jualan', prompt: 'Berapa total jualan hari ini dan ada produk kurang stok?' },
-    { icon: '🛒', label: 'Cara Guna POS', prompt: 'Boleh ajar macam mana nak buat transaksi POS?' },
-    { icon: '⏰', label: 'Urus Syif', prompt: 'Bagaimana cara nak rekod syif masuk kerja?' },
+    { icon: '💰', label: t('nav:ai_suggestion_sales', 'Ringkasan Jualan'), prompt: 'Berapa total jualan hari ini dan ada produk kurang stok?' },
+    { icon: '🛒', label: t('nav:ai_suggestion_pos', 'Cara Guna POS'), prompt: 'Boleh ajar macam mana nak buat transaksi POS?' },
+    { icon: '⏰', label: t('nav:ai_suggestion_shift', 'Urus Syif'), prompt: 'Bagaimana cara nak rekod syif masuk kerja?' },
   ];
 
   const getModuleIcon = (type: string) => {
@@ -1893,12 +1895,12 @@ export function FloatingAiChat() {
               <div className="relative z-10">
                 <h3 className="font-black text-lg italic flex items-center gap-2">
                   <Sparkles size={18} className="text-white/80" />
-                  {selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : 'JPP Nexus')}
+                  {selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : t('nav:ai_assistant', 'JPP Nexus'))}
                 </h3>
                 <p className="text-[11px] text-white/70 font-medium mt-0.5">
                   {selectedChat 
                     ? `Perbualan ${selectedChat.type.toUpperCase()}` 
-                    : (isExcoMode ? 'Pembantu peribadi Exco Kebajikan POLISAS' : 'Pembantu pintar & Sembang berpusat')}
+                    : (isExcoMode ? 'Pembantu peribadi Exco Kebajikan POLISAS' : t('nav:help_subtitle', 'Pembantu pintar & Sembang berpusat'))}
                 </p>
               </div>
               
@@ -1908,7 +1910,7 @@ export function FloatingAiChat() {
                   whileTap={{ scale: 0.9 }}
                   onClick={clearHistory}
                   disabled={messages.length === 0}
-                  title="Kosongkan sembang"
+                  title={t('common:clear', 'Kosongkan sembang')}
                   className="relative z-10 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={14} />
@@ -1927,7 +1929,7 @@ export function FloatingAiChat() {
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <Sparkles size={12} /> Tanya AI
+                  <Sparkles size={12} /> {t('nav:ai_assistant', 'Tanya AI')}
                 </button>
                 <button
                   onClick={() => setActiveTab('messages')}
@@ -1937,7 +1939,7 @@ export function FloatingAiChat() {
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <MessageSquare size={12} /> Peti Mesej
+                  <MessageSquare size={12} /> {t('nav:notifications', 'Peti Mesej')}
                   {unreadTotal > 0 && (
                     <span className="w-2.5 h-2.5 bg-rose-500 rounded-full border border-card" />
                   )}
@@ -1966,7 +1968,7 @@ export function FloatingAiChat() {
                       <input
                         value={inChatSearchQuery}
                         onChange={(e) => setInChatSearchQuery(e.target.value)}
-                        placeholder="Cari dalam sembang..."
+                        placeholder={t('common:search', 'Cari dalam sembang...')}
                         className="w-full text-[10px] pl-7 pr-7 py-1 bg-muted/40 border border-border/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-foreground placeholder:text-muted-foreground/45"
                         autoFocus
                       />
@@ -1984,12 +1986,12 @@ export function FloatingAiChat() {
                         onClick={() => { setSelectedChat(null); setChatMessages([]); fetchInboxData(); }}
                         className="flex items-center gap-1 text-[10px] font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors py-1 px-2.5 bg-muted/40 hover:bg-muted/70 rounded-xl"
                       >
-                        <ArrowLeft size={12} /> Kembali
+                        <ArrowLeft size={12} /> {t('common:back', 'Kembali')}
                       </button>
                       <button
                         onClick={() => setShowInChatSearch(true)}
                         className="p-1.5 text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-lg transition-all"
-                        title="Cari mesej"
+                        title={t('common:search', 'Cari mesej')}
                       >
                         <Search size={12} />
                       </button>
@@ -2204,9 +2206,9 @@ export function FloatingAiChat() {
                                 onDoubleClick={() => {
                                   triggerHaptic([15, 10]);
                                   navigator.clipboard.writeText(msgText);
-                                  toast.success('Mesej disalin!');
+                                  toast.success(t('common:copied', 'Mesej disalin!'));
                                 }}
-                                title="Dwi-ketik untuk menyalin"
+                                title={t('common:copy', 'Dwi-ketik untuk menyalin')}
                               >
                                 <p className="whitespace-pre-wrap break-words">{msgText}</p>
                                 <div className="absolute bottom-1 right-2.5 flex items-center gap-0.5 text-[8px] opacity-60 pointer-events-none select-none">
@@ -2299,7 +2301,7 @@ export function FloatingAiChat() {
                   <textarea
                     value={chatInput}
                     onChange={(e) => handleChatInputChange(e.target.value)}
-                    placeholder="Taip mesej..."
+                    placeholder={t('common:enter_value', 'Taip mesej...')}
                     rows={1}
                     disabled={isSendingMessage}
                     className="flex-1 text-xs bg-muted/30 border border-border focus:border-indigo-500 rounded-2xl py-3 px-4 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all overflow-y-auto"
@@ -2335,7 +2337,7 @@ export function FloatingAiChat() {
                       <p className="text-muted-foreground text-xs leading-relaxed font-medium">
                         {isExcoMode
                           ? "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!"
-                          : "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!"
+                          : t('nav:ai_greeting', "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!")
                         }
                       </p>
                     </div>
@@ -2466,7 +2468,7 @@ export function FloatingAiChat() {
                       ref={textareaRef}
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-                      placeholder={isBusy ? "AI sedang berfikir..." : "Tanya sesuatu..."}
+                      placeholder={isBusy ? t('common:loading', "AI sedang berfikir...") : t('nav:search_placeholder', "Tanya sesuatu...")}
                       rows={1}
                       maxLength={700}
                       disabled={isBusy}
@@ -2486,7 +2488,7 @@ export function FloatingAiChat() {
                       disabled={isBusy || !inputValue.trim()}
                       className={`w-10 h-10 text-white rounded-2xl flex items-center justify-center transition-colors shrink-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed`}
                       style={{ backgroundColor: themeColors.accent }}
-                      title="Hantar (Enter)"
+                      title={`${t('common:send', 'Hantar')} (Enter)`}
                     >
                       <Send size={15} />
                     </motion.button>
