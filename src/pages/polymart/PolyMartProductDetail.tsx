@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
@@ -656,6 +657,7 @@ export function ProductVariationBottomSheet({
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartProductDetail() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -1172,7 +1174,7 @@ export function PolyMartProductDetail() {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all text-amber-600 dark:text-amber-400 font-black text-xs active:scale-[0.99]"
           >
             <MessageCircle className="w-4 h-4 text-amber-500" />
-            <span>Sembang Bersama Peniaga</span>
+            <span>{t('commerce:product_chat_seller', 'Sembang Bersama Peniaga')}</span>
           </motion.button>
         )}
 
@@ -1207,7 +1209,7 @@ export function PolyMartProductDetail() {
               style={{ color: isOut ? 'hsl(var(--muted-foreground))' : PM_ACCENT }}
             >
               <ShoppingCart className="w-4 h-4" />
-              <span>Masukkan Troli</span>
+              <span>{t('commerce:product_add_to_cart', 'Masukkan Troli')}</span>
             </button>
             <button
               type="button"
@@ -1224,7 +1226,7 @@ export function PolyMartProductDetail() {
               style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT }}
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>{isOut ? 'Stok Habis' : 'Tempah Sekarang'}</span>
+              <span>{isOut ? t('commerce:product_out_of_stock', 'Stok Habis') : t('commerce:product_buy_now', 'Tempah Sekarang')}</span>
             </button>
           </div>
         )}

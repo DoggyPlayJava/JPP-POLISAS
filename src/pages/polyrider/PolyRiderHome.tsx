@@ -10,6 +10,7 @@ import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { SwipeToSOS } from '@/components/polyrider/SwipeToSOS';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { MapPicker } from '@/components/MapPicker';
 import { LocationSearchInput } from '@/components/polyrider/LocationSearchInput';
@@ -232,6 +233,7 @@ function RatingModal({ show, stars, note, tip, onStars, onNote, onTip, onSubmit,
 }
 
 export function PolyRiderHome() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1408,7 +1410,7 @@ export function PolyRiderHome() {
             PolyRider <Bike className="w-6 h-6 text-amber-500" />
           </h1>
           <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-1">
-            Jimat, Cepat & Selamat
+            {t('commerce:rider_home_subtitle', 'Jimat, Cepat & Selamat')}
           </p>
         </div>
         <div className="flex items-center gap-2">

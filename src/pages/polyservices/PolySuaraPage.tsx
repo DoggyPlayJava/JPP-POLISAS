@@ -1655,12 +1655,12 @@ export function PolySuaraPage({
                   ✍️
                 </div>
                 <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-medium truncate">
-                  Ada luahan atau rahsia kampus? Kongsi secara rahsia...
+                  {t('suara_modal_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:bg-rose-500 group-hover:text-white transition-all">
-                  Luahkan
+                  {t('suara_post_confession_btn', 'Luahkan')}
                 </span>
               </div>
             </div>
@@ -1679,7 +1679,7 @@ export function PolySuaraPage({
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   )}
                 >
-                  <Clock className="w-3.5 h-3.5" /> Terkini
+                  <Clock className="w-3.5 h-3.5" /> {t('suara_sort_newest', 'Terkini')}
                 </button>
                 <button
                   type="button"
@@ -1691,7 +1691,7 @@ export function PolySuaraPage({
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   )}
                 >
-                  <Flame className="w-3.5 h-3.5" /> Hangat
+                  <Flame className="w-3.5 h-3.5" /> {t('suara_sort_trending', 'Hangat')}
                 </button>
               </div>
 
@@ -1710,7 +1710,7 @@ export function PolySuaraPage({
                       : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200/60 dark:border-white/5"
                   )}
                 >
-                  Semua
+                  {t('suara_category_all', 'Semua')}
                 </button>
                 {FEED_CATEGORIES.map(cat => (
                   <button
