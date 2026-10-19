@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
@@ -75,6 +76,7 @@ export const PRESET_CATEGORY_GROUPS = [
 ];
 
 export default function MakmpAdminDashboardPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const { user, profile } = useAuth();
   const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
@@ -1155,25 +1157,25 @@ export default function MakmpAdminDashboardPage() {
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Jumlah Pencalonan</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">{t('admin_stats_total_subs', 'Jumlah Pencalonan')}</div>
           <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{totalSubmissions}</div>
           <div className="text-[10px] text-slate-400 dark:text-slate-500">{submissions.length} permohonan masuk</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">Menunggu Semakan</div>
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">{t('admin_stats_pending_audit', 'Menunggu Semakan')}</div>
           <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-300">{pendingCount}</div>
           <div className="text-[10px] text-amber-600/80 dark:text-amber-500/80">Perlu tindakan pegawai/juri</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">Diluluskan</div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">{t('admin_stats_qualified', 'Diluluskan')}</div>
           <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
           <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{rejectedCount} ditolak</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">Merit Dianugerah</div>
+          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">{t('track_merit_score', 'Merit Dianugerah')}</div>
           <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300">+{totalMeritGiven}</div>
           <div className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">Diselaraskan ke e-akademik</div>
         </div>
@@ -1190,7 +1192,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Senarai Permohonan ({submissions.length})</span>
+          <span>{t('admin_tab_submissions', 'Senarai Permohonan')} ({submissions.length})</span>
         </button>
 
         <button
@@ -1202,7 +1204,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Award className="w-3.5 h-3.5" />
-          <span>Kategori Anugerah ({categories.length})</span>
+          <span>{t('admin_tab_awards', 'Kategori Anugerah')} ({categories.length})</span>
         </button>
 
         <button
@@ -1214,7 +1216,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Kod PIN Juri ({pins.length})</span>
+          <span>{t('admin_tab_juries', 'Kod PIN Juri')} ({pins.length})</span>
         </button>
 
         <button
@@ -1226,7 +1228,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <CalendarClock className="w-3.5 h-3.5" />
-          <span>Edisi & Sesi ({editions.length})</span>
+          <span>{t('admin_tab_editions', 'Edisi & Sesi')} ({editions.length})</span>
         </button>
 
         <button
@@ -1238,7 +1240,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
-          <span>Keputusan & Ranking</span>
+          <span>{t('admin_tab_ranking', 'Keputusan & Ranking')}</span>
         </button>
 
         <button
@@ -1250,7 +1252,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <IdCard className="w-3.5 h-3.5" />
-          <span>Dokumen Pemenang</span>
+          <span>{t('admin_tab_winner_docs', 'Dokumen Pemenang')}</span>
         </button>
       </div>
 

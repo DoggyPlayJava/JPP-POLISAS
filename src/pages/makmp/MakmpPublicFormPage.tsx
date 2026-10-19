@@ -1376,10 +1376,10 @@ export default function MakmpPublicFormPage() {
               <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800/80">
                 <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
                   {[
-                    { num: 1, label: 'Biodata', fullLabel: 'Maklumat Calon' },
-                    { num: 2, label: `Anugerah (${selectedAwardIds.length})`, fullLabel: `Pilihan Anugerah (${selectedAwardIds.length})` },
-                    { num: 3, label: 'Dokumen', fullLabel: 'Muat Naik Sijil' },
-                    { num: 4, label: 'Hantar', fullLabel: 'Pengesahan & Hantar' },
+                    { num: 1, label: t('nom_step_applicant', 'Biodata'), fullLabel: t('nom_step_applicant', 'Maklumat Calon') },
+                    { num: 2, label: `${t('nom_step_awards', 'Anugerah')} (${selectedAwardIds.length})`, fullLabel: `${t('nom_step_awards', 'Pilihan Anugerah')} (${selectedAwardIds.length})` },
+                    { num: 3, label: t('nom_step_documents', 'Dokumen'), fullLabel: t('nom_step_documents', 'Muat Naik Sijil') },
+                    { num: 4, label: t('nom_step_review', 'Hantar'), fullLabel: t('nom_step_review', 'Pengesahan & Hantar') },
                   ].map((s) => {
                     const isCompleted = step > s.num;
                     const isCurrent = step === s.num;
