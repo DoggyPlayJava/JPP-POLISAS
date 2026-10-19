@@ -117,6 +117,7 @@ export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave,
 // Kad Exco (Premium Bento Style)
 // ─────────────────────────────────────────────
 export interface ExcoCardProps {
+  key?: React.Key;
   module: ExcoModule;
   color: string;
   index: number;

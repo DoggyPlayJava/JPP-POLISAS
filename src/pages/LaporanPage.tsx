@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, Zap, CalendarDays, HelpCircle
@@ -51,6 +52,7 @@ const ALL_DOC_TYPES = [
 const MAX_MB = 25;
 
 export function LaporanPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, profile, isSuperAdmin, isPresident, isMT, selectedClubId } = useAuth();
   // Role kini dari context (berubah mengikut kelab yang dipilih)
   const canSubmit = isPresident || isMT;
@@ -157,7 +159,7 @@ export function LaporanPage() {
           title: 'Laporan Kelab Baharu',
           message: `${clubName} telah menghantar dokumen: ${reportType}. Sila semak di Semakan Laporan.`,
           type: 'INFO',
-          module: 'KPP',
+          module: 'EKPP',
           link: '/semakan-laporan'
         });
       } catch (err) {
@@ -324,7 +326,7 @@ export function LaporanPage() {
           title: 'Laporan Auto-Jana Baharu',
           message: `${clubName} telah menjana laporan ${dateRangeLabel ? 'gabungan ' + dateRangeLabel : 'bulan ' + monthLabel}. Sila semak di Semakan Laporan.`,
           type: 'INFO',
-          module: 'KPP',
+          module: 'EKPP',
           link: '/semakan-laporan'
         });
       } catch (err) {
@@ -348,7 +350,7 @@ export function LaporanPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
         <div>
           <Badge className="mb-3 bg-primary/10 text-primary border-none">{clubName}</Badge>
-          <h1 className="text-5xl font-black tracking-tighter gradient-text">Pusat Dokumen</h1>
+          <h1 className="text-5xl font-black tracking-tighter gradient-text">{t('kpp:submit_report')}</h1>
         </div>
         <button
           onClick={startTour}
@@ -360,7 +362,7 @@ export function LaporanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <Card className="tour-tab-laporan-semua lg:col-span-2 bento-card border-none">
-          <CardHeader><CardTitle>Pengurusan Laporan</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('kpp:report_management')}</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <Select value={reportType} onValueChange={setReportType}>
               <SelectTrigger className="rounded-xl bg-muted/40 h-12"><SelectValue /></SelectTrigger>
@@ -400,7 +402,7 @@ export function LaporanPage() {
                       {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
                     </div>
                     <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
-                      {submitting ? 'Memuat Naik...' : 'Hantar Laporan Manual'}
+                      {submitting ? t('common:loading') : t('kpp:submit_report')}
                     </Button>
                   </form>
                 ) : !allowAutoPdf && !isSuperAdmin ? (
@@ -442,7 +444,7 @@ export function LaporanPage() {
                   {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
                 </div>
                 <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
-                  {submitting ? 'Memuat Naik...' : 'Hantar Dokumen'}
+                  {submitting ? t('common:loading') : t('kpp:submit_report')}
                 </Button>
               </form>
             )}
@@ -452,7 +454,7 @@ export function LaporanPage() {
 
         <div className="lg:col-span-3 space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-black">Rekod Dokumen</h2>
+            <h2 className="text-xl font-black">{t('kpp:review_reports')}</h2>
             <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> Segarkan</Button>
           </div>
           

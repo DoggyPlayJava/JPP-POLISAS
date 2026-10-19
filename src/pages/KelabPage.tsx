@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutGrid, Search, Trophy, BookOpen, Heart, Shield, ArrowRight,
@@ -56,6 +57,7 @@ function getCategoryMeta(rawCategory?: string | null) {
 }
 
 export function KelabPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const navigate = useNavigate();
   const { profile, user } = useAuth();
 
@@ -168,7 +170,7 @@ export function KelabPage() {
             title: 'Permohonan Kelab Baru',
             message: `Terdapat permohonan keahlian baharu untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
             type: 'KPP_MEMBERSHIP_REQUEST',
-            module: 'KPP',
+            module: 'EKPP',
             link: '/jpp'
           });
         } catch (e) {
@@ -273,7 +275,7 @@ export function KelabPage() {
         </div>
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-foreground text-balance">
-          Direktori Kelab & <span className="gradient-text">Persatuan</span>
+          {t('kpp:club_directory')}
         </h1>
         <p className="text-muted-foreground font-medium max-w-xl text-sm sm:text-base leading-relaxed text-balance">
           Pilih dan sertai persatuan minat anda di POLISAS untuk membina kemahiran kepimpinan, jaringan sosial, dan memupuk merit kokurikulum.
@@ -303,7 +305,7 @@ export function KelabPage() {
           <div className="relative flex items-center bg-card border border-border/80 shadow-sm rounded-2xl overflow-hidden p-1.5 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
             <Search className="w-5 h-5 text-muted-foreground ml-3 shrink-0" />
             <Input
-              placeholder="Cari nama kelab (contoh: Elektron, Ketema)..."
+              placeholder={t('kpp:search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border-none shadow-none text-sm sm:text-base h-11 focus-visible:ring-0 placeholder:text-muted-foreground/60 font-medium px-3"
@@ -328,7 +330,7 @@ export function KelabPage() {
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Star className="w-4 h-4 fill-amber-500" />
             <h3 className="text-xs font-bold uppercase tracking-wider">
-              Kelab Saya ({myApprovedClubs.length})
+              {t('kpp:my_clubs')} ({myApprovedClubs.length})
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -389,6 +391,17 @@ export function KelabPage() {
       <div className="flex items-center gap-1.5 p-1.5 bg-muted/40 rounded-2xl border border-border/60 max-w-full overflow-x-auto no-scrollbar mx-auto">
         {categories.map((cat) => {
           const isSelected = activeTab === cat;
+          const getCategoryLabel = (c: string) => {
+            switch (c) {
+              case 'Semua': return t('common:all');
+              case 'Akademik': return t('kpp:club_category_academic');
+              case 'Sukan': return t('kpp:club_category_sports');
+              case 'Umum': return t('kpp:club_category_spiritual');
+              case 'Badan Beruniform': return t('kpp:club_category_uniformed');
+              default: return c;
+            }
+          };
+
           return (
             <button
               key={cat}
@@ -405,7 +418,7 @@ export function KelabPage() {
               {cat === 'Sukan' ? <Trophy className="w-3.5 h-3.5" /> : null}
               {cat === 'Umum' ? <Heart className="w-3.5 h-3.5" /> : null}
               {cat === 'Badan Beruniform' ? <Shield className="w-3.5 h-3.5" /> : null}
-              <span>{cat}</span>
+              <span>{getCategoryLabel(cat)}</span>
             </button>
           );
         })}
@@ -450,12 +463,12 @@ export function KelabPage() {
                       <div className="absolute top-5 right-5 flex flex-col gap-1.5 items-end z-10">
                         {status === 'APPROVED' && (
                           <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Ahli
+                            <CheckCircle2 className="w-3.5 h-3.5" /> {t('kpp:club_status_active')}
                           </div>
                         )}
                         {status === 'PENDING' && (
                           <div className="flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
-                            <Clock className="w-3.5 h-3.5" /> Menunggu
+                            <Clock className="w-3.5 h-3.5" /> {t('kpp:report_status_submitted')}
                           </div>
                         )}
                       </div>
@@ -550,7 +563,7 @@ export function KelabPage() {
                             disabled={applying === club.id}
                             className="flex-1 h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
                           >
-                            {applying === club.id ? 'Menghantar...' : 'Mohon Sertai'}
+                            {applying === club.id ? t('common:loading') : t('kpp:join_club')}
                           </Button>
                         )}
 

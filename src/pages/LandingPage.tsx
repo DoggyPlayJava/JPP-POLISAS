@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
@@ -325,6 +326,7 @@ function SpotlightCard({ children, className, onClick }: any) {
 
 // ── 1. Floating Pill Navbar (<Navbar />) ──────────────────────
 export const Navbar: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -406,7 +408,7 @@ export const Navbar: React.FC = () => {
               onClick={() => navigate('/portal')}
               className="px-5 py-2.5 rounded-full bg-[#C96F4F] hover:bg-[#B85F40] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <span>Masuk Portal</span>
+              <span>{t('portal:explore_portal')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
@@ -449,7 +451,7 @@ export const Navbar: React.FC = () => {
               }}
               className="mt-4 w-full py-3.5 rounded-xl bg-[#C96F4F] text-white text-xs font-black uppercase tracking-widest text-center shadow-xs"
             >
-              Masuk Portal Siswa
+              {t('portal:explore_portal')}
             </button>
           </motion.div>
         )}
@@ -523,6 +525,7 @@ export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats
 
 // ── 3. Centered Bold Hero (<Hero />) ──────────────────────────
 export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
@@ -542,7 +545,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
         >
           <div className="w-2 h-2 rounded-full bg-[#C96F4F] shadow-xs" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#2E3A2F]">
-            Sistem Operasi Institusi Sesi 2026/2027
+            {t('portal:portal_welcome')}
           </span>
         </motion.div>
 
@@ -553,10 +556,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
           transition={{ delay: 0.2 }}
           className="text-4xl sm:text-6xl md:text-8xl xl:text-[7.5rem] font-black tracking-tight text-[#2E3A2F] mb-6 md:mb-8 pb-2 leading-[0.98]"
         >
-          Perpaduan Progresif <br />
-          <span className="text-[#C96F4F] drop-shadow-xs">
-            Demi Mahasiswa.
-          </span>
+          {t('portal:hero_title')}
         </motion.h1>
 
         <motion.p
@@ -565,7 +565,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
           transition={{ delay: 0.3 }}
           className="text-sm md:text-lg text-[#556453] max-w-2xl mx-auto font-medium leading-relaxed mb-10 md:mb-12 px-2"
         >
-          Platform digital rasmi memacu kepimpinan mahasiswa, automasi tadbir urus kelab, dan ekosistem kampus lestari Politeknik Sultan Haji Ahmad Shah.
+          {t('portal:hero_subtitle')}
         </motion.p>
 
         {/* Butang Tindakan */}
@@ -579,7 +579,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
             onClick={() => navigate('/portal')}
             className="w-full sm:w-auto px-8 md:px-10 py-4 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-3 shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
           >
-            <span>Masuk Portal Pelajar</span>
+            <span>{t('portal:explore_portal')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -697,6 +697,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
 
 // ── 5. Bento Section 5 Modul Estetik & Kemas (<BentoSection />) ──
 export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
@@ -709,16 +710,15 @@ export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full bg-[#C96F4F]" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#556453]">
-              EKOSISTEM TERAS
+              {t('portal:portal_select_module')}
             </span>
           </div>
           <h2 className="text-4xl sm:text-6xl md:text-[5rem] font-black tracking-tight text-[#2E3A2F] leading-[0.94]">
-            Satu Ekosistem. <br />
-            <span className="text-[#6B7F5B] font-semibold italic">Kawal Sepenuhnya.</span>
+            {t('portal:features_heading')}
           </h2>
         </div>
         <p className="max-w-md text-sm md:text-base text-[#556453] font-medium leading-relaxed pb-2">
-          Struktur modular yang direka khas untuk logik tadbir urus. Organisasikan keperluan kampus dalam kepantasan milisaat.
+          {t('portal:features_desc')}
         </p>
       </div>
 
@@ -902,6 +902,7 @@ export const StatsSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
 
 // ── 8. Banner Gerakan Tindakan (<CtaSection />) ───────────────
 export const CtaSection: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
 
   return (
@@ -914,11 +915,11 @@ export const CtaSection: React.FC = () => {
       >
 
         <h2 className="text-3xl md:text-6xl font-black tracking-tight text-[#2E3A2F] leading-[1.02] relative z-10">
-          Gerakan Mahasiswa Bermula Di Sini.
+          {t('portal:hero_title')}
         </h2>
 
         <p className="text-sm md:text-lg text-[#556453] max-w-xl mx-auto font-medium leading-relaxed relative z-10">
-          Sertai portal pengurusan kampus bersepadu. Urus kelab, mohon kelulusan kertas kerja, dan pantau kebajikan anda.
+          {t('portal:hero_subtitle')}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-4">
@@ -926,7 +927,7 @@ export const CtaSection: React.FC = () => {
             onClick={() => navigate('/portal')}
             className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
           >
-            <span>Daftar / Log Masuk Sekarang</span>
+            <span>{t('portal:student_login')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -967,6 +968,7 @@ export const Footer: React.FC = () => (
 
 // ── Komponen Utama Halaman Pendaratan (<LandingPage />) ────────
 export const LandingPage: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const stats = useCampusStats();
 
   return (

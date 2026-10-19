@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Users, Clock, FileText, Activity, AlertCircle,
@@ -82,7 +83,7 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
 }
 
 // --- 2. KOMPONEN KECIL: JEJAK PROGRAM (KERTAS KERJA) ---
-function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: any) => void }) {
+function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onUnlock: (p: any) => void }) {
   const isPending = program.status === 'PENDING_APPROVAL' || program.status === 'PENDING_POSTMORTEM';
   const isConfirmed = program.status === 'CONFIRMED';
   const isRejected = program.status === 'DRAFT' && program.jpp_remarks;
@@ -134,6 +135,7 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
 
 // --- 3. KOMPONEN UTAMA DASHBOARD ---
 export function DashboardPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
@@ -372,9 +374,18 @@ export function DashboardPage() {
             <div className="p-2 bg-primary rounded-xl text-white"><LayoutDashboard size={20} /></div>
             <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">{effectiveRole}</Badge>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
+          <div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">{t('kpp:dashboard_title')}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">{t('kpp:dashboard_subtitle')}</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
+          <Button onClick={() => navigate('/sertai-kelab')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-primary/30 text-primary bg-primary/10 hover:bg-primary/20">
+            <Users className="w-4 h-4 mr-2" /> {t('kpp:join_club')}
+          </Button>
+          <Button onClick={() => navigate('/laporan')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20">
+            <FileText className="w-4 h-4 mr-2" /> {t('kpp:submit_report')}
+          </Button>
           <Button onClick={startTour} variant="outline" size="icon" className="rounded-xl border-amber-500/30 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20">
             <HelpCircle className="w-5 h-5" />
           </Button>
@@ -396,10 +407,10 @@ export function DashboardPage() {
 
       {/* ── STAT CARDS ── */}
       <div className="tour-kelab-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {(isAdvisor || isPresident) && <StatCard label="Perlu Kelulusan" val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />}
-        <StatCard label="Ahli Aktif" val={members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
-        <StatCard label="Tugasan" val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
-        <StatCard label="Aktiviti" val={activities.length} color="text-emerald-600" icon={TrendingUp} bg="bg-emerald-500/10" />
+        <StatCard label={t('kpp:stats_pending')} val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />
+        <StatCard label={t('kpp:stats_clubs')} val={userClubIds.length || members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
+        <StatCard label={t('kpp:stats_reports')} val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
+        <StatCard label={t('kpp:stats_activities')} val={activities.length} color="text-emerald-600" icon={TrendingUp} bg="bg-emerald-500/10" />
       </div>
 
       {/* ── CLUB ANALYTICS ── */}
@@ -494,7 +505,7 @@ export function DashboardPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                    <FileCheck className="text-primary" size={24} /> Jejak Program
+                    <FileCheck className="text-primary" size={24} /> {t('kpp:upcoming_activities')}
                   </h3>
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Status Kertas Kerja di JPP</p>
                 </div>
@@ -531,7 +542,7 @@ export function DashboardPage() {
           <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70  overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                {taskView === 'active' ? (isNormalMember ? 'Tugasan Saya' : 'Senarai Tugasan') : 'Arkib Tugasan'}
+                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs') : `${t('kpp:my_clubs')} - Tugasan`) : 'Arkib Tugasan'}
                 {taskView === 'archive' && <Archive size={20} className="text-muted-foreground" />}
               </CardTitle>
               <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 w-full sm:w-auto">
@@ -631,7 +642,7 @@ export function DashboardPage() {
         inputType="textarea"
         placeholder="Contoh: Lampiran minit mesyuarat tidak lengkap..."
         confirmLabel="Tolak Tugasan"
-        confirmVariant="destructive"
+        variant="destructive"
         isLoading={isProcessingAction}
         onConfirm={executeRejectTask}
         onCancel={() => setRejectDialog({ open: false, task: null })}

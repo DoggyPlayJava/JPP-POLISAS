@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +32,7 @@ import type { StudentTimetableEntry } from '@/types';
 const SystemTour = React.lazy(() => import('@/components/ui/SystemTour').then(m => ({ default: m.SystemTour })));
 
 export function PortalPage() {
+  const { t } = useTranslation(['portal', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const karnivalStatus = useKarnivalStatus();
   const karnivalActive = !!karnivalStatus?.isActive;
@@ -450,14 +452,17 @@ export function PortalPage() {
         <PolyMartFeed />
 
         {/* 5. Official Exco Modules Section */}
-        <section aria-label="Modul Rasmi Exco" className="tour-exco-modules space-y-4">
+        <section aria-label={t('portal:portal_title')} className="tour-exco-modules space-y-4">
           <div className="flex items-center justify-between">
             <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7F5B] block mb-1">
+                {t('portal:portal_welcome')}
+              </span>
               <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight [text-wrap:balance]">
-                Modul Rasmi Exco JPP
+                {t('portal:portal_title')}
               </h2>
               <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] [text-wrap:balance]">
-                Akses terus ke portal rasmi pengurusan dan pentadbiran mahasiswa
+                {t('portal:portal_select_module')}
               </p>
             </div>
           </div>

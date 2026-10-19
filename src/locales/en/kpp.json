@@ -32,5 +32,12 @@
   "report_status_draft": "Draft",
   "report_status_submitted": "Submitted",
   "report_status_approved": "Approved",
-  "report_status_rejected": "Requires Amendment"
+  "report_status_rejected": "Requires Amendment",
+  "event_status_upcoming": "Upcoming",
+  "event_status_ongoing": "Ongoing",
+  "event_status_completed": "Completed",
+  "event_status_postponed": "Postponed",
+  "search_placeholder": "Search club name (e.g. Elektron, Ketema)...",
+  "club_activities": "Club Activities",
+  "report_management": "Report Management"
 }
