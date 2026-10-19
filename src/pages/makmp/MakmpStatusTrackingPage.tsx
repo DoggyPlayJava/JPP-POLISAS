@@ -331,11 +331,11 @@ export default function MakmpStatusTrackingPage() {
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link to="/makmp" className="flex items-center gap-2 group text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
             <ArrowLeft className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span>Borang Pencalonan</span>
+            <span>{t('nomination_portal', 'Borang Pencalonan')}</span>
           </Link>
 
           <div className="font-bold text-sm tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-            Semakan Status <span className="text-amber-600 dark:text-amber-400">MAKMP</span>
+            {t('verification_status', 'Semakan Status')} <span className="text-amber-600 dark:text-amber-400">MAKMP</span>
           </div>
 
           <Link
@@ -380,7 +380,7 @@ export default function MakmpStatusTrackingPage() {
               className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center gap-2 disabled:opacity-50 shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              <span>Cari</span>
+              <span>{t('common:search', 'Cari')}</span>
             </button>
           </form>
 
@@ -553,17 +553,17 @@ export default function MakmpStatusTrackingPage() {
               {/* Biodata Pelajar Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Nama Pelajar</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_applicant_name', 'Nama Pelajar')}</span>
                   <div className="font-semibold text-slate-900 dark:text-white truncate" title={submission.full_name}>{submission.full_name}</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">No. Matrik</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_matric_no', 'No. Matrik')}</span>
                   <div className="font-mono font-bold text-amber-600 dark:text-amber-400">{submission.matric_no}</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Jabatan & Semester</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_department', 'Jabatan & Semester')}</span>
                   <div className="font-semibold text-slate-900 dark:text-white">
                     {submission.department} (Sem {submission.semester || 1})
                   </div>
@@ -579,10 +579,10 @@ export default function MakmpStatusTrackingPage() {
                     </div>
                     <div>
                       <div className="font-bold text-sm text-slate-900 dark:text-white">
-                        Permohonan ini belum dipautkan ke akaun JPP Portal
+                        {t('track_claim_title', 'Permohonan ini belum dipautkan ke akaun JPP Portal')}
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                        Pautkan akaun anda supaya sijil & merit yang diluluskan nanti auto-simpan ke dokumen peribadi e-akademik anda.
+                        {t('track_claim_desc', 'Pautkan akaun anda supaya sijil & merit yang diluluskan nanti auto-simpan ke dokumen peribadi e-akademik anda.')}
                       </p>
                     </div>
                   </div>
@@ -649,7 +649,7 @@ export default function MakmpStatusTrackingPage() {
                           className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                         >
                           {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
-                          <span>Pautkan ke Akaun Saya</span>
+                          <span>{t('track_claim_btn', 'Pautkan ke Akaun Saya')}</span>
                         </button>
                       )}
                     </>

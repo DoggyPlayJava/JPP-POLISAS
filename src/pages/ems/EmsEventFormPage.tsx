@@ -23,6 +23,7 @@ import {
   ShoppingBag,
   Store,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
 import type { EmsEventMode, EmsEventType, EmsFormField, EmsRubricCriteria } from '@/types';
@@ -49,6 +50,7 @@ interface LocalRubricCriteria {
 }
 
 export function EmsEventFormPage() {
+  const { t } = useTranslation(['ems', 'common']);
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const {
@@ -559,10 +561,10 @@ export function EmsEventFormPage() {
           </button>
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {isEditMode ? 'Sunting Acara Pertandingan' : 'Cipta Acara Pertandingan Baharu'}
+              {isEditMode ? t('event_form_edit_title', 'Sunting Acara Pertandingan') : t('event_form_create_title', 'Cipta Acara Pertandingan Baharu')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Isi maklumat asas acara, bina borang pendaftaran & tetapkan rubrik pemarkahan juri.
+              {t('event_form_subtitle', 'Isi maklumat asas acara, bina borang pendaftaran & tetapkan rubrik pemarkahan juri.')}
             </p>
           </div>
         </div>
@@ -577,21 +579,21 @@ export function EmsEventFormPage() {
           onClick={() => document.getElementById('sec-info')?.scrollIntoView({ behavior: 'smooth' })}
           className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
         >
-          1. Maklumat Asas &amp; Tarikh
+          1. {t('event_form_nav_info', 'Maklumat Asas & Tarikh')}
         </button>
         <button
           type="button"
           onClick={() => document.getElementById('sec-form-fields')?.scrollIntoView({ behavior: 'smooth' })}
           className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
         >
-          2. Borang Pendaftaran
+          2. {t('event_form_nav_fields', 'Borang Pendaftaran')}
         </button>
         <button
           type="button"
           onClick={() => document.getElementById('sec-rubrics')?.scrollIntoView({ behavior: 'smooth' })}
           className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap transition-colors"
         >
-          3. Rubrik Juri
+          3. {t('event_form_nav_rubrics', 'Rubrik Juri')}
         </button>
       </div>
 
@@ -605,13 +607,13 @@ export function EmsEventFormPage() {
             <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               <Layers className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Seksyen 1: Maklumat Asas Acara</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Seksyen 1: {t('event_form_nav_info', 'Maklumat Asas Acara')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Tajuk / Nama Acara <span className="text-rose-500">*</span>
+                {t('event_form_title_label', 'Tajuk / Nama Acara')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -624,7 +626,7 @@ export function EmsEventFormPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Penerangan Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('event_form_desc_label', 'Penerangan Acara')}</label>
               <textarea
                 rows={3}
                 value={description}
@@ -636,7 +638,7 @@ export function EmsEventFormPage() {
 
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Jenis Acara <span className="text-rose-500">*</span>
+                {t('event_form_mode_label', 'Jenis Acara')} <span className="text-rose-500">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
@@ -1013,7 +1015,7 @@ export function EmsEventFormPage() {
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold text-xs transition-all shadow-sm active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ Tambah Kriteria</span>
+                <span>{t('event_form_add_criteria', '+ Tambah Kriteria')}</span>
               </button>
             </div>
           </div>
@@ -1022,7 +1024,7 @@ export function EmsEventFormPage() {
           <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Templat Rubrik Pantas (1-Click Preset Loader)</span>
+              <span>{t('event_form_load_preset', 'Templat Rubrik Pantas (1-Click Preset Loader)')}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
@@ -1033,7 +1035,7 @@ export function EmsEventFormPage() {
                 <div className="flex items-center gap-2.5 text-left">
                   <Package className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-slate-900 dark:text-white font-extrabold">Tambah Templat iFAMB Best Showcase</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">{t('event_form_preset_ifamb_showcase', 'Tambah Templat iFAMB Best Showcase')}</div>
                     <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(4 Seksyen / 16 Rubrik)</div>
                   </div>
                 </div>
@@ -1047,7 +1049,7 @@ export function EmsEventFormPage() {
                 <div className="flex items-center gap-2.5 text-left">
                   <Mic className="w-5 h-5 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-slate-900 dark:text-white font-extrabold">Tambah Templat iFAMB Best Pitching</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">{t('event_form_preset_ifamb_pitching', 'Tambah Templat iFAMB Best Pitching')}</div>
                     <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(10 Rubrik)</div>
                   </div>
                 </div>
@@ -1411,7 +1413,7 @@ export function EmsEventFormPage() {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all shadow-sm disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
-            <span>Simpan Draf</span>
+            <span>{t('event_form_save_draft', 'Simpan Draf')}</span>
           </button>
 
           <button
@@ -1421,7 +1423,7 @@ export function EmsEventFormPage() {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-xl shadow-amber-500/20 disabled:opacity-50 active:scale-[0.98]"
           >
             <Send className="w-4 h-4" />
-            <span>{submitting ? 'Menyimpan...' : 'Hantar Untuk Kelulusan JPP HQ'}</span>
+            <span>{submitting ? t('event_form_saving', 'Menyimpan...') : t('event_form_publish', 'Hantar Untuk Kelulusan JPP HQ')}</span>
           </button>
         </div>
       </div>
