@@ -32,5 +32,12 @@
   "report_status_draft": "Draf",
   "report_status_submitted": "Telah Dihantar",
   "report_status_approved": "Diluluskan",
-  "report_status_rejected": "Perlu Pindaan"
+  "report_status_rejected": "Perlu Pindaan",
+  "event_status_upcoming": "Akan Datang",
+  "event_status_ongoing": "Sedang Berlangsung",
+  "event_status_completed": "Selesai",
+  "event_status_postponed": "Ditangguh",
+  "search_placeholder": "Cari nama kelab (contoh: Elektron, Ketema)...",
+  "club_activities": "Aktiviti Kelab",
+  "report_management": "Pengurusan Laporan"
 }

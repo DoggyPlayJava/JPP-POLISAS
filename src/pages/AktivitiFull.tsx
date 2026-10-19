@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,7 @@ const PRIORITY_CONFIG: Record<string, { label: string; dot: string }> = {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export function AktivitiFull() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, profile, isPresident, isMT, isSuperAdmin, selectedClubId, effectiveRole } = useAuth();
   const canManageTakwim = isMT || isSuperAdmin;
   const { runTour, startTour, closeTour } = useTour('EKPP_AKTIVITI', !!profile);
@@ -75,9 +77,9 @@ export function AktivitiFull() {
           <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border-none">
             {profile?.club_id ? 'Kelab' : 'JPP'}
           </Badge>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter gradient-text">Aktiviti</h1>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter gradient-text">{t('kpp:upcoming_activities')}</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base font-medium">
-            Takwim Rasmi &amp; Aktiviti Harian Kelab
+            {t('kpp:view_calendar')}
           </p>
         </div>
         <button
@@ -96,14 +98,14 @@ export function AktivitiFull() {
             className="tour-tab-aktiviti rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-emerald-600 flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
             <Zap className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Aktiviti Kelab</span>
+            <span className="truncate">{t('kpp:club_activities')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="takwim"
             className="tour-tab-takwim rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
             <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Takwim Rasmi</span>
+            <span className="truncate">{t('kpp:view_calendar')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="statistik"
@@ -140,6 +142,7 @@ export function AktivitiFull() {
 // Ahli biasa read-only.
 // ══════════════════════════════════════════════════════════════════════════════
 function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('semua');
@@ -204,7 +207,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
     const rawFiles = e.target.files;
     if (!rawFiles || rawFiles.length === 0) return;
     // Convert ke array DAHULU sebelum reset — supaya reference tidak hilang
-    const allFiles = Array.from(rawFiles);
+    const allFiles = Array.from(rawFiles) as File[];
     const originalCount = rawFiles.length;
     // Reset input supaya fail yang sama boleh dipilih semula
     e.target.value = '';
@@ -370,11 +373,11 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full min-w-0">
         <div className="overflow-x-auto no-scrollbar flex items-center gap-2 py-1 w-full min-w-0">
           {[
-            { key: 'semua', label: 'Semua', count: activities.length },
-            { key: 'perancangan', label: 'Perancangan', count: statusCounts.perancangan || 0 },
-            { key: 'aktif', label: 'Aktif', count: statusCounts.aktif || 0 },
-            { key: 'selesai', label: 'Selesai', count: statusCounts.selesai || 0 },
-            { key: 'ditangguh', label: 'Ditangguh', count: statusCounts.ditangguh || 0 },
+            { key: 'semua', label: t('common:all'), count: activities.length },
+            { key: 'perancangan', label: t('kpp:event_status_upcoming'), count: statusCounts.perancangan || 0 },
+            { key: 'aktif', label: t('kpp:event_status_ongoing'), count: statusCounts.aktif || 0 },
+            { key: 'selesai', label: t('kpp:event_status_completed'), count: statusCounts.selesai || 0 },
+            { key: 'ditangguh', label: t('kpp:event_status_postponed'), count: statusCounts.ditangguh || 0 },
           ].map(f => (
             <button
               key={f.key}
@@ -720,10 +723,21 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
 // Card untuk setiap aktiviti kelab
 function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const statusCfg = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
   const priorityCfg = PRIORITY_CONFIG[act.priority] || PRIORITY_CONFIG.sederhana;
   const isOwner = act.user_id === currentUserId;
   const [qrOpen, setQrOpen] = useState(false);
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'perancangan': return t('kpp:event_status_upcoming');
+      case 'aktif': return t('kpp:event_status_ongoing');
+      case 'selesai': return t('kpp:event_status_completed');
+      case 'ditangguh': return t('kpp:event_status_postponed');
+      default: return statusCfg.label;
+    }
+  };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -739,7 +753,7 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-1 border-none', statusCfg.bg, statusCfg.color)}>
-                {statusCfg.label}
+                {getStatusLabel(act.status)}
               </Badge>
               <div className="flex items-center gap-1.5">
                 <div className={cn('w-1.5 h-1.5 rounded-full', priorityCfg.dot)} />
@@ -931,7 +945,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     const remainingSlots = 2 - currentCount;
     if (remainingSlots <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
 
-    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    const filesToUpload = (Array.from(files) as File[]).slice(0, remainingSlots);
     const toastId = toast.loading('Memuat naik gambar...');
     const urls: string[] = [];
     try {
@@ -1015,7 +1029,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               title: 'Program Baru Dihantar Untuk Semakan',
               message: `Program "${form.title}" telah dihantar untuk semakan JPP.`,
               type: 'DOCUMENT_UPLOAD',
-              module: 'KPP',
+              module: 'EKPP',
               link: '/aktiviti'
             });
           } catch (e) {
