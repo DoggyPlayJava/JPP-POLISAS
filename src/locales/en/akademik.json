@@ -28,12 +28,12 @@
   "offense_reason": "Reason for Violation",
   "offense_reason_placeholder": "Example: Absent without reason, dress code violation...",
   "demerit_points": "Demerit Points (Deduction)",
-  "evidence_url": "Proof / Evidence URL (Optional)",
+  "evidence_url": "Evidence Link (Optional)",
   "submit_demerit": "Record Demerit",
   "demerit_appeals_title": "Demerit Appeal Inquiries",
   "approve_appeal": "Approve Appeal",
   "reject_appeal": "Reject Appeal",
-  "appeal_approved_toast": "Appeal approved successfully",
+  "appeal_approved_toast": "Appeal approved",
   "appeal_rejected_toast": "Appeal rejected",
   "folder_title": "Digital Academic Locker",
   "folder_subtitle": "Secure cloud repository for certificates, transcripts, and official letters",
@@ -53,5 +53,5 @@
   "status_approved": "Verified",
   "status_rejected": "Rejected",
   "unlock_request_btn": "Request Unlock",
-  "unlock_reason_placeholder": "State reason for unlock request..."
+  "unlock_reason_placeholder": "State reason for request..."
 }

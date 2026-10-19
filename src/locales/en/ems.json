@@ -31,7 +31,7 @@
   "reg_mode_team": "Team / Booth",
   "reg_leader_name": "Leader / Participant Full Name",
   "reg_matrix_no": "Matriculation Number",
-  "reg_ic_no": "Identity Card (IC) Number",
+  "reg_ic_no": "Identity Card Number",
   "reg_email": "Email Address",
   "reg_phone": "Phone / WhatsApp Number",
   "reg_team_name": "Team Name",

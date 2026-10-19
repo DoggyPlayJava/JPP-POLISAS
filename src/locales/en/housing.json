@@ -31,7 +31,7 @@
   "db_not_ready_desc": "Residency table is not initialized yet. Run database migrations to persist records.",
   "unrecognized_zones_warning": "unrecognized zones need migration",
   "stat_off_campus_students": "Off-Campus Students",
-  "stat_kamsis_students": "In Residential College",
+  "stat_kamsis_students": "In Dormitory",
   "stat_webapp_source": "Web App",
   "stat_gform_source": "Google Form",
   "export_excel": "Export Spreadsheet (XLSX)",
