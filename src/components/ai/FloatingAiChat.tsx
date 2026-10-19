@@ -2336,8 +2336,8 @@ export function FloatingAiChat() {
                       <p className="font-bold mb-1">{isExcoMode ? `Hai ${getMalaysianNickname(profile?.full_name)}! 🛡️` : `Hai ${getMalaysianNickname(profile?.full_name)}! 👋`}</p>
                       <p className="text-muted-foreground text-xs leading-relaxed font-medium">
                         {isExcoMode
-                          ? "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!"
-                          : t('nav:ai_greeting', "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!")
+                          ? t('common:ai_exco_greeting', "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!")
+                          : t('common:ai_greeting', "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!")
                         }
                       </p>
                     </div>
@@ -2468,7 +2468,7 @@ export function FloatingAiChat() {
                       ref={textareaRef}
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-                      placeholder={isBusy ? t('common:loading', "AI sedang berfikir...") : t('nav:search_placeholder', "Tanya sesuatu...")}
+                      placeholder={isBusy ? t('common:loading', "AI sedang berfikir...") : t('common:type_message_placeholder', "Tanya soalan...")}
                       rows={1}
                       maxLength={700}
                       disabled={isBusy}
@@ -2563,7 +2563,7 @@ export function FloatingAiChat() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Cari perbualan..."
+                      placeholder={t('common:search_conversations', "Cari perbualan...")}
                       className="w-full text-[10px] md:text-[11px] pl-8 pr-7 py-2 bg-muted/40 border border-border/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-foreground placeholder:text-muted-foreground/45"
                     />
                     {searchQuery && (
