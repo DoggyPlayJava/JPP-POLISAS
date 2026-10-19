@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -47,7 +48,8 @@ import { ChevronDown } from 'lucide-react';
 // ─────────────────────────────────────────────────────────────────────────────
 type NavItem = {
   icon: React.ElementType;
-  label: string;
+  label?: string;
+  labelKey?: string;
   href: string;
 };
 
@@ -84,20 +86,20 @@ function detectActiveExco(pathname: string): string | null {
 // Konfigurasi nav per exco — TAMBAH di sini bila modul baru dibina
 // ─────────────────────────────────────────────────────────────────────────────
 const EKPP_NAV: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
-  { icon: Flag,            label: 'Kelab & Persatuan', href: '/kelab' },
-  { icon: CalendarDays,    label: 'Aktiviti', href: '/aktiviti' },
-  { icon: Users,           label: 'Ahli Jawatankuasa', href: '/ahli' },
-  { icon: FileText,        label: 'Laporan Kelab', href: '/laporan' },
-  { icon: Settings,        label: 'Tetapan', href: '/tetapan' },
+  { icon: LayoutDashboard, label: 'Papan Pemuka', labelKey: 'nav:dashboard', href: '/dashboard' },
+  { icon: Flag,            label: 'Kelab & Persatuan', labelKey: 'nav:clubs', href: '/kelab' },
+  { icon: CalendarDays,    label: 'Aktiviti', labelKey: 'nav:activities', href: '/aktiviti' },
+  { icon: Users,           label: 'Ahli Jawatankuasa', labelKey: 'nav:committee', href: '/ahli' },
+  { icon: FileText,        label: 'Laporan Kelab', labelKey: 'nav:reports', href: '/laporan' },
+  { icon: Settings,        label: 'Tetapan', labelKey: 'nav:settings', href: '/tetapan' },
 ];
 
 const EKPP_PRESIDENT_NAV: NavItem[] = [
-  { icon: Settings2, label: 'Urus Profil Kelab', href: '/urus-kelab' },
+  { icon: Settings2, label: 'Urus Profil Kelab', labelKey: 'nav:manage_club_profile', href: '/urus-kelab' },
 ];
 
 const EKPP_ADMIN_NAV: NavItem[] = [
-  { icon: ClipboardCheck, label: 'Semakan Laporan', href: '/semakan-laporan' },
+  { icon: ClipboardCheck, label: 'Semakan Laporan', labelKey: 'nav:report_review', href: '/semakan-laporan' },
   // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
 ];
 
@@ -116,6 +118,9 @@ const EMS_NAV: NavItem[] = [
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
 function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string; key?: React.Key }) {
+  const { t } = useTranslation();
+  const displayLabel = item.labelKey ? t(item.labelKey) : item.label;
+
   const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
@@ -159,6 +164,8 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
   return (
     <NavLink
       to={item.href}
+      title={displayLabel}
+      aria-label={displayLabel}
       className={({ isActive }) => cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl group',
         'transition-all duration-200',
@@ -174,7 +181,7 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
           )}>
             <item.icon className={cn('w-3.5 h-3.5', isActive ? (c.iconText ?? `text-${accentColor}-400`) : '')} />
           </div>
-          <span className="text-xs font-bold tracking-tight">{item.label}</span>
+          <span className="text-xs font-bold tracking-tight">{displayLabel}</span>
           {isActive && <div className={cn('ml-auto w-1 h-4 rounded-full', c.dot)} />}
         </>
       )}

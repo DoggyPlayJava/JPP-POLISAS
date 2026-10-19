@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, HelpCircle, MessageSquare, Send, ChevronRight, CalendarDays } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
+import { Search, HelpCircle, MessageSquare, Send, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { ALL_CLUBS } from '@/types';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationBell } from '@/components/ui/NotificationBell';
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { triggerCommandPalette } from '@/lib/commandPalette';
 
 export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
+  const { t } = useTranslation('nav');
   const { profile, selectedClubId, isSuperAdmin, isPresident, effectiveRole } = useAuth();
   const location = useLocation();
   const isEmsRoute = location.pathname.startsWith('/ems');
@@ -59,7 +61,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/40">
             <span className="w-2 h-2 rounded-full bg-accent" />
             <span className="text-xs font-semibold tracking-tight text-muted-foreground">
-              Portal Pelajar POLISAS
+              {t('portal_student_title')}
             </span>
           </div>
         )}
@@ -76,7 +78,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
         >
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-            <span className="text-xs font-medium truncate">Cari kelab, acara EMS, MAKMP, kebajikan...</span>
+            <span className="text-xs font-medium truncate">{t('search_placeholder')}</span>
           </div>
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-border/40 bg-background text-[10px] font-mono font-bold text-muted-foreground/70 shadow-xs">
             ⌘K
@@ -85,6 +87,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
         
         <Popover>
@@ -100,8 +103,8 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                   <MessageSquare size={16} />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black uppercase tracking-widest">Bantuan & Isu</h4>
-                  <p className="text-[9px] font-bold text-muted-foreground mt-0.5">Kami sedia membantu anda.</p>
+                  <h4 className="text-xs font-black uppercase tracking-widest">{t('help_and_issues')}</h4>
+                  <p className="text-[9px] font-bold text-muted-foreground mt-0.5">{t('help_subtitle')}</p>
                 </div>
               </div>
               
@@ -111,8 +114,8 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                     className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
                  >
                     <div className="text-left">
-                      <p className="text-[11px] font-black">Lapor Isu Teknikal</p>
-                      <p className="text-[9px] text-muted-foreground font-medium">Pepijat atau ralat sistem</p>
+                      <p className="text-[11px] font-black">{t('report_technical_issue')}</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">{t('report_technical_desc')}</p>
                     </div>
                     <ChevronRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
                  </button>
@@ -122,8 +125,8 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                     className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
                  >
                     <div className="text-left">
-                      <p className="text-[11px] font-black">Cadangan UI/UX</p>
-                      <p className="text-[9px] text-muted-foreground font-medium">Idea penambahbaikan visual</p>
+                      <p className="text-[11px] font-black">{t('suggest_uiux')}</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">{t('suggest_uiux_desc')}</p>
                     </div>
                     <ChevronRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
                  </button>
@@ -135,7 +138,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                     onClick={() => window.open('https://wa.me/601139413699', '_blank')}
                     className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none"
                  >
-                    <Send size={12} /> WhatsApp JPP Support
+                    <Send size={12} /> {t('whatsapp_support')}
                  </Button>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { JppSidebar } from './JppSidebar';
 import { Menu, X, Search } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -161,6 +162,7 @@ export function JppLayout() {
             >
               <Search className="w-4 h-4" />
             </button>
+            <LanguageToggle />
             <ThemeToggle />
             <NotificationBell />
           </div>
