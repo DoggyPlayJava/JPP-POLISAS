@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendNotificationToJppAndSuperAdmin } from '@/lib/notifications';
@@ -540,6 +541,7 @@ import { resolveRoomLocation } from '@/lib/polyMapsResolver';
 export { resolveRoomLocation } from '@/lib/polyMapsResolver';
 
 export function PolyMapsPage() {
+  const { t } = useTranslation(['services', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -1571,6 +1573,13 @@ export function PolyMapsPage() {
       
       {/* ── HEADER & SEARCH BAR ── */}
       <div className="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top pointer-events-none">
+        <h1 className="sr-only">{t('polymaps_title', { defaultValue: 'PolyMaps — GPS Kampus Interaktif & Direktori' })}</h1>
+        <div className="sr-only">
+          <span>{t('route_directions', { defaultValue: 'Dapatkan Panduan Laluan Berjalan' })}</span>
+          <span>{t('select_starting_point', { defaultValue: 'Pilih Titik Permulaan' })}</span>
+          <span>{t('select_destination', { defaultValue: 'Pilih Destinasi' })}</span>
+          <span>{t('campus_zones', { defaultValue: 'Zon Kampus POLISAS' })}</span>
+        </div>
         <div className="max-w-md mx-auto space-y-3 pointer-events-auto">
           {/* Top Bar */}
           <div className="flex items-center gap-3">
@@ -1584,7 +1593,7 @@ export function PolyMapsPage() {
               <Search className="w-5 h-5 text-[#6B7F5B]" />
               <input
                 type="text"
-                placeholder="Cari kelas (Cth: A301, JKM)..."
+                placeholder={t('search_locations', { defaultValue: 'Cari bilik kuliah, dewan kuliah, jabatan, atau makmal...' })}
                 className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE] placeholder:text-[#556453]/60 dark:placeholder:text-[#A3B39F]/60"
                 value={searchQuery}
                 onChange={(e) => {
@@ -1625,7 +1634,7 @@ export function PolyMapsPage() {
                   : "bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]"
               )}
             >
-              <Coffee className="w-3.5 h-3.5" /> Kafe
+              <Coffee className="w-3.5 h-3.5" /> {t('cafeterias', { defaultValue: 'Kafeteria & Tempat Makan' })}
             </button>
             <button 
               onClick={() => handleFilterClick('surau')} 
@@ -1943,7 +1952,7 @@ export function PolyMapsPage() {
               </div>
               <div className="p-2 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
                 <div className="flex bg-[#D9C9B2]/20 dark:bg-[#1E271F] rounded-xl p-1">
-                  <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>Zon / Jabatan</button>
+                  <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>{t('campus_zones', { defaultValue: 'Zon Kampus POLISAS' })}</button>
                   <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>Fasiliti Utama</button>
                 </div>
               </div>
@@ -3020,7 +3029,7 @@ export function PolyMapsPage() {
                               onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                               className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-colors active:scale-[0.98] bg-[#C96F4F] hover:bg-[#B35F41] text-white shadow-lg shadow-[#C96F4F]/25"
                             >
-                              <Navigation className="w-4 h-4" /> Mula Pandu Arah
+                              <Navigation className="w-4 h-4" /> {t('route_directions', { defaultValue: 'Dapatkan Panduan Laluan Berjalan' })}
                             </button>
                             
                             <button

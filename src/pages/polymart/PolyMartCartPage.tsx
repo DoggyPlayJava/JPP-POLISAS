@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight, Package } from 'lucide-react';
 import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
@@ -40,12 +41,13 @@ interface CartItem {
 }
 
 export function PolyMartCartPage() {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { refetchCounts } = usePolymart();
 
   const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null); // business_id
   const [pickupTime, setPickupTime] = useState<Record<string, string>>({});
   const [paymentMethods, setPaymentMethods] = useState<Record<string, 'COD' | 'QR_ONLINE'>>({});
@@ -211,8 +213,9 @@ export function PolyMartCartPage() {
     return (
       <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-6 h-6 rounded-lg bg-amber-500/20" />
-          <div className="h-6 w-32 bg-muted/60 rounded-md" />
+          <ShoppingCart className="w-6 h-6" style={{ color: PM_ACCENT }} />
+          <h1 className="text-xl font-black text-foreground">{t('cart', { defaultValue: 'Troli Pesanan' })}</h1>
+          <span className="sr-only">{t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })}</span>
         </div>
         {[1, 2].map(i => (
           <div key={i} className="bg-card border border-border/50 rounded-3xl p-4 space-y-4">
@@ -245,16 +248,17 @@ export function PolyMartCartPage() {
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="flex items-center gap-2 mb-6">
         <ShoppingCart className="w-6 h-6" style={{ color: PM_ACCENT }} />
-        <h1 className="text-xl font-black text-foreground">Troli Saya</h1>
+        <h1 className="text-xl font-black text-foreground">{t('cart', { defaultValue: 'Troli Pesanan' })}</h1>
       </div>
 
       {items.length === 0 ? (
         <div className="text-center py-20 bg-muted/20 border border-border/40 rounded-3xl">
           <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-bold text-foreground">Troli kosong</p>
+          <p className="text-sm font-bold text-foreground">{t('cart', { defaultValue: 'Troli kosong' })}</p>
+          <span className="sr-only">{t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })}</span>
           <p className="text-xs text-muted-foreground mt-1">Jom beli sesuatu di PolyMart!</p>
           <button onClick={() => navigate('/polymart')}
-            className="mt-4 px-5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110 shadow-md"
+            className="mt-4 px-5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110 shadow-md cursor-pointer"
             style={{ background: PM_GRADIENT }}>
             Kembali ke Kedai
           </button>
@@ -442,7 +446,7 @@ export function PolyMartCartPage() {
                       disabled={checkingOut === bizId}
                       className="h-10 px-4 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition-all hover:brightness-110 disabled:opacity-60 cursor-pointer"
                       style={{ background: PM_GRADIENT }}>
-                      {checkingOut === bizId ? 'Memproses...' : 'Checkout'} <ArrowRight className="w-3 h-3" />
+                      {checkingOut === bizId ? 'Memproses...' : t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })} <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>

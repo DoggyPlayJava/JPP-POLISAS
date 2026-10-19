@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -213,6 +214,7 @@ function TutorialCollapsible() {
 
 // ─── Main Dashboard ───────────────────────────────────────────
 export function AkademikDashboard() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   const navigate    = useNavigate();
 
@@ -227,10 +229,13 @@ export function AkademikDashboard() {
     latestHpnm:      null as number | null,
   });
   const [recentPencapaian, setRecentPencapaian] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
 
   const load = useCallback(async () => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [pencRes, cgpaRes] = await Promise.all([
@@ -297,7 +302,25 @@ export function AkademikDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-4 py-4">
+      <div className="space-y-4 py-4" aria-busy="true">
+        <div className="rounded-[2rem] border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-5">
+          <h1 className="text-xl font-black text-slate-900 dark:text-white">
+            {t('akademik:module_title', 'Hab Akademik & Matriks Jadual Waktu')}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 mt-1">
+            {t('akademik:module_subtitle', 'Matriks jadual kuliah, tarikh peperiksaan, parser jadual kelas, dan anggaran HPNM.')}
+          </p>
+        </div>
+        <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+              {t('akademik:timetable_grid', 'Matriks Jadual Waktu Kelas')}
+            </h3>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+              {t('akademik:current_slot', 'Kuliah Sedang Berlangsung')}
+            </span>
+          </div>
+        </div>
         <div className="h-28 rounded-[2rem] bg-slate-200/60 dark:bg-white/[0.03] animate-pulse border border-slate-200/40 dark:border-white/[0.04]" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -330,7 +353,7 @@ export function AkademikDashboard() {
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[9px] font-black uppercase tracking-[0.25em] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30">
-                  Student Cockpit
+                  {t('akademik:module_title', 'Hab Akademik & Matriks Jadual Waktu')}
                 </span>
                 <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
@@ -340,6 +363,9 @@ export function AkademikDashboard() {
               <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight truncate">
                 {profile?.full_name || 'Pelajar POLISAS'}
               </h1>
+              <p className="text-xs text-slate-500 dark:text-white/40 font-medium">
+                {t('akademik:module_subtitle', 'Matriks jadual kuliah, tarikh peperiksaan, parser jadual kelas, dan anggaran HPNM.')}
+              </p>
               {/* Badges row: Matric, Department, Semester */}
               <div className="flex items-center gap-2.5 flex-wrap text-slate-500 dark:text-white/40 text-[11px] font-medium pt-1">
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
@@ -392,6 +418,46 @@ export function AkademikDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Timetable Matrix Overview Card ── */}
+      <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-indigo-500" />
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+              {t('akademik:timetable_grid', 'Matriks Jadual Waktu Kelas')}
+            </h3>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+            {t('akademik:current_slot', 'Kuliah Sedang Berlangsung')}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase">
+              {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}
+            </span>
+            <p className="font-bold text-slate-800 dark:text-slate-200">DK 1 / Makmal Komputer 3</p>
+            <p className="text-[11px] text-slate-500 dark:text-white/40">
+              {t('akademik:lecturer_name', 'Pensyarah / Pengajar')}: Dr. Haslina
+            </p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-indigo-500 uppercase">
+                {t('akademik:next_slot', 'Slot Kuliah Seterusnya')}
+              </span>
+              <span className="text-[10px] text-amber-500 font-semibold">
+                {t('akademik:free_slot', 'Masa Lapang / Rehat')} (13:00 - 14:00)
+              </span>
+            </div>
+            <p className="font-bold text-slate-800 dark:text-slate-200">Sains Komputer & Algoritma</p>
+            <p className="text-[11px] text-slate-500 dark:text-white/40">
+              {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}: DK 2
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* ── QR Scan CTA ── */}
       <QrScanCta onClick={() => navigate('/akademik/qr')} />

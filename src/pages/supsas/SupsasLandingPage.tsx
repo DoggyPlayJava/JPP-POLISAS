@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -115,6 +116,7 @@ function MiniPodium({ tally }: { tally: any[] }) {
 
 // ─── Main Landing Page ────────────────────────────────────────
 export function SupsasLandingPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const navigate = useNavigate();
   const { edition, kontingen, sports, medalTally, isLive } = useSupsas();
   const { profile } = useAuth();
@@ -140,7 +142,7 @@ export function SupsasLandingPage() {
           transition={{ delay: 0.1 }}
           className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight"
         >
-          SUPSAS
+          {t('supsas:module_title', 'SUPSAS — Kejohanan Sukan Politeknik')}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -148,16 +150,21 @@ export function SupsasLandingPage() {
           transition={{ delay: 0.2 }}
           className="text-white/40 text-lg font-medium max-w-md"
         >
-          Sistem Sukan Polisas sedang dalam persediaan. Nantikan edisi yang akan datang!
+          {t('supsas:module_subtitle', 'Kejohanan sukan antara jabatan, jadual perlawanan, pungutan pingat langsung, dan pendaftaran atlet.')}
         </motion.p>
+        <div className="mt-6 flex flex-wrap justify-center items-center gap-3 text-xs text-white/50">
+          <span>{t('supsas:fixtures_results', 'Jadual Perlawanan & Keputusan Langsung')}</span> •
+          <span>{t('supsas:medal_tally', 'Pungutan Pingat Rasmi')}</span> •
+          <span>{t('supsas:sports_categories', 'Disiplin Sukan & Olahraga')}</span>
+        </div>
       </div>
     );
   }
 
   const QUICK_LINKS = [
-    { label: 'Kedudukan Live', desc: 'Papan markah medal masa nyata', icon: BarChart3, path: '/supsas/scoreboard', color: 'amber' },
-    { label: 'Jadual Pertandingan', desc: 'Semak perlawanan & keputusan', icon: Calendar, path: '/supsas/jadual', color: 'blue' },
-    { label: 'Sukan & Acara', desc: `${sports.length} sukan dipertandingkan`, icon: Trophy, path: '/supsas/sukan', color: 'emerald' },
+    { label: t('supsas:medal_tally', 'Papan Markah & Pungutan Pingat'), desc: 'Papan markah medal masa nyata', icon: BarChart3, path: '/supsas/scoreboard', color: 'amber' },
+    { label: t('supsas:fixtures_results', 'Jadual Perlawanan & Keputusan Langsung'), desc: 'Semak perlawanan & keputusan', icon: Calendar, path: '/supsas/jadual', color: 'blue' },
+    { label: t('supsas:sports_categories', 'Disiplin Sukan & Olahraga'), desc: `${sports.length} sukan dipertandingkan`, icon: Trophy, path: '/supsas/sukan', color: 'emerald' },
     { label: 'Kontinjen', desc: `${kontingen.length} jabatan bersaing`, icon: Users, path: '/supsas/kontinjen', color: 'violet' },
   ];
 
@@ -212,14 +219,12 @@ export function SupsasLandingPage() {
         </motion.h1>
 
         {/* Tagline */}
-        {edition?.tagline && (
-          <motion.p
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="text-base sm:text-xl text-amber-300/70 font-black uppercase tracking-[0.3em] mb-10"
-          >
-            {edition.tagline}
-          </motion.p>
-        )}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="text-base sm:text-xl text-amber-300/70 font-black uppercase tracking-[0.3em] mb-10"
+        >
+          {edition?.tagline || t('supsas:module_subtitle', 'Kejohanan sukan antara jabatan, jadual perlawanan, pungutan pingat langsung, dan pendaftaran atlet.')}
+        </motion.p>
 
         {/* Countdown or Live state */}
         {isLive ? (

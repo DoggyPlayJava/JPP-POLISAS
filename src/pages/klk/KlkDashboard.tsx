@@ -3,6 +3,7 @@
 // Akses: Exco KLS + MT oversee KLS + SUPER_ADMIN_JPP
 // ============================================================
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   MapPin, Users, Home, Building2, ArrowUpRight, ChevronRight,
@@ -252,12 +253,13 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
 }
 
 export function KlkDashboard() {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile, user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>(MOCK_STATS);
   const [recentSubmissions, setRecentSubmissions] = useState<any[]>([]);
   const [cadanganAll, setCadanganAll] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
   const [dbReady, setDbReady] = useState(false);
   const [searchQ, setSearchQ] = useState('');
   const [filterKawasan, setFilterKawasan] = useState('');
@@ -467,13 +469,16 @@ export function KlkDashboard() {
       {/* Greeting & Quick Actions */}
       <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
+          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-1">
+            {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')}
+          </div>
           <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             className="text-3xl font-black text-slate-50 mb-1 tracking-tight">
             Selamat {getGreeting()}, {name}! 👋
           </motion.h1>
           <div className="flex items-center gap-3 flex-wrap mt-1">
             <p className="text-sm text-slate-400 font-medium">
-              Dashboard Kediaman Luar Kampus — Tahun Akademik
+              {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')} — Tahun Akademik
             </p>
             <select
               value={selectedYear}
@@ -497,8 +502,10 @@ export function KlkDashboard() {
                 <Home className="w-5 h-5 text-teal-400" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-black text-teal-300 uppercase tracking-widest">PolyRent</p>
-                <p className="text-[10px] text-teal-400/70 font-medium group-hover:text-teal-400 transition-colors">Moderasi Iklan</p>
+                <p className="text-xs font-black text-teal-300 uppercase tracking-widest">
+                  {t('housing:browse_rentals', 'Cari Rumah Sewa Disahkan')}
+                </p>
+                <p className="text-[10px] text-teal-400/70 font-medium group-hover:text-teal-400 transition-colors">PolyRent · Moderasi Iklan</p>
               </div>
             </Link>
           </motion.div>
@@ -555,6 +562,31 @@ export function KlkDashboard() {
           <ArrowUpRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
         </motion.div>
       )}
+
+      {/* ── Rental Market Intelligence Strip ── */}
+      <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400">
+            <Home className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">
+              {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')}
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              {t('housing:browse_rentals', 'Cari Rumah Sewa Disahkan')} di sekitar POLISAS
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-bold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-xl">
+            {t('housing:monthly_rent', 'Sewa Bulanan (RM)')}: RM 200 - RM 350
+          </span>
+          <span className="text-xs font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+            {t('housing:distance_to_campus', 'Jarak ke POLISAS (KM)')}: 1.5 - 6.0 KM
+          </span>
+        </div>
+      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
