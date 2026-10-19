@@ -1014,18 +1014,18 @@ export function SettingsPage() {
                   <div className="p-5 sm:p-7 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="input-full-name" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Nama Penuh</Label>
+                        <Label htmlFor="input-full-name" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('common:name', 'Nama Penuh')}</Label>
                         <Input
                           id="input-full-name"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value.toUpperCase())}
-                          placeholder="NAMA PENUH"
+                          placeholder={t('common:name', 'NAMA PENUH')}
                           className="h-11 rounded-xl bg-white dark:bg-[#151D16] uppercase font-bold text-sm border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] focus-visible:ring-[#6B7F5B]/50"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="input-phone" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">No. Telefon Bimbit</Label>
+                        <Label htmlFor="input-phone" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('common:phone_number', 'No. Telefon Bimbit')}</Label>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />
                           <Input
@@ -1040,7 +1040,7 @@ export function SettingsPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="input-email" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Alamat Emel</Label>
+                        <Label htmlFor="input-email" className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('common:email', 'Alamat Emel')}</Label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />
                           <Input
@@ -1055,7 +1055,7 @@ export function SettingsPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">No. Kad Pengenalan (IC)</Label>
+                        <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:ic_no', 'No. Kad Pengenalan (IC)')}</Label>
                         <Input
                           value={profile?.ic_no || profile?.nric || '-'}
                           readOnly
