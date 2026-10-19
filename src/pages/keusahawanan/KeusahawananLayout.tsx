@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getContrastText, hexToRgba } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, CalendarDays, Lightbulb,
   Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X, Store,
@@ -138,7 +139,8 @@ function BusinessSwitcherDropdown({ color }: { color: string }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-function KeusahawananSidebar({ color }: { color: string }) {
+export function KeusahawananSidebar({ color }: { color: string }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { user, profile, signOut, isSuperAdmin } = useAuth();
   const { canSwitch, isKeusahawananAdmin, selectedBusiness } = useBusinessSwitcher();
   const navigate = useNavigate();
@@ -188,8 +190,8 @@ function KeusahawananSidebar({ color }: { color: string }) {
             <Lightbulb className="w-5 h-5 text-amber-400" />
           </div>
           <div>
-            <p className="font-black text-sm tracking-tight text-white/90">e-Keusahawanan</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">JPP Polisas</p>
+            <p className="font-black text-sm tracking-tight text-white/90">{t('module_title')}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">{t('module_subtitle')}</p>
           </div>
         </div>
       </div>
@@ -313,7 +315,7 @@ export function KeusahawananLayout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [themeColor, setThemeColor] = useState(DEFAULT_COLOR);
-  const [moduleEnabled, setModuleEnabled] = useState<boolean | null>(null);
+  const [moduleEnabled, setModuleEnabled] = useState<boolean | null>(typeof window === 'undefined' ? true : null);
 
   // Gunakan hook useTour supaya logik localStorage & auto-start lebih robust
   const { runTour, startTour, closeTour } = useTour('keusahawanan_module_tour', false);
@@ -407,7 +409,7 @@ export function KeusahawananLayout() {
 
 // ── Inner layout (inside BusinessSwitcherProvider) ─────────────────────────────
 
-function LayoutInner({
+export function LayoutInner({
   themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin, hasKeusahawananAccess, startTour
 }: {
   themeColor: string;
@@ -420,6 +422,7 @@ function LayoutInner({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
 
   // Redirect to onboarding if: no admin access AND no business found
@@ -475,8 +478,8 @@ function LayoutInner({
                   <Lightbulb className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-xs tracking-tight text-foreground uppercase">e-Keusahawanan</span>
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 text-foreground">JPP Polisas</span>
+                  <span className="font-black text-xs tracking-tight text-foreground uppercase">{t('module_title')}</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 text-foreground">{t('module_subtitle')}</span>
                 </div>
               </div>
             </div>

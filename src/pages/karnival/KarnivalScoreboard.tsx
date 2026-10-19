@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
@@ -41,6 +42,7 @@ const MEDALS = [
 ];
 
 export function KarnivalScoreboard() {
+  const { t } = useTranslation(['karnival', 'common']);
   const [searchParams] = useSearchParams();
   const isFullscreen = searchParams.get('fullscreen') === '1';
 
@@ -177,6 +179,9 @@ export function KarnivalScoreboard() {
               🎪
             </div>
             <div className="min-w-0 hidden sm:block">
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-400 block mb-0.5">
+                {t('carnival_scoreboard')}
+              </span>
               <h1 className="text-base md:text-xl font-black text-white tracking-tight leading-none truncate">
                 {edition?.name ?? 'Karnival JPP'}
               </h1>
@@ -345,6 +350,11 @@ export function KarnivalScoreboard() {
                     {activeCat.description && (
                       <p className="text-sm text-white/30 font-medium">{activeCat.description}</p>
                     )}
+                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-white/50 flex-wrap">
+                      <span className="text-violet-300 font-bold">{t('total_votes_cast')}: {results.reduce((acc, b) => acc + (b.total_votes || 0), 0)}</span>
+                      <span>•</span>
+                      <span className="text-white/40">{t('admin_tally')}</span>
+                    </div>
                   </div>
 
               {loading && results.length === 0 ? (
@@ -356,7 +366,7 @@ export function KarnivalScoreboard() {
                 <div className="text-center py-24">
                   <Trophy className="w-20 h-20 text-white/10 mx-auto mb-4" />
                   <p className="text-white/25 font-black text-lg">Belum ada undi lagi</p>
-                  <p className="text-white/15 text-sm mt-2">Undi pertama akan muncul di sini</p>
+                  <p className="text-white/15 text-sm mt-2">{t('top_voted_booth')} • {t('total_votes_cast')}</p>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -383,10 +393,17 @@ export function KarnivalScoreboard() {
                             <div className="absolute inset-x-0 top-0 h-px"
                               style={{ background: `linear-gradient(90deg, transparent, ${medal.color}80, transparent)` }} />
 
-                            {/* Crown glow for 1st */}
+                            {/* Crown glow and top voted badge for 1st */}
                             {i === 0 && (
-                              <div className="absolute inset-0 opacity-30 pointer-events-none"
-                                style={{ background: `radial-gradient(ellipse at 50% 0%, ${medal.glow} 0%, transparent 60%)` }} />
+                              <>
+                                <div className="absolute inset-0 opacity-30 pointer-events-none"
+                                  style={{ background: `radial-gradient(ellipse at 50% 0%, ${medal.glow} 0%, transparent 60%)` }} />
+                                <div className="mb-2">
+                                  <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    {t('top_voted_booth')}
+                                  </span>
+                                </div>
+                              </>
                             )}
 
                             <div className="relative">

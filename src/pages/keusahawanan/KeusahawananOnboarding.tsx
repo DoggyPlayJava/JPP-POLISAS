@@ -356,3 +356,5 @@ export function KeusahawananOnboarding() {
     </div>
   );
 }
+
+export { KeusahawananOnboardingPage } from './KeusahawananOnboardingPage';

@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -142,6 +143,7 @@ export const renderCategoryIcon = (category: string, className = 'w-4 h-4') => {
 };
 
 export function KebajikanFoodBankPage() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { user, profile } = useAuth();
 
   // Helper hantar emel Food Bank (fire-and-forget)
@@ -161,7 +163,7 @@ export function KebajikanFoodBankPage() {
   const [locationStocks, setLocationStocks] = useState<FoodBankLocationStock[]>([]);
   const [activeApplication, setActiveApplication] = useState<FoodBankApplication | null>(null);
   const [pastApplications, setPastApplications] = useState<FoodBankApplication[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(typeof window === 'undefined' ? false : true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -434,7 +436,7 @@ export function KebajikanFoodBankPage() {
   // Kuota Tokens untuk Live Tracking
   const totalQuota = maxAllowedItems;
   const totalSelectedCount = useMemo(() => {
-    return Object.values(selectedItemQuantities).reduce((acc, q) => acc + q, 0);
+    return Object.values(selectedItemQuantities).reduce((acc: number, q: any) => acc + (Number(q) || 0), 0);
   }, [selectedItemQuantities]);
   const usedQuota = totalSelectedCount;
   const remainingQuota = Math.max(0, totalQuota - usedQuota);
@@ -442,7 +444,8 @@ export function KebajikanFoodBankPage() {
   // Nilai Anggaran Keseluruhan Barangan Dipilih
   const totalEstimatedCost = useMemo(() => {
     let cost = 0;
-    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+    for (const [itemId, qtyVal] of Object.entries(selectedItemQuantities)) {
+      const qty = Number(qtyVal) || 0;
       const item = items.find((i) => i.id === itemId);
       if (item && qty > 0) {
         cost += (Number(item.estimated_cost) || 0) * qty;
@@ -581,7 +584,8 @@ export function KebajikanFoodBankPage() {
     let hasAdjusted = false;
     const updatedQuantities = { ...selectedItemQuantities };
 
-    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+    for (const [itemId, qtyVal] of Object.entries(selectedItemQuantities)) {
+      const qty = Number(qtyVal) || 0;
       if (qty <= 0) continue;
       const locStock = locationStocks.find(
         (ls) => ls.item_id === itemId && ls.location_id === newLocationId
@@ -881,7 +885,8 @@ export function KebajikanFoodBankPage() {
     }
 
     // Semak baki stok lokasi bagi setiap item sebelum hantar
-    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+    for (const [itemId, qtyVal] of Object.entries(selectedItemQuantities)) {
+      const qty = Number(qtyVal) || 0;
       if (qty <= 0) continue;
       const itm = items.find((i) => i.id === itemId);
       const avail = getItemStockAtSelectedLocation(itemId);
@@ -894,7 +899,8 @@ export function KebajikanFoodBankPage() {
     }
 
     const selectedItemsList: FoodBankSelectedItem[] = [];
-    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+    for (const [itemId, qtyVal] of Object.entries(selectedItemQuantities)) {
+      const qty = Number(qtyVal) || 0;
       const itm = items.find((i) => i.id === itemId);
       if (itm && qty > 0) {
         selectedItemsList.push({
@@ -1062,7 +1068,7 @@ export function KebajikanFoodBankPage() {
               Inisiatif Prihatin Siswa POLISAS
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              Bantuan Food Bank JPP
+              {t('foodbank_pantry')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl font-normal">
               Program agihan pek makanan asas dan keperluan diri bagi meringankan beban mahasiswa
@@ -1444,7 +1450,7 @@ export function KebajikanFoodBankPage() {
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Kategori Kewangan
+                  {t('foodbank_eligibility')}
                 </label>
                 <select
                   value={financialCategory}
@@ -2323,7 +2329,7 @@ export function KebajikanFoodBankPage() {
                     ? 'Pelancaran Rasmi Tidak Lama Lagi (Dalam Persediaan)'
                     : isSessionClosed
                     ? 'Permohonan Ditutup Buat Sementara Waktu'
-                    : 'Hantar Permohonan & Jana Pas QR'}
+                    : t('request_foodbank')}
                 </span>
                 {!isModuleUnderPreparation && !isSessionClosed && <ArrowRight className="w-4 h-4" />}
               </Button>
@@ -2435,7 +2441,8 @@ export function KebajikanFoodBankPage() {
                     </p>
                   </div>
                 ) : (
-                  Object.entries(selectedItemQuantities).map(([itemId, qty]) => {
+                  Object.entries(selectedItemQuantities).map(([itemId, qtyVal]) => {
+                    const qty = Number(qtyVal) || 0;
                     if (qty <= 0) return null;
                     const item = items.find((i) => i.id === itemId);
                     if (!item) return null;

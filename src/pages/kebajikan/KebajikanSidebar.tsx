@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   HeartHandshake,
   LayoutDashboard,
@@ -30,6 +31,7 @@ import { KEBAJIKAN_THEME_COLOR } from '@/types';
 const TEAL = KEBAJIKAN_THEME_COLOR; // #2DD4BF
 
 export function KebajikanSidebar() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { user, profile, signOut, isSuperAdmin, isKebajikanExco, isUnitKebajikanStaff, isKediamanExco, isYdp } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -147,13 +149,13 @@ export function KebajikanSidebar() {
               "font-black text-lg tracking-tight leading-none mb-1",
               isDark ? "text-slate-50" : "text-[#134e4a]"
             )}>
-              E-Kebajikan
+              {t('module_title')}
             </p>
             <p className={cn(
               "text-[9px] font-black uppercase tracking-[0.25em]",
               isDark ? "text-teal-500/70" : "text-[#0f766e]"
             )}>
-              Sistem Aduan Pelajar
+              {t('module_subtitle')}
             </p>
           </div>
         </div>

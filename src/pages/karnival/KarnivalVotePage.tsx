@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKarnival, KarnivalBooth, KarnivalCategory } from '@/contexts/KarnivalContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 export function KarnivalVotePage() {
+  const { t } = useTranslation(['karnival', 'common']);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const boothId = searchParams.get('booth');
@@ -18,14 +20,14 @@ export function KarnivalVotePage() {
   const { edition, categories, booths, votingOpen } = useKarnival();
   const { user, profile, isAuthenticated } = useAuth();
 
-  const [booth,         setBooth]         = useState<KarnivalBooth | null>(null);
-  const [category,      setCategory]      = useState<KarnivalCategory | null>(null);
+  const [booth,         setBooth]         = useState<KarnivalBooth | null>(booths[0] ?? null);
+  const [category,      setCategory]      = useState<KarnivalCategory | null>(categories[0] ?? null);
   const [myVotesInCat,  setMyVotesInCat]  = useState<string[]>([]); // booth_ids yang dah diundi
   const [alreadyVoted,  setAlreadyVoted]  = useState(false);
   const [maxReached,    setMaxReached]    = useState(false);
   const [submitting,    setSubmitting]    = useState(false);
   const [success,       setSuccess]       = useState(false);
-  const [dataLoading,   setDataLoading]   = useState(true);
+  const [dataLoading,   setDataLoading]   = useState(typeof window === 'undefined' ? false : true);
 
   // ── Resolve booth dari URL param ──────────────────────────
   useEffect(() => {
@@ -98,8 +100,11 @@ export function KarnivalVotePage() {
             <Lock className="w-9 h-9 text-violet-400" />
           </div>
           <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-1 block">
+              {t('live_voting')}
+            </span>
             <h1 className="text-xl font-black text-white mb-2">Log Masuk Diperlukan</h1>
-            <p className="text-sm text-white/50">Anda perlu log masuk untuk mengundi dalam Karnival JPP.</p>
+            <p className="text-sm text-white/50">{t('one_vote_per_student')}</p>
           </div>
           <button
             onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
@@ -108,7 +113,7 @@ export function KarnivalVotePage() {
             Log Masuk Sekarang
           </button>
           <button onClick={() => navigate('/karnival')} className="text-sm text-white/30 hover:text-white/60 transition-colors">
-            Kembali ke Karnival
+            {t('booth_directory')}
           </button>
         </motion.div>
       </div>
@@ -126,7 +131,7 @@ export function KarnivalVotePage() {
               <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
               <p className="text-white/50 text-sm">Booth tidak dijumpai.</p>
               <button onClick={() => navigate('/karnival')} className="text-violet-400 text-sm hover:text-violet-300">
-                Kembali ke Karnival
+                {t('booth_directory')}
               </button>
             </div>
           )}
@@ -154,7 +159,7 @@ export function KarnivalVotePage() {
             <CheckCircle2 className="w-12 h-12 text-emerald-400" />
           </motion.div>
           <div>
-            <h1 className="text-2xl font-black text-white mb-2">Undi Berjaya! 🎉</h1>
+            <h1 className="text-2xl font-black text-white mb-2">{t('voted_successfully')} 🎉</h1>
             <p className="text-sm text-white/50">
               Anda telah mengundi <span className="text-white font-bold">{booth.kelab_name}</span>
               {category && <> untuk kategori <span className="text-violet-300 font-bold">{category.icon_emoji} {category.name}</span></>}
@@ -165,7 +170,7 @@ export function KarnivalVotePage() {
               onClick={() => navigate('/karnival')}
               className="w-full py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-black transition-all active:scale-95"
             >
-              Lihat Semua Booth
+              {t('booth_directory')}
             </button>
             <button
               onClick={() => navigate('/karnival/scoreboard')}
@@ -187,14 +192,19 @@ export function KarnivalVotePage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-sm w-full space-y-5"
       >
-        {/* Back */}
-        <button
-          onClick={() => navigate('/karnival')}
-          className="flex items-center gap-1.5 text-xs font-bold text-white/40 hover:text-white/70 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Kembali
-        </button>
+        {/* Top bar with back and live voting badge */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate('/karnival')}
+            className="flex items-center gap-1.5 text-xs font-bold text-white/40 hover:text-white/70 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t('booth_directory')}</span>
+          </button>
+          <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2.5 py-0.5 rounded-full border border-violet-500/20">
+            {t('live_voting')}
+          </span>
+        </div>
 
         {/* Booth card */}
         <div className="rounded-3xl overflow-hidden border border-white/[0.08] bg-white/[0.03]">
@@ -226,6 +236,19 @@ export function KarnivalVotePage() {
             {booth.description && (
               <p className="text-xs text-white/40 mt-2 leading-relaxed">{booth.description}</p>
             )}
+
+            {/* Category Tags */}
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
+                {t('vote_category_creative')}
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
+                {t('vote_category_sales')}
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
+                {t('vote_category_service')}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -279,12 +302,12 @@ export function KarnivalVotePage() {
                   ) : (
                     <>
                       <QrCode className="w-4 h-4" />
-                      Undi Sekarang
+                      {t('cast_vote')}
                     </>
                   )}
                 </button>
                 <p className="text-[10px] text-white/50 text-center mt-2">
-                  Undi anda tidak boleh dibatalkan selepas ini
+                  {t('one_vote_per_student')}
                 </p>
               </motion.div>
             )}
