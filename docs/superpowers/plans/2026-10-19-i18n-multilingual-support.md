@@ -4,7 +4,7 @@
 
 **Goal:** Establish a robust bilingual internationalization (i18n) system for JPP-POLISAS supporting English and Bahasa Melayu, with automatic detection (defaulting to English, auto-detecting Malay for Malay locales, and honoring manual `localStorage` overrides), modular JSON namespaces, and global UI switchers in the Header, Login page, and Settings.
 
-**Architecture:** Initialize `i18next` with `react-i18next` synchronously before app render in `src/main.tsx`. Store translation files in `src/locales/{en,ms}/{common,auth,nav,settings}.json`. Expose a reactive `LanguageToggle` component and integrate `useTranslation()` hooks into the global navigation shell (`Header`, `Sidebar`), authentication (`LoginPage`), and `SettingsPage`.
+**Architecture:** Initialize `i18next` with `react-i18next` synchronously before app render in `src/main.tsx`. Store translation files in `src/locales/{en,ms}/{common,auth,nav,settings}.json`. Expose a reactive `LanguageToggle` component and integrate `useTranslation()` hooks into the global navigation shell (`Header`, `Sidebar` via `labelKey` mapping), authentication (`LoginPage`), and `SettingsPage`.
 
 **Tech Stack:** React 19, TypeScript ~5.9, Vite 7, i18next, react-i18next, Lucide React, Tailwind CSS, Vitest.
 
@@ -15,6 +15,7 @@
 - **Database / RLS:** Do not modify the Supabase schema or `profiles` table in Phase 1; language selection is persisted client-side in `localStorage` (`jpp_language`).
 - **Routing:** Do NOT alter URL routes or add language path prefixes (`ROUTES.md` compliance).
 - **Singletons:** Never create duplicate Supabase clients or alter `src/lib/supabase.ts`.
+- **Dependencies:** Always install packages using `--legacy-peer-deps` due to vite 6 / vite-plugin-pwa environment.
 - **Documentation:** `DEV_GUIDELINE.md` must be updated with the i18n architecture and developer instructions upon completion.
 
 ---
@@ -34,14 +35,14 @@
 - Produces: `changeLanguage(lang: 'en' | 'ms'): Promise<void>`
 - Produces: `SUPPORTED_LANGUAGES = ['en', 'ms'] as const`
 
-- [ ] **Step 1: Install `i18next` and `react-i18next`**
+- [ ] **Step 1: Install `i18next` and `react-i18next` with `--legacy-peer-deps`**
 
 Run:
 ```bash
-npm install i18next@^24.2.2 react-i18next@^15.4.1
+npm install i18next@^24.2.2 react-i18next@^15.4.1 --legacy-peer-deps
 ```
 
-- [ ] **Step 2: Write failing unit test for language detection logic**
+- [ ] **Step 2: Write failing unit test for `detectLanguage` logic**
 
 Create `src/lib/__tests__/i18n.test.ts`:
 ```typescript
@@ -182,13 +183,13 @@ Add `import './lib/i18n';` at the top of `src/main.tsx` so initialization occurs
 - [ ] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run src/lib/__tests__/i18n.test.ts`  
-Expected: PASS (all 3 test suites pass).
+Expected: PASS.
 
 - [ ] **Step 7: Commit Task 1**
 
 ```bash
 git add package.json package-lock.json src/lib/i18n.ts src/lib/__tests__/i18n.test.ts src/main.tsx
-git commit -m "feat(i18n): install dependencies and configure i18n core initialization"
+git commit -m "feat(i18n): install dependencies with legacy-peer-deps and configure i18n core"
 ```
 
 ---
@@ -329,7 +330,8 @@ Create `src/locales/en/auth.json`:
   "back_to_login": "Back to Login",
   "login_success": "Successfully logged in",
   "login_failed": "Login failed. Please check your credentials.",
-  "unauthorized": "You do not have permission to access this module."
+  "unauthorized": "You do not have permission to access this module.",
+  "fill_required_fields": "Please enter both Matrix No / IC and Password"
 }
 ```
 
@@ -350,7 +352,8 @@ Create `src/locales/ms/auth.json`:
   "back_to_login": "Kembali ke Log Masuk",
   "login_success": "Berjaya log masuk",
   "login_failed": "Log masuk gagal. Sila semak maklumat anda.",
-  "unauthorized": "Anda tiada kebenaran untuk mengakses modul ini."
+  "unauthorized": "Anda tiada kebenaran untuk mengakses modul ini.",
+  "fill_required_fields": "Sila masukkan No. Matrik / KP dan Kata Laluan"
 }
 ```
 
@@ -361,10 +364,11 @@ Create `src/locales/en/nav.json`:
   "search_placeholder": "Search clubs, EMS events, MAKMP, welfare...",
   "dashboard": "Dashboard",
   "clubs": "Clubs & Societies",
-  "activities": "Activities & Events",
-  "reports": "Activity Reports",
+  "activities": "Activities",
+  "committee": "Committee Members",
+  "reports": "Club Reports",
   "report_review": "Report Review",
-  "members": "Member Directory",
+  "manage_club_profile": "Manage Club Profile",
   "settings": "Settings",
   "jpp_portal": "JPP HQ Portal",
   "announcements": "Announcements",
@@ -388,10 +392,11 @@ Create `src/locales/ms/nav.json`:
   "search_placeholder": "Cari kelab, acara EMS, MAKMP, kebajikan...",
   "dashboard": "Papan Pemuka",
   "clubs": "Kelab & Persatuan",
-  "activities": "Aktiviti & Program",
-  "reports": "Laporan Aktiviti",
+  "activities": "Aktiviti",
+  "committee": "Ahli Jawatankuasa",
+  "reports": "Laporan Kelab",
   "report_review": "Semakan Laporan",
-  "members": "Senarai Ahli",
+  "manage_club_profile": "Urus Profil Kelab",
   "settings": "Tetapan",
   "jpp_portal": "Portal JPP HQ",
   "announcements": "Pengumuman",
@@ -489,8 +494,8 @@ git commit -m "feat(i18n): create English and Malay translation resources with p
 Create `src/components/ui/__tests__/LanguageToggle.test.tsx`:
 ```tsx
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import { LanguageToggle } from '../LanguageToggle';
 import '@/lib/i18n';
 
@@ -588,52 +593,81 @@ git commit -m "feat(ui): add LanguageToggle component"
 
 ---
 
-### Task 4: Global Shell Integration — Header & Sidebar
+### Task 4: Global Shell Integration — Header & Sidebar Refactor
 
 **Files:**
-- Modify: `src/components/layout/Header.tsx:85-148`
-- Modify: `src/components/layout/Sidebar.tsx`
+- Modify: `src/components/layout/Header.tsx:85-95` (ThemeToggle at line 88)
+- Modify: `src/pages/jpp/JppLayout.tsx:160-170` (ThemeToggle at line 164)
+- Modify: `src/components/layout/Sidebar.tsx:48-115, 195-205`
 
-- [ ] **Step 1: Mount `LanguageToggle` in `Header.tsx` and translate Header content**
+- [ ] **Step 1: Mount `LanguageToggle` in `Header.tsx` and `JppLayout.tsx`**
 
-In `src/components/layout/Header.tsx`:
+In `src/components/layout/Header.tsx` (around line 88 where `<ThemeToggle />` is located):
 - Import `LanguageToggle` from `@/components/ui/LanguageToggle`.
 - Import `useTranslation` from `'react-i18next'`.
 - Call `const { t } = useTranslation('nav');`.
-- Replace hardcoded search placeholder: `placeholder={t('search_placeholder')}`.
-- Replace subtitle: `Portal Pelajar POLISAS` with `{t('portal_student_title')}`.
-- Replace Help popover text: "Bantuan & Isu" -> `{t('help_and_issues')}`, "Lapor Isu Teknikal" -> `{t('report_technical_issue')}`, etc.
+- Replace search placeholder with `{t('search_placeholder')}`.
+- Replace subtitle "Portal Pelajar POLISAS" with `{t('portal_student_title')}`.
 - Insert `<LanguageToggle />` right next to `<ThemeToggle />`:
 ```tsx
 <div className="flex items-center gap-2">
   <LanguageToggle />
   <ThemeToggle />
-  ...
 ```
 
-- [ ] **Step 2: Translate Navigation in `Sidebar.tsx`**
+In `src/pages/jpp/JppLayout.tsx` (around line 164 where `<ThemeToggle />` is located):
+- Import `LanguageToggle` and mount next to `<ThemeToggle />`.
+
+- [ ] **Step 2: Refactor `Sidebar.tsx` navigation array to use `labelKey`**
 
 In `src/components/layout/Sidebar.tsx`:
+1. Update `type NavItem`:
+```typescript
+type NavItem = {
+  icon: React.ElementType;
+  label?: string;
+  labelKey?: string;
+  href: string;
+};
+```
+2. Refactor `EKPP_NAV`:
+```typescript
+const EKPP_NAV: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Papan Pemuka', labelKey: 'nav:dashboard', href: '/dashboard' },
+  { icon: Flag,            label: 'Kelab & Persatuan', labelKey: 'nav:clubs', href: '/kelab' },
+  { icon: CalendarDays,    label: 'Aktiviti', labelKey: 'nav:activities', href: '/aktiviti' },
+  { icon: Users,           label: 'Ahli Jawatankuasa', labelKey: 'nav:committee', href: '/ahli' },
+  { icon: FileText,        label: 'Laporan Kelab', labelKey: 'nav:reports', href: '/laporan' },
+  { icon: Settings,        label: 'Tetapan', labelKey: 'nav:settings', href: '/tetapan' },
+];
+
+const EKPP_PRESIDENT_NAV: NavItem[] = [
+  { icon: Settings2, label: 'Urus Profil Kelab', labelKey: 'nav:manage_club_profile', href: '/urus-kelab' },
+];
+
+const EKPP_ADMIN_NAV: NavItem[] = [
+  { icon: ClipboardCheck, label: 'Semakan Laporan', labelKey: 'nav:report_review', href: '/semakan-laporan' },
+];
+```
+3. In `SidebarNavItem` component in `Sidebar.tsx`:
 - Import `useTranslation` from `'react-i18next'`.
-- Call `const { t } = useTranslation('nav');`.
-- Translate sidebar links:
-  - "Papan Pemuka" -> `{t('dashboard')}`
-  - "Kelab & Persatuan" -> `{t('clubs')}`
-  - "Aktiviti" -> `{t('activities')}`
-  - "Laporan" -> `{t('reports')}`
-  - "Semakan" -> `{t('report_review')}`
-  - "Tetapan" -> `{t('settings')}`
+- Call `const { t } = useTranslation();`.
+- Resolve display label:
+```typescript
+const displayLabel = item.labelKey ? t(item.labelKey) : item.label;
+```
+This guarantees backward compatibility while dynamically updating when language toggles.
 
 - [ ] **Step 3: Verify TypeScript & Build**
 
 Run: `npm run lint:types`  
-Expected: PASS without type errors.
+Expected: PASS.
 
 - [ ] **Step 4: Commit Task 4**
 
 ```bash
-git add src/components/layout/Header.tsx src/components/layout/Sidebar.tsx
-git commit -m "feat(shell): integrate LanguageToggle into Header and localize navigation links"
+git add src/components/layout/Header.tsx src/pages/jpp/JppLayout.tsx src/components/layout/Sidebar.tsx
+git commit -m "feat(shell): integrate LanguageToggle into Headers and refactor Sidebar navigation to translation keys"
 ```
 
 ---
@@ -643,19 +677,29 @@ git commit -m "feat(shell): integrate LanguageToggle into Header and localize na
 **Files:**
 - Modify: `src/pages/LoginPage.tsx`
 
-- [ ] **Step 1: Add `LanguageToggle` to `LoginPage.tsx` and localize labels**
+**Scope Specification:**
+`LoginPage.tsx` is 1039 lines. Phase 1 targets:
+1. Header / card branding: "Portal Pelajar & Staf", "Sistem Pengurusan Jawatankuasa Perwakilan Pelajar POLISAS" -> `{t('auth:login_title')}`, `{t('auth:login_subtitle')}`.
+2. Input labels & placeholders:
+   - Matrix / IC label & placeholder -> `{t('auth:matrix_no')}`, `{t('auth:matrix_no_placeholder')}`.
+   - Password label & placeholder -> `{t('auth:password')}`, `{t('auth:password_placeholder')}`.
+3. Form controls:
+   - "Lupa Kata Laluan?" -> `{t('auth:forgot_password')}`.
+   - "Log Masuk" button -> `{isLoading ? t('auth:logging_in') : t('auth:login_button')}`.
+4. Core alerts & toasts:
+   - Empty credentials validation toast -> `{t('auth:fill_required_fields')}`.
+   - Login failure notification -> `{t('auth:login_failed')}`.
+   - Login success notification -> `{t('auth:login_success')}`.
+5. Top-right `<LanguageToggle />` placement on login card/screen.
+
+- [ ] **Step 1: Integrate translations into `LoginPage.tsx`**
 
 In `src/pages/LoginPage.tsx`:
 - Import `LanguageToggle` from `@/components/ui/LanguageToggle`.
 - Import `useTranslation` from `'react-i18next'`.
 - Call `const { t } = useTranslation(['auth', 'common']);`.
-- Place `<LanguageToggle />` in top right corner of the authentication card or page header.
-- Translate input labels:
-  - Matric No placeholder -> `{t('auth:matrix_no_placeholder')}`
-  - Matric No label -> `{t('auth:matrix_no')}`
-  - Password label -> `{t('auth:password')}`
-  - Submit button -> `{isLoading ? t('auth:logging_in') : t('auth:login_button')}`
-  - Forgot password link -> `{t('auth:forgot_password')}`
+- Place `<LanguageToggle />` in top right header corner.
+- Replace targeted strings with corresponding `t('auth:...')` keys.
 
 - [ ] **Step 2: Verify TypeScript & Build**
 
@@ -666,7 +710,7 @@ Expected: PASS.
 
 ```bash
 git add src/pages/LoginPage.tsx
-git commit -m "feat(auth): add language toggle and translations to LoginPage"
+git commit -m "feat(auth): integrate LanguageToggle and localize primary login interface"
 ```
 
 ---
@@ -680,18 +724,22 @@ git commit -m "feat(auth): add language toggle and translations to LoginPage"
 - [ ] **Step 1: Add Language Selector in `SettingsPage.tsx`**
 
 In `src/pages/SettingsPage.tsx`:
-- In Tab `tema` (Display/Theme):
-  - Rename tab title to include Language ("Paparan & Bahasa").
-  - Add a dedicated Language Card allowing the user to select between English and Bahasa Melayu, showing active indicator.
-  - Call `changeLanguage('en')` or `changeLanguage('ms')` upon selection.
+- Import `useTranslation` from `'react-i18next'`.
+- Import `changeLanguage`, `SupportedLanguage` from `@/lib/i18n`.
+- In `SETTINGS_TAB_CONFIG` array, update `tema` tab description / label to "Paparan & Bahasa".
+- Inside the theme tab content, add a Language Switcher card offering:
+  - English (`en`)
+  - Bahasa Melayu (`ms`)
+- Radio/button cards with visual checkmark indicator for active language.
 
 - [ ] **Step 2: Update `DEV_GUIDELINE.md`**
 
 In `DEV_GUIDELINE.md`:
-- Document Section on "Sistem Pelbagai Bahasa (Multilingual i18n)":
+- Add Section on "Sistem Pelbagai Bahasa (Multilingual i18n)":
   - Document `src/lib/i18n.ts` detection rules (English default, Malay auto-detect, localStorage override).
   - Document how to add translation keys for new modules (`src/locales/{en,ms}/<module>.json`).
   - Code example showing `useTranslation('<module>')`.
+  - Record `LanguageToggle.tsx` in Section 11 (Critical Files / Components).
 
 - [ ] **Step 3: Run full lint and test suite**
 
@@ -700,7 +748,7 @@ Run:
 npm run lint:types
 npm run test
 ```
-Expected: PASS (all tests pass, zero type errors).
+Expected: PASS.
 
 - [ ] **Step 4: Commit Task 6**
 
@@ -720,15 +768,15 @@ git commit -m "feat(settings): add language selection to SettingsPage and update
 4. `npm run lint:types`: Confirms zero TypeScript compile errors.
 
 ### Manual Verification
-1. **Fresh Session Auto-Detection**:
-   - Open browser with English locale -> UI renders in English by default.
-   - Open browser with Malay locale (`ms-MY`) -> UI renders in Bahasa Melayu automatically.
-2. **Toggle in Header**:
-   - Click `EN` badge in Header -> switches to `BM` -> all header and sidebar labels switch to Malay without page reload.
-   - Click `BM` badge -> switches to `EN` -> all labels switch back to English.
-3. **Persistence**:
-   - Switch language to English, refresh browser -> persists in English.
-4. **Login Page**:
-   - Visit `/login`, click Language Toggle -> form labels update instantaneously.
-5. **Settings Page**:
-   - Navigate to `/tetapan?tab=tema` -> verify language card reflects active language and allows changing it.
+1. **Default Language Test:**
+   - Open in an incognito window with default locale -> Verify the app loads in English.
+2. **Malay Auto-Detection Test:**
+   - Set browser language to Malay (`ms-MY`) in DevTools -> Verify UI displays in Bahasa Melayu on first visit.
+3. **Header Language Switcher:**
+   - Click language toggle in the Header -> Select "English" / "Bahasa Melayu" -> Verify all navigation and header items translate immediately without page reload.
+4. **Persistence Test:**
+   - Change language to English, reload the browser tab -> Verify English language persists.
+5. **Login Page Test:**
+   - Navigate to `/login` -> Toggle language -> Verify form placeholders, labels, and helper texts translate dynamically.
+6. **Settings Page Test:**
+   - Navigate to `/tetapan?tab=tema` -> Change language in the display settings card -> Verify state syncs with the Header toggle.
