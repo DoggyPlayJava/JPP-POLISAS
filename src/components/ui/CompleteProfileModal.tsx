@@ -281,22 +281,22 @@ export function CompleteProfileModal() {
 
   // ── Heading text ─────────────────────────────────────────────────────────
   const heading = isOnlyMissingPhone
-    ? 'Kemaskini No. Telefon'
+    ? t('auth:update_phone_title', 'Kemaskini No. Telefon')
     : isOnlyMissingCohort || isMissingPhoneAndCohort
-    ? 'Kemaskini Maklumat Pengajian'
+    ? t('auth:update_academic_title', 'Kemaskini Maklumat Pengajian')
     : isMissingCoreFields
-    ? 'Lengkapkan Profil'
-    : 'Lengkapkan Profil';
+    ? t('auth:complete_profile_title', 'Lengkapkan Profil')
+    : t('auth:complete_profile_title', 'Lengkapkan Profil');
 
   const subheading = isOnlyMissingPhone
-    ? 'Sila masukkan nombor telefon untuk tujuan notifikasi penting.'
+    ? t('auth:update_phone_subtitle', 'Sila masukkan nombor telefon untuk tujuan notifikasi penting.')
     : isOnlyMissingCohort
-    ? 'Sistem kohort baharu memerlukan maklumat program pengajian anda. Sila lengkapkan.'
+    ? t('auth:update_cohort_subtitle', 'Sistem kohort baharu memerlukan maklumat program pengajian anda. Sila lengkapkan.')
     : isMissingPhoneAndCohort
-    ? 'Sila lengkapkan nombor telefon dan maklumat program pengajian anda.'
+    ? t('auth:update_phone_cohort_subtitle', 'Sila lengkapkan nombor telefon dan maklumat program pengajian anda.')
     : isMissingCoreFields
-    ? 'Sila lengkapkan maklumat asas untuk pendaftaran anda.'
-    : 'Akaun anda telah disambungkan. Sila lengkapkan semua maklumat di bawah.';
+    ? t('auth:complete_basic_info_subtitle', 'Sila lengkapkan maklumat asas untuk pendaftaran anda.')
+    : t('auth:complete_connected_account_subtitle', 'Akaun anda telah disambungkan. Sila lengkapkan semua maklumat di bawah.');
 
   // ── Submit handler ───────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -304,24 +304,24 @@ export function CompleteProfileModal() {
 
     // ── A: Only missing phone ─────────────────────────────────────────────
     if (isOnlyMissingPhone) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Nombor telefon berjaya disimpan!');
+        toast.success(t('auth:phone_saved_success', 'Nombor telefon berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan nombor telefon.');
+        toast.error(err.message || t('auth:error_saving_phone', 'Ralat menyimpan nombor telefon.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── B: Only missing cohort ────────────────────────────────────────────
     if (isOnlyMissingCohort) {
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -333,19 +333,19 @@ export function CompleteProfileModal() {
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Maklumat pengajian berjaya disimpan!');
+        toast.success(t('auth:academic_info_saved_success', 'Maklumat pengajian berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan maklumat.');
+        toast.error(err.message || t('auth:error_saving_academic_info', 'Ralat menyimpan maklumat.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── C: Missing phone + cohort ─────────────────────────────────────────
     if (isMissingPhoneAndCohort) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -358,19 +358,19 @@ export function CompleteProfileModal() {
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Profil berjaya dikemaskini!');
+        toast.success(t('auth:profile_updated_success', 'Profil berjaya dikemaskini!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan profil.');
+        toast.error(err.message || t('auth:error_saving_profile', 'Ralat menyimpan profil.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── C2: Missing core fields (matric exists but no dept/phone/cohort) ──
     if (isMissingCoreFields) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -383,9 +383,9 @@ export function CompleteProfileModal() {
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Profil berjaya disimpan!');
+        toast.success(t('auth:profile_updated_success', 'Profil berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan profil.');
+        toast.error(err.message || t('auth:error_saving_profile', 'Ralat menyimpan profil.'));
       } finally { setLoading(false); }
       return;
     }
@@ -393,17 +393,17 @@ export function CompleteProfileModal() {
     // ── D: Full registration ──────────────────────────────────────────────
     if (registerMode !== 'staff') {
       if (!fullName.trim()) {
-        toast.error('Sila masukkan nama penuh seperti dalam IC.');
+        toast.error(t('auth:error_fullname_ic_required', 'Sila masukkan nama penuh seperti dalam IC.'));
         return;
       }
       if (fullName.trim().length < 3) {
-        toast.error('Nama penuh terlalu pendek. Sila masukkan nama penuh seperti dalam IC.');
+        toast.error(t('auth:error_fullname_too_short', 'Nama penuh terlalu pendek. Sila masukkan nama penuh seperti dalam IC.'));
         return;
       }
     }
 
     if (!matricNo.trim() || !phone.trim()) {
-      toast.error('Sila lengkapkan No Matrik dan No Telefon.'); return;
+      toast.error(t('auth:fill_required_fields', 'Sila lengkapkan No Matrik dan No Telefon.')); return;
     }
 
     if (registerMode !== 'staff') {
@@ -420,7 +420,7 @@ export function CompleteProfileModal() {
       console.log('[CompleteProfile] matric check:', { matricCheck, matricErr });
       
       if (matricErr) {
-        toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+        toast.error(t('auth:error_matric_verify', 'Tidak dapat mengesahkan no matrik. Sila cuba lagi.'));
         return;
       }
       
@@ -445,8 +445,8 @@ export function CompleteProfileModal() {
       }
     } else {
       if (!jabatan) { toast.error(t('auth:select_department')); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       if (registerMode === 'leader' && !leaderClubId) {
         toast.error(t('auth:select_club')); return;
       }
@@ -560,7 +560,7 @@ export function CompleteProfileModal() {
       } catch (refetchErr) {
         console.warn('[CompleteProfile] refetchProfile failed (akan reload):', refetchErr);
       }
-      toast.success(isStaff ? 'Profil Staf Berjaya Disimpan!' : 'Profil Pelajar Berjaya Disimpan!');
+      toast.success(isStaff ? t('auth:staff_profile_saved_success', 'Profil Staf Berjaya Disimpan!') : t('auth:student_profile_saved_success', 'Profil Pelajar Berjaya Disimpan!'));
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
       console.error('[CompleteProfile] Submit error:', err);
@@ -586,7 +586,7 @@ export function CompleteProfileModal() {
         >
           <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
             <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-            <span>Pengesahan Program Automatik</span>
+            <span>{t('auth:auto_program_verification', 'Pengesahan Program Automatik')}</span>
           </div>
           <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
             {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
@@ -680,7 +680,7 @@ export function CompleteProfileModal() {
               )}
             >
               <span>Intake 1</span>
-              <span className="text-[8px] font-medium opacity-70">Pertengahan Tahun</span>
+              <span className="text-[8px] font-medium opacity-70">{t('auth:mid_year', 'Pertengahan Tahun')}</span>
             </button>
             <button
               type="button"
@@ -693,7 +693,7 @@ export function CompleteProfileModal() {
               )}
             >
               <span>Intake 2</span>
-              <span className="text-[8px] font-medium opacity-70">Awal Tahun</span>
+              <span className="text-[8px] font-medium opacity-70">{t('auth:early_year', 'Awal Tahun')}</span>
             </button>
           </div>
         </div>
@@ -765,7 +765,7 @@ export function CompleteProfileModal() {
               <div className="space-y-0.5">
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Portal Rasmi POLISAS
+                  {t('auth:official_portal_polisas', 'Portal Rasmi POLISAS')}
                 </span>
                 <h2 className="text-base sm:text-lg font-black text-white tracking-tight">{heading}</h2>
               </div>
@@ -919,7 +919,7 @@ export function CompleteProfileModal() {
                           >
                             <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                               <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                              <span>Pengesahan Program Automatik</span>
+                              <span>{t('auth:auto_program_verification', 'Pengesahan Program Automatik')}</span>
                             </div>
                             <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
                               {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
@@ -956,7 +956,7 @@ export function CompleteProfileModal() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Cipta Kata Laluan Akaun</span>
+                        <span>{t('auth:create_account_password_title', 'Cipta Kata Laluan Akaun')}</span>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                         Cipta kata laluan untuk membolehkan anda log masuk secara manual menggunakan No. Matrik pada masa hadapan (walaupun mendaftar dengan Google).

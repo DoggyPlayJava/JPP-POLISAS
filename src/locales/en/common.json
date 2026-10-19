@@ -1,8 +1,12 @@
 {
+  "action_failed": "Operation failed. Please try again.",
+  "action_success": "Operation completed successfully.",
   "actions": "Actions",
   "active": "Active",
   "add": "Add",
   "add_new": "Add New",
+  "ai_exco_greeting": "I am your personal AI advisor. Ask anything — ticket analysis, letter drafting, or advice. Ready to assist!",
+  "ai_greeting": "I am your JPP AI assistant. Feel free to ask any question regarding POLISAS clubs and activities!",
   "all": "All",
   "apply": "Apply",
   "apply_filter": "Apply Filter",
@@ -114,6 +118,7 @@
   "save_success": "Saved successfully.",
   "saving": "Saving...",
   "search": "Search",
+  "search_conversations": "Search conversations...",
   "search_placeholder": "Search...",
   "see_less": "See Less",
   "see_more": "See More",
@@ -135,6 +140,7 @@
   "title": "Title",
   "total": "Total",
   "try_again": "Try Again",
+  "type_message_placeholder": "Ask a question...",
   "unauthorized_access": "You do not have permission to perform this action.",
   "unavailable": "Unavailable",
   "unverified": "Unverified",
@@ -153,7 +159,5 @@
   "view": "View",
   "view_all": "View All",
   "warning": "Warning",
-  "yes": "Yes",
-  "action_failed": "Operation failed. Please try again.",
-  "action_success": "Operation completed successfully."
+  "yes": "Yes"
 }

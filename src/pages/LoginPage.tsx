@@ -291,7 +291,7 @@ export function LoginPage() {
 
       const { data: emailExists, error: checkError } = await supabase.rpc('check_email_registered', { p_email: email.trim().toLowerCase() });
       if (!checkError && emailExists) {
-        toast.error('Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.');
+        toast.error(t('auth:email_already_registered_prompt', 'Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.'));
         setIsLoading(false);
         return;
       }
@@ -337,13 +337,13 @@ export function LoginPage() {
       }
 
       if (isStaff) {
-        toast.success(isAdvisor ? 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.' : 'Akaun Staf berjaya didaftar dan aktif!');
+        toast.success(isAdvisor ? t('auth:staff_advisor_registered_notice', 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.') : t('auth:staff_registered_active', 'Akaun Staf berjaya didaftar dan aktif!'));
         setIsSignUp(false);
         resetForm();
       } else {
         setRegisteredEmail(email.trim().toLowerCase());
         setVerificationSent(true);
-        toast.success('Akaun berjaya didaftar! Sila semak emel anda.');
+        toast.success(t('auth:account_registered_check_email', 'Akaun berjaya didaftar! Sila semak emel anda.'));
       }
     } catch (error: any) {
       localStorage.removeItem('is_new_register');
@@ -396,18 +396,18 @@ export function LoginPage() {
         <div className="text-left mb-8">
           <h1 className="text-3xl sm:text-[34px] font-black tracking-tight leading-[1.15] text-[#2E3A2F] dark:text-[#F8F6EE]">
             {isForgotPassword
-              ? 'Tetapkan Semula Kata Laluan'
+              ? t('auth:reset_password', 'Tetapkan Semula Kata Laluan')
               : isSignUp
-              ? (step === 1 ? 'Daftar Akaun Baharu' : 'Maklumat Keahlian')
+              ? (step === 1 ? t('auth:register_title', 'Daftar Akaun Baharu') : t('auth:membership_info', 'Maklumat Keahlian'))
               : t('auth:login_title')}
           </h1>
           <p className="text-sm sm:text-[15px] text-[#556453] dark:text-[#A3B39F] font-normal leading-relaxed mt-2.5">
             {isForgotPassword
-              ? 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.'
+              ? t('auth:reset_password_desc', 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.')
               : isSignUp && step === 1
-              ? 'Gunakan Google untuk pendaftaran segera atau daftar manual.'
+              ? t('auth:register_step1_desc', 'Gunakan Google untuk pendaftaran segera atau daftar manual.')
               : isSignUp && step === 2
-              ? 'Pilih jabatan atau kelab untuk pendaftaran peranan.'
+              ? t('auth:register_step2_desc', 'Pilih jabatan atau kelab untuk pendaftaran peranan.')
               : t('auth:login_subtitle')}
           </p>
 
@@ -422,7 +422,7 @@ export function LoginPage() {
               >
                 <Link2 className="w-4 h-4 text-[#6B7F5B] shrink-0" />
                 <p className="text-xs font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                  Log masuk untuk meneruskan ke destinasi QR anda.
+                  {t('auth:qr_redirect_notice', 'Log masuk untuk meneruskan ke destinasi QR anda.')}
                 </p>
               </motion.div>
             )}
@@ -525,7 +525,7 @@ export function LoginPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
-                    toast.error('Sila lengkapkan semua maklumat.');
+                    toast.error(t('auth:fill_all_basic_info', 'Sila lengkapkan semua maklumat.'));
                     return;
                   }
                   setStep(2);
@@ -973,13 +973,13 @@ export function LoginPage() {
                     type="button"
                     onClick={() => {
                       localStorage.setItem('use_mock_auth', 'true');
-                      toast.success('Pintasan Developer diaktifkan!');
+                      toast.success(t('auth:dev_shortcut_activated', 'Pintasan Developer diaktifkan!'));
                       setTimeout(() => window.location.href = '/portal', 500);
                     }}
                     className="w-full h-11 rounded-xl border border-dashed border-[#6B7F5B] bg-[#6B7F5B]/10 hover:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                    <span>Pintas Log Masuk (Dev Mode)</span>
+                    <span>{t('auth:bypass_login_dev', 'Pintas Log Masuk (Dev Mode)')}</span>
                   </button>
                 </div>
               )}

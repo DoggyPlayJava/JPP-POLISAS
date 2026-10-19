@@ -77,6 +77,7 @@ export function resolveSettingsTab(tabParam?: string | null): SettingsTabId {
 // ProfileEditRequestSection - Permintaan pindaan matrik/semester (dalam Tab Profil)
 // ─────────────────────────────────────────────────────────────────────────────
 function ProfileEditRequestSection() {
+  const { t } = useTranslation(['settings', 'common']);
   const { user, profile } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const [requests, setRequests] = React.useState<any[]>([]);
@@ -114,12 +115,12 @@ function ProfileEditRequestSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile) return;
-    if (!requestedValue.trim()) { toast.error('Sila isi nilai baharu.'); return; }
+    if (!requestedValue.trim()) { toast.error(t('settings:error_enter_new_value', 'Sila isi nilai baharu.')); return; }
     if (fieldType === 'semester') {
       const sem = Number(requestedValue);
-      if (!Number.isInteger(sem) || sem < 1 || sem > 6) { toast.error('Semester mesti antara 1 hingga 6.'); return; }
+      if (!Number.isInteger(sem) || sem < 1 || sem > 6) { toast.error(t('settings:error_semester_range', 'Semester mesti antara 1 hingga 6.')); return; }
     }
-    if (hasPendingForSelected) { toast.error('Terdapat permintaan PENDING yang masih belum disemak.'); return; }
+    if (hasPendingForSelected) { toast.error(t('settings:error_pending_request_exists', 'Terdapat permintaan PENDING yang masih belum disemak.')); return; }
 
     setSubmitting(true);
     try {
@@ -149,12 +150,12 @@ function ProfileEditRequestSection() {
       });
       if (notifErr) console.warn('Notifikasi JPP gagal:', notifErr.message);
 
-      toast.success('Permintaan pindaan berjaya dihantar! Sila tunggu semakan MT JPP.');
+      toast.success(t('settings:amendment_request_sent', 'Permintaan pindaan berjaya dihantar! Sila tunggu semakan MT JPP.'));
       setRequestedValue('');
       setReason('');
       await fetchRequests();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal hantar permintaan.');
+      toast.error(err.message || t('settings:error_send_request_failed', 'Gagal hantar permintaan.'));
     } finally {
       setSubmitting(false);
     }
@@ -307,6 +308,7 @@ function ProfileEditRequestSection() {
 // KediamanSettingsSection - Tab kediaman dalam SettingsPage
 // ─────────────────────────────────────────────────────────────────────────────
 function KediamanSettingsSection() {
+  const { t } = useTranslation(['settings', 'common']);
   const { user, profile, refetchProfile } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const [step, setStep] = React.useState<'loading'|'choice'|'form'|'done'>('loading');
@@ -385,17 +387,17 @@ function KediamanSettingsSection() {
       } else {
         await supabase.from('klk_student_residency').insert(payload);
       }
-      toast.success('Status kediaman berjaya disimpan!');
+      toast.success(t('settings:residence_saved_success', 'Status kediaman berjaya disimpan!'));
       setStep('done');
-    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    } catch { toast.error(t('settings:error_save_residence', 'Gagal simpan. Cuba lagi.')); }
     finally { setSaving(false); }
   };
 
   const handleSubmitLuar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!alamat.trim()) { toast.error('Sila isi alamat.'); return; }
-    if (!kawasan) { toast.error('Sila pilih kawasan.'); return; }
-    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error('Sila nyatakan kawasan.'); return; }
+    if (!alamat.trim()) { toast.error(t('settings:error_enter_address', 'Sila isi alamat.')); return; }
+    if (!kawasan) { toast.error(t('settings:error_select_area', 'Sila pilih kawasan.')); return; }
+    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error(t('settings:error_specify_area', 'Sila nyatakan kawasan.')); return; }
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
         toast.error(`Sila isi: ${f.label}`); return;
@@ -584,11 +586,11 @@ export function SettingsPage() {
       await changeLanguage(lang);
       toast.success(
         lang === 'ms'
-          ? 'Bahasa sistem ditukar ke Bahasa Melayu'
-          : 'System language changed to English'
+          ? t('settings:language_switched_ms', 'Bahasa sistem ditukar ke Bahasa Melayu')
+          : t('settings:language_switched_en', 'System language changed to English')
       );
     } catch {
-      toast.error('Gagal menukar bahasa.');
+      toast.error(t('settings:language_update_failed', 'Gagal menukar bahasa.'));
     }
   };
 
@@ -655,7 +657,7 @@ export function SettingsPage() {
 
       const file = event.target.files[0];
       if (file.size > 5242880) {
-        toast.error("Gagal: Saiz fail terlalu besar! Maksimum 5MB sahaja.");
+        toast.error(t('settings:error_avatar_size_exceeded', "Gagal: Saiz fail terlalu besar! Maksimum 5MB sahaja."));
         return;
       }
 
@@ -680,9 +682,9 @@ export function SettingsPage() {
       if (updateError) throw updateError;
 
       await refetchProfile();
-      toast.success("Gambar profil berjaya dikemaskini!");
+      toast.success(t('settings:avatar_updated_success', "Gambar profil berjaya dikemaskini!"));
     } catch (error: any) {
-      toast.error(error.message || "Ralat memuat naik gambar.");
+      toast.error(error.message || t('settings:error_uploading_avatar', "Ralat memuat naik gambar."));
     } finally {
       setUploadingAvatar(false);
     }
@@ -765,9 +767,9 @@ export function SettingsPage() {
       
       setShowOTPModal(true);
       setOtpInput('');
-      toast.success('Kod pengesahan 6-digit telah dihantar ke emel anda.');
+      toast.success(t('settings:otp_sent_to_email', 'Kod pengesahan 6-digit telah dihantar ke emel anda.'));
     } catch (err: any) {
-      toast.error(err.message || "Gagal menghantar kod pengesahan.");
+      toast.error(err.message || t('settings:error_sending_otp', "Gagal menghantar kod pengesahan."));
     } finally {
       setLoading(false);
     }
@@ -781,18 +783,18 @@ export function SettingsPage() {
       setGeneratedOTP('');
       await commitUpdates();
     } else {
-      toast.error('Kod pengesahan (OTP) tidak sah.');
+      toast.error(t('settings:error_invalid_otp', 'Kod pengesahan (OTP) tidak sah.'));
     }
   };
 
   const handleUpdatePassword = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newPassword || newPassword !== confirmPassword) {
-      toast.error('Kata laluan tidak sepadan atau kosong.');
+      toast.error(t('settings:error_passwords_mismatch', 'Kata laluan tidak sepadan atau kosong.'));
       return;
     }
     if (newPassword.length < 6) {
-      toast.error('Kata laluan mestilah sekurang-kurangnya 6 aksara.');
+      toast.error(t('settings:error_password_min_length', 'Kata laluan mestilah sekurang-kurangnya 6 aksara.'));
       return;
     }
 
@@ -817,10 +819,10 @@ export function SettingsPage() {
       if (mode === 'system') {
         const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         setTheme(isDark ? 'dark' : 'light');
-        toast.success('Tema diselaraskan dengan tetapan sistem peranti.');
+        toast.success(t('settings:theme_synced_system', 'Tema diselaraskan dengan tetapan sistem peranti.'));
       } else {
         setTheme(mode);
-        toast.success(`Tema ditukar ke mod ${mode === 'dark' ? 'Gelap' : 'Cerah'}`);
+        toast.success(mode === 'dark' ? t('settings:theme_switched_dark', 'Tema ditukar ke mod Gelap') : t('settings:theme_switched_light', 'Tema ditukar ke mod Cerah'));
       }
     }
   };
@@ -1415,7 +1417,7 @@ export function SettingsPage() {
                         localStorage.removeItem('portal_walkthrough_seen');
                         localStorage.removeItem('hide_bottomnav_tooltip');
                       }
-                      toast.success('Panduan sistem ditetapkan semula. Kembali ke Portal untuk bermula!');
+                      toast.success(t('settings:guide_reset_success', 'Panduan sistem ditetapkan semula. Kembali ke Portal untuk bermula!'));
                       navigate('/portal');
                     }}
                     className="h-11 px-5 rounded-2xl font-bold text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs min-h-[44px] shrink-0"

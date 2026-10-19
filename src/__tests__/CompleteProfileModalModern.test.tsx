@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import i18n, { changeLanguage } from '@/lib/i18n';
 
 describe('CompleteProfileModal Modern Institutional Polish', () => {
   const modalPath = path.resolve(__dirname, '../components/ui/CompleteProfileModal.tsx');
@@ -60,5 +61,23 @@ describe('CompleteProfileModal Modern Institutional Polish', () => {
     expect(content).toContain('Cipta Kata Laluan Akaun');
     expect(content).toContain('showPassword');
     expect(content).toContain('confirmPassword');
+  });
+
+  it('renders localized validation toasts in English when en is active', async () => {
+    await changeLanguage('en');
+
+    // In CompleteProfileModal.tsx, validation toasts must use t('auth:...') with BM fallback
+    expect(content).toContain("t('auth:error_phone_required'");
+    expect(content).toContain("t('auth:error_department_required'");
+    expect(content).toContain("t('auth:error_program_required'");
+    expect(content).toContain("t('auth:error_session_required'");
+    expect(content).toContain("t('auth:profile_updated_success'");
+
+    // Verify toast strings in English translation dictionary
+    expect(i18n.t('auth:error_phone_required')).toBe('Please enter phone number.');
+    expect(i18n.t('auth:error_department_required')).toBe('Please select department.');
+    expect(i18n.t('auth:error_program_required')).toBe('Please select study programme.');
+    expect(i18n.t('auth:error_session_required')).toBe('Please select intake year and session.');
+    expect(i18n.t('auth:profile_updated_success')).toBe('Profile updated successfully.');
   });
 });
