@@ -377,11 +377,11 @@ export function JppUsersPage() {
                                             <div className="flex gap-2">
                                                 <button onClick={() => setTierApproveTarget({ requestId: req.id, userId: req.user_id, newTier: 'pro', receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
                                                     <CheckCircle2 className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:approve', { defaultValue: 'Luluskan' })}</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:approve', 'Luluskan')}</span>
                                                 </button>
                                                 <button onClick={() => setTierRejectTarget({ requestId: req.id, userId: req.user_id, receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors">
                                                     <XCircle className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:reject', { defaultValue: 'Tolak' })}</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:reject', 'Tolak')}</span>
                                                 </button>
                                             </div>
                                         )}
@@ -626,7 +626,7 @@ export function JppUsersPage() {
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-white/[0.02]">
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('common:user', { defaultValue: 'Pengguna' })}</th>
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('common:user', 'Pengguna')}</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_cohort')}</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_ai_tier')}</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_token_balance')}</th>
@@ -804,7 +804,7 @@ export function JppUsersPage() {
                 onOpenChange={(open) => !open && setTierApproveTarget(null)}
                 title={t('jpp:users_tier_approve_title')}
                 description={t('jpp:users_tier_approve_desc')}
-                confirmLabel={t('common:approve', { defaultValue: 'Luluskan' })}
+                confirmLabel={t('common:approve', 'Luluskan')}
                 cancelLabel={t('common:cancel')}
                 variant="default"
                 onConfirm={executeTierApprove}
@@ -816,7 +816,7 @@ export function JppUsersPage() {
                 onOpenChange={(open) => !open && setTierRejectTarget(null)}
                 title={t('jpp:users_tier_reject_title')}
                 description={t('jpp:users_tier_reject_desc')}
-                confirmLabel={t('common:reject', { defaultValue: 'Tolak Permohonan' })}
+                confirmLabel={t('common:reject', 'Tolak Permohonan')}
                 cancelLabel={t('common:cancel')}
                 variant="destructive"
                 onConfirm={executeTierReject}
