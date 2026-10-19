@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
@@ -23,6 +24,7 @@ import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile } = useAuth();
   const location = useLocation();
   
@@ -472,7 +474,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             )}
             style={{ background: activeTab === 'POLYSUARA' ? (themeColor || '#8B5CF6') : undefined }}
           >
-            PolySuara
+            {t('jpp:services_tab_polysuara', 'PolySuara')}
           </button>
 
           <button
@@ -484,7 +486,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             style={{ background: activeTab === 'ANALITIK' ? (themeColor || '#8B5CF6') : undefined }}
           >
             <BarChart className="w-4 h-4" />
-            <span className="hidden sm:inline">ANALITIK</span>
+            <span className="hidden sm:inline">{t('jpp:services_tab_analytics', 'ANALITIK')}</span>
           </button>
           
           <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
@@ -499,7 +501,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             title="Tetapan & Kawalan Modul"
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">TETAPAN</span>
+            <span className="hidden sm:inline">{t('jpp:services_tab_settings', 'TETAPAN')}</span>
           </button>
         </div>
 
@@ -507,7 +509,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
           <Search className="w-4 h-4 text-slate-400 dark:text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
-            placeholder="Cari kandungan / matrik..."
+            placeholder={t('jpp:services_search_placeholder', 'Cari kandungan / matrik...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 transition-colors shadow-sm"
@@ -526,8 +528,8 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
           <div className="max-w-xl space-y-8">
             <div className="space-y-4">
               <div className="space-y-2">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Kawalan Modul</h3>
-                <p className="text-sm text-slate-500 dark:text-white/50">Buka atau tutup modul-modul ini kepada pelajar secara global.</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('jpp:services_module_control', 'Kawalan Modul')}</h3>
+                <p className="text-sm text-slate-500 dark:text-white/50">{t('jpp:services_module_control_desc', 'Buka atau tutup modul-modul ini kepada pelajar secara global.')}</p>
               </div>
               <div className="flex flex-col gap-3">
                 <FeatureToggle 
@@ -540,13 +542,13 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
 
             <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-white/10">
               <div className="space-y-2">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Tetapan Auto-Hide (Laporan Awam)</h3>
-                <p className="text-sm text-slate-500 dark:text-white/50">Jika pengguna melaporkan post/iklan melebihi had dalam tempoh masa tertentu, ia akan disembunyikan secara automatik.</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('jpp:services_auto_hide_settings', 'Tetapan Auto-Hide (Laporan Awam)')}</h3>
+                <p className="text-sm text-slate-500 dark:text-white/50">{t('jpp:services_auto_hide_desc', 'Jika pengguna melaporkan post/iklan melebihi had dalam tempoh masa tertentu, ia akan disembunyikan secara automatik.')}</p>
               </div>
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">Jumlah Laporan (Threshold)</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">{t('jpp:services_report_threshold', 'Jumlah Laporan (Threshold)')}</label>
                 <input 
                   type="number" min="1"
                   value={modConfig.report_threshold}
@@ -555,7 +557,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">Tempoh Masa (Minit)</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">{t('jpp:services_time_window', 'Tempoh Masa (Minit)')}</label>
                 <input 
                   type="number" min="1"
                   value={modConfig.time_window_mins}
@@ -570,7 +572,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                 style={{ background: themeColor }}
               >
                 {savingConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Simpan Tetapan
+                {t('jpp:services_save_settings', 'Simpan Tetapan')}
               </button>
               </div>
             </div>
@@ -579,13 +581,13 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-white/10">
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  🔔 Tetapan Notifikasi PolySuara
+                  🔔 {t('jpp:services_notification_settings', 'Tetapan Notifikasi PolySuara')}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-white/50">Kawal ambang (threshold) upvote untuk mencetuskan notifikasi push kepada pelajar. Max 1 notifikasi sejam. Jika tiada post layak dalam 3 jam, notifikasi akan dihantar untuk post terbaik walaupun di bawah threshold.</p>
+                <p className="text-sm text-slate-500 dark:text-white/50">{t('jpp:services_notification_desc', 'Kawal ambang (threshold) upvote untuk mencetuskan notifikasi push kepada pelajar. Max 1 notifikasi sejam. Jika tiada post layak dalam 3 jam, notifikasi akan dihantar untuk post terbaik walaupun di bawah threshold.')}</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">Minimum Upvotes untuk Notifikasi</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-white/70">{t('jpp:services_min_upvotes', 'Minimum Upvotes untuk Notifikasi')}</label>
                 <input
                   type="number" min="1" max="100"
                   value={notifConfig.upvote_threshold}
@@ -625,8 +627,8 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             {/* Sensor Words Management */}
             <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-white/10">
               <div className="space-y-2">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Pengurusan Perkataan Sensor</h3>
-                <p className="text-sm text-slate-500 dark:text-white/50">Perkataan dalam senarai ini akan digantikan secara automatik kepada *** sebelum dipaparkan di PolySuara.</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('jpp:services_censored_words', 'Pengurusan Perkataan Sensor')}</h3>
+                <p className="text-sm text-slate-500 dark:text-white/50">{t('jpp:services_censored_words_desc', 'Perkataan dalam senarai ini akan digantikan secara automatik kepada *** sebelum dipaparkan di PolySuara.')}</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-2">

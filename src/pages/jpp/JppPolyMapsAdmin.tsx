@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, useMapEvents, CircleMarker, Tooltip, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -35,6 +36,7 @@ L.Icon.Default.mergeOptions({
 });
 
 function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: number, lng: number, onChange: (lat: number, lng: number) => void, existingBuildings?: Building[] }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const MapEvents = () => {
     useMapEvents({
       click(e) {
@@ -74,7 +76,7 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
         ) : null}
       </MapContainer>
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
-        Sentuh peta untuk tetapkan lokasi
+        {t('jpp:polymaps_touch_map_hint', 'Sentuh peta untuk tetapkan lokasi')}
       </div>
     </div>
   );
@@ -295,6 +297,7 @@ interface MissingReport {
 }
 
 export function JppPolyMapsAdmin() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -567,9 +570,9 @@ export function JppPolyMapsAdmin() {
   const deleteWalkway = (id: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Laluan',
+      title: t('jpp:polymaps_delete_route', 'Padam Laluan'),
       description: 'Adakah anda pasti mahu memadam laluan ini? Tindakan ini tidak boleh diundur.',
-      confirmLabel: 'Padam Laluan',
+      confirmLabel: t('jpp:polymaps_delete_route', 'Padam Laluan'),
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -688,9 +691,9 @@ export function JppPolyMapsAdmin() {
   const deleteBuilding = (id: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Bangunan',
-      description: 'Padam bangunan ini? Semua lokasi di dalamnya juga akan terpadam.',
-      confirmLabel: 'Padam Bangunan',
+      title: t('jpp:polymaps_delete_building_title', 'Padam Bangunan'),
+      description: t('jpp:polymaps_delete_building_desc', 'Padam bangunan ini? Semua lokasi di dalamnya juga akan terpadam.'),
+      confirmLabel: t('jpp:polymaps_delete_building_title', 'Padam Bangunan'),
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -799,9 +802,9 @@ export function JppPolyMapsAdmin() {
   const deleteLocation = (id: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Lokasi',
+      title: t('jpp:polymaps_delete_location_title', 'Padam Lokasi'),
       description: 'Adakah anda pasti mahu memadam lokasi ini?',
-      confirmLabel: 'Padam Lokasi',
+      confirmLabel: t('jpp:polymaps_delete_location_title', 'Padam Lokasi'),
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -856,9 +859,9 @@ export function JppPolyMapsAdmin() {
             <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
               <Map className="w-5 h-5 text-sky-500 dark:text-sky-400" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Pentadbiran PolyMaps</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('jpp:polymaps_admin_title')}</h1>
           </div>
-          <p className="text-sm font-medium text-slate-600 dark:text-white/50">Urus koordinat bangunan dan panduan laluan dalaman kampus POLISAS</p>
+          <p className="text-sm font-medium text-slate-600 dark:text-white/50">{t('jpp:polymaps_admin_subtitle')}</p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
               <Compass className="w-3.5 h-3.5 text-emerald-500" />
@@ -883,14 +886,14 @@ export function JppPolyMapsAdmin() {
               onClick={() => { setCurrentBuilding({}); setShowBuildingModal(true); }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg shadow-sky-500/20"
             >
-              <Plus className="w-4 h-4" /> Tambah Bangunan
+              <Plus className="w-4 h-4" /> {t('jpp:polymaps_add_building')}
             </button>
           ) : activeTab === 'locations' ? (
             <button
               onClick={() => { setCurrentLocation({}); setBuildingSearchText(''); setShowLocationModal(true); }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg shadow-indigo-500/20"
             >
-              <Plus className="w-4 h-4" /> Tambah Lokasi
+              <Plus className="w-4 h-4" /> {t('jpp:polymaps_add_location')}
             </button>
           ) : null}
         </div>
@@ -906,7 +909,7 @@ export function JppPolyMapsAdmin() {
               activeTab === 'buildings' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
-            <Building2 className="w-4 h-4" /> Bangunan
+            <Building2 className="w-4 h-4" /> {t('jpp:polymaps_tab_buildings')}
           </button>
           <button
             onClick={() => setActiveTab('locations')}
@@ -915,7 +918,7 @@ export function JppPolyMapsAdmin() {
               activeTab === 'locations' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
-            <Navigation className="w-4 h-4" /> Kelas / Lokasi
+            <Navigation className="w-4 h-4" /> {t('jpp:polymaps_tab_locations')}
           </button>
           <button
             onClick={() => setActiveTab('reports')}
@@ -924,7 +927,7 @@ export function JppPolyMapsAdmin() {
               activeTab === 'reports' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
-            <AlertCircle className="w-4 h-4" /> Laporan Tempat
+            <AlertCircle className="w-4 h-4" /> {t('jpp:polymaps_tab_reports')}
             {reports.filter(r => r.status === 'pending').length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
                 {reports.filter(r => r.status === 'pending').length}
@@ -938,7 +941,7 @@ export function JppPolyMapsAdmin() {
               activeTab === 'walkways' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
-            <Map className="w-4 h-4" /> Urus Laluan
+            <Map className="w-4 h-4" /> {t('jpp:polymaps_tab_walkways')}
           </button>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
@@ -946,7 +949,7 @@ export function JppPolyMapsAdmin() {
             <div className="relative w-full md:w-48">
               <input
                 type="text"
-                value={isZoneDropdownOpen ? filterDropdownSearch : (filterZone === 'all' ? 'Semua Zon' : filterZone)}
+                value={isZoneDropdownOpen ? filterDropdownSearch : (filterZone === 'all' ? t('jpp:polymaps_all_zones') : filterZone)}
                 onFocus={() => {
                   setFilterDropdownSearch('');
                   setIsZoneDropdownOpen(true);
@@ -975,7 +978,7 @@ export function JppPolyMapsAdmin() {
                         filterZone === 'all' ? "bg-sky-500/10 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 font-bold" : "text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5"
                       )}
                     >
-                      Semua Zon
+                      {t('jpp:polymaps_all_zones')}
                     </button>
                     {uniqueZones
                       .filter(z => z.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
@@ -999,7 +1002,7 @@ export function JppPolyMapsAdmin() {
             <div className="relative w-full md:w-64">
               <input
                 type="text"
-                value={isBuildingFilterDropdownOpen ? filterDropdownSearch : (filterBuilding === 'all' ? 'Semua Bangunan' : buildings.find(b => b.id === filterBuilding)?.code || 'Semua Bangunan')}
+                value={isBuildingFilterDropdownOpen ? filterDropdownSearch : (filterBuilding === 'all' ? t('jpp:polymaps_all_buildings') : buildings.find(b => b.id === filterBuilding)?.code || t('jpp:polymaps_all_buildings'))}
                 onFocus={() => {
                   setFilterDropdownSearch('');
                   setIsBuildingFilterDropdownOpen(true);
@@ -1028,10 +1031,10 @@ export function JppPolyMapsAdmin() {
                         filterBuilding === 'all' ? "bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5"
                       )}
                     >
-                      Semua Bangunan
+                      {t('jpp:polymaps_all_buildings')}
                     </button>
                     {buildings
-                      .filter(b => b.name.toLowerCase().includes(filterDropdownSearch.toLowerCase()) || b.code.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
+                      .filter(b => b.name.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
                       .map(b => (
                       <button
                         key={b.id}
@@ -1070,7 +1073,7 @@ export function JppPolyMapsAdmin() {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
               <Compass className="w-3.5 h-3.5 text-sky-500" />
-              Penapis 360°:
+              {t('jpp:polymaps_360_filter')}
             </span>
             {[
               { id: 'all', label: 'Semua Status' },
@@ -1691,7 +1694,7 @@ export function JppPolyMapsAdmin() {
                       disabled={isSaving || drawingPoints.length < 2 || !walkwayName.trim()}
                       className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0 shadow-md"
                     >
-                      {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Laluan
+                      {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t('jpp:polymaps_save_route', 'Simpan Laluan')}
                     </button>
                   </div>
                 </div>
@@ -1975,13 +1978,13 @@ export function JppPolyMapsAdmin() {
                       />
                       <div className="w-10 h-6 bg-slate-200 dark:bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
                     </div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">Bangunan ini adalah Fasiliti Utama (Ada Waktu Operasi)</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{t('jpp:polymaps_facility_marker', 'Bangunan ini adalah Fasiliti Utama (Ada Waktu Operasi)')}</span>
                   </label>
 
                   {currentBuilding.is_facility && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-200 dark:border-white/10">
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Kategori Fasiliti</label>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_facility_category', 'Kategori Fasiliti')}</label>
                         <input 
                           type="text"
                           list="facility-suggestions"
@@ -2015,9 +2018,9 @@ export function JppPolyMapsAdmin() {
               </div>
 
               <div className="flex gap-3 mt-8">
-                <button onClick={() => setShowBuildingModal(false)} className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl font-bold transition-colors">Batal</button>
+                <button onClick={() => setShowBuildingModal(false)} className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl font-bold transition-colors">{t('common:cancel', 'Batal')}</button>
                 <button onClick={saveBuilding} disabled={isSaving} className="flex-1 py-3 px-4 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-sky-500/20 disabled:opacity-50 flex justify-center items-center gap-2">
-                  {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
+                  {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t('common:save', 'Simpan')}
                 </button>
               </div>
             </motion.div>

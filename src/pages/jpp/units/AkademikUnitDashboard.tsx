@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba } from '@/lib/utils';
@@ -143,6 +144,7 @@ function MeritConfigPanel() {
 
 // ─── Pencapaian Review Panel ──────────────────────────────────
 function PencapaianReviewPanel() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [items, setItems]     = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState<'MENUNGGU' | 'SEMUA'>('MENUNGGU');
@@ -317,7 +319,7 @@ function PencapaianReviewPanel() {
         <div className="py-16 text-center space-y-3">
           <CheckCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/20">
-            Tiada pencapaian {filter === 'MENUNGGU' ? 'menunggu semakan' : ''}
+            {filter === 'MENUNGGU' ? t('jpp:akademik_no_pending_review', 'Tiada pencapaian menunggu semakan') : 'Tiada rekod pencapaian'}
           </p>
         </div>
       ) : (
@@ -350,7 +352,7 @@ function PencapaianReviewPanel() {
                   {item.drive_view_url && (
                     <a href={item.drive_view_url} target="_blank" rel="noopener noreferrer"
                       className="text-[9px] font-black text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60 underline shrink-0 transition-colors">
-                      Lihat Sijil
+                      {t('jpp:akademik_view_certificate', 'Lihat Sijil')}
                     </a>
                   )}
                 </div>
@@ -380,9 +382,9 @@ function PencapaianReviewPanel() {
                           if (merit < defaultMerit) {
                             setPromptConfig({
                               open: true,
-                              title: 'Sebab Pengurangan Markah',
+                              title: t('jpp:akademik_merit_reduction_reason', 'Sebab Pengurangan Markah'),
                               description: `Sila nyatakan sebab pengurangan markah merit untuk "${item.nama_pencapaian}":`,
-                              inputLabel: 'Sebab Pengurangan',
+                              inputLabel: t('jpp:akademik_reason_label', 'Sebab Pengurangan'),
                               placeholder: 'cth: Sijil penyertaan peringkat zon, bukan kebangsaan',
                               variant: 'destructive',
                               onConfirm: (reason) => {
@@ -402,15 +404,15 @@ function PencapaianReviewPanel() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
                       >
                         {reviewing === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                        Sahkan (+{merit} merit)
+                        {t('jpp:akademik_confirm_action', 'Sahkan')} (+{merit} merit)
                       </button>
                       <button
                         onClick={() => {
                           setPromptConfig({
                             open: true,
-                            title: 'Tolak Pencapaian',
+                            title: t('jpp:akademik_reject_achievement', 'Tolak Pencapaian'),
                             description: `Sebab penolakan untuk "${item.nama_pencapaian}":`,
-                            inputLabel: 'Sebab Penolakan',
+                            inputLabel: t('jpp:akademik_reason_label', 'Sebab Penolakan'),
                             placeholder: 'cth: Bukti penyertaan tidak jelas',
                             variant: 'destructive',
                             onConfirm: (reason) => {
@@ -423,7 +425,7 @@ function PencapaianReviewPanel() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
                       >
                         <XCircle className="w-3.5 h-3.5" />
-                        Tolak
+                        {t('jpp:akademik_reject_achievement', 'Tolak')}
                       </button>
                     </div>
                   </div>
@@ -459,6 +461,7 @@ function PencapaianReviewPanel() {
 
 // ─── Unlock Requests Review Panel ────────────────────────────
 function UnlockRequestsPanel() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [acting, setActing]     = useState<string | null>(null);
@@ -634,7 +637,7 @@ function UnlockRequestsPanel() {
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
           >
             {acting === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-            Buka Kunci
+            {t('jpp:akademik_tab_unlock', 'Buka Kunci')}
           </button>
           <button
             onClick={() => {
@@ -670,9 +673,9 @@ function UnlockRequestsPanel() {
             onClick={() => {
               setUnlockPromptConfig({
                 open: true,
-                title: 'Tolak Permohonan Buka Kunci',
+                title: t('jpp:akademik_unlock_rejected', 'Tolak Permohonan Buka Kunci'),
                 description: 'Nyatakan nota penolakan permohonan buka kunci merit:',
-                inputLabel: 'Nota Penolakan',
+                inputLabel: t('jpp:akademik_reason_label', 'Nota Penolakan'),
                 placeholder: 'cth: Maklumat yang diberikan tidak mencukupi',
                 variant: 'destructive',
                 onConfirm: (note) => {
@@ -684,7 +687,7 @@ function UnlockRequestsPanel() {
             disabled={acting === req.id}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
           >
-            <XCircle className="w-3.5 h-3.5" /> Tolak
+            <XCircle className="w-3.5 h-3.5" /> {t('jpp:akademik_reject_achievement', 'Tolak')}
           </button>
         </div>
       )}
@@ -709,7 +712,7 @@ function UnlockRequestsPanel() {
           {pending.length === 0 && (
             <div className="py-12 text-center">
               <Unlock className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10 mb-3" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada permohonan buka kunci menunggu</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:akademik_no_unlock_requests', 'Tiada permohonan buka kunci menunggu')}</p>
             </div>
           )}
           {done.length > 0 && (
@@ -739,19 +742,9 @@ function UnlockRequestsPanel() {
   );
 }
 
-// ─── Tab definition ───────────────────────────────────────────
-const TABS = [
-  { id: 'overview',     label: 'Overview',            icon: LayoutDashboard },
-  { id: 'makmp',        label: 'Pusat Kawalan MAKMP', icon: Award },
-  { id: 'semak',        label: 'Semak Sijil',         icon: Trophy },
-  { id: 'buka-kunci',   label: 'Buka Kunci',          icon: Unlock },
-  { id: 'qr',           label: 'QR Merit',            icon: QrCode },
-  { id: 'demerit',      label: 'Demerit',             icon: ShieldAlert },
-  { id: 'merit-config', label: 'Tetapan Merit',       icon: Settings },
-];
-
 // ─── Main Admin Dashboard ─────────────────────────────────────
 export function AkademikUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get('tab');
@@ -759,6 +752,16 @@ export function AkademikUnitDashboard() {
   const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0, pendingUnlock: 0, makmpPending: 0 });
   const [activeEdition, setActiveEdition] = useState<{ id: string; year: number; title: string; is_active: boolean } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+
+  const TABS = [
+    { id: 'overview',     label: t('jpp:akademik_tab_overview', 'Overview'),            icon: LayoutDashboard },
+    { id: 'makmp',        label: t('jpp:akademik_tab_makmp', 'Pusat Kawalan MAKMP'), icon: Award },
+    { id: 'semak',        label: t('jpp:akademik_tab_certificates', 'Semak Sijil'),         icon: Trophy },
+    { id: 'buka-kunci',   label: t('jpp:akademik_tab_unlock', 'Buka Kunci'),          icon: Unlock },
+    { id: 'qr',           label: t('jpp:akademik_tab_qr', 'QR Merit'),            icon: QrCode },
+    { id: 'demerit',      label: t('jpp:akademik_tab_demerit', 'Demerit'),             icon: ShieldAlert },
+    { id: 'merit-config', label: t('jpp:akademik_tab_merit_config', 'Tetapan Merit'),       icon: Settings },
+  ];
 
   const jppPos = profile?.jpp_position as string | undefined;
   const isMT   = JPP_MT_POSITIONS.includes(jppPos as any);
@@ -892,10 +895,10 @@ export function AkademikUnitDashboard() {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Menunggu Semak', value: stats.menunggu, color: '#F59E0B', icon: Clock },
-                  { label: 'Disahkan',        value: stats.disahkan, color: '#10B981', icon: CheckCircle },
-                  { label: 'Ditolak',         value: stats.ditolak,  color: '#EF4444', icon: XCircle },
-                  { label: 'Merit Diagih',    value: stats.totalMerit, color: THEME,   icon: Star },
+                  { label: t('jpp:akademik_stats_pending', 'Menunggu Semak'), value: stats.menunggu, color: '#F59E0B', icon: Clock },
+                  { label: t('jpp:akademik_stats_approved', 'Disahkan'),        value: stats.disahkan, color: '#10B981', icon: CheckCircle },
+                  { label: t('jpp:akademik_stats_rejected', 'Ditolak'),         value: stats.ditolak,  color: '#EF4444', icon: XCircle },
+                  { label: t('jpp:akademik_stats_merit_distributed', 'Merit Diagih'),    value: stats.totalMerit, color: THEME,   icon: Star },
                 ].map(({ label, value, color, icon: Icon }, i) => (
                   <motion.div
                     key={label}
@@ -919,7 +922,7 @@ export function AkademikUnitDashboard() {
                 >
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <p className="text-xs font-black text-amber-800 dark:text-amber-300">
-                    {stats.menunggu} pencapaian menunggu semakan — klik untuk semak
+                    {t('jpp:akademik_alert_pending', { count: stats.menunggu, defaultValue: `${stats.menunggu} pencapaian menunggu semakan — klik untuk semak` })}
                   </p>
                 </div>
               )}
