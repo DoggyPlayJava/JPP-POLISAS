@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -18,6 +19,7 @@ interface DemeritManagerProps {
 }
 
 export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'NEW_DEMERIT' | 'APPEALS' | 'SETTINGS'>('NEW_DEMERIT');
   
@@ -259,9 +261,9 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldAlert className="w-6 h-6 text-rose-500" /> Pengurusan Demerit
+            <ShieldAlert className="w-6 h-6 text-rose-500" /> {t('akademik:demerit_title', 'Pengurusan Demerit')}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Urus potongan merit pelajar dan nilai rayuan</p>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">{t('akademik:demerit_subtitle', 'Urus potongan merit pelajar dan nilai rayuan')}</p>
         </div>
       </div>
 
@@ -273,7 +275,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
             activeTab === 'NEW_DEMERIT' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           }`}
         >
-          Rekod Baru
+          {t('akademik:tab_new_demerit', 'Rekod Baru')}
         </button>
         <button
           onClick={() => setActiveTab('APPEALS')}
@@ -281,7 +283,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
             activeTab === 'APPEALS' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           }`}
         >
-          Rayuan Pelajar
+          {t('akademik:tab_appeals', 'Rayuan Pelajar')}
         </button>
         {isAdmin && (
           <button
@@ -290,7 +292,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               activeTab === 'SETTINGS' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
             }`}
           >
-            Tetapan
+            {t('akademik:tab_settings', 'Tetapan')}
           </button>
         )}
         {!isAdmin && sourceOverride && sourceOverride !== 'MANUAL' && (
@@ -300,7 +302,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               activeTab === 'SETTINGS' ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
             }`}
           >
-            Tutup Kohort
+            {t('akademik:tab_close_cohort', 'Tutup Kohort')}
           </button>
         )}
       </div>
@@ -315,13 +317,13 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Search Panel */}
             <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm text-slate-900 dark:text-white space-y-4">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">1. Pilih Pelajar</h3>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('akademik:step_select_student', '1. Pilih Pelajar')}</h3>
               
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30" />
                 <input
                   type="text"
-                  placeholder="Cari nama atau matrik..."
+                  placeholder={t('akademik:search_student_placeholder', 'Cari nama atau matrik...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-rose-500/50"
@@ -362,14 +364,14 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
 
             {/* Demerit Form */}
             <div className={`bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm text-slate-900 dark:text-white space-y-4 transition-all ${!selectedStudent ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">2. Butiran Kesalahan</h3>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('akademik:step_offense_details', '2. Butiran Kesalahan')}</h3>
               
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Kesalahan</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">{t('akademik:offense_reason', 'Kesalahan')}</label>
                 <textarea
                   value={demeritForm.reason}
                   onChange={(e) => setDemeritForm(p => ({ ...p, reason: e.target.value }))}
-                  placeholder="Cth: Tidak hadir mesyuarat, melanggar peraturan asrama..."
+                  placeholder={t('akademik:offense_reason_placeholder', 'Cth: Tidak hadir mesyuarat, melanggar peraturan asrama...')}
                   rows={3}
                   className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-rose-500/50 resize-none"
                 />
@@ -377,7 +379,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1.5">Jumlah Potongan</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1.5">{t('akademik:demerit_points', 'Jumlah Potongan')}</label>
                   <input
                     type="number"
                     min="1"
@@ -387,7 +389,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Pautan Bukti</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">{t('akademik:evidence_url', 'Pautan Bukti')}</label>
                   <input
                     type="text"
                     placeholder="Link GDrive/Imej (Opsional)"
@@ -404,7 +406,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                 className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-rose-600 text-white hover:bg-rose-500 transition-all disabled:opacity-50 shadow-sm"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
-                Rekod Demerit
+                {t('akademik:submit_demerit', 'Rekod Demerit')}
               </button>
             </div>
           </div>
@@ -454,13 +456,13 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                           onClick={() => updateAppealStatus(appeal.id, 'APPROVED')}
                           className="flex-1 px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest transition-all"
                         >
-                          Terima & Refund
+                          {t('akademik:approve_appeal', 'Terima & Refund')}
                         </button>
                         <button
                           onClick={() => updateAppealStatus(appeal.id, 'REJECTED')}
                           className="flex-1 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest transition-all"
                         >
-                          Tolak
+                          {t('akademik:reject_appeal', 'Tolak')}
                         </button>
                       </div>
                     )}

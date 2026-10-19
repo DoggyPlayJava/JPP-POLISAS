@@ -3,6 +3,7 @@
 // Akses: Exco KLS + SUPER_ADMIN_JPP
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Settings, MapPin, Upload, Wifi, Eye, EyeOff,
@@ -53,6 +54,7 @@ const FIELD_TYPE_LABELS: Record<string, string> = {
 };
 
 export function KlkSettingsPage() {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const [kawasanList, setKawasanList] = useState<Kawasan[]>([]);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
@@ -247,8 +249,8 @@ export function KlkSettingsPage() {
           <ArrowLeft className="w-4 h-4 text-slate-400" />
         </Link>
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Tetapan KLK</h1>
-          <p className="text-xs text-slate-500 font-medium">Urus kawasan, webhook, dan import data</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">{t('housing:klk_settings_title', 'Tetapan KLK')}</h1>
+          <p className="text-xs text-slate-500 font-medium">{t('housing:klk_settings_subtitle', 'Urus kawasan, webhook, dan import data')}</p>
         </div>
       </motion.div>
 

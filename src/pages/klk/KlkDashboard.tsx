@@ -434,10 +434,10 @@ export function KlkDashboard() {
 
   // ── Render ─────────────────────────────────────────────────
   const statCards = [
-    { label: 'Pelajar Luar Kampus', value: stats.total_luar, icon: Home, color: '#60A5FA', href: '#senarai' },
-    { label: 'Dalam KAMSIS', value: stats.total_kamsis, icon: Building2, color: '#22C55E', href: '#senarai' },
-    { label: 'App', value: stats.by_source.webapp, icon: Database, color: '#818CF8', href: '#senarai' },
-    { label: 'Google Form', value: stats.by_source.google_form, icon: Wifi, color: '#F59E0B', href: '#senarai' },
+    { label: t('housing:stat_off_campus_students', 'Pelajar Luar Kampus'), value: stats.total_luar, icon: Home, color: '#60A5FA', href: '#senarai' },
+    { label: t('housing:stat_kamsis_students', 'Dalam KAMSIS'), value: stats.total_kamsis, icon: Building2, color: '#22C55E', href: '#senarai' },
+    { label: t('housing:stat_webapp_source', 'App'), value: stats.by_source.webapp, icon: Database, color: '#818CF8', href: '#senarai' },
+    { label: t('housing:stat_gform_source', 'Google Form'), value: stats.by_source.google_form, icon: Wifi, color: '#F59E0B', href: '#senarai' },
   ];
 
   const top5Kawasan = stats.by_kawasan.slice(0, 5);
@@ -533,7 +533,7 @@ export function KlkDashboard() {
           className="mb-8 rounded-2xl p-5 border border-amber-500/20 bg-amber-500/5 flex items-start gap-4">
           <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-black text-amber-300">Database Sedang Disediakan</p>
+            <p className="text-sm font-black text-amber-300">{t('housing:db_not_ready', 'Database Sedang Disediakan')}</p>
             <p className="text-xs text-amber-400/70 mt-1">
               Jadual <code className="font-mono bg-amber-500/10 px-1 rounded">klk_student_residency</code> belum wujud. Migration perlu dijalankan dahulu. Form pelajar sudah boleh digunakan — data akan disimpan bila DB sedia.
             </p>
@@ -553,7 +553,7 @@ export function KlkDashboard() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-black text-amber-300">
-              {lainLainCount} kawasan tidak dikenali perlu dimigrate
+              {lainLainCount} {t('housing:unrecognized_zones_warning', 'kawasan tidak dikenali perlu dimigrate')}
             </p>
             <p className="text-[10px] text-slate-500 mt-0.5">
               Pelajar memasukkan kawasan yang tidak tersenarai — klik untuk migrate dalam Tetapan KLK.

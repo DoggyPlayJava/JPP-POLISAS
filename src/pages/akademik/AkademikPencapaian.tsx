@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -287,6 +288,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
 // ─── Main Page ────────────────────────────────────────────────
 export function AkademikPencapaian() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   const [pencapaian, setPencapaian] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -482,9 +484,9 @@ export function AkademikPencapaian() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Rekod</p>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Pencapaian Saya</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">{t('akademik:pencapaian_title', 'Pencapaian Saya')}</h1>
           <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
-            Rekod anugerah, sijil & pertandingan — merit dikira automatik
+            {t('akademik:pencapaian_subtitle', 'Rekod anugerah, sijil & pertandingan — merit dikira automatik')}
           </p>
         </div>
         <button
@@ -493,7 +495,7 @@ export function AkademikPencapaian() {
           style={{ background: THEME, color: '#fff', boxShadow: `0 8px 24px ${hexToRgba(THEME, 0.25)}` }}
         >
           <Plus className="w-4 h-4" />
-          Tambah
+          {t('akademik:add_achievement', 'Tambah')}
         </button>
       </div>
 
