@@ -1,0 +1,19 @@
+{
+  "module_title": "Hab Akademik & Matriks Jadual Waktu",
+  "module_subtitle": "Matriks jadual kuliah, tarikh peperiksaan, parser jadual kelas, dan anggaran HPNM.",
+  "timetable_grid": "Matriks Jadual Waktu Kelas",
+  "import_timetable": "Muat Naik Fail Jadual / PDF",
+  "current_slot": "Kuliah Sedang Berlangsung",
+  "next_slot": "Slot Kuliah Seterusnya",
+  "free_slot": "Masa Lapang / Rehat",
+  "lecture_hall": "Dewan Kuliah / Makmal",
+  "lecturer_name": "Pensyarah / Pengajar",
+  "subject_code": "Kod Kursus",
+  "subject_name": "Nama Kursus",
+  "credit_hours": "Jam Kredit",
+  "gpa_calculator": "Kalkulator HPA & HPNM",
+  "target_cgpa": "Sasaran HPNM Graduasi",
+  "exam_schedule": "Kalendar Peperiksaan Rasmi",
+  "attendance_record": "Ringkasan Kehadiran Kuliah",
+  "attendance_warning": "Amaran Had Kehadiran 80%"
+}

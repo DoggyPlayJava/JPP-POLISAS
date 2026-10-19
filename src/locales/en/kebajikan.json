@@ -1,0 +1,22 @@
+{
+  "module_title": "e-Welfare & Public Complaints",
+  "module_subtitle": "Student ticketing system, cafeteria audits, food bank access, and emergency welfare.",
+  "ticket_center": "Welfare Ticket Center",
+  "submit_complaint": "Submit New Ticket / Complaint",
+  "track_ticket": "Track Ticket Status",
+  "cafeteria_audits": "Cafeteria Hygiene & Price Audits",
+  "foodbank_pantry": "Student Food Bank Pantry",
+  "emergency_aid": "Emergency Welfare Assistance",
+  "ticket_category_hostel": "Hostel / Facilities Issue",
+  "ticket_category_academic": "Academic Concern",
+  "ticket_category_welfare": "Financial / Health Welfare",
+  "ticket_category_cafeteria": "Cafeteria Hygiene / Pricing",
+  "ticket_status_open": "Open / Investigating",
+  "ticket_status_progress": "In Progress",
+  "ticket_status_resolved": "Resolved & Closed",
+  "sla_response_time": "SLA Response Target",
+  "assigned_officer": "Assigned Welfare Officer",
+  "submit_evidence": "Attach Photo / Document Evidence",
+  "request_foodbank": "Apply for Food Bank Basket",
+  "foodbank_eligibility": "B40 Welfare Eligibility Status"
+}

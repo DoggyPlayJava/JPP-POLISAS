@@ -1,0 +1,23 @@
+{
+  "module_title": "e-Keusahawanan & Perniagaan Pelajar",
+  "module_subtitle": "Terminal Titik Jualan (POS), pemantauan stok inventori, dan onboarding perniagaan pelajar.",
+  "pos_terminal": "Terminal Juruwang POS",
+  "inventory_management": "Kawalan Stok Inventori",
+  "business_onboarding": "Pendaftaran Perniagaan Pelajar",
+  "sales_analytics": "Analisis Jualan & Hasil",
+  "new_transaction": "Jualan Kaunter Baharu",
+  "product_catalog": "Katalog Barangan",
+  "stock_in": "Kemasukan Stok / Tambah Stok",
+  "low_stock_warning": "Amaran Stok Rendah",
+  "daily_sales": "Jumlah Jualan Hari Ini",
+  "monthly_revenue": "Hasil Jualan Bulanan",
+  "receipt_preview": "Resit Jualan Rasmi",
+  "payment_method_cash": "Bayaran Tunai",
+  "payment_method_qr": "Kod DuitNow QR",
+  "payment_method_card": "Kad Debit / Kredit",
+  "business_name": "Nama Perniagaan / Perusahaan",
+  "owner_matric": "No. Matrik Usahawan Pelajar",
+  "business_category": "Sektor Perniagaan",
+  "approval_status": "Status Kelulusan",
+  "register_business": "Daftar Perniagaan Baharu"
+}

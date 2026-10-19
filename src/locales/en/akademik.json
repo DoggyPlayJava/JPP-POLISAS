@@ -1,0 +1,19 @@
+{
+  "module_title": "Academic Hub & Timetable Matrix",
+  "module_subtitle": "Class timetable grid, examination dates, lecture schedule parser, and GPA forecasting.",
+  "timetable_grid": "Class Timetable Matrix",
+  "import_timetable": "Import Timetable File / PDF",
+  "current_slot": "Current Ongoing Lecture",
+  "next_slot": "Next Lecture Slot",
+  "free_slot": "Free Period / Recess",
+  "lecture_hall": "Lecture Hall / Lab",
+  "lecturer_name": "Lecturer / Instructor",
+  "subject_code": "Course Code",
+  "subject_name": "Course Title",
+  "credit_hours": "Credit Hours",
+  "gpa_calculator": "GPA & CGPA Calculator",
+  "target_cgpa": "Target Graduation CGPA",
+  "exam_schedule": "Official Examination Calendar",
+  "attendance_record": "Lecture Attendance Summary",
+  "attendance_warning": "80% Attendance Threshold Warning"
+}

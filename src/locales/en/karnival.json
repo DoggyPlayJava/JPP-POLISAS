@@ -1,0 +1,17 @@
+{
+  "module_title": "Campus Carnival & Voting Hub",
+  "module_subtitle": "Real-time electronic booth voting, live carnival scoreboard, and festival coordination.",
+  "live_voting": "Real-Time E-Voting",
+  "carnival_scoreboard": "Live Carnival Scoreboard",
+  "booth_directory": "Carnival Booths & Stalls",
+  "cast_vote": "Cast Your Vote",
+  "voted_successfully": "Vote Successfully Recorded",
+  "one_vote_per_student": "One verified vote per registered student",
+  "top_voted_booth": "Leading Popular Booth",
+  "total_votes_cast": "Total Verified Votes Cast",
+  "vote_category_creative": "Most Creative Booth",
+  "vote_category_sales": "Best Performing Sales Booth",
+  "vote_category_service": "Best Customer Hospitality",
+  "carnival_schedule": "Festival Program Itinerary",
+  "admin_tally": "Official Results Tallying"
+}

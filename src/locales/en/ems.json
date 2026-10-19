@@ -1,0 +1,21 @@
+{
+  "module_title": "EMS — Event Management & Scoring System",
+  "module_subtitle": "Tournament orchestration, digital jury grading sheets, live scoreboard, and verifiable digital certificates.",
+  "event_hub": "EMS Event Central Hub",
+  "jury_portal": "Jury Digital Scoring Portal",
+  "stage_presentation": "Stage Presentation / Arena Mode",
+  "certificate_generator": "QR-Verified Certificate Portal",
+  "audience_scanner": "QR Attendance & Entry Scanner",
+  "verify_certificate": "Verify Certificate Legitimacy",
+  "event_schedule": "Event Time & Bracket Matrix",
+  "live_leaderboard": "Live Competition Leaderboard",
+  "jury_rubric": "Judging Rubric & Criteria",
+  "submit_score": "Finalize & Submit Score",
+  "score_locked": "Score Finalized & Locked",
+  "certificate_valid": "Authentic Certificate Verified",
+  "certificate_invalid": "Certificate Record Not Found",
+  "recipient_name": "Participant Full Name",
+  "awarded_title": "Achievement / Award Title",
+  "organizer": "Organizing Committee",
+  "qr_scan_prompt": "Point camera at participant QR pass"
+}

@@ -1,0 +1,22 @@
+{
+  "module_title": "e-Kebajikan & Aduan Awam",
+  "module_subtitle": "Sistem tiket pelajar, audit kafeteria, bantuan food bank, dan kebajikan kecemasan.",
+  "ticket_center": "Pusat Tiket Aduan Kebajikan",
+  "submit_complaint": "Hantar Tiket / Aduan Baharu",
+  "track_ticket": "Semak Status Tiket",
+  "cafeteria_audits": "Audit Kebersihan & Harga Kafeteria",
+  "foodbank_pantry": "Pantri Food Bank Siswa",
+  "emergency_aid": "Bantuan Kebajikan Kecemasan",
+  "ticket_category_hostel": "Isu Asrama / Fasiliti",
+  "ticket_category_academic": "Isu Akademik",
+  "ticket_category_welfare": "Kebajikan Kewangan / Kesihatan",
+  "ticket_category_cafeteria": "Kebersihan / Harga Kafeteria",
+  "ticket_status_open": "Dibuka / Siasatan",
+  "ticket_status_progress": "Dalam Tindakan",
+  "ticket_status_resolved": "Selesai & Ditutup",
+  "sla_response_time": "Sasaran Tempoh SLA",
+  "assigned_officer": "Pegawai Kebajikan Bertanggungjawab",
+  "submit_evidence": "Lampirkan Gambar / Dokumen Bukti",
+  "request_foodbank": "Pohon Bakul Food Bank",
+  "foodbank_eligibility": "Status Kelayakan Kebajikan B40"
+}
