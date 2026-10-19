@@ -260,5 +260,17 @@
   "users_tier_reject_desc": "Adakah anda pasti mahu menolak permohonan kuota AI ini?",
   "users_role_toggle_title": "Ubah Peranan JPP",
   "users_tier_toggle_title": "Ubah Kuota AI Pengguna",
-  "users_change_tier": "Tukar Tier"
+  "users_change_tier": "Tukar Tier",
+  "kpp_search_reports_placeholder": "Cari tajuk laporan...",
+  "polymaps_floorplan": "Pelan Lantai",
+  "polymaps_entrance": "Pintu Masuk",
+  "services_status_resolved": "Diterima / Selesai",
+  "services_status_investigating": "Baru / Disiasat",
+  "services_status_flagged": "Dilaporkan (Flagged)",
+  "services_status_upvotes": "Total Interaksi (Upvote)",
+  "services_reported_comments_title": "Ulasan Dilaporkan / Auto-Hide",
+  "services_action_release": "Lepaskan",
+  "services_empty_confessions": "Tiada luahan ditemui.",
+  "services_add_censored_word_placeholder": "Tambah perkataan kesat/lucah...",
+  "services_no_censored_words": "Tiada perkataan sensor ditetapkan."
 }

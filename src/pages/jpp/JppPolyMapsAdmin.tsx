@@ -1034,7 +1034,7 @@ export function JppPolyMapsAdmin() {
                       {t('jpp:polymaps_all_buildings')}
                     </button>
                     {buildings
-                      .filter(b => b.name.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
+                      .filter(b => b.name.toLowerCase().includes(filterDropdownSearch.toLowerCase()) || (b.code && b.code.toLowerCase().includes(filterDropdownSearch.toLowerCase())))
                       .map(b => (
                       <button
                         key={b.id}
@@ -1845,7 +1845,7 @@ export function JppPolyMapsAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Koordinat GPS</label>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_gps_editor', 'Koordinat GPS')}</label>
                   <LocationPickerMap 
                     lat={currentBuilding.center_lat || 0} 
                     lng={currentBuilding.center_lng || 0} 
@@ -1856,7 +1856,7 @@ export function JppPolyMapsAdmin() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(['floorplan_image_url', 'entrance_image_url'] as const).map(field => {
-                    const label = field === 'floorplan_image_url' ? 'Pelan Lantai' : 'Pintu Masuk';
+                    const label = field === 'floorplan_image_url' ? t('jpp:polymaps_floorplan', 'Pelan Lantai') : t('jpp:polymaps_entrance', 'Pintu Masuk');
                     const value = currentBuilding[field];
                     return (
                       <div key={field} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-3">

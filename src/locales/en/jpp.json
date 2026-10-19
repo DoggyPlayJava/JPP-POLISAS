@@ -260,5 +260,17 @@
   "users_tier_reject_desc": "Are you sure you want to reject this AI quota application?",
   "users_role_toggle_title": "Change JPP Role",
   "users_tier_toggle_title": "Change User AI Quota",
-  "users_change_tier": "Change Tier"
+  "users_change_tier": "Change Tier",
+  "kpp_search_reports_placeholder": "Search report titles...",
+  "polymaps_floorplan": "Floor Plan",
+  "polymaps_entrance": "Entrance",
+  "services_status_resolved": "Resolved / Done",
+  "services_status_investigating": "New / Under Investigation",
+  "services_status_flagged": "Reported (Flagged)",
+  "services_status_upvotes": "Total Upvotes",
+  "services_reported_comments_title": "Reported Comments / Auto-Hide",
+  "services_action_release": "Release",
+  "services_empty_confessions": "No confessions found.",
+  "services_add_censored_word_placeholder": "Add offensive/inappropriate word...",
+  "services_no_censored_words": "No censored words configured."
 }

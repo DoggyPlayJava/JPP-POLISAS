@@ -671,19 +671,19 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             {/* Sentiment Dashboard */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                <div className="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 break-words">Diterima / Selesai</div>
+                <div className="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 break-words">{t('jpp:services_status_resolved', 'Diterima / Selesai')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white">{suaraList.filter(s => s.status === 'ACKNOWLEDGED' || s.status === 'RESOLVED').length}</div>
               </div>
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-                <div className="text-[10px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1 break-words">Baru / Disiasat</div>
+                <div className="text-[10px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1 break-words">{t('jpp:services_status_investigating', 'Baru / Disiasat')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white">{suaraList.filter(s => s.status === 'NEW' || s.status === 'INVESTIGATING').length}</div>
               </div>
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
-                <div className="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1 break-words">Dilaporkan (Flagged)</div>
+                <div className="text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1 break-words">{t('jpp:services_status_flagged', 'Dilaporkan (Flagged)')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white">{suaraList.filter(s => s.reports && s.reports.length > 0).length}</div>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                <div className="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 break-words">Total Interaksi (Upvote)</div>
+                <div className="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 break-words">{t('jpp:services_status_upvotes', 'Total Interaksi (Upvote)')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white">{suaraList.reduce((acc, curr) => acc + (curr.upvotes || 0), 0)}</div>
               </div>
             </div>
@@ -693,7 +693,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
               <div className="bg-rose-50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/20 rounded-[2rem] p-6 mb-6 shadow-sm">
                 <h3 className="text-sm font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
-                  🚨 Ulasan Dilaporkan / Auto-Hide ({reportedComments.length})
+                  🚨 {t('jpp:services_reported_comments_title', 'Ulasan Dilaporkan / Auto-Hide')} ({reportedComments.length})
                 </h3>
                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 no-scrollbar">
                   {reportedComments.map(comment => (
@@ -727,13 +727,13 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           onClick={() => handleRestoreComment(comment.id)}
                           className="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
                         >
-                          <Check className="w-3.5 h-3.5" /> Lepaskan
+                          <Check className="w-3.5 h-3.5" /> {t('jpp:services_action_release', 'Lepaskan')}
                         </button>
                         <button
                           onClick={() => setDeleteCommentId(comment.id)}
                           className="flex-1 sm:flex-none px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
                         >
-                          <Trash2 className="w-3.5 h-3.5" /> Padam
+                          <Trash2 className="w-3.5 h-3.5" /> {t('common:delete', 'Padam')}
                         </button>
                       </div>
                     </div>
@@ -744,7 +744,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
 
             <div className="space-y-4">
             {filteredSuara.length === 0 ? (
-              <div className="text-center py-20 text-slate-400 dark:text-white/40 font-bold uppercase tracking-widest text-xs">Tiada luahan ditemui.</div>
+              <div className="text-center py-20 text-slate-400 dark:text-white/40 font-bold uppercase tracking-widest text-xs">{t('jpp:services_empty_confessions', 'Tiada luahan ditemui.')}</div>
             ) : (
               filteredSuara.map(suara => (
                 <div key={suara.id} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 justify-between group hover:border-slate-300 dark:hover:border-white/10 transition-colors shadow-sm">
