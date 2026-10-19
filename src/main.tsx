@@ -60,6 +60,7 @@ window.addEventListener('vite:preloadError', () => {
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
+import './lib/i18n'
 import App from './App'
 import './index.css'
 
