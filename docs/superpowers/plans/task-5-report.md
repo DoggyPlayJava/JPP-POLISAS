@@ -78,7 +78,7 @@ Full 100% dictionary key parity has been established across English (`en`) and B
 All test suites were executed and verified passing:
 
 ```powershell
-npx vitest run src/locales/__tests__/masterLocales.test.ts src/__tests__/Domain3ExcoUnitsI18n.test.tsx src/__tests__/excoUnitsRevamp.test.ts src/__tests__/KebajikanHeaderParity.test.tsx
+npx vitest run src/locales/__tests__/masterLocales.test.ts src/__tests__/Domain3ExcoUnitsI18n.test.tsx src/__tests__/excoUnitsRevamp.test.ts src/__tests__/KebajikanHeaderParity.test.tsx src/__tests__/kebajikanFoodBankSuperApp.test.ts
 ```
 
 ### Test Results Breakdown:
@@ -96,8 +96,10 @@ npx vitest run src/locales/__tests__/masterLocales.test.ts src/__tests__/Domain3
   - English (`en`) full DOM rendering verified for all 10 Exco unit pages.
   - Bahasa Melayu (`ms`) full DOM rendering verified for all 10 Exco unit pages.
   - Live dynamic language switching verified between `en` and `ms` for Keusahawanan POS, Kebajikan Tickets, and Karnival Scoreboard.
+- **`src/__tests__/kebajikanFoodBankSuperApp.test.ts`**: 33 passed (33 total)
+  - Full AST source code token verification passing with literal fallbacks in `KebajikanFoodBankPage.tsx` and `KebajikanSubmitPage.tsx`.
 
-**Total Tests Passed:** 56 / 56 passed (100%)
+**Total Tests Passed:** 89 / 89 passed (100%)
 **Zero Test Failures.**
 
 ---
