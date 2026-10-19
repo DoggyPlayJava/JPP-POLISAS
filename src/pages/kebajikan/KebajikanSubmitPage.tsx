@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { useTranslation } from 'react-i18next';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
@@ -130,6 +131,7 @@ const getInitialProfileData = (profile: any, user: any) => {
 export function KebajikanSubmitPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation(['kebajikan', 'common']);
 
   const [step, setStep]             = useState<Step>('STATS');
   const [submitting, setSubmitting]   = useState(false);
@@ -477,8 +479,8 @@ export function KebajikanSubmitPage() {
               >
                 <HeartHandshake className="w-8 h-8" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Sistem Aduan Pelajar</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-300">Aduan anda akan diproses oleh Exco Kebajikan JPP POLISAS</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">{t('submit_title')}</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{t('submit_subtitle')}</p>
             </div>
 
             {/* Stats Grid */}
@@ -486,14 +488,14 @@ export function KebajikanSubmitPage() {
               <div className="relative rounded-3xl p-6 sm:p-8 mb-8 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none" />
                 <p className="relative z-10 text-[11px] font-black uppercase tracking-[0.3em] mb-6 text-teal-700 dark:text-teal-400 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Prestasi Exco Kebajikan
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> {t('submit_stats_perf')}
                 </p>
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { icon: CheckCircle2, val: publicStats.total_resolved,    label: 'Kes Selesai', col: '#10B981' },
-                    { icon: TrendingUp,   val: `${publicStats.resolution_rate ?? 0}%`, label: 'Kadar Selesai', col: TEAL },
-                    { icon: Clock,        val: `~${publicStats.avg_resolution_hours ?? 0}j`, label: 'Purata Masa', col: '#F59E0B' },
-                    { icon: ListChecks,   val: publicStats.total_active,     label: 'Kes Aktif', col: '#6366F1' },
+                    { icon: CheckCircle2, val: publicStats.total_resolved,    label: t('submit_stats_resolved'), col: '#10B981' },
+                    { icon: TrendingUp,   val: `${publicStats.resolution_rate ?? 0}%`, label: t('submit_stats_rate'), col: TEAL },
+                    { icon: Clock,        val: `~${publicStats.avg_resolution_hours ?? 0}j`, label: t('submit_stats_time'), col: '#F59E0B' },
+                    { icon: ListChecks,   val: publicStats.total_active,     label: t('submit_stats_active'), col: '#6366F1' },
                   ].map(s => (
                     <div key={s.label} className="text-center p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-transparent">
                       <s.icon className="w-5 h-5 mx-auto mb-1.5" style={{ color: s.col }} />
@@ -506,7 +508,7 @@ export function KebajikanSubmitPage() {
                   to="/kebajikan/statistik"
                   className="relative z-10 mt-6 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-colors w-fit mx-auto"
                 >
-                  Lihat statistik penuh <ArrowUpRight className="w-3 h-3" />
+                  {t('submit_stats_view_all')} <ArrowUpRight className="w-3 h-3" />
                 </Link>
               </div>
             )}
@@ -515,18 +517,18 @@ export function KebajikanSubmitPage() {
               onClick={() => setStep('CATEGORY')}
               className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 bg-teal-400 hover:bg-teal-300 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-teal-500/20"
             >
-              Buat Aduan Baru <ChevronRight className="w-5 h-5 ml-1.5" />
+              {t('submit_new_complaint_btn')} <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
             
             <Link to="/kebajikan/aduan-saya" className="block w-full mt-3">
               <button
                 className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border border-slate-300 dark:border-white/20 text-slate-800 dark:text-white bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 transition-all flex items-center justify-center shadow-sm"
               >
-                Semak Status Aduan Saya <ArrowUpRight className="w-4 h-4 ml-1.5" />
+                {t('submit_track_my_complaints')} <ArrowUpRight className="w-4 h-4 ml-1.5" />
               </button>
             </Link>
 
-            <p className="text-center text-[10px] text-slate-500 dark:text-white/30 mt-4">Log masuk diperlukan untuk kemukakan aduan</p>
+            <p className="text-center text-[10px] text-slate-500 dark:text-white/30 mt-4">{t('submit_login_required')}</p>
           </motion.div>
         )}
 
@@ -535,10 +537,10 @@ export function KebajikanSubmitPage() {
           <motion.div key="cat" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
               <button onClick={() => setStep('STATS')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Kembali
+                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn')}
               </button>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Pilih Kategori Aduan</h2>
-              <p className="text-xs text-slate-600 dark:text-white/40">Pilih kategori yang paling sesuai dengan aduan fasiliti anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_select_category')}</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">{t('submit_select_category_sub')}</p>
             </div>
 
             {/* Tactile 1-Touch High-Contrast Category Grid */}
@@ -594,7 +596,7 @@ export function KebajikanSubmitPage() {
               disabled={!form.category}
               className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
             >
-              Seterusnya <ChevronRight className="w-5 h-5 ml-1.5" />
+              {t('submit_next_step')} <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
           </motion.div>
         )}
@@ -604,12 +606,12 @@ export function KebajikanSubmitPage() {
           <motion.div key="form" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-28 sm:pb-12">
             <div className="mb-6">
               <button onClick={() => setStep('CATEGORY')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-3 transition-colors font-bold">
-                <ChevronLeft className="w-4 h-4" /> Tukar Kategori
+                <ChevronLeft className="w-4 h-4" /> {t('submit_change_category')}
               </button>
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Maklumat Pengadu & Aduan</h2>
-                  <p className="text-xs text-slate-600 dark:text-white/50">Lengkapkan butiran aduan fasiliti anda</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_complainant_info')}</h2>
+                  <p className="text-xs text-slate-600 dark:text-white/50">{t('submit_select_category_sub')}</p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20">
                   <span className="text-[10px] font-black uppercase tracking-wider">Kategori:</span>
@@ -625,43 +627,43 @@ export function KebajikanSubmitPage() {
               <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-1">
-                    Maklumat Pengadu
+                    {t('submit_complainant_info')}
                   </legend>
                   {Boolean(profile?.full_name || profile?.matric_no || user?.user_metadata?.full_name) && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-200 dark:border-teal-500/20">
                       <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                      Auto-isi dari Profil
+                      {t('submit_auto_filled_profile')}
                     </span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Nama Penuh *</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_full_name_label')}</label>
                     <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder="Nama seperti dalam rekod" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Matrik</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_matric_label')}</label>
                     <Input value={form.matric_no} onChange={e => upd('matric_no', e.target.value)} placeholder="23DAD00111" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Telefon</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_phone_label')}</label>
                     <Input value={form.phone} onChange={e => upd('phone', e.target.value)} placeholder="010-1234567" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Kelas / Program</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_class_label')}</label>
                     <Input value={form.class} onChange={e => upd('class', e.target.value)} placeholder="DAD3A" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jantina</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_gender_label')}</label>
                   <div className="flex gap-3">
                     {['Lelaki', 'Perempuan'].map(g => (
                       <button
                         type="button"
                         key={g} onClick={() => upd('gender', g)}
                         className={cn('flex-1 py-2.5 rounded-xl text-xs font-black border transition-all', form.gender === g ? 'bg-teal-400 border-teal-400 text-slate-950 shadow-sm' : 'text-slate-700 dark:text-white/50 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50 dark:bg-white/[0.03]')}
-                      >{g}</button>
+                      >{g === 'Lelaki' ? t('submit_gender_male') : t('submit_gender_female')}</button>
                     ))}
                   </div>
                 </div>
@@ -691,13 +693,13 @@ export function KebajikanSubmitPage() {
 
               {/* Description (common) */}
               <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Penerangan Aduan</legend>
+                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('submit_description_title')}</legend>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Huraikan Aduan Anda dengan Terperinci *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_description_label')}</label>
                   <Textarea
                     value={form.description}
                     onChange={e => upd('description', e.target.value)}
-                    placeholder="Terangkan masalah yang anda hadapi dengan lebih lanjut. Sertakan butiran seperti tarikh, masa, dan tempat kejadian..."
+                    placeholder={t('submit_description_placeholder')}
                     rows={4}
                     className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none"
                   />
@@ -707,7 +709,7 @@ export function KebajikanSubmitPage() {
                 <div className="tour-aduan-gambar">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 block">
-                      Gambar Sokongan (Wajib - min. 1, maks. 3) *
+                      {t('submit_evidence_title')}
                     </label>
                     <span className="text-[10px] font-bold text-slate-400">
                       {images.length}/3 keping
@@ -716,7 +718,7 @@ export function KebajikanSubmitPage() {
 
                   {images.length === 0 && (
                     <p className="text-red-500 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" /> Sila muat naik sekurang-kurangnya 1 gambar/bukti aduan
+                      <AlertCircle className="w-3.5 h-3.5" /> {t('submit_evidence_required_alert')}
                     </p>
                   )}
 
@@ -740,7 +742,7 @@ export function KebajikanSubmitPage() {
                     {isCompressing && (
                       <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-teal-500/40 bg-teal-50/50 dark:bg-teal-500/10 flex flex-col items-center justify-center">
                         <Loader2 className="w-6 h-6 text-teal-600 dark:text-teal-400 animate-spin mb-1" />
-                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300">Memampat...</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300">{t('submit_compressing')}</span>
                       </div>
                     )}
 
@@ -752,7 +754,7 @@ export function KebajikanSubmitPage() {
                           <div className="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                             <Camera className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-black tracking-wider uppercase text-teal-800 dark:text-teal-300">Kamera</span>
+                          <span className="text-[9px] font-black tracking-wider uppercase text-teal-800 dark:text-teal-300">{t('submit_camera_btn')}</span>
                           <input
                             ref={cameraInputRef}
                             type="file"
@@ -768,7 +770,7 @@ export function KebajikanSubmitPage() {
                           <div className="w-8 h-8 rounded-xl bg-slate-200/50 dark:bg-white/10 text-slate-600 dark:text-white/60 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                             <Upload className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-black tracking-wider uppercase text-slate-600 dark:text-white/50">Galeri</span>
+                          <span className="text-[9px] font-black tracking-wider uppercase text-slate-600 dark:text-white/50">{t('submit_gallery_btn')}</span>
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -781,7 +783,7 @@ export function KebajikanSubmitPage() {
                     )}
                   </div>
                   <p className="text-[10px] text-slate-400 mt-2">
-                    Gambar dimampatkan secara automatik sebelum dimuat naik untuk kelajuan & penjimatan data.
+                    {t('submit_evidence_hint')}
                   </p>
                 </div>
               </fieldset>
@@ -795,7 +797,7 @@ export function KebajikanSubmitPage() {
                 onClick={() => setStep('CATEGORY')}
                 className="w-full sm:w-1/3 h-14 text-xs font-black uppercase tracking-widest rounded-2xl border-slate-300 dark:border-white/15"
               >
-                <ChevronLeft className="w-4 h-4 mr-1.5" /> Tukar Kategori
+                <ChevronLeft className="w-4 h-4 mr-1.5" /> {t('submit_change_category')}
               </Button>
               <Button
                 type="button"
@@ -803,7 +805,7 @@ export function KebajikanSubmitPage() {
                 disabled={!isFormReady}
                 className="w-full sm:w-2/3 h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
               >
-                Semak & Hantar <ChevronRight className="w-5 h-5 ml-1.5" />
+                {t('submit_review_and_submit')} <ChevronRight className="w-5 h-5 ml-1.5" />
               </Button>
             </div>
 
@@ -821,13 +823,13 @@ export function KebajikanSubmitPage() {
                     {isFormReady ? (
                       <>
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                        <span className="truncate">Sedia Dihantar</span>
+                        <span className="truncate">{t('submit_ready_to_send')}</span>
                       </>
                     ) : (
                       <>
                         <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                         <span className="truncate text-amber-200">
-                          {images.length === 0 ? 'Perlu 1 Gambar' : 'Lengkapkan Borang'}
+                          {images.length === 0 ? t('submit_need_one_photo') : t('submit_incomplete_form')}
                         </span>
                       </>
                     )}
@@ -848,21 +850,22 @@ export function KebajikanSubmitPage() {
                 disabled={!form.category || !form.full_name || !form.description}
                 className="h-10 px-4 rounded-xl bg-teal-400 hover:bg-teal-300 disabled:opacity-40 disabled:pointer-events-none text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-transform active:scale-95 shadow-md shadow-teal-500/20"
               >
-                Semak & Hantar <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                {t('submit_review_and_submit')} <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </div>
           </motion.div>
         )}
 
         {/* ── STEP: PREVIEW (Fallback / Direct Desktop Review) ───────────────── */}
+        {/* ── STEP: PREVIEW (Fallback / Direct Desktop Review) ───────────────── */}
         {step === 'PREVIEW' && (
           <motion.div key="preview" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
               <button onClick={() => setStep('FORM')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Edit Aduan
+                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn')}
               </button>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Semak & Sahkan Aduan</h2>
-              <p className="text-xs text-slate-600 dark:text-white/40">Sila semak maklumat sebelum menghantar aduan anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_review_title')}</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">{t('submit_review_subtitle')}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 dark:border-white/[0.1] p-6 space-y-5 bg-white dark:bg-slate-900/80 shadow-sm">
@@ -875,12 +878,12 @@ export function KebajikanSubmitPage() {
               <Row label="Tajuk Aduan" value={buildTitle()} />
               {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">Penerangan</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">{t('submit_description_title')}</p>
                 <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{form.description}</p>
               </div>
               {images.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">Gambar ({images.length})</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">{t('submit_evidence_title')} ({images.length})</p>
                   <div className="flex gap-2">
                     {images.map((img, i) => (
                       <img key={i} src={URL.createObjectURL(img)} alt={`Bukti ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
@@ -892,7 +895,7 @@ export function KebajikanSubmitPage() {
 
             <div className="mt-4 p-4 rounded-2xl flex items-start gap-3 bg-teal-50 dark:bg-teal-500/[0.06] border border-teal-200 dark:border-teal-500/15">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-teal-600 dark:text-teal-400" />
-              <p className="text-xs text-slate-700 dark:text-white/70">Dengan menghantar aduan ini, anda bersetuju maklumat anda dikongsi dengan pihak Exco Kebajikan JPP POLISAS untuk tindakan lanjut.</p>
+              <p className="text-xs text-slate-700 dark:text-white/70">{t('submit_consent_notice')}</p>
             </div>
 
             {/* ── Duplicate Warning ── */}
@@ -901,9 +904,9 @@ export function KebajikanSubmitPage() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                    <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">{t('submit_duplicate_title')}</p>
                     <p className="text-xs text-slate-700 dark:text-white/60 leading-relaxed">
-                      Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
+                      {t('submit_duplicate_desc')}{' '}
                       <span className="font-bold text-slate-900 dark:text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
                     </p>
                   </div>
@@ -913,7 +916,7 @@ export function KebajikanSubmitPage() {
                     href={`/kebajikan/aduan/${duplicateWarning.id}`}
                     className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                   >
-                    Lihat Tiket Sedia Ada
+                    {t('submit_view_existing_ticket')}
                   </a>
                   <button
                     onClick={() => {
@@ -922,7 +925,7 @@ export function KebajikanSubmitPage() {
                     }}
                     className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-colors"
                   >
-                    Hantar Aduan Tetap
+                    {t('submit_proceed_anyway')}
                   </button>
                 </div>
               </div>
@@ -935,11 +938,11 @@ export function KebajikanSubmitPage() {
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Menghantar...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t('submit_sending')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Sahkan & Hantar Aduan <ChevronRight className="w-4 h-4" />
+                  {t('submit_confirm_btn')} <ChevronRight className="w-4 h-4" />
                 </span>
               )}
             </Button>
@@ -955,24 +958,24 @@ export function KebajikanSubmitPage() {
             >
               <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Aduan Berjaya Dikemukakan!</h2>
-            <p className="text-sm text-slate-600 dark:text-white/50 mb-6">Aduan anda telah diterima oleh sistem. No. aduan anda ialah:</p>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">{t('submit_success_title')}</h2>
+            <p className="text-sm text-slate-600 dark:text-white/50 mb-6">{t('submit_success_desc')}</p>
             <div
               className="inline-block px-8 py-4 rounded-2xl text-2xl font-black tracking-widest mb-8 bg-teal-50 dark:bg-teal-500/10 border-2 border-teal-400 dark:border-teal-500/30 text-teal-800 dark:text-teal-300 shadow-sm"
             >
               {submittedNo}
             </div>
-            <p className="text-xs text-slate-500 dark:text-white/40 mb-8">Exco Kebajikan akan menguruskan aduan anda dalam masa yang singkat. Anda akan dimaklumkan melalui notifikasi dalam portal.</p>
+            <p className="text-xs text-slate-500 dark:text-white/40 mb-8">{t('submit_success_eta')}</p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/kebajikan/aduan-saya" className="flex-1">
                 <Button className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md">
-                  Semak Status Aduan
+                  {t('submit_check_status_btn')}
                 </Button>
               </Link>
               <Link to="/portal" className="flex-1">
                 <Button variant="outline" className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl border-slate-300 dark:border-white/15 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-transparent">
-                  Kembali ke Portal
+                  {t('submit_back_to_portal')}
                 </Button>
               </Link>
             </div>
@@ -1007,8 +1010,8 @@ export function KebajikanSubmitPage() {
               {/* Sheet Header */}
               <div className="px-6 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Semak & Sahkan Aduan</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Pastikan butiran aduan fasiliti anda tepat</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{t('submit_review_title')}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('submit_review_subtitle')}</p>
                 </div>
                 <button
                   type="button"
@@ -1035,12 +1038,12 @@ export function KebajikanSubmitPage() {
                   {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Penerangan</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{t('submit_description_title')}</span>
                     <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-4">{form.description}</p>
                   </div>
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3 space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Maklumat Pengadu</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">{t('submit_complainant_info')}</span>
                     <Row label="Nama" value={form.full_name} />
                     <Row label="No. Matrik" value={form.matric_no || '-'} />
                     <Row label="Telefon" value={form.phone || '-'} />
@@ -1050,7 +1053,7 @@ export function KebajikanSubmitPage() {
                   {images.length > 0 && (
                     <div className="border-t border-slate-200 dark:border-white/10 pt-3">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                        Gambar Sokongan ({images.length})
+                        {t('submit_evidence_title')} ({images.length})
                       </span>
                       <div className="flex gap-2">
                         {images.map((img, i) => (
@@ -1065,7 +1068,7 @@ export function KebajikanSubmitPage() {
                 <div className="p-3.5 rounded-2xl flex items-start gap-2.5 bg-teal-500/10 border border-teal-500/20">
                   <AlertCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Dengan mengesahkan aduan ini, anda bersetuju maklumat anda dikongsi dengan Exco Kebajikan JPP POLISAS untuk siasatan dan tindakan pembaikan segera.
+                    {t('submit_consent_notice')}
                   </p>
                 </div>
 
@@ -1075,9 +1078,9 @@ export function KebajikanSubmitPage() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                        <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">{t('submit_duplicate_title')}</p>
                         <p className="text-xs text-slate-700 dark:text-white/60 leading-relaxed">
-                          Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
+                          {t('submit_duplicate_desc')}{' '}
                           <span className="font-bold text-slate-900 dark:text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
                         </p>
                       </div>
@@ -1087,7 +1090,7 @@ export function KebajikanSubmitPage() {
                         href={`/kebajikan/aduan/${duplicateWarning.id}`}
                         className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                       >
-                        Lihat Tiket Sedia Ada
+                        {t('submit_view_existing_ticket')}
                       </a>
                       <button
                         type="button"
@@ -1097,7 +1100,7 @@ export function KebajikanSubmitPage() {
                         }}
                         className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-colors"
                       >
-                        Hantar Aduan Tetap
+                        {t('submit_proceed_anyway')}
                       </button>
                     </div>
                   </div>
@@ -1113,7 +1116,7 @@ export function KebajikanSubmitPage() {
                   disabled={submitting}
                   className="w-full sm:w-auto flex-1 h-12 rounded-xl text-xs font-black uppercase tracking-wider border-slate-300 dark:border-white/15"
                 >
-                  Kembali Edit
+                  {t('submit_back_btn')}
                 </Button>
                 <Button
                   type="button"
@@ -1123,11 +1126,11 @@ export function KebajikanSubmitPage() {
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Menghantar...
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t('submit_sending')}
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      Sahkan & Hantar Aduan <ChevronRight className="w-4 h-4" />
+                      {t('submit_confirm_btn')} <ChevronRight className="w-4 h-4" />
                     </span>
                   )}
                 </Button>

@@ -13,5 +13,17 @@
   "vote_category_sales": "Gerai Jualan Terbaik",
   "vote_category_service": "Layanan Pelanggan Terbaik",
   "carnival_schedule": "Atur Cara Program Karnival",
-  "admin_tally": "Pusat Kiraan Keputusan Rasmi"
+  "admin_tally": "Pusat Kiraan Keputusan Rasmi",
+  "voting_rubric_creativity": "Kreativiti & Nilai Estetika",
+  "voting_rubric_sales": "Prestasi Jualan & Daya Tarik Pelanggan",
+  "voting_rubric_hospitality": "Layanan Mesra & Khidmat Pelanggan",
+  "voting_rubric_innovation": "Inovasi & Keunikan Produk",
+  "vote_already_cast": "Anda telah mengundi bagi kategori ini!",
+  "vote_recorded_title": "Undian Anda Berjaya Direkodkan!",
+  "vote_recorded_desc": "Terima kasih atas sokongan anda kepada gerai mahasiswa POLISAS.",
+  "scoreboard_refresh": "Kemaskini Masa Nyata",
+  "scoreboard_podium_1st": "Juara",
+  "scoreboard_podium_2nd": "Naib Juara",
+  "scoreboard_podium_3rd": "Tempat Ketiga",
+  "scoreboard_live_tally": "Kiraan Undi Rasmi Semasa"
 }

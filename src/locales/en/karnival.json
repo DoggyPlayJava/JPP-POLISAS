@@ -13,5 +13,17 @@
   "vote_category_sales": "Best Performing Sales Booth",
   "vote_category_service": "Best Customer Hospitality",
   "carnival_schedule": "Festival Program Itinerary",
-  "admin_tally": "Official Results Tallying"
+  "admin_tally": "Official Results Tallying",
+  "voting_rubric_creativity": "Creativity & Aesthetic Presentation",
+  "voting_rubric_sales": "Sales Performance & Customer Engagement",
+  "voting_rubric_hospitality": "Hospitality & Service Excellence",
+  "voting_rubric_innovation": "Product Innovation & Uniqueness",
+  "vote_already_cast": "You have already cast your vote for this category!",
+  "vote_recorded_title": "Vote Successfully Recorded!",
+  "vote_recorded_desc": "Thank you for supporting student booths at the POLISAS Carnival.",
+  "scoreboard_refresh": "Live Auto-Refresh",
+  "scoreboard_podium_1st": "Champion",
+  "scoreboard_podium_2nd": "Runner-up",
+  "scoreboard_podium_3rd": "Third Place",
+  "scoreboard_live_tally": "Official Live Ballot Count"
 }
