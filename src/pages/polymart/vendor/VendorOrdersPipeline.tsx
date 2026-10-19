@@ -37,6 +37,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { ReceiptReviewSheet } from './ReceiptReviewSheet';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -173,6 +174,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
   myBusinesses,
   selectedBizId,
 }) => {
+  const { t } = useTranslation(['commerce', 'common']);
   const { profile } = useAuth();
 
   // Active Stage Tab
@@ -838,7 +840,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari pembeli, no. matrik, atau ID pesanan..."
+              placeholder={t('commerce:search_orders_placeholder', 'Cari pembeli, no. matrik, atau ID pesanan...')}
               className="w-full pl-10 pr-9 py-2 rounded-xl text-xs sm:text-sm bg-muted/40 border border-border/60 focus:border-amber-500 focus:outline-none transition-colors text-foreground placeholder:text-muted-foreground"
             />
             {searchQuery && (
@@ -866,7 +868,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                     : 'hover:text-foreground'
                 }`}
               >
-                Semua Cara
+                {t('commerce:all_payment_methods', 'Semua Cara')}
               </button>
               <button
                 type="button"
@@ -903,7 +905,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                     : 'hover:text-foreground'
                 }`}
               >
-                Semua Tarikh
+                {t('commerce:all_dates', 'Semua Tarikh')}
               </button>
               <button
                 type="button"
@@ -914,7 +916,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                     : 'hover:text-foreground'
                 }`}
               >
-                Hari Ini
+                {t('common:today', 'Hari Ini')}
               </button>
               <button
                 type="button"
@@ -945,7 +947,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               ) : (
                 <Square className="w-4 h-4 text-muted-foreground" />
               )}
-              <span>Pilih Semua ({displayedOrders.length})</span>
+              <span>{t('commerce:select_all', 'Pilih Semua')} ({displayedOrders.length})</span>
             </button>
 
             {selectedOrderIds.length > 0 && (

@@ -503,8 +503,8 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('PolyMart — Pasaran Siswa Kampus');
-      expect(html).toContain('Troli Pesanan');
+      expect(html).toContain('PolyMart — Pasaran Digital Warga Siswa');
+      expect(html).toContain('Troli Belian');
     });
 
     it('renders PolyMartCartPage in Bahasa Melayu', () => {
@@ -515,7 +515,7 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('Troli Pesanan');
+      expect(html).toContain('Troli Belian');
       expect(html).toContain('Teruskan ke Pembayaran');
     });
 
@@ -539,8 +539,8 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('PolyMaps — GPS Kampus Interaktif &amp; Direktori');
-      expect(html).toContain('Dapatkan Panduan Laluan Berjalan');
+      expect(html).toContain('PolyMaps — GPS &amp; Direktori Interaktif Kampus');
+      expect(html).toContain('Dapatkan Panduan Arah');
     });
 
     it('renders PolySuaraPage in Bahasa Melayu', () => {
@@ -551,7 +551,7 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('Komuniti Mahasiswa Politeknik Terkawal');
+      expect(html).toContain('Komuniti Pelajar Politeknik Yang Diselia');
       expect(html).toContain('Topik Perbincangan Pelajar');
     });
 

@@ -4,6 +4,7 @@ import { X, MapPin, ChevronRight, ChevronLeft, Save, Loader2, Info, Plus, CheckC
 import { MapPicker } from '@/components/MapPicker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 interface PolyRentFormProps {
@@ -29,6 +30,7 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 }
 
 export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { profile } = useAuth();
   
   const [step, setStep] = useState(1);
@@ -265,8 +267,8 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900">
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Cipta Iklan Sewa</h2>
-            <p className="text-xs text-slate-500 font-medium mt-1">Langkah {step} daripada 4</p>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('commerce:rent_form_title', 'Cipta Iklan Sewa')}</h2>
+            <p className="text-xs text-slate-500 font-medium mt-1">{t('common:step', 'Langkah')} {step} / 4</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
             <X className="w-5 h-5" />
