@@ -491,6 +491,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
 // Komponen Sidebar utama
 // ─────────────────────────────────────────────────────────────────────────────
 export function Sidebar() {
+  const { t } = useTranslation(['nav', 'common']);
   const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId, setSelectedClubId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -654,7 +655,7 @@ export function Sidebar() {
           className="w-full justify-start gap-3 h-9 px-3 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Log Keluar</span>
+          <span>{t('common:logout', 'Log Keluar')}</span>
         </Button>
       </div>
     </aside>
