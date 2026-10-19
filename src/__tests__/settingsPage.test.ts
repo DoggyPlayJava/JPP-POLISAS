@@ -39,7 +39,7 @@ describe('SettingsPage Super App Profile Hub', () => {
       expect(kediamanTab?.label).toContain('Kediaman');
 
       const temaTab = SETTINGS_TAB_CONFIG.find(t => t.id === 'tema');
-      expect(temaTab?.label).toContain('Tema');
+      expect(temaTab?.label).toContain('Bahasa');
 
       const notifikasiTab = SETTINGS_TAB_CONFIG.find(t => t.id === 'notifikasi');
       expect(notifikasiTab?.label).toContain('Pemberitahuan');

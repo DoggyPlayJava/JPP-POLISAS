@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   User, Bell, Shield, Mail, Lock, Camera, Check, Award, Loader2, FileText,
   HelpCircle, MessageSquare, ExternalLink, Sparkles, Phone, ArrowLeft, Moon,
   MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle,
   CheckCircle2, AlertCircle, LogOut, Store, ShieldAlert, CalendarRange,
-  Sun, Laptop
+  Sun, Laptop, Languages
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { changeLanguage, SupportedLanguage } from '@/lib/i18n';
 import {
   Card
 } from '@/components/ui/card';
@@ -50,7 +52,7 @@ import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
 export const SETTINGS_TAB_CONFIG = [
   { id: 'profil', label: 'Profil & Akademik', iconComponent: User, desc: 'Maklumat peribadi & pinda data' },
   { id: 'kediaman', label: 'Status Kediaman', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus' },
-  { id: 'tema', label: 'Paparan & Tema', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap atau sistem' },
+  { id: 'tema', label: 'Paparan & Bahasa', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa' },
   { id: 'notifikasi', label: 'Pemberitahuan', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan' },
   { id: 'keselamatan', label: 'Keselamatan', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun' },
   { id: 'bantuan', label: 'Bantuan & Tutorial', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan' },
@@ -568,11 +570,27 @@ export function SettingsPage() {
   const { user, profile, refetchProfile, effectiveRole, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const { intake1Month, intake2Month } = useAcademicSession();
+  const { t, i18n } = useTranslation(['settings', 'common']);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get('tab');
   const currentTab = resolveSettingsTab(rawTab);
+
+  const currentLang = (i18n.language?.startsWith('ms') ? 'ms' : 'en') as SupportedLanguage;
+
+  const handleLanguageSelect = async (lang: SupportedLanguage) => {
+    try {
+      await changeLanguage(lang);
+      toast.success(
+        lang === 'ms'
+          ? 'Bahasa sistem ditukar ke Bahasa Melayu'
+          : 'System language changed to English'
+      );
+    } catch {
+      toast.error('Gagal menukar bahasa.');
+    }
+  };
 
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -1081,10 +1099,74 @@ export function SettingsPage() {
               </motion.div>
             </TabsContent>
 
-            {/* 3. TAB: PAPARAN & TEMA */}
+            {/* 3. TAB: PAPARAN & BAHASA */}
             <TabsContent value="tema" className="space-y-6 focus-visible:ring-0 mt-0">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="space-y-6">
                 
+                {/* Seksyen Pilihan Bahasa */}
+                <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80 overflow-hidden p-5 sm:p-7">
+                  <div className="mb-6 flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-2xl bg-[#6B7F5B]/10 dark:bg-[#6B7F5B]/20 border border-[#6B7F5B]/20 flex items-center justify-center text-[#6B7F5B] shrink-0 mt-0.5">
+                      <Languages className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">
+                        {t('settings:language_section_title')}
+                      </h3>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">
+                        {t('settings:language_section_desc')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      {
+                        id: 'ms' as const,
+                        flag: '🇲🇾',
+                        title: 'Bahasa Melayu',
+                        subtitle: 'Antara muka sistem dalam Bahasa Melayu',
+                      },
+                      {
+                        id: 'en' as const,
+                        flag: '🇬🇧',
+                        title: 'English',
+                        subtitle: 'System interface in English',
+                      },
+                    ].map((langOpt) => {
+                      const isSelected = currentLang === langOpt.id;
+                      return (
+                        <button
+                          key={langOpt.id}
+                          type="button"
+                          onClick={() => handleLanguageSelect(langOpt.id)}
+                          className={cn(
+                            "flex flex-col text-left p-5 rounded-3xl border transition-all duration-300 relative overflow-hidden group min-h-[120px]",
+                            isSelected
+                              ? "border-[#6B7F5B] bg-[#2E3A2F]/5 dark:bg-[#6B7F5B]/15 ring-2 ring-[#6B7F5B]/30 shadow-xs"
+                              : "border-[#D9C9B2]/70 dark:border-[#3A4A3B] bg-white dark:bg-[#151D16]/50 hover:border-[#6B7F5B]/40"
+                          )}
+                        >
+                          <div className="flex items-center justify-between w-full mb-3">
+                            <span className="text-2xl" role="img" aria-label={langOpt.title}>{langOpt.flag}</span>
+                            {isSelected && (
+                              <span className="p-1 rounded-full bg-[#6B7F5B] text-white shrink-0">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE]">
+                            {langOpt.title}
+                          </div>
+                          <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] mt-1 leading-snug">
+                            {langOpt.subtitle}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden p-5 sm:p-7">
                   <div className="mb-6">
                     <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Pemilih Tema & Paparan</h3>

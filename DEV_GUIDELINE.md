@@ -60,6 +60,7 @@
 | **Drag & Drop** | @dnd-kit/core | 6+ |
 | **PWA** | vite-plugin-pwa | — |
 | **Monitoring** | @vercel/speed-insights | — |
+| **Antarabangsa (i18n)** | i18next + react-i18next | i18next v24+, react-i18next v15+ |
 
 ---
 
@@ -115,6 +116,10 @@ src/
 │   ├── tasks/                ← Komponen pengurusan tugasan
 │   └── ui/                   ← Shadcn UI components
 │
+├── locales/
+│   ├── en/                   ← Bahasa Inggeris (common, auth, nav, settings)
+│   └── ms/                   ← Bahasa Melayu (common, auth, nav, settings)
+│
 ├── store/
 │   └── useNotificationStore.ts ← Zustand store untuk notifikasi (guna atomic selector!)
 │
@@ -138,6 +143,7 @@ src/
 │   ├── generateLaporanDocx.ts← Penjana dokumen DOCX laporan
 │   ├── polymaps360Data.ts    ← Pangkalan data 28 bangunan & 200+ bilik 360° terverifikasi (Norman POLISAS)
 │   ├── foodbankDefaults.ts   ← Fallback data dan barangan lalai Food Bank JPP
+│   ├── i18n.ts               ← Enjin segerak i18next & pengesanan bahasa automatik
 │   ├── email.ts              ← Email dispatch via Express server
 │   └── report-utils.ts       ← Utility untuk laporan
 │
@@ -461,6 +467,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/pages/jpp/JppUsersPage.tsx` | Pengurusan pengguna portal & kohort pelajar dengan 5-baris table pulse skeletons, tona gelap `#1C261D` selaras, dan metrik baki token berformat `font-mono tabular-nums` |
 | `src/pages/jpp/JppFoodBankAdmin.tsx` | Kaunter agihan & lejar audit RM70,000 dengan metrik kewangan terlindung `font-mono tabular-nums` kalis layout-jitter |
 | `src/__tests__/JppPhase2Redesign.test.tsx` | Sut ujian verifikasi Fasa 2: membuktikan skeleton loading, penghapusan kecerunan AI, SlideOverSheet, dan tabular numerals |
+| `src/lib/i18n.ts` | Konfigurasi enjin teras antarabangsa (i18n). Inisialisasi segerak, pengesanan bahasa automatik, fallback enjin, dan storan keutamaan `jpp_language` |
+| `src/components/ui/LanguageToggle.tsx` | Butang suis dwibahasa (BM 🇲🇾 / EN 🇬🇧) accessible berasaskan Radix UI DropdownMenu untuk penukaran bahasa pantas tanpa muat semula |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
 | `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
 
@@ -4471,4 +4479,94 @@ Mematuhi piawaian reka bentuk institusi `design-taste-frontend`:
 - **Buka Remotion Studio (Interaktif):** `npm run remotion:studio`
 - **Render Video MP4 Penuh:** `npm run remotion:render`
 - **Render Sampel Frame (Still):** `npx remotion still remotion/index.ts JppIntroVideo --frame=<nombor> out/frame.png`
+
+---
+
+## 36. Sistem Pelbagai Bahasa (Multilingual i18n)
+
+> Dikemas kini: Oktober 2026 (Pelancaran Seni Bina Dwibahasa Bersepadu)
+
+Bagi menyokong kepelbagaian pelajar antarabangsa, program pertukaran, persidangan mobiliti siswa, serta standardisasi portal institusi TVET moden, sistem dilengkapi enjin pelbagai bahasa segerak berasaskan **`i18next`** dan **`react-i18next`**.
+
+### 36.1 Senibina & Falsafah Inisialisasi Segerak (`src/lib/i18n.ts`)
+- **Inisialisasi Segerak (Zero-Flicker Architecture):**
+  Enjin memuatkan sumber kamus modul JSON secara statik semasa `import` dan diinisialisasi secara segerak (*synchronous initialization*) dengan `initReactI18next`. Ini memastikan tiada keadaan *loading* atau *layout shift* yang menjejaskan pengalaman pengguna semasa halaman pertama kali dirender dalam React 19.
+- **Konfigurasi Utama:**
+  - `fallbackLng: 'en'`: Bahasa sandaran sekiranya sebarang kunci terjemahan tiada dalam kamus aktif.
+  - `defaultNS: 'common'`: Namespace lalai untuk istilah sejagat antara muka.
+  - `react.useSuspense: false`: Menghapuskan kebergantungan `React.Suspense` untuk rendering SSR/CSR yang bersih.
+  - `interpolation.escapeValue: false`: Memanfaatkan perlindungan sanitasi XSS sedia ada dalam React.
+
+### 36.2 Peraturan Resolusi Bahasa & Keutamaan Pengguna (Language Resolution Order)
+Fungsi `detectLanguage()` dalam `src/lib/i18n.ts` menentukan bahasa permulaan melalui hierarki 3-peringkat:
+1. **Pilihan Manual (Tersimpan):**
+   Memeriksa `localStorage.getItem('jpp_language')`. Sekiranya pengguna pernah memilih secara manual sama ada `'en'` atau `'ms'`, pilihan ini mengatasi semua tetapan lain.
+2. **Pengesanan Bahasa Pelayar Dinamik:**
+   Sekiranya tiada pilihan tersimpan, sistem menyemak bahasa peranti pengguna (`navigator.language` atau `navigator.languages[0]`). Sekiranya kod bahasa bermula dengan `ms`, `zlm`, atau mengandungi perkataan `malay`, sistem secara automatik menetapkan bahasa kepada `'ms'` (Bahasa Melayu).
+3. **Lalai Sistem (Default Fallback):**
+   Sekiranya tiada padanan di atas, sistem secara lalai menggunakan `'en'` (Bahasa Inggeris).
+4. **Penyegerakan Dokumen HTML:**
+   Fungsi penukaran bahasa `changeLanguage(lang)` mengemas kini `document.documentElement.lang = lang` bagi menjamin aksesibiliti (*screen readers*) serta mematuhi piawaian enjin carian W3C.
+
+### 36.3 Struktur Ruang Nama Kamus (Translation Namespaces)
+Semua fail terjemahan diuruskan secara modular di bawah folder `src/locales/`:
+```
+src/locales/
+├── en/                       ← Bahasa Inggeris
+│   ├── common.json           ← Tindakan sejagat (Simpan, Batal, Padam, status borang)
+│   ├── auth.json             ← Log masuk SSO, set semula kata laluan, No. Matrik, placeholder
+│   ├── nav.json              ← Menu navigasi, sidebar, breadcrumb, label tab
+│   └── settings.json         ← Hab tetapan, tajuk seksyen bahasa & pilihan tema
+└── ms/                       ← Bahasa Melayu
+    ├── common.json           ← Tindakan sejagat versi Bahasa Melayu
+    ├── auth.json             ← Log masuk SSO versi Bahasa Melayu
+    ├── nav.json              ← Menu navigasi versi Bahasa Melayu
+    └── settings.json         ← Hab tetapan versi Bahasa Melayu
+```
+
+### 36.4 Panduan Pembangun: Menambah Terjemahan untuk Modul Baharu
+Bagi mengekalkan keseragaman dan integriti dwibahasa apabila membina modul baharu (contohnya `kpp`, `keusahawanan`, atau `supsas`):
+
+1. **Cipta fail JSON mengikut bahasa:**
+   - `src/locales/en/<modul>.json`
+   - `src/locales/ms/<modul>.json`
+2. **Daftarkan namespace dalam `src/lib/i18n.ts`:**
+   ```typescript
+   import kppEn from '@/locales/en/kpp.json';
+   import kppMs from '@/locales/ms/kpp.json';
+
+   export const resources = {
+     en: { common: commonEn, auth: authEn, nav: navEn, settings: settingsEn, kpp: kppEn },
+     ms: { common: commonMs, auth: authMs, nav: navMs, settings: settingsMs, kpp: kppMs },
+   } as const;
+   ```
+3. **Gunakan hook `useTranslation` dalam komponen:**
+   ```typescript
+   import { useTranslation } from 'react-i18next';
+
+   export function KppActivityCard() {
+     const { t } = useTranslation('kpp');
+
+     return (
+       <div>
+         <h3>{t('activity_title')}</h3>
+         <button>{t('register_now')}</button>
+       </div>
+     );
+   }
+   ```
+   Untuk komponen yang memerlukan akses serentak kepada pelbagai namespace:
+   ```typescript
+   const { t } = useTranslation(['settings', 'common']);
+   // Penggunaan: t('settings:language_section_title') atau t('common:save')
+   ```
+
+### 36.5 Komponen Antara Muka Penukar Bahasa
+1. **`<LanguageToggle />` (`src/components/ui/LanguageToggle.tsx`):**
+   - Komponen suis padat dengan dropdown Radix UI, memaparkan bendera 🇲🇾 / 🇬🇧 dan lencana ringkas `BM` / `EN`.
+   - Boleh diletakkan di header portal (`SuperAppHeader.tsx`), bar alat `LoginPage.tsx`, atau menu navigasi.
+2. **Kad Pilihan Bahasa di Hab Tetapan (`src/pages/SettingsPage.tsx`):**
+   - Ditempatkan di tab **Paparan & Bahasa** (`tema`).
+   - Menyediakan dua kad interaktif reka bentuk 05 Earthy Minimal untuk Bahasa Melayu dan English, lengkap dengan ikon `Languages`, penunjuk sempadan `#6B7F5B`, tanda semakan (checkmark) aktif, dan maklum balas toast interaktif semasa pertukaran bahasa.
+
 
