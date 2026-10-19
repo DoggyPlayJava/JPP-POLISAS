@@ -159,5 +159,13 @@
   "view": "View",
   "view_all": "View All",
   "warning": "Warning",
-  "yes": "Yes"
+  "yes": "Yes",
+  "priority": "Priority",
+  "priority_low": "Low",
+  "priority_medium": "Medium",
+  "priority_high": "High",
+  "overdue": "Overdue",
+  "unassigned": "Unassigned",
+  "archive": "Archive",
+  "latest": "Latest"
 }

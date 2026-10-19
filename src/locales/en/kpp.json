@@ -226,5 +226,7 @@
   "view_file": "View File",
   "jpp_rejection_notes": "JPP Rejection Notes",
   "submit_transfer_request": "Submit Transfer Request",
-  "confirm_leave_club": "Confirm Leave Club"
+  "confirm_leave_club": "Confirm Leave Club",
+  "unlock_reason_label": "Reason for Request",
+  "objective_and_desc": "Objective / Program Description"
 }

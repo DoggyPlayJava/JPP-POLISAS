@@ -1430,7 +1430,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest mb-1.5 flex-1">
-                        {t('kpp:objective', 'Objektif')} / Deskripsi Program
+                        {t('kpp:objective_and_desc', 'Objektif / Deskripsi Program')}
                       </Label>
                       <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
                     </div>

@@ -655,7 +655,7 @@ export function DashboardPage() {
         open={unlockDialog.open}
         title={t('kpp:request_unlock_program', 'Mohon Buka Semula Program')}
         description={t('kpp:request_unlock_desc', 'Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan.')}
-        inputLabel={t('kpp:rejection_reason_label', 'Sebab Permohonan')}
+        inputLabel={t('kpp:unlock_reason_label', 'Sebab Permohonan')}
         inputType="textarea"
         placeholder="Contoh: Perlu mengemas kini perincian bajet dan tentatif program..."
         confirmLabel={t('kpp:submit_application', 'Hantar Permohonan')}
