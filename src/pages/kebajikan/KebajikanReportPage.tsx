@@ -19,6 +19,7 @@ import type { PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
 import { toast } from 'react-hot-toast';
 import type ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useTranslation } from 'react-i18next';
 
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
@@ -76,6 +77,7 @@ function SectionTitle({ num, title, subtitle }: { num: string; title: string; su
 
 export function KebajikanReportPage() {
   const { isKediamanExco, isSuperAdmin, isYdp, isKebajikanExco, user, profile } = useAuth();
+  const { t } = useTranslation(['kebajikan', 'common']);
   const generatedByName = profile?.full_name || user?.email || 'Exco Kebajikan';
   const now   = new Date();
   const [activeTab, setActiveTab] = useState<'bulanan' | 'pic'>('bulanan');
@@ -619,10 +621,10 @@ export function KebajikanReportPage() {
               <div>
                 <motion.h1 className="text-2xl font-black text-slate-50 tracking-tight">
                   {isKediamanExco && !isSuperAdmin && !isYdp
-                    ? 'Laporan Prestasi Kafeteria'
-                    : 'Laporan Prestasi E-Kebajikan'}
+                    ? t('report_cafeteria_title')
+                    : t('report_title')}
                 </motion.h1>
-                <p className="text-xs text-slate-500">Edisi: <span className="font-bold text-slate-300 capitalize">{monthLabel}</span> · Dijana: {generatedAt}</p>
+                <p className="text-xs text-slate-500">{t('report_edition')}: <span className="font-bold text-slate-300 capitalize">{monthLabel}</span> · {t('report_generated_at')}: {generatedAt}</p>
               </div>
             </div>
           </div>
@@ -652,7 +654,7 @@ export function KebajikanReportPage() {
                   style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
                 >
                   <FileDown className={cn("w-3.5 h-3.5", generatingMonthlyPdf && "animate-bounce")} /> 
-                  {generatingMonthlyPdf ? 'Menjana PDF...' : 'PDF'}
+                  {generatingMonthlyPdf ? t('report_generating_pdf') : 'PDF'}
                 </button>
                 <button
                   onClick={exportMonthlyExcel}
@@ -679,8 +681,8 @@ export function KebajikanReportPage() {
       {showPicTab && (
         <div className="flex items-center gap-1 mb-8 p-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] w-fit">
           {[
-            { key: 'bulanan', label: 'Laporan Bulanan', icon: BarChart3 },
-            { key: 'pic', label: 'Laporan PIC', icon: ClipboardList },
+            { key: 'bulanan', label: t('report_monthly_tab'), icon: BarChart3 },
+            { key: 'pic', label: t('report_pic_tab'), icon: ClipboardList },
           ].map(tab => (
             <button
               key={tab.key}
@@ -714,13 +716,13 @@ export function KebajikanReportPage() {
 
           {/* 1. Ringkasan Eksekutif */}
           <GlassCard>
-            <SectionTitle num="1" title="Ringkasan Eksekutif" subtitle={`Keseluruhan aduan bagi bulan ${monthLabel}`} />
+            <SectionTitle num="1" title={t('report_exec_summary')} subtitle={`Keseluruhan aduan bagi bulan ${monthLabel}`} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'Total Diterima',    value: data.total_received,  icon: BarChart3,    color: '#6366F1' },
-                { label: 'Total Diselesaikan',value: data.total_resolved,  icon: CheckCircle2, color: '#10B981' },
-                { label: 'Masih Tertunggak',  value: data.total_pending,   icon: Clock,        color: '#F59E0B' },
-                { label: 'Kadar Penyelesaian',value: `${data.resolution_rate}%`, icon: TrendingUp, color: TEAL },
+                { label: t('report_total_received'),    value: data.total_received,  icon: BarChart3,    color: '#6366F1' },
+                { label: t('report_total_resolved'),    value: data.total_resolved,  icon: CheckCircle2, color: '#10B981' },
+                { label: t('report_total_pending'),     value: data.total_pending,   icon: Clock,        color: '#F59E0B' },
+                { label: t('report_resolution_rate'),   value: `${data.resolution_rate}%`, icon: TrendingUp, color: TEAL },
               ].map((s, i) => (
                 <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
                   <div className="rounded-2xl p-5 border" style={{ background: `rgba(${hexStr(s.color)}, 0.04)`, borderColor: `rgba(${hexStr(s.color)}, 0.15)` }}>
@@ -734,22 +736,22 @@ export function KebajikanReportPage() {
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
                 <p className="text-xl font-black text-slate-200">{data.avg_hours}j</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Purata Masa Selesai</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_avg_resolution_hours')}</p>
               </div>
               <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
                 <p className="text-xl font-black text-red-400">{data.escalated_count}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Kes Diescalate</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_escalated_count')}</p>
               </div>
               <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
                 <p className="text-xl font-black text-slate-400">{data.total_cancelled}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Kes Dibatal</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_total_cancelled')}</p>
               </div>
             </div>
           </GlassCard>
 
           {/* 2. Analisis Mengikut Kategori */}
           <GlassCard>
-            <SectionTitle num="2" title="Analisis Mengikut Kategori" />
+            <SectionTitle num="2" title={t('report_breakdown_category')} />
             {data.by_category.length === 0 ? (
               <p className="text-sm text-slate-500 text-center py-8">Tiada data</p>
             ) : (
@@ -775,7 +777,7 @@ export function KebajikanReportPage() {
 
           {/* 3. Analisis Mengikut Status */}
           <GlassCard>
-            <SectionTitle num="3" title="Analisis Mengikut Status" subtitle="Keadaan tiket pada akhir bulan" />
+            <SectionTitle num="3" title={t('report_breakdown_status')} subtitle="Keadaan tiket pada akhir bulan" />
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={data.by_status.map(s => ({ ...s, name: STATUS_LABEL[s.status] || s.status }))} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>

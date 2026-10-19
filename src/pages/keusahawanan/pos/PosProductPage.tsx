@@ -18,6 +18,7 @@ import { type BusinessProduct, type CostItem, type ProductVariation } from '@/ty
 import toast from 'react-hot-toast';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
+import { useTranslation } from 'react-i18next';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -607,6 +608,7 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
 
 export function PosProductPage() {
   const { color } = useExcoTheme();
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
   const businessId = selectedBusiness?.id;
@@ -815,10 +817,10 @@ export function PosProductPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">POS</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">{t('pos_terminal')}</p>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-            Katalog Produk
+            {t('product_catalog')}
             <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -829,7 +831,7 @@ export function PosProductPage() {
           <button onClick={openAdd}
             className="tour-pos-product-add flex items-center gap-2.5 h-12 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider shadow-lg transition-all hover:brightness-110 active:scale-95"
             style={{ background: color }}>
-            <Plus className="w-4 h-4" /> Tambah Produk
+            <Plus className="w-4 h-4" /> {t('pos_add_product')}
           </button>
         )}
       </motion.div>
@@ -842,7 +844,7 @@ export function PosProductPage() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Cari produk..."
+            placeholder={t('pos_search_product')}
             className="w-full h-11 pl-12 pr-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
         </div>
         <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
@@ -862,7 +864,7 @@ export function PosProductPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="text-sm font-black text-muted-foreground/40">Tiada produk ditemui</p>
+          <p className="text-sm font-black text-muted-foreground/40">{t('pos_out_of_stock')}</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

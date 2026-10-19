@@ -18,6 +18,7 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
 import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
+import { useTranslation } from 'react-i18next';
 
 type LogActionLabel = Record<string, string>;
 const LOG_LABELS: LogActionLabel = {
@@ -45,6 +46,7 @@ const fmtDT = (iso: string) => new Date(iso).toLocaleString('ms-MY', {
 
 export function UrusPerniagaanPage() {
   const { color } = useExcoTheme();
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { user, profile } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin, refreshBusinesses } = useBusinessSwitcher();
   const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_URUS', !!selectedBusiness?.id);
@@ -377,9 +379,9 @@ export function UrusPerniagaanPage() {
 
   // Tabs configuration: 3 Consolidated Domains
   const tabs = [
-    { key: 'profil' as const, label: 'Profil & Kedai', icon: Store },
-    { key: 'pasukan' as const, label: 'Pasukan & Operasi', icon: Users, badge: pending.length > 0 ? pending.length : undefined },
-    { key: 'kupon_log' as const, label: 'Kupon & Log Audit', icon: Tag },
+    { key: 'profil' as const, label: t('biz_tab_profile'), icon: Store },
+    { key: 'pasukan' as const, label: t('biz_tab_team'), icon: Users, badge: pending.length > 0 ? pending.length : undefined },
+    { key: 'kupon_log' as const, label: t('biz_tab_coupons'), icon: Tag },
   ];
 
   return (
@@ -388,13 +390,13 @@ export function UrusPerniagaanPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1 h-5 rounded-full" style={{ background: color }} />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">e-Keusahawanan</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">{t('module_title')}</p>
         </div>
         <div className="flex items-end justify-between">
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                Urus Perniagaan
+                {t('biz_manage_title')}
                 <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all cursor-pointer">
                   <HelpCircle className="w-4 h-4" />
                 </button>
@@ -557,7 +559,7 @@ export function UrusPerniagaanPage() {
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Penerangan</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">{t('biz_description')}</p>
                   <textarea value={description} onChange={e => setDescription(e.target.value)}
                     placeholder="Ceritakan tentang perniagaan anda..."
                     className="w-full h-28 px-4 py-3 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-border transition-all" />
@@ -566,7 +568,7 @@ export function UrusPerniagaanPage() {
                   <button onClick={handleSave} disabled={saving}
                     className="flex items-center gap-2 h-11 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95 cursor-pointer"
                     style={{ background: color }}>
-                    <Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Maklumat'}
+                    <Save className="w-4 h-4" /> {saving ? t('biz_saving') : t('biz_save_changes')}
                   </button>
                 )}
               </div>
@@ -870,7 +872,7 @@ export function UrusPerniagaanPage() {
                   <div className="rounded-2xl border border-border/60 p-4 sm:p-6 bg-muted/10">
                     <h3 className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
                       <Users className="w-4 h-4 text-emerald-600" />
-                      Jadual Syif Bertugas
+                      {t('shift_tab_schedule')}
                     </h3>
                     <BusinessJadual 
                       businessId={businessId}
@@ -884,7 +886,7 @@ export function UrusPerniagaanPage() {
                   <div className="rounded-2xl border border-border/60 p-4 sm:p-6 bg-muted/10">
                     <h3 className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      Sesi Bertugas Semasa
+                      {t('shift_tab_session')}
                     </h3>
                     <SesiBusiness 
                       businessId={businessId}

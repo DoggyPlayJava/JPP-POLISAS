@@ -1065,14 +1065,13 @@ export function KebajikanFoodBankPage() {
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-black uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Inisiatif Prihatin Siswa POLISAS
+              {t('kebajikan:foodbank_header_badge')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               {t('foodbank_pantry')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl font-normal">
-              Program agihan pek makanan asas dan keperluan diri bagi meringankan beban mahasiswa
-              POLISAS yang memerlukan melalui verifikasi Pas Pengambilan Digital (QR).
+              {t('kebajikan:foodbank_header_desc')}
             </p>
           </div>
 
@@ -1085,7 +1084,7 @@ export function KebajikanFoodBankPage() {
               className="h-11 px-4 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold rounded-2xl gap-2 shadow-lg shadow-emerald-500/20 flex-shrink-0 animate-pulse"
             >
               <QrCode className="w-4 h-4" />
-              <span>Buka Pas Pengambilan QR</span>
+              <span>{t('kebajikan:foodbank_pass_button')}</span>
             </Button>
           )}
         </div>
@@ -1098,17 +1097,14 @@ export function KebajikanFoodBankPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
-                Dalam Persediaan / Akan Datang
+                {t('kebajikan:foodbank_prep_badge')}
               </span>
               <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                Pelancaran Rasmi Tidak Lama Lagi
+                {t('kebajikan:foodbank_prep_title')}
               </span>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal pt-0.5">
-              Program Food Bank JPP kini sedang dalam fasa persediaan akhir inventori stok barangan dan
-              penyelarasan kaunter agihan oleh barisan Jawatankuasa Perwakilan Pelajar bersama JHEP. Mahasiswa
-              dialu-alukan menyemak panduan kelayakan, lokasi edaran serta katalog barangan di bawah.
-              Borang permohonan akan dibuka sebaik sahaja perasmian diumumkan.
+              {t('kebajikan:foodbank_prep_desc')}
             </p>
           </div>
         </div>
@@ -1116,11 +1112,9 @@ export function KebajikanFoodBankPage() {
         <div className="rounded-2xl p-4 sm:p-5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-3.5">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="text-sm font-extrabold">Sesi Permohonan Food Bank Ditutup Buat Masa Ini</h4>
+            <h4 className="text-sm font-extrabold">{t('kebajikan:foodbank_closed_title')}</h4>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal">
-              Pengurusan Food Bank JPP sedang menyelaraskan stok bekalan inventori bersama pihak
-              kaunter pengurusan JHEP. Mahasiswa yang mempunyai permohonan aktif masih boleh menebus
-              bantuan mengikut slot temujanji yang telah dijadualkan.
+              {t('kebajikan:foodbank_closed_desc')}
             </p>
           </div>
         </div>
@@ -1142,14 +1136,14 @@ export function KebajikanFoodBankPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                    Pas Pengambilan Digital • E-Boarding Pass
+                    {t('kebajikan:foodbank_digital_pass')}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">
                     POLISAS PRIHATIN
                   </span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-white tracking-tight mt-0.5">
-                  No. Rujukan: {activeApplication.application_no}
+                  {t('kebajikan:foodbank_ref_no')}: {activeApplication.application_no}
                 </h3>
               </div>
             </div>
@@ -1178,10 +1172,10 @@ export function KebajikanFoodBankPage() {
                 />
                 <span>
                   {activeApplication.status === 'LULUS'
-                    ? 'LULUS • SEDIA DIAMBIL'
+                    ? t('kebajikan:foodbank_status_ready')
                     : activeApplication.status === 'DALAM_SEMAKAN'
-                    ? 'DALAM SEMAKAN EXCO'
-                    : 'MENUNGGU SEMAKAN'}
+                    ? t('kebajikan:foodbank_status_review')
+                    : t('kebajikan:foodbank_status_pending')}
                 </span>
               </span>
             </div>
@@ -1203,7 +1197,7 @@ export function KebajikanFoodBankPage() {
                 <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                     <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Lokasi Pengagihan</span>
+                    <span>{t('kebajikan:foodbank_dist_location')}</span>
                   </div>
                   <p className="font-extrabold text-sm text-white">
                     {activeApplication.location?.name || 'Pusat Edaran Kaunter JHEP'}
@@ -1229,7 +1223,7 @@ export function KebajikanFoodBankPage() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-bold hover:bg-teal-500/30 transition-all group"
                         >
-                          <span>Peta 360 PolyMaps</span>
+                          <span>{t('kebajikan:foodbank_polymaps_360')}</span>
                           <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </Link>
                       </div>
@@ -1241,7 +1235,7 @@ export function KebajikanFoodBankPage() {
                 <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                     <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Slot Masa Temujanji Agihan</span>
+                    <span>{t('kebajikan:foodbank_timeslot')}</span>
                   </div>
                   <p className="font-extrabold text-sm text-white">
                     {activeApplication.pickup_date
@@ -1265,7 +1259,7 @@ export function KebajikanFoodBankPage() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-300 flex items-center gap-1.5">
                     <Package className="w-4 h-4 text-amber-400" />
-                    <span>Senarai Barangan / Pakej yang Layak Diambil:</span>
+                    <span>{t('kebajikan:foodbank_eligible_items')}:</span>
                   </span>
                 </div>
 
@@ -1307,7 +1301,7 @@ export function KebajikanFoodBankPage() {
                   {activeApplication.pickup_qr_code || activeApplication.application_no}
                 </span>
                 <p className="text-[10px] text-slate-400 max-w-[200px] leading-relaxed">
-                  Tunjukkan kod QR ini kepada Exco Kebajikan di kaunter agihan untuk imbasan verifikasi.
+                  {t('kebajikan:foodbank_qr_scan_hint')}
                 </p>
               </div>
             </div>
@@ -1317,7 +1311,7 @@ export function KebajikanFoodBankPage() {
           <div className="p-4 sm:p-6 bg-white/[0.02] border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <Info className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Bawa kad matrik fizikal anda bersama semasa temujanji pengambilan.</span>
+              <span>{t('kebajikan:foodbank_bring_matric_card')}</span>
             </div>
 
             <div className="flex items-center gap-2.5">
@@ -1330,7 +1324,7 @@ export function KebajikanFoodBankPage() {
                   className="h-10 text-xs font-bold text-rose-400 border-rose-500/30 hover:bg-rose-500/10 rounded-xl"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" />
-                  <span>{isCancelling ? 'Membatalkan...' : 'Batalkan Permohonan'}</span>
+                  <span>{isCancelling ? t('kebajikan:foodbank_cancelling') : t('kebajikan:foodbank_cancel_application')}</span>
                 </Button>
               )}
 
@@ -1342,7 +1336,7 @@ export function KebajikanFoodBankPage() {
                 className="h-10 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl gap-2 shadow-lg shadow-amber-500/20 text-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>Muat Turun / Tangkap Layar Pas</span>
+                <span>{t('kebajikan:foodbank_download_pass')}</span>
               </Button>
             </div>
           </div>
@@ -1354,12 +1348,12 @@ export function KebajikanFoodBankPage() {
           <div className="rounded-3xl p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-4">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
               <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span>Syarat Kelayakan &amp; Arahan Permohonan</span>
+              <span>{t('kebajikan:foodbank_criteria_title')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-300">
               <div className="space-y-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                  Kriteria Kelayakan:
+                  {t('kebajikan:foodbank_criteria_label')}
                 </span>
                 <p className="leading-relaxed font-normal">
                   {settings?.eligibility_criteria ||
@@ -1368,7 +1362,7 @@ export function KebajikanFoodBankPage() {
               </div>
               <div className="space-y-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                  Panduan Penebusan:
+                  {t('kebajikan:foodbank_guidelines_label')}
                 </span>
                 <p className="leading-relaxed font-normal">
                   {settings?.application_instructions ||
@@ -1386,10 +1380,10 @@ export function KebajikanFoodBankPage() {
               </div>
               <div>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  Maklumat Pemohon &amp; Status Kewangan
+                  {t('kebajikan:foodbank_step1_title')}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Data pemohon diambil secara automatik daripada profil kampus anda.
+                  {t('kebajikan:foodbank_step1_desc')}
                 </p>
               </div>
             </div>
@@ -1397,7 +1391,7 @@ export function KebajikanFoodBankPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Nama Penuh
+                  {t('kebajikan:foodbank_full_name')}
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -1410,7 +1404,7 @@ export function KebajikanFoodBankPage() {
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  No. Matrik Pelajar
+                  {t('kebajikan:foodbank_matric_no')}
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -1435,7 +1429,7 @@ export function KebajikanFoodBankPage() {
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Nombor Telefon <span className="text-rose-500">*</span>
+                  {t('kebajikan:foodbank_phone')} <span className="text-rose-500">*</span>
                 </label>
                 <Input
                   type="tel"
@@ -1480,7 +1474,7 @@ export function KebajikanFoodBankPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Anggaran Pendapatan Isi Rumah Sebulan (RM)
+                  {t('kebajikan:foodbank_household_income')}
                 </label>
                 <Input
                   type="number"
@@ -1494,10 +1488,10 @@ export function KebajikanFoodBankPage() {
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Sebab Memerlukan Bantuan Makanan <span className="text-rose-500">*</span>
+                  {t('kebajikan:foodbank_reason')} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="Contoh: Baki perbelanjaan terhad sebelum elaun/ptptn diterima"
+                  placeholder={t('kebajikan:foodbank_reason_placeholder')}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   disabled={isSessionClosed}
@@ -1516,10 +1510,10 @@ export function KebajikanFoodBankPage() {
               </div>
               <div>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  Maklumat Kediaman &amp; Kuota Rakan Serumah
+                  {t('kebajikan:foodbank_roommates_title')}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Tambah rakan sebilik/serumah untuk meningkatkan kuota barangan pek makanan secara automatik.
+                  {t('kebajikan:foodbank_roommates_desc')}
                 </p>
               </div>
             </div>
@@ -1527,7 +1521,7 @@ export function KebajikanFoodBankPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Jenis Kediaman
+                  {t('kebajikan:foodbank_housing_type')}
                 </label>
                 <select
                   value={housingType}
@@ -1543,7 +1537,7 @@ export function KebajikanFoodBankPage() {
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  No. Bilik / Blok / Alamat Rumah <span className="text-rose-500">*</span>
+                  {t('kebajikan:foodbank_room_no')} <span className="text-rose-500">*</span>
                 </label>
                 <Input
                   placeholder="Contoh: Blok B3-12 (Kamsis) atau No 14, Lorong Semambu"
@@ -1806,7 +1800,7 @@ export function KebajikanFoodBankPage() {
             {/* Pilihan Lokasi */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Pilih Pusat Edaran Food Bank:
+                {t('kebajikan:foodbank_select_center')}:
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1871,7 +1865,7 @@ export function KebajikanFoodBankPage() {
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline"
                         >
-                          <span>Lihat di PolyMaps</span>
+                          <span>{t('kebajikan:foodbank_polymaps_360')}</span>
                           <ExternalLink className="w-3 h-3" />
                         </Link>
                       </div>
@@ -1886,7 +1880,7 @@ export function KebajikanFoodBankPage() {
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>Tarikh Pengambilan (Hari Bekerja Sahaja)</span>
+                  <span>{t('kebajikan:foodbank_select_date')}</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {workingDays.map((d) => (
@@ -1911,7 +1905,7 @@ export function KebajikanFoodBankPage() {
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>Slot Masa Pengambilan</span>
+                  <span>{t('kebajikan:foodbank_select_slot')}</span>
                 </label>
                 <div className="space-y-2">
                   {activeTimeSlots.map((slot) => (
@@ -2291,10 +2285,7 @@ export function KebajikanFoodBankPage() {
                 htmlFor="foodbank-acknowledge"
                 className="text-xs text-slate-300 leading-relaxed cursor-pointer"
               >
-                Saya dengan ini mengesahkan bahawa segala maklumat yang dinyatakan di atas adalah benar
-                dan permohonan ini dibuat atas dasar keperluan sebenar. Saya bersetuju untuk hadir
-                mengikut tarikh serta waktu yang ditetapkan dan menunjukkan Pas Pengambilan Digital (QR)
-                kepada petugas kaunter agihan.
+                {t('foodbank_declaration_text')}
               </label>
             </div>
 
@@ -2324,11 +2315,11 @@ export function KebajikanFoodBankPage() {
                 <ShoppingBag className="w-4 h-4" />
                 <span>
                   {isSubmitting
-                    ? 'Memproses Permohonan...'
+                    ? t('foodbank_submitting')
                     : isModuleUnderPreparation
-                    ? 'Pelancaran Rasmi Tidak Lama Lagi (Dalam Persediaan)'
+                    ? t('foodbank_prep_title')
                     : isSessionClosed
-                    ? 'Permohonan Ditutup Buat Sementara Waktu'
+                    ? t('foodbank_closed_title')
                     : t('request_foodbank')}
                 </span>
                 {!isModuleUnderPreparation && !isSessionClosed && <ArrowRight className="w-4 h-4" />}
@@ -2532,7 +2523,7 @@ export function KebajikanFoodBankPage() {
         <div className="rounded-3xl p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-4">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
             <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>Rekod Sejarah Permohonan Lalu</span>
+            <span>{t('foodbank_history_title')}</span>
           </div>
 
           <div className="divide-y divide-slate-200/80 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
