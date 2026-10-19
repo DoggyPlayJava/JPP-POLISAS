@@ -23,6 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   EmsCertData,
@@ -31,10 +32,11 @@ import {
 } from '@/components/ems/EmsCertificateTemplate';
 
 export const EmsCertificatePage: React.FC = () => {
+  const { t } = useTranslation(['ems', 'common']);
   const { certId } = useParams<{ certId: string }>();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(certId));
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [certData, setCertData] = useState<EmsCertData | null>(null);
   const [searchSerial, setSearchSerial] = useState('');
@@ -232,9 +234,9 @@ export const EmsCertificatePage: React.FC = () => {
             </div>
             <div>
               <div className="font-black tracking-wider text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5">
-                POLISAS <span className="text-amber-600 dark:text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">E-Sijil</span>
+                POLISAS <span className="text-amber-600 dark:text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">{t('certificate_generator')}</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Portal Pengesahan Digital JPP POLISAS</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{t('verify_certificate')}</p>
             </div>
           </div>
 
@@ -268,7 +270,7 @@ export const EmsCertificatePage: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <div className="w-12 h-12 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin" />
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium animate-pulse">
-              Memproses pengesahan e-sijil digital...
+              {t('certificate_generator')}...
             </p>
           </div>
         ) : errorMsg || !certData ? (
@@ -280,10 +282,17 @@ export const EmsCertificatePage: React.FC = () => {
             <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Sijil Tidak Dijumpai</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('certificate_invalid')}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md">
               {errorMsg || 'Nombor siri atau ID sijil yang anda masukkan tidak wujud dalam pangkalan data rasmi JPP POLISAS.'}
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400 mb-6">
+              <span>{t('recipient_name')}</span>
+              <span>•</span>
+              <span>{t('awarded_title')}</span>
+              <span>•</span>
+              <span>{t('organizer')}</span>
+            </div>
 
             <form onSubmit={handleSearchSubmit} className="w-full max-w-md flex gap-2 mb-6">
               <input
@@ -323,9 +332,12 @@ export const EmsCertificatePage: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Sijil Sah & Berdaftar di Sistem JPP-POLISAS
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {t('certificate_valid')}
                     </span>
                     {getCertTypeBadge(certData.cert_type)}
+                  </div>
+                  <div className="text-xs uppercase font-semibold text-slate-400 tracking-wider">
+                    {t('recipient_name')}
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-wide">
                     {certData.recipient_name}
@@ -374,7 +386,7 @@ export const EmsCertificatePage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Acara / Program
+                    <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> {t('awarded_title')}
                   </p>
                   <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-2">
                     {certData.event_title}
@@ -412,9 +424,9 @@ export const EmsCertificatePage: React.FC = () => {
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
                   <div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1">
-                      Pengesahan QR
+                      {t('organizer')}
                     </p>
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono tabular-nums">Digital Verified</p>
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono tabular-nums">JPP POLISAS Verified</p>
                   </div>
                   {certData.qr_code_url && (
                     <img

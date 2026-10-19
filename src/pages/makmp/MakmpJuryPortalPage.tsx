@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Shield,
   KeyRound,
@@ -183,6 +184,7 @@ function RankingViewContent({
 }
 
 export default function MakmpJuryPortalPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlPin = searchParams.get('pin') || '';
 
@@ -601,10 +603,25 @@ export default function MakmpJuryPortalPage() {
             <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400 mb-4 shadow-lg shadow-amber-500/10">
               <KeyRound className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Portal Pegawai Penilai MAKMP</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {t('panel_evaluation')}
+            </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Sila masukkan Kod PIN 6-Digit yang diperuntukkan bagi kategori anugerah anda untuk memulakan semakan.
+              {t('module_subtitle')}
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                <CheckCircle2 className="w-3 h-3" /> {t('verdict_qualified')}
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                <Clock className="w-3 h-3" /> {t('verdict_pending')}
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
+                <XCircle className="w-3 h-3" /> {t('verdict_ineligible')}
+              </span>
+            </div>
           </div>
 
           <form
@@ -728,7 +745,7 @@ export default function MakmpJuryPortalPage() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Semakan Penilaian
+            {t('panel_evaluation')}
           </button>
           <button
             onClick={() => setViewMode('RANKING')}
@@ -758,10 +775,10 @@ export default function MakmpJuryPortalPage() {
             {[
               { value: 'BELUM_SELESAI', label: 'Belum Selesai' },
               { value: 'ALL', label: 'Semua Status' },
-              { value: 'MENUNGGU', label: 'Menunggu' },
+              { value: 'MENUNGGU', label: t('verdict_pending') },
               { value: 'DALAM_SEMAKAN', label: 'Dalam Semakan' },
-              { value: 'DISAHKAN', label: 'Disahkan' },
-              { value: 'DITOLAK', label: 'Ditolak' },
+              { value: 'DISAHKAN', label: t('verdict_qualified') },
+              { value: 'DITOLAK', label: t('verdict_ineligible') },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -874,7 +891,11 @@ export default function MakmpJuryPortalPage() {
                           : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
                       }`}
                     >
-                      {awApp.status}
+                      {awApp.status === 'DISAHKAN'
+                        ? t('verdict_qualified')
+                        : awApp.status === 'DITOLAK'
+                        ? t('verdict_ineligible')
+                        : t('verdict_pending')}
                     </span>
                   </div>
 
@@ -1524,7 +1545,7 @@ export default function MakmpJuryPortalPage() {
                         className="flex-1 py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 dark:bg-rose-950/60 dark:border-rose-500/40 dark:text-rose-300 font-bold text-xs dark:hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <XCircle className="w-4 h-4" />
-                        <span>Tolak Anugerah Ini</span>
+                        <span>{t('verdict_ineligible')}</span>
                       </button>
 
                       <button
@@ -1538,7 +1559,7 @@ export default function MakmpJuryPortalPage() {
                         ) : (
                           <CheckCircle2 className="w-4 h-4" />
                         )}
-                        <span>1-Click Sahkan & Seterusnya (+{currentTotalMerit} Merit)</span>
+                        <span>{t('verdict_qualified')} & Seterusnya (+{currentTotalMerit} Merit)</span>
                       </button>
                     </div>
                   )}

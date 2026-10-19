@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import type { EmsParticipant, EmsVisitor } from '@/types';
 
@@ -91,6 +92,7 @@ function playWarningChime() {
 }
 
 export function EmsCheckinPage() {
+  const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
 
@@ -428,7 +430,7 @@ export function EmsCheckinPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white transition-colors">
         <RefreshCw className="w-10 h-10 text-slate-400 dark:text-slate-500 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-300 font-medium animate-pulse">Memuatkan Portal Pengesahan Kehadiran EMS...</p>
+        <p className="text-slate-600 dark:text-slate-300 font-medium animate-pulse">{t('audience_scanner')} • {t('qr_scan_prompt')}</p>
       </div>
     );
   }
@@ -437,8 +439,8 @@ export function EmsCheckinPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white text-center transition-colors">
         <AlertTriangle className="w-12 h-12 text-rose-500 mb-3" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Acara tidak dijumpai</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">Pautan tidak sah atau acara telah dipadamkan.</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('audience_scanner')}</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">{t('qr_scan_prompt')}</p>
         <Link
           to="/ems/dashboard"
           className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold transition-all shadow-sm"
@@ -465,7 +467,7 @@ export function EmsCheckinPage() {
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                PORTAL URUS SETIA / CREW
+                {t('audience_scanner')}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                 {eventDetail.entity_mode === 'TEAM' || eventDetail.entity_mode === 'EXHIBITION' ? 'PORTAL PASUKAN' : 'PORTAL INDIVIDU'}
@@ -718,9 +720,9 @@ export function EmsCheckinPage() {
                 <div className="w-full flex items-center justify-between mb-3 text-xs text-slate-500 dark:text-slate-400 px-1">
                   <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Kamera Pengimbas QR Active
+                    {t('audience_scanner')}
                   </span>
-                  <span>Sudut Imbasan Optimum</span>
+                  <span>{t('qr_scan_prompt')}</span>
                 </div>
 
                 {/* HTML5 QR Code Render Target */}
@@ -759,7 +761,7 @@ export function EmsCheckinPage() {
                     )}
                   </button>
 
-                  <span className="text-slate-400 dark:text-slate-500">Acuan Kod QR Peserta EMS</span>
+                  <span className="text-slate-400 dark:text-slate-500">{t('qr_scan_prompt')}</span>
                 </div>
               </div>
 
