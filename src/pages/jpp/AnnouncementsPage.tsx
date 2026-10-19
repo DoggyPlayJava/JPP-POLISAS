@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Bell, Plus, ShieldAlert, AlertTriangle, Info, Lock, 
   Trash2, FileText, CheckCircle2, XCircle, Users, Activity, X, Upload, Star, Gift, Megaphone, Calendar
@@ -18,6 +19,7 @@ import { SlideOverSheet } from '@/components/jpp/SlideOverSheet';
 import { SystemAnnouncement, AnnouncementFormField, AnnouncementPriority, AnnouncementTarget } from '@/types';
 
 export function AnnouncementsPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -328,7 +330,9 @@ export function AnnouncementsPage() {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-3">
             JPP HQ • Hebahan Rasmi
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Makluman Global</h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            {t('jpp:broadcast_announcements')}
+          </h1>
           <p className="text-muted-foreground font-medium max-w-2xl text-xs sm:text-sm mt-1">Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul Popout Bersepadu.</p>
         </div>
         {!showCreate && (
@@ -608,8 +612,8 @@ export function AnnouncementsPage() {
         isOpen={Boolean(viewingResponsesFor)}
         onClose={() => setViewingResponsesFor(null)}
         title={viewingResponsesFor?.title || 'Respons Pelajar'}
-        subtitle={`Jumlah respons direkodkan: ${responses.length}`}
-        maxWidth="max-w-2xl"
+        description={`Jumlah respons direkodkan: ${responses.length}`}
+        className="max-w-2xl"
       >
         <div className="p-6 space-y-4">
           {loadingResponses ? (

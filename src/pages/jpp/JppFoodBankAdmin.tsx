@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Html5Qrcode } from 'html5-qrcode';
 import {
   HeartHandshake,
@@ -113,6 +114,7 @@ const OFFICIAL_BASELINE_BUDGET = 70000.0;
 type AdminTab = 'applications' | 'inventory' | 'budget' | 'settings' | 'audit';
 
 export function JppFoodBankAdmin() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
 
   // Helper hantar notifikasi + emel Food Bank kepada pelajar
@@ -2197,7 +2199,7 @@ export function JppFoodBankAdmin() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-                  Food Bank JPP Command Center
+                  {t('jpp:foodbank_admin')}
                   <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
                     {isExecutiveAdmin ? 'Admin Eksekutif' : (myOfficerRecord?.role_title || 'Petugas Kaunter')}
                   </span>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
@@ -28,6 +29,7 @@ interface DuplicateGroup {
 }
 
 export function JppUsersPage() {
+    const { t } = useTranslation(['jpp', 'common']);
     const { isSuperAdmin, profile } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
 
@@ -310,7 +312,9 @@ export function JppUsersPage() {
                             <Users className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Pangkalan Data Pelajar</h1>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                                {t('jpp:users_management')}
+                            </h1>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Urus pengguna dan konfigurasi Nexus Hub</p>
                         </div>
                     </div>
@@ -626,7 +630,7 @@ export function JppUsersPage() {
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Kohort</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Tier AI</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Baki Token</th>
-                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">Tindakan</th>}
+                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">{t('jpp:manage_roles')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
