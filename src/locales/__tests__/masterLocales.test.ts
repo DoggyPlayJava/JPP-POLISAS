@@ -1,4 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+
+const localesDir = path.resolve(__dirname, '..');
 
 // Core namespaces
 import commonEn from '../en/common.json';
@@ -68,4 +72,51 @@ describe('Master Translation Dictionaries Parity (100% All Domains)', () => {
   it('has identical keys for akademik namespace', () => verifyParity(akademikEn, akademikMs, 'akademik'));
   it('has identical keys for housing namespace', () => verifyParity(housingEn, housingMs, 'housing'));
   it('has identical keys for supsas namespace', () => verifyParity(supsasEn, supsasMs, 'supsas'));
+
+  it('ensures English translations do not have redundant slashes or overlong parentheticals', () => {
+    const namespaces = ['common', 'akademik', 'kebajikan', 'jpp', 'makmp', 'ems', 'supsas', 'housing', 'keusahawanan'];
+    namespaces.forEach(ns => {
+      const en = JSON.parse(fs.readFileSync(path.join(localesDir, 'en', `${ns}.json`), 'utf-8'));
+      // Ensure pruned keys are concise
+      if (ns === 'common' && en.ic_no) {
+        expect(en.ic_no).not.toContain(' / ');
+      }
+      if (ns === 'kebajikan' && en.foodbank_package_mode) {
+        expect(en.foodbank_package_mode.length).toBeLessThan(25);
+      }
+      if (ns === 'akademik' && en.appeal_approved_toast) {
+        expect(en.appeal_approved_toast).toBe('Appeal approved');
+      }
+      if (ns === 'akademik') {
+        if (en.evidence_url) expect(en.evidence_url).toBe('Evidence Link (Optional)');
+        if (en.unlock_reason_placeholder) expect(en.unlock_reason_placeholder).toBe('State reason for request...');
+      }
+      if (ns === 'kebajikan') {
+        if (en.submit_title) expect(en.submit_title).toBe('Student Complaint System');
+        if (en.submit_duplicate_title) expect(en.submit_duplicate_title).toBe('Similar Complaint in Progress');
+      }
+      if (ns === 'jpp') {
+        if (en.announcements_push_toggle) expect(en.announcements_push_toggle).toBe('Push Notification');
+        if (en.services_status_investigating) expect(en.services_status_investigating).toBe('New / Investigating');
+        if (en.announcements_composer_title) expect(en.announcements_composer_title).toBe('Announcement Creator');
+      }
+      if (ns === 'makmp') {
+        if (en.nom_ic_no) expect(en.nom_ic_no).toBe('Identity Card Number');
+        if (en.nom_step_documents) expect(en.nom_step_documents).toBe('Attachments & Certs');
+        if (en.track_documents_list) expect(en.track_documents_list).toBe('Supporting Documents');
+      }
+      if (ns === 'ems' && en.reg_ic_no) {
+        expect(en.reg_ic_no).toBe('Identity Card Number');
+      }
+      if (ns === 'supsas' && en.no_edition_warning) {
+        expect(en.no_edition_warning).toBe('No edition found');
+      }
+      if (ns === 'housing' && en.stat_kamsis_students) {
+        expect(en.stat_kamsis_students).toBe('In Dormitory');
+      }
+      if (ns === 'keusahawanan' && en.shift_opening_checklist) {
+        expect(en.shift_opening_checklist).toBe('Opening Checklist');
+      }
+    });
+  });
 });

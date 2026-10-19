@@ -36,6 +36,6 @@
   "bracket_quarterfinals": "Quarter Finals",
   "bracket_semifinals": "Semi Finals",
   "bracket_finals": "Championship Final",
-  "no_edition_warning": "No active sports edition found",
+  "no_edition_warning": "No edition found",
   "edition_inactive_warning": "Edition is currently inactive"
 }
