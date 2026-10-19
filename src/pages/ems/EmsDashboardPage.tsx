@@ -2,28 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  Plus,
-  Edit3,
-  QrCode,
-  Key,
-  Trophy,
-  Scan,
-  Award,
-  ShieldCheck,
-  Calendar,
-  MapPin,
-  User,
-  RefreshCw,
-  AlertCircle,
-  HelpCircle,
-  CheckCircle2,
-  Gift,
-  UserPlus,
-  MoreVertical,
-  Flame,
-  Search,
-  X,
-  ArrowLeft,
+  Plus, Edit3, QrCode, Key, Trophy, Scan, Award, ShieldCheck, Calendar, MapPin,
+  User, RefreshCw, AlertCircle, HelpCircle, CheckCircle2, Gift, UserPlus, MoreVertical,
+  Flame, Search, X, ArrowLeft
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';

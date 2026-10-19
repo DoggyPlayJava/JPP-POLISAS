@@ -113,7 +113,7 @@ export function AkademikTakwimPage() {
           )}
         >
           <BookOpen className="w-4 h-4" />
-          <span>{t('akademik:exam_schedule', 'Kalendar Peperiksaan Rasmi')} & Kelab</span>
+          <span>{t('akademik:exam_schedule', 'Takwim Rasmi')} POLISAS & Kelab</span>
         </button>
       </div>
 

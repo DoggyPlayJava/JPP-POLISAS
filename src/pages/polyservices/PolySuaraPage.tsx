@@ -1648,19 +1648,19 @@ export function PolySuaraPage({
               className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
               role="button"
               tabIndex={0}
-              aria-label={t('services:start_discussion', 'Mulakan Perbincangan')}
+              aria-label="Tulis luahan kampus baharu"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
                   ✍️
                 </div>
                 <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-medium truncate">
-                  {t('services:start_discussion', 'Mulakan Perbincangan')} — Ada luahan atau rahsia kampus?
+                  Ada luahan atau rahsia kampus? Kongsi secara rahsia...
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:bg-rose-500 group-hover:text-white transition-all">
-                  {t('services:post_comment', 'Luahkan')}
+                  Luahkan
                 </span>
               </div>
             </div>
@@ -2649,7 +2649,7 @@ export function PolySuaraPage({
 
                     <input
                       type="text"
-                      placeholder={t('services:post_comment', 'Hantar Pandangan') + '...'}
+                      placeholder="Tulis ulasan sulit anda..."
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       className="flex-1 bg-transparent px-2 py-1 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
