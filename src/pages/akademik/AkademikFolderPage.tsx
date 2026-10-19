@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -420,6 +421,7 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
 
 // ─── Main Folder Page ─────────────────────────────────────────
 export function AkademikFolderPage() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   // Semua pengguna adalah 'admin' untuk folder peribadi mereka sendiri
   const isAdmin = true;
@@ -638,8 +640,8 @@ export function AkademikFolderPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Dokumen Peribadi</h1>
-          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Muat naik dan simpan sijil serta dokumen akademik anda</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">{t('akademik:folder_title', 'Dokumen Peribadi')}</h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">{t('akademik:folder_subtitle', 'Muat naik dan simpan sijil serta dokumen akademik anda')}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Download All ZIP */}
@@ -656,7 +658,7 @@ export function AkademikFolderPage() {
             }
             {zipping === 'all'
               ? `${zipProgress.done}/${zipProgress.total}`
-              : 'Muat Turun Semua'
+              : t('akademik:folder_download_zip', 'Muat Turun Semua')
             }
           </button>
 

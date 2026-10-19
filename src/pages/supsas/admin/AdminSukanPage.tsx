@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight, RotateCcw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -55,6 +56,7 @@ function inputCls() {
 }
 
 export function AdminSukanPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { sports, edition, refetch, kontingen, fixtures } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasSport | null>(null);
@@ -164,22 +166,22 @@ export function AdminSukanPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">Urus Sukan</h1>
-          <p className="text-white/30 text-sm mt-1">{sports.length} sukan dalam edisi ini</p>
+          <h1 className="text-2xl font-black text-white">{t('supsas:admin_sports_title', 'Urus Sukan')}</h1>
+          <p className="text-white/30 text-sm mt-1">{sports.length} {t('supsas:admin_sports_subtitle', 'sukan dalam edisi ini')}</p>
         </div>
         <button
           onClick={openNew}
           className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all"
         >
           <Plus className="w-4 h-4" />
-          Tambah Sukan
+          {t('supsas:btn_add_sport', 'Tambah Sukan')}
         </button>
       </div>
 
       {/* Edition status warnings */}
       {!edition && (
         <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-red-400/70 text-sm space-y-2">
-          <p className="font-black">Tiada edisi ditemui</p>
+          <p className="font-black">{t('supsas:no_edition_warning', 'Tiada edisi ditemui')}</p>
           <p className="text-xs text-red-400/50">Pergi ke <strong>Tetapan Edisi</strong> untuk mencipta edisi SUPSAS baharu.</p>
         </div>
       )}
@@ -187,7 +189,7 @@ export function AdminSukanPage() {
         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
           <span className="text-amber-400 text-lg">⚠️</span>
           <div className="flex-1">
-            <p className="text-amber-400 text-xs font-black">Edisi <strong>{edition.name}</strong> belum diaktifkan</p>
+            <p className="text-amber-400 text-xs font-black">{t('supsas:edition_inactive_warning', 'Edisi')} <strong>{edition.name}</strong> belum diaktifkan</p>
             <p className="text-amber-400/50 text-[10px] mt-0.5">Sukan boleh ditambah sekarang. Aktifkan edisi dalam <strong>Tetapan</strong> supaya scoreboard public hidup.</p>
           </div>
         </div>
