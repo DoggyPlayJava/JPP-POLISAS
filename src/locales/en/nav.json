@@ -44,5 +44,13 @@
   "suggest_uiux_desc": "Ideas for visual improvements",
   "supsas": "SUPSAS Sports",
   "switch_language": "Change Language",
-  "whatsapp_support": "WhatsApp JPP Support"
+  "whatsapp_support": "WhatsApp JPP Support",
+  "ai_greeting": "I am your JPP AI assistant. Feel free to ask any question regarding POLISAS clubs and activities!",
+  "ai_suggestion_opinion": "Give Opinion",
+  "ai_suggestion_analysis": "Today's Analysis",
+  "ai_suggestion_urgent": "Urgent Tickets",
+  "ai_suggestion_draft": "Draft Reply",
+  "ai_suggestion_sales": "Sales Summary",
+  "ai_suggestion_pos": "How to Use POS",
+  "ai_suggestion_shift": "Manage Shifts"
 }

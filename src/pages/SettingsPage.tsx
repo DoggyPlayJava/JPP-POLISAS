@@ -50,12 +50,12 @@ import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
 // Super App Tab Configurations & Legacy Param Mapping
 // ─────────────────────────────────────────────────────────────────────────────
 export const SETTINGS_TAB_CONFIG = [
-  { id: 'profil', label: 'Profil & Akademik', iconComponent: User, desc: 'Maklumat peribadi & pinda data' },
-  { id: 'kediaman', label: 'Status Kediaman', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus' },
-  { id: 'tema', label: 'Paparan & Bahasa', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa' },
-  { id: 'notifikasi', label: 'Pemberitahuan', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan' },
-  { id: 'keselamatan', label: 'Keselamatan', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun' },
-  { id: 'bantuan', label: 'Bantuan & Tutorial', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan' },
+  { id: 'profil', label: 'Profil & Akademik', iconComponent: User, desc: 'Maklumat peribadi & pinda data', descKey: 'profile_tab_desc' },
+  { id: 'kediaman', label: 'Status Kediaman', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus', descKey: 'residence_tab_desc' },
+  { id: 'tema', label: 'Paparan & Bahasa', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa', descKey: 'theme_tab_desc' },
+  { id: 'notifikasi', label: 'Pemberitahuan', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan', descKey: 'notifications_tab_desc' },
+  { id: 'keselamatan', label: 'Keselamatan', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun', descKey: 'security_tab_desc' },
+  { id: 'bantuan', label: 'Bantuan & Tutorial', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan', descKey: 'help_tab_desc' },
 ] as const;
 
 export type SettingsTabId = 'profil' | 'kediaman' | 'tema' | 'notifikasi' | 'keselamatan' | 'bantuan';
@@ -719,12 +719,12 @@ export function SettingsPage() {
       if (isEmailChanged) {
         const { error: emailError } = await supabase.auth.updateUser({ email: email.trim() });
         if (emailError) throw emailError;
-        toast.success('Sila semak emel baru anda untuk pautan pengesahan.');
+        toast.success(t('auth:check_email_verification', 'Sila semak emel baru anda untuk pautan pengesahan.'));
       } else if (isProfileChanged) {
-        toast.success('Profil berjaya disegerakkan!');
+        toast.success(t('settings:profile_updated_success', 'Profil berjaya disegerakkan!'));
       }
     } catch (error: any) {
-      toast.error(error.message || 'Gagal mengemaskini profil.');
+      toast.error(error.message || t('settings:profile_update_failed', 'Gagal mengemaskini profil.'));
     } finally {
       setLoading(false);
     }
@@ -800,11 +800,11 @@ export function SettingsPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success('Kata laluan berjaya ditukar!');
+      toast.success(t('settings:change_password_success', 'Kata laluan berjaya ditukar!'));
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      toast.error(error.message || 'Gagal menukar kata laluan.');
+      toast.error(error.message || t('settings:change_password_failed', 'Gagal menukar kata laluan.'));
     } finally {
       setLoading(false);
     }
@@ -949,14 +949,15 @@ export function SettingsPage() {
 
         {/* ── B. SEGMENTED TAB NAVIGATION ── */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-1 px-1">
-          {SETTINGS_TAB_CONFIG.map((t) => {
-            const isActive = currentTab === t.id;
-            const Icon = t.iconComponent;
+          {SETTINGS_TAB_CONFIG.map((tConfig) => {
+            const isActive = currentTab === tConfig.id;
+            const Icon = tConfig.iconComponent;
             return (
               <button
-                key={t.id}
+                key={tConfig.id}
                 type="button"
-                onClick={() => handleTabChange(t.id)}
+                onClick={() => handleTabChange(tConfig.id)}
+                title={t(`settings:${tConfig.descKey}`, tConfig.desc)}
                 className={cn(
                   "shrink-0 px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all duration-200 snap-start select-none min-h-[44px]",
                   isActive
@@ -965,7 +966,7 @@ export function SettingsPage() {
                 )}
               >
                 <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#2E3A2F] dark:text-[#6B7F5B]" : "text-[#556453] dark:text-[#A3B39F]")} />
-                <span>{t.label}</span>
+                <span>{tConfig.label}</span>
               </button>
             );
           })}
@@ -983,8 +984,8 @@ export function SettingsPage() {
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Maklumat Asas & Perhubungan</h3>
-                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Nama rasmi dan talian perhubungan aktif anda di POLISAS.</p>
+                      <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:personal_details', 'Maklumat Asas & Perhubungan')}</h3>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">{t('settings:profile_tab_desc', 'Nama rasmi dan talian perhubungan aktif anda di POLISAS.')}</p>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <Button
@@ -997,7 +998,7 @@ export function SettingsPage() {
                         }}
                         className="h-11 px-4 rounded-2xl font-bold text-xs text-[#556453] dark:text-[#A3B39F] hover:bg-[#F8F6EE] dark:hover:bg-[#151D16] min-h-[44px]"
                       >
-                        Batal
+                        {t('common:cancel', 'Batal')}
                       </Button>
                       <Button
                         type="button"
@@ -1005,7 +1006,7 @@ export function SettingsPage() {
                         disabled={loading || (fullName === profile?.full_name && phone === profile?.phone && email === user?.email)}
                         className="h-11 px-6 rounded-2xl font-black text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs active:scale-95 transition-all min-h-[44px]"
                       >
-                        {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menyimpan...</> : 'Simpan Profil'}
+                        {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('common:saving', 'Menyimpan...')}</> : t('settings:save_changes', 'Simpan Profil')}
                       </Button>
                     </div>
                   </div>
@@ -1065,7 +1066,7 @@ export function SettingsPage() {
 
                     {/* Academic info summary cards */}
                     <div className="pt-4 border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-3">Maklumat Program & Jabatan</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-3">{t('settings:academic_details', 'Maklumat Program & Jabatan')}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="p-3.5 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
                           <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">Jabatan</span>
@@ -1251,8 +1252,8 @@ export function SettingsPage() {
                 
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50">
-                    <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Tetapan Pemberitahuan & Makluman</h3>
-                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Urus notifikasi amaran, status pesanan bazar, dan aktiviti kampus.</p>
+                    <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:tab_notifications', 'Tetapan Pemberitahuan & Makluman')}</h3>
+                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">{t('settings:notifications_tab_desc', 'Urus amaran & notifikasi pesanan')}</p>
                   </div>
 
                   <div className="divide-y divide-[#D9C9B2]/40 dark:divide-[#3A4A3B]">
@@ -1309,22 +1310,22 @@ export function SettingsPage() {
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  overflow-hidden">
                   <div className="p-5 sm:p-7 border-b border-[#D9C9B2]/40 dark:border-[#3A4A3B] bg-[#F8F6EE]/50 dark:bg-[#151D16]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Kunci Keselamatan Akaun</h3>
-                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Kemaskini kata laluan untuk melindungi data peribadi dan rekod kelab.</p>
+                      <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:tab_security', 'Kunci Keselamatan Akaun')}</h3>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">{t('settings:security_tab_desc', 'Kemaskini kata laluan untuk melindungi data peribadi dan rekod kelab.')}</p>
                     </div>
                     <Button
                       onClick={handleUpdatePassword}
                       disabled={loading || !newPassword}
                       className="h-11 px-6 rounded-2xl font-bold text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs active:scale-95 transition-all min-h-[44px]"
                     >
-                      {loading ? 'Memproses...' : 'Tukar Kata Laluan'}
+                      {loading ? t('common:loading', 'Memproses...') : t('settings:update_password', 'Tukar Kata Laluan')}
                     </Button>
                   </div>
 
                   <div className="p-5 sm:p-7 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Kata Laluan Baharu</Label>
+                        <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:new_password', 'Kata Laluan Baharu')}</Label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />
                           <Input
@@ -1338,7 +1339,7 @@ export function SettingsPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Sahkan Kata Laluan Baharu</Label>
+                        <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:confirm_new_password', 'Sahkan Kata Laluan Baharu')}</Label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />
                           <Input
@@ -1373,16 +1374,20 @@ export function SettingsPage() {
                 {/* Log Out & Danger Zone */}
                 <div className="p-5 sm:p-7 rounded-[2rem] bg-rose-500/5 border border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h4 className="text-sm font-black text-rose-600 dark:text-rose-400">Log Keluar Akaun</h4>
-                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">Tamatkan sesi aktif pada peranti ini untuk keselamatan akaun anda.</p>
+                    <h4 className="text-sm font-black text-rose-600 dark:text-rose-400">{t('settings:danger_zone', 'Zon Bahaya')} - {t('common:logout', 'Log Keluar Akaun')}</h4>
+                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:delete_account_warning', 'Tamatkan sesi aktif pada peranti ini untuk keselamatan akaun anda.')}</p>
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={signOut}
-                    className="h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-700 shadow-xs flex items-center gap-2 min-h-[44px] shrink-0"
+                    onClick={() => {
+                      if (window.confirm(t('common:confirm_action_desc', 'Adakah anda pasti mahu log keluar?'))) {
+                        signOut();
+                      }
+                    }}
+                    className="h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-700 shadow-xs flex items-center gap-2 min-h-[44px] shrink-0 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
-                    Log Keluar Sesi
+                    {t('common:logout', 'Log Keluar Sesi')}
                   </Button>
                 </div>
 
