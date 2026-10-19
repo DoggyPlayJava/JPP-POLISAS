@@ -1,1 +1,22 @@
-{}
+{
+  "page_title": "Settings",
+  "page_subtitle": "Manage your profile, preferences, and account security",
+  "tab_profile": "Profile & Academic",
+  "tab_profile_desc": "Personal information & data updates",
+  "tab_housing": "Housing Status",
+  "tab_housing_desc": "KAMSIS / Off-campus declaration",
+  "tab_theme": "Display & Language",
+  "tab_theme_desc": "Theme, visual mode and language options",
+  "tab_notifications": "Notifications",
+  "tab_notifications_desc": "Manage alerts and message notifications",
+  "tab_security": "Security",
+  "tab_security_desc": "Password & account login credentials",
+  "tab_help": "Help & Tutorials",
+  "tab_help_desc": "System guide and support channel",
+  "language_section_title": "System Language",
+  "language_section_desc": "Choose your preferred language for the system interface.",
+  "theme_section_title": "Display Theme",
+  "theme_section_desc": "Switch between light and dark visual presentation.",
+  "light_mode": "Light Mode",
+  "dark_mode": "Dark Mode"
+}

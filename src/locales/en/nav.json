@@ -1,1 +1,24 @@
-{}
+{
+  "portal_student_title": "POLISAS Student Portal",
+  "search_placeholder": "Search clubs, EMS events, MAKMP, welfare...",
+  "dashboard": "Dashboard",
+  "clubs": "Clubs & Societies",
+  "activities": "Activities",
+  "committee": "Committee Members",
+  "reports": "Club Reports",
+  "report_review": "Report Review",
+  "manage_club_profile": "Manage Club Profile",
+  "settings": "Settings",
+  "jpp_portal": "JPP HQ Portal",
+  "announcements": "Announcements",
+  "help_and_issues": "Help & Issues",
+  "help_subtitle": "We are here to assist you.",
+  "report_technical_issue": "Report Technical Issue",
+  "report_technical_desc": "System bugs or errors",
+  "suggest_uiux": "UI/UX Suggestion",
+  "suggest_uiux_desc": "Ideas for visual improvements",
+  "whatsapp_support": "WhatsApp JPP Support",
+  "switch_language": "Change Language",
+  "language_en": "English",
+  "language_ms": "Bahasa Melayu"
+}

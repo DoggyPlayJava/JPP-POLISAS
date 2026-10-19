@@ -1,1 +1,24 @@
-{}
+{
+  "portal_student_title": "Portal Pelajar POLISAS",
+  "search_placeholder": "Cari kelab, acara EMS, MAKMP, kebajikan...",
+  "dashboard": "Papan Pemuka",
+  "clubs": "Kelab & Persatuan",
+  "activities": "Aktiviti",
+  "committee": "Ahli Jawatankuasa",
+  "reports": "Laporan Kelab",
+  "report_review": "Semakan Laporan",
+  "manage_club_profile": "Urus Profil Kelab",
+  "settings": "Tetapan",
+  "jpp_portal": "Portal JPP HQ",
+  "announcements": "Pengumuman",
+  "help_and_issues": "Bantuan & Isu",
+  "help_subtitle": "Kami sedia membantu anda.",
+  "report_technical_issue": "Lapor Isu Teknikal",
+  "report_technical_desc": "Pepijat atau ralat sistem",
+  "suggest_uiux": "Cadangan UI/UX",
+  "suggest_uiux_desc": "Idea penambahbaikan visual",
+  "whatsapp_support": "WhatsApp JPP Support",
+  "switch_language": "Tukar Bahasa",
+  "language_en": "English",
+  "language_ms": "Bahasa Melayu"
+}
