@@ -1197,7 +1197,7 @@ export function KebajikanFoodBankPage() {
                 <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2">
                   <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                     <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{t('kebajikan:foodbank_dist_location')}</span>
+                    <span>{t('kebajikan:foodbank_dist_location', 'Lokasi Pengagihan')}</span>
                   </div>
                   <p className="font-extrabold text-sm text-white">
                     {activeApplication.location?.name || 'Pusat Edaran Kaunter JHEP'}
@@ -1336,7 +1336,7 @@ export function KebajikanFoodBankPage() {
                 className="h-10 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl gap-2 shadow-lg shadow-amber-500/20 text-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>{t('kebajikan:foodbank_download_pass')}</span>
+                <span>{t('kebajikan:foodbank_download_pass', 'Muat Turun / Tangkap Layar Pas')}</span>
               </Button>
             </div>
           </div>
