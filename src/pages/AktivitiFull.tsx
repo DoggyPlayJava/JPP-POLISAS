@@ -112,7 +112,7 @@ export function AktivitiFull() {
             className="tour-tab-statistik rounded-xl px-1.5 sm:px-6 py-2.5 sm:py-3 font-black text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-violet-600 flex items-center gap-1 sm:gap-2 justify-center min-w-0 transition-all"
           >
             <Activity className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Statistik</span>
+            <span className="truncate">{t('kpp:statistics', 'Statistik')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -404,7 +404,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             onClick={openCreate}
             className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 dark:shadow-emerald-950/40 transition-all hover:scale-105 active:scale-95 shrink-0"
           >
-            <Plus className="w-4 h-4 mr-2" /> Aktiviti Baru
+            <Plus className="w-4 h-4 mr-2" /> {t('kpp:new_activity', 'Aktiviti Baru')}
           </Button>
         )}
       </div>
@@ -474,7 +474,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 {editTarget ? t('common:edit') : t('kpp:new_activity')}
               </DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">
-                Aktiviti spontan yang tidak memerlukan kertas kerja rasmi
+                {t('kpp:new_activity_spontaneous_desc', 'Aktiviti spontan yang tidak memerlukan kertas kerja rasmi')}
               </p>
             </DialogHeader>
 
@@ -547,16 +547,16 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                    Keutamaan
+                    {t('common:priority', 'Keutamaan')}
                   </Label>
                   <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v })}>
                     <SelectTrigger className="h-12 rounded-2xl bg-muted/40 border-border/60 font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="rendah">Rendah</SelectItem>
-                      <SelectItem value="sederhana">Sederhana</SelectItem>
-                      <SelectItem value="tinggi">Tinggi</SelectItem>
+                      <SelectItem value="rendah">{t('common:priority_low', 'Rendah')}</SelectItem>
+                      <SelectItem value="sederhana">{t('common:priority_medium', 'Sederhana')}</SelectItem>
+                      <SelectItem value="tinggi">{t('common:priority_high', 'Tinggi')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -565,7 +565,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               <div className="space-y-2">
                 <div className="flex justify-between items-end">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 flex-1">
-                    Objektif
+                    {t('kpp:objective', 'Objektif')}
                   </Label>
                   <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
                 </div>
@@ -580,8 +580,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               <div className="space-y-2">
                 <div className="flex justify-between items-end">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 flex-1">
-                    Tindakan / Catatan
-                    <span className="ml-2 text-emerald-600 normal-case tracking-normal">← untuk Laporan Bulanan</span>
+                    {t('kpp:action_notes', 'Tindakan / Catatan')}
+                    <span className="ml-2 text-emerald-600 normal-case tracking-normal">{t('kpp:for_monthly_report', '← untuk Laporan Bulanan')}</span>
                   </Label>
                   <AIGrammarCheck textValue={form.tindakan} onApply={v => setForm({ ...form, tindakan: v })} disabled={saving} />
                 </div>
@@ -597,14 +597,14 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               <div className="space-y-4 p-4 rounded-[1.5rem] border border-primary/15 bg-primary/5">
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4 h-4 text-primary" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">QR & Merit Kelab</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">{t('kpp:qr_and_club_merit', 'QR & Merit Kelab')}</p>
                 </div>
 
                 {/* Toggle QR */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Aktifkan QR Kehadiran</Label>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Peserta scan QR untuk daftar hadir</p>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:enable_qr_attendance', 'Aktifkan QR Kehadiran')}</Label>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t('kpp:scan_qr_instruction', 'Peserta scan QR untuk daftar hadir')}</p>
                   </div>
                   <button
                     type="button"
@@ -625,13 +625,13 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Buka QR Pada</Label>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:qr_open_at', 'Buka QR Pada')}</Label>
                         <Input type="datetime-local" value={form.qr_open_at}
                           onChange={e => setForm({ ...form, qr_open_at: e.target.value })}
                           className="h-10 rounded-xl bg-muted/40 border-border/60 text-xs font-bold" />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tutup QR Pada</Label>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:qr_close_at', 'Tutup QR Pada')}</Label>
                         <Input type="datetime-local" value={form.qr_close_at}
                           onChange={e => setForm({ ...form, qr_close_at: e.target.value })}
                           className="h-10 rounded-xl bg-muted/40 border-border/60 text-xs font-bold" />
@@ -645,7 +645,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
                       <Trophy className="w-3 h-3 text-amber-500" />
-                      Merit Kelab (auto)
+                      {t('kpp:merit_club_auto', 'Merit Kelab (auto)')}
                     </Label>
                     <Input
                       type="number" min={0} max={50}
@@ -658,7 +658,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
                       <Trophy className="w-3 h-3 text-emerald-500" />
-                      Merit Rasmi (perlu kelulusan)
+                      {t('kpp:merit_official_approval', 'Merit Rasmi (perlu kelulusan)')}
                     </Label>
                     <Input
                       type="number" min={0} max={100}
@@ -667,7 +667,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                       placeholder="0"
                       className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
                     />
-                    <p className="text-[9px] text-muted-foreground/60">Exco Kelab akan vouch, Exco Kediaman luluskan</p>
+                    <p className="text-[9px] text-muted-foreground/60">{t('kpp:merit_approval_note', 'Exco Kelab akan vouch, Exco Kediaman luluskan')}</p>
                   </div>
                 </div>
               </div>
@@ -675,7 +675,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               {/* Gambar bukti */}
               <div className="space-y-3 p-4 rounded-[2rem] border border-emerald-100 bg-emerald-500/5">
                 <Label className="text-[10px] font-black uppercase text-emerald-800 tracking-widest flex justify-between">
-                  <span>Muat Naik Gambar Bukti (Maks 2)</span>
+                  <span>{t('kpp:upload_proof_images', 'Muat Naik Gambar Bukti (Maks 2)')}</span>
                   <span className="text-emerald-500 normal-case opacity-70">{form.imageUrls?.length || 0} / 2</span>
                 </Label>
                 <div className="grid grid-cols-4 gap-3">
@@ -817,15 +817,15 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
                   >
                     <QrCode size={10} />
-                    Jana QR
+                    {t('kpp:generate_qr', 'Jana QR')}
                   </button>
                 ) : (
                   <span
-                    title="QR token belum dijana. Edit dan simpan semula aktiviti ini untuk jana token."
+                    title={t('kpp:qr_token_not_generated', 'QR token belum dijana. Edit dan simpan semula aktiviti ini untuk jana token.')}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-muted-foreground cursor-not-allowed"
                   >
                     <QrCode size={10} />
-                    QR Tidak Sedia
+                    {t('kpp:qr_not_ready', 'QR Tidak Sedia')}
                   </span>
                 )
               )}
@@ -1151,7 +1151,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Program Rasmi · Kertas Kerja Diperlukan
+            {t('kpp:official_program_desc', 'Program Rasmi · Kertas Kerja Diperlukan')}
           </p>
         </div>
         {canManage && allowAddTakwim && (
@@ -1164,7 +1164,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         )}
         {canManage && !allowAddTakwim && (
           <Button disabled variant="outline" className="w-full sm:w-auto rounded-full h-11 sm:h-12 px-6 shadow-none font-black text-[10px] uppercase tracking-widest border-border cursor-not-allowed opacity-70">
-            <Lock className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> Pendaftaran Ditutup
+            <Lock className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> {t('kpp:registration_closed', 'Pendaftaran Ditutup')}
           </Button>
         )}
       </div>
@@ -1175,7 +1175,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         <div className="space-y-10 sm:space-y-14">
           {urgentItems.length > 0 && (
             <section className="space-y-5">
-              <SectionHeader title="Perhatian Segera" count={urgentItems.length} color="text-rose-500" icon={BellRing} />
+              <SectionHeader title={t('kpp:urgent_attention', 'Perhatian Segera')} count={urgentItems.length} color="text-rose-500" icon={BellRing} />
               <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 hide-scrollbar no-scrollbar scrollbar-hide w-full min-w-0">
                 {urgentItems.map(act => (
                   <ProgramCard key={act.id} act={act} isUrgent canManage={canManage}
@@ -1188,10 +1188,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           )}
 
           <section className="space-y-5">
-            <SectionHeader title="Status Semasa" count={activeZone.length} color="text-indigo-500" icon={Timer} />
+            <SectionHeader title={t('kpp:current_status', 'Status Semasa')} count={activeZone.length} color="text-indigo-500" icon={Timer} />
             {activeZone.length === 0 ? (
               <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest px-2">
-                Tiada program dalam pemprosesan
+                {t('kpp:no_programs_in_processing', 'Tiada program dalam pemprosesan')}
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1206,7 +1206,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           </section>
 
           <section className="space-y-5">
-            <SectionHeader title="Draf Perancangan" count={draftingZone.length} color="text-muted-foreground" icon={Pencil} />
+            <SectionHeader title={t('kpp:planning_draft', 'Draf Perancangan')} count={draftingZone.length} color="text-muted-foreground" icon={Pencil} />
             {draftingZone.length === 0 ? (
               <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest px-2">
                 Tiada draf sedia ada
@@ -1301,7 +1301,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-end mb-1">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest flex-1">Bajet (RM)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest flex-1">{t('kpp:budget_currency', 'Bajet (RM)')}</Label>
                     <AIBudgetGenerator
                       initialTitle={form.title}
                       initialDescription={form.description}
@@ -1316,7 +1316,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">
-                  Pengarah Program *
+                  {t('kpp:program_director', 'Pengarah Program')} *
                 </Label>
                 <Input
                   value={form.pengarahProgram}
@@ -1333,10 +1333,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                       <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
                         <Sparkles className="w-3.5 h-3.5" /> Nexus AI Kertas Kerja
                       </h4>
-                      <p className="text-[10px] text-muted-foreground font-medium mt-1">Jana draf atau betulkan format dengan bantuan AI.</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-1">{t('kpp:ai_draft_helper', 'Jana draf atau betulkan format dengan bantuan AI.')}</p>
                     </div>
                     <Button type="button" onClick={() => navigate('/nexus')} variant="outline" className="w-full sm:w-auto shrink-0 bg-white dark:bg-background border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] hover:bg-indigo-500/10 uppercase tracking-widest gap-2">
-                      <Sparkles className="w-3.5 h-3.5" /> Buka Nexus AI
+                      <Sparkles className="w-3.5 h-3.5" /> {t('kpp:open_nexus_ai', 'Buka Nexus AI')}
                     </Button>
                   </div>
                 )}
@@ -1353,14 +1353,14 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               <div className="space-y-4 p-6 rounded-[2rem] border border-primary/15 bg-primary/5">
                 <div className="flex items-center gap-2">
                   <QrCode className="w-4 h-4 text-primary" />
-                  <p className="text-xs font-black uppercase tracking-widest text-primary">QR Check-in & Merit</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-primary">{t('kpp:qr_checkin_merit', 'QR Check-in & Merit')}</p>
                 </div>
 
                 {/* Toggle QR */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Aktifkan QR Kehadiran</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Peserta scan QR untuk daftar hadir automatik</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:enable_qr_attendance', 'Aktifkan QR Kehadiran')}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t('kpp:scan_qr_instruction_auto', 'Peserta scan QR untuk daftar hadir automatik')}</p>
                   </div>
                   <button
                     type="button"
@@ -1380,13 +1380,13 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 {form.qr_enabled && (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Buka QR Pada</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:qr_open_at', 'Buka QR Pada')}</Label>
                       <Input type="datetime-local" value={form.qr_open_at}
                         onChange={e => setForm({ ...form, qr_open_at: e.target.value })}
                         className="h-11 rounded-2xl bg-muted/40 border-border/60 text-xs font-bold" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tutup QR Pada</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('kpp:qr_close_at', 'Tutup QR Pada')}</Label>
                       <Input type="datetime-local" value={form.qr_close_at}
                         onChange={e => setForm({ ...form, qr_close_at: e.target.value })}
                         className="h-11 rounded-2xl bg-muted/40 border-border/60 text-xs font-bold" />
@@ -1399,7 +1399,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-500" />
-                      Merit Kelab (auto)
+                      {t('kpp:merit_club_auto', 'Merit Kelab (auto)')}
                     </Label>
                     <Input type="number" min={0} max={50}
                       value={form.merit_kelab}
@@ -1410,14 +1410,14 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-emerald-500" />
-                      Merit Rasmi (perlu kelulusan)
+                      {t('kpp:merit_official_approval', 'Merit Rasmi (perlu kelulusan)')}
                     </Label>
                     <Input type="number" min={0} max={100}
                       value={form.merit_eakademik}
                       onChange={e => setForm({ ...form, merit_eakademik: Number(e.target.value) })}
                       placeholder="0"
                       className="h-11 rounded-2xl bg-muted/40 border-border/60 font-bold" />
-                    <p className="text-[9px] text-muted-foreground/60">Akademik akan vouch, Kediaman luluskan</p>
+                    <p className="text-[9px] text-muted-foreground/60">{t('kpp:merit_approval_note_takwim', 'Akademik akan vouch, Kediaman luluskan')}</p>
                   </div>
                 </div>
               </div>
@@ -1430,7 +1430,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest mb-1.5 flex-1">
-                        Objektif / Deskripsi Program
+                        {t('kpp:objective', 'Objektif')} / Deskripsi Program
                       </Label>
                       <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
                     </div>
@@ -1459,7 +1459,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
                   <div className="space-y-3 pt-2">
                     <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest flex justify-between">
-                      <span>Muat Naik Gambar Bukti (Maks 2)</span>
+                      <span>{t('kpp:upload_proof_images', 'Muat Naik Gambar Bukti (Maks 2)')}</span>
                       <span className="text-indigo-300 normal-case opacity-70">{form.imageUrls?.length || 0} / 2</span>
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1474,8 +1474,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                       {(!form.imageUrls || form.imageUrls.length < 2) && (
                         <div className="relative border-2 border-dashed border-border rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:bg-muted/50 hover:border-indigo-400 transition-colors h-24 cursor-pointer group shadow-sm bg-muted/20">
                           <ImageIcon size={20} className="text-muted-foreground group-hover:text-indigo-500 transition-colors" />
-                          <span className="text-[9px] font-black text-muted-foreground uppercase text-center group-hover:text-indigo-600 transition-colors">Tambah Gambar</span>
-                          <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" title="Muat naik gambar" />
+                          <span className="text-[9px] font-black text-muted-foreground uppercase text-center group-hover:text-indigo-600 transition-colors">{t('kpp:add_photo', 'Tambah Gambar')}</span>
+                          <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" title={t('kpp:upload_image_tooltip', 'Muat naik gambar')} />
                         </div>
                       )}
                     </div>
@@ -1527,6 +1527,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 // ─── SHARED SUB-COMPONENTS ────────────────────────────────────────────────────
 
 function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage, onDelete, allowAddTakwim }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user } = useAuth();
   const [qrOpen, setQrOpen] = useState(false);
   const daysLeft = act.tarikh_mula ? differenceInDays(parseISO(act.tarikh_mula), new Date()) : 999;
@@ -1575,17 +1576,17 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
               <div className="flex gap-1.5">
                 {(isPastDeadline || act.status === 'CONFIRMED') && (
                   <Button onClick={onUnlock} variant="ghost" size="icon"
-                    className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" title="Mohon Buka Kunci Tarikh">
+                    className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" title={t('kpp:request_unlock_date_tooltip', 'Mohon Buka Kunci Tarikh')}>
                     <Unlock size={13} />
                   </Button>
                 )}
                 <Button variant="ghost" size="icon" onClick={onEdit}
-                  className="h-8 w-8 rounded-full bg-slate-50 dark:bg-muted/50 text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
+                  className="h-8 w-8 rounded-full bg-slate-50 dark:bg-muted/50 text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted" title={isRejectedPostMortem ? t('kpp:reupload_postmortem', 'Muat Naik Semula Post-Mortem') : t('common:edit', 'Kemaskini')}>
                   <Pencil size={13} />
                 </Button>
                 {act.status === 'DRAFT' && allowAddTakwim && (
                   <Button variant="ghost" size="icon" onClick={onDelete}
-                    className="h-8 w-8 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" title="Padam Program">
+                    className="h-8 w-8 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" title={t('kpp:delete_program_tooltip', 'Padam Program')}>
                     <Trash2 size={13} />
                   </Button>
                 )}
@@ -1616,15 +1617,15 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
                   >
                     <QrCode size={10} />
-                    Jana QR
+                    {t('kpp:generate_qr', 'Jana QR')}
                   </button>
                 ) : (
                   <span
-                    title="QR token belum dijana. Edit dan simpan semula program ini untuk jana token."
+                    title={t('kpp:qr_token_not_generated_program', 'QR token belum dijana. Edit dan simpan semula program ini untuk jana token.')}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-muted-foreground cursor-not-allowed"
                   >
                     <QrCode size={10} />
-                    QR Tidak Sedia
+                    {t('kpp:qr_not_ready', 'QR Tidak Sedia')}
                   </span>
                 )
               )}
@@ -1647,7 +1648,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
             <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-start gap-2">
               <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase text-rose-500 tracking-widest mb-0.5">Ulasan / Nota</p>
+                <p className="text-[9px] font-black uppercase text-rose-500 tracking-widest mb-0.5">{t('kpp:notes_remarks', 'Ulasan / Nota')}</p>
                 <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 italic break-words">{act.jpp_remarks}</p>
               </div>
             </div>

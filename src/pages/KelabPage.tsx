@@ -674,7 +674,7 @@ export function KelabPage() {
               onClick={() => { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); }}
               className="rounded-xl font-bold text-xs"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={confirmApply}
@@ -708,14 +708,14 @@ export function KelabPage() {
               onClick={() => setResignModal(null)}
               className="rounded-xl font-bold text-xs"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={handleResign}
               disabled={resigning}
               className="rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white"
             >
-              {resigning ? 'Memproses...' : (resignModal?.isPrimary ? 'Hantar Permohonan Pindah' : 'Sahkan Tarik Diri')}
+              {resigning ? t('common:loading', 'Memproses...') : (resignModal?.isPrimary ? t('kpp:submit_transfer_request', 'Hantar Permohonan Pindah') : t('kpp:confirm_leave_club', 'Sahkan Tarik Diri'))}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -646,7 +646,7 @@ export function UrusKelabPage() {
           <DialogHeader>
             <DialogTitle className="font-bold text-xl tracking-tight text-rose-600 dark:text-rose-400 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              Sahkan Penyelarasan Kitaran Merit
+              {t('kpp:confirm_merit_reset_title', 'Sahkan Penyelarasan Kitaran Merit')}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
               Adakah anda pasti ingin memulakan kitaran merit <strong>{meritResetModal}</strong> bagi kelab "{clubData?.name}"? Markah merit keahlian bagi kelab ini akan disetkan semula kepada 0 untuk kitaran baharu.
@@ -655,10 +655,10 @@ export function UrusKelabPage() {
 
           <DialogFooter className="gap-2 pt-2">
             <Button variant="outline" onClick={() => setMeritResetModal(null)} className="rounded-xl text-xs font-semibold">
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button onClick={confirmResetMerit} disabled={resettingMerit} className="rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">
-              {resettingMerit ? 'Memproses...' : 'Sahkan Kitaran Baharu'}
+              {resettingMerit ? t('common:loading', 'Memproses...') : t('kpp:confirm_new_cycle', 'Sahkan Kitaran Baharu')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -670,7 +670,7 @@ export function UrusKelabPage() {
           <DialogHeader>
             <DialogTitle className="font-bold text-xl tracking-tight text-amber-600 dark:text-amber-400 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              Peralihan Sesi Kohort Kepimpinan
+              {t('kpp:cohort_transition_title', 'Peralihan Sesi Kohort Kepimpinan')}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
               Tindakan ini akan menurunkan semua peranan <strong>Majlis Tertinggi & Presiden</strong> bagi "{clubData?.name}" kembali kepada <strong>Ahli Biasa</strong>. Rekod keahlian asal tetap kekal terpelihara.
@@ -695,14 +695,14 @@ export function UrusKelabPage() {
               onClick={() => { setShowKohortModal(false); setKohortConfirmationInput(''); }}
               className="rounded-xl text-xs font-semibold"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={confirmResetKohort}
               disabled={resettingKohort || kohortConfirmationInput !== 'RESET'}
               className="rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white"
             >
-              {resettingKohort ? 'Sedang Mereset...' : 'Sahkan Reset Kohort'}
+              {resettingKohort ? t('common:loading', 'Sedang Mereset...') : t('kpp:confirm_cohort_reset', 'Sahkan Reset Kohort')}
             </Button>
           </DialogFooter>
         </DialogContent>
