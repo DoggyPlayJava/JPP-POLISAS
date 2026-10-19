@@ -1,1 +1,24 @@
-{}
+{
+  "save": "Save",
+  "saving": "Saving...",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "back": "Back",
+  "search": "Search",
+  "loading": "Loading...",
+  "success": "Success",
+  "error": "Error",
+  "logout": "Log Out",
+  "yes": "Yes",
+  "no": "No",
+  "actions": "Actions",
+  "status": "Status",
+  "details": "Details",
+  "close": "Close",
+  "filter": "Filter",
+  "all": "All",
+  "view_all": "View All",
+  "no_data": "No data available",
+  "try_again": "Try Again"
+}

@@ -1,1 +1,24 @@
-{}
+{
+  "save": "Simpan",
+  "saving": "Menyimpan...",
+  "cancel": "Batal",
+  "delete": "Padam",
+  "confirm": "Sahkan",
+  "back": "Kembali",
+  "search": "Cari",
+  "loading": "Memuatkan...",
+  "success": "Berjaya",
+  "error": "Ralat",
+  "logout": "Log Keluar",
+  "yes": "Ya",
+  "no": "Tidak",
+  "actions": "Tindakan",
+  "status": "Status",
+  "details": "Butiran",
+  "close": "Tutup",
+  "filter": "Tapis",
+  "all": "Semua",
+  "view_all": "Lihat Semua",
+  "no_data": "Tiada data ditemui",
+  "try_again": "Cuba Lagi"
+}

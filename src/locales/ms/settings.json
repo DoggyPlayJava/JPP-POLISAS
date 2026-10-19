@@ -1,1 +1,22 @@
-{}
+{
+  "page_title": "Tetapan",
+  "page_subtitle": "Urus profil, keutamaan paparan, dan keselamatan akaun",
+  "tab_profile": "Profil & Akademik",
+  "tab_profile_desc": "Maklumat peribadi & pinda data",
+  "tab_housing": "Status Kediaman",
+  "tab_housing_desc": "Deklarasi KAMSIS / Luar Kampus",
+  "tab_theme": "Paparan & Bahasa",
+  "tab_theme_desc": "Pilihan mod cerah, gelap dan pilihan bahasa",
+  "tab_notifications": "Pemberitahuan",
+  "tab_notifications_desc": "Urus amaran & notifikasi pesanan",
+  "tab_security": "Keselamatan",
+  "tab_security_desc": "Kata laluan & log masuk akaun",
+  "tab_help": "Bantuan & Tutorial",
+  "tab_help_desc": "Panduan sistem & talian aduan",
+  "language_section_title": "Bahasa Sistem",
+  "language_section_desc": "Pilih bahasa keutamaan anda untuk antara muka sistem.",
+  "theme_section_title": "Tema Paparan",
+  "theme_section_desc": "Tukar antara paparan mod cerah atau gelap.",
+  "light_mode": "Mod Cerah",
+  "dark_mode": "Mod Gelap"
+}
