@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { KebajikanSidebar } from './KebajikanSidebar';
 import { Menu, ChevronLeft } from 'lucide-react';
@@ -21,6 +22,7 @@ const KEBAJIKAN_UNIT_LINKS = [
 ];
 
 export function KebajikanLayout() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
@@ -142,7 +144,10 @@ export function KebajikanLayout() {
                 <Menu className="w-5 h-5" />
               </button>
             )}
-            <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF] ml-1">E-Kebajikan</span>
+            <div className="flex flex-col ml-1">
+              <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF]">{t('module_title')}</span>
+              <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">{t('module_subtitle')}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={startTour} className="p-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">

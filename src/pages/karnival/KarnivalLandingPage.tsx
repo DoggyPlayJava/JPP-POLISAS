@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useKarnival, KarnivalCategory } from '@/contexts/KarnivalContext';
 import { Trophy, QrCode, Users, ChevronRight, Loader2, CalendarDays, AlertCircle } from 'lucide-react';
 
 export function KarnivalLandingPage() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, categories, booths, isActive, votingOpen, isLoading } = useKarnival();
   const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState<string | null>(null);
@@ -33,8 +35,12 @@ export function KarnivalLandingPage() {
           <div className="w-20 h-20 rounded-3xl bg-violet-600/10 flex items-center justify-center mx-auto">
             <Trophy className="w-10 h-10 text-violet-500/40" />
           </div>
+          <p className="text-xs font-black uppercase tracking-widest text-violet-400">{t('module_title')}</p>
           <p className="text-xl font-black text-white">Tiada Karnival Aktif</p>
           <p className="text-sm text-white/40">Karnival JPP belum bermula. Pantau laman ini dari masa ke masa.</p>
+          <div className="pt-2">
+            <span className="text-xs text-violet-300/70">{t('carnival_schedule')}</span>
+          </div>
         </div>
       </div>
     );
@@ -56,8 +62,11 @@ export function KarnivalLandingPage() {
         </div>
 
         <div className="relative">
-          {/* Status badge */}
-          <div className="mb-4 inline-flex items-center gap-2">
+          {/* Status badge & Module title */}
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <span className="text-xs font-black uppercase tracking-widest text-violet-400">
+              {t('module_title')}
+            </span>
             {isActive ? (
               <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-violet-600/25 border border-violet-400/30 text-xs font-black text-violet-300 uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
@@ -84,6 +93,10 @@ export function KarnivalLandingPage() {
                 {new Date(edition.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             )}
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-violet-200">
+              <CalendarDays className="w-3.5 h-3.5 text-violet-400" />
+              {t('carnival_schedule')}
+            </span>
             <span className="flex items-center gap-1.5">
               <Trophy className="w-4 h-4" />
               {categories.length} Kategori Pertandingan
