@@ -47,7 +47,7 @@ interface MatricParseResult {
   errorMessage?: string;
 }
 
-function parseAndValidateMatric(rawMatric: string, t?: (key: string, def?: string) => string): MatricParseResult {
+function parseAndValidateMatric(rawMatric: string, t?: (key: any, def?: any) => any): MatricParseResult {
   const clean = rawMatric.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
 
   if (!clean.startsWith('02')) {
@@ -214,7 +214,7 @@ export function CompleteProfileModal() {
         toast.success(t('auth:registration_cancelled_success', "Pendaftaran dibatalkan dan akaun berjaya dipadamkan."));
         window.location.href = '/login';
       } catch (err: any) {
-        toast.error("Ralat memadam akaun: " + (err.message || "Sila cuba lagi."));
+        toast.error((t ? t('common:delete_failed', "Gagal memadam akaun.") : "Gagal memadam akaun.") + " " + (err.message || ""));
         setLoading(false);
       }
     } else {
