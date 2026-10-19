@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
@@ -62,6 +63,7 @@ function DollarSignIcon(props: any) {
 }
 
 export function SemakanLaporanPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -388,15 +390,15 @@ export function SemakanLaporanPage() {
           <Badge className="bg-white/5 text-amber-400 border border-white/10 px-5 py-2 font-black uppercase tracking-widest text-[10px]  rounded-2xl shadow-xl">
             Super Admin Panel
           </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">Pusat Kawalan JPP</h1>
-          <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">{t('kpp:audit_control_center', 'Pusat Kawalan JPP')}</h1>
+          <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">{t('kpp:audit_control_subtitle', 'Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.')}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center relative z-10 shrink-0">
           <Button onClick={handleSendOverdueNotices} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 hover:text-amber-400 font-black tracking-widest uppercase text-[10px]  transition-all shadow-lg hover:scale-105 active:scale-95">
-            <AlertTriangle className="w-5 h-5" /> Imbas Tunggakan
+            <AlertTriangle className="w-5 h-5" /> {t('kpp:audit_scan_overdue', 'Imbas Tunggakan')}
           </Button>
           <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/5 bg-white/5 hover:bg-white/10 text-white font-black tracking-widest uppercase text-[10px]  transition-all hover:scale-105 active:scale-95">
-            <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> Segarkan Data
+            <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> {t('kpp:audit_refresh_data', 'Segarkan Data')}
           </Button>
           <button
             onClick={startTour}
@@ -410,18 +412,18 @@ export function SemakanLaporanPage() {
       <Tabs defaultValue="programs" className="tour-semakan-menunggu w-full">
         <TabsList className="bg-muted/40 dark:bg-slate-900/40  p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border border-border shadow-inner gap-2">
           {[
-            { value: 'programs', label: 'Pengurusan Program' },
-            { value: 'reports', label: 'Laporan Kelab (General)' },
-            { value: 'takwim', label: 'Pemantauan Takwim' },
-            { value: 'arkib', label: 'Arkib Berpusat', onClick: handleArkibTab }
-          ].map(t => (
+            { value: 'programs', label: t('kpp:audit_tab_programs', 'Pengurusan Program') },
+            { value: 'reports', label: t('kpp:audit_tab_reports', 'Laporan Kelab (General)') },
+            { value: 'takwim', label: t('kpp:audit_tab_takwim', 'Pemantauan Takwim') },
+            { value: 'arkib', label: t('kpp:audit_tab_archive', 'Arkib Berpusat'), onClick: handleArkibTab }
+          ].map(tab => (
             <TabsTrigger
-              key={t.value}
-              value={t.value}
-              onClick={t.onClick}
+              key={tab.value}
+              value={tab.value}
+              onClick={tab.onClick}
               className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-muted-foreground hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-700 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-primary/20 data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
             >
-              {t.label}
+              {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -436,7 +438,7 @@ export function SemakanLaporanPage() {
                 return (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={`alert-${p.id}`} className="bg-rose-500/10 border-2 border-rose-500/20 p-5 rounded-[2rem] flex items-center gap-5 shadow-sm">
                     <div className="bg-rose-500 p-4 rounded-2xl text-white animate-pulse shadow-lg shadow-rose-500/30"><AlertTriangle size={24} /></div>
-                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Kritikal ({Math.floor(diffInDays)} Hari)</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
+                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('kpp:audit_critical', 'Kritikal')} ({Math.floor(diffInDays)} Hari)</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
                   </motion.div>
                 );
               })}
@@ -447,7 +449,7 @@ export function SemakanLaporanPage() {
             {programs.length === 0 ? (
               <div className="col-span-full py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                 <Calendar className="w-12 h-12 mx-auto mb-4" />
-                <p className="font-black uppercase tracking-widest text-sm">Tiada program untuk disemak</p>
+                <p className="font-black uppercase tracking-widest text-sm">{t('kpp:audit_no_programs', 'Tiada program untuk disemak')}</p>
               </div>
             ) : (
               programs.map((p) => (
@@ -504,11 +506,11 @@ export function SemakanLaporanPage() {
                         const isValidUrl = url && url.length > 5;
                         return isValidUrl ? (
                           <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 md:flex-none">
-                            <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> Papar Dokumen</Button>
+                            <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> {t('kpp:audit_view_doc', 'Papar Dokumen')}</Button>
                           </a>
                         ) : (
                           <Button disabled variant="outline" className="flex-1 md:flex-none rounded-xl font-black text-xs h-12 border-border opacity-50 cursor-not-allowed">
-                            <FileText size={16} className="mr-2 text-slate-400" /> Tiada Dokumen
+                            <FileText size={16} className="mr-2 text-slate-400" /> {t('kpp:audit_no_doc', 'Tiada Dokumen')}
                           </Button>
                         );
                       })()}
@@ -516,10 +518,10 @@ export function SemakanLaporanPage() {
                       {p.status === 'REQUEST_UNLOCK' && (
                         <div className="flex gap-2 flex-1">
                           <Button onClick={() => setActionDialog({ open: true, type: 'UNLOCK', data: p })} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs h-12 shadow-lg shadow-indigo-200">
-                            <Unlock size={16} className="mr-1.5" /> Buka Kunci (Unlock)
+                            <Unlock size={16} className="mr-1.5" /> {t('kpp:audit_unlock', 'Buka Kunci (Unlock)')}
                           </Button>
                           <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT_UNLOCK', data: p })} className="rounded-xl font-black text-xs h-12 px-6">
-                            <XCircle size={16} className="mr-1.5" /> Tolak
+                            <XCircle size={16} className="mr-1.5" /> {t('kpp:audit_reject', 'Tolak')}
                           </Button>
                         </div>
                       )}
@@ -532,12 +534,12 @@ export function SemakanLaporanPage() {
                               onClick={() => setAiReviewProgramId({ id: p.id, name: p.nama_program })} 
                               className="w-full rounded-xl font-black text-xs h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
                             >
-                              <Bot size={16} className="mr-1.5" /> Semak Kertas Kerja (AI)
+                              <Bot size={16} className="mr-1.5" /> {t('kpp:audit_ai_review', 'Semak Kertas Kerja (AI)')}
                             </Button>
                           )}
                           <div className="flex gap-2">
                             <Button variant="success" onClick={() => setActionDialog({ open: true, type: 'APPROVE', data: p })} className="flex-1 rounded-xl font-black text-xs h-12 shadow-sm">
-                              <CheckCircle2 size={16} className="mr-1.5" /> Lulus
+                              <CheckCircle2 size={16} className="mr-1.5" /> {t('kpp:audit_approve', 'Lulus')}
                             </Button>
                             <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT', data: p })} className="rounded-xl font-black text-xs h-12 px-6 shadow-sm">
                               <XCircle size={16} />
@@ -561,7 +563,7 @@ export function SemakanLaporanPage() {
               >
                 <Archive className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
                 <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
-                  Arkib Program Selesai ({archivedPrograms.length})
+                  {t('kpp:audit_archived_programs', 'Arkib Program Selesai')} ({archivedPrograms.length})
                 </span>
                 <ChevronRight className={cn("w-4 h-4 text-slate-300 ml-auto transition-transform", showArchive && "rotate-90")} />
               </button>
@@ -614,15 +616,21 @@ export function SemakanLaporanPage() {
             </Select>
 
             <div className="flex flex-wrap gap-2 w-full xl:w-auto bg-muted/50 p-1.5 rounded-2xl">
-              {['Semua', 'Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak'].map(s => (
+              {[
+                { key: 'Semua', label: t('common:all', 'Semua') },
+                { key: 'Menunggu', label: t('kpp:stats_pending', 'Menunggu') },
+                { key: 'Dalam Semakan', label: t('common:in_progress', 'Dalam Semakan') },
+                { key: 'Diluluskan', label: t('kpp:report_status_approved', 'Diluluskan') },
+                { key: 'Ditolak', label: t('kpp:report_status_rejected', 'Ditolak') },
+              ].map(s => (
                 <button
-                  key={s}
-                  onClick={() => setFilterStatus(s)}
+                  key={s.key}
+                  onClick={() => setFilterStatus(s.key)}
                   className={cn("flex-1 xl:flex-none rounded-xl text-[10px] font-black uppercase tracking-widest px-6 h-11 transition-all",
-                    filterStatus === s ? "bg-foreground text-background shadow-md scale-100" : "text-muted-foreground hover:bg-muted hover:text-foreground scale-95"
+                    filterStatus === s.key ? "bg-foreground text-background shadow-md scale-100" : "text-muted-foreground hover:bg-muted hover:text-foreground scale-95"
                   )}
                 >
-                  {s}
+                  {s.label}
                 </button>
               ))}
             </div>
@@ -633,7 +641,7 @@ export function SemakanLaporanPage() {
               {filteredReports.length === 0 ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                   <FileText className="w-12 h-12 mx-auto mb-4" />
-                  <p className="font-black uppercase tracking-widest text-sm">Tiada dokumen dijumpai</p>
+                  <p className="font-black uppercase tracking-widest text-sm">{t('kpp:audit_no_documents', 'Tiada dokumen dijumpai')}</p>
                 </motion.div>
               ) : (
                 filteredReports.map((r, i) => {
@@ -678,8 +686,8 @@ export function SemakanLaporanPage() {
                             <div className="flex items-center gap-2">
                               {r.status === 'Menunggu' && (
                                 <>
-                                  <Button variant="success" onClick={() => handleStatusUpdate(r, 'Diluluskan')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Lulus</Button>
-                                  <Button variant="destructive" onClick={() => setReportActionDialog({ open: true, report: r, status: 'Ditolak' })} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Tolak</Button>
+                                  <Button variant="success" onClick={() => handleStatusUpdate(r, 'Diluluskan')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">{t('kpp:audit_approve', 'Lulus')}</Button>
+                                  <Button variant="destructive" onClick={() => setReportActionDialog({ open: true, report: r, status: 'Ditolak' })} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">{t('kpp:audit_reject', 'Tolak')}</Button>
                                 </>
                               )}
                               {r.file_url && r.file_url.length > 5 ? (
@@ -839,11 +847,11 @@ export function SemakanLaporanPage() {
       <Dialog open={actionDialog.open} onOpenChange={(o) => setActionDialog({ ...actionDialog, open: o })}>
         <DialogContent className="rounded-[3rem] p-10 max-w-md border-none shadow-2xl bg-card">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">{t('kpp:audit_confirm_action', 'Sahkan Tindakan')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
-              {actionDialog.type === 'REJECT_UNLOCK' ? 'Surat Penolakan (WAJIB isi alasan)' : 'Komen Rasmi JPP (Opsyenal)'}
+              {actionDialog.type === 'REJECT_UNLOCK' ? t('kpp:audit_rejection_reason', 'Surat Penolakan (WAJIB isi alasan)') : t('kpp:audit_reviewer_remarks', 'Komen Rasmi JPP (Opsyenal)')}
             </Label>
             <Textarea
               value={remarks}
@@ -853,8 +861,8 @@ export function SemakanLaporanPage() {
             />
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
-            <Button variant="ghost" onClick={() => setActionDialog({ open: false, type: null, data: null })} className="rounded-xl font-bold flex-1 h-12">Batal</Button>
-            <Button onClick={handleProgramAction} className="rounded-xl font-black flex-1 bg-slate-900 text-white h-12 shadow-xl shadow-slate-900/20">Sahkan</Button>
+            <Button variant="ghost" onClick={() => setActionDialog({ open: false, type: null, data: null })} className="rounded-xl font-bold flex-1 h-12">{t('common:cancel', 'Batal')}</Button>
+            <Button onClick={handleProgramAction} className="rounded-xl font-black flex-1 bg-slate-900 text-white h-12 shadow-xl shadow-slate-900/20">{t('common:confirm', 'Sahkan')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -863,11 +871,11 @@ export function SemakanLaporanPage() {
       <Dialog open={reportActionDialog.open} onOpenChange={(o) => setReportActionDialog({ ...reportActionDialog, open: o })}>
         <DialogContent className="rounded-[3rem] p-10 max-w-md border-none shadow-2xl bg-card">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan Dokumen</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">{t('kpp:audit_confirm_doc_action', 'Sahkan Tindakan Dokumen')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
-              Alasan Penolakan (Opsyenal tetapi digalakkan)
+              {t('kpp:audit_rejection_reason', 'Alasan Penolakan (Opsyenal tetapi digalakkan)')}
             </Label>
             <Textarea
               value={reportRemarks}
@@ -877,8 +885,8 @@ export function SemakanLaporanPage() {
             />
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
-            <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">Batal</Button>
-            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">Sahkan Tolak</Button>
+            <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">{t('common:cancel', 'Batal')}</Button>
+            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">{t('kpp:audit_reject', 'Sahkan Tolak')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Camera, Palette, Users, Save, RefreshCcw, RotateCcw,
   ShieldCheck, UserCog, Trophy, TrendingUp, AlertTriangle, ArrowRight, Check
@@ -31,6 +32,7 @@ const PRESET_COLORS = [
 ];
 
 export function UrusKelabPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const navigate = useNavigate();
   const { profile, refreshClubs, isPresident, selectedClubId, isKppExco, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -120,7 +122,7 @@ export function UrusKelabPage() {
         .eq('club_id', selectedClubId);
 
       if (error) throw error;
-      toast.success(`Merit kelab kitaran ${meritResetModal} berjaya diselaraskan.`);
+      toast.success(t('kpp:toast_merit_reset_success', 'Merit kelab kitaran berjaya diselaraskan.'));
       await createLog(
         selectedClubId, profile?.id, profile?.full_name,
         'RESET_MERIT',
@@ -164,7 +166,7 @@ export function UrusKelabPage() {
         .eq('club_id', selectedClubId);
       if (commErr) throw commErr;
 
-      toast.success(`Kohort berjaya direset untuk ${clubName}. Semua MT dan Presiden kini kembali kepada Ahli Biasa.`);
+      toast.success(t('kpp:toast_cohort_reset_success', 'Kohort berjaya direset. Semua MT dan Presiden kini kembali kepada Ahli Biasa.'));
       await createLog(
         selectedClubId, profile?.id, profile?.full_name,
         'RESET_KOHORT',
@@ -211,7 +213,7 @@ export function UrusKelabPage() {
       }
 
       await refreshClubs();
-      toast.success("Maklumat identiti & susunan kepimpinan berjaya disimpan.");
+      toast.success(t('kpp:toast_save_success', 'Maklumat identiti & susunan kepimpinan berjaya disimpan.'));
       await createLog(
         selectedClubId, profile?.id, profile?.full_name,
         'UPDATE_CLUB',
@@ -243,7 +245,7 @@ export function UrusKelabPage() {
       await supabase.from('clubs').update({ logo_url: publicUrl }).eq('id', clubData.id);
       setClubData((prev: any) => ({ ...prev, logo_url: publicUrl }));
       await refreshClubs();
-      toast.success("Logo kelab berjaya dikemaskini.");
+      toast.success(t('kpp:toast_upload_logo_success', 'Logo kelab berjaya dikemaskini.'));
       await createLog(
         selectedClubId, profile?.id, profile?.full_name,
         'UPDATE_CLUB',
@@ -270,10 +272,10 @@ export function UrusKelabPage() {
       {/* ── HEADER ── */}
       <header className="space-y-1.5">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-          Urus <span className="gradient-text">Profil Kelab</span>
+          {t('kpp:manage_club_profile', 'Urus Profil Kelab')}
         </h1>
         <p className="text-muted-foreground font-medium text-xs sm:text-sm max-w-xl leading-relaxed">
-          Kemaskini identiti visual, warna rasmi, dan namakan jawatan Majlis Tertinggi bagi persatuan anda.
+          {t('kpp:manage_club_subtitle', 'Kemaskini identiti visual, warna rasmi, dan namakan jawatan Majlis Tertinggi bagi persatuan anda.')}
         </p>
       </header>
 
@@ -284,14 +286,14 @@ export function UrusKelabPage() {
           <Card className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
             <CardHeader className="border-b border-border/60 bg-muted/20 p-5">
               <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-                <Palette className="w-4 h-4 text-primary" /> Identiti & Jenama Kelab
+                <Palette className="w-4 h-4 text-primary" /> {t('kpp:club_identity_brand', 'Identiti & Jenama Kelab')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-6">
 
               {/* REAL LIVE CARD PREVIEW */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Pratonton Kad Direktori</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">{t('kpp:card_preview', 'Pratonton Kad Direktori')}</Label>
                 <div
                   className="rounded-2xl p-5 shadow-sm border border-border/60 transition-all flex flex-col gap-3 relative overflow-hidden"
                   style={{ backgroundColor: clubData?.theme_color || '#0f172a' }}
@@ -338,13 +340,13 @@ export function UrusKelabPage() {
                   </label>
                 </div>
                 <p className="text-[11px] font-semibold text-muted-foreground">
-                  {uploading ? 'Memuat naik...' : 'Klik untuk tukar logo'}
+                  {uploading ? t('common:uploading', 'Memuat naik...') : t('kpp:change_logo', 'Klik untuk tukar logo')}
                 </p>
               </div>
 
               {/* WARNA TEMA & PRESETS */}
               <div className="space-y-3">
-                <Label className="text-xs font-semibold text-foreground">Warna Rasmi Persatuan</Label>
+                <Label className="text-xs font-semibold text-foreground">{t('kpp:official_color', 'Warna Rasmi Persatuan')}</Label>
                 <div className="flex items-center gap-3 p-2 rounded-xl bg-muted/30 border border-border/60">
                   <input
                     type="color"
@@ -380,7 +382,7 @@ export function UrusKelabPage() {
 
               {/* PENERANGAN / SLOGAN */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-foreground">Penerangan / Misi Kelab</Label>
+                <Label className="text-xs font-semibold text-foreground">{t('kpp:club_description_mission', 'Penerangan / Misi Kelab')}</Label>
                 <Textarea
                   value={clubData?.description || ''}
                   onChange={(e) => setClubData({ ...clubData, description: e.target.value })}
@@ -397,7 +399,7 @@ export function UrusKelabPage() {
             <Card className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
               <CardHeader className="border-b border-border/60 bg-rose-500/5 p-4">
                 <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  <RefreshCcw className="w-3.5 h-3.5" /> Penyelarasan Kitaran Merit
+                  <RefreshCcw className="w-3.5 h-3.5" /> {t('kpp:merit_cycle_alignment', 'Penyelarasan Kitaran Merit')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-3">
@@ -431,7 +433,7 @@ export function UrusKelabPage() {
             <Card className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
               <CardHeader className="border-b border-border/60 bg-amber-500/5 p-4">
                 <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  <RotateCcw className="w-3.5 h-3.5" /> Peralihan Kohort Kepimpinan
+                  <RotateCcw className="w-3.5 h-3.5" /> {t('kpp:leadership_cohort_transition', 'Peralihan Kohort Kepimpinan')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-3">
@@ -447,7 +449,7 @@ export function UrusKelabPage() {
                   onClick={() => setShowKohortModal(true)}
                   className="w-full h-9 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/10"
                 >
-                  Buka Pengesahan Reset Kohort
+                  {t('kpp:open_cohort_reset', 'Buka Pengesahan Reset Kohort')}
                 </Button>
               </CardContent>
             </Card>
@@ -481,8 +483,8 @@ export function UrusKelabPage() {
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-bold text-foreground">Majlis Tertinggi (MT)</CardTitle>
-                  <p className="text-[11px] text-muted-foreground">Jawatan utama persatuan (Presiden, Naib, Setiausaha, Bendahari)</p>
+                  <CardTitle className="text-sm font-bold text-foreground">{t('kpp:high_council_title', 'Majlis Tertinggi (MT)')}</CardTitle>
+                  <p className="text-[11px] text-muted-foreground">{t('kpp:high_council_desc', 'Jawatan utama persatuan (Presiden, Naib, Setiausaha, Bendahari)')}</p>
                 </div>
               </div>
               <span className="text-xs font-mono tabular-nums text-muted-foreground">{mtMembers.length} Jawatan</span>
@@ -492,14 +494,14 @@ export function UrusKelabPage() {
                 mtMembers.map(m => (
                   <div key={m.full_name} className="flex flex-col md:flex-row gap-3 p-3.5 bg-muted/20 border border-border/60 rounded-2xl items-center">
                     <div className="flex-1 w-full space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Nama Pemegang Jawatan</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:office_holder_name', 'Nama Pemegang Jawatan')}</Label>
                       <div className="h-9 rounded-xl bg-card border border-border/60 font-bold text-xs flex items-center px-3 text-foreground truncate">
                         {m.full_name}
                       </div>
                     </div>
 
                     <div className="w-full md:w-1/3 shrink-0 space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Kategori</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:committee_category', 'Kategori')}</Label>
                       <Select
                         value={m.category}
                         onValueChange={(val) => handleCommitteeChange(m.full_name, 'category', val)}
@@ -515,7 +517,7 @@ export function UrusKelabPage() {
                     </div>
 
                     <div className="w-full md:w-2/5 shrink-0 space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Gelaran Jawatan</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:position_title', 'Gelaran Jawatan')}</Label>
                       <Input
                         value={m.position_title}
                         onChange={(e) => handleCommitteeChange(m.full_name, 'position_title', e.target.value)}
@@ -545,8 +547,8 @@ export function UrusKelabPage() {
                   <UserCog className="w-4 h-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-bold text-foreground">Barisan Exco & AJK</CardTitle>
-                  <p className="text-[11px] text-muted-foreground">Ketua biro, publisiti, teknikal, dan penyelaras program</p>
+                  <CardTitle className="text-sm font-bold text-foreground">{t('kpp:exco_committee_title', 'Barisan Exco & AJK')}</CardTitle>
+                  <p className="text-[11px] text-muted-foreground">{t('kpp:exco_committee_desc', 'Ketua biro, publisiti, teknikal, dan penyelaras program')}</p>
                 </div>
               </div>
               <span className="text-xs font-mono tabular-nums text-muted-foreground">{excoMembers.length} Orang</span>
@@ -556,14 +558,14 @@ export function UrusKelabPage() {
                 excoMembers.map(m => (
                   <div key={m.full_name} className="flex flex-col md:flex-row gap-3 p-3.5 bg-muted/20 border border-border/60 rounded-2xl items-center">
                     <div className="flex-1 w-full space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Nama Pemegang Jawatan</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:office_holder_name', 'Nama Pemegang Jawatan')}</Label>
                       <div className="h-9 rounded-xl bg-card border border-border/60 font-bold text-xs flex items-center px-3 text-foreground truncate">
                         {m.full_name}
                       </div>
                     </div>
 
                     <div className="w-full md:w-1/3 shrink-0 space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Kategori</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:committee_category', 'Kategori')}</Label>
                       <Select
                         value={m.category}
                         onValueChange={(val) => handleCommitteeChange(m.full_name, 'category', val)}
@@ -579,7 +581,7 @@ export function UrusKelabPage() {
                     </div>
 
                     <div className="w-full md:w-2/5 shrink-0 space-y-1">
-                      <Label className="text-[11px] font-semibold text-muted-foreground">Gelaran Jawatan</Label>
+                      <Label className="text-[11px] font-semibold text-muted-foreground">{t('kpp:position_title', 'Gelaran Jawatan')}</Label>
                       <Input
                         value={m.position_title}
                         onChange={(e) => handleCommitteeChange(m.full_name, 'position_title', e.target.value)}
@@ -614,7 +616,7 @@ export function UrusKelabPage() {
             </div>
             <div>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tetapan Profil</p>
-              <p className="text-xs font-bold text-foreground">Sedia untuk disimpan?</p>
+              <p className="text-xs font-bold text-foreground">{t('kpp:ready_to_save', 'Sedia untuk disimpan?')}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -624,7 +626,7 @@ export function UrusKelabPage() {
               size="sm"
               className="rounded-xl h-9 px-3.5 text-xs font-semibold border-border hover:bg-muted"
             >
-              Reset
+              {t('kpp:reset', 'Reset')}
             </Button>
             <Button
               onClick={handleSaveAll}
@@ -632,7 +634,7 @@ export function UrusKelabPage() {
               size="sm"
               className="rounded-xl h-9 px-5 text-xs font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
             >
-              {saving ? 'Menyimpan...' : 'Simpan Semua'}
+              {saving ? t('kpp:saving', 'Menyimpan...') : t('kpp:save_all', 'Simpan Semua')}
             </Button>
           </div>
         </div>
