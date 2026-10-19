@@ -13,6 +13,7 @@ import {
   CheckCircle2, X, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ export interface PolyBusiness {
 
 
 // ── Product Card ───────────────────────────────────────────────────────────────
-function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { product: PolyProduct; index: number; isWishlisted: boolean; onToggleWishlist: (id: string) => void }) {
+function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { product: PolyProduct; index: number; isWishlisted: boolean; onToggleWishlist: (id: string) => void; key?: React.Key }) {
   const navigate = useNavigate();
   const FallbackIcon = CATEGORY_ICON_MAP[product.category] || Package;
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= 5;
@@ -174,7 +175,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
 }
 
 // ── Business Card ──────────────────────────────────────────────────────────────
-function BusinessCard({ biz }: { biz: PolyBusiness }) {
+function BusinessCard({ biz }: { biz: PolyBusiness; key?: React.Key }) {
   const navigate = useNavigate();
   return (
     <motion.div
@@ -199,7 +200,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness }) {
 }
 
 // ── In-Feed Ad Card ────────────────────────────────────────────────────────────
-function InFeedAdCard({ ad }: { ad: PolyAd }) {
+function InFeedAdCard({ ad }: { ad: PolyAd; key?: React.Key }) {
   const navigate = useNavigate();
   
   const handleClick = async () => {
@@ -394,6 +395,7 @@ export function ActiveVendorsSheet({
 
 // ── Ads Banner Carousel ────────────────────────────────────────────────────────
 function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: number; totalVendors: number; ads: PolyAd[] }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   // Filter active ads based on dates
   const activeAds = useMemo(() => {
@@ -440,15 +442,29 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
           </div>
 
           <h1 className="text-base sm:text-xl font-black text-white leading-tight mb-1">
-            Jelajah & Tempah Produk{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
-              Kampus Anda
-            </span>
+            {t('polymart_title', { defaultValue: 'PolyMart — Pasaran Siswa Kampus' })}
           </h1>
 
           <p className="text-[10px] sm:text-[11px] text-white/60 font-medium mb-3 line-clamp-1">
             Tempah produk terus dari usahawan mahasiswa POLISAS.
           </p>
+
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => navigate('/polymart/troli')}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>{t('cart', { defaultValue: 'Troli Pesanan' })}</span>
+            </button>
+            <button
+              onClick={() => navigate('/polymart/pesanan-saya')}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-black flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>{t('my_orders', { defaultValue: 'Sejarah Pesanan Saya' })}</span>
+            </button>
+          </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {[
@@ -518,6 +534,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartHome() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { activeCategory, searchQuery } = usePolymart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -525,10 +542,11 @@ export function PolyMartHome() {
   const [products,  setProducts]  = useState<PolyProduct[]>([]);
   const [businesses, setBusinesses] = useState<PolyBusiness[]>([]);
   const [ads,       setAds]       = useState<PolyAd[]>([]);
-  const [loading,   setLoading]   = useState(true);
+  const [loading,   setLoading]   = useState(() => typeof window === 'undefined' ? false : true);
   const [sortBy,    setSortBy]    = useState<'newest' | 'popular' | 'price_asc' | 'price_desc' | 'rating'>('newest');
   const [showAllVendors, setShowAllVendors] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string | null>(() => {
+    if (typeof window === 'undefined' || !window?.location?.search) return null;
     const params = new URLSearchParams(window.location.search);
     return params.get('vendor');
   });
@@ -761,6 +779,30 @@ export function PolyMartHome() {
   if (loading) {
     return (
       <div className="space-y-5 animate-pulse">
+        {/* Quick Navigation Capsule */}
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-bold text-foreground">{t('polymart_title')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/polymart/troli')}
+              className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>{t('cart')}</span>
+            </button>
+            <button
+              onClick={() => navigate('/polymart/pesanan-saya')}
+              className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>{t('my_orders')}</span>
+            </button>
+          </div>
+        </div>
+
         {/* Hero banner skeleton */}
         <div className="h-36 sm:h-44 w-full rounded-3xl bg-muted/40 border border-border/40" />
 
@@ -807,6 +849,30 @@ export function PolyMartHome() {
 
   return (
     <div className="space-y-5">
+      {/* Quick Navigation Capsule */}
+      <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50">
+        <div className="flex items-center gap-2">
+          <ShoppingBag className="w-4 h-4 text-amber-500" />
+          <span className="text-xs font-bold text-foreground">{t('polymart_title')}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/polymart/troli')}
+            className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>{t('cart')}</span>
+          </button>
+          <button
+            onClick={() => navigate('/polymart/pesanan-saya')}
+            className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+          >
+            <Package className="w-3.5 h-3.5" />
+            <span>{t('my_orders')}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Hero / Ads Carousel */}
       {activeCategory === 'all' && !searchQuery && !vendorFilter && (
         <HeroBanner totalProducts={totalProducts} totalVendors={totalVendors} ads={ads} />

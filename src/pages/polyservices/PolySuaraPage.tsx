@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -169,6 +170,7 @@ export function PolySuaraPage({
   initialActiveConfession,
   initialMyConfessions,
 }: PolySuaraPageProps = {}) {
+  const { t } = useTranslation(['services', 'common']);
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
   const { isSubscribed, requestPermission, unsubscribe } = usePushNotifications();
@@ -179,7 +181,7 @@ export function PolySuaraPage({
   const [userUpvotes, setUserUpvotes] = useState<Set<string>>(new Set());
   const [userDownvotes, setUserDownvotes] = useState<Set<string>>(new Set());
   const [confessionReactions, setConfessionReactions] = useState<Record<string, Array<{ reaction_type: string; user_id?: string }>>>({});
-  const [loading, setLoading] = useState(!initialConfessions);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : !initialConfessions);
   const [moduleEnabled, setModuleEnabled] = useState(true);
 
   // Pagination state
@@ -1612,12 +1614,15 @@ export function PolySuaraPage({
 
       <div className="max-w-2xl mx-auto px-4 pt-6 relative z-10 pb-32">
         <div className="mb-8 flex flex-col">
+          <div className="text-xs font-semibold text-rose-500 uppercase tracking-wider mb-1">
+            {t('services:moderated_community', 'Komuniti Mahasiswa Politeknik Terkawal')}
+          </div>
           <h1 className="text-4xl font-black text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
             Poly<span className="text-rose-500">Suara</span>
             <Ghost className="w-8 h-8 text-rose-500 animate-pulse" />
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            Ruang selamat untuk meluahkan perasaan. 100% Rahsia.
+            {t('services:polysuara_title', 'PolySuara — Suara Siswa & Forum Wacana')} • Ruang selamat untuk meluahkan perasaan. 100% Rahsia.
           </p>
         </div>
 
@@ -1643,19 +1648,19 @@ export function PolySuaraPage({
               className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
               role="button"
               tabIndex={0}
-              aria-label="Tulis luahan kampus baharu"
+              aria-label={t('services:start_discussion', 'Mulakan Perbincangan')}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
                   ✍️
                 </div>
                 <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-medium truncate">
-                  Ada luahan atau rahsia kampus? Kongsi secara rahsia...
+                  {t('services:start_discussion', 'Mulakan Perbincangan')} — Ada luahan atau rahsia kampus?
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:bg-rose-500 group-hover:text-white transition-all">
-                  Luahkan
+                  {t('services:post_comment', 'Luahkan')}
                 </span>
               </div>
             </div>
@@ -1809,7 +1814,9 @@ export function PolySuaraPage({
                       {showPoll && (
                         <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
                           <div className="flex justify-between items-center mb-3">
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Pilihan Undian</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                              {t('services:poll_question', 'Undian Pendapat Mahasiswa')}
+                            </span>
                             <button
                               type="button"
                               onClick={() => setIsMultipleChoice(!isMultipleChoice)}
@@ -1914,6 +1921,13 @@ export function PolySuaraPage({
                 ))}
               </div>
             )}
+
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-rose-500" />
+                {t('services:forum_discussions', 'Topik Perbincangan Pelajar')}
+              </h2>
+            </div>
 
             <div className="space-y-4">
               {loading ? (
@@ -2635,7 +2649,7 @@ export function PolySuaraPage({
 
                     <input
                       type="text"
-                      placeholder="Tulis ulasan sulit anda..."
+                      placeholder={t('services:post_comment', 'Hantar Pandangan') + '...'}
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       className="flex-1 bg-transparent px-2 py-1 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
@@ -2647,7 +2661,8 @@ export function PolySuaraPage({
                       type="submit"
                       disabled={!newCommentText.trim() || submittingComment}
                       className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-500 w-8 h-8 rounded-full font-bold transition-all shrink-0 flex items-center justify-center shadow-xs hover:shadow-rose-500/20"
-                      aria-label="Hantar ulasan"
+                      aria-label={t('services:post_comment', 'Hantar Pandangan')}
+                      title={t('services:post_comment', 'Hantar Pandangan')}
                     >
                       {submittingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                     </button>

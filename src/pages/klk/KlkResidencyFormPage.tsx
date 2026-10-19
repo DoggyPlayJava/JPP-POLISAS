@@ -3,6 +3,7 @@
 // Standalone page — boleh dicapai dari notifikasi / direct link
 // ============================================================
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { MapPin, Home, Building2, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 export function KlkResidencyFormPage() {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile, user } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
@@ -159,7 +161,9 @@ export function KlkResidencyFormPage() {
           </button>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Exco Kediaman Luar Kampus</p>
-            <h1 className="text-lg font-black text-white leading-tight">Deklarasi Status Kediaman</h1>
+            <h1 className="text-lg font-black text-white leading-tight">
+              {t('housing:declare_residence', 'Hantar Deklarasi Kediaman Luar Kampus')}
+            </h1>
           </div>
         </motion.div>
 
@@ -278,7 +282,7 @@ export function KlkResidencyFormPage() {
 
                   {/* Editable fields */}
                   <FieldTextarea
-                    label="Alamat Kediaman" required
+                    label={t('housing:emergency_contact_address', 'Alamat Kecemasan Tempatan')} required
                     value={alamat} onChange={setAlamat}
                     placeholder="Contoh: No. 12, Jalan Semambu 1..."
                   />
@@ -303,6 +307,10 @@ export function KlkResidencyFormPage() {
                       placeholder="Nama kawasan..."
                     />
                   )}
+
+                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                    <span className="font-bold">{t('housing:landlord_contact', 'Maklumat Tuan Rumah Sah')}:</span> Sila simpan salinan perjanjian dan nombor telefon pemilik kediaman untuk rujukan kecemasan Exco.
+                  </div>
 
                   <FieldTextarea
                     label="Cadangan / Penambahbaikan"

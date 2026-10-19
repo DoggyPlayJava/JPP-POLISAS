@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -214,6 +215,7 @@ async function extractCgpaFromPdf(file: File) {
 
 // ─── Main CGPA Page ───────────────────────────────────────────
 export function AkademikCgpa() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   const fileRef     = useRef<HTMLInputElement>(null);
 
@@ -442,9 +444,11 @@ export function AkademikCgpa() {
       {/* Header */}
       <div>
         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">HPNM / CGPA</h1>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          {t('akademik:gpa_calculator', 'Kalkulator HPA & HPNM')}
+        </h1>
         <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
-          Rekod dan pantau prestasi akademik anda dari semester ke semester
+          {t('akademik:module_subtitle', 'Rekod dan pantau prestasi akademik anda dari semester ke semester')}
         </p>
       </div>
 
@@ -765,6 +769,26 @@ export function AkademikCgpa() {
               <p className="text-[9px] text-slate-500 dark:text-white/30 font-medium mt-0.5">{item.range}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── TARGET GRADUATION CGPA & CREDIT HOURS ────────────── */}
+      <div className="rounded-2xl border border-indigo-200/80 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            {t('akademik:target_cgpa', 'Sasaran HPNM Graduasi')}
+          </p>
+          <p className="text-xs text-slate-600 dark:text-white/60 font-medium mt-0.5">
+            Anggarkan sasaran pencapaian semester berdasarkan jumlah {t('akademik:credit_hours', 'Jam Kredit')}.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-indigo-200/60 dark:border-indigo-500/30">
+            {t('akademik:credit_hours', 'Jam Kredit')}: 18
+          </span>
+          <span className="text-xs font-black text-indigo-600 dark:text-indigo-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-indigo-200/60 dark:border-indigo-500/30">
+            {t('akademik:target_cgpa', 'Sasaran HPNM Graduasi')}: 3.75
+          </span>
         </div>
       </div>
 

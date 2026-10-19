@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { 
   Home, Plus, X, Search, MapPin, ChevronLeft, ArrowRight, 
   Phone, Heart, Filter, Calculator, Map, List, CheckCircle2, Navigation, Menu, Users, MessageCircle, ShieldCheck, HelpCircle
@@ -34,10 +35,11 @@ const formatWhatsApp = (phone: string) => {
 };
 
 export function PolyRentPage() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
   const [moduleEnabled, setModuleEnabled] = useState(true);
 
   // Tour
@@ -309,13 +311,25 @@ export function PolyRentPage() {
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <motion.div style={{ opacity: headerOpacity, y: headerY }}>
             <div className="inline-block px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-[9px] uppercase tracking-widest mb-4">
-              PolyRent by JPP POLISAS
+              {t('polyrent_title', { defaultValue: 'PolyRent — Tempahan Aset & Peralatan' })}
             </div>
             
-            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-8">
+            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
               Cari Kawan Sewa.<br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">Lebih Jimat.</span>
             </h1>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] font-bold">
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('rent_asset', { defaultValue: 'Tempah Peralatan / Ruang' })}
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('rental_duration', { defaultValue: 'Tempoh Sewaan (Jam/Hari)' })}
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('equipment_condition', { defaultValue: 'Status Keadaan Peralatan' })}
+              </span>
+            </div>
           </motion.div>
           
           {/* Parallax Glassmorphic Search Bar */}

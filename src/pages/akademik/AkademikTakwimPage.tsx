@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +16,7 @@ import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
 import { MyTimetableView } from '@/components/takwim/MyTimetableView';
 
 export function AkademikTakwimPage() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile, userClubIds } = useAuth();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab')?.toLowerCase() === 'pusat' ? 'PUSAT' : 'PERSONAL';
@@ -78,7 +80,9 @@ export function AkademikTakwimPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Takwim POLISAS</h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{INSTITUSI_LABEL} · Berpusat · {sesi}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+              {t('akademik:exam_schedule', 'Kalendar Peperiksaan Rasmi')} · {INSTITUSI_LABEL} · {sesi}
+            </p>
           </div>
         </div>
       </motion.div>
@@ -109,7 +113,7 @@ export function AkademikTakwimPage() {
           )}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Takwim Rasmi POLISAS & Kelab</span>
+          <span>{t('akademik:exam_schedule', 'Kalendar Peperiksaan Rasmi')} & Kelab</span>
         </button>
       </div>
 
