@@ -682,7 +682,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   KEMAS KINI MASA-NYATA
                 </span>
                 <span className="text-xs text-slate-500 dark:text-white/50 font-bold uppercase tracking-wider">
-                  {t('stage_presentation')}
+                  EMS STAGE MODE • {t('stage_presentation')}
                 </span>
               </div>
               <h1 className="text-xl md:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-400 [text-wrap:balance]">

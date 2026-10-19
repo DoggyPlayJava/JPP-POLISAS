@@ -1760,7 +1760,7 @@ export function EmsJuryPortalPage() {
                     ) : (
                       <>
                         <Send className="w-3.5 h-3.5" />
-                        <span>{t('submit_score')}</span>
+                        <span>{t('submit_score', 'Sahkan & Hantar Markah')}</span>
                       </>
                     )}
                   </button>

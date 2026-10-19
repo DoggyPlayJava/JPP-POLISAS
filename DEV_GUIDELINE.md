@@ -4509,19 +4509,38 @@ Fungsi `detectLanguage()` dalam `src/lib/i18n.ts` menentukan bahasa permulaan me
    Fungsi penukaran bahasa `changeLanguage(lang)` mengemas kini `document.documentElement.lang = lang` bagi menjamin aksesibiliti (*screen readers*) serta mematuhi piawaian enjin carian W3C.
 
 ### 36.3 Struktur Ruang Nama Kamus (Translation Namespaces)
-Semua fail terjemahan diuruskan secara modular di bawah folder `src/locales/`:
+Semua fail terjemahan diuruskan secara modular di bawah folder `src/locales/` merangkumi 17 ruang nama domain menyeluruh:
+
+| Namespace | Skop & Modul Berkaitan | Contoh Kunci Terjemahan |
+|---|---|---|
+| `common` | Tindakan sejagat sistem (Simpan, Batal, Padam, status borang, pagination) | `save`, `cancel`, `loading`, `error` |
+| `auth` | Log masuk SSO, pengesahan no. matrik/IC, kata laluan, toast sekuriti | `login_title`, `matric_or_ic`, `password`, `invalid_credentials` |
+| `nav` | Menu navigasi, bar sisi (Sidebar), bar atas (Header), breadcrumb, label tab | `nav_dashboard`, `nav_portal`, `nav_settings`, `switch_language` |
+| `settings` | Hab tetapan, penukar bahasa sistem, tema mod gelap/cerah | `language_section_title`, `language_section_desc`, `dark_mode` |
+| `portal` | Hab Siswa & Cockpit Pelajar Utama (SuperApp portal & landing page) | `portal_title`, `student_dashboard`, `quick_access`, `my_activities` |
+| `kpp` | e-KPP Pengurusan Kelab/Persatuan, direktori ahli, semakan laporan & takwim | `club_directory`, `register_club`, `annual_report`, `activity_calendar` |
+| `jpp` | Portal Pentadbiran HQ JPP, audit log sistem, pengumuman & urus pengguna | `admin_hq`, `system_logs`, `broadcast_announcement`, `user_directory` |
+| `keusahawanan` | e-Keusahawanan, terminal POS juruwang, inventori, onboarding usahawan siswa | `pos_terminal`, `inventory_management`, `vendor_onboarding`, `sales_report` |
+| `kebajikan` | e-Kebajikan, tiket aduan pelajar, agihan Food Bank, semakan kafeteria | `welfare_tickets`, `foodbank_distribution`, `report_complaint`, `cafeteria_audit` |
+| `karnival` | Karnival Tahunan POLISAS, sistem undian booth, papan skor langsung | `carnival_title`, `vote_booth`, `live_scoreboard`, `official_results` |
+| `ems` | Event Management System, markah juri digital, tiket/pas QR, e-sijil digital | `event_hub`, `jury_portal`, `submit_score`, `certificate_generator`, `audience_scanner` |
+| `makmp` | Majlis Anugerah Kecemerlangan POLISAS, matriks merit, portfolio, panel juri | `nomination_portal`, `award_categories`, `merit_matrix`, `panel_evaluation` |
+| `commerce` | PolyMart Marketplace siswa, PolyRent sewaan peralatan kampus | `polymart_title`, `cart`, `checkout`, `my_orders`, `polyrent_title`, `rent_asset` |
+| `services` | PolyMaps GPS & navigasi kampus, PolySuara forum luahan & undian mahasiswa | `polymaps_title`, `search_locations`, `route_directions`, `polysuara_title`, `poll_question` |
+| `akademik` | e-Akademik, matriks jadual waktu kuliah, kalkulator HPNM, takwim peperiksaan | `module_title`, `timetable_grid`, `current_slot`, `gpa_calculator`, `exam_schedule` |
+| `housing` | e-Kediaman Luar Kampus (KLK), direktori rumah sewa berdaftar, deklarasi kediaman | `klk_title`, `browse_rentals`, `monthly_rent`, `declare_residence` |
+| `supsas` | Kejohanan Sukan Tahunan POLISAS, jadual perlawanan, papan pungutan pingat | `module_title`, `fixtures_results`, `medal_tally`, `gold_medals`, `championship_champion` |
+
 ```
 src/locales/
-├── en/                       ← Bahasa Inggeris
-│   ├── common.json           ← Tindakan sejagat (Simpan, Batal, Padam, status borang)
-│   ├── auth.json             ← Log masuk SSO, set semula kata laluan, No. Matrik, placeholder
-│   ├── nav.json              ← Menu navigasi, sidebar, breadcrumb, label tab
-│   └── settings.json         ← Hab tetapan, tajuk seksyen bahasa & pilihan tema
-└── ms/                       ← Bahasa Melayu
-    ├── common.json           ← Tindakan sejagat versi Bahasa Melayu
-    ├── auth.json             ← Log masuk SSO versi Bahasa Melayu
-    ├── nav.json              ← Menu navigasi versi Bahasa Melayu
-    └── settings.json         ← Hab tetapan versi Bahasa Melayu
+├── en/                       ← Bahasa Inggeris (17 fail JSON kamus lengkap)
+│   ├── common.json, auth.json, nav.json, settings.json, portal.json, kpp.json, jpp.json,
+│   ├── keusahawanan.json, kebajikan.json, karnival.json, ems.json, makmp.json,
+│   └── commerce.json, services.json, akademik.json, housing.json, supsas.json
+└── ms/                       ← Bahasa Melayu (17 fail JSON kamus lengkap dengan 100% key parity)
+    ├── common.json, auth.json, nav.json, settings.json, portal.json, kpp.json, jpp.json,
+    ├── keusahawanan.json, kebajikan.json, karnival.json, ems.json, makmp.json,
+    └── commerce.json, services.json, akademik.json, housing.json, supsas.json
 ```
 
 ### 36.4 Panduan Pembangun: Menambah Terjemahan untuk Modul Baharu
