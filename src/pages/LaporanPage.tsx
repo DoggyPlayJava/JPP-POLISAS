@@ -367,11 +367,25 @@ export function LaporanPage() {
             <Select value={reportType} onValueChange={setReportType}>
               <SelectTrigger className="rounded-xl bg-muted/40 h-12"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {availableDocTypes.map(t => (
-                  <SelectItem key={t.value} value={t.value}>
-                    <div className="flex items-center gap-2"><t.icon className="w-4 h-4" />{t.label}</div>
-                  </SelectItem>
-                ))}
+                {availableDocTypes.map(doc => {
+                  const getDocLabel = (val: string) => {
+                    switch (val) {
+                      case 'Laporan Aktiviti': return t('kpp:monthly_report', 'Laporan Bulanan (Auto-Jana)');
+                      case 'Laporan Kewangan': return t('kpp:report_type_finance', 'Laporan Kewangan');
+                      case 'Takwim Aktiviti': return t('kpp:report_type_takwim', 'Takwim Aktiviti');
+                      case 'Profil Ahli': return t('kpp:report_type_profile', 'Profil Ahli Kelab');
+                      case 'Struktur Jawatan': return t('kpp:report_type_structure', 'Struktur Jawatan');
+                      case 'Carta Organisasi': return t('kpp:report_type_org_chart', 'Carta Organisasi');
+                      case 'Perlembagaan': return t('kpp:report_type_constitution', 'Perlembagaan Kelab (Presiden)');
+                      default: return doc.label;
+                    }
+                  };
+                  return (
+                    <SelectItem key={doc.value} value={doc.value}>
+                      <div className="flex items-center gap-2"><doc.icon className="w-4 h-4" />{getDocLabel(doc.value)}</div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -381,11 +395,11 @@ export function LaporanPage() {
                 <div className="flex gap-2 bg-muted/40 p-1 rounded-xl">
                   <button type="button" onClick={() => setAktivitiMode('auto')}
                     className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'auto' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
-                    Jana AutoPDF
+                    {t('kpp:auto_generate_pdf', 'Jana AutoPDF')}
                   </button>
                   <button type="button" onClick={() => setAktivitiMode('manual')}
                     className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'manual' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
-                    Muat Naik Manual
+                    {t('kpp:manual_upload', 'Muat Naik Manual')}
                   </button>
                 </div>
 
@@ -418,7 +432,7 @@ export function LaporanPage() {
                       <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
                         <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
                           className="accent-violet-500 w-3.5 h-3.5" />
-                        Gabung bulan
+                        {t('kpp:combine_months', 'Gabung bulan')}
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -427,7 +441,7 @@ export function LaporanPage() {
                         <Input type="month" value={endMonth} onChange={e => setEndMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
                       )}
                     </div>
-                    <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? 'Memuatkan...' : 'Pratonton & Jana'}</Button>
+                    <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? t('common:loading') : t('kpp:preview_and_generate', 'Pratonton & Jana')}</Button>
                   </form>
                 )}
               </div>
@@ -455,7 +469,7 @@ export function LaporanPage() {
         <div className="lg:col-span-3 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-black">{t('kpp:review_reports')}</h2>
-            <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> Segarkan</Button>
+            <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> {t('kpp:audit_refresh_data', 'Segarkan')}</Button>
           </div>
           
           <div className="flex gap-2 mb-4 bg-muted/30 p-1 rounded-2xl w-full max-w-[300px]">
@@ -465,7 +479,7 @@ export function LaporanPage() {
                 onClick={() => setFilterTab('aktif')}
                 className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
              >
-                Semasa
+                {t('kpp:current_reports', 'Semasa')}
              </Button>
              <Button
                 variant={filterTab === 'arkib' ? 'default' : 'ghost'}
@@ -473,7 +487,7 @@ export function LaporanPage() {
                 onClick={() => setFilterTab('arkib')}
                 className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
              >
-                Arkib Laporan
+                {t('kpp:report_archive', 'Arkib Laporan')}
              </Button>
           </div>
 

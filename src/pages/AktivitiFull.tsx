@@ -419,16 +419,16 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             <Activity className="w-8 h-8 text-primary animate-pulse" />
           </EmptyMedia>
           <EmptyHeader className="relative z-10">
-            <EmptyTitle className="text-xl font-black uppercase tracking-[0.2em] gradient-text">Tiada Aktiviti Ditemui</EmptyTitle>
+            <EmptyTitle className="text-xl font-black uppercase tracking-[0.2em] gradient-text">{t('kpp:no_activities_found')}</EmptyTitle>
             <EmptyDescription className="text-sm font-medium text-muted-foreground/80 max-w-[280px] leading-relaxed">
               {filterStatus === 'semua'
-                ? 'Kelab anda baru dan masih segar? Mula rekodkan aktiviti spontan anda di sini.'
+                ? t('kpp:no_activities_desc')
                 : `Nampaknya tiada aktiviti dengan status '${filterStatus}' buat masa ini.`}
             </EmptyDescription>
           </EmptyHeader>
           {canManage && (
             <Button onClick={openCreate} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 px-6">
-              Mula Rekod Aktiviti
+              {t('kpp:record_activity')}
             </Button>
           )}
         </Empty>
@@ -471,7 +471,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
           <div className="p-8 space-y-6 overflow-y-auto flex-1">
             <DialogHeader>
               <DialogTitle className="text-3xl font-black tracking-tighter">
-                {editTarget ? 'Kemaskini Aktiviti' : 'Aktiviti Baharu'}
+                {editTarget ? t('common:edit') : t('kpp:new_activity')}
               </DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">
                 Aktiviti spontan yang tidak memerlukan kertas kerja rasmi
@@ -481,7 +481,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             <div className="space-y-5">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                  Tajuk Aktiviti *
+                  {t('kpp:activity_title')} *
                 </Label>
                 <Input
                   value={form.title}
@@ -494,7 +494,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                    Tarikh Mula *
+                    {t('common:start_date')} *
                   </Label>
                   <Input
                     type="date"
@@ -505,7 +505,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                    Tarikh Tamat
+                    {t('common:end_date')}
                   </Label>
                   <Input
                     type="date"
@@ -518,7 +518,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                  Lokasi / Tempat
+                  {t('kpp:activity_venue')}
                 </Label>
                 <Input
                   value={form.venue}
@@ -531,17 +531,17 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                    Status
+                    {t('common:status')}
                   </Label>
                   <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
                     <SelectTrigger className="h-12 rounded-2xl bg-muted/40 border-border/60 font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="perancangan">Perancangan</SelectItem>
-                      <SelectItem value="aktif">Aktif</SelectItem>
-                      <SelectItem value="selesai">Selesai</SelectItem>
-                      <SelectItem value="ditangguh">Ditangguh</SelectItem>
+                      <SelectItem value="perancangan">{t('kpp:event_status_upcoming')}</SelectItem>
+                      <SelectItem value="aktif">{t('kpp:event_status_ongoing')}</SelectItem>
+                      <SelectItem value="selesai">{t('kpp:event_status_completed')}</SelectItem>
+                      <SelectItem value="ditangguh">{t('kpp:event_status_postponed')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -705,14 +705,14 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               onClick={() => setDialogOpen(false)}
               className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest"
             >
-              Batal
+              {t('common:cancel')}
             </Button>
             <Button
               onClick={handleSave}
               disabled={saving || uploading}
               className="flex-[2] h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-primary text-white shadow-xl hover:scale-105 transition-all"
             >
-              {uploading ? 'Memuat naik gambar...' : saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan Aktiviti'}
+              {uploading ? t('common:loading') : saving ? t('common:saving') : editTarget ? t('common:update') : t('common:save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -874,6 +874,7 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
 // Hanya MT & Presiden boleh buat — semua boleh nampak
 // ══════════════════════════════════════════════════════════════════════════════
 function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const navigate = useNavigate();
   const { allowAiBudget } = useAiSettings();
   const [activities, setActivities] = useState<any[]>([]);
@@ -1135,7 +1136,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           <CalendarDays className="w-10 h-10" />
         </EmptyMedia>
         <EmptyHeader>
-          <EmptyTitle className="text-sm font-black uppercase tracking-widest">Takwim Belum Dikemaskini</EmptyTitle>
+          <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:audit_no_programs', 'Takwim Belum Dikemaskini')}</EmptyTitle>
           <EmptyDescription className="text-xs">
             Presiden atau MT kelab anda belum mendaftarkan program rasmi dalam takwim.
           </EmptyDescription>
@@ -1158,7 +1159,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
             onClick={openCreate}
             className="w-full sm:w-auto bg-primary text-white rounded-full h-11 sm:h-12 px-6 shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
           >
-            <Plus className="mr-2 h-4 w-4" /> Program Baru
+            <Plus className="mr-2 h-4 w-4" /> {t('kpp:new_activity', 'Program Baru')}
           </Button>
         )}
         {canManage && !allowAddTakwim && (
@@ -1247,7 +1248,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           <div className="p-10 space-y-8 overflow-y-auto flex-1">
             <DialogHeader>
               <DialogTitle className="text-4xl font-black tracking-tighter">
-                {editTarget ? 'Kemaskini Program' : 'Program Baharu'}
+                {editTarget ? t('common:edit', 'Kemaskini Program') : t('kpp:new_activity', 'Program Baharu')}
               </DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">
                 Program rasmi memerlukan Kertas Kerja dan Post-Mortem
@@ -1257,7 +1258,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">
-                  Nama Program *
+                  {t('kpp:activity_title', 'Nama Program')} *
                 </Label>
                 <Input
                   value={form.title}
@@ -1269,7 +1270,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">Tarikh Mula *</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">{t('common:start_date', 'Tarikh Mula')} *</Label>
                   <div className="relative">
                     <Input type="date"
                       disabled={!!editTarget && form.status !== 'REQUEST_UNLOCK'}
@@ -1280,7 +1281,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">Tarikh Tamat</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">{t('common:end_date', 'Tarikh Tamat')}</Label>
                   <div className="relative">
                     <Input type="date"
                       disabled={!!editTarget && form.status !== 'REQUEST_UNLOCK'}
@@ -1294,7 +1295,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">Lokasi</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">{t('kpp:activity_venue', 'Lokasi')}</Label>
                   <Input value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })}
                     className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder="Tempat program..." />
                 </div>
@@ -1486,7 +1487,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           <DialogFooter className="p-8 bg-muted/20 border-t border-border shrink-0">
             <Button onClick={handleSave} disabled={saving}
               className="w-full bg-primary text-white rounded-2xl h-14 font-black text-sm uppercase tracking-widest shadow-xl">
-              {saving ? 'Diproses...' : 'Sahkan & Simpan'}
+              {saving ? t('common:saving', 'Diproses...') : t('common:save', 'Sahkan & Simpan')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1500,10 +1501,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center mb-4">
                 <Unlock size={28} />
               </div>
-              <DialogTitle className="text-3xl font-black">Mohon Unlock</DialogTitle>
+              <DialogTitle className="text-3xl font-black">{t('kpp:audit_unlock', 'Mohon Unlock')}</DialogTitle>
             </DialogHeader>
             <div className="py-5 space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground">Sebab Permohonan</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">{t('kpp:audit_rejection_reason', 'Sebab Permohonan')}</Label>
               <Textarea value={unlockReason} onChange={e => setUnlockReason(e.target.value)}
                 placeholder="Berikan alasan munasabah (cth: Perubahan tarikh exam)..."
                 className="rounded-[2rem] bg-slate-50 border-none min-h-[120px] p-6 font-bold" />
@@ -1511,10 +1512,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           </div>
           <DialogFooter className="gap-3 pt-2 shrink-0">
             <Button variant="ghost" onClick={() => { setUnlockDialogOpen(false); setUnlockReason(''); }}
-              className="rounded-2xl font-bold h-12 flex-1 bg-muted">Batal</Button>
+              className="rounded-2xl font-bold h-12 flex-1 bg-muted">{t('common:cancel', 'Batal')}</Button>
             <Button onClick={onConfirmUnlock} disabled={saving || !unlockReason.trim()}
               className="bg-indigo-600 text-white rounded-2xl h-12 flex-[2] font-black uppercase tracking-widest">
-              {saving ? 'Menghantar...' : 'Hantar Permohonan'}
+              {saving ? t('common:loading', 'Menghantar...') : t('kpp:submit_application', 'Hantar Permohonan')}
             </Button>
           </DialogFooter>
         </DialogContent>

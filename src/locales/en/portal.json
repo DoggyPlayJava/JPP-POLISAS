@@ -13,5 +13,21 @@
   "view_announcement": "View Details",
   "latest_updates": "Latest Updates",
   "emergency_contacts": "Campus Emergency Contacts",
-  "helpdesk": "Student Helpdesk & Support"
+  "helpdesk": "Student Helpdesk & Support",
+  "upcoming_deadlines": "Upcoming Deadlines",
+  "merit_balance": "Merit Points Balance",
+  "quick_links": "Quick Links",
+  "student_status": "Student Status",
+  "academic_session": "Academic Session",
+  "semester": "Semester",
+  "advisor_address": "Advisor Address",
+  "outstanding_members": "Outstanding Members",
+  "view_all_ranking": "View All Rankings",
+  "task_performance": "Task Performance",
+  "task_distribution": "Assigned Tasks Distribution",
+  "activity_status_lifecycle": "Activity Status Lifecycle",
+  "all_completed": "All Completed!",
+  "no_tasks": "No tasks at this time.",
+  "ai_analysis": "AI Analysis",
+  "system_logs": "System Logs"
 }

@@ -271,14 +271,14 @@ export function KelabPage() {
       >
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-tight">
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Direktori Rasmi Pelajar POLISAS</span>
+          <span>{t('kpp:official_student_directory', 'Direktori Rasmi Pelajar POLISAS')}</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-foreground text-balance">
           {t('kpp:club_directory')}
         </h1>
         <p className="text-muted-foreground font-medium max-w-xl text-sm sm:text-base leading-relaxed text-balance">
-          Pilih dan sertai persatuan minat anda di POLISAS untuk membina kemahiran kepimpinan, jaringan sosial, dan memupuk merit kokurikulum.
+          {t('kpp:club_directory_desc', 'Pilih dan sertai persatuan minat anda di POLISAS untuk membina kemahiran kepimpinan, jaringan sosial, dan memupuk merit kokurikulum.')}
         </p>
 
         {/* Had Keahlian Indicator */}
@@ -296,7 +296,7 @@ export function KelabPage() {
           </div>
           <span className="text-xs font-semibold text-muted-foreground">
             <strong className="font-mono tabular-nums text-foreground">{approvedCount}</strong> daripada{' '}
-            <strong className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</strong> kelab disertai
+            <strong className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</strong> {t('kpp:clubs_joined_count', 'kelab disertai')}
           </span>
         </div>
 
@@ -537,7 +537,7 @@ export function KelabPage() {
                                 }}
                                 className="flex-1 h-9 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/20"
                               >
-                                Mohon Pindah
+                                {t('kpp:request_transfer', 'Mohon Pindah')}
                               </Button>
                             );
                           }
@@ -551,7 +551,7 @@ export function KelabPage() {
                               }}
                               className="flex-1 h-9 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/20"
                             >
-                              Tarik Diri
+                              {t('kpp:leave_club', 'Tarik Diri daripada Kelab')}
                             </Button>
                           );
                         })()}
@@ -599,12 +599,12 @@ export function KelabPage() {
       {filteredClubs.length === 0 && !loading && (
         <div className="py-16 text-center space-y-3 bg-card rounded-3xl border border-dashed border-border/80 p-8 max-w-md mx-auto">
           <Search className="w-10 h-10 mx-auto text-muted-foreground/60" />
-          <h3 className="font-bold text-lg tracking-tight text-foreground">Tiada Kelab Ditemui</h3>
+          <h3 className="font-bold text-lg tracking-tight text-foreground">{t('kpp:no_clubs_found', 'Tiada Kelab Ditemui')}</h3>
           <p className="font-normal text-xs text-muted-foreground leading-relaxed">
             Tiada kelab yang sepadan dengan carian "{searchQuery}". Sila semak ejaan nama atau pilih tab kategori lain.
           </p>
           <Button variant="outline" size="sm" onClick={() => { setSearchQuery(''); setActiveTab('Semua'); }} className="rounded-xl mt-2 text-xs font-semibold">
-            Kosongkan Carian
+            {t('kpp:clear_search', 'Kosongkan Carian')}
           </Button>
         </div>
       )}
@@ -613,9 +613,9 @@ export function KelabPage() {
       <Dialog open={!!confirmClub} onOpenChange={(open) => { if (!open) { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); } }}>
         <DialogContent className="rounded-3xl max-w-md border-border/80 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-bold text-xl tracking-tight">Mohon Sertai Kelab</DialogTitle>
+            <DialogTitle className="font-bold text-xl tracking-tight">{t('kpp:apply_join_club', 'Mohon Sertai Kelab')}</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Hantar permohonan pendaftaran keahlian kepada pihak pengurusan kelab.
+              {t('kpp:apply_join_desc', 'Hantar permohonan pendaftaran keahlian kepada pihak pengurusan kelab.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -639,17 +639,17 @@ export function KelabPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground">Jenis Permohonan Peranan</Label>
+                <Label className="text-xs font-semibold text-foreground">{t('kpp:application_role_type', 'Jenis Permohonan Peranan')}</Label>
                 <Select value={applyRole} onValueChange={(r: UserRole) => setApplyRole(r)}>
                   <SelectTrigger className="h-11 rounded-xl bg-card border-border/80 font-medium w-full text-xs">
                     <SelectValue placeholder="Pilih peranan..." />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-border/80 shadow-xl">
                     <SelectItem value="CLUB_MEMBER" className="font-semibold text-xs py-2">
-                      Ahli Biasa (Keahlian Standard)
+                      {t('kpp:role_member_standard', 'Ahli Biasa (Keahlian Standard)')}
                     </SelectItem>
                     <SelectItem value="CLUB_PRESIDENT" className="font-semibold text-xs py-2">
-                      Presiden / Kepimpinan (Tertakluk Temuduga & Kelulusan JPP)
+                      {t('kpp:role_president_leadership', 'Presiden / Kepimpinan (Tertakluk Temuduga & Kelulusan JPP)')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -658,7 +658,7 @@ export function KelabPage() {
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-2.5">
                 <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Permohonan keahlian biasa akan disemak oleh Majlis Tertinggi kelab. Permohonan kepimpinan akan disaring oleh pihak Exco KPP JPP POLISAS.
+                  {t('kpp:membership_review_note', 'Permohonan keahlian biasa akan disemak oleh Majlis Tertinggi kelab. Permohonan kepimpinan akan disaring oleh pihak Exco KPP JPP POLISAS.')}
                 </p>
               </div>
 
@@ -681,7 +681,7 @@ export function KelabPage() {
               disabled={!!applying}
               className="rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {applying ? 'Menghantar...' : 'Hantar Permohonan'}
+              {applying ? (t('common:loading') || 'Menghantar...') : t('kpp:submit_application', 'Hantar Permohonan')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -693,7 +693,7 @@ export function KelabPage() {
           <DialogHeader>
             <DialogTitle className="font-bold text-xl tracking-tight text-rose-600 dark:text-rose-400 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              {resignModal?.isPrimary ? 'Mohon Pindah Kelab Akademik' : 'Tarik Diri daripada Kelab'}
+              {resignModal?.isPrimary ? t('kpp:request_transfer', 'Mohon Pindah Kelab Akademik') : t('kpp:leave_club', 'Tarik Diri daripada Kelab')}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               {resignModal?.isPrimary

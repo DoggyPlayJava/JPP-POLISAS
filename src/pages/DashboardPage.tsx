@@ -136,6 +136,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
 // --- 3. KOMPONEN UTAMA DASHBOARD ---
 export function DashboardPage() {
   const { t } = useTranslation(['kpp', 'common']);
+  const { t: tPortal } = useTranslation(['portal', 'common']);
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
@@ -393,12 +394,12 @@ export function DashboardPage() {
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
             <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
-              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> Analisis AI
+              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> {tPortal('portal:ai_analysis', 'Analisis AI')}
             </Button>
           )}
           {isAdvisor && (
             <Button onClick={() => navigate('/logs')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10">
-              <Activity className="w-4 h-4 mr-2" /> Log Sistem
+              <Activity className="w-4 h-4 mr-2" /> {tPortal('portal:system_logs', 'Log Sistem')}
             </Button>
           )}
           {isMT && <AddTaskModal onTaskAdded={fetchData} />}
@@ -418,8 +419,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">Prestasi Tugasan</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Taburan Tugasan Dibekalkan</p>
+              <h3 className="text-xl font-black italic">{tPortal('portal:task_performance', 'Prestasi Tugasan')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{tPortal('portal:task_distribution', 'Taburan Tugasan Dibekalkan')}</p>
             </div>
             <Activity className="text-primary" size={24} />
           </div>
@@ -457,8 +458,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">Status Aktiviti</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Kitaran Hidup Program</p>
+              <h3 className="text-xl font-black italic">{tPortal('portal:activity_status_lifecycle', 'Status Aktiviti')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{tPortal('portal:activity_status_lifecycle', 'Kitaran Hidup Program')}</p>
             </div>
             <TrendingUp className="text-emerald-500" size={24} />
           </div>
@@ -510,7 +511,7 @@ export function DashboardPage() {
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Status Kertas Kerja di JPP</p>
                 </div>
                 <Button onClick={() => navigate('/aktiviti')} size="sm" className="w-full sm:w-auto rounded-xl font-black text-[10px] uppercase h-10 bg-slate-900 px-6">
-                  <Send className="w-3 h-3 mr-2" /> Daftar Program
+                  <Send className="w-3 h-3 mr-2" /> {t('kpp:register_program', 'Daftar Program')}
                 </Button>
               </div>
 
@@ -522,13 +523,13 @@ export function DashboardPage() {
                         <FileText className="w-6 h-6" />
                       </EmptyMedia>
                       <EmptyHeader>
-                        <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Program Ditemui</EmptyTitle>
+                        <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:audit_no_programs', 'Tiada Program Ditemui')}</EmptyTitle>
                         <EmptyDescription className="text-xs">
                           Anda belum mendaftarkan sebarang program rasmi untuk kitaran ini.
                         </EmptyDescription>
                       </EmptyHeader>
                       <Button onClick={() => navigate('/aktiviti')} variant="outline" size="sm" className="rounded-xl font-black text-[10px] uppercase h-10 px-6">
-                        Daftar Program Sekarang
+                        {t('kpp:register_program_now', 'Daftar Program Sekarang')}
                       </Button>
                     </Empty>
                   </div>
@@ -557,9 +558,9 @@ export function DashboardPage() {
                     <CheckCircle2 className="w-6 h-6" />
                   </EmptyMedia>
                   <EmptyHeader>
-                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">Semua Selesai!</EmptyTitle>
+                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">{tPortal('portal:all_completed', 'Semua Selesai!')}</EmptyTitle>
                     <EmptyDescription className="text-xs">
-                      Tiada tugasan {taskView === 'active' ? 'aktif' : 'dalam arkib'} buat masa ini.
+                      {tPortal('portal:no_tasks', 'Tiada tugasan')} {taskView === 'active' ? 'aktif' : 'dalam arkib'} buat masa ini.
                     </EmptyDescription>
                   </EmptyHeader>
                   {isMT && taskView === 'active' && <AddTaskModal onTaskAdded={fetchData} />}
@@ -586,7 +587,7 @@ export function DashboardPage() {
                     <Medal size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">Amanat Penasihat</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">{tPortal('portal:advisor_address', 'Amanat Penasihat')}</h4>
                     <p className="text-[10px] font-bold text-white/40 uppercase">Terkini</p>
                   </div>
                 </div>
@@ -606,7 +607,7 @@ export function DashboardPage() {
 
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 border border-border/40">
             <CardTitle className="text-xl font-black mb-6 flex items-center gap-2">
-              <Trophy className="text-amber-500" size={20} /> Ahli Cemerlang
+              <Trophy className="text-amber-500" size={20} /> {tPortal('portal:outstanding_members', 'Ahli Cemerlang')}
             </CardTitle>
             <div className="space-y-4">
               {members.sort((a, b) => (b.merit || 0) - (a.merit || 0)).slice(0, 3).map((m, i) => (
@@ -620,7 +621,7 @@ export function DashboardPage() {
                   <Badge variant="outline" className="font-black text-primary border-primary/20 bg-background">{m.merit || 0} pts</Badge>
                 </div>
               ))}
-              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">Lihat Semua Ranking <ArrowUpRight size={14} className="ml-2" /></Button>
+              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">{tPortal('portal:view_all_ranking', 'Lihat Semua Ranking')} <ArrowUpRight size={14} className="ml-2" /></Button>
             </div>
           </Card>
         </div>
