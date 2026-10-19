@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import {
   Mail,
   Lock,
@@ -41,6 +43,7 @@ type RegisterMode = 'student' | 'leader' | 'staff';
 type Step = 1 | 2;
 
 export function LoginPage() {
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -145,12 +148,16 @@ export function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || (!isForgotPassword && !password)) {
+      toast.error(t('auth:fill_required_fields'));
+      return;
+    }
     setIsLoading(true);
     try {
       if (isForgotPassword) {
         const resolved = await resolveIdentifier(email);
         if (resolved.error || !resolved.email) {
-          toast.error(resolved.error || 'Emel tidak dapat dikenal pasti.');
+          toast.error(resolved.error || t('auth:login_failed'));
           setIsLoading(false);
           return;
         }
@@ -167,7 +174,7 @@ export function LoginPage() {
       } else {
         const resolved = await resolveIdentifier(email);
         if (resolved.error || !resolved.email) {
-          toast.error(resolved.error || 'Identiti tidak dapat dikenal pasti.');
+          toast.error(resolved.error || t('auth:login_failed'));
           setIsLoading(false);
           return;
         }
@@ -187,16 +194,16 @@ export function LoginPage() {
           }
           throw error;
         }
-        toast.success('Log masuk berjaya. Selamat kembali.');
+        toast.success(t('auth:login_success'));
       }
     } catch (error: any) {
       const msg: Record<string, string> = {
-        'Invalid login credentials': 'Emel/Nama/No Matrik atau kata laluan tidak sah.',
+        'Invalid login credentials': t('auth:login_failed'),
         'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
         'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
         'Email not confirmed': 'Sila sahkan emel anda dahulu.',
       };
-      toast.error(msg[error.message] || error.message || 'Operasi gagal. Cuba lagi.');
+      toast.error(msg[error.message] || error.message || t('auth:login_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -356,14 +363,17 @@ export function LoginPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.08)_0%,transparent_70%)]" />
       <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.06)_0%,transparent_70%)]" />
 
-      {/* Top spacer for balanced optical centering */}
-      <div className="w-full max-w-sm flex items-center justify-between pt-2 opacity-80 relative z-10">
+      {/* Top spacer for balanced optical centering and language switcher */}
+      <div className="w-full max-w-sm flex items-center justify-between pt-2 relative z-10">
         <span className="text-[11px] font-bold tracking-widest uppercase text-[#556453] dark:text-[#A3B39F]">
           JPP POLISAS
         </span>
-        <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
-          Sesi 2026/2027
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
+            Sesi 2026/2027
+          </span>
+          <LanguageToggle />
+        </div>
       </div>
 
       {/* Main Content Column (Authentic Amy-Style Cleanliness) */}
@@ -389,7 +399,7 @@ export function LoginPage() {
               ? 'Tetapkan Semula Kata Laluan'
               : isSignUp
               ? (step === 1 ? 'Daftar Akaun Baharu' : 'Maklumat Keahlian')
-              : 'Selamat Datang ke JPP POLISAS'}
+              : t('auth:login_title')}
           </h1>
           <p className="text-sm sm:text-[15px] text-[#556453] dark:text-[#A3B39F] font-normal leading-relaxed mt-2.5">
             {isForgotPassword
@@ -398,7 +408,7 @@ export function LoginPage() {
               ? 'Gunakan Google untuk pendaftaran segera atau daftar manual.'
               : isSignUp && step === 2
               ? 'Pilih jabatan atau kelab untuk pendaftaran peranan.'
-              : 'Satu portal pintar bersepadu untuk aktiviti persatuan, kebajikan, dan mahasiswa POLISAS.'}
+              : t('auth:login_subtitle')}
           </p>
 
           {/* QR Redirect Notification Banner */}
@@ -479,7 +489,7 @@ export function LoginPage() {
                 className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]"
                 onClick={() => { setVerificationSent(false); setIsSignUp(false); resetForm(); }}
               >
-                Kembali ke Log Masuk
+                {t('auth:back_to_login')}
               </Button>
             </div>
           </div>
@@ -499,7 +509,7 @@ export function LoginPage() {
               className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#D9C9B2] text-[#2E3A2F] dark:text-[#F8F6EE] hover:bg-[#F8F6EE]"
               onClick={() => { setResetSent(false); setIsForgotPassword(false); }}
             >
-              Kembali ke Log Masuk
+              {t('auth:back_to_login')}
             </Button>
           </div>
         ) : isSignUp ? (
@@ -907,11 +917,11 @@ export function LoginPage() {
                   <form onSubmit={handleLogin} className="space-y-3.5">
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
-                        {isForgotPassword ? 'Emel Pendaftaran' : 'Emel / No Matrik / Nama'}
+                        {isForgotPassword ? t('auth:email') : t('auth:matrix_no')}
                       </Label>
                       <Input
                         type="text"
-                        placeholder="02DKM1234 / emel@gmail.com"
+                        placeholder={isForgotPassword ? "emel@gmail.com" : t('auth:matrix_no_placeholder')}
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -923,19 +933,19 @@ export function LoginPage() {
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
-                            Kata Laluan
+                            {t('auth:password')}
                           </Label>
                           <button
                             type="button"
                             onClick={() => setIsForgotPassword(true)}
                             className="text-xs font-semibold text-[#C96F4F] hover:underline cursor-pointer"
                           >
-                            Lupa?
+                            {t('auth:forgot_password')}
                           </button>
                         </div>
                         <Input
                           type="password"
-                          placeholder="Masukkan kata laluan anda"
+                          placeholder={t('auth:password_placeholder')}
                           required
                           value={password}
                           onChange={e => setPassword(e.target.value)}
@@ -949,7 +959,7 @@ export function LoginPage() {
                       disabled={isLoading}
                       className="w-full h-14 rounded-2xl bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] font-bold text-[15px] shadow-sm transition-all active:scale-[0.98] cursor-pointer mt-1"
                     >
-                      {isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan Tetapan Semula' : 'Log Masuk'}
+                      {isLoading ? t('auth:logging_in') : isForgotPassword ? t('auth:reset_password') : t('auth:login_button')}
                     </Button>
                   </form>
                     </motion.div>
@@ -985,7 +995,7 @@ export function LoginPage() {
                 onClick={() => setIsForgotPassword(false)}
                 className="text-xs font-bold text-[#C96F4F] hover:underline cursor-pointer"
               >
-                Kembali ke Log Masuk
+                {t('auth:back_to_login')}
               </button>
             ) : (
               <div>
