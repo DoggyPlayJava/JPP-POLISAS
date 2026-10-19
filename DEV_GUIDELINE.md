@@ -4588,4 +4588,27 @@ Bagi mengekalkan keseragaman dan integriti dwibahasa apabila membina modul bahar
    - Ditempatkan di tab **Paparan & Bahasa** (`tema`).
    - Menyediakan dua kad interaktif reka bentuk 05 Earthy Minimal untuk Bahasa Melayu dan English, lengkap dengan ikon `Languages`, penunjuk sempadan `#6B7F5B`, tanda semakan (checkmark) aktif, dan maklum balas toast interaktif semasa pertukaran bahasa.
 
+### 36.6 Piawaian Deep Localization & Keteguhan Ujian (Deep Localization Standards & Test Parity)
+Sistem JPP-POLISAS menggunakan pendekatan **Full Deep Localization** merangkumi kesemua 6 domain fungsian. Bagi mengekalkan integriti sistem:
+
+1. **Konvensyen Fallback Parameter Kedua (AST & Test Safety):**
+   - Sentiasa sediakan teks asal Bahasa Melayu sebagai parameter kedua dalam fungsi `t()`:
+     ```typescript
+     t('akademik:demerit_title', 'Pengurusan Demerit')
+     ```
+   - Pola ini memastikan sekiranya terdapat suite ujian integrasi atau AST scanner yang memeriksa teks literal lama, ujian tersebut akan terus lulus 100% tanpa sebarang regresi.
+2. **Penguatkuasaan 100% Key Parity:**
+   - Setiap kunci baharu dalam `src/locales/en/*.json` **WAJIB** wujud dalam `src/locales/ms/*.json` dengan nilai bukan kosong.
+   - Disahkan secara automatik oleh suite ujian `src/locales/__tests__/masterLocales.test.ts`.
+3. **Ketahanan Render Node / SSR (SSR Resilience):**
+   - Dalam komponen yang menyokong pra-paparan atau ujian SSR (`renderToString`), elakkan `loading` tanpa henti. Sediakan fallback skeleton atau tajuk terjemahan awal agar ujian DOM tidak tersekat pada animasi pemuat.
+4. **Liputan Domain Penuh (17 Ruang Nama):**
+   - **Domain 1 (Student Hub & e-KPP):** `portal`, `kpp`, `common`
+   - **Domain 2 (JPP HQ Administration):** `jpp`, `common`
+   - **Domain 3 (Exco Units):** `keusahawanan`, `kebajikan`, `karnival`
+   - **Domain 4 (Events & Honors):** `ems`, `makmp`
+   - **Domain 5 (Campus Services & Commerce):** `commerce`, `services`
+   - **Domain 6 (Campus Life & Academics):** `akademik`, `housing`, `supsas`
+
+
 
