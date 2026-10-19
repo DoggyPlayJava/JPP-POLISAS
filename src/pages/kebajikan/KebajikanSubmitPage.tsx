@@ -805,7 +805,7 @@ export function KebajikanSubmitPage() {
                 disabled={!isFormReady}
                 className="w-full sm:w-2/3 h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
               >
-                {t('submit_review_and_submit')} <ChevronRight className="w-5 h-5 ml-1.5" />
+                {t('submit_review_and_submit', 'Semak & Hantar')} <ChevronRight className="w-5 h-5 ml-1.5" />
               </Button>
             </div>
 
@@ -850,7 +850,7 @@ export function KebajikanSubmitPage() {
                 disabled={!form.category || !form.full_name || !form.description}
                 className="h-10 px-4 rounded-xl bg-teal-400 hover:bg-teal-300 disabled:opacity-40 disabled:pointer-events-none text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-transform active:scale-95 shadow-md shadow-teal-500/20"
               >
-                {t('submit_review_and_submit')} <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                {t('submit_review_and_submit', 'Semak & Hantar')} <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </div>
           </motion.div>
@@ -862,9 +862,9 @@ export function KebajikanSubmitPage() {
           <motion.div key="preview" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
               <button onClick={() => setStep('FORM')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn')}
+                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn', 'Kembali Edit')}
               </button>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_review_title')}</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_review_title', 'Semak & Sahkan Aduan')}</h2>
               <p className="text-xs text-slate-600 dark:text-white/40">{t('submit_review_subtitle')}</p>
             </div>
 
@@ -942,7 +942,7 @@ export function KebajikanSubmitPage() {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  {t('submit_confirm_btn')} <ChevronRight className="w-4 h-4" />
+                  {t('submit_confirm_btn', 'Sahkan & Hantar Aduan')} <ChevronRight className="w-4 h-4" />
                 </span>
               )}
             </Button>
@@ -1010,7 +1010,7 @@ export function KebajikanSubmitPage() {
               {/* Sheet Header */}
               <div className="px-6 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{t('submit_review_title')}</h3>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{t('submit_review_title', 'Semak & Sahkan Aduan')}</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{t('submit_review_subtitle')}</p>
                 </div>
                 <button
@@ -1116,7 +1116,7 @@ export function KebajikanSubmitPage() {
                   disabled={submitting}
                   className="w-full sm:w-auto flex-1 h-12 rounded-xl text-xs font-black uppercase tracking-wider border-slate-300 dark:border-white/15"
                 >
-                  {t('submit_back_btn')}
+                  {t('submit_back_btn', 'Kembali Edit')}
                 </Button>
                 <Button
                   type="button"
@@ -1130,7 +1130,7 @@ export function KebajikanSubmitPage() {
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      {t('submit_confirm_btn')} <ChevronRight className="w-4 h-4" />
+                      {t('submit_confirm_btn', 'Sahkan & Hantar Aduan')} <ChevronRight className="w-4 h-4" />
                     </span>
                   )}
                 </Button>
