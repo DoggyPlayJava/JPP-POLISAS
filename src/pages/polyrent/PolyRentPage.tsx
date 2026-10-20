@@ -35,7 +35,7 @@ const formatWhatsApp = (phone: string) => {
 };
 
 export function PolyRentPage() {
-  const { t } = useTranslation(['commerce', 'common']);
+  const { t } = useTranslation(['housing', 'commerce', 'common']);
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
@@ -315,8 +315,8 @@ export function PolyRentPage() {
             </div>
             
             <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
-              Cari Kawan Sewa.<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">Lebih Jimat.</span>
+              {t('housing:find_roommates_title', 'Cari Kawan Sewa.')}<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">{t('housing:save_more_subtitle', 'Lebih Jimat.')}</span>
             </h1>
 
             <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] font-bold">
@@ -340,7 +340,7 @@ export function PolyRentPage() {
                  type="text" 
                  value={searchQuery} 
                  onChange={e=>setSearchQuery(e.target.value)} 
-                 placeholder="Cari kawasan (cth: Beserah)..." 
+                 placeholder={t('housing:search_area_placeholder', 'Cari kawasan (cth: Beserah)...')} 
                  className="w-full bg-transparent text-white placeholder:text-white/60 focus:outline-none font-semibold text-sm" 
                />
              </div>
@@ -365,7 +365,7 @@ export function PolyRentPage() {
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             )}
           >
-            Iklan Rumah
+            {t('housing:tab_house_ads', 'Iklan Rumah')}
           </button>
           <button
             onClick={() => setActiveTab('PELAJAR_MENCARI')}
@@ -376,7 +376,7 @@ export function PolyRentPage() {
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             )}
           >
-            Pelajar Mencari
+            {t('housing:tab_student_searching', 'Pelajar Mencari')}
           </button>
         </div>
 
@@ -394,7 +394,7 @@ export function PolyRentPage() {
                     : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
                 )}
               >
-                {filter}
+                {filter === 'SEMUA' ? t('housing:filter_all', 'SEMUA') : filter === 'LELAKI' ? t('housing:filter_male', 'LELAKI') : t('housing:filter_female', 'PEREMPUAN')}
               </button>
             ))}
             <button
@@ -407,7 +407,7 @@ export function PolyRentPage() {
               )}
             >
               <Heart className={cn("w-3 h-3", activeFilter === 'SAVED' ? 'fill-white' : '')} />
-              Tersimpan {wishlist.length > 0 && <span className="ml-0.5 opacity-70">({wishlist.length})</span>}
+              {t('housing:filter_saved', 'Tersimpan')} {wishlist.length > 0 && <span className="ml-0.5 opacity-70">({wishlist.length})</span>}
             </button>
           </div>
         )}
@@ -419,11 +419,11 @@ export function PolyRentPage() {
           <div>
             <div className="flex justify-between items-end mb-6">
                <div>
-                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pelajar Cari Rumah</h2>
-                 <p className="text-xs text-slate-500">Bilik kosong? Tawarkan terus kepada mereka.</p>
+                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:students_finding_home_title', 'Pelajar Cari Rumah')}</h2>
+                 <p className="text-xs text-slate-500">{t('housing:students_finding_home_desc', 'Bilik kosong? Tawarkan terus kepada mereka.')}</p>
                </div>
                <button onClick={() => setIsReverseFormOpen(true)} className="px-4 py-2 rounded-xl bg-teal-500 text-white font-bold text-xs hover:bg-teal-600 transition-colors shadow-sm">
-                 Saya Cari Bilik
+                 {t('housing:i_need_room_btn', 'Saya Cari Bilik')}
                </button>
             </div>
             
@@ -439,7 +439,7 @@ export function PolyRentPage() {
                 <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tiada Permintaan Semasa</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">Jadilah yang pertama untuk mengiklankan pencarian rumah/bilik sewa.</p>
                 <button onClick={() => setIsReverseFormOpen(true)} className="px-6 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:scale-105 transition-transform shadow-lg text-sm">
-                  Saya Cari Rumah
+                  {t('housing:i_need_house_btn', 'Saya Cari Rumah')}
                 </button>
               </div>
             ) : (
@@ -546,7 +546,7 @@ export function PolyRentPage() {
             {berbaloiListings.length > 0 && (
               <div className="mb-10 -mx-4 sm:mx-0">
                 <div className="px-4 sm:px-0 mb-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pilihan Berbaloi</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:great_deals_heading', 'Pilihan Berbaloi')}</h2>
                   <p className="text-slate-500 text-xs">Harga lebih rendah dari purata pasaran</p>
                 </div>
                 <div className="flex overflow-x-auto gap-4 px-4 sm:px-0 pb-6 snap-x snap-mandatory no-scrollbar">
@@ -556,7 +556,7 @@ export function PolyRentPage() {
             )}
 
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Semua Kediaman</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:all_residences_heading', 'Semua Kediaman')}</h2>
             </div>
             
             {/* 2-Column Grid untuk semua (Airbnb style mobile layout) */}

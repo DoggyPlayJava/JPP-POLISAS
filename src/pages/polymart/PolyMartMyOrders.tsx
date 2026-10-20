@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Star, Store,
   ChevronRight, MessageCircle, Phone, X, RefreshCw,
@@ -75,6 +76,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: str
 
 // ── Review Modal ───────────────────────────────────────────────────────────────
 function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: boolean) => void }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const [rating,    setRating]    = useState(5);
   const [comment,   setComment]   = useState('');
@@ -91,7 +93,7 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       comment: comment.trim() || null,
     });
     if (!error) { 
-      toast.success('Terima kasih atas ulasan anda!'); 
+      toast.success(t('commerce:review_submitted_success', 'Terima kasih atas ulasan anda!')); 
       
       // Award merit (Exco Kediaman boleh adjust nilai di pangkalan data kelak)
       const { error: meritErr } = await supabase.rpc('increment_merit_by_source', {
@@ -102,14 +104,14 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       });
       
       if (!meritErr) {
-        toast.success('+1 Merit Kediaman!', {
+        toast.success(t('commerce:merit_rewarded_toast', '+1 Merit Kediaman!'), {
           style: { background: '#f59e0b', color: '#fff', fontWeight: 900 }
         });
       }
       
       onClose(true); 
     }
-    else toast.error('Gagal hantar ulasan');
+    else toast.error(t('commerce:review_submit_failed', 'Gagal hantar ulasan'));
     setSubmitting(false);
   };
 
@@ -120,7 +122,7 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         className="relative w-full sm:max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-foreground">Beri Ulasan</h3>
+          <h3 className="text-base font-black text-foreground">{t('commerce:write_review_title', 'Beri Ulasan')}</h3>
           <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 cursor-pointer">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -129,10 +131,10 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
 
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
           <p className="text-[11px] font-black text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1.5">
-            <Award className="w-3.5 h-3.5" /> Ganjaran Ulasan
+            <Award className="w-3.5 h-3.5" /> {t('commerce:review_reward_title', 'Ganjaran Ulasan')}
           </p>
           <p className="text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 mt-0.5 leading-tight">
-            Tinggalkan ulasan jujur untuk menerima automatik +1 Merit Kediaman.
+            {t('commerce:review_reward_desc', 'Tinggalkan ulasan jujur untuk menerima automatik +1 Merit Kediaman.')}
           </p>
         </div>
 
@@ -146,16 +148,16 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
         </div>
 
         <textarea value={comment} onChange={e => setComment(e.target.value)} rows={3}
-          placeholder="Bagaimana pengalaman anda? (pilihan)"
+          placeholder={t('commerce:review_comment_placeholder', 'Bagaimana pengalaman anda? (pilihan)')}
           className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 resize-none focus:border-amber-500/50 transition-all" />
 
         <button onClick={submit} disabled={submitting}
           className="w-full h-11 rounded-2xl text-white font-black text-sm disabled:opacity-60 cursor-pointer flex items-center justify-center gap-1.5"
           style={{ background: PM_GRADIENT }}>
-          {submitting ? 'Menghantar...' : (
+          {submitting ? t('commerce:submitting_review_dots', 'Menghantar...') : (
             <>
               <Star className="w-4 h-4 fill-current" />
-              <span>Hantar Ulasan</span>
+              <span>{t('commerce:submit_review_btn', 'Hantar Ulasan')}</span>
             </>
           )}
         </button>
@@ -166,13 +168,14 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
 
 // ── Order Timeline ─────────────────────────────────────────────────────────────
 function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelReason?: string | null }) {
+  const { t } = useTranslation(['commerce', 'common']);
   if (status === 'CANCELLED') {
     return (
       <div className="px-3.5 py-3 border-t border-border/30 bg-rose-500/5">
         <div className="flex items-center gap-3">
           <XCircle className="w-6 h-6 text-rose-500" />
           <div>
-            <p className="text-sm font-black text-rose-500">Dibatalkan</p>
+            <p className="text-sm font-black text-rose-500">{t('commerce:status_cancelled_label', 'Dibatalkan')}</p>
             {cancelReason && <p className="text-[11px] font-bold text-rose-500/70 mt-0.5">{cancelReason}</p>}
           </div>
         </div>
@@ -181,10 +184,10 @@ function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelRe
   }
 
   const steps = [
-    { key: 'PENDING',   label: 'Dibuat',   icon: Clock },
-    { key: 'CONFIRMED', label: 'Diproses', icon: Package },
-    { key: 'READY',     label: 'Sedia',    icon: Truck },
-    { key: 'COMPLETED', label: 'Selesai',  icon: Star },
+    { key: 'PENDING',   label: t('commerce:step_placed', 'Dibuat'),   icon: Clock },
+    { key: 'CONFIRMED', label: t('commerce:step_processing', 'Diproses'), icon: Package },
+    { key: 'READY',     label: t('commerce:step_ready', 'Sedia'),    icon: Truck },
+    { key: 'COMPLETED', label: t('commerce:step_done', 'Selesai'),  icon: Star },
   ];
 
   const currentIdx = steps.findIndex(s => s.key === status);
@@ -240,6 +243,7 @@ function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelRe
 
 // ── Receipt Upload Button ──────────────────────────────────────────────────────
 function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploaded: () => void }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,10 +271,10 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
 
       if (updateErr) throw updateErr;
 
-      toast.success('Resit berjaya dimuat naik!');
+      toast.success(t('commerce:payment_receipt_submitted_success', 'Resit berjaya dimuat naik!'));
       onUploaded();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal muat naik resit');
+      toast.error(err.message || t('commerce:upload_receipt_failed', 'Gagal muat naik resit'));
     }
     setUploading(false);
   };
@@ -278,7 +282,7 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
   return (
     <label className={`w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black cursor-pointer hover:bg-blue-500/10 transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
       <Upload className="w-4 h-4" />
-      {uploading ? 'Memuat naik...' : 'Muat Naik Resit Pembayaran'}
+      {uploading ? t('commerce:uploading_dots', 'Memuat naik...') : t('commerce:upload_receipt_btn', 'Muat Naik Resit Pembayaran')}
       <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
     </label>
   );
@@ -294,7 +298,15 @@ const CANCEL_REASONS = [
 ];
 
 function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: boolean) => void }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
+  const cancelReasons = [
+    { key: 'size', label: t('commerce:cancel_reason_size', 'Salah saiz / variasi') },
+    { key: 'product', label: t('commerce:cancel_reason_product', 'Salah pilih produk') },
+    { key: 'mind', label: t('commerce:cancel_reason_mind', 'Tak jadi beli') },
+    { key: 'price', label: t('commerce:cancel_reason_price', 'Harga berubah') },
+    { key: 'other', label: t('commerce:cancel_reason_other', 'Lain-lain') },
+  ];
   const [reason, setReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -302,7 +314,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
   const handleCancel = async () => {
     if (!user) return;
     const finalReason = reason === 'Lain-lain' ? customReason || 'Lain-lain' : reason;
-    if (!finalReason) { toast.error('Sila pilih sebab pembatalan'); return; }
+    if (!finalReason) { toast.error(t('commerce:cancel_select_reason_error', 'Sila pilih sebab pembatalan')); return; }
 
     setSubmitting(true);
     try {
@@ -315,9 +327,9 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
 
       const result = (data as any)?.result;
       if (result === 'CANCELLED') {
-        toast.success('Pesanan berjaya dibatalkan');
+        toast.success(t('commerce:order_cancelled_success', 'Pesanan berjaya dibatalkan'));
       } else if (result === 'CANCELLATION_REQUESTED') {
-        toast.success('Permintaan pembatalan dihantar kepada vendor');
+        toast.success(t('commerce:cancellation_requested_success', 'Permintaan pembatalan dihantar kepada vendor'));
         // Notify vendor
         if (order.keusahawanan_businesses?.id) {
           const { data: bizData } = await supabase.from('keusahawanan_businesses')
@@ -336,7 +348,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
       }
       onClose(true);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal membatalkan pesanan');
+      toast.error(err.message || t('commerce:cancel_order_failed', 'Gagal membatalkan pesanan'));
     }
     setSubmitting(false);
   };
@@ -348,7 +360,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
       <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         className="relative w-full sm:max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-foreground">Batalkan Pesanan</h3>
+          <h3 className="text-base font-black text-foreground">{t('commerce:cancel_order_title', 'Batalkan Pesanan')}</h3>
           <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 cursor-pointer">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -359,33 +371,33 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Pesanan sudah disahkan. Pembatalan memerlukan kelulusan vendor.</span>
+              <span>{t('commerce:cancel_confirmed_warning', 'Pesanan sudah disahkan. Pembatalan memerlukan kelulusan vendor.')}</span>
             </p>
           </div>
         )}
 
         <div className="space-y-2">
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Sebab Pembatalan</p>
-          {CANCEL_REASONS.map(r => (
-            <button key={r} onClick={() => setReason(r)}
+          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">{t('commerce:cancel_reason_label', 'Sebab Pembatalan')}</p>
+          {cancelReasons.map(r => (
+            <button key={r.key} onClick={() => setReason(r.label)}
               className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold border transition-all cursor-pointer ${
-                reason === r
+                reason === r.label
                   ? 'border-rose-500/50 bg-rose-500/10 text-rose-600'
                   : 'border-border/50 bg-muted/20 text-foreground hover:bg-muted/40'
               }`}>
-              {r}
+              {r.label}
             </button>
           ))}
           {reason === 'Lain-lain' && (
             <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} rows={2}
-              placeholder="Nyatakan sebab..."
+              placeholder={t('commerce:cancel_custom_reason_placeholder', 'Nyatakan sebab...')}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 resize-none focus:border-rose-500/50 transition-all" />
           )}
         </div>
 
         <button onClick={handleCancel} disabled={submitting || !reason}
           className="w-full h-11 rounded-2xl text-white font-black text-sm bg-rose-500 hover:bg-rose-600 disabled:opacity-60 transition-colors cursor-pointer">
-          {submitting ? 'Memproses...' : order.status === 'PENDING' ? 'Batalkan Sekarang' : 'Hantar Permintaan Batal'}
+          {submitting ? t('common:loading', 'Memproses...') : order.status === 'PENDING' ? t('commerce:cancel_order_now', 'Batalkan Sekarang') : t('commerce:send_cancellation_request', 'Hantar Permintaan Batal')}
         </button>
       </motion.div>
     </motion.div>
@@ -394,9 +406,16 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
 
 
 function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void }) {
-
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
-  const cfg = STATUS_CONFIG[order.status];
+  const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
+    PENDING:   { label: t('commerce:status_awaiting_verification', 'Menunggu Pengesahan'), color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  icon: Clock },
+    CONFIRMED: { label: t('commerce:status_vendor_confirmed', 'Disahkan Vendor'),     color: '#6366f1', bg: 'rgba(99,102,241,0.12)', icon: CheckCircle },
+    READY:     { label: t('commerce:status_ready_pickup', 'Sedia Diambil!'),      color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  icon: Truck },
+    COMPLETED: { label: t('commerce:status_completed_label', 'Selesai'),             color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', icon: CheckCircle },
+    CANCELLED: { label: t('commerce:status_cancelled_label', 'Dibatalkan'),          color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icon: XCircle },
+  };
+  const cfg = statusConfig[order.status];
   const StatusIcon = cfg.icon;
   const FallbackIcon = CATEGORY_ICON_MAP[order.business_products?.category ?? ''] ?? Package;
   const biz = order.keusahawanan_businesses;
@@ -442,7 +461,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             className="text-[10px] text-muted-foreground/60 hover:text-amber-500 font-bold flex items-center gap-1 transition-colors text-left group cursor-pointer"
           >
             <Store className="w-2.5 h-2.5 text-amber-500" />
-            <span className="group-hover:underline">{biz?.name ?? 'Kedai'}</span>
+            <span className="group-hover:underline">{biz?.name ?? t('commerce:store_label', 'Kedai')}</span>
             <ChevronRight className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
           </button>
           <p className="text-sm font-black text-foreground truncate [text-wrap:balance]">{order.business_products?.name}</p>
@@ -457,7 +476,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
           )}
           {order.selected_variation && (
             <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 text-[10px] font-black uppercase tracking-wider border border-indigo-500/20">
-              Saiz: {order.selected_variation}
+              {t('commerce:size_label', `Saiz: ${order.selected_variation}`, { variation: order.selected_variation })}
             </span>
           )}
         </div>
@@ -471,10 +490,10 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
               <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
                 <CreditCard className="w-3 h-3" /> QR Online
                 {order.payment_verified_at
-                  ? <span className="text-emerald-600 ml-1 inline-flex items-center gap-0.5"><CheckCircle className="w-3 h-3" /> Disahkan</span>
+                  ? <span className="text-emerald-600 ml-1 inline-flex items-center gap-0.5"><CheckCircle className="w-3 h-3" /> {t('commerce:verified_badge', 'Disahkan')}</span>
                   : order.payment_receipt_url
-                    ? <span className="text-amber-600 ml-1 inline-flex items-center gap-0.5"><Clock className="w-3 h-3" /> Menunggu Pengesahan</span>
-                    : <span className="text-rose-500 ml-1 inline-flex items-center gap-0.5"><AlertCircle className="w-3 h-3" /> Belum Bayar</span>
+                    ? <span className="text-amber-600 ml-1 inline-flex items-center gap-0.5"><Clock className="w-3 h-3" /> {t('commerce:status_awaiting_verification', 'Menunggu Pengesahan')}</span>
+                    : <span className="text-rose-500 ml-1 inline-flex items-center gap-0.5"><AlertCircle className="w-3 h-3" /> {t('commerce:qr_unpaid', 'Belum Bayar')}</span>
                 }
               </span>
             ) : (
@@ -484,7 +503,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             )}
             {order.payment_deadline_at && !order.payment_verified_at && order.status === 'PENDING' && (
               <span className="text-[9px] text-rose-500 font-bold font-mono tabular-nums">
-                Had: {new Date(order.payment_deadline_at).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                {t('commerce:payment_deadline_short', `Had: ${new Date(order.payment_deadline_at).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`, { time: new Date(order.payment_deadline_at).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}
               </span>
             )}
           </div>
@@ -501,7 +520,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 mb-2">
               <p className="text-[10px] font-black text-rose-600 flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Resit ditolak oleh vendor. Sila muat naik semula.</span>
+                <span>{t('commerce:receipt_rejected_notice', 'Resit ditolak oleh vendor. Sila muat naik semula.')}</span>
               </p>
             </div>
           )}
@@ -509,13 +528,13 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
               className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all cursor-pointer">
               <CheckCircle className="w-4 h-4 text-blue-500" />
-              <span>Resit Dihantar — Lihat Butiran Bayaran</span>
+              <span>{t('commerce:receipt_submitted_title', 'Resit Dihantar — Lihat Butiran Bayaran')}</span>
             </button>
           ) : (
             <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
               className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all cursor-pointer">
               <Upload className="w-4 h-4" />
-              <span>Selesaikan Pembayaran (Muat Naik Resit)</span>
+              <span>{t('commerce:complete_payment_upload_btn', 'Selesaikan Pembayaran (Muat Naik Resit)')}</span>
             </button>
           )}
         </div>
@@ -527,14 +546,14 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
           <div className="bg-white dark:bg-card p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
             <QRCode value={`${window.location.origin}/polymart/verify/${order.id}`} size={120} className="dark:bg-white p-2 rounded-xl" />
             <p className="text-[10px] text-center text-muted-foreground font-bold mt-3 leading-tight">
-              Tunjuk QR ini kepada vendor semasa ambil pesanan
+              {t('commerce:show_qr_to_vendor_hint', 'Tunjuk QR ini kepada vendor semasa ambil pesanan')}
             </p>
           </div>
           {whatsappUrl && (
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-1.5 h-9 rounded-xl border border-green-500/30 bg-green-500/10 text-[11px] font-bold text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-colors">
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>Hubungi via WhatsApp</span>
+              <span>{t('commerce:whatsapp_vendor_link', 'Hubungi via WhatsApp')}</span>
             </a>
           )}
         </div>
@@ -545,7 +564,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
         <div className="px-3.5 pb-2">
           <button onClick={() => onCancel(order)}
             className="w-full h-9 rounded-xl text-[11px] font-black border border-rose-500/20 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer">
-            {order.status === 'PENDING' ? 'Batalkan Pesanan' : 'Minta Pembatalan'}
+            {order.status === 'PENDING' ? t('commerce:cancel_order_btn', 'Batalkan Pesanan') : t('commerce:request_cancellation_btn', 'Minta Pembatalan')}
           </button>
         </div>
       )}
@@ -556,9 +575,9 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>Permintaan pembatalan dihantar. Menunggu kelulusan vendor...</span>
+              <span>{t('commerce:cancellation_pending_vendor', 'Permintaan pembatalan dihantar. Menunggu kelulusan vendor...')}</span>
             </p>
-            <p className="text-[9px] text-amber-500/60 mt-0.5">Sebab: {order.cancellation_reason}</p>
+            <p className="text-[9px] text-amber-500/60 mt-0.5">{t('commerce:cancel_reason_label', 'Sebab')}: {order.cancellation_reason}</p>
           </div>
         </div>
       )}
@@ -569,7 +588,7 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
             className="w-full h-9 rounded-xl text-[11px] font-black transition-all hover:brightness-110 cursor-pointer flex items-center justify-center gap-1.5"
             style={{ background: PM_LIGHT, color: PM_ACCENT }}>
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span>Beri Ulasan</span>
+            <span>{t('commerce:write_review_title', 'Beri Ulasan')}</span>
           </button>
         </div>
       )}
@@ -579,7 +598,16 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartMyOrders() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
+  const statusTabs: { key: OrderStatus | 'all'; label: string; icon: React.FC<any> }[] = [
+    { key: 'all',       label: t('commerce:tab_all', 'Semua'),    icon: ListFilter },
+    { key: 'PENDING',   label: t('commerce:tab_pending', 'Menunggu'), icon: Clock },
+    { key: 'CONFIRMED', label: t('commerce:tab_confirmed', 'Disahkan'), icon: CheckCircle },
+    { key: 'READY',     label: t('commerce:tab_ready', 'Siap'),     icon: Truck },
+    { key: 'COMPLETED', label: t('commerce:tab_completed', 'Selesai'),  icon: Star },
+    { key: 'CANCELLED', label: t('commerce:tab_cancelled', 'Batal'),    icon: XCircle },
+  ];
   const [orders,         setOrders]         = useState<Order[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [isRefreshing,   setIsRefreshing]   = useState(false);
@@ -656,11 +684,11 @@ export function PolyMartMyOrders() {
           setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
           
           if (updated.status === 'READY') {
-            toast.success(`Pesanan ${updated.id.slice(0, 8)} sedia diambil!`);
+            toast.success(t('commerce:order_ready_toast', `Pesanan ${updated.id.slice(0, 8)} sedia diambil!`, { id: updated.id.slice(0, 8) }));
           } else if (updated.status === 'CONFIRMED') {
-            toast.success(`Pesanan sedang diproses!`);
+            toast.success(t('commerce:order_processing_toast', 'Pesanan sedang diproses!'));
           } else if (updated.status === 'CANCELLED') {
-            toast.error(`Pesanan dibatalkan.`);
+            toast.error(t('commerce:order_cancelled_toast', 'Pesanan dibatalkan.'));
           }
         }
       )
@@ -682,8 +710,8 @@ export function PolyMartMyOrders() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-black text-foreground">Pesanan Saya</h1>
-              <p className="text-xs text-muted-foreground/60 mt-0.5">{orders.length} pesanan keseluruhan</p>
+              <h1 className="text-xl font-black text-foreground">{t('commerce:my_orders_title', 'Pesanan Saya')}</h1>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">{t('commerce:total_orders_count', `${orders.length} pesanan keseluruhan`, { count: orders.length })}</p>
             </div>
             {/* Butang Semak Status + Masa Terakhir Dikemas Kini */}
             <div className="flex flex-col items-end gap-1">
@@ -694,11 +722,11 @@ export function PolyMartMyOrders() {
                 style={{ background: PM_LIGHT, color: PM_ACCENT }}
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Menyemak...' : 'Semak Status'}
+                {isRefreshing ? t('commerce:checking_status_dots', 'Menyemak...') : t('commerce:check_status_btn', 'Semak Status')}
               </button>
               {lastRefreshed && (
                 <p className="text-[9px] text-muted-foreground/40 font-bold font-mono tabular-nums">
-                  Dikemas kini: {lastRefreshed.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
+                  {t('common:updated_at', 'Dikemas kini')}: {lastRefreshed.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>
@@ -707,7 +735,7 @@ export function PolyMartMyOrders() {
 
         {/* Tabs */}
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
-          {STATUS_TABS.map(tab => {
+          {statusTabs.map(tab => {
             const count = tab.key === 'all' ? orders.length : tabCounts[tab.key] ?? 0;
             const Icon = tab.icon;
             return (
@@ -756,8 +784,8 @@ export function PolyMartMyOrders() {
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-xs">
               <Package className="w-8 h-8" />
             </div>
-            <p className="text-sm font-bold text-muted-foreground/80">Tiada pesanan</p>
-            <p className="text-xs text-muted-foreground/50">Pesanan anda akan muncul di sini</p>
+            <p className="text-sm font-bold text-muted-foreground/80">{t('commerce:no_orders_empty', 'Tiada pesanan')}</p>
+            <p className="text-xs text-muted-foreground/50">{t('commerce:orders_will_appear_here', 'Pesanan anda akan muncul di sini')}</p>
           </div>
         ) : (
           <div className="space-y-3">

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   Package, CheckCircle, Clock, CreditCard, Handshake,
   User, ShoppingBag, AlertCircle, ArrowLeft, Loader2,
@@ -49,9 +50,18 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 export function PolyMartVerifyPickup() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { user, hasKeusahawananAccess } = useAuth();
+
+  const statusConfig: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+    PENDING:   { label: t('commerce:status_pending', 'Menunggu Bayaran'),  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icon: <Clock className="w-4 h-4" /> },
+    CONFIRMED: { label: t('commerce:status_confirmed', 'Bayaran Disahkan'), color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  icon: <CreditCard className="w-4 h-4" /> },
+    READY:     { label: t('commerce:status_ready', 'Sedia Diambil'),    color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: <Package className="w-4 h-4" /> },
+    COMPLETED: { label: t('commerce:status_completed', 'Selesai'),          color: '#6b7280', bg: 'rgba(107,114,128,0.1)', icon: <CheckCircle className="w-4 h-4" /> },
+    CANCELLED: { label: t('commerce:status_cancelled', 'Dibatalkan'),       color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icon: <AlertCircle className="w-4 h-4" /> },
+  };
 
   const [order, setOrder] = useState<VerifyOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -202,7 +212,7 @@ export function PolyMartVerifyPickup() {
     <div className="max-w-md mx-auto space-y-4 pb-8">
       {/* Back */}
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Kembali
+        <ArrowLeft className="w-4 h-4" /> {t('common:back', 'Kembali')}
       </button>
 
       {/* Completed Celebration */}
@@ -210,7 +220,7 @@ export function PolyMartVerifyPickup() {
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center gap-3 py-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/5">
           <CheckCircle className="w-14 h-14 text-emerald-500" />
-          <p className="text-lg font-black text-foreground">Pesanan Selesai</p>
+          <p className="text-lg font-black text-foreground">{t('commerce:status_completed', 'Pesanan Selesai')}</p>
           <p className="text-xs text-muted-foreground">Terima kasih. Pesanan telah ditandakan selesai.</p>
         </motion.div>
       )}
@@ -220,7 +230,7 @@ export function PolyMartVerifyPickup() {
         className="p-5 rounded-3xl border border-border/50 bg-card shadow-sm">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Pesanan</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t('commerce:order_label', 'Pesanan')}</p>
             <p className="text-xl font-black font-mono tracking-wider text-foreground">#{shortId}</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black"
@@ -247,11 +257,11 @@ export function PolyMartVerifyPickup() {
             }`}>
               {paymentVerified ? (
                 <>
-                  <CheckCircle className="w-3 h-3 text-emerald-500" /> Disahkan
+                  <CheckCircle className="w-3 h-3 text-emerald-500" /> {t('commerce:verified_badge', 'Disahkan')}
                 </>
               ) : (
                 <>
-                  <Clock className="w-3 h-3 text-amber-500" /> Menunggu Pengesahan
+                  <Clock className="w-3 h-3 text-amber-500" /> {t('commerce:status_awaiting_verification', 'Menunggu Pengesahan')}
                 </>
               )}
             </span>
@@ -272,7 +282,7 @@ export function PolyMartVerifyPickup() {
               <p className="text-xs text-muted-foreground font-mono tabular-nums">×{order.quantity} @ RM {order.unit_price.toFixed(2)}</p>
               {order.selected_variation && (
                 <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-500">
-                  Saiz: {order.selected_variation}
+                  {t('commerce:size_label', `Saiz: ${order.selected_variation}`, { variation: order.selected_variation })}
                 </span>
               )}
             </div>
@@ -284,25 +294,25 @@ export function PolyMartVerifyPickup() {
       {/* Buyer Info */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="p-5 rounded-3xl border border-border/50 bg-card shadow-sm space-y-3">
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Maklumat Pembeli</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t('commerce:buyer_info_title', 'Maklumat Pembeli')}</p>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
             <User className="w-4 h-4 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-black text-foreground">{order.buyer?.full_name ?? 'Tidak diketahui'}</p>
+            <p className="text-sm font-black text-foreground">{order.buyer?.full_name ?? t('commerce:unknown_buyer', 'Tidak diketahui')}</p>
             <p className="text-[11px] text-muted-foreground">{order.buyer?.matric_no ?? '-'}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="p-2.5 rounded-xl bg-muted/20 border border-border/20">
-            <p className="text-[9px] font-bold text-muted-foreground/50 uppercase mb-0.5">Tarikh Tempah</p>
+            <p className="text-[9px] font-bold text-muted-foreground/50 uppercase mb-0.5">{t('commerce:order_date_label', 'Tarikh Tempah')}</p>
             <p className="font-bold text-foreground">
               {new Date(order.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
           <div className="p-2.5 rounded-xl bg-muted/20 border border-border/20">
-            <p className="text-[9px] font-bold text-muted-foreground/50 uppercase mb-0.5">Masa Ambil</p>
+            <p className="text-[9px] font-bold text-muted-foreground/50 uppercase mb-0.5">{t('commerce:pickup_time_label', 'Masa Ambil')}</p>
             <p className="font-bold text-foreground">{order.pickup_time ?? '-'}</p>
           </div>
         </div>
@@ -318,7 +328,7 @@ export function PolyMartVerifyPickup() {
       {order.payment_method === 'QR_ONLINE' && order.payment_receipt_url && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="p-5 rounded-3xl border border-border/50 bg-card shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-3">Resit Pembayaran</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-3">{t('commerce:payment_receipt_title', 'Resit Pembayaran')}</p>
           <a href={order.payment_receipt_url} target="_blank" rel="noopener noreferrer">
             <img src={order.payment_receipt_url} alt="Resit"
               className="w-full rounded-2xl border border-border/30 max-h-60 object-contain bg-muted/20 cursor-pointer hover:opacity-80 transition-opacity" />
@@ -335,7 +345,7 @@ export function PolyMartVerifyPickup() {
               className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               {readying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Package className="w-5 h-5" />}
-              {readying ? 'Mengemaskini...' : 'Pesanan Sedia Diambil'}
+              {readying ? t('common:loading', 'Mengemaskini...') : t('commerce:status_ready_pickup', 'Pesanan Sedia Diambil')}
             </button>
           )}
           {order.status === 'READY' && (
@@ -343,15 +353,15 @@ export function PolyMartVerifyPickup() {
               className="w-full h-14 rounded-2xl text-white font-black text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
               {completing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-              {completing ? 'Mengemaskini...' : 'Tandakan Selesai'}
+              {completing ? t('common:loading', 'Mengemaskini...') : t('commerce:mark_completed_btn', 'Tandakan Selesai')}
             </button>
           )}
           {(order.status === 'PENDING' || order.status === 'CANCELLED' || order.status === 'COMPLETED') && (
             <div className="text-center py-4 rounded-2xl bg-muted/20 border border-border/30">
               <p className="text-xs text-muted-foreground font-bold">
-                {order.status === 'PENDING' && 'Menunggu pembayaran dari pembeli'}
-                {order.status === 'CANCELLED' && 'Pesanan telah dibatalkan'}
-                {order.status === 'COMPLETED' && 'Pesanan telah selesai'}
+                {order.status === 'PENDING' && t('commerce:waiting_payment_from_buyer', 'Menunggu pembayaran dari pembeli')}
+                {order.status === 'CANCELLED' && t('commerce:order_has_been_cancelled', 'Pesanan telah dibatalkan')}
+                {order.status === 'COMPLETED' && t('commerce:order_completed_success', 'Pesanan telah selesai')}
               </p>
             </div>
           )}
@@ -361,7 +371,7 @@ export function PolyMartVerifyPickup() {
       {/* Business Info */}
       <div className="text-center text-[10px] text-muted-foreground/40 pt-2">
         <ShoppingBag className="w-3 h-3 inline mr-1" />
-        {order.business?.name ?? 'Perniagaan'}
+        {order.business?.name ?? t('commerce:business_default_name', 'Perniagaan')}
       </div>
     </div>
   );

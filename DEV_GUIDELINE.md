@@ -4737,3 +4737,39 @@ Domain 3 merangkumi modul operasi barisan hadapan Exco JPP yang kritikal dengan 
    - `src/__tests__/Domain3ExcoUnitsI18n.test.tsx` (30 ujian unit menyeluruh).
    - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master).
    - **Keputusan:** 70/70 ujian berkaitan Domain 3 lulus dengan cemerlang.
+
+### 36.13 Penyetempatan Menyeluruh Domain 5 (Campus Services & Digital Commerce: PolyMart, PolyRent, PolyMaps)
+Domain 5 menguruskan ekosistem perdagangan digital kampus, sewaan penginapan luar kampus, dan panduan lokasi spatial: PolyMart (Pasar Digital Kampus, Saluran Paip Pesanan Vendor, Semakan Resit Pembayaran QR, Pengurusan Iklan Promo, dan Panel Admin), PolyRent (Portal Iklan Rumah Sewa Mahasiswa, Pelajar Mencari Rumah & Borang Pelbagai Langkah Peta Interaktif), dan PolyMaps (GPS Navigasi Kampus, Panduan Laluan Berbumbung & Panduan Dalaman Bangunan).
+
+1. **Senarai Fail Terlibat (11 Fail Lengkap 100% Diterjemahkan):**
+   - **PolyMart (7 fail utama + 1 helaian semakan):**
+     - `src/pages/polymart/vendor/VendorOrdersPipeline.tsx` (Peringkat salur paip: Tindakan Diperlukan / Sedang Disediakan / Selesai & Arkib, penapis bayaran COD/QR, carian pesanan, status pesanan, dialog selesai, modal pembatalan & pengesahan pukal)
+     - `src/pages/polymart/vendor/ReceiptReviewSheet.tsx` (Helaian semakan bukti resit pindahan bank/QR, kawalan zum imej, penunjuk status pengesahan & butang kelulusan/penolakan)
+     - `src/pages/polymart/vendor/VendorAnalyticsPromo.tsx` (Graf kawasan hasil jualan 7-hari Recharts, amaran stok kritikal/rendah, senarai iklan banner PolyMart, pautan analitis penuh POS & modal permohonan iklan)
+     - `src/pages/polymart/PolyMartMyOrders.tsx` (Hab Pesanan Saya pembeli, tab penapis status, visual penjejak garisan masa, pemicu semakan status masa nyata, muat naik resit slip bayaran, modal ulasan berganjaran merit kediaman & modal pembatalan pesanan)
+     - `src/pages/polymart/PolyMartAdminPanel.tsx` (Konsol Panel Pentadbir PolyMart, moderasi laporan pelanggaran produk komuniti, pengurusan iklan penaja/pelajar, input no. WhatsApp penaja & statistik ekosistem jualan)
+     - `src/pages/polymart/PolyMartPaymentPage.tsx` (Laman pembayaran pesanan: pemasa undur tamat had bayaran, maklumat penerima, kod QR perniagaan, arahan akaun bank, zon seret/letak resit bayaran & amaran pematuhan)
+     - `src/pages/polymart/PolyMartProductDetail.tsx` (Halaman butiran produk, helaian bawah variasi/saiz `ProductVariationBottomSheet`, pengiraan kuantiti, cadangan masa pengambilan & kad ulasan pelanggan)
+     - `src/pages/polymart/PolyMartVerifyPickup.tsx` (Pengesahan imbasan QR kaunter pengambilan, butiran pembeli, pengesahan status bayaran & penukaran status pesanan sedia diambil/selesai)
+   - **PolyRent (2 fail):**
+     - `src/pages/polyrent/PolyRentPage.tsx` (Hab sewaan kediaman: tajuk wira dwi-bahasa Cari Kawan Sewa / Lebih Jimat, penapis jantina, carian kawasan, senarai iklan tersimpan, portal Pelajar Mencari Rumah & senarai Pilihan Berbaloi)
+     - `src/pages/polyrent/PolyRentForm.tsx` (Borang pelbagai langkah pengiklanan kediaman: langkah 1 asas kewangan & kekosongan, langkah 2 fasiliti & susunan bilik, langkah 3 alamat penuh & pin peta MapPicker dengan kiraan jarak automatik, langkah 4 pratonton & penerbitan)
+   - **PolyMaps (1 fail):**
+     - `src/pages/polymaps/PolyMapsPage.tsx` (GPS Kampus Interaktif & Direktori: penukaran mod laluan berbumbung semasa hujan, panduan dalaman bilik/makmal, navigasi pandu arah ke hub pesanan PolyMart & penanda lokasi pengguna)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/commerce.json`: **456 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/housing.json`: **274 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/services.json`: **255 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Jumlah Kunci Domain 5:** 985 kunci dwi-bahasa EN & MS disahkan sepenuhnya.
+
+3. **Piawaian Salinan & Fallback Mandatori:**
+   - Semua panggilan fungsi penterjemahan mengamalkan struktur sintaksis AST mandatori: `t('namespace:key', 'Literal BM Asal', { params })`.
+   - Pencegahan Ralat Skop Sub-komponen: Semua komponen bersarang (termasuk `ReviewModal`, `CancelModal`, `OrderCard`, `OrderTimeline`, `ReceiptUploadButton`, `ProductVariationBottomSheet`, `ReportCard`, dan `AdsManagerTab`) mengisytiharkan cangkuk penterjemahan `const { t } = useTranslation(['namespace', 'common'])` dalam skop fungsi masing-masing untuk mengelakkan ralat rujukan atau kegagalan konteks semasa rendering bersendirian.
+   - Mengelakkan shadowing pembolehubah `t` dalam operasi loop pemetaan (menggunakan `.map(tabItem => ...)` atau `.map(stage => ...)`).
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain5CommerceCompleteI18n.test.tsx` (20 ujian komprehensif merangkumi 100% pariti kamus ketiga-tiga ruang nama `commerce`, `housing`, dan `services`, pengesahan rendering DOM Bahasa Inggeris bagi kesemua 8 modul utama, rendering DOM Bahasa Melayu, dan pertukaran bahasa dinamik masa nyata).
+   - `src/__tests__/polymartVendorSuperApp.test.ts` (36 ujian unit teras merangkumi `ReceiptReviewSheet`, `VendorOrdersPipeline`, `VendorCatalogManager`, `VendorAnalyticsPromo`, dan `PolyMartVendorDashboard`).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master merangkumi keseluruhan pangkalan kod JPP-POLISAS).
+   - **Keputusan:** 76/76 ujian berkaitan Domain 5 lulus dengan cemerlang tanpa sebarang regresi.
