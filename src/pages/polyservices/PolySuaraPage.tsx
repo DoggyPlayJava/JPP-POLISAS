@@ -1533,7 +1533,7 @@ export function PolySuaraPage({
                   }}
                   className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-1 text-xs font-bold transition-all shrink-0"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
               </form>
             )}
@@ -1988,7 +1988,7 @@ export function PolySuaraPage({
                                 </span>
                                 {isMine && (
                                   <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider" data-html2canvas-ignore>
-                                    Anda
+                                    {t('services:you_label', 'Anda')}
                                   </span>
                                 )}
                               </div>
@@ -2329,7 +2329,7 @@ export function PolySuaraPage({
                     onClick={() => setReportModalOpen(false)}
                     className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                   <button
                     disabled={!reportReason.trim() || isReporting}
@@ -2408,7 +2408,7 @@ export function PolySuaraPage({
               >
                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-teal-400" />
-                  Maklum Balas JPP
+                  {t('services:jpp_feedback', 'Maklum Balas JPP')}
                 </h3>
                 <p className="text-sm text-slate-400 mb-4">
                   {t('services:jpp_reply_desc', 'Berikan maklum balas rasmi dari pihak pengurusan/JPP untuk luahan ini.')}
@@ -2439,7 +2439,7 @@ export function PolySuaraPage({
                     onClick={() => setReplyModalOpen(false)}
                     className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                   <button
                     disabled={!replyText.trim() || isReplying}
@@ -2494,7 +2494,7 @@ export function PolySuaraPage({
                     onClick={() => setAuthorReplyModalOpen(false)}
                     className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                   <button
                     disabled={!authorReplyText.trim() || isAuthorReplying}

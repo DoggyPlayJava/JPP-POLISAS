@@ -186,7 +186,13 @@
   "change_status_failed": "Gagal menukar status",
   "ad_deleted_success": "Iklan dipadam",
   "delete_ad_failed": "Gagal memadam iklan",
-  "mark_rented": "Tandakan Disewa",
   "reopen_ad": "Buka Semula",
-  "available_slots_stepper": "Slot Kosong"
+  "available_slots_stepper": "Slot Kosong",
+  "delete_ad_confirm": "Adakah anda pasti mahu memadam iklan ini? Tindakan ini tidak boleh dipulihkan.",
+  "delete_search_ad_confirm": "Padam iklan pencarian ini?",
+  "ad_title_required": "Tajuk iklan tidak boleh kosong",
+  "invalid_rent_price": "Sila masukkan harga sewa yang sah",
+  "search_ad_deleted_success": "Iklan pencarian dipadam",
+  "search_ad_status_closed": "Ditutup (Sudah jumpa rumah)",
+  "search_ad_status_open": "Dibuka Semula"
 }

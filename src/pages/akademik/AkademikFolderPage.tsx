@@ -296,7 +296,7 @@ export function InAppDocumentPreviewer({
             }}
           >
             <Download className="w-4 h-4" />
-            Muat Turun Fail
+            {t('akademik:download_file_btn', 'Muat Turun Fail')}
           </a>
           {externalUrl && (
             <a
@@ -759,7 +759,7 @@ export function AkademikFolderPage() {
                   onClick={() => { setShowCreate(false); setShowPresets(false); }}
                   className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
               </div>
             </div>

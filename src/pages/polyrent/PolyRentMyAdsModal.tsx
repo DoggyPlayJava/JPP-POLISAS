@@ -108,7 +108,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
         .eq('id', id);
 
       if (error) throw error;
-      toast.success(newStatus === 'CLOSED' ? 'Iklan ditutup (Telah Disewa)' : 'Iklan dibuka semula');
+      toast.success(newStatus === 'CLOSED' ? t('housing:ad_status_updated', 'Iklan ditutup (Telah Disewa)') : t('housing:reopen_ad', 'Iklan dibuka semula'));
       onUpdateComplete();
     } catch (err) {
       console.error(err);
@@ -118,7 +118,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Adakah anda pasti mahu memadam iklan ini? Tindakan ini tidak boleh dipulihkan.")) return;
+    if (!window.confirm(t('housing:delete_ad_confirm', 'Adakah anda pasti mahu memadam iklan ini? Tindakan ini tidak boleh dipulihkan.'))) return;
 
     setMyListings(prev => prev.filter(l => l.id !== id));
     
@@ -129,7 +129,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Iklan berjaya dipadam');
+      toast.success(t('housing:ad_deleted_success', 'Iklan berjaya dipadam'));
       onUpdateComplete();
     } catch (err) {
       console.error(err);
@@ -139,12 +139,12 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   };
 
   const handleDeleteReverseAd = async (id: string) => {
-    if (!window.confirm("Padam iklan pencarian ini?")) return;
+    if (!window.confirm(t('housing:delete_search_ad_confirm', 'Padam iklan pencarian ini?'))) return;
     setMyReverseAds(prev => prev.filter(a => a.id !== id));
     try {
       const { error } = await supabase.from('polyrent_reverse_ads').delete().eq('id', id);
       if (error) throw error;
-      toast.success('Iklan pencarian dipadam');
+      toast.success(t('housing:search_ad_deleted_success', 'Iklan pencarian dipadam'));
       onUpdateComplete();
     } catch (err) {
       toast.error(t('housing:delete_ad_failed', 'Gagal memadam iklan'));
@@ -158,7 +158,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
     try {
       const { error } = await supabase.from('polyrent_reverse_ads').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
-      toast.success(newStatus === 'CLOSED' ? 'Ditutup (Sudah jumpa rumah)' : 'Dibuka Semula');
+      toast.success(newStatus === 'CLOSED' ? t('housing:search_ad_status_closed', 'Ditutup (Sudah jumpa rumah)') : t('housing:search_ad_status_open', 'Dibuka Semula'));
       onUpdateComplete();
     } catch (err) {
       toast.error(t('housing:change_status_failed', 'Gagal menukar status'));
@@ -182,8 +182,8 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   };
 
   const handleSaveEdit = async (id: string) => {
-    if (!editForm.title?.trim()) { toast.error('Tajuk iklan tidak boleh kosong'); return; }
-    if (!editForm.sewa_bulanan || isNaN(parseFloat(editForm.sewa_bulanan))) { toast.error('Sila masukkan harga sewa yang sah'); return; }
+    if (!editForm.title?.trim()) { toast.error(t('housing:ad_title_required', 'Tajuk iklan tidak boleh kosong')); return; }
+    if (!editForm.sewa_bulanan || isNaN(parseFloat(editForm.sewa_bulanan))) { toast.error(t('housing:invalid_rent_price', 'Sila masukkan harga sewa yang sah')); return; }
 
     setIsSavingEdit(true);
     try {
@@ -387,7 +387,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
 
                                 {/* Tajuk */}
                                 <div>
-                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Tajuk Iklan</label>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:ad_title_label', 'Tajuk Iklan')}</label>
                                   <input
                                     type="text"
                                     value={editForm.title}
@@ -399,7 +399,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                 {/* Harga */}
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Sewa Bulanan (RM)</label>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:monthly_rent_label', 'Sewa Bulanan (RM)')}</label>
                                     <input
                                       type="number"
                                       value={editForm.sewa_bulanan}
@@ -408,7 +408,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Deposit Awal (RM)</label>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:initial_deposit_label', 'Deposit Awal (RM)')}</label>
                                     <input
                                       type="number"
                                       value={editForm.deposit_awal}
@@ -420,31 +420,31 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
 
                                 {/* Kemudahan */}
                                 <div>
-                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Kemudahan / Fasiliti</label>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:facilities_label', 'Kemudahan / Fasiliti')}</label>
                                   <textarea
                                     rows={2}
                                     value={editForm.kemudahan}
                                     onChange={e => setEditForm(p => ({ ...p, kemudahan: e.target.value }))}
-                                    placeholder="Cth: WiFi, Mesin basuh, Peti sejuk..."
+                                    placeholder={t('housing:facilities_placeholder', 'Cth: WiFi, Mesin basuh, Peti sejuk...')}
                                     className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none resize-none"
                                   />
                                 </div>
 
                                 {/* Ciri-ciri */}
                                 <div>
-                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Ciri-ciri Rakan Sewa Dicari</label>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:target_tenant_features', 'Ciri-ciri Rakan Sewa Dicari')}</label>
                                   <textarea
                                     rows={2}
                                     value={editForm.ciri_ciri_dicari}
                                     onChange={e => setEditForm(p => ({ ...p, ciri_ciri_dicari: e.target.value }))}
-                                    placeholder="Cth: Pembersih, tidak merokok..."
+                                    placeholder={t('housing:tenant_features_placeholder', 'Cth: Pembersih, tidak merokok...')}
                                     className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none resize-none"
                                   />
                                 </div>
 
                                 {/* Contact Info */}
                                 <div>
-                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Nombor Telefon / WhatsApp</label>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:phone_whatsapp_label', 'Nombor Telefon / WhatsApp')}</label>
                                   <input
                                     type="text"
                                     value={editForm.contact_info}
@@ -457,7 +457,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                 {/* Available From + Chat Toggle */}
                                 <div className="grid grid-cols-2 gap-3 items-start">
                                   <div>
-                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Tarikh Kekosongan Bermula</label>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:available_from_label', 'Tarikh Kekosongan Bermula')}</label>
                                     <input
                                       type="date"
                                       value={editForm.available_from}
@@ -466,7 +466,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Benarkan In-App Chat</label>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">{t('housing:allow_in_app_chat', 'Benarkan In-App Chat')}</label>
                                     <button
                                       type="button"
                                       onClick={() => setEditForm(p => ({ ...p, enable_in_app_chat: !p.enable_in_app_chat }))}
@@ -478,7 +478,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                         editForm.enable_in_app_chat ? 'translate-x-6' : 'translate-x-0'
                                       }`} />
                                     </button>
-                                    <p className="text-[10px] text-slate-400 mt-1">{editForm.enable_in_app_chat ? 'Dibenarkan' : 'Dimatikan'}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">{editForm.enable_in_app_chat ? t('common:enabled', 'Dibenarkan') : t('common:disabled', 'Dimatikan')}</p>
                                   </div>
                                 </div>
 
