@@ -68,6 +68,7 @@ function GroupColumn({ label, color, entries, revealedCount }: {
   entries: DrawEntry[];
   revealedCount: number;
 }) {
+  const { t } = useTranslation(['supsas', 'common']);
   return (
     <div className="flex-1 space-y-1.5 min-w-0">
       <div
@@ -105,14 +106,14 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
 
   const drawEntries: DrawEntry[] = isMultiGroup
     ? allTeams
-        .filter(t => t.sport_id === sport.id)
-        .map(t => {
-          const k = kontingen.find(k => k.id === t.kontingen_id);
+        .filter(tm => tm.sport_id === sport.id)
+        .map(tm => {
+          const k = kontingen.find(k => k.id === tm.kontingen_id);
           return {
-            id: t.id, name: t.name,
-            shortCode: `${k?.short_code ?? '?'} #${t.group_number}`,
+            id: tm.id, name: tm.name,
+            shortCode: `${k?.short_code ?? '?'} #${tm.group_number}`,
             color: k?.color ?? '#F59E0B',
-            kontingenId: t.kontingen_id, teamId: t.id,
+            kontingenId: tm.kontingen_id, teamId: tm.id,
           };
         })
     : kontingen

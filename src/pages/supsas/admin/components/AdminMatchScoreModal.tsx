@@ -33,6 +33,12 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
   const [scoreA, setScoreA] = useState(fixture.score_a ?? '');
   const [scoreB, setScoreB] = useState(fixture.score_b ?? '');
   const [status, setStatus] = useState<string>(fixture.status);
+  const statusOptions = [
+    { value: 'upcoming',  label: t('supsas:status_upcoming', 'Akan Datang'), cls: 'text-white/60' },
+    { value: 'live',      label: `🔴 ${t('supsas:status_live', 'Sedang Live')}`, cls: 'text-red-400' },
+    { value: 'completed', label: `✅ ${t('supsas:status_completed', 'Selesai')}`, cls: 'text-emerald-400' },
+    { value: 'postponed', label: `⏸ ${t('supsas:status_postponed', 'Ditangguh')}`, cls: 'text-amber-400' },
+  ];
   const [notes, setNotes]   = useState(fixture.notes ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -205,7 +211,7 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:match_status', 'Status Perlawanan')}</label>
             <div className="grid grid-cols-2 gap-2">
-              {STATUS_OPTIONS.map(opt => (
+              {statusOptions.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setStatus(opt.value)}

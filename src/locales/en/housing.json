@@ -320,5 +320,9 @@
   "webhook_url": "Webhook URL",
   "where_do_you_live": "Where are you living this semester?",
   "zero_slot_warning": "Available slots is 0. The ad is still 'Active' but searchers may not be interested. Please 'Mark as Rented' if the house is full.",
-  "zone_name_placeholder": "Zone name (e.g. SEMAMBU)"
+  "zone_name_placeholder": "Zone name (e.g. SEMAMBU)",
+  "residential_area": "Residential Area",
+  "submit_info": "Submit Information",
+  "department": "Department",
+  "declaration_date": "Declaration Date"
 }

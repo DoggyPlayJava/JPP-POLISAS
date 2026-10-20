@@ -320,5 +320,9 @@
   "webhook_url": "Webhook URL",
   "where_do_you_live": "Di mana anda tinggal semester ini?",
   "zero_slot_warning": "Kekosongan adalah 0. Iklan masih 'Aktif' tetapi pencari mungkin tidak berminat. Sila 'Tandakan Disewa' jika rumah sudah penuh.",
-  "zone_name_placeholder": "Nama kawasan (cth: SEMAMBU)"
+  "zone_name_placeholder": "Nama kawasan (cth: SEMAMBU)",
+  "residential_area": "Kawasan Kediaman",
+  "submit_info": "Hantar Maklumat",
+  "department": "Jabatan",
+  "declaration_date": "Tarikh Pengisytiharan"
 }

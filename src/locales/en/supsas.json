@@ -227,5 +227,6 @@
   "wait_sf_left": "Waiting on {{count}} SF matches",
   "winner_label": "Declared Winner",
   "wins": "wins",
-  "yellow_card_for": "Yellow Card: {{name}}"
+  "yellow_card_for": "Yellow Card: {{name}}",
+  "search_player_placeholder": "Search name or matric no..."
 }

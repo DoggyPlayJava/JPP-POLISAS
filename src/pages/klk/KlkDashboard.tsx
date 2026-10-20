@@ -768,7 +768,7 @@ export function KlkDashboard() {
     t('housing:department', 'Jabatan'),
     t('housing:residential_area', 'Kawasan'),
     t('housing:data_source', 'Sumber'),
-    t('housing:achievement_date', 'Tarikh'),
+    t('housing:declaration_date', 'Tarikh'),
     ''
   ].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>

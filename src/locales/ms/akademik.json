@@ -202,5 +202,7 @@
   "uploading": "Memuat Naik...",
   "verification_pin_auto": "PIN Pengesahan (Automatik)",
   "view_transcript": "Transkrip",
-  "vs_previous_sem": "vs semester lepas"
+  "vs_previous_sem": "vs semester lepas",
+  "achievement_name_placeholder": "Contoh: Johan Pertandingan Debat Kebangsaan 2025",
+  "achievement_organizer_placeholder": "Nama penganjur"
 }

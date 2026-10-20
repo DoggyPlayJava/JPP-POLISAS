@@ -264,7 +264,7 @@ export function KetuaDashboard() {
   const [creatingTeam, setCreatingTeam] = useState(false);
 
   // Filter teams for this kontingen
-  const myTeams = allTeams.filter(t => t.kontingen_id === myKontingen.id);
+  const myTeams = allTeams.filter(tm => tm.kontingen_id === myKontingen.id);
 
   const fetchParticipants = async () => {
     setLoadingPart(true);
@@ -283,7 +283,7 @@ export function KetuaDashboard() {
   }, [sports]);
 
   const selectedSport = sports.find(s => s.id === selectedSportId);
-  const teamsForSport = myTeams.filter(t => t.sport_id === selectedSportId);
+  const teamsForSport = myTeams.filter(tm => tm.sport_id === selectedSportId);
   const maxGroups = selectedSport?.max_groups_per_kontingen ?? 1;
   const maxPlayersPerGroup = selectedSport?.max_players_per_group ?? 11;
   const canAddTeam = teamsForSport.length < maxGroups;
@@ -379,7 +379,7 @@ export function KetuaDashboard() {
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-3">{t('supsas:select_sport', 'Pilih Sukan')}</p>
         <div className="flex flex-wrap gap-2">
           {sports.map(s => {
-            const myTeamsForSport = myTeams.filter(t => t.sport_id === s.id);
+            const myTeamsForSport = myTeams.filter(tm => tm.sport_id === s.id);
             return (
               <button key={s.id} onClick={() => setSelectedSportId(s.id)}
                 className={cn(
