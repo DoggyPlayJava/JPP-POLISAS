@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { X, Star, Briefcase, Award, ShieldCheck, User } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { formatMaskedName } from '@/lib/utils';
 
 interface TaskerProfileModalProps {
@@ -13,6 +13,7 @@ interface TaskerProfileModalProps {
 }
 
 export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = false }: TaskerProfileModalProps) {
+  const { t } = useTranslation('gig');
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState({
@@ -90,7 +91,7 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/80 "
+            className="absolute inset-0 bg-slate-950/80"
             onClick={onClose}
           />
           <motion.div
@@ -117,7 +118,7 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                 {/* Avatar with Glow if Top Tasker */}
                 <div className="relative mb-4">
                   {isTopTasker && (
-                    <div className="absolute inset-0 bg-yellow-500  opacity-30 rounded-full" />
+                    <div className="absolute inset-0 bg-yellow-500 opacity-30 rounded-full" />
                   )}
                   <div className={`relative w-24 h-24 rounded-full overflow-hidden border-4 ${isTopTasker ? 'border-yellow-400' : 'border-slate-800'} bg-slate-800 flex items-center justify-center`}>
                     {profile?.avatar_url ? (
@@ -135,14 +136,18 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
 
                 {/* Name & Badge */}
                 <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-                  {isAccepted ? (profile?.full_name || 'Pelajar POLISAS') : formatMaskedName(profile?.full_name)}
+                  {isAccepted ? (profile?.full_name || t('gig:polisas_student', 'Pelajar POLISAS')) : formatMaskedName(profile?.full_name)}
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
                 </h2>
                 
                 {isTopTasker ? (
-                  <span className="text-sm font-bold text-yellow-400 uppercase tracking-widest mb-6">Top Tasker</span>
+                  <span className="text-sm font-bold text-yellow-400 uppercase tracking-widest mb-6">
+                    {t('gig:top_tasker', 'Top Tasker')}
+                  </span>
                 ) : (
-                  <span className="text-sm text-slate-400 mb-6">Tasker Disahkan</span>
+                  <span className="text-sm text-slate-400 mb-6">
+                    {t('gig:verified_tasker', 'Tasker Disahkan')}
+                  </span>
                 )}
 
                 {/* Stats Grid */}
@@ -150,13 +155,13 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                   <div className="bg-slate-950/50 border border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-800/50 transition-colors">
                     <Star className={`w-5 h-5 mb-1 ${stats.averageRating >= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-500'}`} />
                     <span className="text-xl font-black text-white">{stats.averageRating.toFixed(1)}</span>
-                    <span className="text-[10px] text-slate-400">Rating</span>
+                    <span className="text-[10px] text-slate-400">{t('gig:stat_rating', 'Rating')}</span>
                   </div>
                   
                   <div className="bg-slate-950/50 border border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-800/50 transition-colors">
                     <Briefcase className="w-5 h-5 mb-1 text-indigo-400" />
                     <span className="text-xl font-black text-white">{stats.completedJobs}</span>
-                    <span className="text-[10px] text-slate-400">Selesai</span>
+                    <span className="text-[10px] text-slate-400">{t('gig:stat_completed', 'Selesai')}</span>
                   </div>
 
                   <div className={`border rounded-2xl p-3 flex flex-col items-center text-center transition-colors ${
@@ -166,13 +171,13 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                     <span className={`text-xl font-black ${cancellationRate > 20 ? 'text-rose-400' : 'text-white'}`}>
                       {cancellationRate.toFixed(0)}%
                     </span>
-                    <span className="text-[10px] text-slate-400">Batal</span>
+                    <span className="text-[10px] text-slate-400">{t('gig:stat_cancelled', 'Batal')}</span>
                   </div>
                 </div>
 
                 <div className="w-full bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4">
                   <p className="text-sm text-indigo-300 text-center">
-                    "Saya berdedikasi membantu memudahkan urusan anda dengan penuh amanah."
+                    {t('gig:tasker_quote', '"Saya berdedikasi membantu memudahkan urusan anda dengan penuh amanah."')}
                   </p>
                 </div>
               </div>

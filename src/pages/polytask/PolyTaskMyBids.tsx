@@ -6,8 +6,10 @@ import { Loader2, Clock, ChevronRight, CheckCircle, ShieldAlert } from 'lucide-r
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function PolyTaskMyBids() {
+  const { t, i18n } = useTranslation('gig');
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [bids, setBids] = useState<any[]>([]);
@@ -36,18 +38,25 @@ export function PolyTaskMyBids() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'PENDING': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20 flex items-center gap-1"><Clock className="w-3 h-3"/> MENUNGGU</span>;
-      case 'ACCEPTED': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> DITERIMA</span>;
-      case 'REJECTED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20 flex items-center gap-1"><ShieldAlert className="w-3 h-3"/> DITOLAK</span>;
+      case 'PENDING': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20 flex items-center gap-1"><Clock className="w-3 h-3"/> {t('gig:bid_status_pending', 'MENUNGGU')}</span>;
+      case 'ACCEPTED': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {t('gig:bid_status_accepted', 'DITERIMA')}</span>;
+      case 'REJECTED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20 flex items-center gap-1"><ShieldAlert className="w-3 h-3"/> {t('gig:bid_status_rejected', 'DITOLAK')}</span>;
       default: return null;
     }
   };
 
+  const dateFnsLocale = i18n.language === 'en' ? undefined : ms;
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'ms-MY';
+
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">Bidaan <span className="text-indigo-400">Saya</span></h1>
-        <p className="text-slate-400">Pantaun status tawaran khidmat anda kepada peminta tugasan.</p>
+        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+          {t('gig:bids_title_prefix', 'Bidaan')} <span className="text-indigo-400">{t('gig:bids_title_highlight', 'Saya')}</span>
+        </h1>
+        <p className="text-slate-400">
+          {t('gig:my_bids_subtitle', 'Pantau status tawaran khidmat anda kepada peminta tugasan.')}
+        </p>
       </div>
 
       {loading ? (
@@ -78,15 +87,15 @@ export function PolyTaskMyBids() {
           <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
             <Clock className="w-8 h-8 text-slate-500" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Belum ada tawaran bidaan</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('gig:my_bids_empty_title', 'Belum ada tawaran bidaan')}</h3>
           <p className="text-slate-400 max-w-sm mb-6">
-            Anda belum menghantar bidaan untuk mana-mana tugasan. Lihat Papan Tugasan untuk cari peluang pekerjaan!
+            {t('gig:my_bids_empty_desc', 'Anda belum menghantar bidaan untuk mana-mana tugasan. Lihat Papan Tugasan untuk cari peluang pekerjaan!')}
           </p>
           <button 
             onClick={() => navigate('/polytask')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition-all"
           >
-            Cari Tugasan
+            {t('gig:find_tasks_btn', 'Cari Tugasan')}
           </button>
         </div>
       ) : (
@@ -111,23 +120,25 @@ export function PolyTaskMyBids() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-slate-500">
-                      Tugasan dari <span className="font-semibold text-slate-300">{job.requester?.full_name}</span>
+                      {t('gig:task_from', 'Tugasan dari')} <span className="font-semibold text-slate-300">{job.requester?.full_name}</span>
                     </span>
                     <span className="text-xs text-slate-500">
-                      Hantar: {formatDistanceToNow(new Date(bid.created_at), { addSuffix: true, locale: ms })}
+                      {t('gig:submitted_time', 'Hantar: {{time}}', {
+                        time: formatDistanceToNow(new Date(bid.created_at), { addSuffix: true, locale: dateFnsLocale })
+                      })}
                     </span>
                   </div>
                   
                   <h3 className="text-lg font-bold text-white mb-2">{job.title}</h3>
                   <div className="flex items-center gap-4 text-xs text-slate-400">
                     <span className="bg-white/5 px-2 py-1 rounded-md">{job.category}</span>
-                    <span>Tarikh Akhir: {new Date(job.deadline).toLocaleDateString('ms-MY')}</span>
+                    <span>{t('gig:deadline_prefix', 'Tarikh Akhir: {{date}}', { date: new Date(job.deadline).toLocaleDateString(dateLocale) })}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-4 sm:border-l border-white/10 sm:pl-6 min-w-[150px] relative">
                   <div className="text-center">
-                    <p className="text-xs text-slate-400 font-medium mb-1">Tawaran Anda</p>
+                    <p className="text-xs text-slate-400 font-medium mb-1">{t('gig:your_offer', 'Tawaran Anda')}</p>
                     <p className="text-xl font-bold text-emerald-400">RM {bid.bid_amount.toFixed(2)}</p>
                   </div>
                   {getStatusBadge(bid.status)}

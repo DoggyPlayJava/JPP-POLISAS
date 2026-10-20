@@ -5095,3 +5095,46 @@ Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localiz
 
 
 
+
+### 36.23 Penyetempatan Mendalam Task 5: Kumpulan 5 (Sukan SUPSAS, Kediaman Luar Kampus KLK & PolyRent)
+Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localization sweep) bagi Task 5 merentasi 20 fail komponen dan halaman yang meliputi ekosistem Kejohanan Sukan SUPSAS dan Perumahan Luar Kampus KLK / PolyRent:
+
+1. **20 Fail Komponen & Halaman Sasaran:**
+   - **Sukan SUPSAS:** `BracketPage.tsx`, `SupsasHistoryPage.tsx`, `SupsasSchedulePage.tsx`, `SupsasSportsPage.tsx`, `SupsasLayout.tsx`, `KnockoutBracket.tsx`, `LiveDrawOverlay.tsx`, `KetuaLayout.tsx`, `AdminKeputusanPage.tsx`, `AdminKontigenPage.tsx`, `AdminTetapanPage.tsx`, `AdminDrawModal.tsx`, `SupsasAdminLayout.tsx`.
+   - **KLK & PolyRent:** `KlkLayout.tsx`, `KlkPublicStats.tsx`, `PolyRentAdmin.tsx`, `PolyRentCalculatorModal.tsx`, `PolyRentChatModal.tsx`, `PolyRentDetailModal.tsx`, `PolyRentReverseForm.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `supsas.json` disegerakkan sepenuhnya (403 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `housing.json` disegerakkan sepenuhnya (453 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `common.json` disegerakkan sepenuhnya (192 entri terjemahan).
+   - Pengekalan nilai status domain pangkalan data dengan fallback literal Bahasa Melayu mandatori pada setiap panggilan `t()`.
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup5SupsasAndHousingI18n.test.tsx` (13/13 lulus 100%).
+
+### 36.24 Penyetempatan Mendalam Task 6: Kumpulan 6 (Logistik Pelajar: PolyGig/Rider/Task & Shell Utiliti/Sokongan)
+Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localization sweep) bagi Task 6 merentasi 21 fail komponen dan halaman yang merangkumi sistem logistik penghantaran PolyGig/PolyRider, mikro-tugasan kampus PolyTask, pengesahan sijil awam & pengimbas pintu masuk EMS, papan pemuka pentadbiran unit JPP, pengundian demokratik PolySuara, dan halaman utiliti sistem:
+
+1. **21 Fail Komponen & Halaman Sasaran:**
+   - **PolyRider & PolyGig:** `src/pages/polyrider/PolyRiderLayout.tsx`, `src/pages/polyrider/PolyRiderSuspended.tsx`, `src/pages/polyrider/SOSContactsManager.tsx`.
+   - **PolyTask:** `src/pages/polytask/PolyTaskLayout.tsx`, `src/pages/polytask/PolyTaskMyBids.tsx`, `src/pages/polytask/PolyTaskChatModal.tsx`, `src/pages/polytask/PolyTaskReviewModal.tsx`, `src/pages/polytask/PolyTaskSkeleton.tsx`, `src/pages/polytask/TaskerProfileModal.tsx`.
+   - **Pengesahan Awam EMS:** `src/pages/ems/EmsCertVerifyPage.tsx`, `src/pages/ems/EmsCheckinSelectorPage.tsx`.
+   - **Pentadbiran Unit JPP:** `src/pages/jpp/ExcoWrappers.tsx`, `src/pages/jpp/JppUnitDashboard.tsx`.
+   - **Pengundian Siswa PolySuara:** `src/pages/polyservices/PolySuaraPoll.tsx`.
+   - **Shell Utiliti & Sokongan Sistem:** `src/pages/PromoPage.tsx`, `src/pages/RejectedPage.tsx`, `src/pages/ResetPasswordPage.tsx`, `src/pages/PenasihatLogPage.tsx`, `src/pages/PendingPage.tsx`, `src/pages/TeamPage.tsx`, `src/pages/LaunchVideo.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `gig.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (467 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `ems.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (498 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `jpp.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (1,321 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `portal.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (340 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `common.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (193 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Penggunaan fallback literal Bahasa Melayu mandatori pada setiap panggilan `t('namespace:key', 'Literal BM Asal', { ... })`.
+   - Tiada pembayangan pembolehubah (`t` tidak dibayangi oleh pembolehubah gelung atau masa).
+   - Pengekalan nama institusi (POLISAS, JPP, HEP, JKE, SUPSAS, MAKMP) dalam Bahasa Melayu.
+   - Pemformatan tarikh, masa, dan mata wang peka-bahasa (`ms-MY` / `en-US`).
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup6LogisticsAndUtilityI18n.test.tsx` (20/20 lulus 100%).
+   - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
+   - Kesemua 6 suite ujian sapuan menyeluruh lulus serentak: 109/109 ujian (100%).

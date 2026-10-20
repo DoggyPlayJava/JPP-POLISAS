@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { X, Star, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface PolyTaskReviewModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface PolyTaskReviewModalProps {
 }
 
 export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, revieweeId, revieweeName, onReviewSubmitted }: PolyTaskReviewModalProps) {
+  const { t } = useTranslation(['gig', 'common']);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -22,7 +24,7 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error('Sila berikan sekurang-kurangnya 1 bintang.');
+      toast.error(t('gig:rate_at_least_1_star', 'Sila berikan sekurang-kurangnya 1 bintang.'));
       return;
     }
 
@@ -39,9 +41,9 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
 
     if (error) {
       console.error(error);
-      toast.error('Gagal menghantar ulasan. Sila cuba lagi.');
+      toast.error(t('gig:submit_review_failed', 'Gagal menghantar ulasan. Sila cuba lagi.'));
     } else {
-      toast.success('Ulasan berjaya dihantar!');
+      toast.success(t('gig:submit_review_success', 'Ulasan berjaya dihantar!'));
       onReviewSubmitted();
       onClose();
     }
@@ -55,7 +57,7 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/80 "
+            className="absolute inset-0 bg-slate-950/80"
             onClick={onClose}
           />
           <motion.div
@@ -75,9 +77,9 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
               <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
                 <Star className="w-8 h-8 text-indigo-400" />
               </div>
-              <h2 className="text-2xl font-black text-white">Nilai Tugasan</h2>
+              <h2 className="text-2xl font-black text-white">{t('gig:rate_task_title', 'Nilai Tugasan')}</h2>
               <p className="text-sm text-slate-400 mt-2">
-                Bagaimanakah pengalaman anda berurusan dengan <strong className="text-white">{revieweeName}</strong>?
+                {t('gig:rate_experience_prompt', 'Bagaimanakah pengalaman anda berurusan dengan {{name}}?', { name: revieweeName })}
               </p>
             </div>
 
@@ -104,12 +106,12 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Komen (Pilihan)
+                {t('gig:comment_optional', 'Komen (Pilihan)')}
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Tulis sedikit ulasan tentang kualiti kerja..."
+                placeholder={t('gig:comment_placeholder', 'Tulis sedikit ulasan tentang kualiti kerja...')}
                 rows={3}
                 className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/50 outline-none resize-none"
               />
@@ -122,10 +124,10 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Sedang Menghantar...
+                  <Loader2 className="w-5 h-5 animate-spin" /> {t('common:submitting', 'Sedang Menghantar...')}
                 </>
               ) : (
-                'Hantar Ulasan'
+                t('gig:submit_review_btn', 'Hantar Ulasan')
               )}
             </button>
           </motion.div>

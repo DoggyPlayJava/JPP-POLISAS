@@ -12,10 +12,12 @@ import {
   UserCheck,
   RefreshCw,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { fetchEmsEvents } from '@/lib/ems';
 import type { EmsEvent } from '@/types';
 
 export const EmsCheckinSelectorPage: React.FC = () => {
+  const { t, i18n } = useTranslation('ems');
   const navigate = useNavigate();
   const [events, setEvents] = useState<EmsEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,26 +51,28 @@ export const EmsCheckinSelectorPage: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'ms-MY';
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 max-w-7xl mx-auto font-sans transition-colors">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80  p-5 rounded-2xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/ems/dashboard')}
             className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
-            title="Kembali ke Dashboard EMS"
+            title={t('ems:back_to_ems_dashboard', 'Kembali ke Dashboard EMS')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
-                <QrCode className="w-3.5 h-3.5 text-slate-500" /> Portal Check-In Crew EMS
+                <QrCode className="w-3.5 h-3.5 text-slate-500" /> {t('ems:checkin_crew_portal', 'Portal Check-In Crew EMS')}
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
-              Pilih Acara Untuk Check-In Peserta
+              {t('ems:select_event_for_checkin', 'Pilih Acara Untuk Check-In Peserta')}
             </h1>
           </div>
         </div>
@@ -79,7 +83,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-bold transition-all border border-slate-200 dark:border-slate-700/50 shadow-xs active:scale-[0.98]"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Kemaskini Senarai
+            {t('ems:refresh_list', 'Kemaskini Senarai')}
           </button>
         </div>
       </div>
@@ -90,7 +94,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Cari acara mengikut nama atau lokasi..."
+            placeholder={t('ems:search_event_placeholder', 'Cari acara mengikut nama atau lokasi...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 focus:ring-1 focus:ring-slate-400 transition-all shadow-xs"
@@ -104,7 +108,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 shadow-xs"
             >
-              <option value="ALL">Semua Kategori</option>
+              <option value="ALL">{t('ems:all_categories', 'Semua Kategori')}</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -137,9 +141,9 @@ export const EmsCheckinSelectorPage: React.FC = () => {
             <QrCode className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">Tiada Acara Dijumpai</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">{t('ems:no_events_found', 'Tiada Acara Dijumpai')}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Tiada acara aktif yang sepadan dengan carian anda buat masa ini.
+              {t('ems:no_events_found_desc', 'Tiada acara aktif yang sepadan dengan carian anda buat masa ini.')}
             </p>
           </div>
         </div>
@@ -153,10 +157,10 @@ export const EmsCheckinSelectorPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase tracking-wider">
-                    {event.category || 'Acara'}
+                    {event.category || t('ems:event_default_badge', 'Acara')}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Diluluskan
+                    <CheckCircle2 className="w-3 h-3" /> {t('ems:approved_badge', 'Diluluskan')}
                   </span>
                 </div>
 
@@ -169,7 +173,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span className="font-mono tabular-nums">
-                        {new Date(event.event_date).toLocaleDateString('ms-MY', {
+                        {new Date(event.event_date).toLocaleDateString(dateLocale, {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
@@ -186,7 +190,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
                   {event.max_participants ? (
                     <div className="flex items-center gap-2">
                       <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                      <span className="font-mono tabular-nums">Maks Peserta: {event.max_participants} orang</span>
+                      <span className="font-mono tabular-nums">{t('ems:max_participants_count', 'Maks Peserta: {{count}} orang', { count: event.max_participants })}</span>
                     </div>
                   ) : null}
                 </div>
@@ -198,7 +202,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-slate-950 font-bold text-xs shadow-xs transition-all active:scale-[0.98]"
                 >
                   <UserCheck className="w-4 h-4" />
-                  Mula Check-In
+                  {t('ems:start_checkin_btn', 'Mula Check-In')}
                 </Link>
               </div>
             </div>
@@ -208,3 +212,4 @@ export const EmsCheckinSelectorPage: React.FC = () => {
     </div>
   );
 };
+export default EmsCheckinSelectorPage;

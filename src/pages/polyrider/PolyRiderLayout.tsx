@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { supabase } from '@/lib/supabase';
 import { ShieldAlert } from 'lucide-react';
@@ -9,6 +10,7 @@ import { PolyRiderSuspended } from './PolyRiderSuspended';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function PolyRiderLayout() {
+  const { t } = useTranslation('gig');
   const { user } = useAuth();
   const [isActive, setIsActive] = useState<boolean | null>(null);
   const [suspendedUntil, setSuspendedUntil] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function PolyRiderLayout() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Menyemak Sistem...</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{t('gig:checking_system', 'Menyemak Sistem...')}</p>
       </div>
     );
   }
@@ -52,10 +54,10 @@ export function PolyRiderLayout() {
               <ShieldAlert className="w-10 h-10 text-red-500" />
             </div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-              Sistem Ditutup
+              {t('gig:system_closed', 'Sistem Ditutup')}
             </h1>
             <p className="text-sm font-medium text-slate-500 dark:text-white/60 mb-6">
-              Perkhidmatan PolyRider sedang ditutup sementara waktu oleh pihak pembangun.
+              {t('gig:polyrider_service_closed_desc', 'Perkhidmatan PolyRider sedang ditutup sementara waktu oleh pihak pembangun.')}
             </p>
           </div>
         </div>
