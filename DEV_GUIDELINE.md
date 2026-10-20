@@ -5240,6 +5240,19 @@ Melengkapkan gelombang pembersihan pusingan keenam (Batch 6) merentasi 13 fail b
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 2,124 kepada **1,533** (penurunan kumulatif 4,112 kejadian dalam 6 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 33 isu.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.32 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 7): AI Proposals/SuperApp, Academic Folder/PDFs & Entrepreneurship/POS/PolyMart
+Melengkapkan gelombang pembersihan pusingan ketujuh (Batch 7) merentasi 13 fail berketumpatan sederhana dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 7 Disjoint Sweep):**
+   - **Kertas Kerja AI, SuperApp & Aktiviti Kampus (`portal.json`, `kpp.json`):** `superAppHelpers.ts` (33 isu -> 0), `KertasKerjaRenderer.tsx` (31 isu -> 0), `MeritRasmiReviewPanel.tsx` (28 isu -> 0), dan `AktivitiFull.tsx` (30 isu -> 0) diselaraskan sepenuhnya bagi gelongsor kempen SuperApp, pembantu ucapan waktu tempatan, 12 seksyen penjanaan kertas kerja AI, panel semakan merit aktiviti kelab, dan pendaftaran aktiviti rasmi. Kunci kamus `portal.json` dan `kpp.json` diselaraskan dengan 100% pariti.
+   - **Folder Dokumen Akademik, Laporan PDF Kebajikan & Kamsis (`akademik.json`, `kebajikan.json`, `housing.json`):** `AkademikFolderPage.tsx` (30 isu -> 0), `KebajikanReportPDF.tsx` (29 isu -> 0), `KebajikanPicReportPDF.tsx` (27 isu -> 0), dan `KamsisApplicationModal.tsx` (17 isu -> 0) diselubungi bagi pengurus fail ZIP/dokumen pelajar, lejar metrik PDF aduan kebajikan dan surat rasmi PIC, serta modal pemilihan penempatan asrama Kamsis POLISAS. Kunci kamus diselaraskan dengan 100% pariti.
+   - **Program Keusahawanan Pelajar, Terminal POS & PolyMart (`keusahawanan.json`, `commerce.json`):** `KeusahawananProgram.tsx` (26 isu -> 0), `KeusahawananLayout.tsx` (20 isu -> 0), `PosOrderPage.tsx` (19 isu -> 0), `PolyMartAdminPanel.tsx` (18 isu -> 0), dan `PolyMartCartPage.tsx` (16 isu -> 0) diselaraskan bagi direktori inkubator siswa, navigasi susun atur perniagaan, kupon tunai terminal POS, troli pesanan PolyMart, dan penyederhanaan iklan promosi kampus.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 85/85 ujian lulus merentasi suite `masterLocales`, `SweepGroup1PortalAndAcademicsI18n`, `SweepGroup4CommerceAndPosI18n`, dan `Domain1And8SharedCompleteI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 1,533 kepada **1,209** (penurunan kumulatif 4,436 kejadian dalam 7 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 26 isu.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

@@ -3,6 +3,7 @@
 // Muncul jika kamsis_application_open = true dan pelajar belum isi
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, ArrowRight, Loader2, X, CheckCircle2, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { KamsisDynamicFieldRenderer } from '@/components/kamsis/KamsisDynamicFie
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 
 export function KamsisApplicationModal() {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile, user } = useAuth();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<'choice' | 'form' | 'done'>('choice');
@@ -102,7 +104,7 @@ export function KamsisApplicationModal() {
     // Validate
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
-        toast.error(`Sila isi: ${f.label}`); return;
+        toast.error(t('housing:fill_required_field', 'Sila isi: {{label}}', { label: f.label })); return;
       }
     }
 
@@ -122,8 +124,8 @@ export function KamsisApplicationModal() {
       try {
         const { sendNotificationToKamsisAdmin } = await import('@/lib/notifications');
         await sendNotificationToKamsisAdmin({
-          title: 'Permohonan Asrama Baru',
-          message: `Pelajar ${profile?.full_name || ''} telah menghantar permohonan asrama.`,
+          title: t('housing:notif_new_hostel_application_title', 'Permohonan Asrama Baru'),
+          message: t('housing:notif_new_hostel_application_msg', 'Pelajar {{name}} telah menghantar permohonan asrama.', { name: profile?.full_name || '' }),
           type: 'INFO',
           module: 'KAMSIS',
           link: '/jpp/asrama'
@@ -133,10 +135,10 @@ export function KamsisApplicationModal() {
       }
 
       setStep('done');
-      toast.success('Permohonan asrama berjaya dihantar!');
+      toast.success(t('housing:toast_application_success', 'Permohonan asrama berjaya dihantar!'));
       setTimeout(() => setShow(false), 2000);
     } catch (e: any) {
-      toast.error('Gagal menghantar permohonan. Sila cuba lagi.');
+      toast.error(t('housing:toast_application_failed', 'Gagal menghantar permohonan. Sila cuba lagi.'));
     } finally {
       setLoading(false);
     }
@@ -190,10 +192,10 @@ export function KamsisApplicationModal() {
                 {step === 'choice' && (
                   <motion.div key="choice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <h2 className="text-xl font-black text-white mb-1 tracking-tight">
-                      Permohonan Asrama KAMSIS Kini Buka
+                      {t('housing:modal_kamsis_open_title', 'Permohonan Asrama KAMSIS Kini Buka')}
                     </h2>
                     <p className="text-xs text-slate-400 font-medium mb-6">
-                      Bagi sesi {activeSession}. Adakah anda ingin memohon tempat di asrama? Jika ya, sila isi borang permohonan.
+                      {t('housing:modal_kamsis_open_desc', 'Bagi sesi {{session}}. Adakah anda ingin memohon tempat di asrama? Jika ya, sila isi borang permohonan.', { session: activeSession })}
                     </p>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -208,8 +210,8 @@ export function KamsisApplicationModal() {
                           <Building2 className="w-6 h-6 text-violet-400" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-black text-violet-300">Ya, Mohon</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">Duduk Asrama</p>
+                          <p className="text-sm font-black text-violet-300">{t('housing:btn_yes_apply', 'Ya, Mohon')}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:btn_stay_hostel', 'Duduk Asrama')}</p>
                         </div>
                       </motion.button>
 
@@ -225,8 +227,8 @@ export function KamsisApplicationModal() {
                           <Home className="w-6 h-6 text-slate-400" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-black text-slate-300">Tidak Perlu</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">Luar Kampus</p>
+                          <p className="text-sm font-black text-slate-300">{t('housing:btn_no_need', 'Tidak Perlu')}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:btn_off_campus', 'Luar Kampus')}</p>
                         </div>
                       </motion.button>
                     </div>
@@ -244,8 +246,8 @@ export function KamsisApplicationModal() {
                         <X className="w-4 h-4 text-slate-400" />
                       </button>
                       <div>
-                        <h2 className="text-lg font-black text-white tracking-tight">Borang Permohonan</h2>
-                        <p className="text-[11px] text-slate-500">Isi maklumat tambahan yang diperlukan</p>
+                        <h2 className="text-lg font-black text-white tracking-tight">{t('housing:application_form_title', 'Borang Permohonan')}</h2>
+                        <p className="text-[11px] text-slate-500">{t('housing:application_form_subtitle', 'Isi maklumat tambahan yang diperlukan')}</p>
                       </div>
                     </div>
 
@@ -253,7 +255,7 @@ export function KamsisApplicationModal() {
 
                       {dynamicFields.length === 0 ? (
                         <div className="py-8 text-center text-slate-400 text-sm font-medium">
-                          Tiada soalan tambahan diperlukan. Teruskan memohon.
+                          {t('housing:no_additional_questions', 'Tiada soalan tambahan diperlukan. Teruskan memohon.')}
                         </div>
                       ) : (
                         <KamsisDynamicFieldRenderer
@@ -272,11 +274,11 @@ export function KamsisApplicationModal() {
                       >
                         {loading ? (
                           <span className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" /> Menghantar...
+                            <Loader2 className="w-4 h-4 animate-spin" /> {t('housing:submitting', 'Menghantar...')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">
-                            Hantar Permohonan <ArrowRight className="w-4 h-4" />
+                            {t('housing:btn_submit_application', 'Hantar Permohonan')} <ArrowRight className="w-4 h-4" />
                           </span>
                         )}
                       </Button>
@@ -300,8 +302,8 @@ export function KamsisApplicationModal() {
                     >
                       <CheckCircle2 className="w-8 h-8 text-violet-400" />
                     </motion.div>
-                    <h2 className="text-xl font-black text-white mb-2">Terima Kasih!</h2>
-                    <p className="text-sm text-slate-400">Permohonan asrama anda sedang diproses.</p>
+                    <h2 className="text-xl font-black text-white mb-2">{t('housing:thank_you_title', 'Terima Kasih!')}</h2>
+                    <p className="text-sm text-slate-400">{t('housing:application_processing_msg', 'Permohonan asrama anda sedang diproses.')}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -48,7 +48,7 @@ function PosAccessDenied({ color }: { color: string }) {
           {t('pos_access_desc')}
         </p>
         <div className="mt-5 px-4 py-3 rounded-2xl bg-muted/50 border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-          Hubungi pemilik bisnes untuk penetapan akses hari ini.
+          {t('keusahawanan:pos_access_contact_owner', 'Hubungi pemilik bisnes untuk penetapan akses hari ini.')}
         </div>
       </motion.div>
     </div>
@@ -57,7 +57,7 @@ function PosAccessDenied({ color }: { color: string }) {
 
 // ── Product Card ──────────────────────────────────────────────────────────────
 
-function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAdd: (p: BusinessProduct) => void; color: string }) {
+function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAdd: (p: BusinessProduct) => void; color: string; key?: any }) {
   const { t } = useTranslation(['keusahawanan', 'common']);
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= product.stock_alert_threshold;
   const isOutOfStock = product.stock_quantity === 0;
@@ -121,6 +121,7 @@ function CartItemRow({
   onQtyChange: (productId: string, qty: number) => void;
   onRemove: (productId: string) => void;
   color: string;
+  key?: any;
 }) {
   return (
     <motion.div
@@ -324,7 +325,7 @@ export function PosOrderPage() {
       setDiscountNote('');
       toast.success(t('keusahawanan:toast_coupon_used', 'Kupon "{{code}}" berjaya digunakan!', { code: result.promotion.code }));
     } else {
-      setCouponError(result.error ?? 'Kod tidak sah.');
+      setCouponError(result.error ?? t('keusahawanan:pos_coupon_invalid', 'Kod tidak sah.'));
       setAppliedPromo(null);
     }
   };
@@ -357,14 +358,14 @@ export function PosOrderPage() {
     setEventCouponError('');
     try {
       const todayStr = new Date().toISOString().split('T')[0];
-      if (!coupon.is_active) { setEventCouponError('Kupon ini tidak aktif.'); return; }
-      if (coupon.valid_from && todayStr < coupon.valid_from) { setEventCouponError('Kupon belum bermula.'); return; }
-      if (coupon.valid_until && todayStr > coupon.valid_until) { setEventCouponError('Kupon telah tamat tempoh.'); return; }
+      if (!coupon.is_active) { setEventCouponError(t('keusahawanan:pos_coupon_not_active', 'Kupon ini tidak aktif.')); return; }
+      if (coupon.valid_from && todayStr < coupon.valid_from) { setEventCouponError(t('keusahawanan:pos_coupon_not_started', 'Kupon belum bermula.')); return; }
+      if (coupon.valid_until && todayStr > coupon.valid_until) { setEventCouponError(t('keusahawanan:pos_coupon_expired', 'Kupon telah tamat tempoh.')); return; }
       if (coupon.max_uses != null && (coupon.uses_count ?? 0) >= coupon.max_uses) {
-        setEventCouponError('Had penggunaan kupon telah dicapai.'); return;
+        setEventCouponError(t('keusahawanan:pos_coupon_limit_reached', 'Had penggunaan kupon telah dicapai.')); return;
       }
       if (subtotal < (Number(coupon.min_purchase) || 0)) {
-        setEventCouponError(`Minimum pembelian RM${Number(coupon.min_purchase).toFixed(2)} diperlukan.`); return;
+        setEventCouponError(t('keusahawanan:pos_coupon_min_purchase', 'Minimum pembelian RM{{amount}} diperlukan.', { amount: Number(coupon.min_purchase).toFixed(2) })); return;
       }
       // Mutex: clear kupon lain + diskaun manual
       setAppliedPromo(null);
@@ -447,9 +448,9 @@ export function PosOrderPage() {
         .eq('id', cleanText)
         .single();
         
-      if (error || !data) throw new Error('Pesanan tidak wujud');
-      if (data.status !== 'READY' && data.status !== 'CONFIRMED') throw new Error(`Pesanan ini berstatus ${data.status}`);
-      if (data.business_id !== businessId) throw new Error('Pesanan ini bukan untuk perniagaan anda');
+      if (error || !data) throw new Error(t('keusahawanan:pos_order_not_found', 'Pesanan tidak wujud'));
+      if (data.status !== 'READY' && data.status !== 'CONFIRMED') throw new Error(t('keusahawanan:pos_order_status_error', 'Pesanan ini berstatus {{status}}', { status: data.status }));
+      if (data.business_id !== businessId) throw new Error(t('keusahawanan:pos_order_not_for_biz', 'Pesanan ini bukan untuk perniagaan anda'));
       
       setScannedOrder(data);
     } catch (err: any) {
@@ -490,7 +491,7 @@ export function PosOrderPage() {
       <div className="h-full flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-          {isBusinessLoading ? 'Memuatkan perniagaan...' : 'Menyemak akses...'}
+          {isBusinessLoading ? t('keusahawanan:loading_business', 'Memuatkan perniagaan...') : t('keusahawanan:checking_access', 'Menyemak akses...')}
         </p>
       </div>
     );
@@ -522,7 +523,7 @@ export function PosOrderPage() {
             className="flex items-center gap-3 px-5 py-3 bg-amber-500/10 border-b border-amber-500/20">
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">
-              Stok Rendah: {lowStockItems.map(p => `${p.name} (${p.stock_quantity})`).join(' · ')}
+              {t('keusahawanan:pos_low_stock_prefix', 'Stok Rendah:')} {lowStockItems.map(p => `${p.name} (${p.stock_quantity})`).join(' · ')}
             </p>
           </motion.div>
         )}
@@ -605,7 +606,7 @@ export function PosOrderPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setShowScanner(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white px-3 py-1.5 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-md" style={{ background: color }}>
-                <QrCode className="w-3 h-3" /> Imbas PolyMart
+                <QrCode className="w-3 h-3" /> {t('keusahawanan:pos_scan_polymart', 'Imbas PolyMart')}
               </button>
               {cart.length > 0 && (
                 <button onClick={clearCart} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 hover:text-rose-500 transition-colors ml-2">
@@ -708,7 +709,7 @@ export function PosOrderPage() {
                                   <div className="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all"
                                     style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.35)' }}>
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-500">
-                                      <Ticket className="w-3.5 h-3.5" /> Kupon Acara: {appliedEventCoupon.code}
+                                      <Ticket className="w-3.5 h-3.5" /> {t('keusahawanan:pos_event_coupon_colon', 'Kupon Acara:')} {appliedEventCoupon.code}
                                       <span className="text-[9px] text-amber-500/60 normal-case font-black">
                                         {appliedEventCoupon.name} · -{fmtRM(eventCouponDiscountRM)}
                                       </span>
@@ -726,8 +727,8 @@ export function PosOrderPage() {
                     className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                       <Tag className="w-3.5 h-3.5" /> {t('pos_add_discount')}
-                      {appliedPromo && <span className="text-[8px] text-rose-600 dark:text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
-                      {appliedEventCoupon && <span className="text-[8px] text-amber-600 dark:text-amber-400 normal-case font-black">(tidak aktif — kupon acara digunakan)</span>}
+                      {appliedPromo && <span className="text-[8px] text-rose-600 dark:text-rose-400 normal-case font-black">{t('keusahawanan:pos_coupon_active_hint', '(tidak aktif — kupon digunakan)')}</span>}
+                      {appliedEventCoupon && <span className="text-[8px] text-amber-600 dark:text-amber-400 normal-case font-black">{t('keusahawanan:pos_event_coupon_active_hint', '(tidak aktif — kupon acara digunakan)')}</span>}
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${discountEnabled ? 'rotate-180' : ''}`} />
                   </button>
@@ -798,7 +799,7 @@ export function PosOrderPage() {
                   )}
                   {appliedEventCoupon && eventCouponDiscountRM > 0 && (
                     <div className="flex justify-between text-xs" style={{ color: '#f59e0b' }}>
-                      <span className="font-black">🎟️ Kupon Acara: {appliedEventCoupon.code}</span>
+                      <span className="font-black flex items-center gap-1"><Ticket className="w-3 h-3" /> {t('keusahawanan:pos_event_coupon_colon', 'Kupon Acara:')} {appliedEventCoupon.code}</span>
                       <span className="font-black">-{fmtRM(eventCouponDiscountRM)}</span>
                     </div>
                   )}
@@ -870,7 +871,7 @@ export function PosOrderPage() {
                   <CheckCircle2 className="w-8 h-8" style={{ color }} />
                 </motion.div>
                 <h3 className="text-lg font-black mb-1">{t('pos_sale_completed')}</h3>
-                <p className="text-xs text-muted-foreground mb-1">No. Invois: <span className="font-black text-foreground">{successTxn.invoice_number}</span></p>
+                <p className="text-xs text-muted-foreground mb-1">{t('keusahawanan:pos_invoice_number_label', 'No. Invois:')} <span className="font-black text-foreground">{successTxn.invoice_number}</span></p>
                 <p className="text-2xl font-black mt-3 mb-1" style={{ color }}>{fmtRM(successTxn.totalAmount ?? successTxn.total_amount)}</p>
                 {successTxn.changeAmount > 0 && (
                   <p className="text-xs text-muted-foreground mb-4">{t('pos_change_due')}: <span className="font-black text-foreground">{fmtRM(successTxn.changeAmount)}</span></p>
@@ -938,19 +939,19 @@ export function PosOrderPage() {
                   <p className="text-muted-foreground">{scannedOrder.business_products?.name} x {scannedOrder.quantity}</p>
                   {scannedOrder.selected_variation && (
                     <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
-                      Saiz: {scannedOrder.selected_variation}
+                      {t('keusahawanan:pos_size_label', 'Saiz:')} {scannedOrder.selected_variation}
                     </span>
                   )}
                   <p className="text-xl mt-1" style={{ color }}>{fmtRM(scannedOrder.total_price)}</p>
                 </div>
 
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Kaedah Pembayaran (POS)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{t('keusahawanan:pos_payment_method_label', 'Kaedah Pembayaran (POS)')}</p>
                 <div className="flex gap-2 mb-6">
                   {['CASH', 'QR', 'TRANSFER'].map(m => (
                     <button key={m} onClick={() => setScannedOrder({ ...scannedOrder, payment_method: m })}
                       className={`flex-1 h-9 rounded-xl text-[11px] font-bold transition-colors ${(scannedOrder.payment_method || 'CASH') === m ? 'border-2' : 'border border-border/50 bg-muted/30 text-muted-foreground'}`}
                       style={(scannedOrder.payment_method || 'CASH') === m ? { borderColor: color, color, background: hexToRgba(color, 0.1) } : {}}>
-                      {m === 'CASH' ? 'Tunai' : m === 'QR' ? 'QR Pay' : 'Transfer'}
+                      {m === 'CASH' ? t('keusahawanan:pos_payment_cash', 'Tunai') : m === 'QR' ? 'QR Pay' : 'Transfer'}
                     </button>
                   ))}
                 </div>
@@ -958,12 +959,12 @@ export function PosOrderPage() {
                 <div className="flex gap-2">
                   <button onClick={() => setScannedOrder(null)} disabled={processing}
                     className="flex-1 h-11 rounded-xl text-xs font-bold border border-border/50 hover:bg-muted/50 transition-colors">
-                    Batal
+                    {t('keusahawanan:btn_cancel', 'Batal')}
                   </button>
                   <button onClick={handleCompletePolyMart} disabled={processing}
                     className="flex-1 h-11 rounded-xl text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
                     style={{ background: color }}>
-                    {processing ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : 'Selesaikan'}
+                    {processing ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : t('keusahawanan:pos_complete_btn', 'Selesaikan')}
                   </button>
                 </div>
               </motion.div>

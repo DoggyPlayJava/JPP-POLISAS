@@ -50,7 +50,7 @@ interface Report {
 }
 
 // ── Report Card ────────────────────────────────────────────────────────────────
-function ReportCard({ report, onAction }: { report: Report; onAction: () => void }) {
+function ReportCard({ report, onAction }: { report: Report; onAction: () => void; key?: any }) {
   const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -79,13 +79,13 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
     // Notify reporter
     if (report.reporter?.id) {
       await sendNotificationToUser(report.reporter.id, {
-        title: 'Laporan Diambil Tindakan',
-        message: `Produk "${product.name}" telah dikeluarkan dari PolyMart.`,
+        title: t('commerce:report_actioned_title', 'Laporan Diambil Tindakan'),
+        message: t('commerce:report_actioned_product_removed_msg', 'Produk "{{name}}" telah dikeluarkan dari PolyMart.', { name: product.name }),
         type: 'polymart_report_actioned', module: 'POLYMART',
       });
     }
     toast.success(t('commerce:product_removed_toast', `Produk "${product.name}" dikeluarkan dari PolyMart`, { name: product.name }));
-    logAuditAction({ actionType: 'PRODUCT_REMOVED', module: 'PolyMart', entityId: product.id, description: `Produk "${product.name}" dikeluarkan — Sebab: ${report.reason}`, actorId: user!.id });
+    logAuditAction({ actionType: 'PRODUCT_REMOVED', module: 'PolyMart', entityId: product.id, description: t('commerce:audit_product_removed_reason', 'Produk "{{name}}" dikeluarkan — Sebab: {{reason}}', { name: product.name, reason: report.reason }), actorId: user!.id });
     onAction();
     setLoading(false);
   };
@@ -188,7 +188,7 @@ function AdsManagerTab() {
     if (!adsPhone) return;
     setSavingPhone(true);
     await supabase.from('system_settings').update({ value: `"${adsPhone}"` }).eq('key', 'polymart_ads_phone');
-    toast.success('No. Telefon dikemas kini');
+    toast.success(t('commerce:phone_updated_toast', 'No. Telefon dikemas kini'));
     setSavingPhone(false);
   };
 
@@ -226,15 +226,15 @@ function AdsManagerTab() {
       };
       const { error } = await supabase.from('polymart_ads').update(updates).eq('id', ad.id);
       if (error) throw error;
-      toast.success('Iklan berjaya diluluskan (Aktif)!');
+      toast.success(t('commerce:ad_approved_active_toast', 'Iklan berjaya diluluskan (Aktif)!'));
       const actorId = (await supabase.auth.getUser()).data.user?.id;
-      if (actorId) logAuditAction({ actionType: 'AD_APPROVED', module: 'PolyMart', entityId: ad.id, description: `Iklan "${ad.title}" diluluskan`, actorId });
+      if (actorId) logAuditAction({ actionType: 'AD_APPROVED', module: 'PolyMart', entityId: ad.id, description: t('commerce:audit_ad_approved_desc', 'Iklan "{{title}}" diluluskan', { title: ad.title }), actorId });
       
       // Notify creator if exists
       if (ad.created_by) {
         await sendNotificationToUser(ad.created_by, {
-          title: 'Iklan Anda Diluluskan',
-          message: `Iklan "${ad.title}" telah berada di halaman utama PolyMart.`,
+          title: t('commerce:ad_approved_notif_title', 'Iklan Anda Diluluskan'),
+          message: t('commerce:ad_approved_notif_msg', 'Iklan "{{title}}" telah berada di halaman utama PolyMart.', { title: ad.title }),
           type: 'polymart_ad_approved',
           module: 'POLYMART'
         });
@@ -242,14 +242,14 @@ function AdsManagerTab() {
       
       fetchAds();
     } catch (e: any) {
-      toast.error('Gagal kelulusan: ' + e.message);
+      toast.error(t('commerce:ad_approval_failed_toast', 'Gagal kelulusan: {{error}}', { error: e.message }));
     }
     setSaving(false);
   };
 
   const handleSave = async () => {
     if (!title.trim() || (!editingAd && !imageFile)) {
-      toast.error('Tajuk & Gambar diperlukan'); return;
+      toast.error(t('commerce:ad_title_image_required', 'Tajuk & Gambar diperlukan')); return;
     }
     setSaving(true);
     try {
@@ -284,12 +284,12 @@ function AdsManagerTab() {
       if (editingAd) {
         const { error } = await supabase.from('polymart_ads').update(payload).eq('id', editingAd.id);
         if (error) throw error;
-        toast.success('Iklan dikemas kini');
+        toast.success(t('commerce:ad_updated_toast', 'Iklan dikemas kini'));
         
         if (editingAd.status === 'DRAFT' && status === 'ACTIVE' && editingAd.created_by) {
            await sendNotificationToUser(editingAd.created_by, {
-             title: 'Iklan Anda Diluluskan',
-             message: `Iklan "${title}" telah berada di halaman utama PolyMart.`,
+             title: t('commerce:ad_approved_notif_title', 'Iklan Anda Diluluskan'),
+             message: t('commerce:ad_approved_notif_msg', 'Iklan "{{title}}" telah berada di halaman utama PolyMart.', { title }),
              type: 'polymart_ad_approved',
              module: 'POLYMART'
            });
@@ -297,19 +297,19 @@ function AdsManagerTab() {
       } else {
         const { error } = await supabase.from('polymart_ads').insert(payload);
         if (error) throw error;
-        toast.success('Iklan baharu ditambah');
+        toast.success(t('commerce:ad_added_toast', 'Iklan baharu ditambah'));
       }
 
       setShowModal(false);
       fetchAds();
     } catch (e: any) {
-      toast.error('Ralat menyimpan iklan: ' + e.message);
+      toast.error(t('commerce:ad_save_error_toast', 'Ralat menyimpan iklan: {{error}}', { error: e.message }));
     }
     setSaving(false);
   };
 
   const handleDelete = async (ad: PolyAd) => {
-    if (!confirm('Pasti ingin padam iklan ini?')) return;
+    if (!confirm(t('commerce:ad_delete_confirm', 'Pasti ingin padam iklan ini?'))) return;
     try {
       if (ad.image_url) {
         const urlParts = ad.image_url.split('/');
@@ -317,12 +317,12 @@ function AdsManagerTab() {
         await supabase.storage.from('polymart-ads').remove([fileName]);
       }
       await supabase.from('polymart_ads').delete().eq('id', ad.id);
-      toast.success('Iklan dipadam');
+      toast.success(t('commerce:ad_deleted_toast', 'Iklan dipadam'));
       const actorId = (await supabase.auth.getUser()).data.user?.id;
-      if (actorId) logAuditAction({ actionType: 'AD_DELETED', module: 'PolyMart', entityId: ad.id, description: `Iklan "${ad.title}" dipadam`, actorId });
+      if (actorId) logAuditAction({ actionType: 'AD_DELETED', module: 'PolyMart', entityId: ad.id, description: t('commerce:audit_ad_deleted_desc', 'Iklan "{{title}}" dipadam', { title: ad.title }), actorId });
       fetchAds();
     } catch (e: any) {
-      toast.error('Ralat memadam iklan');
+      toast.error(t('commerce:ad_delete_error_toast', 'Ralat memadam iklan'));
     }
   };
 
@@ -463,17 +463,17 @@ function AdsManagerTab() {
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:type_label', 'Jenis')}</label>
                     <select value={type} onChange={e => setType(e.target.value as any)}
                       className="w-full h-10 px-2 rounded-xl border border-border/50 bg-background text-xs font-bold outline-none focus:border-amber-500/50">
-                      <option value="INTERNAL">Internal (Pelajar)</option>
-                      <option value="EXTERNAL">External (Penaja)</option>
+                      <option value="INTERNAL">{t('commerce:ad_type_internal_student', 'Internal (Pelajar)')}</option>
+                      <option value="EXTERNAL">{t('commerce:ad_type_external_sponsor', 'External (Penaja)')}</option>
                     </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:status_label', 'Status')}</label>
                     <select value={status} onChange={e => setStatus(e.target.value as any)}
                       className="w-full h-10 px-2 rounded-xl border border-border/50 bg-background text-xs font-bold outline-none focus:border-amber-500/50">
-                      <option value="DRAFT">Draft</option>
-                      <option value="ACTIVE">Aktif</option>
-                      <option value="INACTIVE">Tidak Aktif</option>
+                      <option value="DRAFT">{t('commerce:ad_status_draft', 'Draft')}</option>
+                      <option value="ACTIVE">{t('commerce:ad_status_active', 'Aktif')}</option>
+                      <option value="INACTIVE">{t('commerce:ad_status_inactive', 'Tidak Aktif')}</option>
                     </select>
                   </div>
                 </div>

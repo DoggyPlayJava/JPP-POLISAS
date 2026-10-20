@@ -20,14 +20,14 @@ const THEME = '#818CF8';
 
 // BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
 
-const FOLDER_PRESETS = [
-  { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },
-  { name: 'Sijil Penghargaan',   description: 'Sijil penghargaan dan anugerah' },
-  { name: 'Slip Keputusan',      description: 'Slip keputusan peperiksaan setiap semester' },
-  { name: 'Surat Tawaran',       description: 'Surat tawaran masuk & tawaran biasiswa' },
-  { name: 'Resit Pembayaran',    description: 'Resit pembayaran yuran pengajian & asrama' },
-  { name: 'Nota Peribadi',       description: 'Nota dan bahan rujukan peribadi' },
-  { name: 'Lain-lain',           description: 'Dokumen dan fail am' },
+const getFolderPresets = (t: (key: string, fallback: string) => string) => [
+  { name: t('akademik:preset_cert_participation_name', 'Sijil Penyertaan'),    description: t('akademik:preset_cert_participation_desc', 'Sijil penyertaan program dan bengkel') },
+  { name: t('akademik:preset_cert_appreciation_name', 'Sijil Penghargaan'),   description: t('akademik:preset_cert_appreciation_desc', 'Sijil penghargaan dan anugerah') },
+  { name: t('akademik:preset_result_slip_name', 'Slip Keputusan'),      description: t('akademik:preset_result_slip_desc', 'Slip keputusan peperiksaan setiap semester') },
+  { name: t('akademik:preset_offer_letter_name', 'Surat Tawaran'),       description: t('akademik:preset_offer_letter_desc', 'Surat tawaran masuk & tawaran biasiswa') },
+  { name: t('akademik:preset_payment_receipt_name', 'Resit Pembayaran'),    description: t('akademik:preset_payment_receipt_desc', 'Resit pembayaran yuran pengajian & asrama') },
+  { name: t('akademik:preset_personal_notes_name', 'Nota Peribadi'),       description: t('akademik:preset_personal_notes_desc', 'Nota dan bahan rujukan peribadi') },
+  { name: t('akademik:preset_other_docs_name', 'Lain-lain'),           description: t('akademik:preset_other_docs_desc', 'Dokumen dan fail am') },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -114,7 +114,8 @@ async function fetchAsBytes(
 async function buildAndDownloadZip(
   folderMap: Record<string, { folderName: string; files: any[] }>,
   zipName: string,
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  t: (key: string, fallback: string, options?: any) => string = (_k, fb) => fb
 ) {
   const zipEntries: Record<string, Uint8Array> = {};
   const failed: string[] = []; // files that couldn't be fetched
@@ -143,12 +144,12 @@ async function buildAndDownloadZip(
   }
 
   if (Object.keys(zipEntries).length === 0) {
-    throw new Error('Gagal muat turun mana-mana fail. Sila cuba lagi.');
+    throw new Error(t('akademik:zip_error_no_files', 'Gagal muat turun mana-mana fail. Sila cuba lagi.'));
   }
 
   // Add a note for any files that failed (edge cases)
   if (failed.length > 0) {
-    const note = ['FAIL YANG TIDAK BERJAYA DIMUAT TURUN:', '', ...failed].join('\n');
+    const note = [t('akademik:zip_failed_header', 'FAIL YANG TIDAK BERJAYA DIMUAT TURUN:'), '', ...failed].join('\n');
     zipEntries['_gagal.txt'] = strToU8(note);
   }
 
@@ -481,7 +482,7 @@ export function AkademikFolderPage() {
     setUploadingFor(null);
 
     try {
-      toast.loading('Memuat naik fail...', { id: 'file-upload' });
+      toast.loading(t('akademik:toast_uploading_file', 'Memuat naik fail...'), { id: 'file-upload' });
       let url: string;
       if (file.type === 'application/pdf') {
         url = await uploadPdfToDrive(file, `akademik/folders/${folderId}`, file.name.replace(/\.[^.]+$/, ''));
@@ -499,10 +500,10 @@ export function AkademikFolderPage() {
         uploaded_by:        profile?.id,
       });
       if (insertError) throw insertError;
-      toast.success('Fail berjaya dimuat naik!', { id: 'file-upload' });
+      toast.success(t('akademik:toast_file_uploaded', 'Fail berjaya dimuat naik!'), { id: 'file-upload' });
       await loadFilesForFolder(folderId, true);
     } catch (e: any) {
-      toast.error(`Gagal muat naik: ${e.message}`, { id: 'file-upload' });
+      toast.error(t('akademik:toast_upload_failed', 'Gagal muat naik: {{error}}', { error: e.message }), { id: 'file-upload' });
     }
   };
 
@@ -511,22 +512,22 @@ export function AkademikFolderPage() {
     setTimeout(() => fileInputRef.current?.click(), 50);
   };
   const handleDeleteFile = async (fileId: string, folderId: string) => {
-    if (!confirm('Padam fail ini?')) return;
+    if (!confirm(t('akademik:confirm_delete_file', 'Padam fail ini?'))) return;
     const { error } = await supabase.from('akademik_files').delete().eq('id', fileId);
-    if (error) { toast.error('Gagal padam fail.'); return; }
+    if (error) { toast.error(t('akademik:toast_delete_file_failed', 'Gagal padam fail.')); return; }
     setFilesMap(p => ({ ...p, [folderId]: (p[folderId] || []).filter(f => f.id !== fileId) }));
-    toast.success('Fail dipadam.');
+    toast.success(t('akademik:toast_file_deleted', 'Fail dipadam.'));
   };
 
   const handleCreateFolder = async () => {
-    if (!newFolder.name) { toast.error('Nama folder diperlukan.'); return; }
+    if (!newFolder.name) { toast.error(t('akademik:toast_folder_name_required', 'Nama folder diperlukan.')); return; }
     const { error } = await supabase.from('akademik_folders').insert({
       name: newFolder.name,
       description: newFolder.description || null,
       created_by: profile?.id,
     });
-    if (error) { toast.error(`Gagal: ${error.message}`); return; }
-    toast.success('Folder dicipta!');
+    if (error) { toast.error(t('akademik:toast_create_folder_failed', 'Gagal: {{error}}', { error: error.message })); return; }
+    toast.success(t('akademik:toast_folder_created', 'Folder dicipta!'));
     setNewFolder({ name: '', description: '' });
     setShowCreate(false);
     loadFolders();
@@ -535,32 +536,33 @@ export function AkademikFolderPage() {
   // ── ZIP: Download one folder ──────────────────────────────────
   const handleDownloadFolder = async (folder: any) => {
     const files = filesMap[folder.id] || [];
-    if (files.length === 0) { toast.error('Folder ini kosong.'); return; }
+    if (files.length === 0) { toast.error(t('akademik:toast_folder_empty', 'Folder ini kosong.')); return; }
 
     setZipping('folder');
     setZipProgress({ done: 0, total: files.length });
     const toastId = 'zip-folder';
 
     try {
-      toast.loading(`Menyediakan ZIP "${folder.name}"...`, { id: toastId });
+      toast.loading(t('akademik:toast_preparing_zip_named', 'Menyediakan ZIP "{{name}}"...', { name: folder.name }), { id: toastId });
       const failedCount = await buildAndDownloadZip(
         { [folder.id]: { folderName: folder.name, files } },
         sanitizeFilename(folder.name),
         (done, total) => {
           setZipProgress({ done, total });
-          toast.loading(`Menyediakan ZIP... (${done}/${total} fail)`, { id: toastId });
-        }
+          toast.loading(t('akademik:toast_preparing_zip_progress', 'Menyediakan ZIP... ({{done}}/{{total}} fail)', { done, total }), { id: toastId });
+        },
+        t
       );
       if (failedCount > 0) {
         toast.success(
-          `ZIP berjaya! (${failedCount} fail gagal dimuat turun — semak _gagal.txt dalam ZIP)`,
+          t('akademik:toast_zip_success_with_failed', 'ZIP berjaya! ({{count}} fail gagal dimuat turun — semak _gagal.txt dalam ZIP)', { count: failedCount }),
           { id: toastId, duration: 7000 }
         );
       } else {
-        toast.success(`ZIP "${folder.name}" berjaya! Semua fail termasuk.`, { id: toastId });
+        toast.success(t('akademik:toast_zip_folder_success', 'ZIP "{{name}}" berjaya! Semua fail termasuk.', { name: folder.name }), { id: toastId });
       }
     } catch (e: any) {
-      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+      toast.error(e.message || t('akademik:toast_zip_failed', 'Gagal buat ZIP.'), { id: toastId });
     } finally {
       setZipping(null);
     }
@@ -568,7 +570,7 @@ export function AkademikFolderPage() {
 
   // ── ZIP: Download all folders ─────────────────────────────────
   const handleDownloadAll = async () => {
-    if (folders.length === 0) { toast.error('Tiada folder untuk dimuat turun.'); return; }
+    if (folders.length === 0) { toast.error(t('akademik:toast_no_folders_to_download', 'Tiada folder untuk dimuat turun.')); return; }
 
     setZipping('all');
     const toastId = 'zip-all';
@@ -576,7 +578,7 @@ export function AkademikFolderPage() {
     try {
 
       // Load all unloaded folders first
-      toast.loading('Memuat data folder...', { id: toastId });
+      toast.loading(t('akademik:toast_loading_folder_data', 'Memuat data folder...'), { id: toastId });
       await Promise.all(folders.map(f => loadFilesForFolder(f.id, false)));
 
       // Brief delay to allow state to settle
@@ -594,31 +596,32 @@ export function AkademikFolderPage() {
       }
 
       if (Object.keys(folderMap).length === 0) {
-        toast.error('Semua folder kosong.', { id: toastId });
+        toast.error(t('akademik:toast_all_folders_empty', 'Semua folder kosong.'), { id: toastId });
         setZipping(null);
         return;
       }
 
-      toast.loading(`Menyediakan ZIP keseluruhan...`, { id: toastId });
+      toast.loading(t('akademik:toast_preparing_all_zip', 'Menyediakan ZIP keseluruhan...'), { id: toastId });
       const failedCount = await buildAndDownloadZip(
         folderMap,
         'akademik_dokumen',
         (done, total) => {
           setZipProgress({ done, total });
-          toast.loading(`Menyediakan ZIP keseluruhan... (${done}/${total} fail)`, { id: toastId });
-        }
+          toast.loading(t('akademik:toast_preparing_all_zip_progress', 'Menyediakan ZIP keseluruhan... ({{done}}/{{total}} fail)', { done, total }), { id: toastId });
+        },
+        t
       );
 
       if (failedCount > 0) {
         toast.success(
-          `ZIP keseluruhan berjaya! (${failedCount} fail gagal — semak _gagal.txt dalam ZIP)`,
+          t('akademik:toast_zip_all_success_with_failed', 'ZIP keseluruhan berjaya! ({{count}} fail gagal — semak _gagal.txt dalam ZIP)', { count: failedCount }),
           { id: toastId, duration: 8000 }
         );
       } else {
-        toast.success('ZIP keseluruhan berjaya! Semua fail termasuk.', { id: toastId });
+        toast.success(t('akademik:toast_zip_all_success', 'ZIP keseluruhan berjaya! Semua fail termasuk.'), { id: toastId });
       }
     } catch (e: any) {
-      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+      toast.error(e.message || t('akademik:toast_zip_failed', 'Gagal buat ZIP.'), { id: toastId });
     } finally {
       setZipping(null);
     }
@@ -651,7 +654,7 @@ export function AkademikFolderPage() {
             disabled={isZipping || folders.length === 0}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
             style={{ background: hexToRgba('#34D399', 0.12), color: '#34D399', border: `1px solid ${hexToRgba('#34D399', 0.2)}` }}
-            title="Muat turun semua dokumen sebagai ZIP"
+            title={t('akademik:download_all_zip_title', 'Muat turun semua dokumen sebagai ZIP')}
           >
             {zipping === 'all'
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -716,7 +719,7 @@ export function AkademikFolderPage() {
                       className="overflow-hidden"
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                        {FOLDER_PRESETS.map(p => (
+                        {getFolderPresets(t).map(p => (
                           <button
                             key={p.name}
                             onClick={() => {

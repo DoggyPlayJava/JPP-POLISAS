@@ -29,12 +29,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
-const KEUSAHAWANAN_UNIT_LINKS = [
-  { label: 'Dashboard Perniagaan', path: '/keusahawanan' },
-  { label: 'PolyMart Marketplace', path: '/polymart' },
-  { label: 'Program Keusahawanan', path: '/keusahawanan/program' },
-  { label: 'Urus Produk / Perkhidmatan', path: '/keusahawanan/pos/products' },
-];
+
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';
 
@@ -50,19 +45,7 @@ function getSidebarBg(hex: string): { top: string; bottom: string } {
   };
 }
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka',     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: CalendarDays,    label: 'Program',           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false, posSection: false },
-  // POS System
-  { icon: ShoppingCart,    label: 'Kedai POS',         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true  },
-  { icon: Package,         label: 'Katalog Produk',    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: BarChart3,       label: 'Statistik',         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true,  posSection: false },
-  { icon: Store,           label: 'PolyMart Peniaga',  href: '/polymart/vendor',              jppOnly: false, ownerOnly: false, posSection: false },
-  // Lain-lain
-  { icon: Building2,       label: 'Sertai / Cipta Perniagaan', href: '/keusahawanan/onboarding',      jppOnly: false, ownerOnly: false, posSection: false },
-];
+
 
 
 // ── Business Switcher Dropdown (in sidebar) ───────────────────────────────────
@@ -142,6 +125,21 @@ function BusinessSwitcherDropdown({ color }: { color: string }) {
 
 export function KeusahawananSidebar({ color }: { color: string }) {
   const { t } = useTranslation(['keusahawanan', 'common']);
+  const navItems = [
+    { icon: LayoutDashboard, label: t('keusahawanan:nav_dashboard', 'Papan Pemuka'),     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false, posSection: false },
+    { icon: CalendarDays,    label: t('keusahawanan:nav_program', 'Program'),           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false, posSection: false },
+    // POS System
+    { icon: ShoppingCart,    label: t('keusahawanan:nav_pos_store', 'Kedai POS'),         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true  },
+    { icon: Package,         label: t('keusahawanan:nav_product_catalog', 'Katalog Produk'),    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false, posSection: false },
+    { icon: BarChart3,       label: t('keusahawanan:nav_stats', 'Statistik'),         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false, posSection: false },
+    { icon: History,         label: t('keusahawanan:nav_history', 'Sejarah Transaksi'), href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false, posSection: false },
+    { icon: Settings2,       label: t('keusahawanan:nav_manage_business', 'Urus Perniagaan'),   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true,  posSection: false },
+    { icon: Store,           label: t('keusahawanan:nav_polymart_vendor', 'PolyMart Peniaga'),  href: '/polymart/vendor',              jppOnly: false, ownerOnly: false, posSection: false },
+    // Lain-lain
+    { icon: Building2,       label: t('keusahawanan:nav_join_create_biz', 'Sertai / Cipta Perniagaan'), href: '/keusahawanan/onboarding',      jppOnly: false, ownerOnly: false, posSection: false },
+  ];
+
+
   const { user, profile, signOut, isSuperAdmin } = useAuth();
   const { canSwitch, isKeusahawananAdmin, selectedBusiness } = useBusinessSwitcher();
   const navigate = useNavigate();
@@ -201,7 +199,7 @@ export function KeusahawananSidebar({ color }: { color: string }) {
       {canSwitch && (
         <div className="pt-3" style={{ borderBottom: `1px solid ${hexToRgba(color, 0.1)}` }}>
           <p className="px-6 pb-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-1.5">
-            <Store className="w-3 h-3" /> Tukar Perniagaan
+            <Store className="w-3 h-3" /> {t('keusahawanan:sidebar_switch_business', 'Tukar Perniagaan')}
           </p>
           <BusinessSwitcherDropdown color={color} />
         </div>
@@ -209,14 +207,14 @@ export function KeusahawananSidebar({ color }: { color: string }) {
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
-        <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Menu Utama</p>
+        <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">{t('keusahawanan:sidebar_main_menu', 'Menu Utama')}</p>
         {visibleItems.map((item, idx) => (
           <React.Fragment key={item.href}>
             {/* POS section separator */}
             {item.posSection && idx > 0 && (
               <>
                 <div className="my-3 mx-3 h-px" style={{ background: hexToRgba(color, 0.12) }} />
-                <p className="px-3 mb-1.5 text-[9px] font-black uppercase tracking-[0.25em] text-white/20">Sistem POS</p>
+                <p className="px-3 mb-1.5 text-[9px] font-black uppercase tracking-[0.25em] text-white/20">{t('keusahawanan:sidebar_pos_system', 'Sistem POS')}</p>
               </>
             )}
             {/* Separator before JPP-only group */}
@@ -302,7 +300,7 @@ export function KeusahawananSidebar({ color }: { color: string }) {
         <Button variant="ghost" onClick={signOut}
           className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/40 hover:text-rose-400 hover:bg-rose-500/10">
           <LogOut className="w-3.5 h-3.5" />
-          Log Keluar
+          {t('keusahawanan:logout_btn', 'Log Keluar')}
         </Button>
       </div>
     </aside>
@@ -312,6 +310,7 @@ export function KeusahawananSidebar({ color }: { color: string }) {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export function KeusahawananLayout() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { isSuperAdmin, isLoading, profile, hasKeusahawananAccess } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -334,27 +333,29 @@ export function KeusahawananLayout() {
   const keusahawananTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke modul e-Keusahawanan! Di sini anda boleh menguruskan perniagaan, rekod kewangan, dan sistem POS.',
-      title: 'e-Keusahawanan',
+      content: t('keusahawanan:tour_welcome_content', 'Selamat datang ke modul e-Keusahawanan! Di sini anda boleh menguruskan perniagaan, rekod kewangan, dan sistem POS.'),
+      title: t('keusahawanan:module_name', 'e-Keusahawanan'),
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-keusahawanan-sidebar',
-      content: isMobile ? 'Gunakan menu ini untuk mengakses sistem POS, statistik, senarai perniagaan, dan banyak lagi.' : 'Pilih fungsi yang diinginkan dari senarai menu ini termasuk sistem POS pintar kami.',
-      title: 'Navigasi Penuh',
+      content: isMobile
+        ? t('keusahawanan:tour_nav_mobile_content', 'Gunakan menu ini untuk mengakses sistem POS, statistik, senarai perniagaan, dan banyak lagi.')
+        : t('keusahawanan:tour_nav_desktop_content', 'Pilih fungsi yang diinginkan dari senarai menu ini termasuk sistem POS pintar kami.'),
+      title: t('keusahawanan:tour_nav_title', 'Navigasi Penuh'),
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-keusahawanan-quickpos',
-      content: 'Tekan pautan ini untuk akses terus ke mesin Kaunter Jualan (POS) bagi merekod setiap transaksi pelanggan.',
-      title: 'Akses Pantas POS',
+      content: t('keusahawanan:tour_quickpos_content', 'Tekan pautan ini untuk akses terus ke mesin Kaunter Jualan (POS) bagi merekod setiap transaksi pelanggan.'),
+      title: t('keusahawanan:tour_quickpos_title', 'Akses Pantas POS'),
       placement: 'bottom' as const,
     },
     {
       target: '.tour-keusahawanan-stats',
-      content: 'Prestasi perniagaan, carta sasaran bulanan dan kutipan dipaparkan di ruang jualan ini.',
-      title: 'Prestasi Bisnes',
+      content: t('keusahawanan:tour_stats_content', 'Prestasi perniagaan, carta sasaran bulanan dan kutipan dipaparkan di ruang jualan ini.'),
+      title: t('keusahawanan:tour_stats_title', 'Prestasi Bisnes'),
       placement: 'bottom' as const,
     }
   ];
@@ -425,6 +426,13 @@ export function LayoutInner({
   const navigate = useNavigate();
   const { t } = useTranslation(['keusahawanan', 'common']);
   const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
+
+  const unitLinks = [
+    { label: t('keusahawanan:layout_unit_business_dashboard', 'Dashboard Perniagaan'), path: '/keusahawanan' },
+    { label: 'PolyMart Marketplace', path: '/polymart' },
+    { label: t('keusahawanan:layout_unit_programs', 'Program Keusahawanan'), path: '/keusahawanan/program' },
+    { label: t('keusahawanan:layout_unit_manage_products', 'Urus Produk / Perkhidmatan'), path: '/keusahawanan/pos/products' },
+  ];
 
   // Redirect to onboarding if: no admin access AND no business found
   // (YDP/MT with hasKeusahawananAccess bypass this — they are reviewers, not owners)
@@ -502,8 +510,8 @@ export function LayoutInner({
                         <MessageSquare size={16} />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black uppercase tracking-widest">Bantuan & Isu</h4>
-                        <p className="text-[9px] font-bold text-muted-foreground mt-0.5">Kami sedia membantu anda.</p>
+                        <h4 className="text-xs font-black uppercase tracking-widest">{t('keusahawanan:support_help_title', 'Bantuan & Isu')}</h4>
+                        <p className="text-[9px] font-bold text-muted-foreground mt-0.5">{t('keusahawanan:support_help_desc', 'Kami sedia membantu anda.')}</p>
                       </div>
                     </div>
 
@@ -521,7 +529,7 @@ export function LayoutInner({
                           onClick={() => { startTour(); document.body.click(); }}
                           className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 shadow-none"
                        >
-                          <HelpCircle size={12} /> Panduan Sistem Tour
+                          <HelpCircle size={12} /> {t('keusahawanan:support_system_tour', 'Panduan Sistem Tour')}
                        </Button>
                     </div>
                   </div>
@@ -560,7 +568,7 @@ export function LayoutInner({
           <FloatingAiChat />
 
           {/* QR Code FAB — untuk Exco Keusahawanan jana QR */}
-          <QrCodeFab unitLinks={KEUSAHAWANAN_UNIT_LINKS} />
+          <QrCodeFab unitLinks={unitLinks} />
           
           <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
         </div>

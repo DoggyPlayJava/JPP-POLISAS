@@ -47,10 +47,10 @@ const EMOJI_OPTIONS = ['📌','🚀','💼','🧠','🏆','🎯','💡','🌟','
 const BUCKET = 'keusahawanan';
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
-const statusMap: Record<ProgramStatus, { label: string; color: string; bg: string }> = {
-  upcoming:  { label: 'Akan Datang',      color: '#3b82f6', bg: '#3b82f615' },
-  active:    { label: 'Sedang Berjalan',  color: '#10b981', bg: '#10b98115' },
-  completed: { label: 'Selesai',          color: '#94a3b8', bg: '#94a3b815' },
+const statusConfig: Record<ProgramStatus, { color: string; bg: string }> = {
+  upcoming:  { color: '#3b82f6', bg: '#3b82f615' },
+  active:    { color: '#10b981', bg: '#10b98115' },
+  completed: { color: '#94a3b8', bg: '#94a3b815' },
 };
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
@@ -58,6 +58,12 @@ export function KeusahawananProgram() {
   const { color }                     = useExcoTheme();
   const { t }                         = useTranslation(['keusahawanan', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
+
+  const getStatusLabel = (status: ProgramStatus) => {
+    if (status === 'upcoming') return t('keusahawanan:program_upcoming', 'Akan Datang');
+    if (status === 'active') return t('keusahawanan:program_active', 'Sedang Berjalan');
+    return t('keusahawanan:program_completed', 'Selesai');
+  };
 
   // ── Auth helpers ──────────────────────────────────────────────────────────
   const isJppMember = !!(profile?.jpp_unit || profile?.jpp_position || isSuperAdmin);
@@ -233,7 +239,7 @@ export function KeusahawananProgram() {
   // ── Delete ────────────────────────────────────────────────────────────────
   const handleDelete = async (p: Program, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(`Padam "${p.title}"? Tindakan ini tidak boleh dibatalkan.`)) return;
+    if (!window.confirm(t('keusahawanan:confirm_delete_program', 'Padam "{{title}}"? Tindakan ini tidak boleh dibatalkan.', { title: p.title }))) return;
     setDeleting(p.id);
     try {
       if (p.image_url) {
@@ -266,7 +272,7 @@ export function KeusahawananProgram() {
   // ── Register interest ─────────────────────────────────────────────────────
   const handleRegister = async (p: Program) => {
     if (!user?.id) { toast.error(t('keusahawanan:toast_login_to_register', 'Sila log masuk')); return; }
-    if (myRegistrations.includes(p.id)) { toast('Anda sudah daftar minat!', { icon: '✅' }); return; }
+    if (myRegistrations.includes(p.id)) { toast.success(t('keusahawanan:toast_already_registered_interest', 'Anda sudah daftar minat!')); return; }
     setRegistering(p.id);
     try {
       const { error } = await supabase.from('keusahawanan_program_registrations').insert({
@@ -278,7 +284,7 @@ export function KeusahawananProgram() {
       setMyRegistrations(prev => [...prev, p.id]);
       fetchPrograms(); // refresh count
     } catch (err: any) {
-      if (err.code === '23505') toast('Anda sudah daftar minat!', { icon: '✅' });
+      if (err.code === '23505') toast.success(t('keusahawanan:toast_already_registered_interest', 'Anda sudah daftar minat!'));
       else toast.error(t('keusahawanan:toast_interest_failed', 'Gagal mendaftar'));
     } finally {
       setRegistering(null);
@@ -380,14 +386,14 @@ export function KeusahawananProgram() {
           {canManage && (
             <button onClick={openCreate} className="mt-3 text-xs font-black underline underline-offset-2 transition-all"
               style={{ color }}>
-              + Tambah Program Baharu
+              + {t('keusahawanan:programs_add_new_btn', 'Tambah Program Baharu')}
             </button>
           )}
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {filtered.map((program, i) => {
-            const st  = statusMap[program.status];
+            const st = { ...statusConfig[program.status], label: getStatusLabel(program.status) };
             const pct = program.max_participants > 0
               ? Math.min(100, Math.round((program.participants_count / program.max_participants) * 100))
               : 0;
@@ -413,7 +419,7 @@ export function KeusahawananProgram() {
                       <div className="absolute top-2 right-2">
                         {program.visibility === 'JPP_SAHAJA' ? (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-amber-400 ">
-                            <Lock className="w-2.5 h-2.5" /> JPP Sahaja
+                            <Lock className="w-2.5 h-2.5" /> {t('keusahawanan:program_vis_jpp_only', 'JPP Sahaja')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-black/60 text-emerald-400 ">
@@ -472,7 +478,7 @@ export function KeusahawananProgram() {
                     <div className="space-y-1.5 mb-4">
                       <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
                         <span className="flex items-center gap-1"><Users className="w-3 h-3" />{program.participants_count} peserta</span>
-                        <span>{pct}% penuh</span>
+                        <span>{t('keusahawanan:program_percent_full', '{{pct}}% penuh', { pct })}</span>
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden bg-muted">
                         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
@@ -553,15 +559,15 @@ export function KeusahawananProgram() {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap gap-2 mb-2">
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
-                          style={{ background: statusMap[selectedProgram.status].bg, color: statusMap[selectedProgram.status].color }}>
-                          {statusMap[selectedProgram.status].label}
+                          style={{ background: statusConfig[selectedProgram.status].bg, color: statusConfig[selectedProgram.status].color }}>
+                          {getStatusLabel(selectedProgram.status)}
                         </span>
                         {isJppMember && (
                           <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
                             selectedProgram.visibility === 'AWAM' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
                           }`}>
                             {selectedProgram.visibility === 'AWAM' ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                            {selectedProgram.visibility === 'AWAM' ? 'Awam' : 'JPP Sahaja'}
+                            {selectedProgram.visibility === 'AWAM' ? t('keusahawanan:program_vis_public_all', 'Awam (Semua)') : t('keusahawanan:program_vis_jpp_only', 'JPP Sahaja')}
                           </span>
                         )}
                       </div>
@@ -659,7 +665,7 @@ export function KeusahawananProgram() {
                 {/* Modal header */}
                 <div className="flex items-center justify-between px-7 py-5 border-b border-border/50">
                   <h2 className="text-base font-black tracking-tight text-foreground">
-                    {formMode === 'create' ? 'Tambah Program Baharu' : 'Edit Program'}
+                    {formMode === 'create' ? t('keusahawanan:programs_add_new_title', 'Tambah Program Baharu') : t('keusahawanan:programs_edit_title', 'Edit Program')}
                   </h2>
                   <button onClick={() => { setShowForm(false); resetForm(); }}
                     className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
@@ -686,8 +692,8 @@ export function KeusahawananProgram() {
 
                   {/* Title */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tajuk Program *</label>
-                    <input value={fTitle} onChange={e => setFTitle(e.target.value)} placeholder="Nama program..."
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('keusahawanan:program_field_title', 'Tajuk Program')} *</label>
+                    <input value={fTitle} onChange={e => setFTitle(e.target.value)} placeholder={t('keusahawanan:program_title_placeholder', 'Nama program...')}
                       className="w-full h-11 px-4 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                   </div>
 
@@ -695,7 +701,7 @@ export function KeusahawananProgram() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Penerangan</label>
                     <textarea value={fDesc} onChange={e => setFDesc(e.target.value)} rows={3}
-                      placeholder="Penerangan ringkas program..."
+                      placeholder={t('keusahawanan:program_desc_placeholder', 'Penerangan ringkas program...')}
                       className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 resize-none focus:border-border transition-all" />
                   </div>
 
@@ -716,25 +722,25 @@ export function KeusahawananProgram() {
                   {/* Status + Max pax */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('keusahawanan:program_field_status', 'Status')}</label>
                       <select value={fStatus} onChange={e => setFStatus(e.target.value as ProgramStatus)}
                         className="w-full h-11 px-3 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground focus:border-border transition-all">
-                        <option value="upcoming">Akan Datang</option>
-                        <option value="active">Sedang Berjalan</option>
-                        <option value="completed">Selesai</option>
+                        <option value="upcoming">{t('keusahawanan:program_upcoming', 'Akan Datang')}</option>
+                        <option value="active">{t('keusahawanan:program_active', 'Sedang Berjalan')}</option>
+                        <option value="completed">{t('keusahawanan:program_completed', 'Selesai')}</option>
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Had Peserta</label>
                       <input type="number" value={fMaxPax} onChange={e => setFMaxPax(e.target.value)} min="0"
-                        placeholder="0 = tiada had"
+                        placeholder={t('keusahawanan:program_max_pax_placeholder', '0 = tiada had')}
                         className="w-full h-11 px-3 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                     </div>
                   </div>
 
                   {/* Tags */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tag (pisahkan dengan koma)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('keusahawanan:program_tags_label', 'Tag (pisahkan dengan koma)')}</label>
                     <input value={fTags} onChange={e => setFTags(e.target.value)} placeholder="Workshop, Inovasi, Berbayar..."
                       className="w-full h-11 px-4 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                   </div>
@@ -751,12 +757,12 @@ export function KeusahawananProgram() {
                             : { background: 'transparent', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground)/0.6)' }
                           }>
                           {v === 'AWAM' ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                          {v === 'AWAM' ? 'Awam (Semua)' : 'JPP Sahaja'}
+                          {v === 'AWAM' ? t('keusahawanan:program_vis_public_all', 'Awam (Semua)') : t('keusahawanan:program_vis_jpp_only', 'JPP Sahaja')}
                         </button>
                       ))}
                     </div>
                     <p className="text-[10px] text-muted-foreground/60">
-                      {fVisibility === 'AWAM' ? '🌍 Semua pengguna portal boleh lihat program ini.' : '🔒 Hanya ahli JPP yang log masuk boleh lihat.'}
+                      {fVisibility === 'AWAM' ? t('keusahawanan:program_vis_public_hint_text', 'Semua pengguna portal boleh lihat program ini.') : t('keusahawanan:program_vis_jpp_hint_text', 'Hanya ahli JPP yang log masuk boleh lihat.')}
                     </p>
                   </div>
 
@@ -790,11 +796,11 @@ export function KeusahawananProgram() {
                 {/* Footer */}
                 <div className="flex gap-3 px-7 py-5 border-t border-border/50 shrink-0">
                   <Button variant="ghost" onClick={() => { setShowForm(false); resetForm(); }}
-                    className="flex-1 h-11 rounded-xl font-black text-[11px] uppercase tracking-wider">Batal</Button>
+                    className="flex-1 h-11 rounded-xl font-black text-[11px] uppercase tracking-wider">{t('keusahawanan:btn_cancel', 'Batal')}</Button>
                   <Button onClick={handleSave} disabled={saving}
                     className="flex-1 h-11 rounded-xl font-black text-[11px] uppercase tracking-wider text-white"
                     style={{ background: color }}>
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : formMode === 'create' ? 'Tambah Program' : 'Simpan Perubahan'}
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : formMode === 'create' ? t('keusahawanan:programs_submit_add', 'Tambah Program') : t('keusahawanan:programs_submit_save', 'Simpan Perubahan')}
                   </Button>
                 </div>
               </motion.div>
