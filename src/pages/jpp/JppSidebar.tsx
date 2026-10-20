@@ -174,40 +174,18 @@ export function JppSidebar() {
       <div
         className="flex-shrink-0 flex flex-col border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
       >
-        {/* Butang balik ke Portal */}
-        <NavLink
-          to="/portal"
-          className="flex items-center gap-2 px-5 pt-4 pb-2 text-[#556453]/70 hover:text-[#2E3A2F] dark:text-[#A3B39F]/70 dark:hover:text-white transition-colors group"
-        >
-          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
-          <LayoutGrid className="w-3 h-3 ml-0.5" />
-        </NavLink>
-
-        <div className="flex items-center gap-3 px-5 pb-4 pt-1">
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-[#2E3A2F]/10 border border-[#D9C9B2]/80 dark:bg-white/5 dark:border-[#3A4A3B]/60"
-            style={{
-              background: isDark ? hexToRgba(themeColor, 0.15) : undefined,
-              borderColor: isDark ? hexToRgba(themeColor, 0.3) : undefined,
-            }}
+        {/* Row 1: Utilities & Navigation */}
+        <div className="flex items-center justify-between px-5 pt-3.5 pb-1">
+          <NavLink
+            to="/portal"
+            className="flex items-center gap-2 text-[#556453]/70 hover:text-[#2E3A2F] dark:text-[#A3B39F]/70 dark:hover:text-white transition-colors group"
           >
-            <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
-          </div>
-          <div>
-            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-none">JPP HQ</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5"
-              style={{ color: isDark ? hexToRgba(themeColor, 0.7) : themeColor }}>
-              Politeknik Polisas
-            </p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]/70">
-                {getCurrentAcademicSession(t)}
-              </span>
-            </div>
-          </div>
-          <div className="ml-auto flex items-center gap-1">
+            <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
+            <LayoutGrid className="w-3 h-3 ml-0.5" />
+          </NavLink>
+
+          <div className="flex items-center gap-1">
             <LanguageToggle />
             <ThemeToggle />
             {canCustomize && (
@@ -219,6 +197,34 @@ export function JppSidebar() {
                 <Palette className="w-3.5 h-3.5" />
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Row 2: Branding */}
+        <div className="flex items-center gap-3 px-5 pb-4 pt-1.5">
+          <div
+            className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-[#2E3A2F]/10 border border-[#D9C9B2]/80 dark:bg-white/5 dark:border-[#3A4A3B]/60"
+            style={{
+              background: isDark ? hexToRgba(themeColor, 0.15) : undefined,
+              borderColor: isDark ? hexToRgba(themeColor, 0.3) : undefined,
+            }}
+          >
+            <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-none truncate">JPP HQ</p>
+            <p
+              className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 truncate"
+              style={{ color: isDark ? hexToRgba(themeColor, 0.7) : themeColor }}
+            >
+              Politeknik Polisas
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="truncate text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]/70">
+                {getCurrentAcademicSession(t)}
+              </span>
+            </div>
           </div>
         </div>
 
