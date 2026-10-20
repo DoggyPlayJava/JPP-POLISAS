@@ -36,12 +36,12 @@ interface DashboardStats {
   by_jabatan: { jabatan: string; count: number }[];
 }
 
-function getGreeting() {
+function getGreeting(t: (k: string, fb: string) => string) {
   const h = new Date().getHours();
-  if (h < 12) return 'pagi';
-  if (h < 15) return 'tengah hari';
-  if (h < 19) return 'petang';
-  return 'malam';
+  if (h < 12) return t('housing:greeting_morning', 'pagi');
+  if (h < 15) return t('housing:greeting_afternoon', 'tengah hari');
+  if (h < 19) return t('housing:greeting_evening', 'petang');
+  return t('housing:greeting_night', 'malam');
 }
 
 // MOCK DATA — digunakan semasa DB belum ready
@@ -78,7 +78,7 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nama.trim() || !matrik.trim()) { toast.error('Nama dan No. Matrik wajib diisi.'); return; }
+    if (!nama.trim() || !matrik.trim()) { toast.error(t('housing:name_matrix_required', 'Nama dan No. Matrik wajib diisi.')); return; }
     setSaving(true);
     try {
       const { error } = await supabase
@@ -97,10 +97,10 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
         })
         .eq('id', record.id);
       if (error) throw error;
-      toast.success('Rekod berjaya dikemaskini!');
+      toast.success(t('housing:record_updated_success', 'Rekod berjaya dikemaskini!'));
       onSaved();
     } catch (err: any) {
-      toast.error(err.message ?? 'Gagal kemaskini rekod.');
+      toast.error(err.message ?? t('housing:record_update_failed', 'Gagal kemaskini rekod.'));
     } finally {
       setSaving(false);
     }
@@ -161,7 +161,7 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>{t('housing:student_name', 'Nama Pelajar')} *</label>
-              <input className={inputCls} value={nama} onChange={e => setNama(e.target.value)} placeholder="NAMA PENUH" required />
+              <input className={inputCls} value={nama} onChange={e => setNama(e.target.value)} placeholder={t('housing:full_name_placeholder', 'NAMA PENUH')} required />
             </div>
             <div>
               <label className={labelCls}>{t('housing:matric_no', 'No. Matrik')} *</label>
@@ -231,8 +231,8 @@ function EditRecordModal({ record, onClose, onSaved }: { record: any; onClose: (
             <select value={source} onChange={e => setSource(e.target.value)} className={cn(inputCls, 'appearance-none')}>
               <option value="WEBAPP">App (Website)</option>
               <option value="GOOGLE_FORM">Google Form</option>
-              <option value="CSV_IMPORT">CSV Import</option>
-              <option value="MANUAL">Manual (Exco Edit)</option>
+              <option value="CSV_IMPORT">{t('housing:source_csv_import', 'CSV Import')}</option>
+              <option value="MANUAL">{t('housing:source_manual_exco', 'Manual (Exco Edit)')}</option>
             </select>
           </div>
 
@@ -266,7 +266,7 @@ export function KlkDashboard() {
   const [filterKawasan, setFilterKawasan] = useState('');
   const [editRecord, setEditRecord] = useState<any | null>(null);  // rekod yang sedang diedit
   const [lainLainCount, setLainLainCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'senarai' | 'cadangan'>('senarai');
+  const [activeTab, setActiveTab] = useState<'list' | 'cadangan'>('list');
 
   const [selectedYear, setSelectedYear] = useState(getKlkAcademicYear());
   const academicYear = selectedYear;
@@ -280,7 +280,7 @@ export function KlkDashboard() {
 
   useEffect(() => {
     if (!hasAccess) {
-      toast.error('Anda tidak mempunyai akses ke modul ini.');
+      toast.error(t('housing:access_denied_module', 'Anda tidak mempunyai akses ke modul ini.'));
       navigate('/jpp');
     }
   }, [hasAccess, navigate]);
@@ -346,7 +346,7 @@ export function KlkDashboard() {
       // Group by kawasan
       const kawasanMap: Record<string, number> = {};
       luarData.forEach((d: any) => {
-        const k = d.kawasan_kediaman === 'LAIN_LAIN' ? (d.kawasan_custom ?? 'LAIN_LAIN') : (d.kawasan_kediaman ?? 'TIDAK DIISI');
+        const k = d.kawasan_kediaman === 'LAIN_LAIN' ? (d.kawasan_custom ?? 'LAIN_LAIN') : (d.kawasan_kediaman ?? t('housing:unfilled_label', 'TIDAK DIISI'));
         kawasanMap[k] = (kawasanMap[k] ?? 0) + 1;
       });
       const byKawasan = Object.entries(kawasanMap)
@@ -360,7 +360,7 @@ export function KlkDashboard() {
       // Group by jabatan
       const jabatanMap: Record<string, number> = {};
       luarData.forEach((d: any) => {
-        const j = d.jabatan ?? 'Tidak Diisi';
+        const j = d.jabatan ?? t('housing:unfilled_title_case', 'Tidak Diisi');
         jabatanMap[j] = (jabatanMap[j] ?? 0) + 1;
       });
       const byJabatan = Object.entries(jabatanMap).sort((a, b) => b[1] - a[1]).map(([jabatan, count]) => ({ jabatan, count }));
@@ -400,7 +400,7 @@ export function KlkDashboard() {
 
   // ── Export XLSX ─────────────────────────────────────────────
   const handleExport = async () => {
-    if (!dbReady) { toast.error('Database belum sedia.'); return; }
+    if (!dbReady) { toast.error(t('housing:database_not_ready', 'Database belum sedia.')); return; }
     try {
       const { data } = await supabase
         .from('klk_student_residency')
@@ -408,17 +408,17 @@ export function KlkDashboard() {
         .eq('academic_year', academicYear)
         .eq('tinggal_luar', true);
 
-      if (!data?.length) { toast.error('Tiada data untuk export.'); return; }
+      if (!data?.length) { toast.error(t('housing:no_data_to_export', 'Tiada data untuk export.')); return; }
       const columns = [
         { header: 'Nama', width: 26 },
-        { header: 'No Matrik', width: 16, asText: true },
+        { header: t('housing:matric_no_header', 'No Matrik'), width: 16, asText: true },
         { header: 'No Telefon', width: 16, asText: true },
         { header: 'Jabatan', width: 18 },
         { header: 'Kawasan', width: 22 },
         { header: 'Alamat', width: 32 },
         { header: 'Cadangan', width: 28 },
         { header: 'Sumber', width: 14 },
-        { header: 'Tarikh', width: 14 },
+        { header: t('housing:date_header', 'Tarikh'), width: 14 },
       ];
       const rows = data.map((d: any) => [
         d.nama_pelajar, d.no_matrik, d.no_telefon ?? '',
@@ -427,10 +427,10 @@ export function KlkDashboard() {
         new Date(d.created_at).toLocaleDateString('ms-MY'),
       ]);
       await exportXlsx(`KLK_${academicYear.replace('/', '-')}.xlsx`, [
-        { name: 'Senarai KLK', columns, rows },
+        { name: t('housing:klk_list_sheet_name', 'Senarai KLK'), columns, rows },
       ]);
-      toast.success('Export berjaya!');
-    } catch { toast.error('Gagal export.'); }
+      toast.success(t('housing:export_success', 'Export berjaya!'));
+    } catch { toast.error(t('housing:export_failed', 'Gagal export.')); }
   };
 
   // ── Render ─────────────────────────────────────────────────
@@ -448,7 +448,7 @@ export function KlkDashboard() {
   const kawasanKey = (d: any) =>
     d.kawasan_kediaman === 'LAIN_LAIN'
       ? (d.kawasan_custom ?? 'LAIN_LAIN')
-      : (d.kawasan_kediaman ?? 'TIDAK DIISI');
+      : (d.kawasan_kediaman ?? t('housing:unfilled_label', 'TIDAK DIISI'));
 
   const filteredSubs = recentSubmissions.filter(d => {
     const matchQ = !searchQ || d.nama_pelajar?.toLowerCase().includes(searchQ.toLowerCase()) || d.no_matrik?.toLowerCase().includes(searchQ.toLowerCase());
@@ -475,7 +475,7 @@ export function KlkDashboard() {
           </div>
           <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             className="text-3xl font-black text-slate-50 mb-1 tracking-tight">
-            Selamat {getGreeting()}, {name}! 👋
+            {t('housing:greeting_message', 'Selamat {{period}}, {{name}}!', { period: getGreeting(t), name })}
           </motion.h1>
           <div className="flex items-center gap-3 flex-wrap mt-1">
             <p className="text-sm text-slate-400 font-medium">
@@ -521,7 +521,7 @@ export function KlkDashboard() {
               </div>
               <div className="text-left">
                 <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">PolyRider HQ</p>
-                <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">Urus Rider & Tetapan</p>
+                <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">{t('housing:manage_riders_and_settings', 'Urus Rider & Tetapan')}</p>
               </div>
             </Link>
           </motion.div>
@@ -536,7 +536,7 @@ export function KlkDashboard() {
           <div>
             <p className="text-sm font-black text-amber-300">{t('housing:db_not_ready', 'Database Sedang Disediakan')}</p>
             <p className="text-xs text-amber-400/70 mt-1">
-              Jadual <code className="font-mono bg-amber-500/10 px-1 rounded">klk_student_residency</code> belum wujud. Migration perlu dijalankan dahulu. Form pelajar sudah boleh digunakan — data akan disimpan bila DB sedia.
+              {t('housing:db_not_ready_desc', 'Jadual {{table}} belum wujud. Migration perlu dijalankan dahulu. Form pelajar sudah boleh digunakan — data akan disimpan bila DB sedia.', { table: 'klk_student_residency' })}
             </p>
           </div>
         </motion.div>
@@ -557,7 +557,7 @@ export function KlkDashboard() {
               {lainLainCount} {t('housing:unrecognized_zones_warning', 'kawasan tidak dikenali perlu dimigrate')}
             </p>
             <p className="text-[10px] text-slate-500 mt-0.5">
-              Pelajar memasukkan kawasan yang tidak tersenarai — klik untuk migrate dalam Tetapan KLK.
+              {t('housing:unlisted_area_alert_desc', 'Pelajar memasukkan kawasan yang tidak tersenarai — klik untuk migrate dalam Tetapan KLK.')}
             </p>
           </div>
           <ArrowUpRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
@@ -575,7 +575,7 @@ export function KlkDashboard() {
               {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')}
             </h3>
             <p className="text-[11px] text-slate-400">
-              {t('housing:browse_rentals', 'Cari Rumah Sewa Disahkan')} di sekitar POLISAS
+              {t('housing:browse_rentals_around_polisas', 'Cari Rumah Sewa Disahkan di sekitar POLISAS')}
             </p>
           </div>
         </div>
@@ -698,9 +698,9 @@ export function KlkDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 border-b border-white/[0.04] gap-4">
           <div className="flex items-center gap-2 bg-slate-800/50 p-1.5 rounded-2xl w-fit">
             <button
-              onClick={() => setActiveTab('senarai')}
+              onClick={() => setActiveTab('list')}
               className={cn("px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                activeTab === 'senarai' ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-white/5")}
+                activeTab === 'list' ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-white/5")}
             >
               {t('housing:student_list', 'Senarai Pelajar')}
             </button>
@@ -756,7 +756,7 @@ export function KlkDashboard() {
         </div>
 
         {/* Content based on Tab */}
-        {activeTab === 'senarai' ? (
+        {activeTab === 'list' ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

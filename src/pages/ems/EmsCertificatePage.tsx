@@ -75,7 +75,7 @@ export const EmsCertificatePage: React.FC = () => {
 
 
       if (!cert) {
-        setErrorMsg('Sijil tidak dijumpai dalam rekod rasmi JPP-POLISAS.');
+        setErrorMsg(t('ems:cert_not_found_in_records', 'Sijil tidak dijumpai dalam rekod rasmi JPP-POLISAS.'));
         setCertData(null);
         setLoading(false);
         return;
@@ -109,7 +109,7 @@ export const EmsCertificatePage: React.FC = () => {
       const jury = juryRes.data;
 
       // Determine Recipient Name & Subtext
-      let recipientName = 'Penerima Sijil';
+      let recipientName = t('ems:cert_recipient_default', 'Penerima Sijil');
       let recipientSubtext = '';
 
       if (participant) {
@@ -118,17 +118,17 @@ export const EmsCertificatePage: React.FC = () => {
           : participant.leader_name;
         
         if (participant.matrix_no) {
-          recipientSubtext = `No. Matrik: ${participant.matrix_no}`;
+          recipientSubtext = t('ems:cert_matric_label', 'No. Matrik: {{matricNo}}', { matricNo: participant.matrix_no });
         } else if (participant.category_name) {
-          recipientSubtext = `Kategori: ${participant.category_name}`;
+          recipientSubtext = t('ems:cert_category_label', 'Kategori: {{category}}', { category: participant.category_name });
         } else {
-          recipientSubtext = `Peserta Acara`;
+          recipientSubtext = t('ems:cert_event_participant', 'Peserta Acara');
         }
       } else if (jury) {
-        recipientName = jury.jury_name || 'Juri Penilai';
+        recipientName = jury.jury_name || t('ems:cert_evaluating_jury', 'Juri Penilai');
         recipientSubtext = jury.organization
-          ? `Organisasi: ${jury.organization}`
-          : 'Juri Penilai POLISAS';
+          ? t('ems:cert_organization_label', 'Organisasi: {{org}}', { org: jury.organization })
+          : t('ems:cert_jury_polisas', 'Juri Penilai POLISAS');
       }
 
       const formattedDate = event?.event_date
@@ -163,9 +163,9 @@ export const EmsCertificatePage: React.FC = () => {
         cert_type: cert.cert_type,
         recipient_name: recipientName,
         recipient_subtext: recipientSubtext,
-        event_title: event?.title || 'Program / Acara JPP POLISAS',
+        event_title: event?.title || t('ems:cert_default_program_title', 'Program / Acara JPP POLISAS'),
         event_date: formattedDate,
-        award_title: cert.cert_type === 'WINNER' ? 'Pemenang Utama / Anugerah Cemerlang' : undefined,
+        award_title: cert.cert_type === 'WINNER' ? t('ems:cert_winner_award_title', 'Pemenang Utama / Anugerah Cemerlang') : undefined,
         qr_code_url: qrCodeDataUrl,
         verification_url: verificationUrl,
       };
@@ -173,7 +173,7 @@ export const EmsCertificatePage: React.FC = () => {
       setCertData(builtCertData);
     } catch (err: any) {
       console.error('Fetch cert details error:', err);
-      setErrorMsg(err.message || 'Gagal memproses pengesahan sijil.');
+      setErrorMsg(err.message || t('ems:cert_err_verify_proc', 'Gagal memproses pengesahan sijil.'));
       setCertData(null);
     } finally {
       setLoading(false);
@@ -190,7 +190,7 @@ export const EmsCertificatePage: React.FC = () => {
     if (!certData?.verification_url) return;
     navigator.clipboard.writeText(certData.verification_url);
     setCopied(true);
-    toast.success('Pautan pengesahan disalin ke papan keratan!');
+    toast.success(t('ems:cert_verification_link_copied', 'Pautan pengesahan disalin ke papan keratan!'));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -199,19 +199,19 @@ export const EmsCertificatePage: React.FC = () => {
       case 'WINNER':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-            <Award className="w-3.5 h-3.5" /> Sijil Anugerah Pemenang
+            <Award className="w-3.5 h-3.5" /> {t('ems:cert_badge_winner', 'Sijil Anugerah Pemenang')}
           </span>
         );
       case 'JURY':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-            <ShieldCheck className="w-3.5 h-3.5" /> Sijil Penghargaan Juri
+            <ShieldCheck className="w-3.5 h-3.5" /> {t('ems:cert_badge_jury', 'Sijil Penghargaan Juri')}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Sijil Penyertaan Rasmi
+            <CheckCircle2 className="w-3.5 h-3.5" /> {t('ems:cert_badge_participant', 'Sijil Penyertaan Rasmi')}
           </span>
         );
     }
@@ -228,7 +228,7 @@ export const EmsCertificatePage: React.FC = () => {
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Kembali
+              <ArrowLeft className="w-4 h-4" /> {t('ems:back', 'Kembali')}
             </button>
             <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-amber-500/20">
               <ShieldCheck className="w-5 h-5 text-slate-950" />
@@ -247,7 +247,7 @@ export const EmsCertificatePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Cari No. Siri Sijil..."
+                  placeholder={t('ems:search_cert_serial_placeholder', 'Cari No. Siri Sijil...')}
                   value={searchSerial}
                   onChange={(e) => setSearchSerial(e.target.value)}
                   className="pl-9 pr-3 py-1.5 text-xs font-mono tabular-nums rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition-colors w-48"
@@ -257,7 +257,7 @@ export const EmsCertificatePage: React.FC = () => {
                 type="submit"
                 className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold active:scale-[0.98] transition-colors"
               >
-                Semak
+                {t('ems:check_cert_btn', 'Semak')}
               </button>
             </form>
             <LanguageToggle />
@@ -286,7 +286,7 @@ export const EmsCertificatePage: React.FC = () => {
             </div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('certificate_invalid')}</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md">
-              {errorMsg || 'Nombor siri atau ID sijil yang anda masukkan tidak wujud dalam pangkalan data rasmi JPP POLISAS.'}
+              {errorMsg || t('ems:cert_invalid_or_not_found_desc', 'Nombor siri atau ID sijil yang anda masukkan tidak wujud dalam pangkalan data rasmi JPP POLISAS.')}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400 mb-6">
               <span>{t('recipient_name')}</span>
@@ -299,7 +299,7 @@ export const EmsCertificatePage: React.FC = () => {
             <form onSubmit={handleSearchSubmit} className="w-full max-w-md flex gap-2 mb-6">
               <input
                 type="text"
-                placeholder="Masukkan No. Siri Sijil (cth: CERT-EMS-2026-P1-12345)"
+                placeholder={t('ems:enter_cert_serial_placeholder', 'Masukkan No. Siri Sijil (cth: CERT-EMS-2026-P1-12345)')}
                 value={searchSerial}
                 onChange={(e) => setSearchSerial(e.target.value)}
                 className="flex-1 px-4 py-2.5 text-xs font-mono tabular-nums rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
@@ -316,7 +316,7 @@ export const EmsCertificatePage: React.FC = () => {
               to="/"
               className="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Kembali ke Utama
+              <ArrowLeft className="w-4 h-4" /> {t('ems:back_to_main', 'Kembali ke Utama')}
             </Link>
           </motion.div>
         ) : (
@@ -355,13 +355,13 @@ export const EmsCertificatePage: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                   <EmsCertificateDownloadLink
                     certData={certData}
-                    fileName={`Sijil_${certData.cert_serial}.pdf`}
+                    fileName={t('ems:cert_filename_format', 'Sijil_{{serial}}.pdf', { serial: certData.cert_serial })}
                     className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     {({ loading }) => (
                       <>
                         <Download className="w-4 h-4" />
-                        {loading ? 'Menjana PDF...' : 'Muat Turun Sijil PDF'}
+                        {loading ? t('ems:generating_pdf', 'Menjana PDF...') : t('ems:download_cert_pdf_btn', 'Muat Turun Sijil PDF')}
                       </>
                     )}
                   </EmsCertificateDownloadLink>
@@ -371,7 +371,7 @@ export const EmsCertificatePage: React.FC = () => {
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-colors"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                    {copied ? 'Disalin!' : 'Kongsi Pautan'}
+                    {copied ? t('ems:copied', 'Disalin!') : t('ems:share_link', 'Kongsi Pautan')}
                   </button>
 
                   <button
@@ -379,7 +379,7 @@ export const EmsCertificatePage: React.FC = () => {
                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-colors"
                   >
                     <Eye className="w-4 h-4" />
-                    {showPreview ? 'Sembunyi PDF' : 'Papar PDF'}
+                    {showPreview ? t('ems:hide_pdf', 'Sembunyi PDF') : t('ems:show_pdf', 'Papar PDF')}
                   </button>
                 </div>
               </div>
@@ -397,17 +397,17 @@ export const EmsCertificatePage: React.FC = () => {
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> No. Siri Rasmi
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> {t('ems:official_serial_no', 'No. Siri Rasmi')}
                   </p>
                   <div className="text-xs sm:text-sm font-mono tabular-nums font-bold text-amber-600 dark:text-amber-400 flex items-center justify-between">
                     <span>{certData.cert_serial}</span>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(certData.cert_serial);
-                        toast.success('No. siri disalin!');
+                        toast.success(t('ems:serial_copied', 'No. siri disalin!'));
                       }}
                       className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                      title="Salin No. Siri"
+                      title={t('ems:copy_serial_tooltip', 'Salin No. Siri')}
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -416,7 +416,7 @@ export const EmsCertificatePage: React.FC = () => {
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Tarikh Sijil
+                    <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> {t('ems:cert_date_label', 'Tarikh Sijil')}
                   </p>
                   <p className="text-xs sm:text-sm font-bold font-mono tabular-nums text-slate-800 dark:text-slate-200">
                     {certData.event_date || 'Julai 2026'}
@@ -452,14 +452,14 @@ export const EmsCertificatePage: React.FC = () => {
                 >
                   <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80">
                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Pratinjau Sijil Digital (PDF)
+                      <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> {t('ems:digital_cert_preview', 'Pratinjau Sijil Digital (PDF)')}
                     </h3>
                     <EmsCertificateDownloadLink
                       certData={certData}
-                      fileName={`Sijil_${certData.cert_serial}.pdf`}
+                      fileName={t('ems:cert_filename_format', 'Sijil_{{serial}}.pdf', { serial: certData.cert_serial })}
                       className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold flex items-center gap-1 active:scale-[0.98]"
                     >
-                      {({ loading }) => (loading ? 'Menjana...' : 'Muat Turun PDF →')}
+                      {({ loading }) => (loading ? t('ems:generating', 'Menjana...') : t('ems:download_pdf_arrow', 'Muat Turun PDF →'))}
                     </EmsCertificateDownloadLink>
                   </div>
 
@@ -477,8 +477,8 @@ export const EmsCertificatePage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 py-6 bg-white dark:bg-slate-950 text-center text-xs text-slate-500 dark:text-slate-400">
-        <p>© {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS. Hak Cipta Terpelihara.</p>
-        <p className="mt-1 text-[11px]">Sistem Pengurusan Acara (EMS) & Generator Sijil Digital</p>
+        <p>© {new Date().getFullYear()} {t('ems:footer_copyright', 'Jawatankuasa Perwakilan Pelajar POLISAS. Hak Cipta Terpelihara.')}</p>
+        <p className="mt-1 text-[11px]">{t('ems:footer_system_name', 'Sistem Pengurusan Acara (EMS) & Generator Sijil Digital')}</p>
       </footer>
     </div>
   );

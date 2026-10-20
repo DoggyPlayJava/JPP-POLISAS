@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -39,25 +39,25 @@ import { uploadPdfToDrive } from '@/lib/driveUpload';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
-const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan (Auto-Jana)', icon: Zap },
-  { value: 'Laporan Kewangan', label: 'Laporan Kewangan', icon: FileText },
-  { value: 'Takwim Aktiviti', label: 'Takwim Aktiviti', icon: Calendar },
-  { value: 'Profil Ahli', label: 'Profil Ahli Kelab', icon: Users },
-  { value: 'Struktur Jawatan', label: 'Struktur Jawatan', icon: Award },
-  { value: 'Carta Organisasi', label: 'Carta Organisasi', icon: Users },
-  { value: 'Perlembagaan', label: 'Perlembagaan Kelab (Presiden)', icon: BookOpen },
-];
-
 const MAX_MB = 25;
 
 export function LaporanPage() {
-  const { t } = useTranslation(['kpp', 'common']);
+  const { t } = useTranslation(['portal', 'kpp', 'common']);
   const { user, profile, isSuperAdmin, isPresident, isMT, selectedClubId } = useAuth();
   // Role kini dari context (berubah mengikut kelab yang dipilih)
   const canSubmit = isPresident || isMT;
 
-  const [reportType, setReportType] = useState<string>('Laporan Aktiviti');
+  const allDocTypes = useMemo(() => [
+    { value: t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'), label: t('portal:monthly_report_autogen', 'Laporan Bulanan (Auto-Jana)'), icon: Zap },
+    { value: t('portal:financial_report', 'Laporan Kewangan'), label: t('portal:financial_report', 'Laporan Kewangan'), icon: FileText },
+    { value: t('portal:activity_calendar', 'Takwim Aktiviti'), label: t('portal:activity_calendar', 'Takwim Aktiviti'), icon: Calendar },
+    { value: t('portal:club_member_profile', 'Profil Ahli'), label: t('portal:club_member_profile', 'Profil Ahli Kelab'), icon: Users },
+    { value: t('portal:position_structure', 'Struktur Jawatan'), label: t('portal:position_structure', 'Struktur Jawatan'), icon: Award },
+    { value: t('portal:org_chart', 'Carta Organisasi'), label: t('portal:org_chart', 'Carta Organisasi'), icon: Users },
+    { value: 'Perlembagaan', label: t('portal:club_constitution_pres', 'Perlembagaan Kelab (Presiden)'), icon: BookOpen },
+  ], [t]);
+
+  const [reportType, setReportType] = useState<string>(() => t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'));
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -74,7 +74,7 @@ export function LaporanPage() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [logoData, setLogoData] = useState<string | undefined>(undefined);
-  const [presidentName, setPresidentName] = useState<string>('PRESIDEN KELAB');
+  const [presidentName, setPresidentName] = useState<string>(() => t('portal:club_president_upper', 'PRESIDEN KELAB'));
 
   const { runTour, startTour, closeTour } = useTour('EKPP_LAPORAN', !!profile);
 
@@ -88,17 +88,17 @@ export function LaporanPage() {
         return `${sm} - ${em}`;
       })()
     : undefined;
-  const submitterRole = isPresident ? 'PRESIDEN' : isMT ? 'MAJLIS TERTINGGI JPP' : ((profile as any)?.club_role || 'SETIAUSAHA');
+  const submitterRole = isPresident ? 'PRESIDEN' : isMT ? t('portal:jpp_mt_upper', 'MAJLIS TERTINGGI JPP') : ((profile as any)?.club_role || 'SETIAUSAHA');
 
   const clubName = effectiveClubId
     ? ALL_CLUBS.find(c => c.id === effectiveClubId)?.name ?? effectiveClubId
     : '—';
 
   // --- HELPER FUNCTION UNTUK FILTER JENIS DOKUMEN ---
-  const availableDocTypes = ALL_DOC_TYPES.filter(doc => {
+  const availableDocTypes = useMemo(() => allDocTypes.filter(doc => {
     if (doc.value === 'Perlembagaan' && !isPresident) return false;
     return true;
-  });
+  }), [allDocTypes, isPresident]);
 
   useEffect(() => {
     const checkSettings = async () => {
@@ -109,7 +109,7 @@ export function LaporanPage() {
   }, []);
 
   const validateFile = (f: File): boolean => {
-    if (f.type !== 'application/pdf') { toast.error('Hanya fail PDF dibenarkan.'); return false; }
+    if (f.type !== 'application/pdf') { toast.error(t('portal:only_pdf_allowed', 'Hanya fail PDF dibenarkan.')); return false; }
     if (f.size > MAX_MB * 1024 * 1024) { toast.error(`Fail terlalu besar. Had: ${MAX_MB}MB`); return false; }
     return true;
   };
@@ -156,8 +156,8 @@ export function LaporanPage() {
       try {
         const { sendNotificationToKppExco } = await import('@/lib/notifications');
         await sendNotificationToKppExco({
-          title: 'Laporan Kelab Baharu',
-          message: `${clubName} telah menghantar dokumen: ${reportType}. Sila semak di Semakan Laporan.`,
+          title: t('portal:new_club_report_notif_title', 'Laporan Kelab Baharu'),
+          message: t('portal:new_club_report_notif_msg', '{{club}} telah menghantar dokumen: {{doc}}. Sila semak di Semakan Laporan.', { club: clubName, doc: reportType }),
           type: 'INFO',
           module: 'EKPP',
           link: '/semakan-laporan'
@@ -166,7 +166,7 @@ export function LaporanPage() {
         console.error('Notification error:', err);
       }
 
-      toast.success('Berjaya dihantar!');
+      toast.success(t('portal:successfully_submitted', 'Berjaya dihantar!'));
       setFile(null); loadReports();
     } catch (err: any) { toast.error(err.message); } finally { setSubmitting(false); setProgress(0); }
   };
@@ -257,7 +257,7 @@ export function LaporanPage() {
     try {
       const data = await fetchReportData();
       if (data.length === 0) {
-        toast.error(gabungMode ? "Tiada aktiviti atau program selesai dalam tempoh ini." : "Tiada aktiviti atau program selesai pada bulan ini.");
+        toast.error(gabungMode ? t('portal:no_completed_activities_in_period', 'Tiada aktiviti atau program selesai dalam tempoh ini.') : t('portal:no_completed_activities_in_month', 'Tiada aktiviti atau program selesai pada bulan ini.'));
         setSubmitting(false);
         return;
       }
@@ -300,7 +300,7 @@ export function LaporanPage() {
       const blob = await asPdf.toBlob();
       setProgress(70);
 
-      const fileName = `Auto_Laporan_${targetMonth}_${Date.now()}`;
+      const fileName = t('portal:auto_laporan_target_month_filename', 'Auto_Laporan_{{month}}_{{ts}}', { month: targetMonth, ts: Date.now() });
       // Tukar Blob kepada File untuk Edge Function
       const pdfFile = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
       
@@ -310,9 +310,9 @@ export function LaporanPage() {
       const { error: dbError } = await supabase.from('club_reports').insert({
         club_id: effectiveClubId,
         submitted_by: user.id,
-        report_type: 'Laporan Aktiviti',
+        report_type: t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'),
         file_url: url,
-        file_name: `Laporan Bulanan - ${dateRangeLabel || monthLabel}.pdf`,
+        file_name: t('portal:monthly_report_date_range_filename', 'Laporan Bulanan - {{period}}.pdf', { period: dateRangeLabel || monthLabel }),
         status: 'Menunggu',
         is_archived: false
       });
@@ -323,8 +323,8 @@ export function LaporanPage() {
       try {
         const { sendNotificationToKppExco } = await import('@/lib/notifications');
         await sendNotificationToKppExco({
-          title: 'Laporan Auto-Jana Baharu',
-          message: `${clubName} telah menjana laporan ${dateRangeLabel ? 'gabungan ' + dateRangeLabel : 'bulan ' + monthLabel}. Sila semak di Semakan Laporan.`,
+          title: t('portal:new_autogen_report_notif_title', 'Laporan Auto-Jana Baharu'),
+          message: t('portal:new_autogen_report_notif_msg', '{{club}} telah menjana laporan {{period}}. Sila semak di Semakan Laporan.', { club: clubName, period: dateRangeLabel ? ('gabungan ' + dateRangeLabel) : ('bulan ' + monthLabel) }),
           type: 'INFO',
           module: 'EKPP',
           link: '/semakan-laporan'
@@ -333,10 +333,10 @@ export function LaporanPage() {
         console.error('Notification error:', err);
       }
 
-      toast.success('Laporan berjaya dijana!');
+      toast.success(t('portal:report_generated_success', 'Laporan berjaya dijana!'));
       loadReports();
     } catch (err: any) {
-      toast.error('Ralat: ' + err.message);
+      toast.error(t('portal:error_prefix', 'Ralat:') + ' ' + err.message);
     } finally {
       setSubmitting(false);
       setProgress(0);
@@ -367,29 +367,15 @@ export function LaporanPage() {
             <Select value={reportType} onValueChange={setReportType}>
               <SelectTrigger className="rounded-xl bg-muted/40 h-12"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {availableDocTypes.map(doc => {
-                  const getDocLabel = (val: string) => {
-                    switch (val) {
-                      case 'Laporan Aktiviti': return t('kpp:monthly_report', 'Laporan Bulanan (Auto-Jana)');
-                      case 'Laporan Kewangan': return t('kpp:report_type_finance', 'Laporan Kewangan');
-                      case 'Takwim Aktiviti': return t('kpp:report_type_takwim', 'Takwim Aktiviti');
-                      case 'Profil Ahli': return t('kpp:report_type_profile', 'Profil Ahli Kelab');
-                      case 'Struktur Jawatan': return t('kpp:report_type_structure', 'Struktur Jawatan');
-                      case 'Carta Organisasi': return t('kpp:report_type_org_chart', 'Carta Organisasi');
-                      case 'Perlembagaan': return t('kpp:report_type_constitution', 'Perlembagaan Kelab (Presiden)');
-                      default: return doc.label;
-                    }
-                  };
-                  return (
-                    <SelectItem key={doc.value} value={doc.value}>
-                      <div className="flex items-center gap-2"><doc.icon className="w-4 h-4" />{getDocLabel(doc.value)}</div>
-                    </SelectItem>
-                  );
-                })}
+                {availableDocTypes.map(doc => (
+                  <SelectItem key={doc.value} value={doc.value}>
+                    <div className="flex items-center gap-2"><doc.icon className="w-4 h-4" />{doc.label}</div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            {reportType === 'Laporan Aktiviti' ? (
+            {reportType === t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti') || reportType === 'Laporan Aktiviti' ? (
               <div className="space-y-4">
                 {/* Mode toggle: auto vs manual */}
                 <div className="flex gap-2 bg-muted/40 p-1 rounded-xl">
@@ -509,7 +495,7 @@ export function LaporanPage() {
             <AnimatePresence mode="popLayout">
               {reports.filter(r => filterTab === 'arkib' ? r.is_archived : !r.is_archived).map((r) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
-                  <Card className={cn("tour-laporan-card bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
+                  <Card className={cn(t('portal:tour_laporan_card_cls', 'tour-laporan-card'), "bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4">
@@ -556,7 +542,7 @@ export function LaporanPage() {
             reviewerRole="PRESIDEN"
             reviewerUnit={clubName}
             clubLogoUrl={logoData}
-            fileName={`Laporan_${effectiveClubId}_${targetMonth}`}
+            fileName={t('portal:laporan_preview_filename_pattern', 'Laporan_{{clubId}}_{{month}}', { clubId: effectiveClubId, month: targetMonth })}
             onClose={() => setIsPreviewOpen(false)}
             onSubmit={handleConfirmGenerate}
           />
