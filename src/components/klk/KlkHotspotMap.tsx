@@ -4,6 +4,7 @@
 // Lazy loaded — import secara dynamic dalam KlkDashboard
 // ============================================================
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -50,6 +51,7 @@ function getRadius(count: number): number {
 }
 
 export function KlkHotspotMap({ data }: Props) {
+  const { t } = useTranslation(['housing', 'common']);
   // Merge coords — gunakan data dari DB jika ada, fallback ke DEFAULT_COORDS
   const markers = data
     .filter(d => d.latitude || DEFAULT_COORDS[d.name])
@@ -97,7 +99,7 @@ export function KlkHotspotMap({ data }: Props) {
             <div style={{ fontFamily: 'system-ui, sans-serif', fontSize: 11, fontWeight: 700 }}>
               <strong>{m.name}</strong>
               <br />
-              {m.count > 0 ? `${m.count} pelajar` : 'Tiada data'}
+              {m.count > 0 ? t('housing:students_count', '{{count}} pelajar', { count: m.count }) : t('housing:no_data', 'Tiada data')}
             </div>
           </Tooltip>
         </CircleMarker>

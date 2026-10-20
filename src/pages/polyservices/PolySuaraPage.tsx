@@ -361,7 +361,7 @@ export function PolySuaraPage({
           }
         }, 'image/webp', 0.8);
       };
-      img.onerror = () => reject('Gagal memproses gambar');
+      img.onerror = () => reject(new Error(t('services:failed_process_image', 'Gagal memproses gambar')));
     });
   };
 
@@ -769,14 +769,14 @@ export function PolySuaraPage({
 
       if (justHidden) {
          sendNotificationToKebajikanExco({
-           title: '🚨 Luahan Disembunyikan Automatik',
-           message: 'Luahan telah melebihi had downvote (>60% daripada 40 undian). Sila semak di panel Moderasi PolySuara.',
+           title: t('services:notif_confession_hidden_auto_title', '🚨 Luahan Disembunyikan Automatik'),
+           message: t('services:notif_confession_hidden_auto_msg', 'Luahan telah melebihi had downvote (>60% daripada 40 undian). Sila semak di panel Moderasi PolySuara.'),
            type: 'ALERT',
            module: 'KEBAJIKAN',
            link: '/jpp/polyservices'
          }).catch(console.error);
          setConfessions(prev => prev.filter(c => c.id !== confessionId));
-         toast('Luahan ini telah disembunyikan dari awam', { icon: '🚨' });
+         toast(t('services:confession_hidden_from_public_toast', 'Luahan ini telah disembunyikan dari awam'), { icon: '🚨' });
       }
     } catch (err: any) {
       console.error(err);
@@ -906,8 +906,8 @@ export function PolySuaraPage({
       fetchConfessions(0, true);
 
       sendNotificationToKebajikanExco({
-        title: '💬 Balasan Pengguna PolySuara',
-        message: 'Pengguna telah membalas maklum balas rasmi JPP.',
+        title: t('services:notif_user_reply_title', '💬 Balasan Pengguna PolySuara'),
+        message: t('services:notif_user_reply_msg', 'Pengguna telah membalas maklum balas rasmi JPP.'),
         type: 'INFO',
         module: 'KEBAJIKAN',
         link: '/jpp/polyservices'
@@ -986,8 +986,8 @@ export function PolySuaraPage({
       setReportTargetId(null);
 
       sendNotificationToKebajikanExco({
-        title: '⚠️ Laporan PolySuara Baru',
-        message: 'Terdapat satu luahan baru yang dilaporkan dan memerlukan semakan moderasi.',
+        title: t('services:notif_new_report_title', '⚠️ Laporan PolySuara Baru'),
+        message: t('services:notif_new_report_msg', 'Terdapat satu luahan baru yang dilaporkan dan memerlukan semakan moderasi.'),
         type: 'WARNING',
         module: 'KEBAJIKAN',
         link: '/jpp/polyservices'
@@ -1249,14 +1249,16 @@ export function PolySuaraPage({
     try {
       const { error } = await supabase.rpc('report_polysuara_comment', {
         p_comment_id: comment.id,
-        p_reason: '🚨 KECEMASAN/KRISIS ESKALASI: Pelajar melaporkan ulasan ini memerlukan perhatian kecemasan Exco Kebajikan.'
+        p_reason: t('services:rpc_comment_emergency_escalate_reason', '🚨 KECEMASAN/KRISIS ESKALASI: Pelajar melaporkan ulasan ini memerlukan perhatian kecemasan Exco Kebajikan.')
       });
 
-      if (error && !error.message?.includes('sudah melaporkan')) throw error;
+      if (error && !error.message?.includes(t('services:already_reported_substr', 'sudah melaporkan'))) throw error;
 
       await sendNotificationToKebajikanExco({
-        title: '🚨 Kecemasan Ulasan PolySuara',
-        message: `Pelajar melaporkan ulasan ("${comment.content.substring(0, 30)}...") memerlukan tindakan kebajikan segera.`,
+        title: t('services:notif_comment_emergency_title', '🚨 Kecemasan Ulasan PolySuara'),
+        message: t('services:notif_comment_emergency_msg', 'Pelajar melaporkan ulasan ("{{snippet}}...") memerlukan tindakan kebajikan segera.', {
+          snippet: comment.content.substring(0, 30)
+        }),
         type: 'ALERT',
         module: 'KEBAJIKAN',
         link: '/jpp/polyservices'
@@ -2015,7 +2017,7 @@ export function PolySuaraPage({
                                 type="button"
                                 onClick={() => handleDeleteConfession(confession.id)}
                                 title={t('services:delete_confession_tooltip', 'Padam luahan anda')}
-                                aria-label="Padam Luahan"
+                                aria-label={t('services:delete_confession', 'Padam Luahan')}
                                 className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-xs"
                               >
                                 <Trash2 className="w-4 h-4 text-slate-400" />

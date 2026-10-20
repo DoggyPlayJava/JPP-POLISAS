@@ -86,7 +86,7 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
 
   const buildSOSMessage = (contact: SOSContact) => {
     const now = new Date().toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { hour: '2-digit', minute: '2-digit' });
-    const loc = jobLocation ? (i18n.language === 'en' ? ` My location: ${jobLocation}` : ` Lokasi saya: ${jobLocation}`) : '';
+    const loc = jobLocation ? t('gig:sos_my_location', ' Lokasi saya: {{location}}', { location: jobLocation }) : '';
     return t('gig:sos_message_text', '🚨 SOS KECEMASAN!\nSaya memerlukan bantuan segera semasa menaiki PolyRider ({{time}}).{{loc}}\nSila hubungi saya atau beritahu pihak berkuasa. Terima kasih.', { time: now, loc });
   };
 

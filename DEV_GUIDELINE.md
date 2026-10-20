@@ -5279,6 +5279,19 @@ Melengkapkan gelombang pembersihan pusingan kesembilan (Batch 9) merentasi 30 fa
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 897 kepada **638** (penurunan kumulatif 5,007 kejadian dalam 9 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 14 isu.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.35 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 10): SUPSAS/Karnival, Housing/KLK & PolyRider/PolyTask/PolySuara
+Melengkapkan gelombang pembersihan pusingan kesepuluh (Batch 10) merentasi 42 fail serentak dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 10 Disjoint Sweep):**
+   - **Sukan SUPSAS & Karnival JPP (`supsas.json`, `karnival.json`) [17 Fail]:** `KetuaDashboard.tsx` (12 isu -> 0), `AdminSukanPage.tsx` (11 isu -> 0), `AdminMatchScoreModal.tsx` (7 isu -> 0), `SupsasScoreboardPage.tsx` (6 isu -> 0), `AdminTetapanPage.tsx` (3 isu -> 0), `AdminDrawModal.tsx` (3 isu -> 0), `SupsasAdminHome.tsx` (3 isu -> 0), `KarnivalAdminBooths.tsx` (2 isu -> 0), `AdminJadualPage.tsx` (2 isu -> 0), `AdminKeputusanPage.tsx` (2 isu -> 0), `KarnivalAdminCategories.tsx` (1 isu -> 0), `KarnivalAdminEdition.tsx` (1 isu -> 0), `KarnivalAdminResults.tsx` (1 isu -> 0), `AdminKontigenPage.tsx` (1 isu -> 0), `SupsasLayout.tsx` (1 isu -> 0), `SupsasSchedulePage.tsx` (1 isu -> 0), dan `SupsasScorekeeperPage.tsx` (1 isu -> 0) diselaraskan sepenuhnya bagi jadual perlawanan, cabutan undian, portal ketua kontinjen, papan skor langsung, dan pengurusan gerai/kategori karnival.
+   - **Kediaman, KLK, PolyRent & Kamsis (`housing.json`, `klk.json`) [12 Fail]:** `KlkResidencyFormPage.tsx` (13 isu -> 0), `PolyRentPage.tsx` (11 isu -> 0), `KamsisAppealModal.tsx` (11 isu -> 0), `KlkResidencyModal.tsx` (7 isu -> 0), `KawasanSearchSelect.tsx` (3 isu -> 0), `KlkPublicStats.tsx` (2 isu -> 0), `PolyRentDetailModal.tsx` (2 isu -> 0), `KlkHotspotMap.tsx` (2 isu -> 0), `KlkSidebar.tsx` (1 isu -> 0), `PolyRentCalculatorModal.tsx` (1 isu -> 0), `KamsisDynamicFieldRenderer.tsx` (1 isu -> 0), dan `KlkDynamicFieldRenderer.tsx` (1 isu -> 0) diselubungi bagi borang kediaman luar kampus, penyenaraian sewaan bilik PolyRent, rayuan penempatan asrama Kamsis, dan peta hotspot perumahan pelajar.
+   - **PolyRider, PolyTask, PolySuara & Pengurusan Tugasan (`gig.json`, `services.json`, `jpp.json`) [13 Fail]:** `CancelJobModal.tsx` (13 isu -> 0), `TaskDetailModal.tsx` (13 isu -> 0), `PolySuaraPage.tsx` (12 isu -> 0), `PolySuaraReactions.tsx` (9 isu -> 0), `PolyTaskJobDetail.tsx` (8 isu -> 0), `SwipeToSOS.tsx` (3 isu -> 0), `PolySuaraStickerPicker.tsx` (3 isu -> 0), `PolyTaskSkeleton.tsx` (2 isu -> 0), `IGStoryExportCard.tsx` (2 isu -> 0), `PolySuaraStickerBadge.tsx` (2 isu -> 0), `SOSContactsManager.tsx` (1 isu -> 0), `LocationSearchInput.tsx` (1 isu -> 0), dan `AddTaskModal.tsx` (1 isu -> 0) diselaraskan bagi pembatalan pesanan rider, kecemasan SOS, reaksi/pelekat luahan anonim PolySuara, bidaan tugasan PolyTask, dan muat naik bukti pelaksanaan tugas.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 47/47 ujian lulus merentasi suite `masterLocales`, `SweepGroup5SupsasAndHousingI18n`, dan `Domain7PolyGigI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 638 kepada **454** (penurunan kumulatif 5,191 kejadian dalam 10 batch). Jumlah fail yang masih mempunyai sebarang teks BM tersisa menurun ke 94 fail sahaja.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

@@ -51,6 +51,7 @@
   "ai_budget_context_desc": "Deskripsi: {{desc}}",
   "ai_budget_context_program": "Program: {{title}}",
   "ai_draft_helper": "Jana draf atau betulkan format dengan bantuan AI.",
+  "ai_empty_response": "AI memulangkan isian kosong.",
   "ai_illogical_budget": "AI mengembalikan bentuk bajet tidak logik. Cuba perincikan lagi maklumat anda.",
   "ai_invalid_task_format": "AI menjana format salah. Cuba spesifikkan lagi objektif anda.",
   "ai_rough_estimate": "Anggaran Kasar AI",

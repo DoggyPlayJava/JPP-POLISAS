@@ -124,7 +124,7 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
                     setAiGeneratedTasks(formatted);
                     toast.success(t('kpp:ai_tasks_generated', 'Berjaya menjana {{count}} pecahan tugas!', { count: formatted.length }));
                 } else {
-                    throw new Error('AI memulangkan isian kosong.');
+                    throw new Error(t('kpp:ai_empty_response', 'AI memulangkan isian kosong.'));
                 }
             } catch (error) {
                 console.error(error);

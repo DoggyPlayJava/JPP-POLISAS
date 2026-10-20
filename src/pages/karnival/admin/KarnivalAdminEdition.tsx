@@ -109,7 +109,7 @@ export function KarnivalAdminEdition() {
             <input
               value={form.name}
               onChange={e => update('name', e.target.value)}
-              placeholder="Hari Karnival JPP POLISAS 2025"
+              placeholder={t('karnival:placeholder_carnival_example', 'Hari Karnival JPP POLISAS 2025')}
               className={inputCls}
             />
           </div>

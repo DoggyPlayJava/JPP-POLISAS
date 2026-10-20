@@ -93,7 +93,7 @@ function RankBadge({ rank }: { rank: number }) {
 
 // ─── Tally Row ────────────────────────────────────────────────
 function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number; isTV: boolean; key?: React.Key }) {
-  const { t } = useTranslation(['supsas', 'common']);
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const isTop3 = rank <= 3;
 
   return (
@@ -163,7 +163,7 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
 
 // ─── Main Scoreboard ──────────────────────────────────────────
 export function SupsasScoreboardPage() {
-  const { t } = useTranslation(['supsas', 'common']);
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const { edition, medalTally, sports, isLive, refetch } = useSupsas();
   const [isTV, setIsTV] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -227,7 +227,7 @@ export function SupsasScoreboardPage() {
                       {t('supsas:medal_tally', 'Papan Markah Medal')}
                     </h1>
                     <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">
-                      {edition?.name} · Dikemas kini setiap 30 saat
+                      {edition?.name} · {t('supsas:updated_every_30s', 'Dikemas kini setiap 30 saat')}
                     </p>
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export function SupsasScoreboardPage() {
                     <span className="w-2 h-2 rounded-full bg-white/20" />
                   )}
                   <span className={cn('text-[9px] font-black uppercase tracking-widest', isLive ? 'text-red-400' : 'text-white/30')}>
-                    {isLive ? 'Live' : 'Tidak Aktif'}
+                    {isLive ? t('supsas:status_live', 'Live') : t('supsas:status_inactive', 'Tidak Aktif')}
                   </span>
                 </div>
 
@@ -269,7 +269,7 @@ export function SupsasScoreboardPage() {
                       ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
                       : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10'
                   )}
-                  title={isTV ? 'Keluar TV Mode' : 'TV Mode'}
+                  title={isTV ? t('supsas:exit_tv_mode', 'Keluar TV Mode') : t('supsas:enter_tv_mode', 'TV Mode')}
                 >
                   {isTV ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </button>
@@ -278,7 +278,7 @@ export function SupsasScoreboardPage() {
 
             {/* Last update */}
             <p className="text-[9px] font-bold text-white/20 mt-3">
-              Terakhir dikemas kini: {lastUpdate.toLocaleTimeString('ms-MY')}
+              {t('supsas:last_updated_at', 'Terakhir dikemas kini: {{time}}', { time: lastUpdate.toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'ms-MY') })}
             </p>
           </div>
         </div>
@@ -291,7 +291,7 @@ export function SupsasScoreboardPage() {
               <div className="w-9" /> {/* rank */}
               <div className="w-1 hidden sm:block" /> {/* color bar */}
               <div className="flex-1">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Kontinjen</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">{t('supsas:contingent_label', 'Kontinjen')}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="w-16 sm:w-20 text-center">
@@ -314,9 +314,9 @@ export function SupsasScoreboardPage() {
               <div className="text-center py-24">
                 <Trophy className="w-12 h-12 text-white/10 mx-auto mb-4" />
                 <p className="text-white/30 font-black uppercase tracking-widest text-sm">
-                  Belum ada keputusan direkod
+                  {t('supsas:no_results_recorded_yet', 'Belum ada keputusan direkod')}
                 </p>
-                <p className="text-white/20 text-xs mt-2">Papan markah akan dikemas kini sebaik keputusan dimasukkan</p>
+                <p className="text-white/20 text-xs mt-2">{t('supsas:scoreboard_update_hint', 'Papan markah akan dikemas kini sebaik keputusan dimasukkan')}</p>
               </div>
             ) : (
               <AnimatePresence mode="popLayout">

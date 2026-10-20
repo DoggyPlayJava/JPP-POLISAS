@@ -19,7 +19,7 @@ import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 export function KlkResidencyFormPage() {
-  const { t } = useTranslation(['housing', 'common']);
+  const { t } = useTranslation(['housing', 'klk', 'common']);
   const { profile, user } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
@@ -97,19 +97,19 @@ export function KlkResidencyFormPage() {
         await supabase.from('klk_student_residency').insert(payload);
       }
       setStep('done');
-    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    } catch { toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.')); }
     finally { setLoading(false); }
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!alamat.trim()) { toast.error('Sila isi alamat kediaman.'); return; }
-    if (!kawasan) { toast.error('Sila pilih kawasan kediaman.'); return; }
-    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error('Sila nyatakan kawasan.'); return; }
+    if (!alamat.trim()) { toast.error(t('housing:fill_address_required', 'Sila isi alamat kediaman.')); return; }
+    if (!kawasan) { toast.error(t('housing:choose_area_required', 'Sila pilih kawasan kediaman.')); return; }
+    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error(t('housing:specify_area_required', 'Sila nyatakan kawasan.')); return; }
     // Validate required dynamic fields
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
-        toast.error(`Sila isi: ${f.label}`); return;
+        toast.error(t('housing:fill_dynamic_field_required', 'Sila isi: {{field}}', { field: f.label })); return;
       }
     }
 
@@ -130,9 +130,9 @@ export function KlkResidencyFormPage() {
       } else {
         await supabase.from('klk_student_residency').insert(payload);
       }
-      toast.success('Maklumat kediaman berjaya disimpan!');
+      toast.success(t('housing:residence_saved_success', 'Maklumat kediaman berjaya disimpan!'));
       setStep('done');
-    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    } catch { toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.')); }
     finally { setLoading(false); }
   };
 
@@ -160,7 +160,7 @@ export function KlkResidencyFormPage() {
             <ArrowLeft className="w-4 h-4 text-slate-400" />
           </button>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Exco Kediaman Luar Kampus</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{t('klk:exco_klk_title', 'Exco Kediaman Luar Kampus')}</p>
             <h1 className="text-lg font-black text-white leading-tight">
               {t('housing:declare_residence', 'Hantar Deklarasi Kediaman Luar Kampus')}
             </h1>
@@ -180,11 +180,11 @@ export function KlkResidencyFormPage() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-white truncate">{profile?.full_name}</p>
             <p className="text-[10px] text-slate-500 font-medium">
-              {profile?.matric_no?.toUpperCase()} · {jabatanLabel} · Semester {semInfo.semester}
+              {profile?.matric_no?.toUpperCase()} · {jabatanLabel} · {t('common:semester', 'Semester')} {semInfo.semester}
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-600">Tahun Akademik</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-600">{t('housing:academic_year', 'Tahun Akademik')}</p>
             <p className="text-xs font-black text-slate-400">{academicYear}</p>
           </div>
         </motion.div>
@@ -309,7 +309,7 @@ export function KlkResidencyFormPage() {
                   )}
 
                   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
-                    <span className="font-bold">{t('housing:landlord_contact', 'Maklumat Tuan Rumah Sah')}:</span> Sila simpan salinan perjanjian dan nombor telefon pemilik kediaman untuk rujukan kecemasan Exco.
+                    <span className="font-bold">{t('housing:landlord_contact', 'Maklumat Tuan Rumah Sah')}:</span> {t('housing:landlord_agreement_note', 'Sila simpan salinan perjanjian dan nombor telefon pemilik kediaman untuk rujukan kecemasan Exco.')}
                   </div>
 
                   <FieldTextarea
@@ -393,12 +393,13 @@ function FieldText({ label, value, onChange, placeholder, required, optional }: 
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; optional?: boolean;
 }) {
+  const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-slate-600">(Pilihan)</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-slate-600">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <input
         type="text" value={value} onChange={e => onChange(e.target.value)}
@@ -413,12 +414,13 @@ function FieldTextarea({ label, value, onChange, placeholder, required, optional
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; optional?: boolean;
 }) {
+  const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-slate-600">(Pilihan)</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-slate-600">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <textarea
         value={value} onChange={e => onChange(e.target.value)}

@@ -3,6 +3,7 @@
 // Guna dalam Modal, FormPage, dan SettingsPage
 // ============================================================
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KlkFormField } from '@/hooks/useKlkDynamicFields';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 const BASE_INPUT = 'w-full px-4 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600';
 
 export function KlkDynamicFieldRenderer({ fields, values, onChange, inputClass }: Props) {
+  const { t } = useTranslation(['housing', 'common']);
   if (fields.length === 0) return null;
 
   return (
@@ -56,7 +58,7 @@ export function KlkDynamicFieldRenderer({ fields, values, onChange, inputClass }
               required={f.is_required}
               className={`${BASE_INPUT} h-11 appearance-none ${inputClass ?? ''}`}
             >
-              <option value="">-- Pilih --</option>
+              <option value="">{t('housing:select_dropdown_placeholder', '-- Pilih --')}</option>
               {f.options.map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}

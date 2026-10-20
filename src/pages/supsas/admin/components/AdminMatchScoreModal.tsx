@@ -18,12 +18,7 @@ interface Props {
   onSaved: () => void;
 }
 
-const STATUS_OPTIONS = [
-  { value: 'upcoming',  label: 'Akan Datang', cls: 'text-white/60' },
-  { value: 'live',      label: '🔴 Sedang Live', cls: 'text-red-400' },
-  { value: 'completed', label: '✅ Selesai',   cls: 'text-emerald-400' },
-  { value: 'postponed', label: '⏸ Ditangguh', cls: 'text-amber-400' },
-];
+
 
 export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }: Props) {
   const { t } = useTranslation(['supsas', 'common']);
@@ -35,9 +30,9 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
   const [status, setStatus] = useState<string>(fixture.status);
   const statusOptions = [
     { value: 'upcoming',  label: t('supsas:status_upcoming', 'Akan Datang'), cls: 'text-white/60' },
-    { value: 'live',      label: `🔴 ${t('supsas:status_live', 'Sedang Live')}`, cls: 'text-red-400' },
-    { value: 'completed', label: `✅ ${t('supsas:status_completed', 'Selesai')}`, cls: 'text-emerald-400' },
-    { value: 'postponed', label: `⏸ ${t('supsas:status_postponed', 'Ditangguh')}`, cls: 'text-amber-400' },
+    { value: 'live',      label: t('supsas:status_live', 'Sedang Live'), cls: 'text-red-400' },
+    { value: 'completed', label: t('supsas:status_completed', 'Selesai'), cls: 'text-emerald-400' },
+    { value: 'postponed', label: t('supsas:status_postponed', 'Ditangguh'), cls: 'text-amber-400' },
   ];
   const [notes, setNotes]   = useState(fixture.notes ?? '');
   const [saving, setSaving] = useState(false);
@@ -58,7 +53,7 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
     const payload: Partial<SupsasFixture> = {
       score_a: scoreA !== '' ? scoreA : null,
       score_b: scoreB !== '' ? scoreB : null,
-      status: status as SupsasFixture['status'],
+      status: status as any,
       winner_id: status === 'completed' ? autoWinnerId : fixture.winner_id,
       notes: notes || null,
     };
@@ -81,10 +76,10 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
   };
 
   const matchLabel = fixture.group_name
-    ? `Kumpulan ${fixture.group_name} — Match #${fixture.match_number}`
-    : fixture.bracket_round === 2 ? `Separuh Akhir ${fixture.bracket_position}`
-    : fixture.bracket_round === 1 ? '🏆 Akhir'
-    : `Round ${fixture.round}`;
+    ? t('supsas:match_label_group', 'Kumpulan {{group}} — Perlawanan #{{match}}', { group: fixture.group_name, match: fixture.match_number })
+    : fixture.bracket_round === 2 ? t('supsas:match_label_sf', 'Separuh Akhir {{pos}}', { pos: fixture.bracket_position })
+    : fixture.bracket_round === 1 ? t('supsas:match_label_final', 'Akhir')
+    : t('supsas:match_label_round', 'Pusingan {{round}}', { round: fixture.round });
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

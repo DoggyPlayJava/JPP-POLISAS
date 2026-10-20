@@ -14,7 +14,7 @@ export function SupsasScorekeeperPage() {
   const [fixture, setFixture] = useState<SupsasFixture | null>(null);
   const [teamA, setTeamA] = useState<SupsasKontingen | null>(null);
   const [teamB, setTeamB] = useState<SupsasKontingen | null>(null);
-  const [sportName, setSportName] = useState<string>('Perlawanan Sukan');
+  const [sportName, setSportName] = useState<string>(() => t('supsas:default_sport_match_name', 'Perlawanan Sukan'));
   
   // Players
   const [playersA, setPlayersA] = useState<any[]>([]);

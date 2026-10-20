@@ -21,7 +21,7 @@ export function AdminKeputusanPage() {
     { value: 'gold',   label: `🥇 ${t('supsas:gold_medals_label', 'Emas')}`,   cls: 'bg-amber-500/20 border-amber-500/40 text-amber-400' },
     { value: 'silver', label: `🥈 ${t('supsas:silver_medals_label', 'Perak')}`,  cls: 'bg-slate-500/20 border-slate-500/30 text-slate-300' },
     { value: 'bronze', label: `🥉 ${t('supsas:bronze_medals_label', 'Gangsa')}`, cls: 'bg-orange-700/20 border-orange-700/30 text-orange-400' },
-    { value: null,     label: `— ${t('supsas:no_medal_label', 'Tiada')}`,   cls: 'bg-white/5 border-white/10 text-white/30' },
+    { value: null,     label: t('supsas:no_medal_dash', '— Tiada'),   cls: 'bg-white/5 border-white/10 text-white/30' },
   ];
 
   const handleMedalChange = (kontingenId: string, medal: string | null) => {
@@ -55,7 +55,7 @@ export function AdminKeputusanPage() {
       .upsert(upsertData, { onConflict: 'sport_id,kontingen_id' });
 
     setSaving(false);
-    if (error) { toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan')}: ${error.message}`); return; }
+    if (error) { toast.error(t('supsas:save_results_failed_with_msg', 'Gagal simpan: {{msg}}', { msg: error.message })); return; }
     toast.success(t('supsas:results_saved_success', 'Keputusan disimpan! Papan markah dikemas kini.'));
     refetch();
   };

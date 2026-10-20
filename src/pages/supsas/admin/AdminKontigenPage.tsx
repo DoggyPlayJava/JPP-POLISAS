@@ -48,7 +48,7 @@ export function AdminKontigenPage() {
       ? await supabase.from('supsas_kontingen').update(payload).eq('id', editTarget.id)
       : await supabase.from('supsas_kontingen').insert({ ...payload, invite_code: generateCode() });
     setSaving(false);
-    if (error) { toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan')}: ${error.message}`); return; }
+    if (error) { toast.error(t('supsas:save_contingent_failed_with_msg', 'Gagal simpan: {{msg}}', { msg: error.message })); return; }
     toast.success(editTarget ? t('supsas:contingent_updated', 'Kontinjen dikemas kini!') : t('supsas:contingent_added_with_code', 'Kontinjen ditambah dengan kod jemputan!'));
     setShowForm(false);
     refetch();

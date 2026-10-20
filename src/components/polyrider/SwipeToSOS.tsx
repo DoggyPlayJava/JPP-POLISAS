@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
 
@@ -8,6 +9,7 @@ interface SwipeToSOSProps {
 }
 
 export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
+  const { t } = useTranslation('gig');
   const [isTriggered, setIsTriggered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -57,7 +59,7 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
       await controls.start({ x: maxDrag, transition: { duration: 0.2 } });
       
       // Give users a 5-second countdown to cancel if they want to
-      if (window.confirm("AMARAN: Ini adalah panggilan kecemasan. Menyalahgunakan butang SOS dengan niat khianat akan menyebabkan akaun anda DIGANTUNG. Teruskan?")) {
+      if (window.confirm(t('gig:sos_confirm_warning', 'AMARAN: Ini adalah panggilan kecemasan. Menyalahgunakan butang SOS dengan niat khianat akan menyebabkan akaun anda DIGANTUNG. Teruskan?'))) {
         onTrigger();
       } else {
         // Reset if cancelled
@@ -73,7 +75,7 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
   return (
     <div className="w-full py-4">
       <p className="text-xs text-center text-red-500/80 mb-2 font-medium">
-        Hanya untuk kecemasan. Akaun akan digantung jika didapati khianat.
+        {t('gig:sos_disclaimer', 'Hanya untuk kecemasan. Akaun akan digantung jika didapati khianat.')}
       </p>
       
       <div 
@@ -85,7 +87,7 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
           style={{ opacity }}
           className="absolute z-0 text-red-600 dark:text-red-400 font-bold uppercase tracking-wider text-sm select-none pointer-events-none"
         >
-          Sapu Untuk SOS
+          {t('gig:swipe_to_sos', 'Sapu Untuk SOS')}
         </motion.span>
         
         {/* The draggable knob */}

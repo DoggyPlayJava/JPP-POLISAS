@@ -49,7 +49,10 @@ export function KarnivalAdminResults() {
       { header: t('karnival:header_total_votes', 'Jumlah Undi'), width: 14 },
     ];
     const rows = results.map((b, i) => [i + 1, b.booth_name, b.booth_number ?? '', b.total_votes]);
-    await exportXlsx(`Keputusan-${selectedCat?.name ?? 'Karnival'}-${edition?.edition_year ?? ''}.xlsx`, [
+    const filePrefix = t('karnival:export_filename_results', 'Keputusan');
+    const catName = selectedCat?.name ?? t('karnival:default_carnival_title', 'Karnival');
+    const year = edition?.edition_year ?? '';
+    await exportXlsx(`${filePrefix}-${catName}-${year}.xlsx`, [
       { name: t('karnival:sheet_results_name', 'Keputusan'), columns, rows },
     ]);
   };

@@ -134,7 +134,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
         .from('supsas_fixtures')
         .delete()
         .eq('sport_id', sport.id);
-      if (error) { toast.error(`${t('supsas:delete_old_fixtures_failed', 'Gagal padam fixture lama')}: ${error.message}`); return; }
+      if (error) { toast.error(t('supsas:delete_old_fixtures_failed_with_msg', 'Gagal padam fixture lama: {{msg}}', { msg: error.message })); return; }
     }
 
     const result = await startDraw(sport, drawEntries);
@@ -166,7 +166,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
       .select('id, bracket_round, bracket_position');
 
     if (error || !inserted) {
-      toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan bracket')}: ${error?.message ?? 'ralat tidak diketahui'}`);
+      toast.error(t('supsas:save_bracket_failed_with_msg', 'Gagal simpan bracket: {{msg}}', { msg: error?.message ?? t('supsas:unknown_error', 'Ralat tidak diketahui') }));
       setConfirming(false);
       return;
     }

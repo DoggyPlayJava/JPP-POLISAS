@@ -97,7 +97,7 @@ export function SupsasLayout() {
           <div className="flex flex-col">
             <span className="font-black text-sm tracking-tight text-white leading-none">SUPSAS</span>
             <span className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-400 leading-none mt-0.5">
-              {edition?.name ?? 'Sukan Polisas'}
+              {edition?.name ?? t('supsas:default_supsas_subtitle', 'Sukan POLISAS')}
             </span>
           </div>
           {/* Live badge */}

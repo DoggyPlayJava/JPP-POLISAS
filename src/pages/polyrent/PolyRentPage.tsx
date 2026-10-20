@@ -144,7 +144,7 @@ export function PolyRentPage() {
       setListings(data || []);
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan senarai PolyRent.');
+      toast.error(t('housing:polyrent_load_failed', 'Gagal memuatkan senarai PolyRent.'));
     } finally {
       setLoading(false);
     }
@@ -204,9 +204,9 @@ export function PolyRentPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <Home className="w-16 h-16 text-slate-800 mb-6" />
-        <h1 className="text-2xl font-black text-white tracking-tight mb-2">Modul PolyRent Ditutup</h1>
+        <h1 className="text-2xl font-black text-white tracking-tight mb-2">{t('housing:polyrent_closed', 'Modul PolyRent Ditutup')}</h1>
         <button onClick={() => navigate('/portal')} className="mt-8 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors">
-          Kembali ke Portal
+          {t('housing:back_to_portal', 'Kembali ke Portal')}
         </button>
       </div>
     );
@@ -295,7 +295,7 @@ export function PolyRentPage() {
             <button
               onClick={startTour}
               className="tour-help-button w-10 h-10 rounded-full bg-white/10  flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors border border-white/10"
-              title="Panduan PolyRent"
+              title={t('housing:guide_polyrent', 'Panduan PolyRent')}
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -476,16 +476,19 @@ export function PolyRentPage() {
                        <button 
                          onClick={() => {
                            if (profile?.id === ad.student_id) {
-                             toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                             toast(t('housing:detail_own_listing', 'Ini adalah iklan anda sendiri'));
                            } else {
                              window.dispatchEvent(
                                new CustomEvent('open-polyrent-chat', {
                                  detail: {
                                    partnerId: ad.student_id,
-                                   partnerName: ad.profiles?.full_name || 'Pelajar',
+                                   partnerName: ad.profiles?.full_name || t('housing:student_single', 'Pelajar'),
                                    listing: {
                                      id: ad.id,
-                                     title: `Bajet RM${ad.budget}: ${ad.lokasi_prefer || 'Mana-mana'}`,
+                                     title: t('housing:budget_title_pattern', 'Bajet RM{{budget}}: {{location}}', {
+                                       budget: ad.budget,
+                                       location: ad.lokasi_prefer || t('common:any', 'Mana-mana')
+                                     }),
                                      sewa_bulanan: ad.budget,
                                      image_url: undefined
                                    }
@@ -526,16 +529,16 @@ export function PolyRentPage() {
             </div>
             {activeFilter === 'SAVED' ? (
               <>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Tiada Iklan Tersimpan</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-sm">Tekan ikon ❤️ pada mana-mana iklan untuk menyimpannya ke sini.</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('housing:no_saved_ads_title', 'Tiada Iklan Tersimpan')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm">{t('housing:no_saved_ads_desc', 'Tekan ikon ❤️ pada mana-mana iklan untuk menyimpannya ke sini.')}</p>
                 <button onClick={() => setActiveFilter('SEMUA')} className="mt-6 px-6 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm hover:scale-105 transition-transform shadow-lg">
-                  Semak Iklan Lain
+                  {t('housing:browse_other_ads_btn', 'Semak Iklan Lain')}
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Tiada Iklan Dijumpai</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-sm">Cuba tukar carian atau tetapan penapis anda.</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('housing:no_ads_found_title', 'Tiada Iklan Dijumpai')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm">{t('housing:no_ads_found_desc', 'Cuba tukar carian atau tetapan penapis anda.')}</p>
               </>
             )}
           </div>
@@ -594,7 +597,7 @@ export function PolyRentPage() {
             }}
             onOpenChat={(userId, userName) => {
               if (profile?.id === userId) {
-                toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                toast(t('housing:detail_own_listing', 'Ini adalah iklan anda sendiri'));
                 return;
               }
               window.dispatchEvent(
