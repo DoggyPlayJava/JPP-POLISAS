@@ -84,7 +84,7 @@ export function AnnouncementsPage() {
 
   const handleCreate = async () => {
     if (!title || !content) {
-      toast.error('Sila isi tajuk dan kandungan');
+      toast.error(t('jpp:announcements_fill_title_content', 'Sila isi tajuk dan kandungan'));
       return;
     }
 
@@ -129,7 +129,7 @@ export function AnnouncementsPage() {
           .eq('id', editingId);
 
         if (dbError) throw dbError;
-        toast.success('Hebahan berjaya dikemas kini.');
+        toast.success(t('jpp:announcements_broadcast_updated', 'Hebahan berjaya dikemas kini.'));
       } else {
         const { error: dbError } = await supabase
           .from('system_announcements')
@@ -146,7 +146,7 @@ export function AnnouncementsPage() {
           });
 
         if (dbError) throw dbError;
-        toast.success('Hebahan berjaya dicipta.');
+        toast.success(t('jpp:announcements_broadcast_created', 'Hebahan berjaya dicipta.'));
 
         // --- Trigger Push Notification ---
         try {
@@ -185,7 +185,7 @@ export function AnnouncementsPage() {
     
     if (error) toast.error('Ralat mengemaskini status');
     else {
-      toast.success('Status dikemaskini');
+      toast.success(t('jpp:announcements_status_updated', 'Status dikemaskini'));
       fetchAnnouncements();
     }
   };
@@ -205,7 +205,7 @@ export function AnnouncementsPage() {
     if (error) {
       toast.error('Gagal memadam makluman.');
     } else {
-      toast.success('Makluman berjaya dipadam.');
+      toast.success(t('jpp:announcements_broadcast_deleted', 'Makluman berjaya dipadam.'));
       setDeleteTarget(null);
       fetchAnnouncements();
     }
@@ -267,7 +267,7 @@ export function AnnouncementsPage() {
         link: '/portal'
       }, targetRoles);
       
-      toast.success('Hebahan push berjaya dihantar.', { id: 'broadcast_push' });
+      toast.success(t('jpp:announcements_push_sent', 'Hebahan push berjaya dihantar.'), { id: 'broadcast_push' });
       setBroadcastTarget(null);
     } catch (err: any) {
       console.error(err);
@@ -450,8 +450,8 @@ export function AnnouncementsPage() {
               <div className="flex gap-4 items-center">
                 <div className="p-3 bg-primary/20 text-primary rounded-xl"><Lock size={20} /></div>
                 <div>
-                  <h3 className="font-black text-primary">Tindakan Aksi & Borang (Opsional)</h3>
-                  <p className="text-sm text-muted-foreground">Kumpul pendaftaran (seperti Fun Run) atau lilit butang URL luaran.</p>
+                  <h3 className="font-black text-primary">{t('jpp:announcements_actions_and_forms', 'Tindakan Aksi & Borang (Opsional)')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('jpp:announcements_actions_desc', 'Kumpul pendaftaran (seperti Fun Run) atau lilit butang URL luaran.')}</p>
                 </div>
               </div>
 
@@ -473,7 +473,7 @@ export function AnnouncementsPage() {
                   <div className="space-y-6 pt-4 border-t border-border/50">
                      <div className="flex justify-between items-center">
                         <Label className="font-bold text-lg">Konfigurasi Borang Dinamik</Label>
-                        <Button variant="outline" size="sm" onClick={addFormField} className="rounded-xl"><Plus size={16} className="mr-2"/> Tambah Soalan</Button>
+                        <Button variant="outline" size="sm" onClick={addFormField} className="rounded-xl"><Plus size={16} className="mr-2"/> {t('jpp:announcements_add_question', 'Tambah Soalan')}</Button>
                      </div>
                      
                      <div className="space-y-4">

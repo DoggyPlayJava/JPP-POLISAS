@@ -355,6 +355,14 @@ describe('Task 4: Domain 2 Integration — JPP HQ Administration Portal i18n', (
 
       expect(html).toContain('Food Bank Central Control');
     });
+
+    it('renders localized food bank counter scan errors in English', async () => {
+      await changeLanguage('en');
+      const html = renderPage(<JppFoodBankAdmin />);
+      expect(html).toContain('Student Pickup Pass Verification');
+      expect(html).toContain('Open Camera Scanner');
+      expect(i18n.t('jpp:scan_qr_prompt')).toBe('Please scan the QR code or enter Matric No. / Application No.');
+    });
   });
 
   describe('Bahasa Melayu (ms) Full DOM Rendering', () => {

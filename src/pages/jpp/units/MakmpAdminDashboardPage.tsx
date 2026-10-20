@@ -76,7 +76,7 @@ export const PRESET_CATEGORY_GROUPS = [
 ];
 
 export default function MakmpAdminDashboardPage() {
-  const { t } = useTranslation(['makmp', 'common']);
+  const { t } = useTranslation(['jpp', 'makmp', 'common']);
   const { user, profile } = useAuth();
   const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
@@ -168,9 +168,9 @@ export default function MakmpAdminDashboardPage() {
   const handleUnlockAward = (awardApplicationId: string, awardName?: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Buka Semula Semakan Juri',
+      title: t('jpp:makmp_unlock_single_title', 'Buka Semula Semakan Juri'),
       description: `Buka semula semakan untuk anugerah "${awardName || 'ini'}"? Ini akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`,
-      confirmLabel: 'Buka Semula',
+      confirmLabel: t('jpp:makmp_reopen_review', 'Buka Semula'),
       variant: 'warning',
       onConfirm: async () => {
         setUnlockingAwardId(awardApplicationId);
@@ -213,9 +213,9 @@ export default function MakmpAdminDashboardPage() {
     const names = lockedAwards.map((a) => a.award?.name || 'anugerah').join(', ');
     setConfirmConfig({
       isOpen: true,
-      title: 'Buka Semula Semua Anugerah Terkunci',
+      title: t('jpp:makmp_unlock_all_title', 'Buka Semula Semua Anugerah Terkunci'),
       description: `Buka semula ${lockedAwards.length} anugerah terkunci untuk ${sub.full_name} (${names})? Ini akan reset keputusan juri dan menolak semula merit (jika disahkan).`,
-      confirmLabel: 'Buka Semula',
+      confirmLabel: t('jpp:makmp_reopen_review', 'Buka Semula'),
       variant: 'warning',
       onConfirm: async () => {
         setUnlockingAwardId('__submission__' + sub.id);
@@ -1269,11 +1269,11 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white shadow-sm"
               >
-                <option value="ALL">Semua Status</option>
-                <option value="MENUNGGU">Menunggu</option>
-                <option value="DALAM_SEMAKAN">Dalam Semakan</option>
-                <option value="DISAHKAN">Disahkan</option>
-                <option value="DITOLAK">Ditolak</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_status', 'Semua Status')}</option>
+                <option value="MENUNGGU">{t('jpp:makmp_filter_pending', 'Menunggu')}</option>
+                <option value="DALAM_SEMAKAN">{t('jpp:makmp_filter_in_review', 'Dalam Semakan')}</option>
+                <option value="DISAHKAN">{t('jpp:makmp_filter_approved', 'Disahkan')}</option>
+                <option value="DITOLAK">{t('jpp:makmp_filter_rejected', 'Ditolak')}</option>
               </select>
 
               <select
@@ -1281,7 +1281,7 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[200px] shadow-sm"
               >
-                <option value="ALL">Semua Kategori</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_categories', 'Semua Kategori')}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -1295,7 +1295,7 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setAwardFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[220px] shadow-sm"
               >
-                <option value="ALL">Semua Anugerah</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_awards', 'Semua Anugerah')}</option>
                 {awards.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -1333,14 +1333,14 @@ export default function MakmpAdminDashboardPage() {
                 <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Kod Rujukan</th>
-                    <th className="py-3 px-4">Nama Pelajar</th>
-                    <th className="py-3 px-4">No. Matrik</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_student_name', 'Nama Pelajar')}</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_matric_no', 'No. Matrik')}</th>
                     <th className="py-3 px-4">Jabatan</th>
-                    <th className="py-3 px-4">Kategori Anugerah</th>
-                    <th className="py-3 px-4">Sijil</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_award_category', 'Kategori Anugerah')}</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_certificates', 'Sijil')}</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Merit</th>
-                    <th className="py-3 px-4 text-right">Tindakan</th>
+                    <th className="py-3 px-4 text-right">{t('jpp:makmp_th_actions', 'Tindakan')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1423,7 +1423,7 @@ export default function MakmpAdminDashboardPage() {
                                 ) : (
                                   <Lock className="w-3.5 h-3.5" />
                                 )}
-                                <span>Buka Semula</span>
+                                <span>{t('jpp:makmp_reopen_review', 'Buka Semula')}</span>
                               </button>
                             )}
                             <button
@@ -2598,7 +2598,7 @@ export default function MakmpAdminDashboardPage() {
                                 }}
                                 className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
                               >
-                                {unlockingAwardId === awApp.id ? 'Membuka...' : '🔓 Buka Semula'}
+                                {unlockingAwardId === awApp.id ? t('jpp:makmp_reopening', 'Membuka...') : `🔓 ${t('jpp:makmp_reopen_review', 'Buka Semula')}`}
                               </button>
                             )}
                           </div>
