@@ -176,7 +176,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         setRevealStep('HIDDEN');
-        toast.success('Pentas ditetapkan semula ke mod terlindung (Armed)');
+        toast.success(t('ems:leaderboard_armed_toast', 'Pentas ditetapkan semula ke mod terlindung (Armed)'));
       } else if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         triggerConfetti();
@@ -228,7 +228,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       setScores((scoresRes.data || []) as EmsScore[]);
 
       if (showToast) {
-        toast.success('Papan pendahulu dikemas kini!');
+        toast.success(t('ems:leaderboard_updated_toast', 'Papan pendahulu dikemas kini!'));
       }
     } catch (err: any) {
       console.error('[EMS Leaderboard] Error loading data:', err);
@@ -245,7 +245,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   useEffect(() => {
     if (!loading && (activeTab === 'AUDIT' || searchParams.get('tab') === 'audit')) {
       if (!canAccessAuditTab) {
-        toast.error('Akses Terhad: Hanya JPP, Super Admin JPP, dan Pencipta Acara dibenarkan mengakses Tab Audit Penjurian.');
+        toast.error(t('ems:leaderboard_audit_access_denied', 'Akses Terhad: Hanya JPP, Super Admin JPP, dan Pencipta Acara dibenarkan mengakses Tab Audit Penjurian.'));
         setActiveTab('LEADERBOARD');
         setSearchParams({}, { replace: true });
       }
@@ -496,14 +496,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Handle Resolve Tie Winner
   const handleConfirmTieWinner = async () => {
     if (!eventId || !selectedTieWinnerId) {
-      toast.error('Sila pilih peserta pemenang penentuan seri');
+      toast.error(t('ems:leaderboard_tie_select_error', 'Sila pilih peserta pemenang penentuan seri'));
       return;
     }
 
     try {
       setResolvingTie(true);
       await resolveTieWinner(eventId, selectedTieWinnerId);
-      toast.success('Pemenang penentuan seri berjaya dikemaskini!');
+      toast.success(t('ems:leaderboard_tie_success', 'Pemenang penentuan seri berjaya dikemaskini!'));
       setShowTieBreakerModal(false);
       loadData();
     } catch (err: any) {
@@ -743,7 +743,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 active:scale-[0.98] transition flex items-center gap-2"
               >
                 <Gift className="w-4 h-4 text-slate-950" />
-                Cabutan Bertuah
+                {t('ems:leaderboard_lucky_draw', 'Cabutan Bertuah')}
               </button>
             )}
 
@@ -1089,7 +1089,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 active:scale-[0.98] transition flex items-center gap-2"
             >
               <Gift className="w-4 h-4 text-slate-950" />
-              Cabutan Bertuah
+                {t('ems:leaderboard_lucky_draw', 'Cabutan Bertuah')}
             </button>
           )}
 
@@ -1163,7 +1163,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             }`}
           >
             <Shield className={`w-4 h-4 ${activeTab === 'AUDIT' ? 'text-slate-950' : 'text-amber-500'}`} />
-            Audit & Pemantauan Juri
+            {t('ems:leaderboard_tab_audit', 'Audit & Pemantauan Juri')}
           </button>
         )}
       </div>

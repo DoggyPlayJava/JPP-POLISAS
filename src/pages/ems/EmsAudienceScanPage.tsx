@@ -18,17 +18,27 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { supabase } from '@/lib/supabase';
 import type { EmsEvent, EmsVisitor } from '@/types';
 
-export function EmsAudienceScanPage() {
+export interface EmsAudienceScanPageProps {
+  initialEvent?: EmsEvent | null;
+  initialLoading?: boolean;
+}
+
+export function EmsAudienceScanPage({
+  initialEvent = null,
+  initialLoading,
+}: EmsAudienceScanPageProps = {}) {
+  const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  const [event, setEvent] = useState<EmsEvent | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState<EmsEvent | null>(initialEvent);
+  const [loading, setLoading] = useState(initialLoading ?? (initialEvent ? false : true));
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
@@ -66,20 +76,20 @@ export function EmsAudienceScanPage() {
 
         if (error) throw error;
         if (!data) {
-          toast.error('Acara tidak dijumpai');
+          toast.error(t('ems:audience_scan_event_not_found', 'Acara tidak dijumpai'));
         } else {
           setEvent(data as EmsEvent);
         }
       } catch (err: any) {
         console.error('[EMS Audience Scan] Error loading event:', err);
-        toast.error('Gagal memuatkan maklumat acara');
+        toast.error(t('ems:audience_scan_event_not_found_desc', 'Gagal memuatkan maklumat acara'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvent();
-  }, [eventId]);
+  }, [eventId, t]);
 
   const triggerConfettiExplosion = () => {
     const end = Date.now() + 4 * 1000;
@@ -112,7 +122,7 @@ export function EmsAudienceScanPage() {
     if (!eventId) return;
 
     if (!name.trim()) {
-      toast.error('Sila masukkan Nama Penuh.');
+      toast.error(t('ems:audience_scan_toast_name_required', 'Sila masukkan Nama Penuh.'));
       return;
     }
 
@@ -132,8 +142,8 @@ export function EmsAudienceScanPage() {
         const { data: dup } = await dupQuery.maybeSingle();
         if (dup) {
           setSubmitting(false);
-          const t = new Date(dup.scanned_at).toLocaleTimeString('ms-MY');
-          toast.error(`Kehadiran anda telah direkodkan pada ${t}. Tidak boleh scan berulang!`);
+          const timeBadge = new Date(dup.scanned_at).toLocaleTimeString('ms-MY');
+          toast.error(t('ems:audience_scan_toast_duplicate', 'Kehadiran anda telah direkodkan pada {{time}}. Tidak boleh scan berulang!', { time: timeBadge }));
           setSubmittedVisitor(dup as unknown as EmsVisitor);
           return;
         }
@@ -179,7 +189,7 @@ export function EmsAudienceScanPage() {
       if (error) {
         // Race-condition: unique index (event_id + matric/email/phone) tangkap double-scan
         if (error.code === '23505') {
-          toast.error('Kehadiran anda telah direkodkan. Tidak boleh scan berulang!');
+          toast.error(t('ems:audience_scan_toast_duplicate', 'Kehadiran anda telah direkodkan. Tidak boleh scan berulang!'));
           return;
         }
         throw error;
@@ -190,13 +200,13 @@ export function EmsAudienceScanPage() {
 
       if (isMilestoneWinner) {
         triggerConfettiExplosion();
-        toast.success(`Tahniah! Anda Pengunjung Ke-${currentVisitorCount}!`);
+        toast.success(t('ems:audience_scan_toast_milestone', 'Tahniah! Anda Pengunjung Ke-{{number}}!', { number: currentVisitorCount }));
       } else {
-        toast.success('Kehadiran anda berjaya direkodkan!');
+        toast.success(t('ems:audience_scan_toast_success', 'Kehadiran anda berjaya direkodkan!'));
       }
     } catch (err: any) {
       console.error('[EMS Scan] Error recording attendance:', err);
-      toast.error(err.message || 'Gagal merekodkan kehadiran. Sila cuba lagi.');
+      toast.error(err.message || t('ems:error_occurred', 'Gagal merekodkan kehadiran. Sila cuba lagi.'));
     } finally {
       setSubmitting(false);
     }
@@ -207,7 +217,7 @@ export function EmsAudienceScanPage() {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 transition-colors">
         <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/50 animate-pulse">
-          Memuatkan Portal Kehadiran Pengunjung...
+          {t('ems:audience_scan_loading', 'Memuatkan Portal Kehadiran Pengunjung...')}
         </p>
       </div>
     );
@@ -217,15 +227,15 @@ export function EmsAudienceScanPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 text-center transition-colors">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-4" />
-        <h2 className="text-2xl font-black mb-2">Acara Tidak Ditemui</h2>
+        <h2 className="text-2xl font-black mb-2">{t('ems:audience_scan_event_not_found', 'Acara Tidak Ditemui')}</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 max-w-sm">
-          Pautan imbasan QR kehadiran ini tidak sah atau acara telah ditamatkan.
+          {t('ems:audience_scan_event_not_found_desc', 'Pautan imbasan QR kehadiran ini tidak sah atau acara telah ditamatkan.')}
         </p>
         <button
           onClick={() => navigate('/')}
           className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/20 active:scale-[0.98]"
         >
-          Kembali ke Halaman Utama
+          {t('ems:audience_scan_back_home', 'Kembali ke Halaman Utama')}
         </button>
       </div>
     );
@@ -233,8 +243,6 @@ export function EmsAudienceScanPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans transition-colors">
-      {/* Background ambient lighting */}
-
       {/* Floating ThemeToggle in top-right corner */}
       <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
@@ -244,7 +252,7 @@ export function EmsAudienceScanPage() {
         {/* Header Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-black uppercase tracking-wider">
-            <QrCode className="w-3.5 h-3.5" /> Portal Imbasan Kehadiran Awam
+            <QrCode className="w-3.5 h-3.5" /> {t('ems:audience_scan_title', 'Portal Imbasan Kehadiran Awam')}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200">
             {event.title}
@@ -267,7 +275,7 @@ export function EmsAudienceScanPage() {
         {/* Card Body */}
         {submittedVisitor ? (
           /* Success / Celebration View */
-          <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-6  shadow-2xl transition-colors animate-fadeIn text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-6 shadow-2xl transition-colors animate-fadeIn text-slate-900 dark:text-white">
             {submittedVisitor.is_milestone_winner ? (
               /* Milestone Winner Celebration Card */
               <div className="space-y-5">
@@ -278,27 +286,23 @@ export function EmsAudienceScanPage() {
                 <div className="space-y-2">
                   <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/30 inline-flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    PEMENANG PENGUNJUNG BERTUAH!
+                    {t('ems:audience_scan_milestone_title', 'PEMENANG PENGUNJUNG BERTUAH!')}
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-300">
-                    TAHNIAH!
+                    {t('ems:congrats_and_thank_you', 'TAHNIAH!')}
                   </h2>
                   <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
-                    Anda Adalah Pengunjung Ke-
-                    <span className="text-amber-500 dark:text-amber-400 text-xl font-black mx-1">
-                      [{submittedVisitor.milestone_number || 1}]
-                    </span>
-                    &amp; Pemenang Bertuah!
+                    {t('ems:audience_scan_milestone_desc', 'Anda Adalah Pengunjung Ke-[{{number}}] & Pemenang Bertuah!', { number: submittedVisitor.milestone_number || 1 })}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-left text-xs space-y-1.5 text-amber-900 dark:text-amber-200">
                   <p className="font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Sila Tunjukkan Skrin Ini Kepada Urus Setia Acara:
+                    <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" /> {t('ems:checkin_instructions', 'Sila Tunjukkan Skrin Ini Kepada Urus Setia Acara:')}
                   </p>
-                  <p>• Nama: <strong>{submittedVisitor.name}</strong></p>
-                  {submittedVisitor.matrix_no && <p>• No. Matrik: <strong>{submittedVisitor.matrix_no}</strong></p>}
-                  <p>• Masa Imbasan: {new Date(submittedVisitor.scanned_at).toLocaleTimeString('ms-MY')}</p>
+                  <p>• {t('ems:recipient_name', 'Nama')}: <strong>{submittedVisitor.name}</strong></p>
+                  {submittedVisitor.matrix_no && <p>• {t('ems:reg_matrix_no', 'No. Matrik')}: <strong>{submittedVisitor.matrix_no}</strong></p>}
+                  <p>• {t('ems:checkin_table_th_time', 'Masa Imbasan')}: {new Date(submittedVisitor.scanned_at).toLocaleTimeString('ms-MY')}</p>
                 </div>
               </div>
             ) : (
@@ -309,16 +313,18 @@ export function EmsAudienceScanPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Kehadiran Berjaya Direkodkan!</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    {t('ems:audience_scan_success_title', 'Kehadiran Berjaya Direkodkan!')}
+                  </h2>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Terima Kasih! Kehadiran Anda Telah Direkodkan. Anda Kini Layak Untuk Cabutan Bertuah!
+                    {t('ems:audience_scan_success_desc', 'Terima Kasih! Kehadiran Anda Telah Direkodkan. Anda Kini Layak Untuk Cabutan Bertuah!')}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-left text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                  <p><strong className="text-slate-900 dark:text-white">Nama:</strong> {submittedVisitor.name}</p>
-                  {submittedVisitor.matrix_no && <p><strong className="text-slate-900 dark:text-white">No. Matrik:</strong> {submittedVisitor.matrix_no}</p>}
-                  {submittedVisitor.email && <p><strong className="text-slate-900 dark:text-white">Emel:</strong> {submittedVisitor.email}</p>}
+                  <p><strong className="text-slate-900 dark:text-white">{t('ems:recipient_name', 'Nama')}:</strong> {submittedVisitor.name}</p>
+                  {submittedVisitor.matrix_no && <p><strong className="text-slate-900 dark:text-white">{t('ems:reg_matrix_no', 'No. Matrik')}:</strong> {submittedVisitor.matrix_no}</p>}
+                  {submittedVisitor.email && <p><strong className="text-slate-900 dark:text-white">{t('ems:reg_email', 'Emel')}:</strong> {submittedVisitor.email}</p>}
                 </div>
               </div>
             )}
@@ -333,32 +339,36 @@ export function EmsAudienceScanPage() {
               }}
               className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition border border-slate-200 dark:border-transparent"
             >
-              Imbas Rekod Baharu
+              {t('ems:audience_scan_done_btn', 'Imbas Rekod Baharu')}
             </button>
           </div>
         ) : (
           /* Attendance Registration Form */
           <form
             onSubmit={handleSubmit}
-            className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5  shadow-2xl transition-colors"
+            className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl transition-colors"
           >
             <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Borang Kehadiran Pengunjung</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Sila isi maklumat anda untuk pendaftaran kehadiran</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                {t('ems:audience_scan_heading', 'Borang Kehadiran Pengunjung')}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t('ems:audience_scan_subtitle', 'Sila isi maklumat anda untuk pendaftaran kehadiran')}
+              </p>
             </div>
 
             {/* Account Status Badge if Logged In */}
             {user && (
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
                 <User className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Log masuk sebagai <strong>{profile?.full_name || user.email}</strong></span>
+                <span>{t('ems:logged_in_as', 'Log masuk sebagai')} <strong>{profile?.full_name || user.email}</strong></span>
               </div>
             )}
 
             {/* Name Field */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Nama Penuh <span className="text-rose-500">*</span>
+                {t('ems:audience_scan_fullname', 'Nama Penuh')} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -367,7 +377,7 @@ export function EmsAudienceScanPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Ahmad bin Ali"
+                  placeholder={t('ems:audience_scan_fullname_placeholder', 'e.g. Ahmad bin Ali')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -384,7 +394,7 @@ export function EmsAudienceScanPage() {
                     : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Pelajar POLISAS
+                {t('ems:audience_scan_student_toggle', 'Pelajar POLISAS')}
               </button>
               <button
                 type="button"
@@ -395,21 +405,23 @@ export function EmsAudienceScanPage() {
                     : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Pengunjung Awam / Staf
+                {t('ems:reg_cat_public', 'Pengunjung Awam / Staf')}
               </button>
             </div>
 
             {/* Matrix No Field (if Student) */}
             {isStudent && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">No. Matrik</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('ems:reg_matrix_no', 'No. Matrik')}
+                </label>
                 <div className="relative">
                   <CreditCard className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     value={matrixNo}
                     onChange={(e) => setMatrixNo(e.target.value.toUpperCase())}
-                    placeholder="e.g. 01DIT22F1001"
+                    placeholder={t('ems:audience_scan_matric_placeholder', 'e.g. 01DIT22F1001')}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs uppercase font-mono tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
@@ -418,14 +430,16 @@ export function EmsAudienceScanPage() {
 
             {/* Email Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Alamat Emel</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t('ems:reg_email', 'Alamat Emel')}
+              </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. email@polisas.edu.my"
+                  placeholder={t('ems:audience_scan_email_placeholder', 'e.g. email@polisas.edu.my')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -433,14 +447,16 @@ export function EmsAudienceScanPage() {
 
             {/* Phone Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">No. Telefon (WhatsApp)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t('ems:reg_phone', 'No. Telefon (WhatsApp)')}
+              </label>
               <div className="relative">
                 <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. 0123456789"
+                  placeholder={t('ems:audience_scan_phone_placeholder', 'e.g. 0123456789')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -454,12 +470,12 @@ export function EmsAudienceScanPage() {
               {submitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Merekodkan Kehadiran...
+                  {t('ems:audience_scan_submitting', 'Merekodkan Kehadiran...')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Sahkan &amp; Rekod Kehadiran
+                  {t('ems:audience_scan_submit', 'Sahkan & Rekod Kehadiran')}
                 </>
               )}
             </button>
@@ -468,7 +484,7 @@ export function EmsAudienceScanPage() {
       </div>
 
       <footer className="relative z-10 text-[11px] text-slate-500 text-center mt-8">
-        JPP POLISAS - Event Management System (EMS) Attendance Portal
+        {t('ems:copyright_notice', 'All Rights Reserved © 2026 POLISAS EMS')}
       </footer>
     </div>
   );
