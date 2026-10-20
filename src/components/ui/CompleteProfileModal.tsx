@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { changeLanguage, SupportedLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -128,7 +129,8 @@ function computeSemDisplay(
 // ─── Modal ───────────────────────────────────────────────────────────────────
 
 export function CompleteProfileModal() {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t, i18n } = useTranslation(['auth', 'common']);
+  const currentLang = (i18n.language?.startsWith('ms') ? 'ms' : 'en') as SupportedLanguage;
   const { profile, user, refetchProfile } = useAuth();
 
   // ── Form state ──────────────────────────────────────────────────────────
@@ -307,7 +309,10 @@ export function CompleteProfileModal() {
       if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
       setLoading(true);
       try {
-        const { error } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user?.id);
+        const { error } = await supabase.from('profiles').update({
+          phone: phone.trim(),
+          preferred_language: currentLang,
+        }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
         toast.success(t('auth:phone_saved_success', 'Nombor telefon berjaya disimpan!'));
@@ -330,6 +335,7 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
@@ -355,6 +361,7 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
@@ -380,6 +387,7 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
@@ -497,6 +505,7 @@ export function CompleteProfileModal() {
         role:             roleToAssign,
         department:       isStaff ? null : jabatan,
         account_status:   initialStatus,
+        preferred_language: currentLang,
         ...(isStaff ? {} : {
           programme_code:   isFtv ? 'FTV' : programmeCode,
           intake_year:      intakeYear || null,
@@ -755,8 +764,8 @@ export function CompleteProfileModal() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/10 overflow-hidden max-h-[90dvh] overflow-y-auto custom-scrollbar"
         >
-          {/* Refined Institutional Header */}
-          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center px-6 gap-3.5 shrink-0">
+          {/* Refined Institutional Header with Language Toggle */}
+          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center justify-between px-6 shrink-0">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)] pointer-events-none" />
             <div className="flex items-center gap-3.5 z-10">
               <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-2 shadow-sm backdrop-blur-md shrink-0">
@@ -769,6 +778,36 @@ export function CompleteProfileModal() {
                 </span>
                 <h2 className="text-base sm:text-lg font-black text-white tracking-tight">{heading}</h2>
               </div>
+            </div>
+
+            {/* Language Segmented Switch in Header */}
+            <div className="z-10 flex items-center p-1 bg-white/10 border border-white/15 rounded-xl backdrop-blur-md shrink-0">
+              <button
+                type="button"
+                onClick={() => changeLanguage('ms')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1",
+                  currentLang === 'ms'
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-white/70 hover:text-white"
+                )}
+              >
+                <span>🇲🇾</span>
+                <span>BM</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('en')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1",
+                  currentLang === 'en'
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-white/70 hover:text-white"
+                )}
+              >
+                <span>🇬🇧</span>
+                <span>EN</span>
+              </button>
             </div>
           </div>
 
