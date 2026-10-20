@@ -4612,3 +4612,57 @@ Sistem JPP-POLISAS menggunakan pendekatan **Full Deep Localization** merangkumi 
 
 
 
+
+### 36.7 Piawaian Salinan Bahasa Inggeris Ringkas & Padat (Concise Copy Standards)
+Bagi mengekalkan imbangan visual (*visual parity*) antara label Bahasa Melayu dan Bahasa Inggeris, terutamanya pada butang sempit, kad bento, lencana status, dan bar navigasi mudah alih:
+1. **Prinsip Pariti Visual (Visual Length Parity):**
+   - Panjang aksara teks terjemahan Bahasa Inggeris mestilah setara dengan teks asal Bahasa Melayu (had toleransi $\le +8$ aksara bagi frasa di bawah 50 aksara).
+   - Elakkan "overtranslation" atau terjemahan berlebihan yang memanjangkan frasa secara tidak perlu (contoh: gunakan *"Push broadcast sent successfully"* dan bukannya *"Push notification broadcast has been sent out successfully to all devices"*).
+2. **Larangan Sengkang Berulang & Kurungan Berganda (No Redundant Slashes/Parentheticals):**
+   - Elakkan meletakkan pilihan dwi-bahasa dalam satu label seperti `"No. Kad Pengenalan / IC No."` — gunakan kunci ringkas `"IC Number"` dalam Bahasa Inggeris dan `"No. Kad Pengenalan"` dalam Bahasa Melayu.
+   - Singkatkan istilah teknikal biasa: gunakan `"Sync"` dan bukannya `"Synchronization"`, `"Info"` dan bukannya `"Information"`, `"Pax"` untuk kuota/kapasiti peserta.
+
+### 36.8 Penggunaan Mandatori Fallback Parameter Kedua `t('key', 'Literal BM')` (AST & Test Safety)
+Dalam projek berskala besar dengan ratusan ujian unit berasaskan AST, regex dan `renderToString`:
+1. **Sintaks Mandatori:**
+   - Setiap panggilan `t()` dalam kod JSX **WAJIB** membekalkan teks literal Bahasa Melayu sebagai parameter kedua:
+     ```typescript
+     t('services:mark_sensitive', 'Tanda sebagai Sensitif (Blur)')
+     t('auth:error_phone_required', 'Sila masukkan nombor telefon.')
+     ```
+2. **Kestabilan Ujian AST & Pemeriksaan Statik:**
+   - Pemeriksaan fail statik (`fs.readFileSync(path, 'utf8')`) dalam suite ujian TDD masih dapat menemui teks asal Bahasa Melayu di dalam kod sumber, menghalang regresi ujian legasi tanpa perlu menulis semula keseluruhan logik pengujian.
+3. **Ketahanan Interpolasi Parameter dalam Persekitaran SSR / Ujian Tanpa Instance:**
+   - Dalam persekitaran ujian unit di mana `react-i18next` tidak menginisialisasi enjin penuh (`NO_I18NEXT_INSTANCE`), interpolasi `{{param}}` tidak digantikan secara automatik oleh mock `t`.
+   - Gunakan rantaian `.replace('{{param}}', param)` atau penyambungan string langsung bagi parameter dinamik yang diuji secara ketat dalam `renderToString`.
+
+### 36.9 Pencegahan Ralat & Notifikasi Tidak Diterjemahkan (Toasts, Prompts & Modals Localization)
+1. **Semua Maklum Balas Interaktif Mesti Diterjemahkan:**
+   - Dilarang sama sekali menggunakan string keras Bahasa Melayu atau Bahasa Inggeris dalam `toast.success()`, `toast.error()`, `toast.loading()`, `window.confirm()`, atau dialog modal adhoc.
+   - Contoh pelaksanaan yang betul:
+     ```typescript
+     // ✅ Betul
+     toast.success(t('services:whisper_posted_success', 'Luahan anda berjaya dikongsi secara rahsia!'));
+     toast.error(t('common:try_again', 'Cuba lagi.'));
+
+     // ❌ Salah (Anti-pattern)
+     toast.success('Luahan anda berjaya dikongsi!');
+     ```
+2. **Pengendalian Ralat `catch (err)` Bersifat Dwibahasa:**
+   - Apabila menangkap pengecualian API atau Supabase, sediakan fallback tersusun:
+     ```typescript
+     } catch (err: any) {
+       console.error('[Operation Error]', err);
+       toast.error(err.message || t('common:error_occurred', 'Ralat berlaku. Sila cuba lagi.'));
+     }
+     ```
+
+### 36.10 Pengesahan Pariti Kamus & Pintu Gerbang Regresi (Parity Verification & Regression Gate)
+Sebelum sebarang kod digabungkan (*merged*) ke cawangan utama:
+1. **Pariti 100% Kamus Terjemahan:**
+   - Jalankan `npx vitest run src/locales/__tests__/masterLocales.test.ts`. Ujian ini mengesahkan 100% kunci dalam 17 ruang nama wujud dalam kedua-dua `en/` dan `ms/` tanpa sebarang kunci kosong.
+2. **Pintu Gerbang Regresi Kod Penuh (Full Regression Gate):**
+   - Jalankan `npx vitest run`. Kesemua 69 fail ujian dan 800+ ujian unit/integrasi mesti lulus dengan 0 kegagalan.
+3. **Audit Ketumpatan & Kepanjangan Terjemahan:**
+   - Jalankan `node scratch/check_lengths.cjs` bagi mengesan sebarang frasa Bahasa Inggeris yang terlampau panjang atau herot berbanding Bahasa Melayu.
+   - Jalankan `node scratch/scan_hardcoded_malay.cjs` bagi memastikan tiada teks teras baharu yang tercicir daripada terjemahan.

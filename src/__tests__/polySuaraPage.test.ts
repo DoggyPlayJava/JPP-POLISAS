@@ -313,7 +313,7 @@ describe('PolySuaraPage Suite', () => {
     });
 
     it('renders verified anonymous identity badge (✓) and author name', () => {
-      expect(pageContent).toContain('title="Identiti Anon Sah Disahkan"');
+      expect(pageContent).toMatch(/title="Identiti Anon Sah Disahkan"|title=\{t\(['"]services:anon_verified_tooltip['"],\s*['"]Identiti Anon Sah Disahkan['"]\)\}/);
       expect(pageContent).toContain('✓');
       expect(pageContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
     });
