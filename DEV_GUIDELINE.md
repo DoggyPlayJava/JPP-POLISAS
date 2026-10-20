@@ -4957,3 +4957,23 @@ Sesi ini melengkapkan penyetempatan menyeluruh (deep row-by-row localization) me
    - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus).
    - Suite ujian regresi penuh: 78 fail ujian, 1,025/1,025 ujian unit & integrasi lulus tanpa ralat.
 
+### 36.20 Penyetempatan Mendalam Task 2: Kumpulan 2 (Pentadbiran JPP HQ, Papan Pemuka Unit Exco & Kokpit Telemetri)
+Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localization sweep) bagi Task 2 merentasi 19 fail utama yang meliputi modul Pentadbiran HQ JPP, Papan Pemuka Unit Exco, dan Kokpit Telemetri Sistem:
+
+1. **19 Fail Komponen & Halaman Sasaran:**
+   - **Pentadbiran JPP HQ & Shell:** `src/pages/jpp/JppNexusPage.tsx`, `src/pages/jpp/JppSettingsPage.tsx`, `src/pages/jpp/JppTelemetryPage.tsx`, `src/pages/jpp/JppLayout.tsx`, `src/pages/jpp/ExcoWrappers.tsx`, `src/pages/JppReviewPage.tsx`.
+   - **Papan Pemuka Unit Exco & Widget:** `src/pages/jpp/units/ExcoGenericDashboard.tsx`, `src/pages/jpp/units/EventCouponPanel.tsx`, `src/pages/jpp/units/KamsisKlkStatsWidget.tsx`, `src/pages/jpp/units/KeusahawananUnitDashboard.tsx`, `src/pages/jpp/units/KlsUnitDashboard.tsx`, `src/pages/jpp/units/KolaborasiUnitDashboard.tsx`, `src/pages/jpp/units/MultimediaUnitDashboard.tsx`, `src/pages/jpp/units/SrkUnitDashboard.tsx`.
+   - **Kokpit Telemetri & Seni Bina Sistem:** `src/pages/jpp/telemetry/TelemetryLeftRail.tsx`, `src/pages/jpp/telemetry/TelemetryLiveTimeline.tsx`, `src/pages/jpp/telemetry/TelemetryModuleTabs.tsx`, `src/pages/jpp/telemetry/TelemetryQuickMetrics.tsx`, `src/pages/jpp/telemetry/TelemetryTopologyFlow.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `jpp.json` dan `common.json` disegerakkan 100% antara `src/locales/en/` dan `src/locales/ms/` (mencapai 1,311 entri terjemahan, 0 kunci kosong, 100% dua hala).
+   - Penggunaan fallback literal Bahasa Melayu mandatori pada setiap panggilan `t('jpp:key', 'Literal BM Asal', { ... })`.
+   - Pengekalan kata nama khas institusi (POLISAS, JPP, HEP, JKE, MAKMP, SUPSAS, Supabase, PostgreSQL) tanpa terjemahan berlebihan.
+   - Pengekalan nilai status domain pangkalan data ('Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak') dengan pemetaan paparan antaramuka setempat.
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup2JppUnitsAndTelemetryI18n.test.tsx` (10/10 lulus 100%).
+   - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
+   - Binaan produksi PWA (`npm run build`) melepasi semua semakan dalam 1m 16s tanpa sebarang ralat.
+
+

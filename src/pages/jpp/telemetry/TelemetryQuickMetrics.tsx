@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   ShieldAlert,
@@ -21,6 +22,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
   onViewThreatsClick,
   onViewAutomationClick,
 }) => {
+  const { t } = useTranslation();
   const { modules, diagnostics } = data;
   const db = diagnostics?.database;
   const keb = diagnostics?.kebajikan;
@@ -34,14 +36,14 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
       <div className="space-y-3 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-xs font-bold mb-3">
-            <span className="text-slate-900 font-black">Top Threats</span>
-            <span className="text-slate-400 font-medium text-[10px]">Last 24h</span>
+            <span className="text-slate-900 font-black">{t('jpp:telemetry_qm_top_threats', 'Top Threats')}</span>
+            <span className="text-slate-400 font-medium text-[10px]">{t('jpp:telemetry_qm_last_24h', 'Last 24h')}</span>
           </div>
 
           <div className="space-y-2.5">
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Credential / SLA</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_threat_credential', 'Credential / SLA')}</span>
                 <span className="text-rose-500 font-mono">91%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -51,7 +53,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">API Abuse / Mart</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_threat_api_abuse', 'API Abuse / Mart')}</span>
                 <span className="text-[#F97316] font-mono">74%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -61,7 +63,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Ransomware / SOS</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_threat_ransomware', 'Ransomware / SOS')}</span>
                 <span className="text-purple-500 font-mono">35%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -71,7 +73,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Privilege Escalation</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_threat_privilege', 'Privilege Escalation')}</span>
                 <span className="text-slate-400 font-mono">22%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -85,7 +87,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
           onClick={onViewThreatsClick}
           className="text-left text-xs font-black text-[#FF5B37] hover:underline flex items-center gap-1 pt-2"
         >
-          <span>View all Threats</span>
+          <span>{t('jpp:telemetry_qm_view_all_threats', 'View all Threats')}</span>
           <ArrowRight className="w-3 h-3" />
         </button>
       </div>
@@ -94,17 +96,17 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
       <div className="space-y-3 pt-4 md:pt-0 md:pl-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-xs font-bold mb-3">
-            <span className="text-slate-900 font-black">Infrastructure</span>
+            <span className="text-slate-900 font-black">{t('jpp:telemetry_qm_infrastructure', 'Infrastructure')}</span>
             <span className="text-emerald-600 font-bold text-[10px] flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              All healthy
+              {t('jpp:telemetry_qm_all_healthy', 'All healthy')}
             </span>
           </div>
 
           <div className="space-y-2.5">
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Cloud Services</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_cloud_services', 'Cloud Services')}</span>
                 <span className="text-slate-600 font-mono">99%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -114,7 +116,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Endpoints</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_endpoints', 'Endpoints')}</span>
                 <span className="text-slate-600 font-mono">99%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -124,7 +126,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Servers (API)</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_servers_api', 'Servers (API)')}</span>
                 <span className="text-slate-600 font-mono">99%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -134,7 +136,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
             <div>
               <div className="flex justify-between text-[11px] font-bold mb-1">
-                <span className="text-slate-700">Databases (PostgreSQL)</span>
+                <span className="text-slate-700">{t('jpp:telemetry_qm_databases_postgres', 'Databases (PostgreSQL)')}</span>
                 <span className="text-[#F97316] font-mono">94%</span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -145,7 +147,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <span className="text-xs font-bold text-slate-500">Overall Uptime</span>
+          <span className="text-xs font-bold text-slate-500">{t('jpp:telemetry_qm_overall_uptime', 'Overall Uptime')}</span>
           <span className="text-sm font-black text-emerald-600 font-mono">99.6%</span>
         </div>
       </div>
@@ -154,25 +156,25 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
       <div className="space-y-3 pt-4 md:pt-0 md:pl-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-xs font-bold mb-3">
-            <span className="text-slate-900 font-black">AI Insights</span>
-            <span className="text-slate-400 font-medium text-[10px]">Today</span>
+            <span className="text-slate-900 font-black">{t('jpp:telemetry_qm_ai_insights', 'AI Insights')}</span>
+            <span className="text-slate-400 font-medium text-[10px]">{t('jpp:telemetry_qm_today', 'Today')}</span>
           </div>
 
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-0.5 border-b border-slate-50">
-              <span className="text-slate-600">Threats detected by AI</span>
+              <span className="text-slate-600">{t('jpp:telemetry_qm_threats_detected_ai', 'Threats detected by AI')}</span>
               <span className="font-black text-slate-900 font-mono">67%</span>
             </div>
             <div className="flex justify-between py-0.5 border-b border-slate-50">
-              <span className="text-slate-600">False-positives reduced</span>
+              <span className="text-slate-600">{t('jpp:telemetry_qm_false_positives_reduced', 'False-positives reduced')}</span>
               <span className="font-black text-slate-900 font-mono">43%</span>
             </div>
             <div className="flex justify-between py-0.5 border-b border-slate-50">
-              <span className="text-slate-600">Mean time to detect</span>
+              <span className="text-slate-600">{t('jpp:telemetry_qm_mean_time_to_detect', 'Mean time to detect')}</span>
               <span className="font-black text-slate-900 font-mono">18s</span>
             </div>
             <div className="flex justify-between py-0.5">
-              <span className="text-slate-600">Risk reduced</span>
+              <span className="text-slate-600">{t('jpp:telemetry_qm_risk_reduced', 'Risk reduced')}</span>
               <span className="font-black text-emerald-600 font-mono">32%</span>
             </div>
           </div>
@@ -181,7 +183,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
         {/* Green pill callout like SentinelAI */}
         <div className="p-2 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[10px] text-emerald-800 font-medium flex items-center gap-1.5 mt-2">
           <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span className="truncate">AI: Semak tiket SLA tertunggak di e-Kebajikan</span>
+          <span className="truncate">{t('jpp:telemetry_qm_ai_callout', 'AI: Semak tiket SLA tertunggak di e-Kebajikan')}</span>
         </div>
       </div>
 
@@ -189,17 +191,17 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
       <div className="space-y-3 pt-4 md:pt-0 md:pl-5 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-xs font-bold mb-2">
-            <span className="text-slate-900 font-black">Automation</span>
+            <span className="text-slate-900 font-black">{t('jpp:telemetry_qm_automation', 'Automation')}</span>
             <span className="text-emerald-600 font-bold text-[10px] flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Active
+              {t('jpp:telemetry_qm_active', 'Active')}
             </span>
           </div>
 
           <div className="flex items-center justify-between mt-2">
             <div>
               <span className="text-3xl font-black text-slate-900 tabular-nums">152</span>
-              <p className="text-[10px] font-bold text-slate-400 mt-0.5">Playbooks Executed</p>
+              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{t('jpp:telemetry_qm_playbooks_executed', 'Playbooks Executed')}</p>
             </div>
 
             {/* Circular Gauge 94% (Exact SVG match) */}
@@ -230,11 +232,11 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
 
           <div className="mt-3 space-y-1 text-[10px] font-bold text-slate-500">
             <div className="flex justify-between">
-              <span>Avg Response Time:</span>
+              <span>{t('jpp:telemetry_qm_avg_response_time', 'Avg Response Time:')}</span>
               <span className="text-slate-700 font-mono">22s</span>
             </div>
             <div className="flex justify-between">
-              <span>Automation Coverage:</span>
+              <span>{t('jpp:telemetry_qm_automation_coverage', 'Automation Coverage:')}</span>
               <span className="text-slate-700 font-mono">94%</span>
             </div>
           </div>
@@ -244,7 +246,7 @@ export const TelemetryQuickMetrics: React.FC<TelemetryQuickMetricsProps> = ({
           onClick={onViewAutomationClick}
           className="text-left text-xs font-black text-[#FF5B37] hover:underline flex items-center gap-1 pt-2"
         >
-          <span>View automation activity</span>
+          <span>{t('jpp:telemetry_qm_view_automation', 'View automation activity')}</span>
           <ArrowRight className="w-3 h-3" />
         </button>
       </div>
