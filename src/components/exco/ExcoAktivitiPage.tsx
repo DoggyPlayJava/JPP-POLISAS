@@ -242,7 +242,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Header */}
@@ -254,12 +254,12 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
             >
               {excoUnit}
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 text-white/40">
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-200/80 text-slate-700 dark:bg-white/5 dark:text-white/40">
               {t('kpp:exco_activity', 'Aktiviti Exco')}
             </span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-white leading-tight">{t('kpp:activities', 'Aktiviti')}</h1>
-          <p className="text-sm text-white/40 mt-1 font-medium">{excoLabel}</p>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">{t('kpp:activities', 'Aktiviti')}</h1>
+          <p className="text-sm text-slate-600 dark:text-white/40 mt-1 font-medium">{excoLabel}</p>
         </motion.div>
 
         {/* Stat bar + tambah */}
@@ -279,14 +279,14 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                   'px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2',
                   filterStatus === f.key
                     ? 'text-white shadow-lg'
-                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40 hover:text-white/70'
+                    : 'bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 shadow-xs'
                 )}
                 style={filterStatus === f.key ? { background: themeColor } : {}}
               >
                 {f.label}
                 <span className={cn(
                   'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black',
-                  filterStatus === f.key ? 'bg-black/20' : 'bg-white/10'
+                  filterStatus === f.key ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-white'
                 )}>
                   {f.count}
                 </span>
@@ -308,21 +308,21 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-44 rounded-[2rem] bg-white/[0.03] animate-pulse border border-white/[0.05]" />
+              <div key={i} className="h-44 rounded-[2rem] bg-slate-100 dark:bg-white/[0.03] animate-pulse border border-slate-200 dark:border-white/[0.05]" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 border-2 border-dashed border-white/[0.06] rounded-[3rem]">
-            <div className="w-16 h-16 rounded-[1.5rem] bg-white/[0.04] flex items-center justify-center">
-              <Activity className="w-8 h-8 text-white/10" />
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 border-2 border-dashed border-slate-300 dark:border-white/[0.06] rounded-[3rem]">
+            <div className="w-16 h-16 rounded-[1.5rem] bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center">
+              <Activity className="w-8 h-8 text-slate-400 dark:text-white/10" />
             </div>
-            <p className="text-xs font-black uppercase tracking-widest text-white/20">
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
               {filterStatus === 'semua' ? t('kpp:no_activities_yet', 'Tiada aktiviti lagi') : t('kpp:no_activities_filter', 'Tiada aktiviti \'{{filter}}\'', { filter: filterStatus })}
             </p>
             {canManage && (
               <button
                 onClick={openCreate}
-                className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-all underline underline-offset-4"
+                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 dark:text-white/30 dark:hover:text-white/60 transition-all underline underline-offset-4"
               >
                 {t('kpp:add_first_activity', 'Tambah Aktiviti Pertama')}
               </button>
@@ -334,8 +334,8 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
               {groupKeys.map(month => (
                 <motion.div key={month} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-white/40 shrink-0">{month}</h3>
-                    <div className="h-px bg-white/[0.06] flex-1" />
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/40 shrink-0">{month}</h3>
+                    <div className="h-px bg-slate-200 dark:bg-white/[0.06] flex-1" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {grouped[month].map(act => (
@@ -365,7 +365,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                 <Button
                   onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
                   variant="outline"
-                  className="rounded-full px-8 h-12 bg-white/[0.02] hover:bg-white/[0.05] border-white/[0.1] text-white/70 hover:text-white text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                  className="rounded-full px-8 h-12 bg-white dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.05] border-slate-200 dark:border-white/[0.1] text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xs"
                 >
                   {t('common:load_more', 'Muat Lagi')}
                 </Button>
@@ -376,13 +376,13 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
 
         {/* Dialog Form */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[560px] rounded-[2.5rem] p-0 border-none overflow-hidden flex flex-col max-h-[95vh] bg-[#0f0f17]">
+          <DialogContent className="sm:max-w-[560px] rounded-[2.5rem] p-0 border border-slate-200 dark:border-transparent overflow-hidden flex flex-col max-h-[95vh] bg-[#F8F6EE] dark:bg-[#0f0f17] text-slate-900 dark:text-white shadow-xl">
             <div className="p-8 space-y-6 overflow-y-auto flex-1">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black tracking-tight text-white">
+                <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                   {editTarget ? t('kpp:update_activity', 'Kemaskini Aktiviti') : t('kpp:new_activity_title', 'Aktiviti Baharu')}
                 </DialogTitle>
-                <p className="text-xs text-white/40 font-medium">
+                <p className="text-xs text-slate-600 dark:text-white/40 font-medium">
                   {t('kpp:record_exco_activity_desc', 'Rekod aktiviti {{label}} tanpa kertas kerja rasmi', { label: excoLabel })}
                 </p>
               </DialogHeader>
@@ -390,57 +390,57 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
               <div className="space-y-5">
                 {/* Tajuk */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('kpp:activity_title_req', 'Tajuk Aktiviti *')}</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('kpp:activity_title_req', 'Tajuk Aktiviti *')}</Label>
                   <Input
                     value={form.title}
                     onChange={e => setForm({ ...form, title: e.target.value })}
                     placeholder={t('kpp:title_placeholder_exco', 'Cth: Mesyuarat Bulanan, Gotong-Royong...')}
-                    className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white placeholder:text-white/20 font-bold"
+                    className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-bold"
                   />
                 </div>
 
                 {/* Tarikh */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('kpp:start_date_req', 'Tarikh Mula *')}</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('kpp:start_date_req', 'Tarikh Mula *')}</Label>
                     <Input
                       type="date"
                       value={form.start_date}
                       onChange={e => setForm({ ...form, start_date: e.target.value })}
-                      className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold"
+                      className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('kpp:end_date', 'Tarikh Tamat')}</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('kpp:end_date', 'Tarikh Tamat')}</Label>
                     <Input
                       type="date"
                       value={form.end_date}
                       onChange={e => setForm({ ...form, end_date: e.target.value })}
-                      className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold"
+                      className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white font-bold"
                     />
                   </div>
                 </div>
 
                 {/* Lokasi */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('kpp:venue_location', 'Lokasi')}</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('kpp:venue_location', 'Lokasi')}</Label>
                   <Input
                     value={form.venue}
                     onChange={e => setForm({ ...form, venue: e.target.value })}
                     placeholder={t('kpp:venue_placeholder_exco', 'Cth: Bilik Mesyuarat JPP, Dewan Serbaguna...')}
-                    className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white placeholder:text-white/20 font-bold"
+                    className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-bold"
                   />
                 </div>
 
                 {/* Status + Priority */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('common:status', 'Status')}</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('common:status', 'Status')}</Label>
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                      <SelectTrigger className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold">
+                      <SelectTrigger className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white font-bold">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-[#161622] text-slate-900 dark:text-white border-slate-200 dark:border-white/10">
                         <SelectItem value="perancangan">{t('kpp:planning', 'Perancangan')}</SelectItem>
                         <SelectItem value="aktif">{t('common:active', 'Aktif')}</SelectItem>
                         <SelectItem value="selesai">{t('kpp:completed', 'Selesai')}</SelectItem>
@@ -449,12 +449,12 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">{t('kpp:priority', 'Keutamaan')}</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest">{t('kpp:priority', 'Keutamaan')}</Label>
                     <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v })}>
-                      <SelectTrigger className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold">
+                      <SelectTrigger className="h-12 rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white font-bold">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-[#161622] text-slate-900 dark:text-white border-slate-200 dark:border-white/10">
                         <SelectItem value="rendah">{t('kpp:priority_low', 'Rendah')}</SelectItem>
                         <SelectItem value="sederhana">{t('kpp:priority_medium', 'Sederhana')}</SelectItem>
                         <SelectItem value="tinggi">{t('kpp:priority_high', 'Tinggi')}</SelectItem>
@@ -466,23 +466,23 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                 {/* Objektif */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex-1">{t('kpp:objective', 'Objektif')}</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest flex-1">{t('kpp:objective', 'Objektif')}</Label>
                     <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
                   </div>
                   <Textarea
                     value={form.description}
                     onChange={e => setForm({ ...form, description: e.target.value })}
                     placeholder={t('kpp:summary_placeholder', 'Ringkasan aktiviti...')}
-                    className="rounded-2xl bg-white/[0.05] border-white/[0.07] text-white placeholder:text-white/20 font-medium resize-none min-h-[80px]"
+                    className="rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none min-h-[80px]"
                   />
                 </div>
 
                 {/* Tindakan */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
-                    <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex-1">
+                    <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest flex-1">
                       {t('kpp:action_notes', 'Tindakan / Catatan')}
-                      <span className="ml-2 text-emerald-400 normal-case tracking-normal">{t('kpp:for_monthly_report', '← untuk Laporan Bulanan')}</span>
+                      <span className="ml-2 text-emerald-600 dark:text-emerald-400 normal-case tracking-normal">{t('kpp:for_monthly_report', '← untuk Laporan Bulanan')}</span>
                     </Label>
                     <AIGrammarCheck textValue={form.tindakan} onApply={v => setForm({ ...form, tindakan: v })} disabled={saving} />
                   </div>
@@ -490,19 +490,19 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                     value={form.tindakan}
                     onChange={e => setForm({ ...form, tindakan: e.target.value })}
                     placeholder={t('kpp:action_notes_placeholder', 'Tindakan yang telah diambil atau rumusan aktiviti...')}
-                    className="rounded-2xl bg-white/[0.05] border-white/[0.07] text-white placeholder:text-white/20 font-medium resize-none min-h-[80px]"
+                    className="rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.07] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none min-h-[80px]"
                   />
                 </div>
 
                 {/* Gambar Bukti */}
-                <div className="p-4 rounded-[2rem] border border-white/[0.06] bg-white/[0.02] space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex justify-between">
+                <div className="p-4 rounded-[2rem] border border-slate-200 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.02] space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/40 tracking-widest flex justify-between">
                     <span>{t('kpp:proof_images_max2', 'Gambar Bukti (Maks 2)')}</span>
-                    <span className="text-white/20">{form.imageUrls?.length || 0} / 2</span>
+                    <span className="text-slate-400 dark:text-white/20">{form.imageUrls?.length || 0} / 2</span>
                   </Label>
                   <div className="grid grid-cols-4 gap-3">
                     {(form.imageUrls || []).map((url: string, idx: number) => (
-                      <div key={idx} className="relative group rounded-2xl overflow-hidden h-20 bg-white/[0.05] border border-white/[0.07]">
+                      <div key={idx} className="relative group rounded-2xl overflow-hidden h-20 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.07]">
                         <img src={url} alt={`bukti ${idx}`} className="w-full h-full object-cover" />
                         <button
                           onClick={(e) => { e.preventDefault(); handleRemoveImage(idx); }}
@@ -514,9 +514,9 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                       </div>
                     ))}
                     {(!form.imageUrls || form.imageUrls.length < 2) && (
-                      <div className="relative border-2 border-dashed border-white/[0.1] rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:border-white/30 transition-colors h-20 cursor-pointer group">
-                        <ImageIcon size={16} className="text-white/20 group-hover:text-white/40" />
-                        <span className="text-[10px] font-black text-white/20 uppercase text-center group-hover:text-white/40">{t('common:add', 'Tambah')}</span>
+                      <div className="relative border-2 border-dashed border-slate-300 dark:border-white/[0.1] rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:border-slate-400 dark:hover:border-white/30 transition-colors h-20 cursor-pointer group">
+                        <ImageIcon size={16} className="text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/40" />
+                        <span className="text-[10px] font-black text-slate-400 dark:text-white/20 uppercase text-center group-hover:text-slate-600 dark:group-hover:text-white/40">{t('common:add', 'Tambah')}</span>
                         <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     )}
@@ -525,11 +525,11 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
               </div>
             </div>
 
-            <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/[0.05] gap-3 shrink-0">
+            <DialogFooter className="p-6 bg-slate-100 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/[0.05] gap-3 shrink-0">
               <Button
                 variant="ghost"
                 onClick={() => setDialogOpen(false)}
-                className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white/40 hover:text-white"
+                className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-900 dark:text-white/40 dark:hover:text-white"
               >
                 {t('common:cancel', 'Batal')}
               </Button>
@@ -572,7 +572,7 @@ function ExcoActivityCard({ act, canManage, currentUserId, themeColor, onEdit, o
   };
 
   return (
-    <div className="group rounded-[2rem] p-5 border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.1] transition-all duration-300 flex flex-col gap-4">
+    <div className="group rounded-[2rem] p-5 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] shadow-xs transition-all duration-300 flex flex-col gap-4">
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -581,20 +581,20 @@ function ExcoActivityCard({ act, canManage, currentUserId, themeColor, onEdit, o
           </span>
           <div className="flex items-center gap-1.5">
             <div className={cn('w-1.5 h-1.5 rounded-full', priorityCfg.dot)} />
-            <span className="text-[10px] font-black uppercase text-white/25 tracking-widest">{priorityLabel}</span>
+            <span className="text-[10px] font-black uppercase text-slate-400 dark:text-white/25 tracking-widest">{priorityLabel}</span>
           </div>
         </div>
         {(canManage || isCreator) && (
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={onEdit}
-              className="w-7 h-7 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/30 hover:bg-white/10 hover:text-white transition-colors"
+              className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/[0.06] dark:text-white/30 dark:hover:bg-white/10 dark:hover:text-white transition-colors flex items-center justify-center"
             >
               <Pencil size={11} />
             </button>
             <button
               onClick={onDelete}
-              className="w-7 h-7 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/30 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
+              className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600 dark:bg-white/[0.06] dark:text-white/30 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors flex items-center justify-center"
             >
               <Trash2 size={11} />
             </button>
@@ -603,25 +603,25 @@ function ExcoActivityCard({ act, canManage, currentUserId, themeColor, onEdit, o
       </div>
 
       {/* Title */}
-      <h3 className="font-black text-base tracking-tight leading-snug line-clamp-2 text-white">{act.title}</h3>
+      <h3 className="font-black text-base tracking-tight leading-snug line-clamp-2 text-slate-900 dark:text-white">{act.title}</h3>
 
       {/* Meta */}
-      <div className="space-y-1.5 text-[11px] font-bold text-white/30">
+      <div className="space-y-1.5 text-[11px] font-bold text-slate-500 dark:text-white/30">
         {act.start_date && (
           <div className="flex items-center gap-2">
-            <Calendar size={12} className="text-white/20 shrink-0" />
+            <Calendar size={12} className="text-slate-400 dark:text-white/20 shrink-0" />
             <span>{formatDate(act.start_date)}{act.end_date ? ` — ${formatDate(act.end_date)}` : ''}</span>
           </div>
         )}
         {act.location && (
           <div className="flex items-center gap-2">
-            <MapPin size={12} className="text-white/20 shrink-0" />
+            <MapPin size={12} className="text-slate-400 dark:text-white/20 shrink-0" />
             <span className="truncate">{act.location}</span>
           </div>
         )}
         {act.creator?.full_name && (
           <div className="flex items-center gap-2">
-            <Users size={12} className="text-white/20 shrink-0" />
+            <Users size={12} className="text-slate-400 dark:text-white/20 shrink-0" />
             <span className="truncate">{act.creator.full_name}</span>
           </div>
         )}
@@ -630,8 +630,8 @@ function ExcoActivityCard({ act, canManage, currentUserId, themeColor, onEdit, o
       {/* Tindakan */}
       {act.tindakan && (
         <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-          <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">{t('kpp:action', 'Tindakan')}</p>
-          <p className="text-xs font-medium text-emerald-300/80 line-clamp-2">{act.tindakan}</p>
+          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest mb-1">{t('kpp:action', 'Tindakan')}</p>
+          <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-300/80 line-clamp-2">{act.tindakan}</p>
         </div>
       )}
     </div>
