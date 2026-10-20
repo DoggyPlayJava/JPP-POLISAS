@@ -85,4 +85,15 @@ describe('LanguageToggle Component', () => {
 
     expect(html).toContain('custom-test-class');
   });
+
+  it('renders circular glass variant correctly when variant="circular" is passed', () => {
+    const html = renderToString(
+      <I18nextProvider i18n={i18n}>
+        <LanguageToggle variant="circular" />
+      </I18nextProvider>
+    );
+
+    expect(html).toContain('button');
+    expect(html).toContain('rounded-full');
+  });
 });
