@@ -1,140 +1,70 @@
-# Task 3 Report: Deep-Localize Domain 3 (Exco Units: Kebajikan, Keusahawanan, Karnival)
+# Task 3 Report: Dual-Theme Contrast Parity in MeritRasmiReviewPanel.tsx
 
-**Date:** 2026-10-20  
-**Scope:** Domain 3 — Exco Units: Kebajikan, Keusahawanan, Karnival (`kebajikan.json`, `keusahawanan.json`, `karnival.json`)  
-**Status:** Completed & Verified (70/70 Tests Passing across Domain 3 and Locale Master Suites)  
+## Overview
+Resolved low-contrast and unreadable white-on-white text in `MeritRasmiReviewPanel.tsx` when rendered inside light-mode dashboard containers (`KppUnitDashboard.tsx` and `KkUnitDashboard.tsx`). Applied high-contrast dual-theme Tailwind classes (`text-slate-900 dark:text-white`, `text-slate-700 dark:text-white/70`, `bg-slate-50/50 dark:bg-white/[0.02]`, `border-slate-200 dark:border-white/10`) across headers, information notices, application cards, review textareas, empty states, history cards, and loading skeletons.
 
----
+## Changes Implemented
 
-## 1. Summary of Changes
+### 1. Panel Header & Information Banner
+- **Header (`MeritRasmiReviewPanel.tsx`)**:
+  - Replaced `<h3 className="text-xl font-black text-white mt-0.5">` with `<h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">` for clear title readability in both light and dark themes.
+- **Info Banner**:
+  - Replaced hardcoded `<p className="text-[10px] text-white/50 leading-relaxed">` with `<p className="text-[11px] font-medium text-slate-700 dark:text-white/70 leading-relaxed">`.
 
-### A. Localized Components & Domain 3 Modules (21 Files 100% Localized)
+### 2. Actionable Application Card (`AppCard`)
+- **Card Container**:
+  - Replaced inline style `style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}` with classes `border border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-white/[0.02]`.
+- **Card Header Interactive Area**:
+  - Updated button hover background to `hover:bg-slate-100/60 dark:hover:bg-white/[0.02]`.
+- **Typography & Metadata**:
+  - Program title: updated to `text-slate-900 dark:text-white`.
+  - Type & attendee count meta: updated to `text-[10px] font-bold text-slate-500 dark:text-white/40`.
+  - Applicant name & creation date: updated to `text-[9px] text-slate-500 dark:text-white/30 mt-0.5`.
+  - Chevrons: updated from `text-white/30` to `text-slate-400 dark:text-white/30`.
+- **Expanded Drawer & Justification**:
+  - Divider: replaced inline border style with `border-t border-slate-200 dark:border-white/[0.05]`.
+  - Justification card: styled with `bg-slate-100/70 dark:bg-white/[0.03]`.
+  - Justification label & body: styled with `text-slate-500 dark:text-white/30` and `text-slate-700 dark:text-white/60`.
+  - KPP vouch notes: styled with `text-slate-700 dark:text-white/70`.
+- **Review Decision Textarea**:
+  - Updated to `bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500 dark:focus:border-white/25 transition-all shadow-xs`.
 
-#### Kebajikan Pages (4 Files):
-1. **`src/pages/kebajikan/KebajikanTicketDetail.tsx`** (61 `t()` calls, 951 lines)
-   - Implemented `useTranslation(['kebajikan', 'common'])`.
-   - Localized ticket details, status transitions (`BARU`, `DALAM_TINDAKAN`, `SELESAI`, `DITOLAK`), priority badges (`RENDAH`, `SEDERHANA`, `TINGGI`, `KRITIKAL`), category labels, resolution logs, PIC assignment modals, feedback submissions, and all action toasts with fallback `t('kebajikan:key', 'BM Asal')`.
+### 3. History Card, Empty State & Loading Skeleton
+- **AppCardHistory**:
+  - Replaced inline style with `border border-slate-200/70 dark:border-transparent bg-slate-50/60 dark:bg-white/[0.02]`.
+  - Program title: updated to `text-slate-800 dark:text-white/70`.
+  - Subtext metadata: updated to `text-slate-500 dark:text-white/30`.
+- **Section Collapse Header**:
+  - Enhanced Section to use fallback `text-slate-400 dark:text-white/40` when no custom themeColor is passed, removing low-contrast `rgba(255,255,255,0.2)` on Sejarah section.
+- **EmptyState**:
+  - Icon: `text-slate-300 dark:text-white/10`.
+  - Label: `text-slate-400 dark:text-white/20`.
+- **LoadingSkeleton**:
+  - Replaced inline style with `bg-slate-100 dark:bg-white/[0.04] border border-slate-200/50 dark:border-transparent`.
 
-2. **`src/pages/kebajikan/KebajikanFoodBankPage.tsx`** (105 `t()` calls, 2771 lines)
-   - Implemented `useTranslation(['kebajikan', 'common'])`.
-   - Localized food bank categories (Smart Pantry Basket, Ready Care Box, Siswa Hunger Relief), monthly quota counter, roommate declaration cards, claim QR generator, digital pickup pass, distribution hours, and all 36 status and error toasts.
+## Test Suite & Verification
 
-3. **`src/pages/kebajikan/KebajikanReportPage.tsx`** (59 `t()` calls, 1131 lines)
-   - Implemented `useTranslation(['kebajikan', 'common'])`.
-   - Localized analytical complaint tracking, SLA turnaround charts, category breakdown, satisfaction rating distributions, PIC efficiency tables, PDF export prompts, and date-range filters.
+1. **Created Test Suite**:
+   - `src/components/program/__tests__/MeritRasmiReviewPanelTheme.test.tsx` verifying:
+     - Panel heading dual-theme classes.
+     - Info banner light contrast.
+     - Actionable application card container, title, metadata, and chevrons.
+     - Expanded drawer, justification label/body, and KPP vouch notes.
+     - Textarea light & dark classes.
+     - History card contrast and structure.
+     - Empty states and loading skeletons.
+2. **Verification Command**:
+   ```bash
+   npx vitest run src/components/program/__tests__/MeritRasmiReviewPanelTheme.test.tsx src/__tests__/Domain2JppAdminCompleteI18n.test.tsx
+   ```
+3. **Results**:
+   - `src/components/program/__tests__/MeritRasmiReviewPanelTheme.test.tsx`: 7 passed (7 tests)
+   - `src/__tests__/Domain2JppAdminCompleteI18n.test.tsx`: 32 passed (32 tests)
+   - **Total**: 39 passed (39 tests), 0 failed.
 
-4. **`src/pages/kebajikan/KebajikanSubmitPage.tsx`** (104 `t()` calls, 1285 lines)
-   - Implemented `useTranslation(['kebajikan', 'common'])`.
-   - Localized complaint intake wizard, cafeteria & hostel picker, anonymity toggles, photo evidence uploaders, urgency radio selectors, contact input placeholders, and validation toasts.
-
-#### Keusahawanan Pages (7 Files):
-5. **`src/pages/keusahawanan/KeusahawananAdminPanel.tsx`** (49 `t()` calls, 711 lines)
-   - Implemented `useTranslation(['keusahawanan', 'common'])`.
-   - Localized business verification console, interview scheduling dialogs, permit approvals, status transitions, revenue threshold alerts, officer appointments, and administrative action toasts.
-
-6. **`src/pages/keusahawanan/KeusahawananDashboard.tsx`** (65 `t()` calls, 1134 lines)
-   - Implemented `useTranslation(['keusahawanan', 'common'])`.
-   - Localized merchant telemetry overview, monthly revenue targets, quick action bento grid, PUSKEP & PolyMart integration banners, popular product heatmaps, and business profile cards.
-
-7. **`src/pages/keusahawanan/UrusPerniagaanPage.tsx`** (51 `t()` calls, 1150 lines)
-   - Implemented `useTranslation(['keusahawanan', 'common'])`.
-   - Localized student business permit management, stall configuration, bank account settings, business ownership transfer dialogs, COD / Online payment toggles, and promotional coupon controls.
-
-8. **`src/pages/keusahawanan/KeusahawananProgram.tsx`** (35 `t()` calls, 809 lines)
-   - Implemented `useTranslation(['keusahawanan', 'common'])`.
-   - Localized entrepreneurship incubator programs, workshop registrations, grant applications, poster upload forms, target participant counters, and public vs internal visibility switches.
-
-9. **`src/pages/keusahawanan/pos/PosProductPage.tsx`** (52 `t()` calls, 1523 lines)
-   - Implemented `useTranslation(['keusahawanan', 'common'])`.
-   - Localized product catalog management, barcode scanner modals, cost price and profit margin calculations, product variations, low-stock threshold alerts, and category badge filters.
-
-10. **`src/pages/keusahawanan/pos/PosOrderPage.tsx`** (45 `t()` calls, 979 lines)
-    - Implemented `useTranslation(['keusahawanan', 'common'])`.
-    - Localized POS cashier checkout register, cart line items, cash / DuitNow QR payment modal, cash tender calculation, coupon redemption logic, and receipt printing dialogues.
-
-11. **`src/pages/keusahawanan/BusinessShiftModule.tsx`** (76 `t()` calls, 1082 lines)
-    - Implemented `useTranslation(['keusahawanan', 'common'])`.
-    - Localized cashier shift scheduling, shift swap requests, cash drawer reconciliation, opening float entry, closing float audit, shift handover logs, and shift status toasts.
-
-#### Karnival Pages (10 Files):
-12. **`src/pages/karnival/KarnivalLandingPage.tsx`** (19 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized annual campus carnival portal, festival countdown, highlights, program schedule, and competing booth catalog.
-
-13. **`src/pages/karnival/KarnivalLayout.tsx`** (9 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized carnival navigation shell, active edition status badge, and public portal header/footer.
-
-14. **`src/pages/karnival/KarnivalVotePage.tsx`** (29 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized electronic voting booth, ballot cast workflow, category filters, voter verification, and vote confirmation dialogs.
-
-15. **`src/pages/karnival/KarnivalScoreboard.tsx`** (17 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized live LCD scoreboard, vote tallies, category rankings, live broadcast banner, and polling refresh indicators.
-
-16. **`src/pages/karnival/admin/KarnivalAdminDashboard.tsx`** (27 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized carnival admin telemetry, real-time vote metrics, audit alerts, and edition quick-controls.
-
-17. **`src/pages/karnival/admin/KarnivalAdminBooths.tsx`** (31 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized booth registration, vendor allocation, stall status toggles, and voting QR code generator.
-
-18. **`src/pages/karnival/admin/KarnivalAdminCategories.tsx`** (22 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized award category setup, voter quota per student, and judging criteria modals.
-
-19. **`src/pages/karnival/admin/KarnivalAdminEdition.tsx`** (21 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized carnival season configuration, theme banners, dates, and edition transition controls.
-
-20. **`src/pages/karnival/admin/KarnivalAdminLayout.tsx`** (11 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized carnival administration navigation sidebar, quick breadcrumbs, and console headers.
-
-21. **`src/pages/karnival/admin/KarnivalAdminResults.tsx`** (12 `t()` calls)
-    - Implemented `useTranslation(['karnival', 'common'])`.
-    - Localized final vote tabulation, category winners, score breakdown tables, and export controls.
-
----
-
-### B. Translation Dictionaries & Key Parity
-
-| Namespace | EN Keys | MS Keys | Key Parity | Missing / Empty Keys |
-|-----------|---------|---------|------------|----------------------|
-| `kebajikan.json` | 383 | 383 | 100% | 0 |
-| `keusahawanan.json` | 407 | 407 | 100% | 0 |
-| `karnival.json` | 92 | 92 | 100% | 0 |
-| **Total Domain 3** | **882** | **882** | **100%** | **0** |
-
-- **Strict Fallback Guarantee:** All `t()` calls in the 21 localized files supply the original Malay literal as the second argument, ensuring zero broken UI if a key lookup ever fails.
-- **Engine Registration:** Registered under `en` and `ms` in `src/lib/i18n.ts`.
-
----
-
-## 2. Verification & Test Suite
-
-### Executed Command:
-```bash
-npx vitest run src/__tests__/Domain3ExcoCompleteI18n.test.tsx src/__tests__/Domain3ExcoUnitsI18n.test.tsx src/locales/__tests__/masterLocales.test.ts
-```
-
-### Results:
-- **`src/__tests__/Domain3ExcoCompleteI18n.test.tsx`:** 20/20 tests passed
-  - Dictionary contract parity checks for `kebajikan`, `keusahawanan`, and `karnival` (100% symmetry).
-  - English DOM SSR tests across Kebajikan, Keusahawanan, and Karnival.
-  - Malay DOM SSR tests across Kebajikan, Keusahawanan, and Karnival.
-  - Dynamic language toggle test (`en` <-> `ms`).
-- **`src/__tests__/Domain3ExcoUnitsI18n.test.tsx`:** 30/30 tests passed.
-- **`src/locales/__tests__/masterLocales.test.ts`:** 20/20 tests passed.
-- **Total:** **70/70 tests passed (100% success rate, 0 failures, 0 regressions)**.
-
----
-
-## 3. Compliance Checklist
-- [x] **Zero Database Alterations:** No database migrations, tables, columns, or RLS policies were modified or added.
-- [x] **Preserved Supabase Singleton:** Kept global singleton `supabase` from `@/lib/supabase`; no additional client instances created.
-- [x] **Strict 100% Key Parity:** Exactly 882 matching keys across English and Bahasa Melayu dictionaries for `kebajikan`, `keusahawanan`, and `karnival`.
-- [x] **Mandatory Malay Fallbacks:** All calls to `t()` supply original Malay literal strings as the second argument: `t('namespace:key', 'Literal BM Asal')`.
-- [x] **Documentation Updated:** `DEV_GUIDELINE.md` updated in Section 36 with Subsection 36.12 documenting Domain 3 deep localization.
+## Git Commit
+- **Hash**: `059e7a9`
+- **Message**: `fix(program): implement full light mode contrast in MeritRasmiReviewPanel`
+- **Files**:
+  - `src/components/program/MeritRasmiReviewPanel.tsx`
+  - `src/components/program/__tests__/MeritRasmiReviewPanelTheme.test.tsx`

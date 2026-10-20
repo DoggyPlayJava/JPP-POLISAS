@@ -122,14 +122,14 @@ export function JppFoodBankAdmin() {
     const recipientId = app.applicant?.id;
     const recipientEmail = app.applicant?.email;
     const studentName = app.applicant?.full_name || 'Mahasiswa';
-    const locationName = (app.location as any)?.name || app.location?.name || 'Pusat Agihan';
+    const locationName = (app.location as any)?.name || app.location?.name || t('jpp:foodbank_distribution_center_fallback', 'Pusat Agihan');
 
     const payload = {
       title: status === 'LULUS'
-        ? 'Permohonan Food Bank Diluluskan'
+        ? t('jpp:foodbank_notif_app_approved_title', 'Permohonan Food Bank Diluluskan')
         : status === 'DITOLAK'
-          ? 'Permohonan Food Bank Ditolak'
-          : 'Bantuan Food Bank Telah Diambil',
+          ? t('jpp:foodbank_notif_app_rejected_title', 'Permohonan Food Bank Ditolak')
+          : t('jpp:foodbank_notif_app_collected_title', 'Bantuan Food Bank Telah Diambil'),
       message: status === 'LULUS'
         ? `Tahniah! Permohonan ${app.application_no} anda telah diluluskan. Sila muat turun pas QR anda.`
         : status === 'DITOLAK'
@@ -192,7 +192,7 @@ export function JppFoodBankAdmin() {
   const [isSearchingCandidate, setIsSearchingCandidate] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
   const [officerAssignLocationId, setOfficerAssignLocationId] = useState('');
-  const [officerRoleTitle, setOfficerRoleTitle] = useState('Petugas Kaunter Food Bank');
+  const [officerRoleTitle, setOfficerRoleTitle] = useState(t('jpp:foodbank_counter_officer_default', 'Petugas Kaunter Food Bank'));
   const [isAssigningOfficer, setIsAssigningOfficer] = useState(false);
 
   // ── Tab 1: Permohonan & Kaunter ───────────────────────────────────────────
@@ -496,7 +496,7 @@ export function JppFoodBankAdmin() {
       setAuditLogs(finalAuditLogs);
     } catch (err: any) {
       console.error('Fatal load error:', err);
-      toast.error('Ralat ketika memuat turun data Food Bank.');
+      toast.error(t('jpp:foodbank_data_fetch_error', 'Ralat ketika memuat turun data Food Bank.'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -572,9 +572,9 @@ export function JppFoodBankAdmin() {
     saveLocalFoodBankSettings({ is_application_open: newStatus });
     setSettings(prev => prev ? ({ ...prev, is_application_open: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_application_open: newStatus } as FoodBankSettings));
     if (newStatus) {
-      toast.success('Pintu permohonan Food Bank dibuka kepada mahasiswa!');
+      toast.success(t('jpp:foodbank_door_opened', 'Pintu permohonan Food Bank dibuka kepada mahasiswa!'));
     } else {
-      toast('Permohonan Food Bank ditutup buat sementara waktu.');
+      toast(t('jpp:foodbank_door_closed_toast', 'Permohonan Food Bank ditutup buat sementara waktu.'));
     }
   };
 
@@ -605,9 +605,9 @@ export function JppFoodBankAdmin() {
     saveLocalFoodBankSettings({ is_module_active: newStatus });
     setSettings(prev => prev ? ({ ...prev, is_module_active: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_module_active: newStatus } as FoodBankSettings));
     if (newStatus) {
-      toast.success('Modul Food Bank kini RASMI DIBUKA & aktif di portal Kebajikan mahasiswa!');
+      toast.success(t('jpp:foodbank_module_opened_toast', 'Modul Food Bank kini RASMI DIBUKA & aktif di portal Kebajikan mahasiswa!'));
     } else {
-      toast('Modul Food Bank kini DALAM PERSEDIAAN (Tutup untuk permohonan mahasiswa).');
+      toast(t('jpp:foodbank_module_prep_toast', 'Modul Food Bank kini DALAM PERSEDIAAN (Tutup untuk permohonan mahasiswa).'));
     }
   };
 
@@ -675,8 +675,8 @@ export function JppFoodBankAdmin() {
         scannerRef.current = null;
         toast.error(
           err?.name === 'NotAllowedError' || String(err?.message || '').includes('NotAllowed')
-            ? 'Akses kamera ditolak. Sila benarkan kamera pada pelayar (HTTPS).'
-            : 'Gagal memulakan kamera. Peranti mungkin tiada kamera atau disekat.'
+            ? t('jpp:foodbank_camera_permission_denied', 'Akses kamera ditolak. Sila benarkan kamera pada pelayar (HTTPS).')
+            : t('jpp:foodbank_camera_start_failed', 'Gagal memulakan kamera. Peranti mungkin tiada kamera atau disekat.')
         );
       }
     }, 150);
@@ -734,7 +734,7 @@ export function JppFoodBankAdmin() {
       return;
     }
     if (!user?.id) {
-      toast.error('Sesi pegawai tidak sah.');
+      toast.error(t('jpp:foodbank_officer_session_invalid', 'Sesi pegawai tidak sah.'));
       return;
     }
 
@@ -838,7 +838,7 @@ export function JppFoodBankAdmin() {
       }
     } catch (err: any) {
       console.error('Counter verify error:', err);
-      toast.error('Ralat pengesahan kaunter: ' + (err.message || 'Sila semak baki stok barangan.'));
+      toast.error(t('jpp:foodbank_counter_error_prefix', 'Ralat pengesahan kaunter:') + ' ' + (err.message || t('jpp:foodbank_check_stock_balance', 'Sila semak baki stok barangan.')));
     } finally {
       setIsVerifyingCounter(false);
     }
@@ -920,12 +920,12 @@ export function JppFoodBankAdmin() {
 
       if (error) throw error;
 
-      toast.success(`${t('jpp:foodbank_toast_approved')}: ${app.application_no}`);
+      toast.success(`${t('jpp:foodbank_toast_approved', 'Permohonan berjaya diluluskan')}: ${app.application_no}`);
       notifyStudent({ ...app, status: 'LULUS' }, 'LULUS').catch(() => {});
       fetchAllData(true);
     } catch (err: any) {
       console.error('Approve error:', err);
-      toast.error('Gagal meluluskan: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_approve_prefix', 'Gagal meluluskan:') + ' ' + err.message);
     } finally {
       setIsProcessingAction(false);
     }
@@ -933,13 +933,13 @@ export function JppFoodBankAdmin() {
 
   const handleOpenRejectionModal = (app: FoodBankApplication) => {
     setRejectionModalApp(app);
-    setRejectionReason('Maklumat pendapatan / kelayakan tidak memenuhi syarat semasa.');
+    setRejectionReason(t('jpp:foodbank_rejection_reason_default', 'Maklumat pendapatan / kelayakan tidak memenuhi syarat semasa.'));
   };
 
   const handleConfirmReject = async () => {
     if (!rejectionModalApp || !user?.id) return;
     if (!rejectionReason.trim()) {
-      toast.error('Sila nyatakan sebab penolakan.');
+      toast.error(t('jpp:foodbank_specify_rejection_reason', 'Sila nyatakan sebab penolakan.'));
       return;
     }
 
@@ -967,14 +967,14 @@ export function JppFoodBankAdmin() {
         }
       }
 
-      toast.success(`${t('jpp:foodbank_toast_rejected')}: ${rejectionModalApp.application_no}`);
+      toast.success(`${t('jpp:foodbank_toast_rejected', 'Permohonan ditolak')}: ${rejectionModalApp.application_no}`);
       notifyStudent({ ...rejectionModalApp, status: 'DITOLAK', rejection_reason: rejectionReason.trim() }, 'DITOLAK').catch(() => {});
       setRejectionModalApp(null);
       setRejectionReason('');
       fetchAllData(true);
     } catch (err: any) {
       console.error('Reject error:', err);
-      toast.error('Gagal menolak permohonan: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_reject_prefix', 'Gagal menolak permohonan:') + ' ' + err.message);
     } finally {
       setIsProcessingAction(false);
     }
@@ -1016,7 +1016,7 @@ export function JppFoodBankAdmin() {
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemFormData.name.trim()) {
-      toast.error('Sila masukkan nama item.');
+      toast.error(t('jpp:foodbank_enter_item_name', 'Sila masukkan nama item.'));
       return;
     }
 
@@ -1075,7 +1075,7 @@ export function JppFoodBankAdmin() {
       fetchAllData(true);
     } catch (err: any) {
       console.error('Save item error:', err);
-      toast.error('Gagal menyimpan item: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_save_item_prefix', 'Gagal menyimpan item:') + ' ' + err.message);
     } finally {
       setIsSavingItem(false);
     }
@@ -1238,11 +1238,11 @@ export function JppFoodBankAdmin() {
   const handleExecuteStockTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transferFormData.item_id || !transferFormData.from_location_id || !transferFormData.to_location_id) {
-      toast.error('Sila lengkapkan semua medan lokasi dan barangan.');
+      toast.error(t('jpp:foodbank_transfer_all_fields_required', 'Sila lengkapkan semua medan lokasi dan barangan.'));
       return;
     }
     if (transferFormData.from_location_id === transferFormData.to_location_id) {
-      toast.error('Lokasi sumber dan destinasi tidak boleh sama.');
+      toast.error(t('jpp:foodbank_transfer_same_location', 'Lokasi sumber dan destinasi tidak boleh sama.'));
       return;
     }
     const sourceStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
@@ -1282,11 +1282,11 @@ export function JppFoodBankAdmin() {
       if (error) throw error;
 
       if (data && typeof data === 'object' && (data as any).success === false) {
-        toast.error((data as any).message || 'Gagal memindahkan stok.');
+        toast.error((data as any).message || t('jpp:foodbank_transfer_failed', 'Gagal memindahkan stok.'));
         return;
       }
 
-      toast.success((data as any)?.message || 'Pindahan stok berjaya direkodkan!');
+      toast.success((data as any)?.message || t('jpp:foodbank_transfer_success', 'Pindahan stok berjaya direkodkan!'));
       setTransferModalOpen(false);
       setTransferFormData({
         item_id: '',
@@ -1362,7 +1362,7 @@ export function JppFoodBankAdmin() {
         // silent catch
       }
 
-      toast.success('Pindahan stok berjaya (Mod Tempatan)!');
+      toast.success(t('jpp:foodbank_transfer_local_success', 'Pindahan stok berjaya (Mod Tempatan)!'));
       setTransferModalOpen(false);
       setTransferFormData({
         item_id: '',
@@ -1392,10 +1392,10 @@ export function JppFoodBankAdmin() {
       setItems(prev =>
         prev.map(i => (i.id === item.id ? { ...i, is_active: newStatus } : i))
       );
-      toast.success(`Item ${item.name} kini ${newStatus ? 'AKTIF' : 'TIDAK AKTIF'}.`);
+      toast.success(t('jpp:foodbank_item_status_msg', 'Item {{name}} kini {{status}}.', { name: item.name, status: newStatus ? t('jpp:foodbank_status_active_caps', 'AKTIF') : t('jpp:foodbank_status_inactive_caps', 'TIDAK AKTIF') }));
     } catch (err: any) {
       console.error('Toggle active error:', err);
-      toast.error('Gagal menukar status: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_change_status_prefix', 'Gagal menukar status:') + ' ' + err.message);
     }
   };
 
@@ -1414,7 +1414,7 @@ export function JppFoodBankAdmin() {
           fetchAllData(true);
         } catch (err: any) {
           console.error('Delete item error:', err);
-          toast.error('Gagal memadam item (mungkin terdapat rekod permohonan berkaitan).');
+          toast.error(t('jpp:foodbank_delete_item_failed', 'Gagal memadam item (mungkin terdapat rekod permohonan berkaitan).'));
         }
       },
     });
@@ -1425,11 +1425,11 @@ export function JppFoodBankAdmin() {
     e.preventDefault();
     if (!user?.id) return;
     if (budgetFormData.amount <= 0) {
-      toast.error('Sila masukkan amaun melebihi RM0.');
+      toast.error(t('jpp:foodbank_budget_amount_required', 'Sila masukkan amaun melebihi RM0.'));
       return;
     }
     if (!budgetFormData.description.trim()) {
-      toast.error('Sila nyatakan sebab / perihal pelarasan.');
+      toast.error(t('jpp:foodbank_budget_reason_required', 'Sila nyatakan sebab / perihal pelarasan.'));
       return;
     }
 
@@ -1459,7 +1459,7 @@ export function JppFoodBankAdmin() {
           .eq('id', settings.id);
       }
 
-      toast.success('Pelarasan bajet berjaya direkodkan ke lejar audit!');
+      toast.success(t('jpp:foodbank_budget_adjusted_success', 'Pelarasan bajet berjaya direkodkan ke lejar audit!'));
       setBudgetModalOpen(false);
       setBudgetFormData({
         transaction_type: 'BUDGET_ADDITION',
@@ -1469,7 +1469,7 @@ export function JppFoodBankAdmin() {
       fetchAllData(true);
     } catch (err: any) {
       console.error('Budget adjustment error:', err);
-      toast.error('Gagal merekod bajet: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_record_budget_prefix', 'Gagal merekod bajet:') + ' ' + err.message);
     } finally {
       setIsSubmittingBudget(false);
     }
@@ -1511,7 +1511,7 @@ export function JppFoodBankAdmin() {
 
     saveLocalFoodBankSettings(updatedPayload);
     setSettings(prev => prev ? ({ ...prev, ...updatedPayload } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), ...updatedPayload } as FoodBankSettings));
-    toast.success('Tetapan sesi & formula kuota berjaya disimpan!');
+    toast.success(t('jpp:foodbank_settings_saved', 'Tetapan sesi & formula kuota berjaya disimpan!'));
     setIsSavingSettings(false);
   };
 
@@ -1555,7 +1555,7 @@ export function JppFoodBankAdmin() {
   const handleSaveLocation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!locationFormData.name.trim()) {
-      toast.error('Sila masukkan nama pusat lokasi.');
+      toast.error(t('jpp:foodbank_location_name_required', 'Sila masukkan nama pusat lokasi.'));
       return;
     }
 
@@ -1596,7 +1596,7 @@ export function JppFoodBankAdmin() {
       fetchAllData(true);
     } catch (err: any) {
       console.error('Save location error:', err);
-      toast.error('Gagal menyimpan lokasi: ' + err.message);
+      toast.error(t('jpp:foodbank_fail_save_location_prefix', 'Gagal menyimpan lokasi:') + ' ' + err.message);
     } finally {
       setIsSavingLocation(false);
     }
@@ -1651,11 +1651,11 @@ export function JppFoodBankAdmin() {
 
   const handleAssignOfficer = async () => {
     if (!selectedCandidate) {
-      toast.error('Sila pilih calon pegawai daripada carian No. Matrik / Nama.');
+      toast.error(t('jpp:foodbank_select_officer_candidate', 'Sila pilih calon pegawai daripada carian No. Matrik / Nama.'));
       return;
     }
     if (!officerRoleTitle.trim()) {
-      toast.error('Sila nyatakan gelaran peranan pegawai.');
+      toast.error(t('jpp:foodbank_officer_role_required', 'Sila nyatakan gelaran peranan pegawai.'));
       return;
     }
 
@@ -1666,14 +1666,14 @@ export function JppFoodBankAdmin() {
       o => o.user_id === selectedCandidate.id && (o.location_id || null) === locId
     );
     if (alreadyAssigned) {
-      toast.error('Pegawai ini sudah pun dilantik bagi lokasi tersebut.');
+      toast.error(t('jpp:foodbank_officer_already_assigned', 'Pegawai ini sudah pun dilantik bagi lokasi tersebut.'));
       return;
     }
 
     setIsAssigningOfficer(true);
     const assignedLocName = locId
       ? locations.find(l => l.id === locId)?.name || 'Pusat Edaran Khusus'
-      : 'Semua Pusat Edaran (Floating)';
+      : t('jpp:foodbank_all_distribution_centers_floating', 'Semua Pusat Edaran (Floating)');
 
     try {
       const { data, error } = await supabase
@@ -1712,13 +1712,13 @@ export function JppFoodBankAdmin() {
           },
         });
       } catch (auditErr) {
-        console.warn('Audit log insert note:', auditErr);
+        console.warn(t('jpp:foodbank_audit_log_insert_note', 'Nota sisipan log audit:'), auditErr);
       }
 
       toast.success(`Berjaya melantik ${selectedCandidate.full_name} sebagai ${officerRoleTitle.trim()}!`);
       handleClearCandidate();
       setOfficerAssignLocationId('');
-      setOfficerRoleTitle('Petugas Kaunter Food Bank');
+      setOfficerRoleTitle(t('jpp:foodbank_counter_officer_default', 'Petugas Kaunter Food Bank'));
       await fetchAllData(true);
     } catch (err: any) {
       console.error('Assign officer error, fallback local:', err);
@@ -1765,7 +1765,7 @@ export function JppFoodBankAdmin() {
       toast.success(`(Mod Tempatan) Berjaya melantik ${selectedCandidate.full_name}!`);
       handleClearCandidate();
       setOfficerAssignLocationId('');
-      setOfficerRoleTitle('Petugas Kaunter Food Bank');
+      setOfficerRoleTitle(t('jpp:foodbank_counter_officer_default', 'Petugas Kaunter Food Bank'));
     } finally {
       setIsAssigningOfficer(false);
     }
@@ -1799,20 +1799,20 @@ export function JppFoodBankAdmin() {
             officer_id: officer.id,
             officer_name: officer.user?.full_name,
             new_status: newStatus ? 'AKTIF' : 'TIDAK_AKTIF',
-            action: newStatus ? 'Mengaktifkan semula pegawai' : 'Menyahaktifkan status pegawai',
+            action: newStatus ? t('jpp:foodbank_reactivating_officer', 'Mengaktifkan semula pegawai') : t('jpp:foodbank_deactivating_officer', 'Menyahaktifkan status pegawai'),
           },
         });
       } catch (e) {
         // silent
       }
 
-      toast.success(`Status ${officer.user?.full_name || 'pegawai'} kini ${newStatus ? 'AKTIF' : 'TIDAK AKTIF'}.`);
+      toast.success(t('jpp:foodbank_officer_status_named_msg', 'Status {{name}} kini {{status}}.', { name: officer.user?.full_name || t('jpp:foodbank_officer_fallback', 'pegawai'), status: newStatus ? t('jpp:foodbank_status_active_caps', 'AKTIF') : t('jpp:foodbank_status_inactive_caps', 'TIDAK AKTIF') }));
     } catch (err: any) {
       console.error('Toggle officer error:', err);
       setOfficers(prev =>
         prev.map(o => (o.id === officer.id ? { ...o, is_active: newStatus } : o))
       );
-      toast.success(`(Mod Tempatan) Status pegawai dikemaskini: ${newStatus ? 'AKTIF' : 'TIDAK AKTIF'}.`);
+      toast.success(t('jpp:foodbank_officer_status_local_msg', '(Mod Tempatan) Status pegawai dikemaskini: {{status}}.', { status: newStatus ? t('jpp:foodbank_status_active_caps', 'AKTIF') : t('jpp:foodbank_status_inactive_caps', 'TIDAK AKTIF') }));
     }
   };
 
@@ -1844,11 +1844,11 @@ export function JppFoodBankAdmin() {
                 officer_id: officer.id,
                 officer_name: officerName,
                 role_title: officer.role_title,
-                location_name: officer.location?.name || 'Semua Pusat Edaran (Floating)',
+                location_name: officer.location?.name || t('jpp:foodbank_all_distribution_centers_floating', 'Semua Pusat Edaran (Floating)'),
               },
             });
           } catch (auditErr) {
-            console.warn('Audit log note:', auditErr);
+            console.warn(t('jpp:foodbank_audit_log_note', 'Nota log audit:'), auditErr);
           }
 
           setOfficers(prev => prev.filter(o => o.id !== officer.id));
@@ -1926,7 +1926,7 @@ export function JppFoodBankAdmin() {
     switch (actionType) {
       case 'STOCK_TRANSFER':
         return {
-          label: 'Pindahan Stok Lokasi',
+          label: t('jpp:foodbank_audit_action_stock_transfer', 'Pindahan Stok Lokasi'),
           category: 'STOK',
           badgeBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
           iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -1934,7 +1934,7 @@ export function JppFoodBankAdmin() {
         };
       case 'STOCK_ADJUSTMENT':
         return {
-          label: 'Pelarasan Inventori',
+          label: t('jpp:foodbank_audit_action_stock_adjustment', 'Pelarasan Inventori'),
           category: 'STOK',
           badgeBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
           iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -1942,7 +1942,7 @@ export function JppFoodBankAdmin() {
         };
       case 'PICKUP_VERIFIED':
         return {
-          label: 'Penebusan QR Disahkan',
+          label: t('jpp:foodbank_audit_action_pickup_verified', 'Penebusan QR Disahkan'),
           category: 'AGIHAN',
           badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
           iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -1950,7 +1950,7 @@ export function JppFoodBankAdmin() {
         };
       case 'APPLICATION_APPROVAL':
         return {
-          label: 'Permohonan Diluluskan',
+          label: t('jpp:foodbank_audit_action_application_approval', 'Permohonan Diluluskan'),
           category: 'AGIHAN',
           badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
           iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -1958,7 +1958,7 @@ export function JppFoodBankAdmin() {
         };
       case 'APPLICATION_REJECTION':
         return {
-          label: 'Permohonan Ditolak',
+          label: t('jpp:foodbank_audit_action_application_rejection', 'Permohonan Ditolak'),
           category: 'AGIHAN',
           badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
           iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -1966,7 +1966,7 @@ export function JppFoodBankAdmin() {
         };
       case 'OFFICER_ASSIGNED':
         return {
-          label: 'Pelantikan Pegawai Kaunter',
+          label: t('jpp:foodbank_audit_action_officer_assigned', 'Pelantikan Pegawai Kaunter'),
           category: 'PEGAWAI',
           badgeBg: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
           iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
@@ -1974,7 +1974,7 @@ export function JppFoodBankAdmin() {
         };
       case 'OFFICER_REMOVED':
         return {
-          label: 'Penamatan Pegawai Kaunter',
+          label: t('jpp:foodbank_audit_action_officer_removed', 'Penamatan Pegawai Kaunter'),
           category: 'PEGAWAI',
           badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
           iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -1982,7 +1982,7 @@ export function JppFoodBankAdmin() {
         };
       case 'SESSION_CONFIG_CHANGED':
         return {
-          label: 'Perubahan Tetapan Sesi',
+          label: t('jpp:foodbank_audit_action_session_config_changed', 'Perubahan Tetapan Sesi'),
           category: 'TETAPAN',
           badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
           iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -1990,7 +1990,7 @@ export function JppFoodBankAdmin() {
         };
       case 'LOCATION_UPDATED':
         return {
-          label: 'Kemas Kini Hab Edaran',
+          label: t('jpp:foodbank_audit_action_location_updated', 'Kemas Kini Hab Edaran'),
           category: 'TETAPAN',
           badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
           iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -1998,7 +1998,7 @@ export function JppFoodBankAdmin() {
         };
       case 'BUDGET_ADDITION':
         return {
-          label: 'Penambahan / Pelarasan Bajet',
+          label: t('jpp:foodbank_audit_action_budget_addition', 'Penambahan / Pelarasan Bajet'),
           category: 'TETAPAN',
           badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
           iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -2098,7 +2098,7 @@ export function JppFoodBankAdmin() {
     }
 
     if (rows.length === 0) {
-      toast.error('Tiada nama untuk dieksport.');
+      toast.error(t('jpp:foodbank_no_export_names', 'Tiada nama untuk dieksport.'));
       return;
     }
 
@@ -2112,7 +2112,7 @@ export function JppFoodBankAdmin() {
 
     await exportXlsx(filename, [
       {
-        name: 'Senarai Nama',
+        name: t('jpp:foodbank_export_names_sheet', 'Senarai Nama'),
         columns: [
           { header: 'Bil.', width: 8 },
           { header: 'Nama', width: 32 },
@@ -2127,22 +2127,22 @@ export function JppFoodBankAdmin() {
 
   const handleExportCsv = async (logsToExport: FoodBankAuditLog[]) => {
     if (logsToExport.length === 0) {
-      toast.error('Tiada rekod audit untuk dieksport.');
+      toast.error(t('jpp:foodbank_no_audit_to_export', 'Tiada rekod audit untuk dieksport.'));
       return;
     }
 
     const columns = [
       { header: 'ID', width: 34 },
-      { header: 'Tarikh & Masa', width: 20 },
-      { header: 'Pegawai Bertugas', width: 24 },
-      { header: 'Jenis Tindakan', width: 20 },
-      { header: 'Lokasi Pusat Edaran', width: 24 },
-      { header: 'Sasaran / Dokumen', width: 22 },
-      { header: 'Butiran Ringkas', width: 40 },
+      { header: t('jpp:foodbank_audit_col_datetime', 'Tarikh & Masa'), width: 20 },
+      { header: t('jpp:foodbank_audit_col_officer', 'Pegawai Bertugas'), width: 24 },
+      { header: t('jpp:foodbank_audit_col_action_type', 'Jenis Tindakan'), width: 20 },
+      { header: t('jpp:foodbank_audit_col_location', 'Lokasi Pusat Edaran'), width: 24 },
+      { header: t('jpp:foodbank_audit_col_target', 'Sasaran / Dokumen'), width: 22 },
+      { header: t('jpp:foodbank_audit_col_details', 'Butiran Ringkas'), width: 40 },
     ];
 
     const rows = logsToExport.map(log => {
-      const locName = locations.find(l => l.id === log.location_id)?.name || log.location?.name || 'Semua Lokasi';
+      const locName = locations.find(l => l.id === log.location_id)?.name || log.location?.name || t('jpp:foodbank_all_locations', 'Semua Lokasi');
       const actionConfig = getAuditActionConfig(log.action_type);
 
       let detailsSummary = '';
@@ -2171,7 +2171,7 @@ export function JppFoodBankAdmin() {
     const filename = `Audit_FoodBank_POLISAS_${yyyy}${mm}${dd}.xlsx`;
 
     await exportXlsx(filename, [
-      { name: 'Audit Log', columns, rows },
+      { name: t('jpp:foodbank_export_audit_sheet', 'Audit Log'), columns, rows },
     ]);
 
     toast.success(`Berjaya mengeksport ${logsToExport.length} rekod audit JHEP!`);
@@ -2189,7 +2189,7 @@ export function JppFoodBankAdmin() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-rose-800/70 dark:text-rose-400">
               <span>Portal JPP HQ</span>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span>Pengurusan Pelajar</span>
+              <span>{t('jpp:foodbank_breadcrumb_student_management', 'Pengurusan Pelajar')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
               <span className="text-rose-950 dark:text-rose-200 font-bold">Food Bank JPP</span>
             </div>
@@ -2199,7 +2199,7 @@ export function JppFoodBankAdmin() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-                  {t('jpp:foodbank_admin')}
+                  {t('jpp:foodbank_admin', 'Kawalan Berpusat Food Bank')}
                   <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
                     {isExecutiveAdmin ? t('jpp:foodbank_executive_admin', 'Admin Eksekutif') : (myOfficerRecord?.role_title || t('jpp:foodbank_counter_officer', 'Petugas Kaunter'))}
                   </span>
@@ -2211,7 +2211,7 @@ export function JppFoodBankAdmin() {
                   )}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  {t('jpp:foodbank_subtitle')}
+                  {t('jpp:foodbank_subtitle', 'Pusat Kawalan Agihan Bantuan Makanan & Keperluan Asas Mahasiswa POLISAS')}
                 </p>
               </div>
             </div>
@@ -2223,7 +2223,7 @@ export function JppFoodBankAdmin() {
             {isExecutiveAdmin ? (
               <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white dark:bg-white/5 border border-rose-200/80 dark:border-white/10 shadow-sm">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {t('jpp:foodbank_student_session')}
+                  {t('jpp:foodbank_student_session', 'Sesi Pelajar:')}
                 </span>
                 <button
                   type="button"
@@ -2238,24 +2238,24 @@ export function JppFoodBankAdmin() {
                   {settings?.is_application_open ? (
                     <>
                       <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                      {t('jpp:foodbank_session_open')}
+                      {t('jpp:foodbank_session_open', 'Buka')}
                     </>
                   ) : (
                     <>
                       <Lock className="w-3 h-3" />
-                      {t('jpp:foodbank_session_closed')}
+                      {t('jpp:foodbank_session_closed', 'Tutup')}
                     </>
                   )}
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm text-xs font-bold text-slate-600 dark:text-slate-400">
-                <span>{t('jpp:foodbank_student_session')}</span>
+                <span>{t('jpp:foodbank_student_session', 'Sesi Pelajar:')}</span>
                 <span className={cn(
                   "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase",
                   settings?.is_application_open ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
                 )}>
-                  {settings?.is_application_open ? t('jpp:foodbank_status_opened') : t('jpp:foodbank_status_closed')}
+                  {settings?.is_application_open ? t('jpp:foodbank_status_opened', 'Dibuka') : t('jpp:foodbank_status_closed', 'Ditutup')}
                 </span>
               </div>
             )}
@@ -2283,7 +2283,7 @@ export function JppFoodBankAdmin() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                  {t('jpp:foodbank_official_budget')}
+                  {t('jpp:foodbank_official_budget', 'Peruntukan Belanjawan Rasmi')}
                 </p>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono tabular-nums">
                   RM {budgetAllocation.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -2297,7 +2297,7 @@ export function JppFoodBankAdmin() {
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
               <div className="flex justify-between items-center text-xs mb-1.5 font-bold">
                 <span className="text-slate-500 dark:text-slate-400 font-mono tabular-nums">
-                  {t('jpp:foodbank_current_spending')}: RM {currentSpent.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
+                  {t('jpp:foodbank_current_spending', 'Belanja Semasa')}: RM {currentSpent.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
                 </span>
                 <span className="text-amber-700 dark:text-amber-400 font-mono tabular-nums">
                   {budgetUsedPercentage.toFixed(1)}% Digunakan
@@ -2310,7 +2310,7 @@ export function JppFoodBankAdmin() {
                 />
               </div>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold font-mono tabular-nums">
-                {t('jpp:foodbank_remaining_budget')}: RM {remainingBudget.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
+                {t('jpp:foodbank_remaining_budget', 'Baki Peruntukan')}: RM {remainingBudget.toLocaleString('en-MY', { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -2320,7 +2320,7 @@ export function JppFoodBankAdmin() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                  {t('jpp:foodbank_pending_applications')}
+                  {t('jpp:foodbank_pending_applications', 'Permohonan Menunggu')}
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
@@ -2335,7 +2335,7 @@ export function JppFoodBankAdmin() {
             </div>
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">{t('jpp:foodbank_needs_review')}</span>
+              <span className="text-xs text-slate-500 font-medium">{t('jpp:foodbank_needs_review', 'Perlu Semakan')}</span>
               <button
                 onClick={() => {
                   setActiveTab('applications');
@@ -2343,7 +2343,7 @@ export function JppFoodBankAdmin() {
                 }}
                 className="text-[11px] font-black text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1"
               >
-                Semak Segera <ChevronRight className="w-3 h-3" />
+                {t('jpp:foodbank_check_immediately', 'Semak Segera')} <ChevronRight className="w-3 h-3" />
               </button>
             </div>
           </div>
@@ -2353,13 +2353,13 @@ export function JppFoodBankAdmin() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400">
-                  {t('jpp:foodbank_approved_ready')}
+                  {t('jpp:foodbank_approved_ready', 'Diluluskan (Sedia Diambil)')}
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
                     {appMetrics.approved}
                   </h3>
-                  <span className="text-xs text-slate-500 font-semibold">{t('jpp:foodbank_active_passes')}</span>
+                  <span className="text-xs text-slate-500 font-semibold">{t('jpp:foodbank_active_passes', 'pas aktif')}</span>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
@@ -2368,7 +2368,7 @@ export function JppFoodBankAdmin() {
             </div>
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">{t('jpp:foodbank_waiting_counter_scan')}</span>
+              <span className="text-xs text-slate-500 font-medium">{t('jpp:foodbank_waiting_counter_scan', 'Menanti imbasan QR di kaunter')}</span>
               <button
                 onClick={() => {
                   setActiveTab('applications');
@@ -2376,7 +2376,7 @@ export function JppFoodBankAdmin() {
                 }}
                 className="text-[11px] font-black text-sky-700 dark:text-sky-400 hover:underline flex items-center gap-1"
               >
-                Lihat Senarai <ChevronRight className="w-3 h-3" />
+                {t('jpp:foodbank_view_list', 'Lihat Senarai')} <ChevronRight className="w-3 h-3" />
               </button>
             </div>
           </div>
@@ -2386,13 +2386,13 @@ export function JppFoodBankAdmin() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  {t('jpp:foodbank_completed_distributions')}
+                  {t('jpp:foodbank_completed_distributions', 'Jumlah Agihan Selesai')}
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <h3 className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums">
                     {appMetrics.completed}
                   </h3>
-                  <span className="text-xs text-slate-500 font-semibold">{t('jpp:foodbank_recipients')}</span>
+                  <span className="text-xs text-slate-500 font-semibold">{t('jpp:foodbank_recipients', 'penerima')}</span>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -2402,10 +2402,10 @@ export function JppFoodBankAdmin() {
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
               <span className="text-xs text-slate-500 font-medium">
-                {t('jpp:foodbank_packs_distributed')} <strong className="text-slate-800 dark:text-slate-200">{appMetrics.totalItemsDistributed} unit</strong>
+                {t('jpp:foodbank_packs_distributed', 'Pek diagihkan:')} <strong className="text-slate-800 dark:text-slate-200">{appMetrics.totalItemsDistributed} unit</strong>
               </span>
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                {t('jpp:foodbank_audit_verified')}
+                {t('jpp:foodbank_audit_verified', 'Audit Sah')}
               </span>
             </div>
           </div>
@@ -2416,30 +2416,30 @@ export function JppFoodBankAdmin() {
           {[
             {
               id: 'applications',
-              label: t('jpp:foodbank_tab_applications'),
+              label: t('jpp:foodbank_tab_applications', 'Permohonan & Kaunter'),
               icon: QrCode,
               badge: appMetrics.pending > 0 ? appMetrics.pending : null,
               badgeColor: 'bg-amber-500 text-white',
             },
             {
               id: 'inventory',
-              label: t('jpp:foodbank_tab_inventory'),
+              label: t('jpp:foodbank_tab_inventory', 'Inventori & Stok'),
               icon: Package,
-              badge: items.filter(i => i.current_stock < 10).length > 0 ? 'Stok Rendah' : null,
+              badge: items.filter(i => i.current_stock < 10).length > 0 ? t('jpp:foodbank_low_stock_badge', 'Stok Rendah') : null,
               badgeColor: 'bg-rose-500 text-white',
             },
             ...(isExecutiveAdmin
               ? [
                   {
                     id: 'budget',
-                    label: t('jpp:foodbank_tab_budget'),
+                    label: t('jpp:foodbank_tab_budget', 'Bajet & Lejar Audit (RM70k)'),
                     icon: Receipt,
                     badge: null,
                     badgeColor: '',
                   },
                   {
                     id: 'settings',
-                    label: t('jpp:foodbank_tab_settings'),
+                    label: t('jpp:foodbank_tab_settings', 'Tetapan Sesi & Pegawai'),
                     icon: Sliders,
                     badge: null,
                     badgeColor: '',
@@ -2448,7 +2448,7 @@ export function JppFoodBankAdmin() {
               : []),
             {
               id: 'audit',
-              label: t('jpp:foodbank_tab_audit'),
+              label: t('jpp:foodbank_tab_audit', 'Log Audit Operasi'),
               icon: FileText,
               badge: auditLogs.length > 0 ? `${auditLogs.length}` : null,
               badgeColor: 'bg-amber-500/20 text-amber-800 dark:text-amber-300',
@@ -2884,7 +2884,7 @@ export function JppFoodBankAdmin() {
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                             <ShoppingBag className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                            Tiada permohonan ditemui bagi kriteria carian ini.
+                            {t('jpp:foodbank_no_applications_found_search', 'Tiada permohonan ditemui bagi kriteria carian ini.')}
                           </td>
                         </tr>
                       ) : (
@@ -2920,7 +2920,7 @@ export function JppFoodBankAdmin() {
                                   >
                                     {app.counter_verified ? (
                                       <>
-                                        <ShieldCheck className="w-2.5 h-2.5" /> Disahkan Kaunter
+                                        <ShieldCheck className="w-2.5 h-2.5" /> {t('jpp:foodbank_counter_verified', 'Disahkan Kaunter')}
                                       </>
                                     ) : (
                                       <>
@@ -2978,7 +2978,7 @@ export function JppFoodBankAdmin() {
                                 {app.location?.name || 'Pusat Edaran JPP'}
                               </div>
                               <div className="text-[10px] text-slate-400">
-                                {app.pickup_date || 'Sedia untuk diambil'}
+                                {app.pickup_date || t('jpp:foodbank_ready_for_pickup', 'Sedia untuk diambil')}
                               </div>
                             </td>
 
@@ -3005,7 +3005,7 @@ export function JppFoodBankAdmin() {
                                 <button
                                   type="button"
                                   onClick={() => setSelectedAppForDetail(app)}
-                                  title="Lihat Butiran Penuh"
+                                  title={t('jpp:foodbank_view_full_details', 'Lihat Butiran Penuh')}
                                   className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
@@ -3058,7 +3058,7 @@ export function JppFoodBankAdmin() {
 
                                 {app.status === 'SELESAI' && (
                                   <span className="text-[10px] text-slate-400 font-medium italic">
-                                    Disahkan oleh {app.verifier?.full_name || 'Pegawai'}
+                                    {t('jpp:foodbank_verified_by_officer', 'Disahkan oleh {{officer}}', { officer: app.verifier?.full_name || t('jpp:foodbank_officer_default', 'Pegawai') })}
                                   </span>
                                 )}
                               </div>
@@ -3099,7 +3099,7 @@ export function JppFoodBankAdmin() {
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                       )}
                     >
-                      {cat === 'SEMUA' ? 'Semua Kategori' : cat}
+                      {cat === 'SEMUA' ? t('jpp:foodbank_all_categories', 'Semua Kategori') : cat}
                     </button>
                   ))}
                 </div>
@@ -3119,7 +3119,7 @@ export function JppFoodBankAdmin() {
                     >
                       {isExecutiveAdmin && (
                         <option value="SEMUA" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
-                          Semua Pusat Edaran (Agregat)
+                          {t('jpp:foodbank_all_distribution_centers_aggregate', 'Semua Pusat Edaran (Agregat)')}
                         </option>
                       )}
                       {locations.map(loc => (
@@ -3128,7 +3128,7 @@ export function JppFoodBankAdmin() {
                           value={loc.id}
                           className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
                         >
-                          {loc.name} {!isExecutiveAdmin && loc.id === assignedLocationId ? ' (Lokasi Jagaan Anda)' : ''}
+                          {loc.name} {!isExecutiveAdmin && loc.id === assignedLocationId ? ' ' + t('jpp:foodbank_your_assigned_location', '(Lokasi Jagaan Anda)') : ''}
                         </option>
                       ))}
                     </select>
@@ -3194,7 +3194,7 @@ export function JppFoodBankAdmin() {
                           ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                           : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                       )}
-                      title="Paparan Jadual Inventori"
+                      title={t('jpp:foodbank_view_table_title', 'Paparan Jadual Inventori')}
                     >
                       <FileSpreadsheet className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Jadual</span>
@@ -3262,7 +3262,7 @@ export function JppFoodBankAdmin() {
                               </span>
                           {!item.is_active && (
                             <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white">
-                              Tidak Aktif
+                              {t('jpp:foodbank_status_inactive', 'Tidak Aktif')}
                             </span>
                           )}
                         </div>
@@ -3287,7 +3287,7 @@ export function JppFoodBankAdmin() {
                           </div>
                           <div className="text-right flex flex-col items-end">
                             <span className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">
-                              {selectedInventoryLocationId === 'SEMUA' ? 'Baki Agregat' : 'Baki Lokasi'}
+                              {selectedInventoryLocationId === 'SEMUA' ? t('jpp:foodbank_balance_aggregate', 'Baki Agregat') : t('jpp:foodbank_balance_location', 'Baki Lokasi')}
                             </span>
                             <span
                               className={cn(
@@ -3308,7 +3308,7 @@ export function JppFoodBankAdmin() {
                               Pusat Edaran
                             </span>
                             <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400">
-                              {selectedInventoryLocationId !== 'SEMUA' ? 'Fokus Lokasi' : 'Pecahan'}
+                              {selectedInventoryLocationId !== 'SEMUA' ? t('jpp:foodbank_focus_location', 'Fokus Lokasi') : t('jpp:foodbank_breakdown', 'Pecahan')}
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-1.5">
@@ -3316,9 +3316,9 @@ export function JppFoodBankAdmin() {
                               const locStock = getItemStockForLocation(item.id, loc.id);
                               const isCurrentSelected = selectedInventoryLocationId === loc.id;
                               const shortName = loc.name.includes('Utama') || loc.name.includes('Student Centre')
-                                ? 'SC Utama'
+                                ? t('jpp:foodbank_sc_main', 'SC Utama')
                                 : loc.name.includes('Kamsis') || loc.name.includes('Al-Biruni')
-                                ? 'Kamsis AB'
+                                ? t('jpp:foodbank_kamsis_ab', 'Kamsis AB')
                                 : loc.name.includes('Pentadbiran')
                                 ? 'Pentadbiran'
                                 : loc.name.split(' ')[0];
@@ -3407,7 +3407,7 @@ export function JppFoodBankAdmin() {
                                 });
                                 setTransferModalOpen(true);
                               }}
-                              title="Pindah Stok Barangan Ini"
+                              title={t('jpp:foodbank_transfer_item_stock_title', 'Pindah Stok Barangan Ini')}
                               className="p-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-colors"
                             >
                               <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -3447,8 +3447,8 @@ export function JppFoodBankAdmin() {
                       <th className="py-3 px-4">Barangan</th>
                       <th className="py-3 px-4">Kategori</th>
                       <th className="py-3 px-4">Anggaran Seunit</th>
-                      <th className="py-3 px-4">Baki Stok</th>
-                      <th className="py-3 px-4">Pusat Agihan Terpilih</th>
+                      <th className="py-3 px-4">{t('jpp:foodbank_col_stock_balance', 'Baki Stok')}</th>
+                      <th className="py-3 px-4">{t('jpp:foodbank_col_selected_distribution_center', 'Pusat Agihan Terpilih')}</th>
                       <th className="py-3 px-4 text-center">Status</th>
                       <th className="py-3 px-4 text-right">Tindakan</th>
                     </tr>
@@ -3457,7 +3457,7 @@ export function JppFoodBankAdmin() {
                     {filteredItems.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
-                          Tiada barangan inventori ditemui.
+                          {t('jpp:foodbank_no_inventory_items_found', 'Tiada barangan inventori ditemui.')}
                         </td>
                       </tr>
                     ) : (
@@ -3562,7 +3562,7 @@ export function JppFoodBankAdmin() {
                       Penyata Penggunaan Peruntukan RM {budgetAllocation.toLocaleString('en-MY')}
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-                      Setiap agihan barangan di kaunter menolak bajet secara automatik mengikut nilai kos sebenar pek barangan. Semua transaksi direkodkan secara lejar kekal (immutable ledger).
+                      {t('jpp:foodbank_budget_ledger_desc', 'Setiap agihan barangan di kaunter menolak bajet secara automatik mengikut nilai kos sebenar pek barangan. Semua transaksi direkodkan secara lejar kekal (immutable ledger).')}
                     </p>
                   </div>
 
@@ -3579,25 +3579,25 @@ export function JppFoodBankAdmin() {
                 {/* Butiran Baki & Purata */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-white/5">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Peruntukan Asas</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">{t('jpp:foodbank_budget_baseline_label', 'Peruntukan Asas')}</span>
                     <p className="text-base font-black text-slate-900 dark:text-white font-mono tabular-nums">
                       RM {budgetAllocation.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Jumlah Digunakan</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">{t('jpp:foodbank_total_spent_label', 'Jumlah Digunakan')}</span>
                     <p className="text-base font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">
                       RM {currentSpent.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Baki Sedia Ada</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">{t('jpp:foodbank_remaining_balance_label', 'Baki Sedia Ada')}</span>
                     <p className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
                       RM {remainingBudget.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Purata Kos / Pelajar</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">{t('jpp:foodbank_avg_cost_student_label', 'Purata Kos / Pelajar')}</span>
                     <p className="text-base font-black text-slate-900 dark:text-white font-mono tabular-nums">
                       RM {appMetrics.completed > 0 ? (currentSpent / appMetrics.completed).toFixed(2) : '0.00'}
                     </p>
@@ -3621,7 +3621,7 @@ export function JppFoodBankAdmin() {
                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                         )}
                       >
-                        {txT === 'SEMUA' ? 'Semua Transaksi' : txT}
+                        {txT === 'SEMUA' ? t('jpp:foodbank_all_transactions', 'Semua Transaksi') : txT}
                       </button>
                     ))}
                   </div>
@@ -3642,7 +3642,7 @@ export function JppFoodBankAdmin() {
                   <table className="w-full text-left text-xs min-w-[650px]">
                     <thead>
                       <tr className="bg-rose-50/50 dark:bg-white/[0.02] border-b border-rose-200/60 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
-                        <th className="py-3 px-4">Tarikh & Masa</th>
+                        <th className="py-3 px-4">{t('jpp:foodbank_audit_col_datetime', 'Tarikh & Masa')}</th>
                         <th className="py-3 px-4">Jenis Transaksi</th>
                         <th className="py-3 px-4">No. Rujukan</th>
                         <th className="py-3 px-4">Keterangan</th>
@@ -3654,7 +3654,7 @@ export function JppFoodBankAdmin() {
                       {filteredTransactions.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">
-                            Tiada transaksi lejar ditemui.
+                            {t('jpp:foodbank_no_ledger_tx_found', 'Tiada transaksi lejar ditemui.')}
                           </td>
                         </tr>
                       ) : (
@@ -3740,7 +3740,7 @@ export function JppFoodBankAdmin() {
                           ? "bg-emerald-500 text-white"
                           : "bg-amber-500 text-slate-900 font-bold"
                       )}>
-                        {settings?.is_module_active ? 'MODUL DIAKTIFKAN (RASMI)' : 'MODUL DALAM PERSEDIAAN (TUTUP)'}
+                        {settings?.is_module_active ? t('jpp:foodbank_module_active_caps', 'MODUL DIAKTIFKAN (RASMI)') : t('jpp:foodbank_module_prep_caps', 'MODUL DALAM PERSEDIAAN (TUTUP)')}
                       </span>
                       <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         Akses Portal Mahasiswa (/kebajikan/foodbank)
@@ -3750,7 +3750,7 @@ export function JppFoodBankAdmin() {
                       Suis Induk Pelancaran Modul Food Bank JPP
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl mt-0.5">
-                      Kawal kebolehcapaian portal mahasiswa sebelum perasmian penuh. Apabila ditutup (default), mahasiswa boleh melihat info persediaan & katalog barangan, namun borang permohonan dikunci rapi dengan notis "Dalam Persediaan / Akan Datang".
+                      {t('jpp:foodbank_module_prep_desc', 'Kawal kebolehcapaian portal mahasiswa sebelum perasmian penuh. Apabila ditutup (default), mahasiswa boleh melihat info persediaan & katalog barangan, namun borang permohonan dikunci rapi dengan notis "Dalam Persediaan / Akan Datang".')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -3767,12 +3767,12 @@ export function JppFoodBankAdmin() {
                       {settings?.is_module_active ? (
                         <>
                           <Lock className="w-4 h-4" />
-                          Tutup Akses Siswa (Mod Persediaan)
+                          {t('jpp:foodbank_close_student_access_btn', 'Tutup Akses Siswa (Mod Persediaan)')}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          Rasmikan & Buka Modul Siswa
+                          {t('jpp:foodbank_open_student_module_btn', 'Rasmikan & Buka Modul Siswa')}
                         </>
                       )}
                     </button>
@@ -3787,7 +3787,7 @@ export function JppFoodBankAdmin() {
                     Konfigurasi Sesi & Peraturan
                   </span>
                   <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                    Formula Kuota & Had Permohonan
+                    {t('jpp:foodbank_quota_formula_title', 'Formula Kuota & Had Permohonan')}
                   </h2>
                 </div>
 
@@ -3871,7 +3871,7 @@ export function JppFoodBankAdmin() {
                           Benarkan Kuota Rakan Serumah
                         </span>
                         <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Jika aktif, pelajar boleh tambah rakan serumah untuk tingkatkan kuota barangan. Matikan untuk hadkan pelajar kepada kuota peribadi sahaja (one-off).
+                          {t('jpp:foodbank_housemates_quota_desc', 'Jika aktif, pelajar boleh tambah rakan serumah untuk tingkatkan kuota barangan. Matikan untuk hadkan pelajar kepada kuota peribadi sahaja (one-off).')}
                         </span>
                       </div>
                     </label>
@@ -3879,7 +3879,7 @@ export function JppFoodBankAdmin() {
 
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 mb-1">
-                      Teks Arahan & Panduan Permohonan
+                      {t('jpp:foodbank_instructions_guidelines_label', 'Teks Arahan & Panduan Permohonan')}
                     </label>
                     <textarea
                       rows={3}
@@ -3891,7 +3891,7 @@ export function JppFoodBankAdmin() {
                         })
                       }
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
-                      placeholder="Masukkan arahan kepada mahasiswa..."
+                      placeholder={t('jpp:foodbank_instructions_placeholder', 'Masukkan arahan kepada mahasiswa...')}
                     />
                   </div>
 
@@ -3909,7 +3909,7 @@ export function JppFoodBankAdmin() {
                         })
                       }
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
-                      placeholder="Syarat kelayakan bantuan..."
+                      placeholder={t('jpp:foodbank_eligibility_placeholder', 'Syarat kelayakan bantuan...')}
                     />
                   </div>
 
@@ -3930,7 +3930,7 @@ export function JppFoodBankAdmin() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
-                        Lokasi Fizikal & PolyMaps 360°
+                        {t('jpp:foodbank_physical_location_polymaps', 'Lokasi Fizikal & PolyMaps 360°')}
                       </span>
                       <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
                         Pusat Pengagihan Food Bank
@@ -4000,7 +4000,7 @@ export function JppFoodBankAdmin() {
                     Integrasi PolyMaps 360° Kampus
                   </p>
                   <p className="text-[11px] text-rose-800/80 dark:text-rose-300/80 mt-1">
-                    Setiap pusat agihan dihubungkan secara terus ke sistem peta 360° POLISAS untuk membolehkan mahasiswa mencari arah kaunter fizikal tanpa sesat.
+                    {t('jpp:foodbank_polymaps_integration_desc', 'Setiap pusat agihan dihubungkan secara terus ke sistem peta 360° POLISAS untuk membolehkan mahasiswa mencari arah kaunter fizikal tanpa sesat.')}
                   </p>
                 </div>
               </div>
@@ -4016,17 +4016,17 @@ export function JppFoodBankAdmin() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                          Akses Kaunter & RBAC
+                          {t('jpp:foodbank_counter_access_rbac', 'Akses Kaunter & RBAC')}
                         </span>
                         <span className="text-xs text-slate-400 font-bold">
-                          {officers.length} Pegawai Dilantik ({officers.filter(o => o.is_active).length} Aktif)
+                          {officers.length} {t('jpp:foodbank_officers_appointed_count', 'Pegawai Dilantik')} ({officers.filter(o => o.is_active).length} {t('jpp:foodbank_active_count', 'Aktif')})
                         </span>
                       </div>
                       <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                        Pengurusan & Pelantikan Pegawai Bertugas Kaunter
+                        {t('jpp:foodbank_officers_mgmt_title', 'Pengurusan & Pelantikan Pegawai Bertugas Kaunter')}
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Lantik staf atau mahasiswa POLISAS bertugas bagi menguruskan imbasan pas QR dan stok edaran.
+                        {t('jpp:foodbank_officers_mgmt_desc', 'Lantik staf atau mahasiswa POLISAS bertugas bagi menguruskan imbasan pas QR dan stok edaran.')}
                       </p>
                     </div>
                   </div>
@@ -4038,14 +4038,14 @@ export function JppFoodBankAdmin() {
                     <div className="flex items-center gap-2">
                       <UserPlus className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                        Borang Lantikan Pegawai Baharu
+                        {t('jpp:foodbank_new_officer_form_title', 'Borang Lantikan Pegawai Baharu')}
                       </h3>
                     </div>
 
                     {/* Carian No. Matrik / Nama dari profiles */}
                     <div className="space-y-1.5 relative">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Cari Calon Pegawai (No. Matrik / Nama) *
+                        {t('jpp:foodbank_search_candidate_label', 'Cari Calon Pegawai (No. Matrik / Nama) *')}
                       </label>
                       <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -4056,7 +4056,7 @@ export function JppFoodBankAdmin() {
                             setOfficerSearchQuery(e.target.value);
                             if (selectedCandidate) setSelectedCandidate(null);
                           }}
-                          placeholder="Cari '15DIT...' atau nama..."
+                          placeholder={t('jpp:foodbank_search_candidate_placeholder', "Cari '15DIT...' atau nama...")}
                           className="w-full pl-9 pr-9 py-2.5 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
                         />
                         {officerSearchQuery && (
@@ -4074,7 +4074,7 @@ export function JppFoodBankAdmin() {
                       {isSearchingCandidate && (
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5 mt-1">
                           <RefreshCw className="w-3 h-3 animate-spin" />
-                          Mencari profil pelajar / staf POLISAS...
+                          {t('jpp:foodbank_searching_profile', 'Mencari profil pelajar / staf POLISAS...')}
                         </p>
                       )}
 
@@ -4097,7 +4097,7 @@ export function JppFoodBankAdmin() {
                                 </p>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                                   {candidate.matric_no ? `${candidate.matric_no} • ` : ''}
-                                  {candidate.department || candidate.email || 'Pelajar POLISAS'}
+                                  {candidate.department || candidate.email || t('jpp:foodbank_student_polisas_default', 'Pelajar POLISAS')}
                                 </p>
                               </div>
                               <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-600 shrink-0" />
@@ -4144,7 +4144,7 @@ export function JppFoodBankAdmin() {
                         onChange={e => setOfficerAssignLocationId(e.target.value)}
                         className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm cursor-pointer"
                       >
-                        <option value="">Semua Pusat Edaran (Floating / Merentas Lokasi)</option>
+                        <option value="">{t('jpp:foodbank_all_centers_floating_option', 'Semua Pusat Edaran (Floating / Merentas Lokasi)')}</option>
                         {locations.map(loc => (
                           <option key={loc.id} value={loc.id}>
                             {loc.name}
@@ -4152,7 +4152,7 @@ export function JppFoodBankAdmin() {
                         ))}
                       </select>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Pegawai terapung (Floating) boleh menguruskan imbasan di mana-mana kaunter aktif.
+                        {t('jpp:foodbank_floating_officer_desc', 'Pegawai terapung (Floating) boleh menguruskan imbasan di mana-mana kaunter aktif.')}
                       </p>
                     </div>
 
@@ -4165,7 +4165,7 @@ export function JppFoodBankAdmin() {
                         type="text"
                         value={officerRoleTitle}
                         onChange={e => setOfficerRoleTitle(e.target.value)}
-                        placeholder="cth: Petugas Kaunter Food Bank, Ketua Penyelaras"
+                        placeholder={t('jpp:foodbank_officer_role_placeholder', 'cth: Petugas Kaunter Food Bank, Ketua Penyelaras')}
                         className="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
                       />
                     </div>
@@ -4191,7 +4191,7 @@ export function JppFoodBankAdmin() {
                   <div className="lg:col-span-7 space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        Senarai Pegawai Bertugas
+                        {t('jpp:foodbank_officers_list_title', 'Senarai Pegawai Bertugas')}
                         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-bold">
                           {officers.length}
                         </span>
@@ -4202,10 +4202,10 @@ export function JppFoodBankAdmin() {
                       <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
                         <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                         <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                          Tiada pegawai bertugas dilantik setakat ini.
+                          {t('jpp:foodbank_no_officers_appointed', 'Tiada pegawai bertugas dilantik setakat ini.')}
                         </p>
                         <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                          Gunakan borang carian di sebelah untuk melantik petugas kaunter Food Bank.
+                          {t('jpp:foodbank_use_search_form_desc', 'Gunakan borang carian di sebelah untuk melantik petugas kaunter Food Bank.')}
                         </p>
                       </div>
                     ) : (
@@ -4261,7 +4261,7 @@ export function JppFoodBankAdmin() {
                                     ) : (
                                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
                                         <Sparkles className="w-3 h-3 text-sky-600 shrink-0" />
-                                        Semua Pusat Edaran (Floating)
+                                        {t('jpp:foodbank_all_distribution_centers_floating', 'Semua Pusat Edaran (Floating)')}
                                       </span>
                                     )}
 
@@ -4344,13 +4344,13 @@ export function JppFoodBankAdmin() {
                     Lejar Rasmi Pengauditan JHEP & JPP
                   </div>
                   <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                    Log Audit Dedikasi Food Bank
+                    {t('jpp:foodbank_audit_dedicated_title', 'Log Audit Dedikasi Food Bank')}
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
                       {filteredAuditLogs.length} Rekod Ditapis
                     </span>
                   </h2>
                   <p className="text-xs text-slate-300 max-w-xl">
-                    Jejak telus setiap pergerakan stok antara lokasi, imbasan pas QR kaunter, perlantikan pegawai bertugas, dan pengubahsuaian sesi permohonan.
+                    {t('jpp:foodbank_audit_dedicated_desc', 'Jejak telus setiap pergerakan stok antara lokasi, imbasan pas QR kaunter, perlantikan pegawai bertugas, dan pengubahsuaian sesi permohonan.')}
                   </p>
                 </div>
 
@@ -4373,7 +4373,7 @@ export function JppFoodBankAdmin() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                        Jumlah Transaksi Rekod
+                        {t('jpp:foodbank_audit_total_tx_title', 'Jumlah Transaksi Rekod')}
                       </p>
                       <div className="flex items-baseline gap-2 mt-1">
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white">
@@ -4387,7 +4387,7 @@ export function JppFoodBankAdmin() {
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
-                    <span>Keseluruhan rekod aktif</span>
+                    <span>{t('jpp:foodbank_audit_overall_active_records', 'Keseluruhan rekod aktif')}</span>
                     <span className="font-bold text-amber-600 dark:text-amber-400">100% Tercatat</span>
                   </div>
                 </div>
@@ -4397,7 +4397,7 @@ export function JppFoodBankAdmin() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                        Pindahan Stok Lokasi
+                        {t('jpp:foodbank_audit_stock_transfers_title', 'Pindahan Stok Lokasi')}
                       </p>
                       <div className="flex items-baseline gap-2 mt-1">
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white">
@@ -4411,7 +4411,7 @@ export function JppFoodBankAdmin() {
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
-                    <span>Pusat Edaran JPP ⇄ Hab Kamsis</span>
+                    <span>{t('jpp:foodbank_audit_between_hubs_desc', 'Pusat Edaran JPP ⇄ Hab Kamsis')}</span>
                     <span className="font-bold text-slate-700 dark:text-slate-300">Antara Hab</span>
                   </div>
                 </div>
@@ -4427,7 +4427,7 @@ export function JppFoodBankAdmin() {
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white">
                           {auditMetrics.pickups}
                         </h3>
-                        <span className="text-xs text-slate-500 font-semibold">agihan fizikal</span>
+                        <span className="text-xs text-slate-500 font-semibold">{t('jpp:foodbank_physical_distribution', 'agihan fizikal')}</span>
                       </div>
                     </div>
                     <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -4435,7 +4435,7 @@ export function JppFoodBankAdmin() {
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
-                    <span>Imbasan QR kaunter sah</span>
+                    <span>{t('jpp:foodbank_valid_counter_qr_scan', 'Imbasan QR kaunter sah')}</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">Diserahkan</span>
                   </div>
                 </div>
@@ -4445,7 +4445,7 @@ export function JppFoodBankAdmin() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400">
-                        Tindakan Pegawai & Admin
+                        {t('jpp:foodbank_admin_officer_actions_title', 'Tindakan Pegawai & Admin')}
                       </p>
                       <div className="flex items-baseline gap-2 mt-1">
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white">
@@ -4459,8 +4459,8 @@ export function JppFoodBankAdmin() {
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
-                    <span>Lantikan, kuota & tetapan</span>
-                    <span className="font-bold text-sky-600 dark:text-sky-400">Tadbir Urus</span>
+                    <span>{t('jpp:foodbank_appointments_quota_settings', 'Lantikan, kuota & tetapan')}</span>
+                    <span className="font-bold text-sky-600 dark:text-sky-400">{t('jpp:foodbank_governance', 'Tadbir Urus')}</span>
                   </div>
                 </div>
               </div>
@@ -4502,7 +4502,7 @@ export function JppFoodBankAdmin() {
                         onChange={e => setAuditLocationFilter(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
                       >
-                        <option value="SEMUA">Semua Lokasi Pengagihan</option>
+                        <option value="SEMUA">{t('jpp:foodbank_all_distribution_locations_option', 'Semua Lokasi Pengagihan')}</option>
                         {locations.map(loc => (
                           <option key={loc.id} value={loc.id}>
                             {loc.name}
@@ -4518,7 +4518,7 @@ export function JppFoodBankAdmin() {
                         type="text"
                         value={auditSearchQuery}
                         onChange={e => setAuditSearchQuery(e.target.value)}
-                        placeholder="Cari pegawai, sasaran, butiran..."
+                        placeholder={t('jpp:foodbank_search_officer_target_placeholder', 'Cari pegawai, sasaran, butiran...')}
                         className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
                       />
                       {auditSearchQuery && (
@@ -4542,10 +4542,10 @@ export function JppFoodBankAdmin() {
                     <FileText className="w-6 h-6" />
                   </div>
                   <h4 className="text-base font-black text-slate-900 dark:text-white">
-                    Tiada Rekod Audit Ditemui
+                    {t('jpp:foodbank_no_audit_records_found_title', 'Tiada Rekod Audit Ditemui')}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    Tiada aktiviti transaksi sepadan dengan kriteria carian atau penapis kategori dan lokasi semasa.
+                    {t('jpp:foodbank_no_audit_records_found_desc', 'Tiada aktiviti transaksi sepadan dengan kriteria carian atau penapis kategori dan lokasi semasa.')}
                   </p>
                   {(auditCategoryFilter !== 'SEMUA' || auditLocationFilter !== 'SEMUA' || auditSearchQuery.trim()) && (
                     <button
@@ -4557,7 +4557,7 @@ export function JppFoodBankAdmin() {
                       }}
                       className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
                     >
-                      Set Semula Semua Penapis
+                      {t('jpp:foodbank_reset_all_filters_btn', 'Set Semula Semua Penapis')}
                     </button>
                   )}
                 </div>
@@ -4611,7 +4611,7 @@ export function JppFoodBankAdmin() {
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400">
                                   <Sparkles className="w-3 h-3 text-slate-400 shrink-0" />
-                                  Peringkat Sistem JPP
+                                  {t('jpp:foodbank_jpp_system_level', 'Peringkat Sistem JPP')}
                                 </span>
                               )}
                             </div>
@@ -4691,7 +4691,7 @@ export function JppFoodBankAdmin() {
               {t('jpp:foodbank_reject_dialog_title', 'Tolak Permohonan Food Bank')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Permohonan <strong>{rejectionModalApp.application_no}</strong> bagi pelajar{' '}
+              Permohonan <strong>{rejectionModalApp.application_no}</strong> {t('jpp:foodbank_for_student', 'bagi pelajar')}{' '}
               <strong>{rejectionModalApp.applicant?.full_name}</strong>.
             </p>
 
@@ -4703,7 +4703,7 @@ export function JppFoodBankAdmin() {
                 rows={3}
                 value={rejectionReason}
                 onChange={e => setRejectionReason(e.target.value)}
-                placeholder="Nyatakan sebab penolakan permohonan..."
+                placeholder={t('jpp:foodbank_reject_reason_placeholder', 'Nyatakan sebab penolakan permohonan...')}
                 className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
               />
             </div>
@@ -4736,7 +4736,7 @@ export function JppFoodBankAdmin() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div>
                 <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
-                  Butiran Permohonan
+                  {t('jpp:foodbank_application_details_title', 'Butiran Permohonan')}
                 </span>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
                   {selectedAppForDetail.application_no}
@@ -4753,7 +4753,7 @@ export function JppFoodBankAdmin() {
             {/* Profil Pemohon */}
             <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-white/5 border border-rose-100 dark:border-white/5 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Nama Penuh</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_full_name_label', 'Nama Penuh')}</span>
                 <p className="font-bold text-slate-800 dark:text-white">{effectiveName(selectedAppForDetail)}</p>
                 {selectedAppForDetail.applicant_name_override && (
                   <p className="text-[10px] text-slate-400 line-through">{selectedAppForDetail.applicant?.full_name}</p>
@@ -4768,7 +4768,7 @@ export function JppFoodBankAdmin() {
               </div>
               {selectedAppForDetail.requires_counter_verification && (
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold">Pengesahan Kaunter</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_counter_verification_label', 'Pengesahan Kaunter')}</span>
                   <p className={cn('font-bold text-xs flex items-center gap-1.5', selectedAppForDetail.counter_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
                     {selectedAppForDetail.counter_verified ? (
                       <>
@@ -4789,24 +4789,24 @@ export function JppFoodBankAdmin() {
                 <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.phone || '-'}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Kategori Kewangan</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_financial_category_label', 'Kategori Kewangan')}</span>
                 <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.financial_category || 'B40'}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Pendapatan Isi Rumah</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_household_income_label', 'Pendapatan Isi Rumah')}</span>
                 <p className="font-bold text-slate-800 dark:text-white">
-                  {selectedAppForDetail.household_income ? `RM ${selectedAppForDetail.household_income}` : 'Tiada maklumat'}
+                  {selectedAppForDetail.household_income ? `RM ${selectedAppForDetail.household_income}` : t('jpp:foodbank_no_info', 'Tiada maklumat')}
                 </p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Jenis Kediaman</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_residence_type_label', 'Jenis Kediaman')}</span>
                 <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.housing_type}</p>
               </div>
             </div>
 
             {/* Sebab Memohon */}
             <div className="text-xs">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Sebab / Alasan Permohonan:</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold">{t('jpp:foodbank_reason_application_label', 'Sebab / Alasan Permohonan:')}</span>
               <p className="p-3 mt-1 rounded-xl bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium">
                 {selectedAppForDetail.reason}
               </p>
@@ -4856,7 +4856,7 @@ export function JppFoodBankAdmin() {
                         </tr>
                       ))}
                       <tr className="bg-rose-50/50 dark:bg-white/5 font-black text-rose-700 dark:text-rose-300">
-                        <td colSpan={2} className="py-2.5 px-3">Jumlah Nilai Anggaran</td>
+                        <td colSpan={2} className="py-2.5 px-3">{t('jpp:foodbank_total_estimated_value', 'Jumlah Nilai Anggaran')}</td>
                         <td className="py-2.5 px-3 text-right font-mono">
                           RM {Number(selectedAppForDetail.total_estimated_value || 0).toFixed(2)}
                         </td>
@@ -4915,7 +4915,7 @@ export function JppFoodBankAdmin() {
                     onChange={e => setItemFormData({ ...itemFormData, category: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                   >
-                    <option value="MAKANAN">Makanan Asas</option>
+                    <option value="MAKANAN">{t('jpp:foodbank_cat_basic_food', 'Makanan Asas')}</option>
                     <option value="MINUMAN">Minuman</option>
                     <option value="KEBERSIHAN">Kebersihan Diri</option>
                     <option value="KEPERLUAN_ASAS">Keperluan Asas</option>
@@ -4936,7 +4936,7 @@ export function JppFoodBankAdmin() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-700 dark:text-slate-300 mb-1">Stok Semasa</label>
+                  <label className="block text-slate-700 dark:text-slate-300 mb-1">{t('jpp:foodbank_current_stock_label', 'Stok Semasa')}</label>
                   <input
                     type="number"
                     min={0}
@@ -4974,14 +4974,14 @@ export function JppFoodBankAdmin() {
                   rows={2}
                   value={itemFormData.description}
                   onChange={e => setItemFormData({ ...itemFormData, description: e.target.value })}
-                  placeholder="Keterangan kandungan atau pembungkusan..."
+                  placeholder={t('jpp:foodbank_packaging_desc_placeholder', 'Keterangan kandungan atau pembungkusan...')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
               </div>
 
               {/* Muat Naik Gambar */}
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 mb-1">Gambar Produk</label>
+                <label className="block text-slate-700 dark:text-slate-300 mb-1">{t('jpp:foodbank_product_image_label', 'Gambar Produk')}</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="file"
@@ -5006,7 +5006,7 @@ export function JppFoodBankAdmin() {
                   className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
                 />
                 <label htmlFor="item_active" className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-                  Katalog Aktif (Mahasiswa boleh mohon item ini)
+                  {t('jpp:foodbank_active_catalog_checkbox', 'Katalog Aktif (Mahasiswa boleh mohon item ini)')}
                 </label>
               </div>
 
@@ -5023,7 +5023,7 @@ export function JppFoodBankAdmin() {
                   disabled={isSavingItem || isUploadingImage}
                   className="px-5 py-2 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white uppercase tracking-wider shadow-sm disabled:opacity-50"
                 >
-                  {isSavingItem || isUploadingImage ? 'Menyimpan...' : 'Simpan Item'}
+                  {isSavingItem || isUploadingImage ? t('common:saving', 'Menyimpan...') : t('jpp:foodbank_save_item_btn', 'Simpan Item')}
                 </button>
               </div>
             </form>
@@ -5077,10 +5077,10 @@ export function JppFoodBankAdmin() {
                   required
                   className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <option value="" disabled>Pilih Barangan...</option>
+                  <option value="" disabled>{t('jpp:foodbank_select_item_option', 'Pilih Barangan...')}</option>
                   {items.filter(i => i.is_active).map(it => (
                     <option key={it.id} value={it.id}>
-                      {it.name} ({it.unit}) — Jumlah Stok: {getItemStockForLocation(it.id, 'SEMUA')} {it.unit}
+                      {it.name} ({it.unit}) — {t('jpp:foodbank_total_stock_label', 'Jumlah Stok:')} {getItemStockForLocation(it.id, 'SEMUA')} {it.unit}
                     </option>
                   ))}
                 </select>
@@ -5091,7 +5091,7 @@ export function JppFoodBankAdmin() {
                 {/* Dari Lokasi (Sumber) */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Dari Lokasi (Sumber) *
+                    {t('jpp:foodbank_from_source_location', 'Dari Lokasi (Sumber) *')}
                   </label>
                   <select
                     value={transferFormData.from_location_id}
@@ -5107,7 +5107,7 @@ export function JppFoodBankAdmin() {
                     className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="AGREGAT">
-                      Agregat (Stok Belum Agih) — Baki: {transferFormData.item_id ? getItemStockForLocation(transferFormData.item_id, 'AGREGAT') : 0}
+                      {t('jpp:foodbank_aggregate_unallocated_stock', 'Agregat (Stok Belum Agih) — Baki:')} {transferFormData.item_id ? getItemStockForLocation(transferFormData.item_id, 'AGREGAT') : 0}
                     </option>
                     <option value="" disabled>─────────────</option>
                     {locations.map(loc => {
@@ -5127,7 +5127,7 @@ export function JppFoodBankAdmin() {
                 {/* Ke Lokasi (Destinasi) */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Ke Lokasi (Destinasi) *
+                    {t('jpp:foodbank_to_destination_location', 'Ke Lokasi (Destinasi) *')}
                   </label>
                   <select
                     value={transferFormData.to_location_id}
@@ -5140,7 +5140,7 @@ export function JppFoodBankAdmin() {
                     required
                     className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="" disabled>Pilih Pusat Destinasi...</option>
+                    <option value="" disabled>{t('jpp:foodbank_select_destination_center_option', 'Pilih Pusat Destinasi...')}</option>
                     {locations.map(loc => {
                       const isSame = loc.id === transferFormData.from_location_id;
                       const stockHere = transferFormData.item_id
@@ -5149,7 +5149,7 @@ export function JppFoodBankAdmin() {
                       const selectedItem = items.find(i => i.id === transferFormData.item_id);
                       return (
                         <option key={loc.id} value={loc.id} disabled={isSame}>
-                          {loc.name} {isSame ? '(Sama dengan Sumber)' : `(Semasa: ${stockHere} ${selectedItem?.unit || 'unit'})`}
+                          {loc.name} {isSame ? t('jpp:foodbank_same_as_source', '(Sama dengan Sumber)') : `(Semasa: ${stockHere} ${selectedItem?.unit || 'unit'})`}
                         </option>
                       );
                     })}
@@ -5168,7 +5168,7 @@ export function JppFoodBankAdmin() {
                   return (
                     <div className="p-3 rounded-2xl bg-amber-50/70 dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 text-xs space-y-1.5">
                       <div className="flex items-center justify-between font-bold">
-                        <span className="text-slate-600 dark:text-slate-400">Baki Semasa di {fromLoc?.name || 'Sumber'}:</span>
+                        <span className="text-slate-600 dark:text-slate-400">{t('jpp:foodbank_current_balance_at', 'Baki Semasa di')} {fromLoc?.name || t('jpp:foodbank_source_default', 'Sumber')}:</span>
                         <span className={cn(
                           "px-2 py-0.5 rounded font-black",
                           sourceStock > 10 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300" :
@@ -5229,7 +5229,7 @@ export function JppFoodBankAdmin() {
                         }}
                         className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-slate-700 dark:text-slate-300 transition-colors"
                       >
-                        Semua (Max)
+                        {t('jpp:foodbank_all_max', 'Semua (Max)')}
                       </button>
                     </div>
                   )}
@@ -5250,13 +5250,13 @@ export function JppFoodBankAdmin() {
               {/* Catatan Pindahan */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Catatan Pindahan (Untuk Rekod Audit)
+                  {t('jpp:foodbank_transfer_notes_audit', 'Catatan Pindahan (Untuk Rekod Audit)')}
                 </label>
                 <textarea
                   rows={2}
                   value={transferFormData.notes}
                   onChange={e => setTransferFormData(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Cth: Penambahan stok Hab Kamsis Al-Biruni sempena minggu peperiksaan akhir..."
+                  placeholder={t('jpp:foodbank_transfer_notes_placeholder', 'Cth: Penambahan stok Hab Kamsis Al-Biruni sempena minggu peperiksaan akhir...')}
                   className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                 />
               </div>
@@ -5265,7 +5265,7 @@ export function JppFoodBankAdmin() {
               {transferFormData.from_location_id && transferFormData.to_location_id && transferFormData.from_location_id === transferFormData.to_location_id && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Lokasi sumber dan destinasi tidak boleh sama.</span>
+                  <span>{t('jpp:foodbank_transfer_same_location', 'Lokasi sumber dan destinasi tidak boleh sama.')}</span>
                 </div>
               )}
 
@@ -5275,7 +5275,7 @@ export function JppFoodBankAdmin() {
                   return (
                     <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Baki stok di lokasi sumber adalah 0. Pindahan tidak dapat dijalankan.</span>
+                      <span>{t('jpp:foodbank_transfer_source_zero', 'Baki stok di lokasi sumber adalah 0. Pindahan tidak dapat dijalankan.')}</span>
                     </div>
                   );
                 }
@@ -5283,7 +5283,7 @@ export function JppFoodBankAdmin() {
                   return (
                     <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Baki stok tidak mencukupi di lokasi sumber (Baki tersedia: {sourceStock}).</span>
+                      <span>{t('jpp:foodbank_transfer_insufficient_stock_msg', 'Baki stok tidak mencukupi di lokasi sumber (Baki tersedia: {{balance}}).', { balance: sourceStock })}</span>
                     </div>
                   );
                 }
@@ -5387,7 +5387,7 @@ export function JppFoodBankAdmin() {
                       description: e.target.value,
                     })
                   }
-                  placeholder="cth: Sumbangan Alumni POLISAS, Geran Kebajikan Sesi..."
+                  placeholder={t('jpp:foodbank_budget_reason_placeholder', 'cth: Sumbangan Alumni POLISAS, Geran Kebajikan Sesi...')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
               </div>
@@ -5405,7 +5405,7 @@ export function JppFoodBankAdmin() {
                   disabled={isSubmittingBudget}
                   className="px-5 py-2 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white uppercase tracking-wider shadow-sm disabled:opacity-50"
                 >
-                  {isSubmittingBudget ? 'Menyimpan...' : 'Simpan Transaksi'}
+                  {isSubmittingBudget ? t('common:saving', 'Menyimpan...') : t('jpp:foodbank_save_transaction_btn', 'Simpan Transaksi')}
                 </button>
               </div>
             </form>
@@ -5418,25 +5418,25 @@ export function JppFoodBankAdmin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 ">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">
-              {editingLocation ? t('common:edit') + ' ' + t('jpp:foodbank_pickup_location') : t('common:add_new') + ' ' + t('jpp:foodbank_pickup_location')}
+              {editingLocation ? t('common:edit', 'Sunting') + ' ' + t('jpp:foodbank_pickup_location', 'Lokasi Pengagihan') : t('common:add_new', 'Tambah Baharu') + ' ' + t('jpp:foodbank_pickup_location', 'Lokasi Pengagihan')}
             </h3>
 
             <form onSubmit={handleSaveLocation} className="space-y-4 text-xs font-semibold">
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 mb-1">Nama Lokasi *</label>
+                <label className="block text-slate-700 dark:text-slate-300 mb-1">{t('jpp:foodbank_location_name_req_label', 'Nama Lokasi *')}</label>
                 <input
                   type="text"
                   required
                   value={locationFormData.name}
                   onChange={e => setLocationFormData({ ...locationFormData, name: e.target.value })}
-                  placeholder="cth: Pusat Edaran Utama JPP (Blok Pentadbiran)"
+                  placeholder={t('jpp:foodbank_location_name_placeholder', 'cth: Pusat Edaran Utama JPP (Blok Pentadbiran)')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1">
-                  Pautan Bangunan PolyMaps (Peta Kampus)
+                  {t('jpp:foodbank_polymaps_link_label', 'Pautan Bangunan PolyMaps (Peta Kampus)')}
                 </label>
                 <select
                   value={locationFormData.polymaps_building_id}
@@ -5448,7 +5448,7 @@ export function JppFoodBankAdmin() {
                   }
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 >
-                  <option value="">-- Pilih Bangunan PolyMaps --</option>
+                  <option value="">{t('jpp:foodbank_select_polymaps_building_option', '-- Pilih Bangunan PolyMaps --')}</option>
                   {buildings.map(b => (
                     <option key={b.id} value={b.id}>
                       {b.name} ({b.code})
@@ -5458,14 +5458,14 @@ export function JppFoodBankAdmin() {
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 mb-1">Perincian Bilik / Aras</label>
+                <label className="block text-slate-700 dark:text-slate-300 mb-1">{t('jpp:foodbank_room_detail_label', 'Perincian Bilik / Aras')}</label>
                 <input
                   type="text"
                   value={locationFormData.room_detail}
                   onChange={e =>
                     setLocationFormData({ ...locationFormData, room_detail: e.target.value })
                   }
-                  placeholder="cth: Bilik Gerakan JPP, Tingkat 1"
+                  placeholder={t('jpp:foodbank_room_detail_placeholder', 'cth: Bilik Gerakan JPP, Tingkat 1')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
               </div>
@@ -5485,7 +5485,7 @@ export function JppFoodBankAdmin() {
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1">
-                  Slot Masa Pengambilan <span className="text-slate-400 font-normal">(pisahkan dengan koma)</span>
+                  {t('jpp:foodbank_pickup_time_slot_label', 'Slot Masa Pengambilan')} <span className="text-slate-400 font-normal">{t('jpp:foodbank_separate_with_comma', '(pisahkan dengan koma)')}</span>
                 </label>
                 <input
                   type="text"
@@ -5497,13 +5497,13 @@ export function JppFoodBankAdmin() {
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Slot ini akan dipaparkan kepada pelajar apabila mereka memilih pusat ini.
+                  {t('jpp:foodbank_slot_display_hint', 'Slot ini akan dipaparkan kepada pelajar apabila mereka memilih pusat ini.')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1">
-                  Hari Beroperasi (Tarikh Pengambilan)
+                  {t('jpp:foodbank_operating_days_label', 'Hari Beroperasi (Tarikh Pengambilan)')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {['Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat'].map((day) => {
@@ -5531,7 +5531,7 @@ export function JppFoodBankAdmin() {
                   })}
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Kosongkan = guna lalai (Isnin - Jumaat). Tarikh pengambilan pelajar akan dijana ikut hari ini.
+                  {t('jpp:foodbank_operating_days_hint', 'Kosongkan = guna lalai (Isnin - Jumaat). Tarikh pengambilan pelajar akan dijana ikut hari ini.')}
                 </p>
               </div>
 
@@ -5572,7 +5572,7 @@ export function JppFoodBankAdmin() {
                   className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
                 />
                 <label htmlFor="loc_active" className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-                  Lokasi Aktif & Buka untuk Temujanji
+                  {t('jpp:foodbank_location_active_label', 'Lokasi Aktif & Buka untuk Temujanji')}
                 </label>
               </div>
 
@@ -5589,7 +5589,7 @@ export function JppFoodBankAdmin() {
                   disabled={isSavingLocation}
                   className="px-5 py-2 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white uppercase tracking-wider shadow-sm disabled:opacity-50"
                 >
-                  {isSavingLocation ? 'Menyimpan...' : 'Simpan Lokasi'}
+                  {isSavingLocation ? t('common:saving', 'Menyimpan...') : t('jpp:foodbank_save_location_btn', 'Simpan Lokasi')}
                 </button>
               </div>
             </form>
@@ -5605,7 +5605,7 @@ export function JppFoodBankAdmin() {
         studentName={selectedAppForPass?.applicant?.full_name}
         studentMatric={selectedAppForPass?.applicant?.matric_no || undefined}
         roomOrResidence={
-          selectedAppForDetail?.housing_type === 'KAMSIS' ? 'KAMSIS POLISAS' : 'Kediaman Luar'
+          selectedAppForDetail?.housing_type === 'KAMSIS' ? t('jpp:foodbank_kamsis_polisas', 'KAMSIS POLISAS') : t('jpp:foodbank_offcampus_residence', 'Kediaman Luar')
         }
       />
 
