@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import mockData from '../mockData.json';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -80,6 +81,7 @@ export function VendorCatalogManager({
   onBizChange,
   onUpdate,
 }: VendorCatalogManagerProps) {
+  const { t } = useTranslation(['commerce', 'common']);
   // ── Smart Auto-Selection (No blocker screen) ─────────────────────────────────
   const effectiveBizId = useMemo(() => {
     if (selectedBizId && selectedBizId !== 'all') {
@@ -152,12 +154,12 @@ export function VendorCatalogManager({
         .order('name');
 
       if (error) {
-        toast.error('Ralat memuatkan produk: ' + error.message);
+        toast.error(t('commerce:load_products_error', 'Ralat memuatkan produk: {{error}}', { error: error.message }));
       } else {
         setProducts((data as BusinessProduct[]) || []);
       }
     } catch {
-      toast.error('Gagal berhubung dengan pelayan');
+      toast.error(t('commerce:server_connection_failed', 'Gagal berhubung dengan pelayan'));
     } finally {
       setLoading(false);
     }
@@ -186,7 +188,7 @@ export function VendorCatalogManager({
           // ignore
         }
       }
-      toast.success(updatedStatus ? 'Produk kini dibuka untuk jualan' : 'Produk telah ditutup daripada jualan');
+      toast.success(updatedStatus ? t('commerce:product_opened_sales', 'Produk kini dibuka untuk jualan') : t('commerce:product_closed_sales', 'Produk telah ditutup daripada jualan'));
       setTogglingId(null);
       onUpdate?.();
       return;
@@ -199,14 +201,14 @@ export function VendorCatalogManager({
         .eq('id', prodId);
 
       if (error) {
-        toast.error('Ralat mengemaskini status ketersediaan');
+        toast.error(t('commerce:update_availability_error', 'Ralat mengemaskini status ketersediaan'));
         loadProducts();
       } else {
-        toast.success(updatedStatus ? 'Produk kini dibuka untuk jualan' : 'Produk telah ditutup daripada jualan');
+        toast.success(updatedStatus ? t('commerce:product_opened_sales', 'Produk kini dibuka untuk jualan') : t('commerce:product_closed_sales', 'Produk telah ditutup daripada jualan'));
         onUpdate?.();
       }
     } catch {
-      toast.error('Gagal berhubung dengan pelayan');
+      toast.error(t('commerce:server_connection_failed', 'Gagal berhubung dengan pelayan'));
       loadProducts();
     } finally {
       setTogglingId(null);
@@ -217,7 +219,7 @@ export function VendorCatalogManager({
   const handleSaveBaseStock = async (prodId: string, valueStr: string) => {
     const newVal = parseInt(valueStr, 10);
     if (isNaN(newVal) || newVal < 0) {
-      toast.error('Masukkan kuantiti stok yang sah!');
+      toast.error(t('commerce:enter_valid_stock', 'Masukkan kuantiti stok yang sah!'));
       return;
     }
 
@@ -237,7 +239,7 @@ export function VendorCatalogManager({
           // ignore
         }
       }
-      toast.success('Stok produk berjaya dikemaskini');
+      toast.success(t('commerce:stock_updated_success', 'Stok produk berjaya dikemaskini'));
       setEditingBaseStock(null);
       setSavingStockId(null);
       onUpdate?.();
@@ -251,15 +253,15 @@ export function VendorCatalogManager({
         .eq('id', prodId);
 
       if (error) {
-        toast.error('Gagal mengemaskini stok: ' + error.message);
+        toast.error(t('commerce:update_stock_failed', 'Gagal mengemaskini stok: {{error}}', { error: error.message }));
         loadProducts();
       } else {
-        toast.success('Stok produk berjaya dikemaskini');
+        toast.success(t('commerce:stock_updated_success', 'Stok produk berjaya dikemaskini'));
         setEditingBaseStock(null);
         onUpdate?.();
       }
     } catch {
-      toast.error('Ralat pangkalan data');
+      toast.error(t('commerce:database_error', 'Ralat pangkalan data'));
       loadProducts();
     } finally {
       setSavingStockId(null);
@@ -281,7 +283,7 @@ export function VendorCatalogManager({
   ) => {
     const newVal = parseInt(valueStr, 10);
     if (isNaN(newVal) || newVal < 0) {
-      toast.error('Masukkan kuantiti stok yang sah');
+      toast.error(t('commerce:enter_valid_stock', 'Masukkan kuantiti stok yang sah!'));
       return;
     }
 
@@ -303,7 +305,7 @@ export function VendorCatalogManager({
           // ignore
         }
       }
-      toast.success('Stok variasi berjaya dikemaskini');
+      toast.success(t('commerce:variation_stock_updated', 'Stok variasi berjaya dikemaskini'));
       setEditingVarStock(null);
       setSavingStockId(null);
       onUpdate?.();
@@ -317,15 +319,15 @@ export function VendorCatalogManager({
         .eq('id', prodId);
 
       if (error) {
-        toast.error('Gagal mengemaskini stok variasi');
+        toast.error(t('commerce:update_variation_stock_failed', 'Gagal mengemaskini stok variasi'));
         loadProducts();
       } else {
-        toast.success('Stok variasi berjaya dikemaskini');
+        toast.success(t('commerce:variation_stock_updated', 'Stok variasi berjaya dikemaskini'));
         setEditingVarStock(null);
         onUpdate?.();
       }
     } catch {
-      toast.error('Ralat pangkalan data');
+      toast.error(t('commerce:database_error', 'Ralat pangkalan data'));
       loadProducts();
     } finally {
       setSavingStockId(null);
@@ -376,16 +378,16 @@ export function VendorCatalogManager({
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
           <Store className="w-7 h-7" />
         </div>
-        <p className="text-sm font-black text-foreground">Tiada Kedai Didaftarkan</p>
+        <p className="text-sm font-black text-foreground">{t('commerce:no_store_registered', 'Tiada Kedai Didaftarkan')}</p>
         <p className="text-xs text-muted-foreground max-w-xs -mt-1 leading-normal">
-          Daftar perniagaan anda di modul e-Keusahawanan untuk mula mengurus produk dan menerima pesanan PolyMart.
+          {t('commerce:register_store_hint', 'Daftar perniagaan anda di modul e-Keusahawanan untuk mula mengurus produk dan menerima pesanan PolyMart.')}
         </p>
         <Link
           to="/keusahawanan"
           className="mt-2 inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-sm"
         >
           <Store className="w-4 h-4" />
-          <span>Daftar Kedai di e-Keusahawanan</span>
+          <span>{t('commerce:register_store_btn', 'Daftar Kedai di e-Keusahawanan')}</span>
         </Link>
       </div>
     );
@@ -402,10 +404,10 @@ export function VendorCatalogManager({
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-black text-foreground">
-                Katalog &amp; Kawalan Stok Pantas
+                {t('commerce:catalog_quick_stock_title', 'Katalog & Kawalan Stok Pantas')}
               </h2>
               <p className="text-[11px] text-muted-foreground font-medium">
-                Kemas kini ketersediaan jualan dan pelaras pantas stok produk kedai anda
+                {t('commerce:catalog_quick_stock_desc', 'Kemas kini ketersediaan jualan dan pelaras pantas stok produk kedai anda')}
               </p>
             </div>
           </div>
@@ -417,7 +419,7 @@ export function VendorCatalogManager({
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-sm active:scale-98 shrink-0"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>+ Urus Penuh / Tambah Produk di POS</span>
+          <span>{t('commerce:manage_full_pos_products', '+ Urus Penuh / Tambah Produk di POS')}</span>
           <ExternalLink className="w-3.5 h-3.5 opacity-70" />
         </Link>
       </div>
@@ -427,7 +429,7 @@ export function VendorCatalogManager({
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none px-1">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 flex items-center gap-1.5">
             <Store className="w-3.5 h-3.5" />
-            <span>Pilih Kedai:</span>
+            <span>{t('commerce:select_store_label', 'Pilih Kedai:')}</span>
           </span>
           {myBusinesses.map(b => {
             const isSelected = b.id === effectiveBizId;
@@ -464,14 +466,14 @@ export function VendorCatalogManager({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama produk atau kategori..."
+              placeholder={t('commerce:search_product_category_placeholder', 'Cari nama produk atau kategori...')}
               className="w-full pl-9 pr-8 py-2 bg-muted/40 border border-border/50 rounded-xl text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-amber-500/50 transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground p-0.5"
-                title="Kosongkan carian"
+                title={t('commerce:clear_search', 'Kosongkan carian')}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -482,10 +484,10 @@ export function VendorCatalogManager({
             onClick={loadProducts}
             disabled={loading}
             className="h-8.5 px-3 rounded-xl bg-muted/40 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs font-bold transition-all shrink-0"
-            title="Muat semula senarai produk"
+            title={t('commerce:refresh_product_list', 'Muat semula senarai produk')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-500' : ''}`} />
-            <span className="hidden sm:inline">Segar Semula</span>
+            <span className="hidden sm:inline">{t('commerce:refresh', 'Segar Semula')}</span>
           </button>
         </div>
 
@@ -502,7 +504,7 @@ export function VendorCatalogManager({
                     : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/30'
                 }`}
               >
-                {cat === 'all' ? 'Semua Kategori' : cat}
+                {cat === 'all' ? t('commerce:all_categories', 'Semua Kategori') : cat}
               </button>
             ))}
           </div>
@@ -532,18 +534,18 @@ export function VendorCatalogManager({
           </div>
           <p className="text-xs font-bold text-muted-foreground">
             {searchQuery || selectedCategory !== 'all'
-              ? 'Tiada produk menepati carian atau kategori anda.'
-              : 'Tiada produk didaftarkan di bawah kedai ini.'}
+              ? t('commerce:no_matching_products', 'Tiada produk menepati carian atau kategori anda.')
+              : t('commerce:no_products_under_store', 'Tiada produk didaftarkan di bawah kedai ini.')}
           </p>
           <p className="text-[11px] text-muted-foreground/60 max-w-xs -mt-1 leading-normal">
-            Gunakan sistem POS untuk menambah dan mengurus inventori produk kedai anda.
+            {t('commerce:use_pos_for_inventory_hint', 'Gunakan sistem POS untuk menambah dan mengurus inventori produk kedai anda.')}
           </p>
           <Link
             to="/keusahawanan/pos/products"
             className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>+ Urus Penuh / Tambah Produk di POS</span>
+            <span>{t('commerce:manage_full_pos_products', '+ Urus Penuh / Tambah Produk di POS')}</span>
           </Link>
         </div>
       ) : (
@@ -583,7 +585,7 @@ export function VendorCatalogManager({
                       </span>
                     </div>
                     <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mt-0.5">
-                      {p.category || 'Umum'}
+                      {p.category || t('commerce:general_category', 'Umum')}
                     </p>
                   </div>
                 </div>
@@ -601,7 +603,7 @@ export function VendorCatalogManager({
                         p.is_available ? 'text-emerald-500' : 'text-rose-500'
                       }`}
                     >
-                      {p.is_available ? 'Tersedia untuk Pelanggan' : 'Tutup Jualan'}
+                      {p.is_available ? t('commerce:available_for_customers', 'Tersedia untuk Pelanggan') : t('commerce:sales_closed', 'Tutup Jualan')}
                     </span>
                   </div>
                   <button
@@ -618,12 +620,12 @@ export function VendorCatalogManager({
                     ) : p.is_available ? (
                       <>
                         <X className="w-3 h-3" />
-                        <span>Tutup Jualan</span>
+                        <span>{t('commerce:close_sales', 'Tutup Jualan')}</span>
                       </>
                     ) : (
                       <>
                         <Check className="w-3 h-3" />
-                        <span>Buka Jualan</span>
+                        <span>{t('commerce:open_sales', 'Buka Jualan')}</span>
                       </>
                     )}
                   </button>
@@ -633,7 +635,7 @@ export function VendorCatalogManager({
                 {hasVariations ? (
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 space-y-2">
                     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                      Stok Mengikut Variasi
+                      {t('commerce:stock_by_variation', 'Stok Mengikut Variasi')}
                     </p>
                     <div className="divide-y divide-border/20 space-y-2">
                       {p.variations!.map((v) => {
@@ -656,7 +658,7 @@ export function VendorCatalogManager({
                               {isLowVar && (
                                 <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 uppercase tracking-wide flex items-center gap-0.5 shrink-0">
                                   <AlertTriangle className="w-2.5 h-2.5 text-rose-500 shrink-0" />
-                                  <span>Stok Rendah</span>
+                                  <span>{t('commerce:low_stock', 'Stok Rendah')}</span>
                                 </span>
                               )}
                             </div>
@@ -664,11 +666,11 @@ export function VendorCatalogManager({
                             <div className="flex items-center gap-2">
                               <div className="text-right shrink-0 mr-1">
                                 <p className="font-bold text-[10px] text-foreground font-mono tabular-nums">
-                                  Stok Fizikal: {v.stock} unit
+                                  {t('commerce:physical_stock_units', 'Stok Fizikal: {{count}} unit', { count: v.stock })}
                                 </p>
                                 {(v.reserved ?? 0) > 0 && (
                                   <p className="text-[9px] text-amber-500 font-bold font-mono tabular-nums">
-                                    Ditempah: {v.reserved}
+                                    {t('commerce:reserved_units', 'Ditempah: {{count}}', { count: v.reserved })}
                                   </p>
                                 )}
                                 <p
@@ -676,7 +678,7 @@ export function VendorCatalogManager({
                                     isLowVar ? 'text-rose-500' : 'text-emerald-500'
                                   }`}
                                 >
-                                  Boleh Dijual: {varAvailable}
+                                  {t('commerce:available_for_sale_units', 'Boleh Dijual: {{count}}', { count: varAvailable })}
                                 </p>
                               </div>
 
@@ -697,7 +699,7 @@ export function VendorCatalogManager({
                                       )
                                     }
                                     className="w-7 h-7 bg-muted/50 border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg flex items-center justify-center transition-all"
-                                    title="Tolak 1"
+                                    title={t('commerce:decrement_one', 'Tolak 1')}
                                   >
                                     <Minus className="w-3.5 h-3.5" />
                                   </button>
@@ -726,7 +728,7 @@ export function VendorCatalogManager({
                                       )
                                     }
                                     className="w-7 h-7 bg-muted/50 border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg flex items-center justify-center transition-all"
-                                    title="Tambah 1"
+                                    title={t('commerce:increment_one', 'Tambah 1')}
                                   >
                                     <Plus className="w-3.5 h-3.5" />
                                   </button>
@@ -744,7 +746,7 @@ export function VendorCatalogManager({
                                     }
                                     disabled={isSavingThis}
                                     className="w-7 h-7 bg-emerald-500 text-white hover:bg-emerald-600 rounded-lg flex items-center justify-center shadow-xs active:scale-95 transition-all"
-                                    title="Simpan Stok"
+                                    title={t('commerce:save_stock', 'Simpan Stok')}
                                   >
                                     {isSavingThis ? (
                                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -755,7 +757,7 @@ export function VendorCatalogManager({
                                   <button
                                     onClick={() => setEditingVarStock(null)}
                                     className="w-7 h-7 bg-rose-500 text-white hover:bg-rose-600 rounded-lg flex items-center justify-center shadow-xs active:scale-95 transition-all"
-                                    title="Batal"
+                                    title={t('common:cancel', 'Batal')}
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
@@ -766,14 +768,14 @@ export function VendorCatalogManager({
                                     onClick={() => handleStepVariationStock(p, v.name, -1)}
                                     disabled={v.stock <= 0}
                                     className="w-6 h-6 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-xs font-bold transition-all disabled:opacity-40"
-                                    title="Tolak 1 Stok"
+                                    title={t('commerce:decrement_one_stock', 'Tolak 1 Stok')}
                                   >
                                     <Minus className="w-3 h-3" />
                                   </button>
                                   <button
                                     onClick={() => handleStepVariationStock(p, v.name, 1)}
                                     className="w-6 h-6 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-xs font-bold transition-all"
-                                    title="Tambah 1 Stok"
+                                    title={t('commerce:increment_one_stock', 'Tambah 1 Stok')}
                                   >
                                     <Plus className="w-3 h-3" />
                                   </button>
@@ -787,7 +789,7 @@ export function VendorCatalogManager({
                                     }
                                     className="px-2 py-1 rounded-lg border border-border/60 bg-card/60 text-[9px] font-bold text-muted-foreground hover:text-foreground hover:border-amber-500/40 transition-all shadow-2xs"
                                   >
-                                    Ubah
+                                    {t('commerce:change', 'Ubah')}
                                   </button>
                                 </div>
                               )}
@@ -802,16 +804,14 @@ export function VendorCatalogManager({
                   <div className="p-3 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-between gap-2">
                     <div>
                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                        Kuantiti Stok Utama
+                        {t('commerce:primary_stock_quantity', 'Kuantiti Stok Utama')}
                       </p>
                       <div className="mt-1 space-y-0.5">
-                        <p className="text-[11px] font-bold text-foreground font-mono tabular-nums">
-                          Stok Fizikal: <span className="font-black">{p.stock_quantity ?? 0}</span> unit
-                        </p>
+                        <p className="text-[11px] font-bold text-foreground font-mono tabular-nums">{t('commerce:physical_stock_count_units', 'Stok Fizikal: {{count}} unit', { count: p.stock_quantity ?? 0 })}</p>
                         {(p.reserved_stock ?? 0) > 0 && (
                           <p className="text-[9.5px] text-amber-500 font-bold flex items-center gap-1 font-mono tabular-nums">
                             <Clock className="w-3 h-3 shrink-0" />
-                            <span>Ditempah: {p.reserved_stock} unit</span>
+                            <span>{t('commerce:reserved_stock_units', 'Ditempah: {{count}} unit', { count: p.reserved_stock })}</span>
                           </p>
                         )}
                         <p
@@ -819,11 +819,11 @@ export function VendorCatalogManager({
                             isLowBase ? 'text-rose-500' : 'text-emerald-500'
                           }`}
                         >
-                          <span>Boleh Dijual: {availableBaseStock} unit</span>
+                          <span>{t('commerce:available_for_sale_base_units', 'Boleh Dijual: {{count}} unit', { count: availableBaseStock })}</span>
                           {isLowBase && (
                             <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 uppercase tracking-wide flex items-center gap-0.5 shrink-0">
                               <AlertTriangle className="w-2.5 h-2.5 text-rose-500 shrink-0" />
-                              <span>Stok Rendah</span>
+                              <span>{t('commerce:low_stock', 'Stok Rendah')}</span>
                             </span>
                           )}
                         </p>
@@ -848,7 +848,7 @@ export function VendorCatalogManager({
                               )
                             }
                             className="w-7 h-7 bg-muted/50 border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg flex items-center justify-center transition-all"
-                            title="Tolak 1"
+                            title={t('commerce:decrement_one', 'Tolak 1')}
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -877,7 +877,7 @@ export function VendorCatalogManager({
                               )
                             }
                             className="w-7 h-7 bg-muted/50 border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg flex items-center justify-center transition-all"
-                            title="Tambah 1"
+                            title={t('commerce:increment_one', 'Tambah 1')}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -890,7 +890,7 @@ export function VendorCatalogManager({
                             }
                             disabled={savingStockId === p.id}
                             className="w-7 h-7 bg-emerald-500 text-white hover:bg-emerald-600 rounded-lg flex items-center justify-center shadow-xs active:scale-95 transition-all"
-                            title="Simpan Stok"
+                            title={t('commerce:save_stock', 'Simpan Stok')}
                           >
                             {savingStockId === p.id ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -901,7 +901,7 @@ export function VendorCatalogManager({
                           <button
                             onClick={() => setEditingBaseStock(null)}
                             className="w-7 h-7 bg-rose-500 text-white hover:bg-rose-600 rounded-lg flex items-center justify-center shadow-xs active:scale-95 transition-all"
-                            title="Batal"
+                            title={t('common:cancel', 'Batal')}
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -912,14 +912,14 @@ export function VendorCatalogManager({
                             onClick={() => handleStepBaseStock(p, -1)}
                             disabled={(p.stock_quantity ?? 0) <= 0}
                             className="w-7 h-7 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-xs font-bold transition-all disabled:opacity-40"
-                            title="Tolak 1 Stok"
+                            title={t('commerce:decrement_one_stock', 'Tolak 1 Stok')}
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleStepBaseStock(p, 1)}
                             className="w-7 h-7 rounded-lg bg-muted/50 border border-border/40 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-xs font-bold transition-all"
-                            title="Tambah 1 Stok"
+                            title={t('commerce:increment_one_stock', 'Tambah 1 Stok')}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -932,7 +932,7 @@ export function VendorCatalogManager({
                             }
                             className="px-2.5 py-1.5 rounded-lg border border-border/60 bg-card/60 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:border-amber-500/40 transition-all shadow-2xs"
                           >
-                            Ubah Stok
+                            {t('commerce:change_stock', 'Ubah Stok')}
                           </button>
                         </div>
                       )}

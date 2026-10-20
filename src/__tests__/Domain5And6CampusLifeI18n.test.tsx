@@ -402,6 +402,21 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
       expect(html).toContain('Student Discussion Topics');
     });
 
+    it('renders localized delete comment and empty whisper states in PolySuaraPage in English', () => {
+      const html = renderToString(
+        <MemoryRouter initialEntries={['/polysuara']}>
+          <I18nextProvider i18n={i18n}>
+            <PolySuaraPage />
+          </I18nextProvider>
+        </MemoryRouter>
+      );
+      expect(html).toContain('Reading student thoughts...');
+      expect(i18n.t('services:delete_comment')).toBe('Delete Comment');
+      expect(i18n.t('services:no_whispers_title')).toBe('No Whispers At This Time');
+      expect(i18n.t('services:no_whispers_subtitle')).toBe('Be the first to share a secret.');
+      expect(i18n.t('services:whisper_input_placeholder')).toBe('What is on your mind?');
+    });
+
     it('renders AkademikDashboard in English', () => {
       const html = renderToString(
         <MemoryRouter initialEntries={['/akademik']}>

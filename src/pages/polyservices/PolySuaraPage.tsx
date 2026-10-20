@@ -210,10 +210,10 @@ export function PolySuaraPage({
       const next = new Set(prev);
       if (next.has(confessionId)) {
         next.delete(confessionId);
-        toast.success('Dikeluarkan dari simpanan');
+        toast.success(t('services:removed_from_saved', 'Dikeluarkan dari simpanan'));
       } else {
         next.add(confessionId);
-        toast.success('Disimpan ke penanda buku');
+        toast.success(t('services:saved_to_bookmarks', 'Disimpan ke penanda buku'));
       }
       return next;
     });
@@ -308,7 +308,7 @@ export function PolySuaraPage({
         setSelectedFile(file);
         setImagePreview(URL.createObjectURL(file));
       } else {
-        toast.error('Sila muat naik format gambar sahaja.');
+        toast.error(t('services:image_format_only', 'Sila muat naik format gambar sahaja.'));
       }
     }
   };
@@ -320,7 +320,7 @@ export function PolySuaraPage({
         setCommentFile(file);
         setCommentImagePreview(URL.createObjectURL(file));
       } else {
-        toast.error('Sila muat naik format gambar sahaja.');
+        toast.error(t('services:image_format_only', 'Sila muat naik format gambar sahaja.'));
       }
     }
   };
@@ -456,7 +456,7 @@ export function PolySuaraPage({
 
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan luahan.');
+      toast.error(t('services:failed_load_whispers', 'Gagal memuatkan luahan.'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -513,7 +513,7 @@ export function PolySuaraPage({
         }
       }
       
-      toast.success('Luahan anda berjaya dikongsi secara rahsia!');
+      toast.success(t('services:whisper_posted_success', 'Luahan anda berjaya dikongsi secara rahsia!'));
       setNewContent('');
       setSelectedFile(null);
       setImagePreview(null);
@@ -529,7 +529,7 @@ export function PolySuaraPage({
       if (err?.code === 'P0001' || err?.message?.includes('5/hari') || err?.message?.includes('5/jam')) {
         setLimitReachedModalOpen(true);
       } else {
-        toast.error('Gagal menghantar luahan.');
+        toast.error(t('services:whisper_post_failed', 'Gagal menghantar luahan.'));
       }
     } finally {
       setIsSubmitting(false);
@@ -538,7 +538,7 @@ export function PolySuaraPage({
 
   const handleToggleReaction = async (confessionId: string, reactionType: string) => {
     if (!profile?.id) {
-      toast.error('Sila log masuk untuk memberi reaksi.');
+      toast.error(t('services:login_to_react', 'Sila log masuk untuk memberi reaksi.'));
       return;
     }
 
@@ -687,14 +687,14 @@ export function PolySuaraPage({
       if (error) throw error;
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memproses sokongan.');
+      toast.error(t('services:process_reaction_failed', 'Gagal memproses sokongan.'));
       fetchConfessions(0, true);
     }
   };
 
   const handleDownvote = async (confessionId: string) => {
     if (!profile?.id) {
-      toast.error('Sila log masuk untuk mengundi.');
+      toast.error(t('services:login_to_vote', 'Sila log masuk untuk mengundi.'));
       return;
     }
 
@@ -779,7 +779,7 @@ export function PolySuaraPage({
       }
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memproses undian.');
+      toast.error(t('services:process_vote_failed', 'Gagal memproses undian.'));
       fetchConfessions(0, true);
     }
   };
@@ -789,7 +789,7 @@ export function PolySuaraPage({
       if (!currentPinned) {
         const pinCount = confessions.filter(c => c.is_pinned).length;
         if (pinCount >= 3) {
-          toast.error('Had maksimum dicapai. Anda hanya boleh menyemat sehingga 3 luahan.');
+          toast.error(t('services:pin_limit_reached', 'Had maksimum dicapai. Anda hanya boleh menyemat sehingga 3 luahan.'));
           return;
         }
       }
@@ -800,7 +800,7 @@ export function PolySuaraPage({
         .eq('id', id);
       
       if (error) throw error;
-      toast.success(!currentPinned ? 'Luahan disematkan' : 'Luahan dinyahsemat');
+      toast.success(!currentPinned ? t('services:whisper_pinned', 'Luahan disematkan') : t('services:whisper_unpinned', 'Luahan dinyahsemat'));
       
       setConfessions(prev => {
         const updated = prev.map(c => c.id === id ? { ...c, is_pinned: !currentPinned } : c);
@@ -813,7 +813,7 @@ export function PolySuaraPage({
       });
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal menukar status pin');
+      toast.error(t('services:pin_status_failed', 'Gagal menukar status pin'));
     }
   };
 
@@ -822,12 +822,12 @@ export function PolySuaraPage({
     if (!confession) return;
     const isAuthor = Boolean(myConfessions.has(confessionId) || (profile?.id && confession.author_id === profile.id));
     if (!isAuthor || !isWithin1Hour(confession.created_at)) {
-      toast.error('Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.');
+      toast.error(t('services:delete_time_limit', 'Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.'));
       return;
     }
 
     if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm('Adakah anda pasti ingin memadamkan luahan ini?')) {
+      if (!window.confirm(t('services:delete_confession_confirm', 'Adakah anda pasti ingin memadamkan luahan ini?'))) {
         return;
       }
     }
@@ -843,7 +843,7 @@ export function PolySuaraPage({
       return c;
     }));
 
-    toast.success('Luahan telah dipadamkan.');
+    toast.success(t('services:whisper_deleted_success', 'Luahan telah dipadamkan.'));
 
     try {
       const { error } = await supabase
@@ -875,14 +875,14 @@ export function PolySuaraPage({
         .eq('id', replyTargetId);
       
       if (error) throw error;
-      toast.success('Maklum balas JPP telah dihantar');
+      toast.success(t('services:jpp_feedback_sent', 'Maklum balas JPP telah dihantar'));
       setReplyModalOpen(false);
       setReplyText('');
       setReplyTargetId(null);
       fetchConfessions(0, true);
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal menghantar maklum balas');
+      toast.error(t('services:jpp_feedback_failed', 'Gagal menghantar maklum balas'));
     } finally {
       setIsReplying(false);
     }
@@ -899,7 +899,7 @@ export function PolySuaraPage({
         })
         .eq('id', authorReplyTargetId);
       if (error) throw error;
-      toast.success('Maklum balas anda telah dihantar kepada JPP');
+      toast.success(t('services:author_reply_sent', 'Maklum balas anda telah dihantar kepada JPP'));
       setAuthorReplyModalOpen(false);
       setAuthorReplyText('');
       fetchConfessions(0, true);
@@ -912,7 +912,7 @@ export function PolySuaraPage({
         link: '/jpp/polyservices'
       }).catch(console.error);
     } catch (e) {
-      toast.error('Gagal menghantar balas');
+      toast.error(t('services:author_reply_failed', 'Gagal menghantar balas'));
     } finally {
       setIsAuthorReplying(false);
     }
@@ -954,7 +954,7 @@ export function PolySuaraPage({
         }
       } catch (err) {
         console.error(err);
-        toast.error('Gagal mengeksport luahan.');
+        toast.error(t('services:export_whisper_failed', 'Gagal mengeksport luahan.'));
       } finally {
         setShareLoadingId(null);
         setActiveExportId(null);
@@ -975,9 +975,9 @@ export function PolySuaraPage({
       
       if (error) throw error;
       
-      toast.success('Laporan telah dihantar');
+      toast.success(t('services:report_submitted', 'Laporan telah dihantar'));
       if (data?.auto_hidden) {
-        toast.success('Confession ini telah disembunyikan untuk semakan.');
+        toast.success(t('services:confession_hidden_for_review', 'Confession ini telah disembunyikan untuk semakan.'));
         setConfessions(prev => prev.filter(c => c.id !== reportTargetId));
       }
       setReportModalOpen(false);
@@ -994,7 +994,7 @@ export function PolySuaraPage({
       
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal menghantar laporan');
+      toast.error(t('services:report_failed', 'Gagal menghantar laporan'));
     } finally {
       setIsReporting(false);
     }
@@ -1035,7 +1035,7 @@ export function PolySuaraPage({
       }
     } catch (err) {
       console.error('[Fetch Comments Error]', err);
-      toast.error('Gagal memuatkan ulasan.');
+      toast.error(t('services:comments_load_failed', 'Gagal memuatkan ulasan.'));
     } finally {
       setCommentsLoading(false);
     }
@@ -1069,7 +1069,7 @@ export function PolySuaraPage({
 
       if (error) throw error;
 
-      toast.success(parentId ? 'Balasan dihantar!' : 'Ulasan dikongsi!');
+      toast.success(parentId ? t('services:reply_sent', 'Balasan dihantar!') : t('services:comment_posted', 'Ulasan dikongsi!'));
       if (parentId) {
         setReplyCommentText('');
         setReplyingToCommentId(null);
@@ -1093,7 +1093,7 @@ export function PolySuaraPage({
       }));
     } catch (err: any) {
       console.error('[Add Comment Error]', err);
-      toast.error('Gagal menghantar ulasan.');
+      toast.error(t('services:comment_failed', 'Gagal menghantar ulasan.'));
     } finally {
       setSubmittingComment(false);
     }
@@ -1163,19 +1163,19 @@ export function PolySuaraPage({
       
       if (justHidden) {
         setComments(prev => prev.filter(c => c.id !== commentId));
-        toast('Ulasan disembunyikan oleh komuniti', { icon: '🚨' });
+        toast(t('services:comment_hidden_by_community', 'Ulasan disembunyikan oleh komuniti'), { icon: '🚨' });
       }
     } catch (err) {
       console.error('[Comment Vote Error]', err);
-      toast.error('Gagal memproses undian.');
+      toast.error(t('services:process_vote_failed', 'Gagal memproses undian.'));
       if (activeConfessionForComments) fetchComments(activeConfessionForComments.id);
     }
   };
 
   const handleReportComment = async (commentId: string) => {
-    const reason = window.prompt('Sebab melaporkan ulasan ini (minimum 3 aksara):');
+    const reason = window.prompt(t('services:report_comment_prompt', 'Sebab melaporkan ulasan ini (minimum 3 aksara):'));
     if (!reason || reason.trim().length < 3) {
-      if (reason != null) toast.error('Sebab laporan tidak sah.');
+      if (reason != null) toast.error(t('services:invalid_report_reason', 'Sebab laporan tidak sah.'));
       return;
     }
 
@@ -1187,14 +1187,14 @@ export function PolySuaraPage({
 
       if (error) throw error;
 
-      toast.success('Ulasan dilaporkan.');
+      toast.success(t('services:comment_reported', 'Ulasan dilaporkan.'));
       if (justHidden) {
         setComments(prev => prev.filter(c => c.id !== commentId));
-        toast('Ulasan disembunyikan untuk semakan.', { icon: '🚨' });
+        toast(t('services:comment_hidden_for_review', 'Ulasan disembunyikan untuk semakan.'), { icon: '🚨' });
       }
     } catch (err: any) {
       console.error('[Report Comment Error]', err);
-      toast.error(err.message || 'Gagal menghantar laporan.');
+      toast.error(err.message || t('services:report_failed', 'Gagal menghantar laporan.'));
     }
   };
 
@@ -1203,12 +1203,12 @@ export function PolySuaraPage({
     if (!comment) return;
     const isCommentAuthor = Boolean(profile?.id && comment.user_id === profile.id);
     if (!isCommentAuthor || !isWithin1Hour(comment.created_at)) {
-      toast.error('Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.');
+      toast.error(t('services:delete_time_limit', 'Hanya boleh dipadam dalam tempoh 1 jam selepas diterbitkan.'));
       return;
     }
 
     if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm('Adakah anda pasti ingin memadamkan ulasan ini?')) {
+      if (!window.confirm(t('services:delete_comment_confirm', 'Adakah anda pasti ingin memadamkan ulasan ini?'))) {
         return;
       }
     }
@@ -1225,7 +1225,7 @@ export function PolySuaraPage({
       return c;
     }));
 
-    toast.success('Ulasan telah dipadamkan.');
+    toast.success(t('services:comment_deleted_success', 'Ulasan telah dipadamkan.'));
 
     try {
       const { error } = await supabase
@@ -1242,7 +1242,7 @@ export function PolySuaraPage({
   };
 
   const handleEscalateComment = async (comment: any) => {
-    if (!window.confirm('Hantar laporan krisis/kebajikan kecemasan bagi ulasan ini ke Exco Kebajikan? Tindakan ini 100% rahsia.')) return;
+    if (!window.confirm(t('services:emergency_escalate_confirm', 'Hantar laporan krisis/kebajikan kecemasan bagi ulasan ini ke Exco Kebajikan? Tindakan ini 100% rahsia.'))) return;
     
     setEscalatingCommentId(comment.id);
     try {
@@ -1261,10 +1261,10 @@ export function PolySuaraPage({
         link: '/jpp/polyservices'
       });
 
-      toast.success('Bantuan Kebajikan telah disegerakan! Exco Kebajikan telah dimaklumkan secara sulit.', { duration: 5000 });
+      toast.success(t('services:welfare_escalated_success', 'Bantuan Kebajikan telah disegerakan! Exco Kebajikan telah dimaklumkan secara sulit.'), { duration: 5000 });
     } catch (err) {
       console.error('[Escalate Comment Error]', err);
-      toast.error('Gagal menghantar eskalasi kecemasan.');
+      toast.error(t('services:emergency_escalation_failed', 'Gagal menghantar eskalasi kecemasan.'));
     } finally {
       setEscalatingCommentId(null);
     }
@@ -1276,7 +1276,7 @@ export function PolySuaraPage({
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     const persona = getFriendlyAnonName(comment.codename);
     const isOP = Boolean(comment.codename?.includes('[Penulis]'));
-    const displayName = comment.is_jpp_official ? 'JPP RASMI' : persona.displayName;
+    const displayName = comment.is_jpp_official ? t('services:jpp_official_badge', 'JPP RASMI') : persona.displayName;
     const isCommUpvoted = commentUpvotes.has(comment.id);
     const cleanCommContent = cleanConfessionText(comment.content);
     const isCommentAuthor = Boolean(profile?.id && comment.user_id === profile.id);
@@ -1323,7 +1323,7 @@ export function PolySuaraPage({
                 {comment.is_jpp_official && (
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                     <Shield className="w-2.5 h-2.5" />
-                    JPP RASMI
+                    {t('services:jpp_official_badge', 'JPP RASMI')}
                   </span>
                 )}
                 <span className="text-[10px] text-slate-300 dark:text-slate-600 select-none">•</span>
@@ -1342,7 +1342,7 @@ export function PolySuaraPage({
             ) : isCommentDeletedByAuthor ? (
               <div className="py-1">
                 <span className="text-slate-400 dark:text-slate-500 italic text-xs flex items-center gap-1">
-                  <Trash2 className="w-3.5 h-3.5 text-slate-400" /> {`${displayName} telah memadamkan ruangan ini`}
+                  <Trash2 className="w-3.5 h-3.5 text-slate-400" /> {t('services:author_deleted_comment', '{{author}} telah memadamkan ruangan ini', { author: displayName })}
                 </span>
               </div>
             ) : comment.is_sensitive ? (
@@ -1355,7 +1355,7 @@ export function PolySuaraPage({
               <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/40 max-w-xs">
                 <img 
                   src={comment.image_url} 
-                  alt="Bukti Lampiran" 
+                  alt={t('services:attachment_proof', 'Bukti Lampiran')} 
                   className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
                   onClick={() => window.open(comment.image_url, '_blank')} 
                 />
@@ -1369,16 +1369,16 @@ export function PolySuaraPage({
                   type="button"
                   disabled
                   className="text-[10px] font-semibold text-slate-300 dark:text-slate-600 cursor-not-allowed flex items-center gap-1 select-none"
-                  aria-label="Balas komen"
+                  aria-label={t('services:reply_comment', 'Balas komen')}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Balas</span>
+                  <span>{t('services:reply', 'Balas')}</span>
                 </button>
                 <button
                   type="button"
                   disabled
                   className="flex items-center gap-1 text-[10px] font-medium text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
-                  aria-label="Suka ulasan"
+                  aria-label={t('services:like_comment', 'Suka ulasan')}
                 >
                   <Heart className="w-3.5 h-3.5" />
                   <span>0</span>
@@ -1395,10 +1395,10 @@ export function PolySuaraPage({
                       setReplyCommentText(`@${displayName} `);
                     }}
                     className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
-                    aria-label="Balas komen"
+                    aria-label={t('services:reply_comment', 'Balas komen')}
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    <span>Balas</span>
+                    <span>{t('services:reply', 'Balas')}</span>
                   </button>
 
                   {canDeleteComment && (
@@ -1406,11 +1406,11 @@ export function PolySuaraPage({
                       type="button"
                       onClick={() => handleDeleteComment(comment.id)}
                       className="text-[10px] font-semibold text-rose-500 hover:text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Padam Ulasan"
-                      aria-label="Padam Ulasan"
+                      title={t('services:delete_comment', 'Padam Ulasan')}
+                      aria-label={t('services:delete_comment', 'Padam Ulasan')}
                     >
                       <Trash2 className="w-3 h-3 text-rose-500" />
-                      <span>Padam Ulasan</span>
+                      <span>{t('services:delete_comment', 'Padam Ulasan')}</span>
                     </button>
                   )}
                 </div>
@@ -1426,7 +1426,7 @@ export function PolySuaraPage({
                         ? "text-rose-500 font-semibold"
                         : "text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
                     )}
-                    aria-label="Suka ulasan"
+                    aria-label={t('services:like_comment', 'Suka ulasan')}
                   >
                     <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
                     <span>{comment.upvotes || 0}</span>
@@ -1437,8 +1437,8 @@ export function PolySuaraPage({
                       type="button"
                       onClick={() => setCommentMenuOpenId(commentMenuOpenId === comment.id ? null : comment.id)}
                       className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors font-bold tracking-widest text-xs flex items-center justify-center w-6 h-6 leading-none"
-                      title="Pilihan ulasan"
-                      aria-label="Pilihan ulasan"
+                      title={t('services:comment_options', 'Pilihan ulasan')}
+                      aria-label={t('services:comment_options', 'Pilihan ulasan')}
                     >
                       ···
                     </button>
@@ -1458,11 +1458,11 @@ export function PolySuaraPage({
                                 handleDeleteComment(comment.id);
                               }}
                               className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 dark:text-rose-400 font-medium flex items-center gap-2 transition-colors cursor-pointer"
-                              title="Padam ulasan"
-                              aria-label="Padam Ulasan"
+                              title={t('services:delete_comment', 'Padam Ulasan')}
+                              aria-label={t('services:delete_comment', 'Padam Ulasan')}
                             >
                               <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-                              <span>Padam Ulasan</span>
+                              <span>{t('services:delete_comment', 'Padam Ulasan')}</span>
                             </button>
                           )}
                           <button
@@ -1473,15 +1473,15 @@ export function PolySuaraPage({
                             }}
                             disabled={escalatingCommentId === comment.id}
                             className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2 transition-colors"
-                            title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
-                            aria-label="Eskalasi kecemasan ke Kebajikan"
+                            title={t('services:welfare_escalation_tooltip', 'Eskalasi kecemasan ke Kebajikan (Rahsia)')}
+                            aria-label={t('services:welfare_escalation', 'Eskalasi kecemasan ke Kebajikan')}
                           >
                             {escalatingCommentId === comment.id ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" />
                             ) : (
                               <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
                             )}
-                            <span>Bantuan Kebajikan</span>
+                            <span>{t('services:welfare_assistance', 'Bantuan Kebajikan')}</span>
                           </button>
                           <button
                             type="button"
@@ -1490,11 +1490,11 @@ export function PolySuaraPage({
                               handleReportComment(comment.id);
                             }}
                             className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 dark:text-rose-400 font-medium flex items-center gap-2 transition-colors"
-                            title="Lapor ulasan"
-                            aria-label="Lapor ulasan"
+                            title={t('services:report_comment_tooltip', 'Lapor ulasan')}
+                            aria-label={t('services:report_comment_tooltip', 'Lapor ulasan')}
                           >
                             <AlertTriangle className="w-3.5 h-3.5" />
-                            <span>Lapor Ulasan</span>
+                            <span>{t('services:report_comment', 'Lapor Ulasan')}</span>
                           </button>
                         </div>
                       </>
@@ -1509,7 +1509,7 @@ export function PolySuaraPage({
               <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
                 <input
                   type="text"
-                  placeholder={`Balas kepada ${displayName}...`}
+                  placeholder={t('services:reply_to_user', 'Balas kepada {{name}}...', { name: displayName })}
                   value={replyCommentText}
                   onChange={(e) => setReplyCommentText(e.target.value)}
                   className="flex-1 bg-transparent px-3 py-1 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
@@ -1577,7 +1577,7 @@ export function PolySuaraPage({
                       .delete()
                       .eq('user_id', profile.id);
                     if (delErr) throw delErr;
-                    toast.success('Notifikasi PolySuara diaktifkan.');
+                    toast.success(t('services:notifications_enabled', 'Notifikasi PolySuara diaktifkan.'));
                     if (!isSubscribed) requestPermission();
                   } else {
                     // Opt-OUT: tambah record ke opt-out table
@@ -1585,12 +1585,12 @@ export function PolySuaraPage({
                       .from('polysuara_notif_optout')
                       .upsert({ user_id: profile.id }, { onConflict: 'user_id', ignoreDuplicates: true });
                     if (upsertErr) throw upsertErr;
-                    toast.success('Notifikasi PolySuara ditutup.');
+                    toast.success(t('services:notifications_disabled', 'Notifikasi PolySuara ditutup.'));
                   }
                   setPolySuaraNotif(next);
                 } catch (err: any) {
                   console.error('[PolySuara Notif Toggle]', err);
-                  toast.error(`Gagal menukar tetapan notifikasi: ${err?.message ?? 'Cuba lagi.'}`);
+                  toast.error(t('services:notifications_failed', 'Gagal menukar tetapan notifikasi: {{error}}', { error: err?.message ?? t('common:try_again', 'Cuba lagi.') }));
                 } finally {
                   setNotifToggleLoading(false);
                 }
@@ -1600,7 +1600,7 @@ export function PolySuaraPage({
                 notifToggleLoading && "opacity-50 cursor-wait",
                 polySuaraNotif ? "bg-teal-500/20 text-teal-600 dark:text-teal-400" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/10"
               )}
-              title={polySuaraNotif ? "Notifikasi Aktif" : "Aktifkan Notifikasi"}
+              title={polySuaraNotif ? t('services:notifications_active', 'Notifikasi Aktif') : t('services:enable_notifications', 'Aktifkan Notifikasi')}
             >
               {polySuaraNotif ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
             </button>
@@ -1622,7 +1622,7 @@ export function PolySuaraPage({
             <Ghost className="w-8 h-8 text-rose-500 animate-pulse" />
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            {t('services:polysuara_title', 'PolySuara — Suara Siswa & Forum Wacana')} • Ruang selamat untuk meluahkan perasaan. 100% Rahsia.
+            {t('services:polysuara_title', 'PolySuara — Suara Siswa & Forum Wacana')} • {t('services:safe_space_subtitle', 'Ruang selamat untuk meluahkan perasaan. 100% Rahsia.')}
           </p>
         </div>
 
@@ -1631,8 +1631,8 @@ export function PolySuaraPage({
             <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
               <Shield className="w-10 h-10 text-rose-500" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Modul Ditutup Sementara</h3>
-            <p className="text-slate-600 dark:text-slate-400 max-w-md">Modul PolySuara sedang ditutup sementara oleh pihak Exco Kebajikan. Sila kembali semula nanti.</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('services:polysuara_module_closed_title', 'Modul Ditutup Sementara')}</h3>
+            <p className="text-slate-600 dark:text-slate-400 max-w-md">{t('services:polysuara_maintenance_notice', 'Modul PolySuara sedang ditutup sementara oleh pihak Exco Kebajikan. Sila kembali semula nanti.')}</p>
           </div>
         ) : (
           <>
@@ -1648,7 +1648,7 @@ export function PolySuaraPage({
               className="bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/[0.08] hover:border-rose-400/50 dark:hover:border-rose-500/40 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-all"
               role="button"
               tabIndex={0}
-              aria-label="Tulis luahan kampus baharu"
+              aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
@@ -1769,10 +1769,10 @@ export function PolySuaraPage({
                         </div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                            Tulis Luahan Rahsia
+                            {t('services:write_secret_whisper', 'Tulis Luahan Rahsia')}
                           </h3>
                           <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">
-                            100% Rahsia
+                            {t('services:hundred_percent_secret', '100% Rahsia')}
                           </span>
                         </div>
                       </div>
@@ -1780,7 +1780,7 @@ export function PolySuaraPage({
                         type="button"
                         onClick={() => setComposeModalOpen(false)}
                         className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        aria-label="Tutup"
+                        aria-label={t('common:close', 'Tutup')}
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -1792,7 +1792,7 @@ export function PolySuaraPage({
                         autoFocus
                         value={newContent}
                         onChange={(e) => setNewContent(e.target.value)}
-                        placeholder="Apa yang bermain di fikiran anda?"
+                        placeholder={t('services:whisper_input_placeholder', 'Apa yang bermain di fikiran anda?')}
                         className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40 resize-none transition-all text-sm leading-relaxed"
                         rows={4}
                         maxLength={500}
@@ -1825,13 +1825,13 @@ export function PolySuaraPage({
                                 isMultipleChoice ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                               )}
                             >
-                              {isMultipleChoice ? 'Pilihan Pelbagai' : 'Pilihan Tunggal'}
+                              {isMultipleChoice ? t('services:poll_multiple_choice', 'Pilihan Pelbagai') : t('services:poll_single_choice', 'Pilihan Tunggal')}
                             </button>
                           </div>
                           {pollOptions.map((opt, idx) => (
                             <input
                               key={idx}
-                              placeholder={`Pilihan ${idx + 1}`}
+                              placeholder={t('services:poll_option_placeholder', 'Pilihan {{num}}', { num: idx + 1 })}
                               value={opt}
                               onChange={(e) => {
                                 const next = [...pollOptions];
@@ -1847,7 +1847,7 @@ export function PolySuaraPage({
                               onClick={() => setPollOptions([...pollOptions, ''])}
                               className="text-[10px] font-bold text-rose-500 hover:text-rose-600"
                             >
-                              + Tambah Pilihan (max {MAX_POLL_OPTIONS})
+                              {t('services:add_poll_option', '+ Tambah Pilihan (max {{max}})', { max: MAX_POLL_OPTIONS })}
                             </button>
                           )}
                         </div>
@@ -1867,7 +1867,7 @@ export function PolySuaraPage({
 
                           <label className="cursor-pointer bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none transition-colors flex items-center gap-2 font-medium">
                             <ImageIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                            <span>Imej</span>
+                            <span>{t('services:whisper_image', 'Imej')}</span>
                             <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                           </label>
 
@@ -1882,11 +1882,11 @@ export function PolySuaraPage({
                             )}
                           >
                             <BarChart className="w-4 h-4" />
-                            <span>Undian</span>
+                            <span>{t('services:whisper_poll', 'Undian')}</span>
                           </button>
 
                           <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-1">
-                            {500 - newContent.length} aksara baki
+                            {t('services:chars_remaining', '{{count}} aksara baki', { count: 500 - newContent.length })}
                           </span>
                         </div>
 
@@ -1900,7 +1900,7 @@ export function PolySuaraPage({
                           ) : (
                             <Send className="w-4 h-4" />
                           )}
-                          <span>Kongsi Luahan</span>
+                          <span>{t('services:share_whisper', 'Kongsi Luahan')}</span>
                         </button>
                       </div>
                     </form>
@@ -1933,13 +1933,13 @@ export function PolySuaraPage({
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500 gap-3">
                   <Loader2 className="w-6 h-6 animate-spin text-rose-500" />
-                  <p className="text-sm font-bold tracking-wide">Membaca minda pelajar...</p>
+                  <p className="text-sm font-bold tracking-wide">{t('services:loading_whispers', 'Membaca minda pelajar...')}</p>
                 </div>
               ) : confessions.length === 0 ? (
                 <div className="text-center py-20 bg-white/60 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl">
                   <Ghost className="w-12 h-12 text-slate-400 dark:text-slate-700 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">Tiada Luahan Buat Masa Ini</h3>
-                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Jadilah yang pertama berkongsi rahsia.</p>
+                  <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t('services:no_whispers_title', 'Tiada Luahan Buat Masa Ini')}</h3>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{t('services:no_whispers_subtitle', 'Jadilah yang pertama berkongsi rahsia.')}</p>
                 </div>
               ) : (
                 <AnimatePresence>
@@ -1981,9 +1981,9 @@ export function PolySuaraPage({
                             <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
-                                  {confession.codename || 'Pelajar Anon'}
+                                  {confession.codename || t('services:anon_student', 'Pelajar Anon')}
                                 </h4>
-                                <span className="w-4 h-4 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-[10px] font-black shrink-0" title="Identiti Anon Sah Disahkan">
+                                <span className="w-4 h-4 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-[10px] font-black shrink-0" title={t('services:anon_verified_tooltip', 'Identiti Anon Sah Disahkan')}>
                                   ✓
                                 </span>
                                 {isMine && (
@@ -1999,12 +1999,12 @@ export function PolySuaraPage({
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore>
-                            {isTrending && <span className="bg-rose-500/20 text-rose-500 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 animate-pulse shrink-0"><Flame className="w-3 h-3" /> Hangat</span>}
+                            {isTrending && <span className="bg-rose-500/20 text-rose-500 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 animate-pulse shrink-0"><Flame className="w-3 h-3" /> {t('services:trending_badge', 'Hangat')}</span>}
                             {confession.is_pinned && <span className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Pin className="w-3 h-3" /> Pinned</span>}
-                            {confession.status === 'NEW' && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Baru</span>}
-                            {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
-                            {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
-                            {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
+                            {confession.status === 'NEW' && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">{t('services:status_new', 'Baru')}</span>}
+                            {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> {t('services:status_acknowledged', 'Diterima')}</span>}
+                            {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {t('services:status_investigating', 'Disiasat')}</span>}
+                            {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> {t('services:status_resolved', 'Selesai')}</span>}
                             <span className="text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full text-slate-600 dark:text-slate-400 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] shrink-0">
                               {confession.category}
                             </span>
@@ -2012,12 +2012,12 @@ export function PolySuaraPage({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteConfession(confession.id)}
-                                title="Padam luahan anda"
+                                title={t('services:delete_confession_tooltip', 'Padam luahan anda')}
                                 aria-label="Padam Luahan"
                                 className="text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-xs"
                               >
                                 <Trash2 className="w-4 h-4 text-slate-400" />
-                                <span className="hidden sm:inline text-[11px] font-medium">Padam Luahan</span>
+                                <span className="hidden sm:inline text-[11px] font-medium">{t('services:delete_confession', 'Padam Luahan')}</span>
                               </button>
                             )}
                             {!isConfessionDeleted && (
@@ -2026,7 +2026,7 @@ export function PolySuaraPage({
                                   setReportTargetId(confession.id);
                                   setReportModalOpen(true);
                                 }}
-                                title="Laporkan kandungan ini"
+                                title={t('services:report_content_tooltip', 'Laporkan kandungan ini')}
                                 className="text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
                               >
                                 <AlertTriangle className="w-4 h-4" />
@@ -2038,7 +2038,7 @@ export function PolySuaraPage({
                         {isConfessionDeleted ? (
                           <div className="py-2 mb-3.5">
                             <span className="text-slate-400 dark:text-slate-500 italic text-sm flex items-center gap-1.5">
-                              <Trash2 className="w-4 h-4 text-slate-400" /> {`${confession.codename || 'Penulis'} telah memadamkan ruangan ini`}
+                              <Trash2 className="w-4 h-4 text-slate-400" /> {t('services:author_deleted_post', '{{author}} telah memadamkan ruangan ini', { author: confession.codename || t('services:author', 'Penulis') })}
                             </span>
                           </div>
                         ) : (
@@ -2072,7 +2072,7 @@ export function PolySuaraPage({
                           <div className="mb-4 border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl">
                             <div className="flex items-center gap-2 mb-2">
                               <Shield className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                              <span className="text-xs font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">Maklum Balas JPP</span>
+                              <span className="text-xs font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">{t('services:jpp_feedback', 'Maklum Balas JPP')}</span>
                             </div>
                             <div className="text-teal-900 dark:text-teal-100 text-sm leading-relaxed">
                               <ReactMarkdown 
@@ -2089,7 +2089,7 @@ export function PolySuaraPage({
                               </ReactMarkdown>
                             </div>
                             <div className="mt-2 text-[10px] text-teal-600/70 dark:text-teal-500/60 font-bold uppercase tracking-widest">
-                              Oleh: {confession.responder?.full_name || 'Wakil JPP'} • {formatDistanceToNow(new Date(confession.official_reply_at), { addSuffix: true, locale: ms })}
+                              {t('services:by_responder', 'Oleh: {{name}}', { name: confession.responder?.full_name || t('services:jpp_rep', 'Wakil JPP') })} • {formatDistanceToNow(new Date(confession.official_reply_at), { addSuffix: true, locale: ms })}
                             </div>
                           </div>
                         )}
@@ -2099,7 +2099,7 @@ export function PolySuaraPage({
                            <div className="mb-4 border-l-2 border-rose-500 bg-rose-50 dark:bg-rose-500/[0.04] p-3.5 rounded-r-2xl ml-4 sm:ml-6">
                             <div className="flex items-center gap-2 mb-2">
                               <UserCircle2 className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-                              <span className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Balasan Pengarang</span>
+                              <span className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">{t('services:author_reply_badge', 'Balasan Pengarang')}</span>
                             </div>
                             <p className="text-rose-950 dark:text-rose-100 text-sm leading-relaxed">
                               {cleanConfessionText(confession.author_reply)}
@@ -2117,7 +2117,7 @@ export function PolySuaraPage({
                                 type="button"
                                 disabled
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
-                                aria-label="Suka (Dinyahdayakan)"
+                                aria-label={t('services:like_disabled', 'Suka (Dinyahdayakan)')}
                               >
                                 <Heart className="w-3.5 h-3.5" />
                                 <span className="tabular-nums font-mono text-[11px] leading-none">0</span>
@@ -2126,7 +2126,7 @@ export function PolySuaraPage({
                                 type="button"
                                 disabled
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 text-slate-300 dark:text-slate-600 cursor-not-allowed select-none"
-                                aria-label="Tidak setuju (Dinyahdayakan)"
+                                aria-label={t('services:disagree_disabled', 'Tidak setuju (Dinyahdayakan)')}
                               >
                                 <ThumbsDown className="w-3.5 h-3.5" />
                                 <span className="font-mono text-[11px] leading-none">0</span>
@@ -2140,7 +2140,7 @@ export function PolySuaraPage({
                                   setCommentDrawerOpen(true);
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
-                                title="Ulasan Pelajar"
+                                title={t('services:student_comments', 'Ulasan Pelajar')}
                               >
                                 <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
@@ -2163,7 +2163,7 @@ export function PolySuaraPage({
                                     ? "bg-slate-800 text-white dark:bg-slate-700"
                                     : "bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                                 )}
-                                title="Tidak setuju (Auto-moderasi)"
+                                title={t('services:disagree_tooltip', 'Tidak setuju (Auto-moderasi)')}
                               >
                                 <ThumbsDown className={cn("w-3.5 h-3.5", userDownvotes.has(confession.id) && "fill-current")} />
                                 <span className="font-mono text-[11px] leading-none">{confession.downvotes || 0}</span>
@@ -2177,7 +2177,7 @@ export function PolySuaraPage({
                                   setCommentDrawerOpen(true);
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex-nowrap cursor-pointer"
-                                title="Ulasan Pelajar"
+                                title={t('services:student_comments', 'Ulasan Pelajar')}
                               >
                                 <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span className="font-mono text-[11px] leading-none">{confession.comments_count || 0}</span>
@@ -2190,7 +2190,7 @@ export function PolySuaraPage({
                               type="button"
                               onClick={() => handleShareImage(confession.id)}
                               className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
-                              title="Kongsi Grafik"
+                              title={t('services:share_graphic_tooltip', 'Kongsi Grafik')}
                             >
                               {shareLoadingId === confession.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Share2 className="w-4 h-4" />}
                             </button>
@@ -2204,7 +2204,7 @@ export function PolySuaraPage({
                                   ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10"
                                   : "text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10"
                               )}
-                              title={bookmarkedIds.has(confession.id) ? "Padam Penanda Buku" : "Simpan Penanda Buku"}
+                              title={bookmarkedIds.has(confession.id) ? t('services:remove_bookmark_tooltip', 'Padam Penanda Buku') : t('services:save_bookmark_tooltip', 'Simpan Penanda Buku')}
                             >
                               <Bookmark className={cn("w-4 h-4", bookmarkedIds.has(confession.id) && "fill-rose-500")} />
                             </button>
@@ -2219,7 +2219,7 @@ export function PolySuaraPage({
                                 className="px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                                Balas JPP
+                                {t('services:reply_jpp', 'Balas JPP')}
                               </button>
                             )}
 
@@ -2233,7 +2233,7 @@ export function PolySuaraPage({
                                 className="text-[10px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2 sm:px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 uppercase tracking-wider shrink-0 flex-nowrap cursor-pointer"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                                Balas JPP
+                                {t('services:reply_jpp', 'Balas JPP')}
                               </button>
                             )}
 
@@ -2247,7 +2247,7 @@ export function PolySuaraPage({
                                     ? "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20"
                                     : "text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-500/10"
                                 )}
-                                title={confession.is_pinned ? "Nyah-pin luahan" : "Pin ke atas suapan"}
+                                title={confession.is_pinned ? t('services:unpin_confession_tooltip', 'Nyah-pin luahan') : t('services:pin_confession_tooltip', 'Pin ke atas suapan')}
                               >
                                 <Pin className={cn("w-4 h-4", confession.is_pinned && "fill-yellow-500")} />
                               </button>
@@ -2269,7 +2269,7 @@ export function PolySuaraPage({
                   {loadingMore && (
                     <div className="flex items-center gap-3 text-slate-500">
                       <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
-                      <span className="text-xs font-bold uppercase tracking-widest">Memuatkan lagi...</span>
+                      <span className="text-xs font-bold uppercase tracking-widest">{t('services:loading_more', 'Memuatkan lagi...')}</span>
                     </div>
                   )}
                 </div>
@@ -2277,7 +2277,7 @@ export function PolySuaraPage({
 
               {!loading && !hasMore && confessions.length > FEED_PAGE_SIZE && (
                 <div className="text-center py-6">
-                  <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">Anda telah melihat semua luahan 🎉</span>
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">{t('services:all_whispers_seen', 'Anda telah melihat semua luahan 🎉')}</span>
                 </div>
               )}
             </div>
@@ -2312,15 +2312,15 @@ export function PolySuaraPage({
               >
                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  Laporkan Kandungan
+                  {t('services:report_content_title', 'Laporkan Kandungan')}
                 </h3>
                 <p className="text-sm text-slate-400 mb-4">
-                  Nyatakan sebab laporan (contoh: Scam, Lucah, Maklumat Palsu).
+                  {t('services:report_content_desc', 'Nyatakan sebab laporan (contoh: Scam, Lucah, Maklumat Palsu).')}
                 </p>
                 <textarea
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  placeholder="Sebab laporan..."
+                  placeholder={t('services:report_reason_placeholder', 'Sebab laporan...')}
                   className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50 resize-none transition-all mb-4"
                   rows={3}
                 />
@@ -2337,7 +2337,7 @@ export function PolySuaraPage({
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 disabled:text-slate-500 text-slate-900 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                   >
                     {isReporting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    Hantar Laporan
+                    {t('services:submit_report', 'Hantar Laporan')}
                   </button>
                 </div>
               </motion.div>
@@ -2371,17 +2371,15 @@ export function PolySuaraPage({
                   </div>
                 </div>
                 <h3 className="text-2xl font-black text-white mb-3 text-center tracking-tight">
-                  Rehat Sekejap! 🛑
+                  {t('services:limit_reached_title', 'Rehat Sekejap! 🛑')}
                 </h3>
-                <p className="text-sm text-slate-400 mb-8 text-center leading-relaxed">
-                  Anda telah mencapai had maksimum <strong className="text-white">5 luahan sejam</strong>. Kami menetapkan had ini untuk menjaga kualiti komuniti dan mengelakkan spam. Cuba lagi selepas 1 jam!
-                </p>
+                <p className="text-sm text-slate-400 mb-8 text-center leading-relaxed">{t('services:limit_reached_desc', 'Anda telah mencapai had maksimum 5 luahan sejam. Kami menetapkan had ini untuk menjaga kualiti komuniti dan mengelakkan spam. Cuba lagi selepas 1 jam!')}</p>
                 <div className="flex justify-center">
                   <button
                     onClick={() => setLimitReachedModalOpen(false)}
                     className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(244,63,94,0.3)] hover:shadow-[0_0_30px_rgba(244,63,94,0.5)]"
                   >
-                    Baik, Saya Faham
+                    {t('services:i_understand', 'Baik, Saya Faham')}
                   </button>
                 </div>
               </motion.div>
@@ -2413,26 +2411,26 @@ export function PolySuaraPage({
                   Maklum Balas JPP
                 </h3>
                 <p className="text-sm text-slate-400 mb-4">
-                  Berikan maklum balas rasmi dari pihak pengurusan/JPP untuk luahan ini.
+                  {t('services:jpp_reply_desc', 'Berikan maklum balas rasmi dari pihak pengurusan/JPP untuk luahan ini.')}
                 </p>
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Taip jawapan rasmi di sini..."
+                  placeholder={t('services:jpp_reply_placeholder', 'Taip jawapan rasmi di sini...')}
                   className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 resize-none transition-all mb-4"
                   rows={4}
                 />
                 
                 <div className="mb-6">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Status Laporan</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">{t('services:report_status', 'Status Laporan')}</label>
                   <select 
                     value={replyStatus} 
                     onChange={(e) => setReplyStatus(e.target.value)}
                     className="w-full bg-slate-950/50 border border-slate-800 rounded-xl p-3 text-sm font-medium text-white outline-none focus:border-teal-500/50"
                   >
-                    <option value="ACKNOWLEDGED">Maklumat Diterima (Acknowledged)</option>
-                    <option value="INVESTIGATING">Sedang Disiasat (Investigating)</option>
-                    <option value="RESOLVED">Selesai (Resolved)</option>
+                    <option value="ACKNOWLEDGED">{t('services:status_acknowledged_full', 'Maklumat Diterima (Acknowledged)')}</option>
+                    <option value="INVESTIGATING">{t('services:status_investigating_full', 'Sedang Disiasat (Investigating)')}</option>
+                    <option value="RESOLVED">{t('services:status_resolved_full', 'Selesai (Resolved)')}</option>
                   </select>
                 </div>
 
@@ -2449,7 +2447,7 @@ export function PolySuaraPage({
                     className="px-4 py-2 bg-teal-500 hover:bg-teal-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                   >
                     {isReplying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    Hantar Jawapan
+                    {t('services:submit_reply', 'Hantar Jawapan')}
                   </button>
                 </div>
               </motion.div>
@@ -2478,15 +2476,15 @@ export function PolySuaraPage({
               >
                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                   <UserCircle2 className="w-5 h-5 text-rose-400" />
-                  Balas Kepada JPP
+                  {t('services:reply_to_jpp', 'Balas Kepada JPP')}
                 </h3>
                 <p className="text-sm text-slate-400 mb-4">
-                  Berikan maklum balas tambahan kepada wakil JPP secara rahsia.
+                  {t('services:author_reply_desc', 'Berikan maklum balas tambahan kepada wakil JPP secara rahsia.')}
                 </p>
                 <textarea
                   value={authorReplyText}
                   onChange={(e) => setAuthorReplyText(e.target.value)}
-                  placeholder="Taip balasan anda di sini..."
+                  placeholder={t('services:author_reply_placeholder', 'Taip balasan anda di sini...')}
                   className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50 resize-none transition-all mb-4"
                   rows={4}
                 />
@@ -2504,7 +2502,7 @@ export function PolySuaraPage({
                     className="px-4 py-2 bg-rose-500 hover:bg-rose-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                   >
                     {isAuthorReplying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    Hantar Balasan
+                    {t('services:submit_author_reply', 'Hantar Balasan')}
                   </button>
                 </div>
               </motion.div>
@@ -2539,7 +2537,7 @@ export function PolySuaraPage({
                 <div className="flex items-center justify-between w-full px-5 sm:px-6">
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-rose-500" />
-                    <span>Ulasan Pelajar</span>
+                    <span>{t('services:student_comments', 'Ulasan Pelajar')}</span>
                     <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 font-mono">
                       ({comments.length})
                     </span>
@@ -2555,7 +2553,7 @@ export function PolySuaraPage({
                           commentSortBy === 'LATEST' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                         )}
                       >
-                        Terkini
+                        {t('services:sort_latest', 'Terkini')}
                       </button>
                       <button
                         type="button"
@@ -2565,7 +2563,7 @@ export function PolySuaraPage({
                           commentSortBy === 'TOP' ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                         )}
                       >
-                        Terbaik
+                        {t('services:sort_top', 'Terbaik')}
                       </button>
                     </div>
 
@@ -2573,7 +2571,7 @@ export function PolySuaraPage({
                       type="button"
                       onClick={() => setCommentDrawerOpen(false)}
                       className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
-                      aria-label="Tutup ulasan"
+                      aria-label={t('services:close_comments', 'Tutup ulasan')}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -2598,13 +2596,13 @@ export function PolySuaraPage({
                 {commentsLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Membaca maklum balas...</p>
+                    <p className="text-xs font-bold uppercase tracking-widest">{t('services:reading_comments', 'Membaca maklum balas...')}</p>
                   </div>
                 ) : comments.length === 0 ? (
                   <div className="text-center py-12 text-slate-400 dark:text-slate-600 px-4">
                     <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-bold text-slate-700 dark:text-slate-400">Tiada Ulasan Lagi</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Jadilah yang pertama menulis pendapat anda.</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-400">{t('services:no_comments_title', 'Tiada Ulasan Lagi')}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{t('services:no_comments_desc', 'Jadilah yang pertama menulis pendapat anda.')}</p>
                   </div>
                 ) : (
                   <div>
@@ -2628,7 +2626,7 @@ export function PolySuaraPage({
                 <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-2">
                   {commentImagePreview && (
                     <div className="relative mb-2 w-16 h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 group animate-in fade-in zoom-in duration-200">
-                      <img src={commentImagePreview} alt="Pratonton" className="w-full h-full object-cover" />
+                      <img src={commentImagePreview} alt={t('services:preview', 'Pratonton')} className="w-full h-full object-cover" />
                       <button 
                         type="button"
                         onClick={() => { setCommentFile(null); setCommentImagePreview(null); }}
@@ -2642,14 +2640,14 @@ export function PolySuaraPage({
                   {/* Rounded-full floating capsule pill */}
                   <div className="rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center gap-2">
                     {/* Camera/Image Selector Button */}
-                    <label className="cursor-pointer text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-white dark:hover:bg-white/10 transition-all flex items-center justify-center shrink-0 w-8 h-8" title="Lampirkan Imej">
+                    <label className="cursor-pointer text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-white dark:hover:bg-white/10 transition-all flex items-center justify-center shrink-0 w-8 h-8" title={t('services:attach_image', 'Lampirkan Imej')}>
                       <ImageIcon className="w-4 h-4" />
                       <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
                     </label>
 
                     <input
                       type="text"
-                      placeholder="Tulis ulasan sulit anda..."
+                      placeholder={t('services:write_confidential_comment', 'Tulis ulasan sulit anda...')}
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       className="flex-1 bg-transparent px-2 py-1 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
@@ -2679,11 +2677,11 @@ export function PolySuaraPage({
                       />
                       <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors uppercase tracking-wider flex items-center gap-1">
                         <EyeOff className="w-3.5 h-3.5" />
-                        Tanda sebagai Sensitif (Blur)
+                        {t('services:mark_sensitive', 'Tanda sebagai Sensitif (Blur)')}
                       </span>
                     </label>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {300 - newCommentText.length} baki
+                      {t('services:chars_remaining_short', '{{count}} baki', { count: 300 - newCommentText.length })}
                     </span>
                   </div>
                 </form>
@@ -2706,6 +2704,7 @@ export function PolySuaraPage({
 }
 
 function SensitiveCommentContent({ content }: { content: string }) {
+  const { t } = useTranslation(['services']);
   const [revealed, setRevealed] = React.useState(false);
   
   if (revealed) {
@@ -2719,7 +2718,7 @@ function SensitiveCommentContent({ content }: { content: string }) {
     >
       <EyeOff className="w-4 h-4 text-rose-500/70 shrink-0 group-hover:scale-105 transition-transform" />
       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors select-none">
-        Ulasan ini mengandungi kandungan sensitif. Klik untuk baca.
+        {t('services:sensitive_comment_notice', 'Ulasan ini mengandungi kandungan sensitif. Klik untuk baca.')}
       </span>
     </div>
   );

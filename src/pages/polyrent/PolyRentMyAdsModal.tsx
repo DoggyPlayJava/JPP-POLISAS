@@ -4,11 +4,13 @@ import { X, Package, Trash2, CheckCircle, Plus, Minus, Home, Loader2, Info, EyeO
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 
 export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOpen: boolean; onClose: () => void; onUpdateComplete: () => void }) {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'IKLAN_RUMAH' | 'PENCARIAN_BILIK'>('IKLAN_RUMAH');
   const [myListings, setMyListings] = useState<any[]>([]);
@@ -48,7 +50,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       }
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan iklan anda.');
+      toast.error(t('housing:load_ads_failed', 'Gagal memuatkan iklan anda.'));
     } finally {
       setLoading(false);
     }
@@ -79,16 +81,16 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       if (error) throw error;
       
       if (autoStatus === 'CLOSED') {
-        toast.success('Kekosongan 0 — Iklan ditutup secara automatik (Penuh)', { icon: '🏠' });
+        toast.success(t('housing:slots_zero_closed', 'Kekosongan 0 — Iklan ditutup secara automatik (Penuh)'), { icon: '🏠' });
       } else if (autoStatus === 'OPEN') {
-        toast.success('Kekosongan ada — Iklan dibuka semula secara automatik!', { icon: '✅' });
+        toast.success(t('housing:slots_available_reopened', 'Kekosongan ada — Iklan dibuka semula secara automatik!'), { icon: '✅' });
       } else {
-        toast.success(`Kekosongan dikemaskini: ${newKekosongan} orang`);
+        toast.success(t('housing:slots_updated', 'Kekosongan dikemaskini: {{count}} orang', { count: newKekosongan }));
       }
       onUpdateComplete();
     } catch (err) {
       console.error(err);
-      toast.error('Gagal mengemaskini kekosongan');
+      toast.error(t('housing:update_slots_failed', 'Gagal mengemaskini kekosongan'));
       fetchMyAds(); // revert
     }
   };
@@ -110,7 +112,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       onUpdateComplete();
     } catch (err) {
       console.error(err);
-      toast.error('Gagal menukar status');
+      toast.error(t('housing:change_status_failed', 'Gagal menukar status'));
       fetchMyAds();
     }
   };
@@ -131,7 +133,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       onUpdateComplete();
     } catch (err) {
       console.error(err);
-      toast.error('Gagal memadam iklan');
+      toast.error(t('housing:delete_ad_failed', 'Gagal memadam iklan'));
       fetchMyAds();
     }
   };
@@ -145,7 +147,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       toast.success('Iklan pencarian dipadam');
       onUpdateComplete();
     } catch (err) {
-      toast.error('Gagal memadam iklan');
+      toast.error(t('housing:delete_ad_failed', 'Gagal memadam iklan'));
       fetchMyAds();
     }
   };
@@ -159,7 +161,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
       toast.success(newStatus === 'CLOSED' ? 'Ditutup (Sudah jumpa rumah)' : 'Dibuka Semula');
       onUpdateComplete();
     } catch (err) {
-      toast.error('Gagal menukar status');
+      toast.error(t('housing:change_status_failed', 'Gagal menukar status'));
       fetchMyAds();
     }
   };
@@ -200,13 +202,13 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Iklan berjaya dikemaskini! ✅');
+      toast.success(t('housing:ad_updated_success', 'Iklan berjaya dikemaskini!'));
       setEditingId(null);
       fetchMyAds();
       onUpdateComplete();
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Gagal menyimpan perubahan');
+      toast.error(err.message || t('housing:save_changes_failed', 'Gagal menyimpan perubahan'));
     } finally {
       setIsSavingEdit(false);
     }
@@ -239,8 +241,8 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                       <Package className="w-5 h-5" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black text-slate-900 dark:text-white">Iklan Saya</h2>
-                      <p className="text-xs text-slate-500 font-medium">Urus iklan rumah & pencarian anda</p>
+                      <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('housing:my_ads_title', 'Iklan Saya')}</h2>
+                      <p className="text-xs text-slate-500 font-medium">{t('housing:my_ads_subtitle', 'Urus iklan sewaan & pencarian bilik anda')}</p>
                     </div>
                   </div>
                   <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
@@ -254,13 +256,13 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                     onClick={() => setActiveTab('IKLAN_RUMAH')}
                     className={cn("pb-3 text-sm font-bold border-b-2 transition-all", activeTab === 'IKLAN_RUMAH' ? "border-indigo-500 text-indigo-500" : "border-transparent text-slate-500 hover:text-slate-700")}
                   >
-                    Iklan Tuan Rumah
+                    {t('housing:landlord_ads_tab', 'Iklan Tuan Rumah')}
                   </button>
                   <button
                     onClick={() => setActiveTab('PENCARIAN_BILIK')}
                     className={cn("pb-3 text-sm font-bold border-b-2 transition-all", activeTab === 'PENCARIAN_BILIK' ? "border-teal-500 text-teal-500" : "border-transparent text-slate-500 hover:text-slate-700")}
                   >
-                    Pencarian Bilik (Reverse)
+                    {t('housing:room_search_tab', 'Pencarian Bilik (Reverse)')}
                   </button>
                 </div>
               </div>
@@ -270,7 +272,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                     <Loader2 className="w-8 h-8 animate-spin mb-4 text-indigo-500" />
-                    <p className="text-sm font-medium">Memuatkan iklan anda...</p>
+                    <p className="text-sm font-medium">{t('housing:loading_my_ads', 'Memuatkan iklan anda...')}</p>
                   </div>
                 ) : activeTab === 'IKLAN_RUMAH' ? (
                   myListings.length === 0 ? (
@@ -278,8 +280,8 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                       <div className="w-24 h-24 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6">
                         <Home className="w-10 h-10 text-slate-400" />
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tiada Iklan Rumah</h3>
-                      <p className="text-slate-500 text-sm">Anda belum memuat naik sebarang iklan rumah sewa.</p>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('housing:no_house_ads_title', 'Tiada Iklan Rumah')}</h3>
+                      <p className="text-slate-500 text-sm">{t('housing:no_house_ads_desc', 'Anda belum menerbitkan sebarang iklan rumah sewa.')}</p>
                     </div>
                   ) : (
                     myListings.map((listing) => (
@@ -298,14 +300,14 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                             <div className="flex justify-between items-start mb-1">
                               <h4 className="font-bold text-slate-900 dark:text-white line-clamp-1 flex items-center gap-1.5">
                                 {listing.title}
-                                {listing.is_hidden && <EyeOff className="w-3.5 h-3.5 text-rose-500 shrink-0" title="Iklan disembunyikan akibat laporan" />}
+                                {listing.is_hidden && <EyeOff className="w-3.5 h-3.5 text-rose-500 shrink-0" title={t('housing:ad_hidden_reported_tooltip', 'Iklan disembunyikan kerana laporan')} />}
                               </h4>
                               <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0", listing.status === 'OPEN' ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-100 text-slate-500")}>
-                                {listing.status === 'OPEN' ? 'Aktif' : 'Ditutup'}
+                                {listing.status === 'OPEN' ? t('housing:status_active', 'Aktif') : t('housing:status_closed', 'Ditutup')}
                               </span>
                             </div>
                             <p className="text-xs text-slate-500 mb-2 truncate">{listing.lokasi}</p>
-                            <p className="text-xs font-bold text-indigo-500 mb-2">RM{listing.sewa_bulanan} / kepala</p>
+                            <p className="text-xs font-bold text-indigo-500 mb-2">RM{listing.sewa_bulanan} / {t('housing:per_head', 'orang')}</p>
                             <p className="text-[10px] text-slate-400">Dibuat {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: ms })}</p>
                           </div>
                         </div>
@@ -317,7 +319,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                           
                           {/* Kekosongan Stepper */}
                           <div className="flex items-center gap-4">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Slot Kosong</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('housing:available_slots_stepper', 'Slot Kosong')}</span>
                             <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 px-2 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
                               <button 
                                 onClick={() => handleUpdateKekosongan(listing.id, listing.kekosongan, -1)}
@@ -349,7 +351,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                               )}
                             >
                               <Pencil className="w-3.5 h-3.5" />
-                              {editingId === listing.id ? 'Tutup Edit' : 'Edit'}
+                              {editingId === listing.id ? t('housing:close_edit', 'Tutup Edit') : t('common:edit', 'Edit')}
                             </button>
 
                             <button 
@@ -357,7 +359,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                               className={cn("px-4 py-2.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all", listing.status === 'OPEN' ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-emerald-500 text-white")}
                             >
                               <CheckCircle className="w-4 h-4" />
-                              {listing.status === 'OPEN' ? 'Tandakan Disewa' : 'Buka Semula'}
+                              {listing.status === 'OPEN' ? t('housing:mark_rented', 'Tandakan Disewa') : t('housing:reopen_ad', 'Buka Semula')}
                             </button>
                             
                             <button 
@@ -381,7 +383,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                               className="overflow-hidden"
                             >
                               <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-5 mt-1 space-y-4">
-                                <p className="text-xs font-black text-indigo-500 uppercase tracking-widest">✏️ Kemaskini Iklan</p>
+                                <p className="text-xs font-black text-indigo-500 uppercase tracking-widest">✏️ {t('housing:update_ad', 'Kemaskini Iklan')}</p>
 
                                 {/* Tajuk */}
                                 <div>
@@ -488,13 +490,13 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                                     className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-600 disabled:opacity-60 transition-colors"
                                   >
                                     {isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                    {isSavingEdit ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                                    {isSavingEdit ? t('housing:saving', 'Menyimpan...') : t('housing:save_changes', '💾 Simpan Perubahan')}
                                   </button>
                                   <button
                                     onClick={() => setEditingId(null)}
                                     className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                                   >
-                                    Batal
+                                    {t('common:cancel', 'Batal')}
                                   </button>
                                 </div>
                               </div>
@@ -505,7 +507,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                         {listing.kekosongan === 0 && listing.status === 'OPEN' && (
                           <div className="bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 p-3 rounded-xl flex items-start gap-2 text-xs">
                             <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                            <p>Kekosongan adalah 0. Iklan masih 'Aktif' tetapi pencari mungkin tidak berminat. Sila 'Tandakan Disewa' jika rumah sudah penuh.</p>
+                            <p>{t('housing:zero_slot_warning', 'Kekosongan adalah 0. Iklan masih \'Aktif\' tetapi pencari mungkin tidak berminat. Sila \'Tandakan Disewa\' jika rumah sudah penuh.')}</p>
                           </div>
                         )}
 
@@ -518,8 +520,8 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                       <div className="w-24 h-24 bg-teal-50 dark:bg-teal-900/20 rounded-full flex items-center justify-center mb-6">
                         <Package className="w-10 h-10 text-teal-400" />
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tiada Pencarian Semasa</h3>
-                      <p className="text-slate-500 text-sm">Anda belum mengiklankan pencarian bilik/rumah.</p>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('housing:no_active_searches', 'Tiada Pencarian Semasa')}</h3>
+                      <p className="text-slate-500 text-sm">{t('housing:no_searches_desc', 'Anda belum mengiklankan pencarian bilik/rumah.')}</p>
                     </div>
                   ) : (
                     myReverseAds.map((ad) => (
@@ -527,18 +529,18 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                         <div className="flex justify-between items-start">
                           <div>
                             <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest inline-block mb-2", ad.status === 'OPEN' ? "bg-teal-500/10 text-teal-600" : "bg-slate-100 text-slate-500")}>
-                              {ad.status === 'OPEN' ? 'Sedang Mencari' : 'Sudah Berjumpa'}
+                              {ad.status === 'OPEN' ? t('housing:currently_searching', 'Sedang Mencari') : t('housing:found_place', 'Sudah Berjumpa')}
                             </span>
                             <p className="text-sm font-medium text-slate-900 dark:text-white line-clamp-2">"{ad.description}"</p>
                           </div>
                           <div className="text-right">
-                            <span className="text-xs text-slate-500 font-bold uppercase">Bajet</span>
+                            <span className="text-xs text-slate-500 font-bold uppercase">{t('housing:budget_label', 'Bajet')}</span>
                             <p className="text-lg font-black text-rose-500">RM{ad.budget}</p>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                          <span>{ad.klk_kawasan?.name || 'Mana-mana Kawasan'}</span>
+                          <span>{ad.klk_kawasan?.name || t('housing:any_area', 'Mana-mana Kawasan')}</span>
                           <span>{formatDistanceToNow(new Date(ad.created_at), { addSuffix: true, locale: ms })}</span>
                         </div>
 
@@ -550,7 +552,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                             className={cn("px-4 py-2.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all", ad.status === 'OPEN' ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-teal-500 text-white")}
                           >
                             <CheckCircle className="w-4 h-4" />
-                            {ad.status === 'OPEN' ? 'Tandakan Selesai' : 'Buka Semula'}
+                            {ad.status === 'OPEN' ? t('housing:mark_completed', 'Tandakan Selesai') : t('housing:reopen_ad', 'Buka Semula')}
                           </button>
                           
                           <button 

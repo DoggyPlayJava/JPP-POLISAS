@@ -2530,7 +2530,7 @@ export function PolyMapsPage() {
                             onClick={(e) => { e.stopPropagation(); navigate('/ems/hub'); }}
                             className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-amber-500/30 active:scale-95"
                           >
-                            <span>Buka EMS</span>
+                            <span>{t('services:open_ems', 'Buka EMS')}</span>
                             <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                           <button
@@ -2604,7 +2604,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronDown className="w-3.5 h-3.5" />
-                            <span>Lipat Paparan</span>
+                            <span>{t('services:collapse_view', 'Kecilkan Paparan')}</span>
                           </button>
                         )}
 
@@ -2613,14 +2613,14 @@ export function PolyMapsPage() {
                             onClick={() => navigate('/ems/hub')}
                             className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-amber-500/30 active:scale-[0.98]"
                           >
-                            <span>Buka EMS</span>
+                            <span>{t('services:open_ems', 'Buka EMS')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => startNavigationToCoords(selectedEmsEvent.lat, selectedEmsEvent.lng, selectedEmsEvent.title)}
                             className="w-full flex items-center justify-center gap-2 bg-[#C96F4F] hover:bg-[#B35F41] text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-[#C96F4F]/25 active:scale-[0.98]"
                           >
-                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Lokasi
+                            <Navigation className="w-3.5 h-3.5" /> {t('services:navigate_to_location', 'Navigasi ke Lokasi')}
                           </button>
                         </div>
                       </div>
@@ -2718,7 +2718,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronDown className="w-3.5 h-3.5" />
-                            <span>Lipat Paparan</span>
+                            <span>{t('services:collapse_view', 'Kecilkan Paparan')}</span>
                           </button>
                         )}
 
@@ -3011,7 +3011,7 @@ export function PolyMapsPage() {
                               className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-[#6B7F5B] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors active:scale-95"
                             >
                               <ChevronUp className="w-3.5 h-3.5" />
-                              <span>Papar Direktori Penuh & Arah Luaran</span>
+                              <span>{t('services:show_full_directory', 'Lihat Direktori Penuh & Laluan Luar')}</span>
                             </button>
                           ) : (
                             <button
@@ -3150,8 +3150,8 @@ export function PolyMapsPage() {
             >
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 dark:text-white">Lapor Tempat Hilang</h3>
-                  <p className="text-xs font-bold text-slate-500 font-sans">Bantu JPP kemaskini peta kampus</p>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white">{t('services:report_missing_location_title', 'Laporkan Lokasi Tiada')}</h3>
+                  <p className="text-xs font-bold text-slate-500 font-sans">{t('services:report_missing_location_subtitle', 'Bantu JPP kemas kini peta kampus')}</p>
                 </div>
                 <button
                   onClick={() => setIsReportModalOpen(false)}
@@ -3164,34 +3164,34 @@ export function PolyMapsPage() {
               <form onSubmit={handleReportSubmit} className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Nama Tempat / Kelas / Ruang
+                    {t('services:place_name_label', 'Nama Tempat / Bilik / Ruang')}
                   </label>
                   <input
                     type="text"
                     required
                     value={reportForm.room_code}
                     onChange={(e) => setReportForm(prev => ({ ...prev, room_code: e.target.value }))}
-                    placeholder="Contoh: A302, Makmal CAD 2"
+                    placeholder={t('services:place_name_placeholder', 'Contoh: A302, Makmal CAD 2')}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Cadangan Bangunan / Blok
+                    {t('services:building_suggestion_label', 'Cadangan Bangunan / Blok')}
                   </label>
                   <select
                     value={reportForm.building_id}
                     onChange={(e) => setReportForm(prev => ({ ...prev, building_id: e.target.value, building_name_suggestion: e.target.value === 'new' ? '' : prev.building_name_suggestion }))}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
                   >
-                    <option value="">-- Pilih Bangunan (Jika Tahu) --</option>
+                    <option value="">{t('services:select_building_optional', '-- Pilih Bangunan (Jika Tahu) --')}</option>
                     {allBuildings.map(b => (
                       <option key={b.id} value={b.id}>
                         {b.name} ({b.code})
                       </option>
                     ))}
-                    <option value="new">Lain-lain / Bangunan Baru</option>
+                    <option value="new">{t('services:other_or_new_building', 'Lain-lain / Bangunan Baru')}</option>
                   </select>
                 </div>
 
@@ -3202,14 +3202,14 @@ export function PolyMapsPage() {
                     exit={{ opacity: 0, }}
                   >
                     <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                      Nama Bangunan Baru / Cadangan
+                      {t('services:new_building_name_label', 'Nama Bangunan / Cadangan Baru')}
                     </label>
                     <input
                       type="text"
                       required
                       value={reportForm.building_name_suggestion}
                       onChange={(e) => setReportForm(prev => ({ ...prev, building_name_suggestion: e.target.value }))}
-                      placeholder="Masukkan nama bangunan/blok"
+                      placeholder={t('services:new_building_placeholder', 'Masukkan nama bangunan/blok')}
                       className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all"
                     />
                   </motion.div>
@@ -3217,29 +3217,29 @@ export function PolyMapsPage() {
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Aras (Tingkat)
+                    {t('services:floor_level_label', 'Aras (Tingkat)')}
                   </label>
                   <select
                     value={reportForm.floor_level}
                     onChange={(e) => setReportForm(prev => ({ ...prev, floor_level: e.target.value }))}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
                   >
-                    <option value="0">Aras Bawah (Ground Floor)</option>
-                    <option value="1">Aras 1</option>
-                    <option value="2">Aras 2</option>
-                    <option value="3">Aras 3</option>
-                    <option value="4">Aras 4</option>
+                    <option value="0">{t('services:ground_floor', 'Aras Bawah (Ground)')}</option>
+                    <option value="1">{t('services:floor_n', 'Aras {{level}}', { level: 1 })}</option>
+                    <option value="2">{t('services:floor_n', 'Aras {{level}}', { level: 2 })}</option>
+                    <option value="3">{t('services:floor_n', 'Aras {{level}}', { level: 3 })}</option>
+                    <option value="4">{t('services:floor_n', 'Aras {{level}}', { level: 4 })}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Catatan Tambahan (Landmark / Kedudukan)
+                    {t('services:additional_notes_landmark', 'Nota Tambahan (Landmark / Posisi)')}
                   </label>
                   <textarea
                     value={reportForm.description}
                     onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Contoh: Sebelah lif utama, berdekatan bilik pensyarah JTM"
+                    placeholder={t('services:landmark_placeholder', 'Contoh: Sebelah lif utama, berdekatan bilik pensyarah JTM')}
                     rows={3}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all resize-none font-bold"
                   />
@@ -3264,7 +3264,7 @@ export function PolyMapsPage() {
                         Hantar...
                       </>
                     ) : (
-                      'Hantar Aduan'
+                      t('services:submit_report_button', 'Hantar Laporan')
                     )}
                   </button>
                 </div>
