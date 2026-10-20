@@ -30,7 +30,7 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 }
 
 export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
-  const { t } = useTranslation(['commerce', 'common']);
+  const { t } = useTranslation(['housing', 'commerce', 'common']);
   const { profile } = useAuth();
   
   const [step, setStep] = useState(1);
@@ -292,7 +292,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tajuk Iklan <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:ad_title_label', 'Tajuk Iklan')} <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   placeholder="Cth: Bilik Sewa Kosong Balok (Lelaki)"
@@ -304,7 +304,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Sewa Bulanan (RM) <span className="text-rose-500">*</span></label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:monthly_rent_label', 'Sewa Bulanan (RM)')} <span className="text-rose-500">*</span></label>
                   <input
                     type="number"
                     placeholder="150"
@@ -314,7 +314,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Deposit (RM)</label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:deposit_label', 'Deposit (RM)')}</label>
                   <input
                     type="number"
                     placeholder="300"
@@ -327,7 +327,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kekosongan (Orang)</label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:vacancies_label', 'Kekosongan (Orang)')}</label>
                   <input
                     type="number"
                     placeholder="2"
@@ -337,15 +337,15 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Jantina</label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:gender_label', 'Jantina')}</label>
                   <select
                     value={formData.jantina_prefer}
                     onChange={(e) => handleInputChange('jantina_prefer', e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white"
                   >
-                    <option value="CAMPURAN">Campuran (Any)</option>
-                    <option value="LELAKI">Lelaki Sahaja</option>
-                    <option value="PEREMPUAN">Perempuan Sahaja</option>
+                    <option value="CAMPURAN">{t('housing:gender_mixed', 'Campuran (Any)')}</option>
+                    <option value="LELAKI">{t('housing:gender_male_only', 'Lelaki Sahaja')}</option>
+                    <option value="PEREMPUAN">{t('housing:gender_female_only', 'Perempuan Sahaja')}</option>
                   </select>
                 </div>
               </div>
@@ -404,7 +404,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                     />
                     <div className="w-full px-4 py-6 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center transition-all group-hover:border-teal-500 group-hover:bg-teal-500/5">
                       <Plus className="w-6 h-6 mb-2 text-slate-400" />
-                      <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Tambah Gambar</span>
+                      <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{t('housing:add_photo_btn', 'Tambah Gambar')}</span>
                     </div>
                   </div>
                 )}
@@ -416,7 +416,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Susunan Bilik</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:room_layout_label', 'Susunan Bilik')}</label>
                 <textarea
                   placeholder="Cth: Bilik Master (Sharing 2 orang), ada katil dan tilam..."
                   rows={3}
@@ -426,7 +426,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kemudahan (Fasiliti)</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:facilities_heading', 'Kemudahan (Fasiliti)')}</label>
                 <textarea
                   placeholder="Cth: Mesin basuh, Peti sejuk, WiFi percuma..."
                   rows={3}
@@ -618,7 +618,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
               onClick={prevStep}
               className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 font-bold transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" /> Kembali
+              <ChevronLeft className="w-4 h-4" /> {t('common:back', 'Kembali')}
             </button>
           ) : (
              <button
@@ -640,7 +640,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
               onClick={nextStep}
               className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:scale-105 active:scale-95 transition-transform"
             >
-              Seterusnya <ChevronRight className="w-4 h-4" />
+              {t('common:next', 'Seterusnya')} <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -649,7 +649,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
               className="flex items-center gap-2 px-8 py-2.5 rounded-full bg-teal-500 text-white font-bold hover:bg-teal-600 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Terbitkan
+              {t('housing:publish_ad_btn', 'Terbitkan')}
             </button>
           )}
         </div>

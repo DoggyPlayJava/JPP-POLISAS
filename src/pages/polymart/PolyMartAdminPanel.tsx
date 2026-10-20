@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { logAuditAction } from '@/lib/auditLogger';
 import {
   Flag, CheckCircle, Trash2, Eye, Store, Package,
@@ -50,6 +51,7 @@ interface Report {
 
 // ── Report Card ────────────────────────────────────────────────────────────────
 function ReportCard({ report, onAction }: { report: Report; onAction: () => void }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const product = report.business_products;
@@ -60,7 +62,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
     await supabase.from('polymart_reports').update({
       status: 'DISMISSED', reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
     }).eq('id', report.id);
-    toast.success('Laporan diabaikan');
+    toast.success(t('commerce:report_dismissed_toast', 'Laporan diabaikan'));
     onAction();
     setLoading(false);
   };
@@ -82,7 +84,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
         type: 'polymart_report_actioned', module: 'POLYMART',
       });
     }
-    toast.success(`Produk "${product.name}" dikeluarkan dari PolyMart`);
+    toast.success(t('commerce:product_removed_toast', `Produk "${product.name}" dikeluarkan dari PolyMart`, { name: product.name }));
     logAuditAction({ actionType: 'PRODUCT_REMOVED', module: 'PolyMart', entityId: product.id, description: `Produk "${product.name}" dikeluarkan — Sebab: ${report.reason}`, actorId: user!.id });
     onAction();
     setLoading(false);
@@ -94,7 +96,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
       {/* Header */}
       <div className="flex items-center gap-2 px-3.5 py-2 bg-rose-500/10">
         <Flag className="w-3.5 h-3.5 text-rose-500" />
-        <span className="text-[11px] font-black text-rose-500">Laporan Baru</span>
+        <span className="text-[11px] font-black text-rose-500">{t('commerce:new_report_badge', 'Laporan Baru')}</span>
         <span className="ml-auto text-[9px] text-muted-foreground/50">
           {new Date(report.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </span>
@@ -110,20 +112,20 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
             }
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-foreground truncate">{product?.name ?? 'Produk dipadam'}</p>
+            <p className="text-sm font-black text-foreground truncate">{product?.name ?? t('commerce:product_deleted', 'Produk dipadam')}</p>
             <p className="text-[10px] text-muted-foreground/60">{product?.keusahawanan_businesses?.name} · <span className="font-mono tabular-nums">RM {product?.price?.toFixed(2)}</span></p>
           </div>
         </div>
 
         {/* Report reason */}
         <div className="px-3 py-2 rounded-xl bg-background border border-border/40">
-          <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider mb-0.5">Sebab Laporan</p>
+          <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider mb-0.5">{t('commerce:report_reason_label', 'Sebab Laporan')}</p>
           <p className="text-xs text-foreground">{report.reason}</p>
         </div>
 
         {/* Reporter */}
         <p className="text-[10px] text-muted-foreground/50">
-          Laporan oleh: <span className="font-bold text-foreground/70">{report.reporter?.full_name ?? 'Anonim'}</span>
+          {t('commerce:report_by_label', 'Laporan oleh:')} <span className="font-bold text-foreground/70">{report.reporter?.full_name ?? t('commerce:anonymous_reporter', 'Anonim')}</span>
           {report.reporter?.matric_no && ` (${report.reporter.matric_no})`}
         </p>
 
@@ -132,12 +134,12 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
           <button onClick={dismiss} disabled={loading}
             className="flex-1 h-9 rounded-xl text-[11px] font-bold border border-border/50 hover:bg-muted/50 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5">
             <CheckCircle className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Abaikan</span>
+            <span>{t('commerce:dismiss_report_btn', 'Abaikan')}</span>
           </button>
           <button onClick={removeProduct} disabled={loading}
             className="flex-1 h-9 rounded-xl text-[11px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5">
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Keluarkan Produk</span>
+            <span>{t('commerce:remove_product_btn', 'Keluarkan Produk')}</span>
           </button>
         </div>
       </div>
@@ -147,6 +149,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
 
 // ── Ads Manager Tab ─────────────────────────────────────────────────────────────
 function AdsManagerTab() {
+  const { t } = useTranslation(['commerce', 'common']);
   const [ads, setAds] = useState<PolyAd[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -328,22 +331,22 @@ function AdsManagerTab() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/50">
         <p className="text-sm font-black flex items-center gap-2">
-          <Megaphone className="w-4 h-4 text-amber-500" /> Urus Iklan & Penaja
+          <Megaphone className="w-4 h-4 text-amber-500" /> {t('commerce:manage_ads_sponsors', 'Urus Iklan & Penaja')}
         </p>
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-muted/40 rounded-xl overflow-hidden border border-border/50 focus-within:border-amber-500/50 transition-colors">
-            <span className="pl-3 pr-2 text-[10px] font-bold text-muted-foreground whitespace-nowrap">No WhatsApp:</span>
+            <span className="pl-3 pr-2 text-[10px] font-bold text-muted-foreground whitespace-nowrap">{t('commerce:whatsapp_no_label', 'No WhatsApp:')}</span>
             <input value={adsPhone} onChange={e => setAdsPhone(e.target.value)} type="text" placeholder="601..."
               className="w-24 sm:w-28 h-8 bg-transparent text-xs font-bold outline-none text-foreground" />
             <button disabled={savingPhone} onClick={saveAdsPhone} className="h-8 px-3 text-[10px] font-bold bg-muted hover:bg-amber-500/20 hover:text-amber-600 transition-colors border-l border-border/50 disabled:opacity-50">
-              {savingPhone ? '...' : 'Simpan'}
+              {savingPhone ? '...' : t('commerce:save_btn', 'Simpan')}
             </button>
           </div>
           <button onClick={() => handleOpenModal()}
             className="h-8 px-3 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-md hover:shadow-lg active:scale-95 transition-all shrink-0"
             style={{ background: PM_GRADIENT }}>
             <Plus className="w-4 h-4" />
-            <span>Iklan Baru</span>
+            <span>{t('commerce:new_ad_btn', 'Iklan Baru')}</span>
           </button>
         </div>
       </div>
@@ -355,7 +358,7 @@ function AdsManagerTab() {
           <div className="w-16 h-16 rounded-2xl bg-muted/40 border border-border/40 flex items-center justify-center text-muted-foreground/40">
             <Megaphone className="w-8 h-8" />
           </div>
-          <p className="text-sm font-bold text-muted-foreground">Tiada iklan buat masa ini</p>
+          <p className="text-sm font-bold text-muted-foreground">{t('commerce:no_ads_empty', 'Tiada iklan buat masa ini')}</p>
         </div>
       ) : (
         <div className="grid gap-3">
@@ -367,7 +370,7 @@ function AdsManagerTab() {
                 <div className={`absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${
                   ad.status === 'ACTIVE' ? 'bg-emerald-500' : ad.status === 'DRAFT' ? 'bg-amber-500' : 'bg-slate-500'
                 }`}>
-                  {ad.status === 'DRAFT' ? 'MENUNGGU KELULUSAN' : ad.status}
+                  {ad.status === 'DRAFT' ? t('commerce:awaiting_approval', 'MENUNGGU KELULUSAN') : ad.status}
                 </div>
               </div>
 
@@ -378,14 +381,14 @@ function AdsManagerTab() {
                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground/80 font-medium">
                       <span className="font-semibold px-1.5 py-0.5 rounded-md bg-muted/50">{ad.type}</span>
                       {ad.creator && (
-                        <span>Oleh: {ad.creator.full_name} ({ad.creator.matric_no})</span>
+                        <span>{t('commerce:by_creator', `Oleh: ${ad.creator.full_name} (${ad.creator.matric_no})`, { name: `${ad.creator.full_name} (${ad.creator.matric_no})` })}</span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     {ad.status === 'DRAFT' && (
                       <button disabled={saving} onClick={() => handleApprove(ad)} className="h-7 px-2.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold text-[10px] hover:bg-amber-500/20 disabled:opacity-50 flex items-center gap-1 mr-1 transition-colors">
-                        <CheckCircle className="w-3.5 h-3.5" /> Lulus
+                        <CheckCircle className="w-3.5 h-3.5" /> {t('commerce:approve_btn', 'Lulus')}
                       </button>
                     )}
                     <button disabled={saving} onClick={() => handleOpenModal(ad)} className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 disabled:opacity-50">
@@ -400,12 +403,12 @@ function AdsManagerTab() {
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground/80 pt-1">
                   {ad.clicks > 0 && (
                     <span className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
-                      <TrendingUp className="w-3 h-3" /> {ad.clicks} Klik
+                      <TrendingUp className="w-3 h-3" /> {t('commerce:clicks_count', `${ad.clicks} Klik`, { count: ad.clicks })}
                     </span>
                   )}
                   {ad.link_url && (
                     <span className="flex items-center gap-1 truncate max-w-[120px]">
-                      <LinkIcon className="w-3 h-3" /> Berkait
+                      <LinkIcon className="w-3 h-3" /> {t('commerce:linked_label', 'Berkait')}
                     </span>
                   )}
                   {(ad.start_date || ad.end_date) && (
@@ -429,7 +432,7 @@ function AdsManagerTab() {
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               className="w-full max-w-md bg-background rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
               <div className="flex items-center justify-between p-4 border-b border-border/50">
-                <h3 className="text-sm font-black text-foreground">{editingAd ? 'Edit Iklan' : 'Iklan Baru'}</h3>
+                <h3 className="text-sm font-black text-foreground">{editingAd ? t('commerce:edit_ad_title', 'Edit Iklan') : t('commerce:new_ad_btn', 'Iklan Baru')}</h3>
                 <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -437,13 +440,13 @@ function AdsManagerTab() {
 
               <div className="p-4 space-y-4 overflow-y-auto">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tajuk</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:title_label', 'Tajuk')}</label>
                   <input value={title} onChange={e => setTitle(e.target.value)} type="text" placeholder="Cth: Maxis Student Promo"
                     className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background text-sm font-medium outline-none focus:border-amber-500/50 transition-colors" />
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Gambar Banner (Horizontal)</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:banner_image_horizontal', 'Gambar Banner (Horizontal)')}</label>
                   <div className="flex items-center gap-3">
                     {imageFile ? (
                       <div className="w-20 aspect-[2.5/1] rounded-lg overflow-hidden shrink-0"><img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /></div>
@@ -457,7 +460,7 @@ function AdsManagerTab() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Jenis</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:type_label', 'Jenis')}</label>
                     <select value={type} onChange={e => setType(e.target.value as any)}
                       className="w-full h-10 px-2 rounded-xl border border-border/50 bg-background text-xs font-bold outline-none focus:border-amber-500/50">
                       <option value="INTERNAL">Internal (Pelajar)</option>
@@ -465,7 +468,7 @@ function AdsManagerTab() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:status_label', 'Status')}</label>
                     <select value={status} onChange={e => setStatus(e.target.value as any)}
                       className="w-full h-10 px-2 rounded-xl border border-border/50 bg-background text-xs font-bold outline-none focus:border-amber-500/50">
                       <option value="DRAFT">Draft</option>
@@ -476,19 +479,19 @@ function AdsManagerTab() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">URL Pautan (Opsional)</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:link_url_optional', 'URL Pautan (Opsional)')}</label>
                   <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} type="url" placeholder="https://..."
                     className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background text-sm font-medium outline-none focus:border-amber-500/50 transition-colors" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Mula</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:start_date_field', 'Mula')}</label>
                     <input value={startDate} onChange={e => setStartDate(e.target.value)} type="datetime-local" 
                       className="w-full h-10 px-2 text-xs rounded-xl border border-border/50 bg-background outline-none" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tamat</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('commerce:end_date_field', 'Tamat')}</label>
                     <input value={endDate} onChange={e => setEndDate(e.target.value)} type="datetime-local" 
                       className="w-full h-10 px-2 text-xs rounded-xl border border-border/50 bg-background outline-none" />
                   </div>
@@ -496,9 +499,9 @@ function AdsManagerTab() {
               </div>
 
               <div className="p-4 border-t border-border/50 pt-3 flex gap-2">
-                <button onClick={() => setShowModal(false)} className="flex-1 h-11 rounded-xl text-xs font-bold bg-muted/50 hover:bg-muted text-foreground">Batal</button>
+                <button onClick={() => setShowModal(false)} className="flex-1 h-11 rounded-xl text-xs font-bold bg-muted/50 hover:bg-muted text-foreground">{t('common:cancel', 'Batal')}</button>
                 <button disabled={saving} onClick={handleSave} className="flex-1 h-11 rounded-xl text-xs font-bold text-white disabled:opacity-50" style={{ background: PM_GRADIENT }}>
-                  {saving ? 'Menyimpan...' : 'Simpan Iklan'}
+                  {saving ? t('common:saving', 'Menyimpan...') : t('commerce:save_ad_btn', 'Simpan Iklan')}
                 </button>
               </div>
             </motion.div>
@@ -511,6 +514,7 @@ function AdsManagerTab() {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolean }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { hasKeusahawananAccess, isSuperAdmin } = useAuth();
   const [reports,  setReports]  = useState<Report[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -546,7 +550,7 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3">
         <Shield className="w-10 h-10 text-muted-foreground/30" />
-        <p className="text-sm font-bold text-muted-foreground/50">Akses Ditolak</p>
+        <p className="text-sm font-bold text-muted-foreground/50">{t('common:access_denied', 'Akses Ditolak')}</p>
       </div>
     );
   }
@@ -561,8 +565,8 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
               <Shield className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-foreground">Panel Admin PolyMart</h1>
-              <p className="text-xs text-muted-foreground/60">Moderasi dan statistik marketplace</p>
+              <h1 className="text-xl font-black text-foreground">{t('commerce:polymart_admin_panel_title', 'Panel Admin PolyMart')}</h1>
+              <p className="text-xs text-muted-foreground/60">{t('commerce:polymart_admin_panel_desc', 'Moderasi dan statistik marketplace')}</p>
             </div>
           </div>
         </motion.div>
@@ -571,21 +575,21 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
       {/* Tabs */}
       <div className="flex gap-2 relative z-10 w-full overflow-x-auto scrollbar-hide pb-2">
         {[
-          { key: 'reports', label: 'Laporan', icon: Flag, badge: reports.length },
-          { key: 'ads',     label: 'Pengurusan Iklan', icon: Megaphone, badge: 0 },
-          { key: 'stats',   label: 'Statistik', icon: TrendingUp, badge: 0 },
-        ].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key as any)}
+          { key: 'reports', label: t('commerce:tab_reports', 'Laporan'), icon: Flag, badge: reports.length },
+          { key: 'ads',     label: t('commerce:tab_ad_management', 'Pengurusan Iklan'), icon: Megaphone, badge: 0 },
+          { key: 'stats',   label: t('commerce:tab_stats', 'Statistik'), icon: TrendingUp, badge: 0 },
+        ].map(tabItem => (
+          <button key={tabItem.key} onClick={() => setTab(tabItem.key as any)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-            style={tab === t.key
+            style={tab === tabItem.key
               ? { background: PM_LIGHT, color: PM_ACCENT, border: `1.5px solid ${PM_ACCENT}40` }
               : { background: 'transparent', color: 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border)/0.5)' }
             }>
-            <t.icon className="w-3.5 h-3.5" />
-            <span>{t.label}</span>
-            {t.badge > 0 && (
+            <tabItem.icon className="w-3.5 h-3.5" />
+            <span>{tabItem.label}</span>
+            {tabItem.badge > 0 && (
               <span className="w-5 h-5 rounded-full text-[9px] font-black flex items-center justify-center bg-rose-500 text-white">
-                {t.badge}
+                {tabItem.badge}
               </span>
             )}
           </button>
@@ -600,8 +604,8 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
                 <ShieldCheck className="w-8 h-8" />
               </div>
-              <p className="text-sm font-bold text-foreground">Tiada laporan baharu</p>
-              <p className="text-xs text-muted-foreground/60">Semua produk mematuhi piawaian komuniti PolyMart.</p>
+              <p className="text-sm font-bold text-foreground">{t('commerce:no_new_reports', 'Tiada laporan baharu')}</p>
+              <p className="text-xs text-muted-foreground/60">{t('commerce:all_products_compliant', 'Semua produk mematuhi piawaian komuniti PolyMart.')}</p>
             </div>
           ) : (
             <AnimatePresence>
@@ -619,10 +623,10 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Produk Aktif di PolyMart', value: stats.products,        color: PM_ACCENT,   icon: Package },
-            { label: 'Jumlah Pesanan',            value: stats.orders,          color: '#6366f1',   icon: TrendingUp },
-            { label: 'Vendor Aktif',               value: stats.vendors,         color: '#22c55e',   icon: Store },
-            { label: 'Pesanan Selesai',            value: stats.completedOrders, color: '#94a3b8',   icon: CheckCircle },
+            { label: t('commerce:stat_active_products', 'Produk Aktif di PolyMart'), value: stats.products,        color: PM_ACCENT,   icon: Package },
+            { label: t('commerce:stat_total_orders', 'Jumlah Pesanan'),            value: stats.orders,          color: '#6366f1',   icon: TrendingUp },
+            { label: t('commerce:stat_active_vendors', 'Vendor Aktif'),               value: stats.vendors,         color: '#22c55e',   icon: Store },
+            { label: t('commerce:stat_completed_orders', 'Pesanan Selesai'),            value: stats.completedOrders, color: '#94a3b8',   icon: CheckCircle },
           ].map(s => (
             <div key={s.label}
               className="rounded-2xl border border-border/40 bg-card p-4 space-y-2">

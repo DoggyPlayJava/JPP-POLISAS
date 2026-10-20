@@ -84,6 +84,7 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
 
 // ── Review Card ────────────────────────────────────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
+  const { t } = useTranslation(['commerce', 'common']);
   return (
     <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/40">
       <div className="flex items-center justify-between mb-1.5">
@@ -93,7 +94,7 @@ function ReviewCard({ review }: { review: Review }) {
           </div>
           <div>
             <p className="text-[11px] font-bold text-foreground">
-              {review.reviewer?.full_name ?? 'Pengguna'}
+              {review.reviewer?.full_name ?? t('commerce:user_default', 'Pengguna')}
             </p>
             <p className="text-[9px] text-muted-foreground/50">
               {new Date(review.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -121,6 +122,7 @@ export function ProductVariationBottomSheet({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { refetchCounts } = usePolymart();
@@ -186,7 +188,7 @@ export function ProductVariationBottomSheet({
       return;
     }
     if (product.variations && product.variations.length > 0 && !selectedVariation) {
-      toast.error('Sila pilih saiz/variasi produk dahulu!');
+      toast.error(t('commerce:select_variation_first', 'Sila pilih saiz/variasi produk dahulu!'));
       return;
     }
 
@@ -202,11 +204,11 @@ export function ProductVariationBottomSheet({
         { onConflict: 'buyer_id, product_id, selected_variation' }
       );
       if (error) throw error;
-      toast.success('Ditambah ke troli!', { style: { borderRadius: '16px', fontWeight: 700 } });
+      toast.success(t('commerce:added_to_cart_success', 'Ditambah ke troli!'), { style: { borderRadius: '16px', fontWeight: 700 } });
       refetchCounts();
       onClose();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal tambah ke troli');
+      toast.error(err.message || t('commerce:add_to_cart_failed', 'Gagal tambah ke troli'));
     } finally {
       setSubmitting(false);
     }
@@ -218,15 +220,15 @@ export function ProductVariationBottomSheet({
       return;
     }
     if (product.variations && product.variations.length > 0 && !selectedVariation) {
-      toast.error('Sila pilih saiz/variasi produk dahulu!');
+      toast.error(t('commerce:select_variation_first', 'Sila pilih saiz/variasi produk dahulu!'));
       return;
     }
     if (!pickupTime.trim()) {
-      toast.error('Sila isi cadangan masa pesanan siap/ambil');
+      toast.error(t('commerce:input_pickup_time_error', 'Sila isi cadangan masa pesanan siap/ambil'));
       return;
     }
     if (!paymentMethod) {
-      toast.error('Sila pilih kaedah pembayaran dahulu!');
+      toast.error(t('commerce:select_payment_method_error', 'Sila pilih kaedah pembayaran dahulu!'));
       return;
     }
 
@@ -365,7 +367,7 @@ export function ProductVariationBottomSheet({
                     </span>
                   )}
                   <span className="text-[10px] text-muted-foreground/60 font-mono tabular-nums">
-                    (Baki stok: {availableStock})
+                    {t('commerce:available_for_sale_units', `(Baki stok: ${availableStock})`, { count: availableStock })}
                   </span>
                 </div>
               </div>
@@ -393,7 +395,7 @@ export function ProductVariationBottomSheet({
               )}
             >
               <ShoppingCart className="w-3.5 h-3.5 text-amber-500" />
-              <span>Tambah ke Troli</span>
+              <span>{t('commerce:add_to_cart', 'Tambah ke Troli')}</span>
             </button>
             <button
               type="button"
@@ -406,7 +408,7 @@ export function ProductVariationBottomSheet({
               )}
             >
               <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
-              <span>Beli Sekarang</span>
+              <span>{t('commerce:buy_now', 'Beli Sekarang')}</span>
             </button>
           </div>
         </div>
@@ -417,7 +419,7 @@ export function ProductVariationBottomSheet({
           {product.variations && product.variations.length > 0 && (
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
-                Pilih Saiz / Variasi <span className="text-amber-500 font-bold">*</span>
+                {t('commerce:variation_size_label', 'Pilih Saiz / Variasi')} <span className="text-amber-500 font-bold">*</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.variations.map((v) => {
@@ -447,7 +449,7 @@ export function ProductVariationBottomSheet({
 
           {/* Quantity Stepper */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Kuantiti</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:quantity_label', 'Kuantiti')}</p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -476,7 +478,7 @@ export function ProductVariationBottomSheet({
               {/* Pickup Time */}
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">
-                  Cadangan Waktu Ambil <span className="text-rose-400">*</span>
+                  {t('commerce:suggested_pickup_time', 'Cadangan Waktu Ambil')} <span className="text-rose-400">*</span>
                 </p>
 
                 {/* Quick suggestions */}
@@ -509,18 +511,18 @@ export function ProductVariationBottomSheet({
                 <input
                   value={pickupTime}
                   onChange={(e) => setPickupTime(e.target.value)}
-                  placeholder="Atau taip masa pilihan anda..."
+                  placeholder={t('commerce:custom_pickup_time_placeholder', 'Atau taip masa pilihan anda...')}
                   className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Nota Tambahan (Pilihan)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:special_notes_label', 'Nota Tambahan (Pilihan)')}</p>
                 <input
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Permintaan khas atau alahan makanan..."
+                  placeholder={t('commerce:special_notes_placeholder', 'Permintaan khas atau alahan makanan...')}
                   className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
@@ -530,7 +532,7 @@ export function ProductVariationBottomSheet({
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground/60" />
                   <div>
-                    <p className="text-[11px] font-bold text-foreground">Kongsikan No. Telefon</p>
+                    <p className="text-[11px] font-bold text-foreground">{t('commerce:share_phone_toggle', 'Kongsikan No. Telefon')}</p>
                     <p className="text-[9px] text-muted-foreground/50">Membolehkan peniaga hubungi pesanan anda</p>
                   </div>
                 </div>
@@ -550,7 +552,7 @@ export function ProductVariationBottomSheet({
               {/* Payment Method Selector */}
               {qrEnabled && codEnabled && (
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Kaedah Pembayaran</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:payment_method_label', 'Kaedah Pembayaran')}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -597,7 +599,7 @@ export function ProductVariationBottomSheet({
               className="absolute bottom-[130px] left-1/2 z-20 pointer-events-none"
             >
               <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20  animate-bounce">
-                <span>Skrol ke bawah</span>
+                <span>{t('commerce:scroll_down', 'Skrol ke bawah')}</span>
                 <ChevronDown className="w-3 h-3 animate-pulse" />
               </div>
             </motion.div>
@@ -608,7 +610,7 @@ export function ProductVariationBottomSheet({
         <div className="p-4 border-t border-border/40 bg-card/95  shrink-0">
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-muted-foreground">Jumlah ({qty} unit)</span>
+              <span className="text-xs font-bold text-muted-foreground">{t('commerce:total_units_count', `Jumlah (${qty} unit)`, { count: qty })}</span>
               <span className="text-xl font-black" style={{ color: PM_ACCENT }}>RM {total}</span>
             </div>
 
@@ -634,7 +636,7 @@ export function ProductVariationBottomSheet({
                 style={{ background: PM_GRADIENT }}
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>{submitting ? 'Menambah...' : 'Sahkan & Tambah ke Troli'}</span>
+                <span>{submitting ? t('commerce:submitting_dots', 'Menambah...') : t('commerce:confirm_add_cart', 'Sahkan & Tambah ke Troli')}</span>
               </button>
             ) : (
               <button
@@ -645,7 +647,7 @@ export function ProductVariationBottomSheet({
                 style={{ background: PM_GRADIENT }}
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>{submitting ? 'Menghantar...' : 'Teruskan Pesanan'}</span>
+                <span>{submitting ? t('commerce:submitting_dots', 'Menghantar...') : t('commerce:proceed_order', 'Teruskan Pesanan')}</span>
               </button>
             )}
           </div>

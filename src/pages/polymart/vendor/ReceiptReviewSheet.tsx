@@ -13,6 +13,7 @@ import {
   Receipt,
   RotateCcw,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface ReceiptReviewSheetProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
   onReject,
   loading,
 }) => {
+  const { t } = useTranslation(['commerce', 'common']);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   const handleZoomIn = () => {
@@ -71,7 +73,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0"
-            aria-label="Tutup Semakan Resit"
+            aria-label={t('commerce:close_aria', 'Tutup Semakan Resit')}
           />
 
           {/* Slide-Up Bottom Sheet Card */}
@@ -95,10 +97,10 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-black text-foreground tracking-tight truncate">
-                    Semakan Resit Pembayaran
+                    {t('commerce:review_receipt_title', 'Semakan Resit Pembayaran')}
                   </h3>
                   <p className="text-[11px] font-mono font-bold text-muted-foreground truncate">
-                    Pesanan {formattedOrderId}
+                    {t('commerce:order_prefix', `Pesanan ${formattedOrderId}`, { id: formattedOrderId })}
                   </p>
                 </div>
               </div>
@@ -107,7 +109,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                 type="button"
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-muted/60 hover:bg-rose-500/10 hover:text-rose-500 text-muted-foreground flex items-center justify-center transition-colors shrink-0"
-                aria-label="Tutup"
+                aria-label={t('common:close', 'Tutup')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -123,17 +125,17 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-black text-foreground truncate">
-                      {buyerName || 'Pelajar'}
+                      {buyerName || t('commerce:student_buyer', 'Pelajar')}
                     </p>
                     <p className="text-[10px] font-mono text-muted-foreground truncate">
-                      {buyerMatric ? buyerMatric : 'Tiada No. Matrik'}
+                      {buyerMatric ? buyerMatric : t('commerce:no_matric_no', 'Tiada No. Matrik')}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Jumlah Bayaran
+                    {t('commerce:payment_amount_label', 'Jumlah Bayaran')}
                   </span>
                   <span className="text-base sm:text-lg font-black font-mono tabular-nums text-amber-500 dark:text-amber-400">
                     {formattedAmount}
@@ -145,21 +147,21 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
               {paymentVerifiedAt && (
                 <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-xs">
                   <CheckCircle className="w-4 h-4 shrink-0" />
-                  <span>Pembayaran Telah Disahkan!</span>
+                  <span>{t('commerce:payment_already_verified', 'Pembayaran Telah Disahkan!')}</span>
                 </div>
               )}
 
               {paymentRejected && (
                 <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400 font-black text-xs">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>Resit Telah Ditolak</span>
+                  <span>{t('commerce:receipt_already_rejected', 'Resit Telah Ditolak')}</span>
                 </div>
               )}
 
               {/* Receipt Viewer Card */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-                  <span className="font-bold">Imej Bukti Resit</span>
+                  <span className="font-bold">{t('commerce:receipt_image_proof', 'Imej Bukti Resit')}</span>
                   {receiptUrl && (
                     <div className="flex items-center gap-1">
                       <button
@@ -167,8 +169,8 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                         onClick={handleZoomOut}
                         disabled={zoomLevel <= 1}
                         className="p-1 rounded-md bg-muted/60 hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                        title="Zum Keluar"
-                        aria-label="Zum Keluar"
+                        title={t('commerce:zoom_out_aria', 'Zum Keluar')}
+                        aria-label={t('commerce:zoom_out_aria', 'Zum Keluar')}
                       >
                         <ZoomOut className="w-3.5 h-3.5" />
                       </button>
@@ -177,8 +179,8 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                         onClick={handleZoomIn}
                         disabled={zoomLevel >= 2.5}
                         className="p-1 rounded-md bg-muted/60 hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                        title="Zum Masuk"
-                        aria-label="Zum Masuk"
+                        title={t('commerce:zoom_in_aria', 'Zum Masuk')}
+                        aria-label={t('commerce:zoom_in_aria', 'Zum Masuk')}
                       >
                         <ZoomIn className="w-3.5 h-3.5" />
                       </button>
@@ -187,8 +189,8 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                           type="button"
                           onClick={handleResetZoom}
                           className="p-1 rounded-md bg-muted/60 hover:bg-muted text-foreground transition-colors"
-                          title="Reset Zum"
-                          aria-label="Reset Zum"
+                          title={t('commerce:reset_zoom_aria', 'Reset Zum')}
+                          aria-label={t('commerce:reset_zoom_aria', 'Reset Zum')}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
@@ -198,8 +200,8 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1 rounded-md bg-muted/60 hover:bg-muted text-foreground transition-colors ml-1"
-                        title="Buka Imej Asal"
-                        aria-label="Buka Imej Asal"
+                        title={t('commerce:open_original_image_aria', 'Buka Imej Asal')}
+                        aria-label={t('commerce:open_original_image_aria', 'Buka Imej Asal')}
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -212,7 +214,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                     <div className="w-full h-full max-h-[380px] overflow-auto flex items-center justify-center p-2">
                       <img
                         src={receiptUrl}
-                        alt="Bukti Resit Pembayaran"
+                        alt={t('commerce:receipt_alt', 'Bukti Resit Pembayaran')}
                         style={{
                           transform: `scale(${zoomLevel})`,
                           transformOrigin: 'center center',
@@ -227,7 +229,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                         <FileQuestion className="w-6 h-6" />
                       </div>
                       <p className="text-xs font-bold text-muted-foreground">
-                        Tiada fail resit dimuat naik
+                        {t('commerce:no_receipt_uploaded', 'Tiada fail resit dimuat naik')}
                       </p>
                     </div>
                   )}
@@ -249,7 +251,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                   ) : (
                     <X className="w-4 h-4" />
                   )}
-                  <span>Tolak Resit</span>
+                  <span>{t('commerce:reject_receipt_btn', 'Tolak Resit')}</span>
                 </button>
 
                 <button
@@ -263,7 +265,7 @@ export const ReceiptReviewSheet: React.FC<ReceiptReviewSheetProps> = ({
                   ) : (
                     <CheckCircle className="w-4 h-4" />
                   )}
-                  <span>Sahkan Bayaran</span>
+                  <span>{t('commerce:verify_payment_btn', 'Sahkan Bayaran')}</span>
                 </button>
               </div>
             )}

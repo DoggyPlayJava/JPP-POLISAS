@@ -1813,7 +1813,7 @@ export function PolyMapsPage() {
 
           {userLocation && (
             <Marker position={userLocation} icon={getUserIcon(heading)}>
-              <Popup>Lokasi Anda</Popup>
+              <Popup>{t('services:your_location', 'Lokasi Anda')}</Popup>
             </Marker>
           )}
 
@@ -2235,7 +2235,7 @@ export function PolyMapsPage() {
                           <Umbrella className="w-4 h-4 text-emerald-300" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white">Utamakan Laluan Berbumbung</p>
+                          <p className="text-xs font-bold text-white">{t('services:prefer_covered_walkway', 'Utamakan Laluan Berbumbung')}</p>
                           <p className="text-[10px] text-blue-200">Elakkan hujan & panas di kampus</p>
                         </div>
                       </div>
@@ -2416,7 +2416,7 @@ export function PolyMapsPage() {
                           {hasIndoorDirections && !hasArrived && (
                             <div className="bg-white/10 rounded-2xl p-3 border border-white/10 flex flex-col gap-2">
                               <p className="text-xs text-white leading-relaxed">
-                                Panduan dalaman bilik akan dibuka secara automatik apabila anda berada &lt; 30m dari bangunan.
+                                {t('services:indoor_auto_open_hint', 'Panduan dalaman bilik akan dibuka secara automatik apabila anda berada < 30m dari bangunan.')}
                               </p>
                               <div className="flex justify-between items-center pt-2 border-t border-white/10">
                                 <span className="text-[10px] font-bold text-white/60">Jarak ke bangunan: {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : 'mengira...'}</span>
@@ -2795,7 +2795,7 @@ export function PolyMapsPage() {
                             className="flex items-center gap-1.5 bg-[#C96F4F] hover:bg-[#B35F41] text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-[#C96F4F]/25 active:scale-95"
                           >
                             <Navigation className="w-3.5 h-3.5" />
-                            <span>Pandu</span>
+                            <span>{t('services:drive_navigate', 'Pandu')}</span>
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setSheetSnap('HALF'); }}
