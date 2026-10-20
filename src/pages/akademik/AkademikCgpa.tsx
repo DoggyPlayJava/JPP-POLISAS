@@ -21,12 +21,16 @@ const HPNM_COLOR = '#818CF8';
 const PNM_COLOR  = '#34D399';
 
 // ─── Grade helper ─────────────────────────────────────────────
-function gradeInfo(val: number) {
-  // POLISAS grading: Cemerlang >= 3.5 (not 3.7)
-  if (val >= 3.5) return { label: 'Cemerlang',  color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
-  if (val >= 3.0) return { label: 'Kepujian',   color: THEME,     bg: 'rgba(129,140,248,0.12)' };
-  if (val >= 2.0) return { label: 'Lulus',      color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' };
-  return           { label: 'Gagal',            color: '#EF4444', bg: 'rgba(239,68,68,0.12)' };
+function gradeInfo(val: number, t?: (key: string, fallback: string) => string) {
+  const cemerlang = t ? t('akademik:grade_excellent', 'Cemerlang') : 'Cemerlang';
+  const kepujian  = t ? t('akademik:grade_honours', 'Kepujian') : 'Kepujian';
+  const lulus     = t ? t('akademik:grade_pass', 'Lulus') : 'Lulus';
+  const gagal     = t ? t('akademik:grade_fail', 'Gagal') : 'Gagal';
+
+  if (val >= 3.5) return { label: cemerlang,  color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
+  if (val >= 3.0) return { label: kepujian,   color: THEME,     bg: 'rgba(129,140,248,0.12)' };
+  if (val >= 2.0) return { label: lulus,      color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' };
+  return           { label: gagal,            color: '#EF4444', bg: 'rgba(239,68,68,0.12)' };
 }
 
 // ─── Semester label builder ───────────────────────────────────
@@ -432,7 +436,7 @@ export function AkademikCgpa() {
   const latestRecord = records[records.length - 1];
   const prevRecord   = records[records.length - 2];
   const latestHpnm   = latestRecord ? Number(latestRecord.hpnm) : null;
-  const grade        = latestHpnm ? gradeInfo(latestHpnm) : null;
+  const grade        = latestHpnm ? gradeInfo(latestHpnm, t) : null;
   const trend        = latestHpnm && prevRecord
     ? latestHpnm - Number(prevRecord.hpnm)
     : null;
@@ -443,7 +447,7 @@ export function AkademikCgpa() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">{t('akademik:records_badge', 'Akademik')}</p>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white">
           {t('akademik:gpa_calculator', 'Kalkulator HPA & HPNM')}
         </h1>
@@ -470,7 +474,7 @@ export function AkademikCgpa() {
               <span className="text-[8px] font-black text-slate-500 dark:text-white/30 uppercase tracking-widest mt-0.5">HPNM</span>
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Terkini</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">{t('akademik:latest_cgpa', 'Terkini')}</p>
               <p className="text-xl font-black text-slate-900 dark:text-white">{grade.label}</p>
               <p className="text-[10px] font-bold text-slate-500 dark:text-white/40 mt-1">
                 {semLabel(latestRecord.semester, latestRecord.tahun)}
@@ -490,7 +494,7 @@ export function AkademikCgpa() {
                     {trend > 0 ? '+' : ''}{trend.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-[9px] text-slate-400 dark:text-white/25 font-medium mt-0.5">vs semester lepas</p>
+                <p className="text-[9px] text-slate-400 dark:text-white/25 font-medium mt-0.5">{t('akademik:vs_previous_sem', 'vs semester lepas')}</p>
                 <p className="text-xs font-black text-slate-600 dark:text-white/50 mt-1">
                   PNM: <span style={{ color: PNM_COLOR }}>{latestRecord.pnm ? Number(latestRecord.pnm).toFixed(2) : '—'}</span>
                 </p>
@@ -509,7 +513,7 @@ export function AkademikCgpa() {
           className="bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] text-slate-900 dark:text-white rounded-[2rem] p-5 shadow-xs"
         >
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Trend HPNM</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:cgpa_trend', 'Trend HPNM')}</p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-1.5 rounded-full" style={{ background: HPNM_COLOR }} />
@@ -581,9 +585,9 @@ export function AkademikCgpa() {
           {/* Grade bands legend */}
           <div className="flex items-center gap-4 mt-3 justify-end">
             {[
-              { label: '≥3.50 Cemerlang', color: '#10B981' },
-              { label: '≥3.00 Kepujian',  color: THEME },
-              { label: '≥2.00 Lulus',     color: '#F59E0B' },
+              { label: '≥3.50 ' + t('akademik:grade_excellent', 'Cemerlang'), color: '#10B981' },
+              { label: '≥3.00 ' + t('akademik:grade_honours', 'Kepujian'),  color: THEME },
+              { label: '≥2.00 ' + t('akademik:grade_pass', 'Lulus'),     color: '#F59E0B' },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-1">
                 <div className="w-6 border-t border-dashed" style={{ borderColor: b.color, opacity: 0.5 }} />
@@ -597,7 +601,7 @@ export function AkademikCgpa() {
       {/* ── INPUT FORM ──────────────────────────────────────── */}
       <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] text-slate-900 dark:text-white p-5 space-y-4 shadow-xs">
         <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
-          <Upload className="w-3.5 h-3.5" /> Tambah Rekod HPNM
+          <Upload className="w-3.5 h-3.5" /> {t('akademik:add_cgpa_record', 'Tambah Rekod HPNM')}
         </h3>
 
         <input
@@ -625,14 +629,14 @@ export function AkademikCgpa() {
               {scanning ? (
                 <>
                   <Loader2 className="w-8 h-8 animate-spin" style={{ color: THEME }} />
-                  <p className="text-xs font-black uppercase tracking-widest">Menganalisis PDF...</p>
+                  <p className="text-xs font-black uppercase tracking-widest">{t('akademik:analyzing_pdf', 'Menganalisis PDF...')}</p>
                 </>
               ) : (
                 <>
                   <FileText className="w-8 h-8" />
                   <div className="text-center">
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white/80">Muat Naik Transkrip PDF</p>
-                    <p className="text-[9px] text-slate-500 dark:text-white/20 mt-1">Slip peperiksaan / transkrip POLISAS — HPNM dikesan automatik</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white/80">{t('akademik:upload_transcript_pdf', 'Muat Naik Transkrip PDF')}</p>
+                    <p className="text-[9px] text-slate-500 dark:text-white/20 mt-1">{t('akademik:upload_transcript_hint', 'Slip peperiksaan / transkrip POLISAS — HPNM dikesan automatik')}</p>
                   </div>
                 </>
               )}
@@ -642,7 +646,7 @@ export function AkademikCgpa() {
               className="flex items-center gap-1.5 mx-auto text-[10px] font-black text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 transition-colors uppercase tracking-widest"
             >
               <Sparkles className="w-3 h-3" />
-              Isi secara manual (tanpa PDF)
+              {t('akademik:manual_entry_no_pdf', 'Isi secara manual (tanpa PDF)')}
             </button>
           </div>
         ) : (
@@ -652,13 +656,13 @@ export function AkademikCgpa() {
               scanOk ? (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
                   <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
-                  <p className="text-xs font-black text-emerald-600 dark:text-emerald-300">HPNM berjaya dikesan daripada PDF. Semak dan sahkan di bawah.</p>
+                  <p className="text-xs font-black text-emerald-600 dark:text-emerald-300">{t('akademik:cgpa_detected_success', 'HPNM berjaya dikesan daripada PDF. Semak dan sahkan di bawah.')}</p>
                 </div>
               ) : (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/25 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
-                    <p className="text-xs font-black text-rose-600 dark:text-rose-300">Gagal dimuatnaik — format PDF tidak dikenali.</p>
+                    <p className="text-xs font-black text-rose-600 dark:text-rose-300">{t('akademik:pdf_format_unrecognized', 'Gagal dimuatnaik — format PDF tidak dikenali.')}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <a
@@ -667,13 +671,13 @@ export function AkademikCgpa() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-black text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/25 transition-all uppercase tracking-widest"
                     >
-                      <MessageCircle className="w-3 h-3" /> Hubungi JPP
+                      <MessageCircle className="w-3 h-3" /> {t('akademik:contact_jpp', 'Hubungi JPP')}
                     </a>
                     <button
                       onClick={() => setDraftMode('MANUAL')}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-[10px] font-black text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60 transition-all uppercase tracking-widest"
                     >
-                      <Sparkles className="w-3 h-3" /> Isi Manual
+                      <Sparkles className="w-3 h-3" /> {t('akademik:fill_manually', 'Isi Manual')}
                     </button>
                   </div>
                 </div>
@@ -683,7 +687,7 @@ export function AkademikCgpa() {
             {/* Form fields */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">HPNM (Kumulatif) *</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">{t('akademik:cumulative_cgpa_label', 'HPNM (Kumulatif) *')}</label>
                 <input
                   type="number" step="0.01" min="0" max="4"
                   value={fHpnm}
@@ -693,7 +697,7 @@ export function AkademikCgpa() {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">PNM (Semester ini)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">{t('akademik:gpa_current_sem_label', 'PNM (Semester ini)')}</label>
                 <input
                   type="number" step="0.01" min="0" max="4"
                   value={fPnm}
@@ -703,7 +707,7 @@ export function AkademikCgpa() {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">Semester (1–9)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">{t('akademik:semester_range_label', 'Semester (1–9)')}</label>
                 <input
                   type="number" min="1" max="9" step="1"
                   value={fSem}
@@ -713,7 +717,7 @@ export function AkademikCgpa() {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">Sesi Tahun</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-1.5">{t('akademik:academic_year_session', 'Sesi Tahun')}</label>
                 <input
                   value={fTahun}
                   onChange={e => setFTahun(e.target.value)}
@@ -725,10 +729,10 @@ export function AkademikCgpa() {
 
             {/* Live preview grade */}
             {fHpnm && !isNaN(parseFloat(fHpnm)) && (
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: gradeInfo(parseFloat(fHpnm)).bg }}>
-                <BookOpen className="w-4 h-4 shrink-0" style={{ color: gradeInfo(parseFloat(fHpnm)).color }} />
-                <span className="text-xs font-black" style={{ color: gradeInfo(parseFloat(fHpnm)).color }}>
-                  {parseFloat(fHpnm).toFixed(2)} — {gradeInfo(parseFloat(fHpnm)).label}
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: gradeInfo(parseFloat(fHpnm), t).bg }}>
+                <BookOpen className="w-4 h-4 shrink-0" style={{ color: gradeInfo(parseFloat(fHpnm), t).color }} />
+                <span className="text-xs font-black" style={{ color: gradeInfo(parseFloat(fHpnm), t).color }}>
+                  {parseFloat(fHpnm).toFixed(2)} — {gradeInfo(parseFloat(fHpnm), t).label}
                 </span>
               </div>
             )}
@@ -741,7 +745,7 @@ export function AkademikCgpa() {
                 style={{ background: THEME, color: '#fff' }}
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                {saving ? 'Menyimpan...' : 'Simpan Rekod'}
+                {saving ? t('akademik:saving', 'Menyimpan...') : t('akademik:save_record', 'Simpan Rekod')}
               </button>
               <button
                 onClick={resetDraft}
@@ -756,13 +760,13 @@ export function AkademikCgpa() {
 
       {/* ── GRADE SCALE ─────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.05] bg-white dark:bg-white/[0.01] p-4 shadow-xs">
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 mb-3">Skala HPNM</p>
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 mb-3">{t('akademik:cgpa_scale', 'Skala HPNM')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
-            { range: '3.50 – 4.00', label: 'Cemerlang', color: '#10B981' },
-            { range: '3.00 – 3.49', label: 'Kepujian',  color: THEME },
-            { range: '2.00 – 2.99', label: 'Lulus',     color: '#F59E0B' },
-            { range: '< 2.00',      label: 'Gagal',     color: '#EF4444' },
+            { range: '3.50 – 4.00', label: t('akademik:grade_excellent', 'Cemerlang'), color: '#10B981' },
+            { range: '3.00 – 3.49', label: t('akademik:grade_honours', 'Kepujian'),  color: THEME },
+            { range: '2.00 – 2.99', label: t('akademik:grade_pass', 'Lulus'),     color: '#F59E0B' },
+            { range: '< 2.00',      label: t('akademik:grade_fail', 'Gagal'),     color: '#EF4444' },
           ].map(item => (
             <div key={item.range} className="p-2.5 rounded-xl" style={{ background: hexToRgba(item.color, 0.08) }}>
               <p className="text-xs font-black" style={{ color: item.color }}>{item.label}</p>
@@ -779,7 +783,7 @@ export function AkademikCgpa() {
             {t('akademik:target_cgpa', 'Sasaran HPNM Graduasi')}
           </p>
           <p className="text-xs text-slate-600 dark:text-white/60 font-medium mt-0.5">
-            Anggarkan sasaran pencapaian semester berdasarkan jumlah {t('akademik:credit_hours', 'Jam Kredit')}.
+            {t('akademik:target_cgpa_calc_desc', 'Anggarkan sasaran pencapaian semester berdasarkan jumlah {{credit}}.', { credit: t('akademik:credit_hours', 'Jam Kredit') })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -796,12 +800,12 @@ export function AkademikCgpa() {
       {records.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-            Rekod Semester ({records.length})
+            {t('akademik:semester_records_count', 'Rekod Semester ({{count}})', { count: records.length })}
           </h3>
           <div className="space-y-2.5">
             {[...records].reverse().map((r, i) => {
               const hpnm  = Number(r.hpnm);
-              const g     = gradeInfo(hpnm);
+              const g     = gradeInfo(hpnm, t);
               const pnm   = r.pnm ? Number(r.pnm) : null;
               // Compare with next older record
               const older = records[records.length - 2 - i];
@@ -849,16 +853,16 @@ export function AkademikCgpa() {
                         href={r.drive_view_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Lihat Transkrip"
+                        aria-label={t('akademik:view_transcript', 'Lihat Transkrip')}
                         className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[10px] font-black text-indigo-600 dark:text-indigo-400/80 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-xl bg-slate-100 dark:bg-white/[0.03] hover:bg-slate-200/70 dark:hover:bg-white/[0.08] transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 gap-1 px-2.5"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Transkrip</span>
+                        <span className="hidden sm:inline">{t('akademik:view_transcript', 'Transkrip')}</span>
                       </a>
                     )}
                     <button
                       onClick={() => handleDelete(r.id)}
-                      aria-label="Padam rekod"
+                      aria-label={t('akademik:delete_achievement', 'Padam rekod')}
                       className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 dark:text-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -875,8 +879,8 @@ export function AkademikCgpa() {
       {records.length === 0 && !inDraft && (
         <div className="py-16 text-center space-y-3">
           <BookOpen className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada rekod HPNM lagi</p>
-          <p className="text-[9px] text-slate-400 dark:text-white/15">Muat naik transkrip atau isi manual untuk mulakan</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('akademik:no_cgpa_records_yet', 'Tiada rekod HPNM lagi')}</p>
+          <p className="text-[9px] text-slate-400 dark:text-white/15">{t('akademik:upload_or_manual_hint', 'Muat naik transkrip atau isi manual untuk mulakan')}</p>
         </div>
       )}
     </div>

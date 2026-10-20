@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Plus, Save, X, Edit2, Trash2, Loader, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -48,6 +49,7 @@ function inputCls() {
 }
 
 export function AdminJadualPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { fixtures, sports, kontingen, edition, refetch } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasFixture | null>(null);
@@ -81,7 +83,7 @@ export function AdminJadualPage() {
   };
 
   const handleSave = async () => {
-    if (!edition || !form.sport_id) { toast.error('Sila pilih sukan'); return; }
+    if (!edition || !form.sport_id) { toast.error(t('supsas:select_sport_required', 'Sila pilih sukan')); return; }
     setSaving(true);
     const payload = {
       edition_id: edition.id,
@@ -103,17 +105,17 @@ export function AdminJadualPage() {
       ? await supabase.from('supsas_fixtures').update(payload).eq('id', editTarget.id)
       : await supabase.from('supsas_fixtures').insert(payload);
     setSaving(false);
-    if (error) { toast.error('Gagal simpan: ' + error.message); return; }
-    toast.success(editTarget ? 'Perlawanan dikemas kini!' : 'Perlawanan ditambah!');
+    if (error) { toast.error(t('supsas:save_failed_prefix', 'Gagal simpan: ') + error.message); return; }
+    toast.success(editTarget ? t('supsas:match_updated', 'Perlawanan dikemas kini!') : t('supsas:match_added', 'Perlawanan ditambah!'));
     setShowForm(false);
     refetch();
   };
 
   const handleDelete = async (f: SupsasFixture) => {
-    if (!confirm('Padam perlawanan ini?')) return;
+    if (!confirm(t('supsas:delete_match_confirm', 'Padam perlawanan ini?'))) return;
     const { error } = await supabase.from('supsas_fixtures').delete().eq('id', f.id);
-    if (error) { toast.error('Gagal padam'); return; }
-    toast.success('Perlawanan dipadam');
+    if (error) { toast.error(t('supsas:delete_failed', 'Gagal padam')); return; }
+    toast.success(t('supsas:match_deleted', 'Perlawanan dipadam'));
     refetch();
   };
 
@@ -122,7 +124,7 @@ export function AdminJadualPage() {
   // Group by date
   const grouped: Record<string, SupsasFixture[]> = {};
   filtered.forEach(f => {
-    const key = f.match_date ?? 'Tanpa Tarikh';
+    const key = f.match_date ?? t('supsas:no_date', 'Tanpa Tarikh');
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(f);
   });
@@ -132,14 +134,14 @@ export function AdminJadualPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white">Jadual Pertandingan</h1>
-          <p className="text-white/30 text-sm mt-1">{fixtures.length} perlawanan dijadualkan</p>
+          <h1 className="text-2xl font-black text-white">{t('supsas:match_schedule_title', 'Jadual Pertandingan')}</h1>
+          <p className="text-white/30 text-sm mt-1">{t('supsas:matches_scheduled_count', '{{count}} perlawanan dijadualkan', { count: fixtures.length })}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
               if (fixtures.length === 0) {
-                toast.error('Tiada perlawanan untuk disalin');
+                toast.error(t('supsas:no_matches_to_copy', 'Tiada perlawanan untuk disalin'));
                 return;
               }
               const lines = fixtures.map(f => {
@@ -150,18 +152,18 @@ export function AdminJadualPage() {
               });
               const text = `📋 *KOD PIN PENGADIL SUPSAS 2.0*\n========================\n\n` + lines.join('\n');
               navigator.clipboard.writeText(text);
-              toast.success('Senarai PIN Pengadil disalin untuk WhatsApp!');
+              toast.success(t('supsas:pin_copied_whatsapp', 'Senarai PIN Pengadil disalin untuk WhatsApp!'));
             }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/80 text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all"
           >
-            📋 Salin PIN (WhatsApp)
+            {t('supsas:copy_pin_whatsapp', '📋 Salin PIN (WhatsApp)')}
           </button>
           <button
             onClick={openNew}
             className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all"
           >
             <Plus className="w-4 h-4" />
-            Tambah Perlawanan
+            {t('supsas:btn_add_match', 'Tambah Perlawanan')}
           </button>
         </div>
       </div>
@@ -174,7 +176,7 @@ export function AdminJadualPage() {
             filterSport === 'all' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10'
           )}
         >
-          Semua Sukan
+          {t('supsas:all_sports', 'Semua Sukan')}
         </button>
         {sports.map(s => (
           <button
@@ -193,7 +195,7 @@ export function AdminJadualPage() {
       {Object.keys(grouped).length === 0 ? (
         <div className="text-center py-16">
           <Calendar className="w-10 h-10 text-white/10 mx-auto mb-3" />
-          <p className="text-white/20 text-sm font-black uppercase tracking-widest">Belum ada perlawanan dijadualkan</p>
+          <p className="text-white/20 text-sm font-black uppercase tracking-widest">{t('supsas:no_matches_scheduled', 'Belum ada perlawanan dijadualkan')}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -253,10 +255,10 @@ export function AdminJadualPage() {
                         <button
                           onClick={() => setScoreTarget(f)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all"
-                          title="Kemaskini Skor"
+                          title={t('supsas:update_score_title', 'Kemaskini Skor')}
                         >
                           <Pencil className="w-3 h-3" />
-                          Skor
+                          {t('supsas:score_btn', 'Skor')}
                         </button>
                         <button onClick={() => openEdit(f)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
                           <Edit2 className="w-3.5 h-3.5" />
@@ -301,7 +303,7 @@ export function AdminJadualPage() {
             >
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-white">{editTarget ? 'Edit Perlawanan' : 'Tambah Perlawanan'}</h2>
+                  <h2 className="text-lg font-black text-white">{editTarget ? t('supsas:edit_match', 'Edit Perlawanan') : t('supsas:btn_add_match', 'Tambah Perlawanan')}</h2>
                   <button onClick={() => setShowForm(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
                     <X className="w-4 h-4" />
                   </button>
@@ -309,20 +311,20 @@ export function AdminJadualPage() {
 
                 {/* Sport */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Sukan</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:sport_label', 'Sukan')}</label>
                   <select value={form.sport_id} onChange={e => setForm(p => ({ ...p, sport_id: e.target.value }))} className={inputCls()}>
-                    <option value="">— Pilih Sukan —</option>
+                    <option value="">{t('supsas:select_sport_placeholder', '— Pilih Sukan —')}</option>
                     {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Pusingan</label>
-                    <input value={form.round} onChange={e => setForm(p => ({ ...p, round: e.target.value }))} placeholder="cth: Separuh Akhir" className={inputCls()} />
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:round_label', 'Pusingan')}</label>
+                    <input value={form.round} onChange={e => setForm(p => ({ ...p, round: e.target.value }))} placeholder={t('supsas:round_placeholder', 'cth: Separuh Akhir')} className={inputCls()} />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">No. Perlawanan</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:match_number_label', 'No. Perlawanan')}</label>
                     <input type="number" value={form.match_number} onChange={e => setForm(p => ({ ...p, match_number: e.target.value }))} placeholder="1" className={inputCls()} />
                   </div>
                 </div>
@@ -330,14 +332,14 @@ export function AdminJadualPage() {
                 {/* Teams */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Pasukan A</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:team_a_label', 'Pasukan A')}</label>
                     <select value={form.kontingen_a_id} onChange={e => setForm(p => ({ ...p, kontingen_a_id: e.target.value }))} className={inputCls()}>
                       <option value="">— TBD —</option>
                       {kontingen.map(k => <option key={k.id} value={k.id}>{k.short_code} — {k.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Pasukan B</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:team_b_label', 'Pasukan B')}</label>
                     <select value={form.kontingen_b_id} onChange={e => setForm(p => ({ ...p, kontingen_b_id: e.target.value }))} className={inputCls()}>
                       <option value="">— TBD —</option>
                       {kontingen.map(k => <option key={k.id} value={k.id}>{k.short_code} — {k.name}</option>)}
@@ -348,22 +350,22 @@ export function AdminJadualPage() {
                 {/* Date + Time */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tarikh</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:date_label', 'Tarikh')}</label>
                     <input type="date" value={form.match_date} onChange={e => setForm(p => ({ ...p, match_date: e.target.value }))} className={inputCls()} />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Masa</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:match_time', 'Masa')}</label>
                     <input type="time" value={form.match_time} onChange={e => setForm(p => ({ ...p, match_time: e.target.value }))} className={inputCls()} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Venue / Tempat</label>
-                    <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder="cth: Padang A" className={inputCls()} />
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:venue_label', 'Venue / Tempat')}</label>
+                    <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder={t('supsas:venue_placeholder', 'cth: Padang A')} className={inputCls()} />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Status</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:status_label', 'Status')}</label>
                     <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} className={inputCls()}>
                       {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
@@ -374,17 +376,17 @@ export function AdminJadualPage() {
                 {(form.status === 'completed' || form.status === 'live') && (
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Skor A</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:score_a_label', 'Skor A')}</label>
                       <input value={form.score_a} onChange={e => setForm(p => ({ ...p, score_a: e.target.value }))} placeholder="3" className={inputCls()} />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Skor B</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:score_b_label', 'Skor B')}</label>
                       <input value={form.score_b} onChange={e => setForm(p => ({ ...p, score_b: e.target.value }))} placeholder="1" className={inputCls()} />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Pemenang</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:winner_label', 'Pemenang')}</label>
                       <select value={form.winner_id} onChange={e => setForm(p => ({ ...p, winner_id: e.target.value }))} className={inputCls()}>
-                        <option value="">— Tiada —</option>
+                        <option value="">{t('supsas:none_placeholder', '— Tiada —')}</option>
                         {kontingen.map(k => <option key={k.id} value={k.id}>{k.short_code}</option>)}
                       </select>
                     </div>
@@ -392,8 +394,8 @@ export function AdminJadualPage() {
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Nota (Pilihan)</label>
-                  <input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="cth: Ditangguh sebab hujan" className={inputCls()} />
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:notes_optional', 'Nota (Pilihan)')}</label>
+                  <input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder={t('supsas:notes_placeholder', 'cth: Ditangguh sebab hujan')} className={inputCls()} />
                 </div>
 
                 <button
@@ -402,7 +404,7 @@ export function AdminJadualPage() {
                   className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {editTarget ? 'Simpan Perubahan' : 'Tambah Perlawanan'}
+                  {editTarget ? t('supsas:save_changes', 'Simpan Perubahan') : t('supsas:btn_add_match', 'Tambah Perlawanan')}
                 </button>
               </div>
             </motion.div>

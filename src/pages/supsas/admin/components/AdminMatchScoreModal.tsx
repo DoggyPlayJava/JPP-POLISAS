@@ -3,6 +3,7 @@
  * Digunakan untuk match kumpulan DAN match KO (SF/Final)
  */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Loader, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +26,7 @@ const STATUS_OPTIONS = [
 ];
 
 export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }: Props) {
+  const { t } = useTranslation(['supsas', 'common']);
   const a = fixture.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
   const b = fixture.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
 
@@ -63,11 +65,11 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
     setSaving(false);
 
     if (error) {
-      toast.error('Gagal simpan skor: ' + error.message);
+      toast.error(t('supsas:update_score_failed', 'Gagal simpan skor') + ': ' + error.message);
       return;
     }
 
-    toast.success('Skor dikemas kini!');
+    toast.success(t('supsas:match_updated', 'Skor dikemas kini!'));
     onSaved();
     onClose();
   };
@@ -105,23 +107,23 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400/60 mb-0.5">
-                Kemaskini Skor
+                {t('supsas:update_score_title', 'Kemaskini Skor')}
               </p>
               <h2 className="text-base font-black text-white">{matchLabel}</h2>
               {fixture.referee_pin && (
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    PIN Pengadil: {fixture.referee_pin}
+                    {t('supsas:referee_pin_label', 'PIN Pengadil:')} {fixture.referee_pin}
                   </span>
                   <button
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(fixture.referee_pin || '');
-                      toast.success('PIN Pengadil disalin!');
+                      toast.success(t('supsas:pin_copied', 'PIN Pengadil disalin!'));
                     }}
                     className="text-[9px] font-black text-white/40 hover:text-white underline uppercase"
                   >
-                    Salin
+                    {t('common:copy', 'Salin')}
                   </button>
                 </div>
               )}
@@ -166,9 +168,9 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
               <span className="text-white/20 font-black text-sm">VS</span>
               {!isNaN(numA) && !isNaN(numB) && (
                 <span className="text-[9px] font-black text-white/20 uppercase">
-                  {numA > numB ? (a?.short_code ?? 'A') + ' menang'
-                  : numB > numA ? (b?.short_code ?? 'B') + ' menang'
-                  : 'Seri'}
+                  {numA > numB ? t('supsas:team_wins', '{{code}} menang', { code: a?.short_code ?? 'A' })
+                  : numB > numA ? t('supsas:team_wins', '{{code}} menang', { code: b?.short_code ?? 'B' })
+                  : t('supsas:draw', 'Seri')}
                 </span>
               )}
             </div>
@@ -201,7 +203,7 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
 
           {/* Status selector */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Status Perlawanan</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:match_status', 'Status Perlawanan')}</label>
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map(opt => (
                 <button
@@ -222,11 +224,11 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
 
           {/* Notes */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Nota (Opsional)</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:notes_optional', 'Nota (Pilihan)')}</label>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="cth: Masa tambahan, penalti..."
+              placeholder={t('supsas:notes_extra_time_placeholder', 'cth: Masa tambahan, penalti...')}
               className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all"
             />
           </div>
@@ -238,7 +240,7 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
             className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Simpan Skor
+            {t('supsas:btn_save_score', 'Simpan Skor')}
           </button>
         </div>
       </motion.div>

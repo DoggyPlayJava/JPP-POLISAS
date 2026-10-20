@@ -26,6 +26,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
 
 // ─── Form Tambah Pencapaian ───────────────────────────────────
 function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   const [form, setForm] = useState({
     category_id: '', jenis: '', peringkat: '',
@@ -114,8 +115,8 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-white/[0.06]">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/30 mb-0.5">Baharu</p>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Tambah Pencapaian</h2>
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/30 mb-0.5">{t('common:new', 'Baharu')}</p>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">{t('akademik:add_achievement_title', 'Tambah Pencapaian')}</h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.06] transition-all">
             <X className="w-4 h-4" />
@@ -125,7 +126,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
         <div className="p-6 space-y-4 pb-8">
           {/* Kategori */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Kategori Sijil</label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:certificate_category', 'Kategori Sijil')}</label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat: any) => (
                 <button
@@ -150,7 +151,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Jenis */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Jenis <span className="text-rose-500">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:type', 'Jenis')} <span className="text-rose-500">*</span></label>
             <div className="grid grid-cols-3 gap-2">
               {JENIS_OPTIONS.map(j => (
                 <button
@@ -175,7 +176,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Peringkat */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Peringkat <span className="text-rose-500">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:achievement_level', 'Peringkat')} <span className="text-rose-500">*</span></label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PERINGKAT_OPTIONS.map(p => (
                 <button
@@ -203,19 +204,19 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
             <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02]">
               <Trophy className="w-4 h-4 shrink-0" style={{ color: THEME }} />
               <p className="text-xs font-black text-slate-700 dark:text-white/60">
-                Merit dijangka: <span className="font-black" style={{ color: THEME }}>+{meritPreview} merit</span>
-                <span className="text-slate-400 dark:text-white/30 font-medium ml-1">(selepas disahkan exco)</span>
+                {t('akademik:expected_merit', 'Merit dijangka:')} <span className="font-black" style={{ color: THEME }}>+{meritPreview} {t('akademik:merit_unit', 'merit')}</span>
+                <span className="text-slate-400 dark:text-white/30 font-medium ml-1">{t('akademik:after_exco_approval', '(selepas disahkan exco)')}</span>
               </p>
             </div>
           )}
 
           {/* Nama */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Nama Pencapaian <span className="text-rose-500">*</span></label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:achievement_name', 'Nama Pencapaian')} <span className="text-rose-500">*</span></label>
             <input
               value={form.nama_pencapaian}
               onChange={e => field('nama_pencapaian', e.target.value)}
-              placeholder="Contoh: Johan Pertandingan Debat Kebangsaan 2025"
+              placeholder={t('akademik:achievement_name_placeholder', 'Contoh: Johan Pertandingan Debat Kebangsaan 2025')}
               className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs"
             />
           </div>
@@ -223,16 +224,16 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
           {/* Grid: Penganjur + Tarikh */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Penganjur</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:achievement_organizer', 'Penganjur')}</label>
               <input
                 value={form.penganjur}
                 onChange={e => field('penganjur', e.target.value)}
-                placeholder="Nama penganjur"
+                placeholder={t('akademik:achievement_organizer_placeholder', 'Nama penganjur')}
                 className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Tarikh</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:achievement_date', 'Tarikh')}</label>
               <input
                 type="date"
                 value={form.tarikh}
@@ -244,13 +245,13 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
           {/* Upload Sijil PDF */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Upload Sijil (PDF)</label>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('akademik:upload_cert_pdf', 'Upload Sijil (PDF)')}</label>
             <label className="flex items-center gap-3 p-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.02] cursor-pointer hover:bg-slate-100/70 dark:hover:bg-white/[0.04] hover:border-slate-400 dark:hover:border-white/20 transition-all group">
               <Upload className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:text-white/30 dark:group-hover:text-white/50 transition-colors" />
               <div className="flex-1 min-w-0">
                 {file
                   ? <p className="text-xs font-black text-slate-900 dark:text-white/70 truncate">{file.name}</p>
-                  : <p className="text-xs font-black text-slate-500 dark:text-white/30">Klik untuk pilih PDF (maks 30MB)</p>
+                  : <p className="text-xs font-black text-slate-500 dark:text-white/30">{t('akademik:click_select_pdf', 'Klik untuk pilih PDF (maks 30MB)')}</p>
                 }
               </div>
               {file && (
@@ -278,7 +279,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
             style={{ background: THEME, color: '#fff', boxShadow: `0 8px 24px ${hexToRgba(THEME, 0.3)}` }}
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
-            {saving ? 'Menghantar...' : 'Hantar Pencapaian'}
+            {saving ? t('common:submitting', 'Menghantar...') : t('akademik:submit_achievement', 'Hantar Pencapaian')}
           </button>
         </div>
       </div>
@@ -450,12 +451,12 @@ export function AkademikPencapaian() {
                   <UnlockKeyhole className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">Permohonan</p>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Buka Kunci Pencapaian</h3>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">{t('akademik:application', 'Permohonan')}</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('akademik:unlock_achievement_title', 'Buka Kunci Pencapaian')}</h3>
                 </div>
                 <button onClick={() => setUnlockTarget(null)} className="ml-auto p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.06] transition-all"><X className="w-4 h-4" /></button>
               </div>
-              <p className="text-xs text-slate-600 dark:text-white/40">Pencapaian <strong className="text-slate-900 dark:text-white/70">{unlockTarget.nama_pencapaian}</strong> telah disahkan. Nyatakan sebab permohonan buka kunci untuk edit/padam.</p>
+              <p className="text-xs text-slate-600 dark:text-white/40">{t('akademik:unlock_achievement_desc', 'Pencapaian {{name}} telah disahkan. Nyatakan sebab permohonan buka kunci untuk edit/padam.', { name: unlockTarget.nama_pencapaian })}</p>
               <textarea
                 value={unlockReason}
                 onChange={e => setUnlockReason(e.target.value)}
@@ -471,9 +472,9 @@ export function AkademikPencapaian() {
                   style={{ background: THEME, color: '#fff' }}
                 >
                   {unlockSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UnlockKeyhole className="w-3.5 h-3.5" />}
-                  {unlockSaving ? 'Menghantar...' : 'Hantar Permohonan'}
+                  {unlockSaving ? t('common:submitting', 'Menghantar...') : t('akademik:submit_request', 'Hantar Permohonan')}
                 </button>
-                <button onClick={() => setUnlockTarget(null)} className="px-4 py-3 rounded-xl text-xs font-black uppercase text-slate-500 hover:text-slate-900 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]">Batal</button>
+                <button onClick={() => setUnlockTarget(null)} className="px-4 py-3 rounded-xl text-xs font-black uppercase text-slate-500 hover:text-slate-900 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]">{t('common:cancel', 'Batal')}</button>
               </div>
             </div>
           </motion.div>
@@ -483,7 +484,7 @@ export function AkademikPencapaian() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Rekod</p>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">{t('akademik:records_badge', 'Rekod')}</p>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">{t('akademik:pencapaian_title', 'Pencapaian Saya')}</h1>
           <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
             {t('akademik:pencapaian_subtitle', 'Rekod anugerah, sijil & pertandingan — merit dikira automatik')}
@@ -512,7 +513,7 @@ export function AkademikPencapaian() {
                 : "bg-white dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
             )}
           >
-            {f} <span className="opacity-60">({counts[f]})</span>
+            {f === 'SEMUA' ? t('akademik:folder_all', 'Semua') : f === 'MENUNGGU' ? t('akademik:status_pending', 'Menunggu') : f === 'DISAHKAN' ? t('akademik:status_approved', 'Disahkan') : t('akademik:status_rejected', 'Ditolak')} <span className="opacity-60">({counts[f]})</span>
           </button>
         ))}
       </div>
@@ -528,7 +529,7 @@ export function AkademikPencapaian() {
         <div className="py-20 text-center space-y-4">
           <Trophy className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
           <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-            {filter === 'SEMUA' ? 'Belum ada pencapaian' : `Tiada pencapaian ${filter.toLowerCase()}`}
+            {filter === 'SEMUA' ? t('akademik:no_achievements_yet', 'Belum ada pencapaian') : t('akademik:no_achievements_status', 'Tiada pencapaian {{status}}', { status: filter.toLowerCase() })}
           </p>
           {filter === 'SEMUA' && (
             <button
@@ -536,7 +537,7 @@ export function AkademikPencapaian() {
               className="text-[10px] font-black uppercase tracking-wider underline underline-offset-2 hover:opacity-70 transition-opacity"
               style={{ color: THEME }}
             >
-              + Tambah Pencapaian Pertama
+              {t('akademik:add_first_achievement', '+ Tambah Pencapaian Pertama')}
             </button>
           )}
         </div>
@@ -593,7 +594,7 @@ export function AkademikPencapaian() {
                   {p.status === 'DISAHKAN' && p.merit_override !== null && p.merit_override < p.merit_auto && p.rejection_reason && (
                     <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/15">
                       <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400/80 font-medium">Sebab Pengurangan: {p.rejection_reason}</p>
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400/80 font-medium">{t('akademik:reduction_reason', 'Sebab Pengurangan: ')}{p.rejection_reason}</p>
                     </div>
                   )}
                 </div>
@@ -607,11 +608,11 @@ export function AkademikPencapaian() {
                     <div className="flex flex-col items-end">
                       {p.merit_override !== null && p.merit_override !== p.merit_auto ? (
                         <>
-                          <span className="text-[8px] font-bold text-slate-400 dark:text-white/30 line-through">+{p.merit_auto} asal</span>
-                          <span className="text-[10px] font-black" style={{ color: THEME }}>+{p.merit_override} merit</span>
+                          <span className="text-[8px] font-bold text-slate-400 dark:text-white/30 line-through">+{p.merit_auto} {t('akademik:original', 'asal')}</span>
+                          <span className="text-[10px] font-black" style={{ color: THEME }}>+{p.merit_override} {t('akademik:merit_unit', 'merit')}</span>
                         </>
                       ) : (
-                        <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} merit</span>
+                        <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} {t('akademik:merit_unit', 'merit')}</span>
                       )}
                     </div>
                   )}
@@ -622,7 +623,7 @@ export function AkademikPencapaian() {
                       rel="noopener noreferrer"
                       className="text-[9px] font-black text-slate-500 hover:text-slate-900 dark:text-white/25 dark:hover:text-white/60 flex items-center gap-1 transition-colors"
                     >
-                      <FileText className="w-2.5 h-2.5" /> Sijil
+                      <FileText className="w-2.5 h-2.5" /> {t('akademik:certificate_label', 'Sijil')}
                     </a>
                   )}
                   {/* Action buttons */}
@@ -630,7 +631,7 @@ export function AkademikPencapaian() {
                     <button
                       onClick={() => handleDelete(p.id)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:text-white/20 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-all"
-                      title="Padam pencapaian"
+                      title={t('akademik:delete_achievement', 'Padam pencapaian')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -648,13 +649,13 @@ export function AkademikPencapaian() {
                       return (
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-[8px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/20 flex items-center gap-1">
-                            <UnlockKeyhole className="w-2.5 h-2.5 inline" /> Diluluskan ({hoursLeft}j lagi)
+                            <UnlockKeyhole className="w-2.5 h-2.5 inline" /> {t('akademik:approved_hours_left', 'Diluluskan ({{hours}}j lagi)', { hours: hoursLeft })}
                           </span>
                           <button
                             onClick={() => handleDelete(p.id)}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400/70 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-all border border-rose-200 dark:border-rose-500/20"
                           >
-                            <Trash2 className="w-2.5 h-2.5" /> Padam
+                            <Trash2 className="w-2.5 h-2.5" /> {t('akademik:delete', 'Padam')}
                           </button>
                         </div>
                       );
@@ -662,7 +663,7 @@ export function AkademikPencapaian() {
                     if (isPending) {
                       return (
                         <span className="text-[8px] font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/20 flex items-center gap-1">
-                          <Clock className="w-2.5 h-2.5 inline" /> Menunggu Kelulusan
+                          <Clock className="w-2.5 h-2.5 inline" /> {t('akademik:pending_approval', 'Menunggu Kelulusan')}
                         </span>
                       );
                     }
@@ -670,7 +671,7 @@ export function AkademikPencapaian() {
                       return (
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-[8px] font-black text-rose-700 dark:text-rose-400/80 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/15 flex items-center gap-1">
-                            <X className="w-2.5 h-2.5 inline" /> Ditolak
+                            <X className="w-2.5 h-2.5 inline" /> {t('akademik:status_rejected', 'Ditolak')}
                           </span>
                           {unlock?.reviewer_note && (
                             <p className="text-[8px] text-slate-500 dark:text-white/25 max-w-[120px] text-right">{unlock.reviewer_note}</p>
@@ -679,7 +680,7 @@ export function AkademikPencapaian() {
                             onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-amber-700 hover:text-amber-800 hover:bg-amber-100 dark:text-amber-400/60 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 transition-all border border-amber-300 dark:border-white/[0.06]"
                           >
-                            <UnlockKeyhole className="w-2.5 h-2.5" /> Cuba Lagi
+                            <UnlockKeyhole className="w-2.5 h-2.5" /> {t('akademik:try_again', 'Cuba Lagi')}
                           </button>
                         </div>
                       );
@@ -692,7 +693,7 @@ export function AkademikPencapaian() {
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-amber-700 hover:bg-amber-50 dark:text-white/20 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 transition-all border border-slate-200 hover:border-amber-300 dark:border-white/[0.06] dark:hover:border-amber-500/20"
                         title={isReduced ? "Rayuan Markah / Buka Kunci" : "Minta buka kunci"}
                       >
-                        <UnlockKeyhole className="w-2.5 h-2.5" /> {isReduced ? 'Rayuan Markah' : 'Buka Kunci'}
+                        <UnlockKeyhole className="w-2.5 h-2.5" /> {isReduced ? t('akademik:score_appeal', 'Rayuan Markah') : t('akademik:unlock_btn', 'Buka Kunci')}
                       </button>
                     );
                   })()}

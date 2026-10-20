@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Trophy, Users, Layers, Calendar, Medal, Activity,
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 export function SupsasAdminHome() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { edition, kontingen, sports, medalTally, fixtures, isLive } = useSupsas();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
@@ -22,7 +24,7 @@ export function SupsasAdminHome() {
 
   // N-3: Export PDF Laporan SUPSAS
   const handleExportPDF = async () => {
-    if (!edition) { toast.error('Tiada edisi untuk dieksport'); return; }
+    if (!edition) { toast.error(t('supsas:no_edition_desc', 'Tiada edisi untuk dieksport')); return; }
     setExporting(true);
     try {
       const kontingenMap: Record<string, string> = {};
@@ -84,20 +86,20 @@ export function SupsasAdminHome() {
         win.document.close();
         setTimeout(() => { win.print(); }, 600);
       } else {
-        toast.error('Sila benarkan popup untuk mencetak laporan');
+        toast.error(t('supsas:report_popup_blocked', 'Sila benarkan popup untuk mencetak laporan'));
       }
     } catch {
-      toast.error('Gagal jana laporan');
+      toast.error(t('supsas:generate_report_failed', 'Gagal jana laporan'));
     } finally {
       setExporting(false);
     }
   };
 
   const STAT_CARDS = [
-    { label: 'Kontinjen',       value: kontingen.length, icon: Users,    color: 'violet', sub: 'jabatan berdaftar',    path: '/supsas/admin/kontinjen' },
-    { label: 'Sukan Aktif',     value: sports.length,    icon: Trophy,   color: 'amber',  sub: 'acara dipertandingkan', path: '/supsas/admin/sukan' },
-    { label: 'Perlawanan Live', value: liveFixtures,     icon: Activity, color: 'red',    sub: 'sedang berlangsung',    path: '/supsas/admin/jadual' },
-    { label: 'Medal Diraih',    value: totalMedals,      icon: Medal,    color: 'emerald',sub: 'emas + perak + gangsa', path: '/supsas/admin/keputusan' },
+    { label: t('supsas:stat_contingent', 'Kontinjen'),       value: kontingen.length, icon: Users,    color: 'violet', sub: t('supsas:sub_registered_depts', 'jabatan berdaftar'),    path: '/supsas/admin/kontinjen' },
+    { label: t('supsas:stat_active_sports', 'Sukan Aktif'),     value: sports.length,    icon: Trophy,   color: 'amber',  sub: t('supsas:sub_contested_events', 'acara dipertandingkan'), path: '/supsas/admin/sukan' },
+    { label: t('supsas:stat_live_matches', 'Perlawanan Live'), value: liveFixtures,     icon: Activity, color: 'red',    sub: t('supsas:sub_ongoing', 'sedang berlangsung'),    path: '/supsas/admin/jadual' },
+    { label: t('supsas:stat_medals_won', 'Medal Diraih'),    value: totalMedals,      icon: Medal,    color: 'emerald',sub: t('supsas:sub_gold_silver_bronze', 'emas + perak + gangsa'), path: '/supsas/admin/keputusan' },
   ];
 
   const colorMap: Record<string, string> = {
@@ -108,10 +110,10 @@ export function SupsasAdminHome() {
   };
 
   const QUICK_ACTIONS = [
-    { label: 'Input Keputusan',  desc: 'Rekod medal & kedudukan',        path: '/supsas/admin/keputusan', icon: Layers,   urgent: liveFixtures > 0 },
-    { label: 'Tambah Sukan',     desc: 'Daftar sukan baru ke edisi ini', path: '/supsas/admin/sukan',     icon: Plus,     urgent: false },
-    { label: 'Urus Kontinjen',   desc: 'Jana kod jemputan ketua',        path: '/supsas/admin/kontinjen', icon: Users,    urgent: false },
-    { label: 'Tetapkan Jadual',  desc: 'Setup perlawanan & masa',       path: '/supsas/admin/jadual',    icon: Calendar, urgent: false },
+    { label: t('supsas:action_input_results', 'Input Keputusan'),  desc: t('supsas:desc_input_results', 'Rekod medal & kedudukan'),        path: '/supsas/admin/keputusan', icon: Layers,   urgent: liveFixtures > 0 },
+    { label: t('supsas:btn_add_sport', 'Tambah Sukan'),     desc: t('supsas:desc_add_sport', 'Daftar sukan baru ke edisi ini'), path: '/supsas/admin/sukan',     icon: Plus,     urgent: false },
+    { label: t('supsas:action_manage_contingents', 'Urus Kontinjen'),   desc: t('supsas:desc_manage_contingents', 'Jana kod jemputan ketua'),        path: '/supsas/admin/kontinjen', icon: Users,    urgent: false },
+    { label: t('supsas:action_set_schedule', 'Tetapkan Jadual'),  desc: t('supsas:desc_set_schedule', 'Setup perlawanan & masa'),       path: '/supsas/admin/jadual',    icon: Calendar, urgent: false },
   ];
 
   return (
@@ -119,7 +121,7 @@ export function SupsasAdminHome() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-2">Panel Admin</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-2">{t('supsas:admin_panel_badge', 'Panel Admin')}</p>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             {edition?.name ?? 'SUPSAS Dashboard'}
           </h1>
@@ -131,7 +133,7 @@ export function SupsasAdminHome() {
           {isLive && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/15 border border-red-500/25">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-              <span className="text-xs font-black uppercase tracking-widest text-red-400">Acara Sedang Berlangsung</span>
+              <span className="text-xs font-black uppercase tracking-widest text-red-400">{t('supsas:event_in_progress', 'Acara Sedang Berlangsung')}</span>
             </div>
           )}
           {/* N-3: Export PDF button */}
@@ -142,7 +144,7 @@ export function SupsasAdminHome() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-widest hover:text-white hover:border-white/20 transition-all disabled:opacity-40"
             >
               {exporting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              Export PDF
+              {t('supsas:export_pdf_btn', 'Export PDF')}
             </button>
           )}
         </div>
@@ -179,7 +181,7 @@ export function SupsasAdminHome() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-black text-white mb-4">Tindakan Pantas</h2>
+        <h2 className="text-lg font-black text-white mb-4">{t('supsas:quick_actions', 'Tindakan Pantas')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {QUICK_ACTIONS.map(({ label, desc, path, icon: Icon, urgent }, i) => (
             <motion.button
@@ -217,7 +219,7 @@ export function SupsasAdminHome() {
         <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20">
           <div className="flex items-center gap-3 mb-4">
             <Trophy className="w-5 h-5 text-amber-400" />
-            <h2 className="text-sm font-black uppercase tracking-widest text-amber-400">Pemimpin Sementara</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-amber-400">{t('supsas:temporary_leader', 'Pemimpin Sementara')}</h2>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-4 h-12 rounded-full" style={{ backgroundColor: topKontingen.color }} />
@@ -235,13 +237,13 @@ export function SupsasAdminHome() {
       {!edition && (
         <div className="p-8 rounded-3xl bg-amber-500/5 border border-amber-500/20 text-center">
           <Trophy className="w-10 h-10 text-amber-400/30 mx-auto mb-3" />
-          <p className="text-amber-400 font-black text-sm uppercase tracking-widest mb-2">Tiada Edisi Aktif</p>
-          <p className="text-white/30 text-sm mb-4">Pergi ke Tetapan Edisi untuk mencipta dan mengaktifkan edisi SUPSAS.</p>
+          <p className="text-amber-400 font-black text-sm uppercase tracking-widest mb-2">{t('supsas:no_active_edition', 'Tiada Edisi Aktif')}</p>
+          <p className="text-white/30 text-sm mb-4">{t('supsas:no_edition_desc', 'Pergi ke Tetapan Edisi untuk mencipta dan mengaktifkan edisi SUPSAS.')}</p>
           <button
             onClick={() => navigate('/supsas/admin/tetapan')}
             className="px-6 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all"
           >
-            Setup Edisi
+            {t('supsas:setup_edition_btn', 'Setup Edisi')}
           </button>
         </div>
       )}

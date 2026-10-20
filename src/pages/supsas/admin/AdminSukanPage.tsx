@@ -68,16 +68,16 @@ export function AdminSukanPage() {
   const openEdit = (s: SupsasSport) => { setForm({ name: s.name, category: s.category, gender: s.gender, format: s.format, icon: s.icon, venue: s.venue ?? '', max_per_team: s.max_per_team, max_groups_per_kontingen: (s as any).max_groups_per_kontingen ?? 1, max_players_per_group: (s as any).max_players_per_group ?? 11, sort_order: s.sort_order }); setEditTarget(s); setShowForm(true); };
 
   const handleSave = async () => {
-    if (!edition) { toast.error('Tiada edisi ditemui. Cipta edisi dahulu dalam Tetapan.'); return; }
-    if (!form.name.trim()) { toast.error('Sila isi nama sukan'); return; }
+    if (!edition) { toast.error(t('supsas:sport_created_setting', 'Tiada edisi ditemui. Cipta edisi dahulu dalam Tetapan.')); return; }
+    if (!form.name.trim()) { toast.error(t('supsas:fill_sport_name', 'Sila isi nama sukan')); return; }
     setSaving(true);
     const payload = { ...form, edition_id: edition.id };
     const { error } = editTarget
       ? await supabase.from('supsas_sports').update(payload).eq('id', editTarget.id)
       : await supabase.from('supsas_sports').insert(payload);
     setSaving(false);
-    if (error) { toast.error('Gagal simpan: ' + error.message); return; }
-    toast.success(editTarget ? 'Sukan dikemas kini!' : 'Sukan ditambah!');
+    if (error) { toast.error(t('supsas:save_failed_prefix', 'Gagal simpan: ') + error.message); return; }
+    toast.success(editTarget ? t('supsas:sport_updated', 'Sukan dikemas kini!') : t('supsas:sport_added', 'Sukan ditambah!'));
     setShowForm(false);
     refetch();
   };
@@ -85,16 +85,16 @@ export function AdminSukanPage() {
 
   const handleToggle = async (sport: SupsasSport) => {
     const { error } = await supabase.from('supsas_sports').update({ is_active: !sport.is_active }).eq('id', sport.id);
-    if (error) { toast.error('Gagal kemaskini'); return; }
-    toast.success(sport.is_active ? 'Sukan dinonaktifkan' : 'Sukan diaktifkan');
+    if (error) { toast.error(t('supsas:update_score_failed', 'Gagal kemaskini')); return; }
+    toast.success(sport.is_active ? t('supsas:sport_deactivated', 'Sukan dinonaktifkan') : t('supsas:sport_activated', 'Sukan diaktifkan'));
     refetch();
   };
 
   const handleDelete = async (sport: SupsasSport) => {
-    if (!confirm(`Padam sukan "${sport.name}"? Tindakan ini tidak boleh diundur.`)) return;
+    if (!confirm(t('supsas:confirm_delete_sport', 'Padam sukan "{{name}}"? Tindakan ini tidak boleh diundur.', { name: sport.name }))) return;
     const { error } = await supabase.from('supsas_sports').delete().eq('id', sport.id);
-    if (error) { toast.error('Gagal padam'); return; }
-    toast.success('Sukan dipadam');
+    if (error) { toast.error(t('supsas:delete_failed', 'Gagal padam')); return; }
+    toast.success(t('supsas:sport_deleted', 'Sukan dipadam'));
     refetch();
   };
 
@@ -106,10 +106,10 @@ export function AdminSukanPage() {
     const { data, error } = await supabase.rpc('advance_group_winners', { p_sport_id: sport.id });
     setAdvancing(null);
     console.log('[advance_group_winners] data:', data, 'error:', error);
-    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
-    if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
-    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
-    toast.success('✅ Fasa seterusnya berjaya dijana!');
+    if (error) { toast.error(t('supsas:rpc_error_prefix', 'Ralat RPC: ') + error.message); return; }
+    if (!data) { toast.error(t('supsas:no_server_response', 'Tiada respons dari pelayan. Sila cuba semula.')); return; }
+    if (data?.ok === false) { toast.error(data.error ?? t('supsas:unknown_error', 'Ralat tidak diketahui')); return; }
+    toast.success('✅ ' + t('supsas:next_phase_generated', 'Fasa seterusnya berjaya dijana!'));
     refetch();
   };
 
@@ -118,10 +118,10 @@ export function AdminSukanPage() {
     setAdvancing(sport.id + '_qf');
     const { data, error } = await supabase.rpc('advance_qf_winners', { p_sport_id: sport.id });
     setAdvancing(null);
-    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
+    if (error) { toast.error(t('supsas:rpc_error_prefix', 'Ralat RPC: ') + error.message); return; }
     if (!data) { toast.error('Tiada respons dari pelayan.'); return; }
-    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
-    toast.success('⚔️ Separuh Akhir berjaya dijana dari Suku Akhir!');
+    if (data?.ok === false) { toast.error(data.error ?? t('supsas:unknown_error', 'Ralat tidak diketahui')); return; }
+    toast.success('⚔️ ' + t('supsas:sf_generated_from_qf', 'Separuh Akhir berjaya dijana dari Suku Akhir!'));
     refetch();
   };
 
@@ -130,23 +130,19 @@ export function AdminSukanPage() {
     const { data, error } = await supabase.rpc('advance_sf_winners', { p_sport_id: sport.id });
     setAdvancing(null);
     console.log('[advance_sf_winners] data:', data, 'error:', error);
-    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
-    if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
-    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
-    toast.success('🏆 Final berjaya dijana!');
+    if (error) { toast.error(t('supsas:rpc_error_prefix', 'Ralat RPC: ') + error.message); return; }
+    if (!data) { toast.error(t('supsas:no_server_response', 'Tiada respons dari pelayan. Sila cuba semula.')); return; }
+    if (data?.ok === false) { toast.error(data.error ?? t('supsas:unknown_error', 'Ralat tidak diketahui')); return; }
+    toast.success('🏆 ' + t('supsas:final_generated', 'Final berjaya dijana!'));
     refetch();
   };
 
   // Reset: Padam semua fixtures untuk sukan ini
   const handleResetBracket = async (sport: SupsasSport) => {
-    const confirmStep1 = window.confirm(
-      `⚠️ Reset bracket "${sport.name}"?\n\nSemua keputusan perlawanan dan jadual yang dijana akan DIPADAM sepenuhnya.\n\nTekan OK untuk teruskan.`
-    );
+    const confirmStep1 = window.confirm(t('supsas:confirm_reset_bracket_1', 'Reset bracket "{{name}}"?\n\nSemua keputusan perlawanan dan jadual yang dijana akan DIPADAM sepenuhnya.\n\nTekan OK untuk teruskan.', { name: sport.name }));
     if (!confirmStep1) return;
 
-    const confirmStep2 = window.confirm(
-      `🔴 PENGESAHAN AKHIR\n\nAdakah anda PASTI ingin memadam bracket "${sport.name}"?\n\nTindakan ini TIDAK BOLEH diundur.`
-    );
+    const confirmStep2 = window.confirm(t('supsas:confirm_reset_bracket_2', 'PENGESAHAN AKHIR\n\nAdakah anda PASTI ingin memadam bracket "{{name}}"?\n\nTindakan ini TIDAK BOLEH diundur.', { name: sport.name }));
     if (!confirmStep2) return;
 
     setAdvancing(sport.id + '_reset');
@@ -156,8 +152,8 @@ export function AdminSukanPage() {
       .eq('sport_id', sport.id);
     setAdvancing(null);
 
-    if (error) { toast.error('Gagal reset bracket: ' + error.message); return; }
-    toast.success(`🔄 Bracket ${sport.name} telah direset. Sedia untuk jana semula.`);
+    if (error) { toast.error(t('supsas:save_failed_prefix', 'Gagal reset bracket: ') + error.message); return; }
+    toast.success('🔄 ' + t('supsas:bracket_reset_success', 'Bracket {{name}} telah direset. Sedia untuk jana semula.', { name: sport.name }));
     refetch();
   };
 
@@ -256,7 +252,7 @@ export function AdminSukanPage() {
                   <span className={cn('px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border',
                     sport.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-white/20 bg-white/5 border-white/10'
                   )}>
-                    {sport.is_active ? 'Aktif' : 'Nonaktif'}
+                    {sport.is_active ? t('supsas:status_active', 'Aktif') : t('supsas:status_inactive', 'Nonaktif')}
                   </span>
                   {/* Jana Bracket button */}
                   {(sport.format === 'knockout' || sport.format === 'group_knockout') && sport.is_active && (
@@ -265,7 +261,7 @@ export function AdminSukanPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-[9px] font-black uppercase tracking-widest hover:bg-purple-500/25 transition-all"
                     >
                       <Shuffle className="w-3 h-3" />
-                      Jana Bracket
+                      {t('supsas:btn_generate_bracket', 'Jana Bracket')}
                     </button>
                   )}
                   <button onClick={() => openEdit(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
@@ -296,9 +292,7 @@ export function AdminSukanPage() {
                       )}
                     >
                       {advancing === sport.id + '_group' ? <Loader className="w-3 h-3 animate-spin" /> : <ChevronRight className="w-3 h-3" />}
-                      {groupDone
-                        ? (hasQF ? 'Jana Suku Akhir dari Kumpulan' : 'Jana Separuh Akhir dari Kumpulan')
-                        : `Tunggu ${groupFixtures.filter(f => f.status !== 'completed').length} match lagi`}
+                      {groupDone ? (hasQF ? t('supsas:btn_advance_qf_from_group', 'Jana Suku Akhir dari Kumpulan') : t('supsas:btn_advance_sf_from_group', 'Jana Separuh Akhir dari Kumpulan')) : t('supsas:wait_matches_left', 'Tunggu {{count}} match lagi', { count: groupFixtures.filter(f => f.status !== 'completed').length })}
                     </button>
                   )}
 
@@ -315,7 +309,7 @@ export function AdminSukanPage() {
                       )}
                     >
                       {advancing === sport.id + '_qf' ? <Loader className="w-3 h-3 animate-spin" /> : <ChevronRight className="w-3 h-3" />}
-                      {qfDone ? 'Jana Separuh Akhir dari Suku Akhir' : `Tunggu ${qfFixtures.filter(f => f.status !== 'completed').length} QF lagi`}
+                      {qfDone ? t('supsas:btn_advance_sf_from_qf', 'Jana Separuh Akhir dari Suku Akhir') : t('supsas:wait_qf_left', 'Tunggu {{count}} QF lagi', { count: qfFixtures.filter(f => f.status !== 'completed').length })}
                     </button>
                   )}
 
@@ -332,7 +326,7 @@ export function AdminSukanPage() {
                       )}
                     >
                       {advancing === sport.id + '_sf' ? <Loader className="w-3 h-3 animate-spin" /> : <Trophy className="w-3 h-3" />}
-                      {sfDone ? 'Jana Akhir dari Separuh Akhir' : `Tunggu ${sfFixtures.filter(f => f.status !== 'completed' || !f.winner_id).length} SF lagi`}
+                      {sfDone ? t('supsas:btn_advance_final_from_sf', 'Jana Akhir dari Separuh Akhir') : t('supsas:wait_sf_left', 'Tunggu {{count}} SF lagi', { count: sfFixtures.filter(f => f.status !== 'completed' || !f.winner_id).length })}
                     </button>
                   )}
 
@@ -340,7 +334,7 @@ export function AdminSukanPage() {
                   {finalHasTeams && (
                     <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
                       <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Final Bersedia</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">{t('supsas:final_ready', 'Final Bersedia')}</span>
                     </div>
                   )}
 
@@ -354,7 +348,7 @@ export function AdminSukanPage() {
                     {advancing === sport.id + '_reset'
                       ? <Loader className="w-3 h-3 animate-spin" />
                       : <RotateCcw className="w-3 h-3" />}
-                    Reset Bracket
+                    {t('supsas:btn_reset_bracket', 'Reset Bracket')}
                   </button>
                 </div>
               )}
@@ -364,7 +358,7 @@ export function AdminSukanPage() {
         {sports.length === 0 && !edition && null}
         {sports.length === 0 && edition && (
           <div className="text-center py-12 text-white/20 text-sm font-black uppercase tracking-widest">
-            Belum ada sukan. Tambah sukan pertama!
+            {t('supsas:no_sports_add_first', 'Belum ada sukan. Tambah sukan pertama!')}
           </div>
         )}
       </div>
@@ -385,63 +379,63 @@ export function AdminSukanPage() {
               <div className="p-6 space-y-5">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-white">{editTarget ? 'Edit Sukan' : 'Tambah Sukan Baharu'}</h2>
+                  <h2 className="text-lg font-black text-white">{editTarget ? t('supsas:btn_edit_sport', 'Edit Sukan') : t('supsas:add_new_sport_title', 'Tambah Sukan Baharu')}</h2>
                   <button onClick={() => setShowForm(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <FormField label="Nama Sukan">
-                  <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="cth: Bola Sepak" className={inputCls()} />
+                <FormField label={t('supsas:sport_name', 'Nama Sukan')}>
+                  <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t('supsas:sport_name_placeholder', 'cth: Bola Sepak')} className={inputCls()} />
                 </FormField>
 
-                <FormField label="Ikon">
+                <FormField label={t('supsas:sport_icon', 'Ikon')}>
                   <IconPicker value={form.icon} onChange={v => setForm(p => ({ ...p, icon: v }))} />
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Kategori">
+                  <FormField label={t('supsas:sport_category', 'Kategori')}>
                     <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inputCls()}>
                       {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </FormField>
-                  <FormField label="Jantina">
+                  <FormField label={t('supsas:sport_gender', 'Jantina')}>
                     <select value={form.gender} onChange={e => setForm(p => ({ ...p, gender: e.target.value }))} className={inputCls()}>
                       {GENDERS.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                     </select>
                   </FormField>
                 </div>
 
-                <FormField label="Format Pertandingan">
+                <FormField label={t('supsas:sport_format', 'Format Pertandingan')}>
                   <select value={form.format} onChange={e => setForm(p => ({ ...p, format: e.target.value }))} className={inputCls()}>
                     {FORMATS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Gelanggang / Venue">
+                  <FormField label={t('supsas:sport_venue', 'Gelanggang / Venue')}>
                     <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder="cth: Padang A" className={inputCls()} />
                   </FormField>
-                  <FormField label="Max Pemain / Pasukan (lama)">
+                  <FormField label={t('supsas:max_per_team_label', 'Max Pemain / Pasukan (lama)')}>
                     <input type="number" min={1} value={form.max_per_team} onChange={e => setForm(p => ({ ...p, max_per_team: +e.target.value }))} className={inputCls()} />
                   </FormField>
                 </div>
 
                 {/* Multi-group settings */}
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/15 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400/70">Tetapan Kumpulan Per Kontingen</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400/70">{t('supsas:group_settings_per_contingent', 'Tetapan Kumpulan Per Kontingen')}</p>
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Max Kumpulan / Kontingen">
+                    <FormField label={t('supsas:max_groups_per_contingent', 'Max Kumpulan / Kontingen')}>
                       <input type="number" min={1} max={10} value={form.max_groups_per_kontingen}
                         onChange={e => setForm(p => ({ ...p, max_groups_per_kontingen: +e.target.value }))}
                         className={inputCls()} />
-                      <p className="text-[9px] text-white/25 mt-1">1 = sistem lama (1 unit/kontingen)</p>
+                      <p className="text-[9px] text-white/25 mt-1">{t('supsas:max_groups_hint', '1 = sistem lama (1 unit/kontingen)')}</p>
                     </FormField>
-                    <FormField label="Max Pemain / Kumpulan">
+                    <FormField label={t('supsas:max_players_per_group', 'Max Pemain / Kumpulan')}>
                       <input type="number" min={1} max={50} value={form.max_players_per_group}
                         onChange={e => setForm(p => ({ ...p, max_players_per_group: +e.target.value }))}
                         className={inputCls()} />
-                      <p className="text-[9px] text-white/25 mt-1">Bilangan pemain dalam 1 kumpulan</p>
+                      <p className="text-[9px] text-white/25 mt-1">{t('supsas:max_players_hint', 'Bilangan pemain dalam 1 kumpulan')}</p>
                     </FormField>
                   </div>
                 </div>
@@ -452,7 +446,7 @@ export function AdminSukanPage() {
                   className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving ? <span className="animate-spin">⟳</span> : <Save className="w-4 h-4" />}
-                  {editTarget ? 'Simpan Perubahan' : 'Tambah Sukan'}
+                  {editTarget ? t('supsas:save_changes', 'Simpan Perubahan') : t('supsas:btn_add_sport', 'Tambah Sukan')}
                 </button>
               </div>
             </motion.div>
