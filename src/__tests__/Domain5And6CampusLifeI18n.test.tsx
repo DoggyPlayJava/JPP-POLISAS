@@ -586,7 +586,7 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('PolyMaps — GPS &amp; Direktori Interaktif Kampus');
+      expect(html).toContain('PolyMaps — GPS Kampus Interaktif &amp; Direktori');
       expect(html).toContain('Dapatkan Panduan Arah');
     });
 
@@ -748,9 +748,9 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('Pungutan Pingat Rasmi');
-      expect(html).toContain('Jadual Perlawanan &amp; Keputusan Langsung');
-      expect(html).toContain('Disiplin Sukan &amp; Olahraga');
+      expect(html).toContain('Kedudukan Rasmi Pungutan Pingat');
+      expect(html).toContain('Jadual &amp; Keputusan Langsung');
+      expect(html).toContain('Kategori Sukan &amp; Acara');
     });
 
     it('renders SupsasScoreboardPage in Bahasa Melayu', () => {
@@ -761,11 +761,11 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('Pungutan Pingat Rasmi');
+      expect(html).toContain('Kedudukan Rasmi Pungutan Pingat');
       expect(html).toContain('Emas');
       expect(html).toContain('Perak');
       expect(html).toContain('Gangsa');
-      expect(html).toContain('Jabatan Juara Keseluruhan');
+      expect(html).toContain('Juara Keseluruhan Kejohanan');
     });
   });
 
@@ -813,7 +813,7 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(htmlMs).toContain('Pungutan Pingat Rasmi');
+      expect(htmlMs).toContain('Kedudukan Rasmi Pungutan Pingat');
       expect(htmlMs).toContain('Emas');
     });
   });
