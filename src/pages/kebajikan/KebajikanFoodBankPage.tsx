@@ -413,7 +413,7 @@ export function KebajikanFoodBankPage() {
       }
     } catch (err) {
       console.error('Failed to load foodbank data:', err);
-      toast.error('Ralat semasa memuatkan data Food Bank.');
+      toast.error(t('kebajikan:toast_foodbank_fetch_failed', 'Ralat semasa memuatkan data Food Bank.'));
     } finally {
       setIsLoading(false);
     }
@@ -503,7 +503,7 @@ export function KebajikanFoodBankPage() {
     const name = (student.full_name || 'Pelajar POLISAS').trim();
 
     if (housemates.some((h) => h.ic_or_matric.toUpperCase() === matric)) {
-      toast.error('Rakan serumah dengan nombor matrik ini telah dimasukkan.');
+      toast.error(t('kebajikan:toast_roommate_already_added', 'Rakan serumah dengan nombor matrik ini telah dimasukkan.'));
       return;
     }
 
@@ -512,7 +512,7 @@ export function KebajikanFoodBankPage() {
     setHmSuggestions([]);
     setHmName('');
     setHmMatric('');
-    toast.success(`${name} berjaya ditambah! Kuota anda meningkat.`);
+    toast.success(t('kebajikan:toast_roommate_added_success', '{{name}} berjaya ditambah! Kuota anda meningkat.', { name }));
   };
 
   const handleAddHousemate = () => {
@@ -520,26 +520,26 @@ export function KebajikanFoodBankPage() {
     const trimmedMatric = hmMatric.trim().toUpperCase();
 
     if (!trimmedName || !trimmedMatric) {
-      toast.error('Sila masukkan nama dan nombor matrik rakan serumah.');
+      toast.error(t('kebajikan:toast_roommate_input_required', 'Sila masukkan nama dan nombor matrik rakan serumah.'));
       return;
     }
 
     if (housemates.some((h) => h.ic_or_matric.toUpperCase() === trimmedMatric)) {
-      toast.error('Rakan serumah dengan nombor matrik ini telah dimasukkan.');
+      toast.error(t('kebajikan:toast_roommate_already_added', 'Rakan serumah dengan nombor matrik ini telah dimasukkan.'));
       return;
     }
 
     setHousemates([...housemates, { name: trimmedName, ic_or_matric: trimmedMatric }]);
     setHmName('');
     setHmMatric('');
-    toast.success('Rakan serumah ditambah! Kuota anda meningkat.');
+    toast.success(t('kebajikan:toast_roommate_added_success', 'Rakan serumah ditambah! Kuota anda meningkat.', { name: 'Rakan serumah' }));
   };
 
   const handleRemoveHousemate = (index: number) => {
     const updated = [...housemates];
     updated.splice(index, 1);
     setHousemates(updated);
-    toast.success('Rakan serumah dikeluarkan.');
+    toast.success(t('kebajikan:toast_roommate_removed', 'Rakan serumah dikeluarkan.'));
   };
 
   // Helper Baki Stok di Lokasi Terpilih
@@ -625,11 +625,11 @@ export function KebajikanFoodBankPage() {
 
     if (delta > 0) {
       if (newQty > availableStock) {
-        toast.error(`Baki stok bagi "${item.name}" di pusat ini hanya tinggal ${availableStock} unit.`);
+        toast.error(t('kebajikan:toast_stock_insufficient', 'Baki stok bagi "{{item}}" di pusat ini hanya tinggal {{stock}} unit.', { item: item.name, stock: availableStock }));
         return;
       }
       if (totalSelectedCount >= maxAllowedItems) {
-        toast.error(`Had kuota kelayakan (${maxAllowedItems} unit barangan) telah dicapai.`);
+        toast.error(t('kebajikan:toast_quota_limit_reached', 'Had kuota kelayakan ({{limit}} unit barangan) telah dicapai.', { limit: maxAllowedItems }));
         return;
       }
     }
@@ -649,13 +649,13 @@ export function KebajikanFoodBankPage() {
   // 1-Sentuhan Pilihan Pakej Segera (Ready Care Box Selection Logic)
   const handleSelectReadyCareBox = (presetId: string) => {
     if (settings?.is_application_open === false || settings?.is_module_active === false) {
-      toast.error('Sesi permohonan ditutup buat masa ini.');
+      toast.error(t('kebajikan:toast_session_closed', 'Sesi permohonan ditutup buat masa ini.'));
       return;
     }
 
     const availableItems = items.filter((it) => getItemStockAtSelectedLocation(it.id) > 0);
     if (availableItems.length === 0) {
-      toast.error('Maaf, tiada baki stok barangan di pusat edaran terpilih.');
+      toast.error(t('kebajikan:toast_no_stock_available', 'Maaf, tiada baki stok barangan di pusat edaran terpilih.'));
       return;
     }
 
@@ -752,7 +752,7 @@ export function KebajikanFoodBankPage() {
 
     setSelectedItemQuantities(newQuantities);
     toast.success(
-      `Ready Care Box berjaya dimuatkan (${allocatedCount} item). Sila sahkan lokasi & slot masa.`
+      t('kebajikan:toast_ready_box_loaded', 'Ready Care Box berjaya dimuatkan ({{count}} item). Sila sahkan lokasi & slot masa.', { count: allocatedCount })
     );
 
     // Bawa pelajar terus ke langkah pengesahan lokasi & slot masa
@@ -819,11 +819,11 @@ export function KebajikanFoodBankPage() {
         /* abaikan */
       }
 
-      toast.success('Permohonan Food Bank telah dibatalkan.');
+      toast.success(t('kebajikan:toast_foodbank_cancelled', 'Permohonan Food Bank telah dibatalkan.'));
       await fetchInitialData();
     } catch (err: any) {
       console.error('Error cancelling application:', err);
-      toast.error('Gagal membatalkan permohonan: ' + (err.message || 'Sila cuba lagi.'));
+      toast.error(t('kebajikan:toast_cancel_failed', 'Gagal membatalkan permohonan') + ': ' + (err.message || 'Sila cuba lagi.'));
     } finally {
       setIsCancelling(false);
     }
@@ -833,62 +833,62 @@ export function KebajikanFoodBankPage() {
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error('Sila log masuk terlebih dahulu.');
+      toast.error(t('kebajikan:toast_login_required', 'Sila log masuk terlebih dahulu.'));
       return;
     }
 
     if (settings?.is_application_open === false) {
-      toast.error('Permohonan Food Bank ditutup buat masa ini.');
+      toast.error(t('kebajikan:toast_session_closed', 'Permohonan Food Bank ditutup buat masa ini.'));
       return;
     }
 
     if (activeApplication) {
-      toast.error('Anda sudah mempunyai permohonan aktif yang sedang diproses.');
+      toast.error(t('kebajikan:toast_active_application_exists', 'Anda sudah mempunyai permohonan aktif yang sedang diproses.'));
       return;
     }
 
     if (!reason.trim()) {
-      toast.error('Sila nyatakan sebab permohonan bantuan.');
+      toast.error(t('kebajikan:toast_reason_required', 'Sila nyatakan sebab permohonan bantuan.'));
       return;
     }
 
     if (!roomNumber.trim()) {
-      toast.error('Sila nyatakan nombor bilik atau nama rumah kediaman.');
+      toast.error(t('kebajikan:toast_room_no_required', 'Sila nyatakan nombor bilik atau nama rumah kediaman.'));
       return;
     }
 
     if (!phone.trim()) {
-      toast.error('Sila isikan nombor telefon.');
+      toast.error(t('kebajikan:toast_phone_required', 'Sila isikan nombor telefon.'));
       return;
     }
 
     if (!/^[0-9+\-\s]{9,15}$/.test(phone.trim())) {
-      toast.error('Nombor telefon tidak sah.');
+      toast.error(t('kebajikan:toast_phone_invalid', 'Nombor telefon tidak sah.'));
       return;
     }
 
     if (totalSelectedCount === 0) {
-      toast.error('Sila pilih sekurang-kurangnya 1 item daripada katalog barangan.');
+      toast.error(t('kebajikan:toast_select_at_least_one_item', 'Sila pilih sekurang-kurangnya 1 item daripada katalog barangan.'));
       return;
     }
 
     if (totalSelectedCount > maxAllowedItems) {
-      toast.error(`Pilihan melebihi had kuota maksimum (${maxAllowedItems} item).`);
+      toast.error(t('kebajikan:toast_exceeds_max_quota', 'Pilihan melebihi had kuota maksimum ({{max}} item).', { max: maxAllowedItems }));
       return;
     }
 
     if (!selectedLocationId) {
-      toast.error('Sila pilih pusat agihan / lokasi pengambilan.');
+      toast.error(t('kebajikan:toast_distribution_center_required', 'Sila pilih pusat agihan / lokasi pengambilan.'));
       return;
     }
 
     if (!pickupDate) {
-      toast.error('Sila pilih tarikh pengambilan.');
+      toast.error(t('kebajikan:toast_pickup_date_required', 'Sila pilih tarikh pengambilan.'));
       return;
     }
 
     if (!acknowledged) {
-      toast.error('Sila sahkan perakuan permohonan terlebih dahulu.');
+      toast.error(t('kebajikan:toast_declaration_required', 'Sila sahkan perakuan permohonan terlebih dahulu.'));
       return;
     }
 
@@ -900,7 +900,7 @@ export function KebajikanFoodBankPage() {
       const avail = getItemStockAtSelectedLocation(itemId);
       if (qty > avail) {
         toast.error(
-          `Kuantiti bagi "${itm?.name || 'barangan'}" melebihi baki stok lokasi terkini (${avail} unit).`
+          t('kebajikan:toast_stock_insufficient', 'Kuantiti bagi "{{item}}" melebihi baki stok lokasi terkini ({{stock}} unit).', { item: itm?.name || 'barangan', stock: avail })
         );
         return;
       }
@@ -968,12 +968,12 @@ export function KebajikanFoodBankPage() {
           /* abaikan */
         }
         toast.error(
-          'Maaf, stok barangan telah habis atau tidak mencukupi. Sila semak semula pilihan anda.'
+          t('kebajikan:toast_no_stock_available', 'Maaf, stok barangan telah habis atau tidak mencukupi. Sila semak semula pilihan anda.')
         );
         throw new Error('STOCK_INSUFFICIENT');
       }
 
-      toast.success('Permohonan Food Bank berjaya dihantar!');
+      toast.success(t('kebajikan:toast_foodbank_submitted', 'Permohonan Food Bank berjaya dihantar!'));
 
       if (phone.trim() && phone.trim() !== (profile?.phone || '')) {
         supabase
@@ -1029,7 +1029,7 @@ export function KebajikanFoodBankPage() {
     } catch (err: any) {
       console.error('Failed to submit foodbank application:', err);
       if (err?.message !== 'STOCK_INSUFFICIENT') {
-        toast.error('Gagal menghantar permohonan: ' + (err.message || 'Sila cuba lagi.'));
+        toast.error(t('kebajikan:toast_submit_failed', 'Gagal menghantar permohonan') + ': ' + (err.message || 'Sila cuba lagi.'));
       }
     } finally {
       setIsSubmitting(false);
@@ -1066,7 +1066,7 @@ export function KebajikanFoodBankPage() {
             <span>Hab E-Kebajikan</span>
           </Link>
           <span>/</span>
-          <span className="text-amber-600 dark:text-amber-400">Food Bank JPP</span>
+          <span className="text-amber-600 dark:text-amber-400">{t('kebajikan:nav_foodbank', 'Food Bank JPP')}</span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1288,7 +1288,7 @@ export function KebajikanFoodBankPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Pakej standard keperluan asas mahasiswa.</p>
+                  <p className="text-xs text-slate-400 italic">{t('kebajikan:foodbank_standard_package_desc', 'Pakej standard keperluan asas mahasiswa.')}</p>
                 )}
               </div>
             </div>
@@ -1710,7 +1710,7 @@ export function KebajikanFoodBankPage() {
                           type="button"
                           onClick={() => handleRemoveHousemate(idx)}
                           className="text-rose-500 hover:text-rose-700 p-1"
-                          title="Padam"
+                          title={t('common:delete', 'Padam')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -2093,7 +2093,7 @@ export function KebajikanFoodBankPage() {
                   <div className="relative w-full sm:w-64">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <Input
-                      placeholder="Cari barangan..."
+                      placeholder={t('kebajikan:search_items_placeholder', 'Cari barangan...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9 h-9 text-xs rounded-xl"
@@ -2103,28 +2103,38 @@ export function KebajikanFoodBankPage() {
 
                 {/* Tab Kategori */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs">
-                  {CATEGORY_TABS.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveCategory(tab.id)}
-                      className={cn(
-                        'px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all',
-                        activeCategory === tab.id
-                          ? 'bg-amber-600 text-white shadow-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                  {CATEGORY_TABS.map((tab) => {
+                    const tabKeyMap: Record<string, string> = {
+                      'SEMUA': 'kebajikan:tab_all_items',
+                      'MAKANAN': 'kebajikan:tab_basic_food',
+                      'MINUMAN': 'kebajikan:tab_beverages',
+                      'KEBERSIHAN': 'kebajikan:tab_personal_hygiene',
+                      'LAIN_LAIN': 'kebajikan:tab_other_essentials'
+                    };
+                    const label = tabKeyMap[tab.id] ? t(tabKeyMap[tab.id], tab.label) : tab.label;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveCategory(tab.id)}
+                        className={cn(
+                          'px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all',
+                          activeCategory === tab.id
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Grid Katalog Barangan */}
                 {filteredItems.length === 0 ? (
                   <div className="py-12 text-center text-slate-400 text-xs space-y-2">
                     <Package className="w-8 h-8 mx-auto text-slate-300" />
-                    <p>Tiada barangan dijumpai dalam kategori ini.</p>
+                    <p>{t('kebajikan:no_items_in_category', 'Tiada barangan dijumpai dalam kategori ini.')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -2358,7 +2368,7 @@ export function KebajikanFoodBankPage() {
             onClick={() => setShowBasketSheet(true)}
             className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 flex items-center gap-1 shadow-md transition-all active:scale-95"
           >
-            <span>Semak Bakul</span>
+            <span>{t('kebajikan:review_basket_btn', 'Semak Bakul')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -2492,7 +2502,7 @@ export function KebajikanFoodBankPage() {
                               const updated = { ...selectedItemQuantities };
                               delete updated[itemId];
                               setSelectedItemQuantities(updated);
-                              toast.success(`${item.name} dikeluarkan dari bakul.`);
+                              toast.success(t('kebajikan:toast_item_removed_from_basket', '{{item}} dikeluarkan dari bakul.', { item: item.name }));
                             }}
                             className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition"
                           >
@@ -2645,7 +2655,7 @@ export function KebajikanFoodBankPage() {
                   onClick={confirmIdentity}
                   className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1"
                 >
-                  <span>Maklumat Saya Betul</span>
+                  <span>{t('kebajikan:my_details_correct', 'Maklumat Saya Betul')}</span>
                   <Check className="w-4 h-4 ml-1" />
                 </button>
                 <button

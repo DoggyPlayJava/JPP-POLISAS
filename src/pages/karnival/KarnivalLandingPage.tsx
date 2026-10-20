@@ -35,11 +35,11 @@ export function KarnivalLandingPage() {
           <div className="w-20 h-20 rounded-3xl bg-violet-600/10 flex items-center justify-center mx-auto">
             <Trophy className="w-10 h-10 text-violet-500/40" />
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-violet-400">{t('module_title')}</p>
-          <p className="text-xl font-black text-white">Tiada Karnival Aktif</p>
-          <p className="text-sm text-white/40">Karnival JPP belum bermula. Pantau laman ini dari masa ke masa.</p>
+          <p className="text-xs font-black uppercase tracking-widest text-violet-400">{t('karnival:module_title', 'Karnival Kampus & Hab Pengundian')}</p>
+          <p className="text-xl font-black text-white">{t('karnival:no_active_carnival_title', 'Tiada Karnival Aktif')}</p>
+          <p className="text-sm text-white/40">{t('karnival:no_active_carnival_desc', 'Karnival JPP belum bermula. Pantau laman ini dari masa ke masa.')}</p>
           <div className="pt-2">
-            <span className="text-xs text-violet-300/70">{t('carnival_schedule')}</span>
+            <span className="text-xs text-violet-300/70">{t('karnival:carnival_schedule', 'Atur Cara Program Karnival')}</span>
           </div>
         </div>
       </div>
@@ -65,16 +65,16 @@ export function KarnivalLandingPage() {
           {/* Status badge & Module title */}
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <span className="text-xs font-black uppercase tracking-widest text-violet-400">
-              {t('module_title')}
+              {t('karnival:module_title', 'Karnival Kampus & Hab Pengundian')}
             </span>
             {isActive ? (
               <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-violet-600/25 border border-violet-400/30 text-xs font-black text-violet-300 uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                Karnival Sedang Berlangsung
+                {t('karnival:carnival_in_progress', 'Karnival Sedang Berlangsung')}
               </span>
             ) : (
               <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black text-white/40 uppercase tracking-widest">
-                Tidak Aktif
+                {t('karnival:status_inactive', 'Tidak Aktif')}
               </span>
             )}
           </div>
@@ -95,15 +95,15 @@ export function KarnivalLandingPage() {
             )}
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-violet-200">
               <CalendarDays className="w-3.5 h-3.5 text-violet-400" />
-              {t('carnival_schedule')}
+              {t('karnival:carnival_schedule', 'Atur Cara Program Karnival')}
             </span>
             <span className="flex items-center gap-1.5">
               <Trophy className="w-4 h-4" />
-              {categories.length} Kategori Pertandingan
+              {t('karnival:categories_competing', { count: categories.length, defaultValue: `${categories.length} Kategori Pertandingan` })}
             </span>
             <span className="flex items-center gap-1.5">
               <Users className="w-4 h-4" />
-              {booths.length} Booth Bertanding
+              {t('karnival:booths_competing', { count: booths.length, defaultValue: `${booths.length} Booth Bertanding` })}
             </span>
           </div>
 
@@ -120,8 +120,8 @@ export function KarnivalLandingPage() {
                   <QrCode className="w-5 h-5 text-violet-300" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-white">Pengundian Sedang Dibuka! 🎉</p>
-                  <p className="text-xs text-violet-300/70">Scan QR code di setiap booth untuk mengundi</p>
+                  <p className="text-sm font-black text-white">{t('karnival:voting_is_open_banner', 'Pengundian Sedang Dibuka! 🎉')}</p>
+                  <p className="text-xs text-violet-300/70">{t('karnival:scan_booth_qr_desc', 'Scan QR code di setiap booth untuk mengundi')}</p>
                 </div>
               </div>
             </motion.div>
@@ -131,7 +131,7 @@ export function KarnivalLandingPage() {
             <div className="mt-6 p-4 rounded-2xl bg-amber-600/10 border border-amber-500/20">
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <p className="text-sm text-amber-300/80">Pengundian belum dibuka. Tunggu pengumuman daripada Exco KPP.</p>
+                <p className="text-sm text-amber-300/80">{t('karnival:voting_not_open_yet', 'Pengundian belum dibuka. Tunggu pengumuman daripada Exco KPP.')}</p>
               </div>
             </div>
           )}
@@ -149,7 +149,7 @@ export function KarnivalLandingPage() {
             transition={{ delay: 0.1 }}
             className="space-y-2"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Kategori Pertandingan</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">{t('karnival:categories_sidebar_title', 'Kategori Pertandingan')}</p>
             {categories.map((cat: KarnivalCategory) => {
               const boothCount = booths.filter(b => b.category_id === cat.id).length;
               const isSelected = (activeCat ?? categories[0]?.id) === cat.id;
@@ -168,7 +168,7 @@ export function KarnivalLandingPage() {
                     <p className={`text-xs font-black leading-tight ${isSelected ? 'text-white' : 'text-white/70'}`}>
                       {cat.name}
                     </p>
-                    <p className="text-[10px] text-white/30 mt-0.5">{boothCount} booth · max {cat.max_votes} undi</p>
+                    <p className="text-[10px] text-white/30 mt-0.5">{t('karnival:category_item_meta', { booths: boothCount, votes: cat.max_votes, defaultValue: `${boothCount} booth · max ${cat.max_votes} undi` })}</p>
                   </div>
                   {isSelected && <ChevronRight className="w-4 h-4 text-violet-400 flex-shrink-0" />}
                 </button>
@@ -191,7 +191,7 @@ export function KarnivalLandingPage() {
                   <p className="text-sm text-white/40 mt-1">{selectedCat.description}</p>
                 )}
                 <p className="text-xs text-violet-300/60 mt-1">
-                  Had undi: {selectedCat.max_votes} undi per pelajar dalam kategori ini
+                  {t('karnival:category_vote_limit_hint', { count: selectedCat.max_votes, defaultValue: `Had undi: ${selectedCat.max_votes} undi per pelajar dalam kategori ini` })}
                 </p>
               </div>
             )}
@@ -199,7 +199,7 @@ export function KarnivalLandingPage() {
             {filteredBooths.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Trophy className="w-12 h-12 text-white/10 mb-3" />
-                <p className="text-sm text-white/30 font-bold">Tiada booth didaftarkan lagi</p>
+                <p className="text-sm text-white/30 font-bold">{t('karnival:no_booths_registered_yet', 'Tiada booth didaftarkan lagi')}</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
@@ -250,7 +250,7 @@ export function KarnivalLandingPage() {
                           className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-violet-500/20"
                         >
                           <QrCode className="w-3.5 h-3.5" />
-                          Undi Booth Ini
+                          {t('karnival:vote_this_booth_btn', 'Undi Booth Ini')}
                         </button>
                       )}
                     </div>
@@ -265,7 +265,7 @@ export function KarnivalLandingPage() {
       {categories.length === 0 && !isLoading && (
         <div className="text-center py-16">
           <Trophy className="w-16 h-16 text-white/10 mx-auto mb-4" />
-          <p className="text-white/40 font-bold">Kategori belum ditetapkan lagi</p>
+          <p className="text-white/40 font-bold">{t('karnival:no_categories_set', 'Kategori belum ditetapkan lagi')}</p>
         </div>
       )}
     </div>

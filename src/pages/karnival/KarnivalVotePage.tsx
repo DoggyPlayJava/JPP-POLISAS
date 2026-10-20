@@ -74,15 +74,15 @@ export function KarnivalVotePage() {
 
     if (error) {
       if (error.code === '23505') {
-        toast.error('Anda sudah mengundi booth ini!');
+        toast.error(t('karnival:toast_already_voted_booth', 'Anda sudah mengundi booth ini!'));
         setAlreadyVoted(true);
       } else {
-        toast.error('Ralat: ' + error.message);
+        toast.error(t('common:error', 'Ralat') + ': ' + error.message);
       }
     } else {
       setSuccess(true);
       setAlreadyVoted(true);
-      if (navigator.vibrate) navigator.vibrate(50);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
     }
     setSubmitting(false);
   };
@@ -101,19 +101,19 @@ export function KarnivalVotePage() {
           </div>
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-1 block">
-              {t('live_voting')}
+              {t('karnival:live_voting', 'E-Undian Masa Nyata')}
             </span>
-            <h1 className="text-xl font-black text-white mb-2">Log Masuk Diperlukan</h1>
-            <p className="text-sm text-white/50">{t('one_vote_per_student')}</p>
+            <h1 className="text-xl font-black text-white mb-2">{t('karnival:login_required_title', 'Log Masuk Diperlukan')}</h1>
+            <p className="text-sm text-white/50">{t('karnival:one_vote_per_student', 'Satu undian sah bagi setiap pelajar berdaftar')}</p>
           </div>
           <button
             onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
             className="w-full py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-black transition-all active:scale-95 shadow-lg shadow-violet-500/25"
           >
-            Log Masuk Sekarang
+            {t('karnival:login_now_btn', 'Log Masuk Sekarang')}
           </button>
           <button onClick={() => navigate('/karnival')} className="text-sm text-white/30 hover:text-white/60 transition-colors">
-            {t('booth_directory')}
+            {t('karnival:booth_directory', 'Direktori Gerai & Khemah Karnival')}
           </button>
         </motion.div>
       </div>
@@ -129,9 +129,9 @@ export function KarnivalVotePage() {
           {!booth && !dataLoading && boothId && (
             <div className="space-y-2">
               <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-              <p className="text-white/50 text-sm">Booth tidak dijumpai.</p>
+              <p className="text-white/50 text-sm">{t('karnival:booth_not_found', 'Booth tidak dijumpai.')}</p>
               <button onClick={() => navigate('/karnival')} className="text-violet-400 text-sm hover:text-violet-300">
-                {t('booth_directory')}
+                {t('karnival:booth_directory', 'Direktori Gerai & Khemah Karnival')}
               </button>
             </div>
           )}
@@ -159,10 +159,10 @@ export function KarnivalVotePage() {
             <CheckCircle2 className="w-12 h-12 text-emerald-400" />
           </motion.div>
           <div>
-            <h1 className="text-2xl font-black text-white mb-2">{t('voted_successfully')} 🎉</h1>
+            <h1 className="text-2xl font-black text-white mb-2">{t('karnival:voted_successfully', 'Undian Berjaya Direkodkan')} 🎉</h1>
             <p className="text-sm text-white/50">
-              Anda telah mengundi <span className="text-white font-bold">{booth.kelab_name}</span>
-              {category && <> untuk kategori <span className="text-violet-300 font-bold">{category.icon_emoji} {category.name}</span></>}
+              {t('karnival:already_voted_desc', 'Anda telah mengundi booth ini')}: <span className="text-white font-bold">{booth.kelab_name}</span>
+              {category && <> ({category.icon_emoji} <span className="text-violet-300 font-bold">{category.name}</span>)</>}
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -170,13 +170,13 @@ export function KarnivalVotePage() {
               onClick={() => navigate('/karnival')}
               className="w-full py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-black transition-all active:scale-95"
             >
-              {t('booth_directory')}
+              {t('karnival:booth_directory', 'Direktori Gerai & Khemah Karnival')}
             </button>
             <button
               onClick={() => navigate('/karnival/scoreboard')}
               className="w-full py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] text-white/70 font-bold text-sm transition-all"
             >
-              Lihat Papan Markah
+              {t('karnival:view_scoreboard_btn', 'Lihat Papan Markah')}
             </button>
           </div>
         </motion.div>
@@ -199,10 +199,10 @@ export function KarnivalVotePage() {
             className="flex items-center gap-1.5 text-xs font-bold text-white/40 hover:text-white/70 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('booth_directory')}</span>
+            <span>{t('karnival:booth_directory', 'Direktori Gerai & Khemah Karnival')}</span>
           </button>
           <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2.5 py-0.5 rounded-full border border-violet-500/20">
-            {t('live_voting')}
+            {t('karnival:live_voting', 'E-Undian Masa Nyata')}
           </span>
         </div>
 
@@ -240,13 +240,13 @@ export function KarnivalVotePage() {
             {/* Category Tags */}
             <div className="flex flex-wrap gap-1.5 pt-2">
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
-                {t('vote_category_creative')}
+                {t('karnival:vote_category_creative', 'Gerai Paling Kreatif')}
               </span>
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
-                {t('vote_category_sales')}
+                {t('karnival:vote_category_sales', 'Gerai Jualan Terbaik')}
               </span>
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-violet-300">
-                {t('vote_category_service')}
+                {t('karnival:vote_category_service', 'Layanan Pelanggan Terbaik')}
               </span>
             </div>
           </div>
@@ -258,7 +258,7 @@ export function KarnivalVotePage() {
           {/* Voting status */}
           {category && (
             <div className="text-xs text-white/40">
-              Undi anda dalam kategori ini:
+              {t('karnival:your_votes_in_cat', 'Undi anda dalam kategori ini:')}
               <span className="text-white font-bold ml-1">
                 {myVotesInCat.length} / {category.max_votes}
               </span>
@@ -270,21 +270,21 @@ export function KarnivalVotePage() {
             {!votingOpen ? (
               <motion.div key="closed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
                 <AlertCircle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                <p className="text-sm font-bold text-amber-300">Pengundian Belum Dibuka</p>
-                <p className="text-xs text-white/40 mt-1">Tunggu pengumuman daripada Exco KPP</p>
+                <p className="text-sm font-bold text-amber-300">{t('karnival:voting_not_open_state', 'Pengundian Belum Dibuka')}</p>
+                <p className="text-xs text-white/40 mt-1">{t('karnival:await_announcement_state', 'Tunggu pengumuman daripada Exco KPP')}</p>
               </motion.div>
             ) : alreadyVoted ? (
               <motion.div key="voted" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                <p className="text-sm font-bold text-emerald-300">Sudah Diundi ✓</p>
-                <p className="text-xs text-white/40 mt-1">Anda telah mengundi booth ini</p>
+                <p className="text-sm font-bold text-emerald-300">{t('karnival:already_voted_title', 'Sudah Diundi ✓')}</p>
+                <p className="text-xs text-white/40 mt-1">{t('karnival:already_voted_desc', 'Anda telah mengundi booth ini')}</p>
               </motion.div>
             ) : maxReached ? (
               <motion.div key="max" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
                 <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                <p className="text-sm font-bold text-amber-300">Had Undi Tercapai</p>
+                <p className="text-sm font-bold text-amber-300">{t('karnival:vote_limit_reached_title', 'Had Undi Tercapai')}</p>
                 <p className="text-xs text-white/40 mt-1">
-                  Anda sudah mengundi {category?.max_votes} kali dalam kategori {category?.name}
+                  {t('karnival:vote_limit_reached_desc', { count: category?.max_votes, category: category?.name, defaultValue: `Anda sudah mengundi ${category?.max_votes} kali dalam kategori ${category?.name}` })}
                 </p>
               </motion.div>
             ) : (
@@ -297,17 +297,17 @@ export function KarnivalVotePage() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Mengundi...
+                      {t('karnival:submitting_vote', 'Mengundi...')}
                     </>
                   ) : (
                     <>
                       <QrCode className="w-4 h-4" />
-                      {t('cast_vote')}
+                      {t('karnival:cast_vote', 'Hantar Undian Anda')}
                     </>
                   )}
                 </button>
                 <p className="text-[10px] text-white/50 text-center mt-2">
-                  {t('one_vote_per_student')}
+                  {t('karnival:one_vote_per_student', 'Satu undian sah bagi setiap pelajar berdaftar')}
                 </p>
               </motion.div>
             )}
@@ -317,7 +317,7 @@ export function KarnivalVotePage() {
         {/* Footer info */}
         <div className="text-center">
           <p className="text-[10px] text-white/50">
-            Mengundi sebagai <span className="text-white/50">{profile?.full_name ?? user?.email}</span>
+            {t('karnival:voting_as', 'Mengundi sebagai')} <span className="text-white/50">{profile?.full_name ?? user?.email}</span>
           </p>
         </div>
       </motion.div>

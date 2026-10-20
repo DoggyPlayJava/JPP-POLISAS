@@ -4692,3 +4692,48 @@ Domain 0 merangkumi kesemua cengkerang navigasi global, bar sisi (*sidebars*), d
    - Ruang nama kamus `gig.json` (402 kunci dwi-bahasa EN & MS dengan 100% pariti kunci dan tanpa rentetan kosong).
    - Penyetempatan mendalam komponen PolyRider (`PolyRiderHome`, `PolyRiderDashboard`, `PolyRiderAdminDashboard`), PolyTask (`PolyTaskBoard`, `PolyTaskJobDetail`, `PolyTaskMyJobs`, `PolyTaskAdmin`, `CreateJobModal`, `PolyTaskDisputeModal`), dan Nexus (`NexusPage`).
    - Ujian unit integrasi komprehensif didokumenkan dalam `src/__tests__/Domain7PolyGigI18n.test.tsx` (14 ujian khusus merangkumi pengesahan 100% pariti kamus `gig.json`, rendering DOM Bahasa Inggeris, dan rendering DOM Bahasa Melayu).
+
+### 36.12 Penyetempatan Menyeluruh Domain 3 (Exco Units: Kebajikan, Keusahawanan, Karnival)
+Domain 3 merangkumi modul operasi barisan hadapan Exco JPP yang kritikal dengan interaksi intensif pelajar: Kebajikan (Tiket Bantuan & Food Bank Siswa), Keusahawanan (POS Counter, Katalog Produk, Jadual Syif & Pengurusan Perniagaan), serta Karnival (Undian Gerai Masa Nyata, Papan Skor LCD & Konsol Pentadbiran).
+
+1. **Senarai Fail Terlibat (21 Fail Lengkap 100% Diterjemahkan):**
+   - **Kebajikan (4 fail):**
+     - `src/pages/kebajikan/KebajikanTicketDetail.tsx` (Pengurusan status tiket, semakan bukti, penugasan PIC & audit log)
+     - `src/pages/kebajikan/KebajikanFoodBankPage.tsx` (Pas Digital QR, Smart Pantry Basket, Ready Care Box & kiraan kuota rakan serumah)
+     - `src/pages/kebajikan/KebajikanReportPage.tsx` (Laporan bulanan & PIC, penjanaan PDF, analisis SLA & penilaian kepuasan)
+     - `src/pages/kebajikan/KebajikanSubmitPage.tsx` (Borang aduan kebajikan, pemilihan kafeteria, blok asrama & muat naik gambar)
+   - **Keusahawanan (7 fail):**
+     - `src/pages/keusahawanan/KeusahawananAdminPanel.tsx` (Konsol kelulusan perniagaan, temuduga, pelantikan pegawai unit keusahawanan)
+     - `src/pages/keusahawanan/KeusahawananDashboard.tsx` (Analitis jualan, sasaran bulanan, integrasi PolyMart & heatmap produk)
+     - `src/pages/keusahawanan/UrusPerniagaanPage.tsx` (Tetapan profil bisnes, pindah milik, kaedah bayaran COD/Online & kupon promosi)
+     - `src/pages/keusahawanan/KeusahawananProgram.tsx` (Katalog program keusahawanan, pendaftaran minat & kawalan visibiliti AWAM/JPP)
+     - `src/pages/keusahawanan/pos/PosProductPage.tsx` (Katalog produk, analisis kos & margin untung, variasi & stok ambang amaran)
+     - `src/pages/keusahawanan/pos/PosOrderPage.tsx` (Kaunter POS, bakul jualan, pengiraan baki tunai & penebusan kupon)
+     - `src/pages/keusahawanan/BusinessShiftModule.tsx` (Jadual syif staf, tukar syif, buka/tutup kedai & rekod tunai apungan)
+   - **Karnival (10 fail):**
+     - `src/pages/karnival/KarnivalLandingPage.tsx` (Hab karnival, atur cara festival & senarai gerai bertanding)
+     - `src/pages/karnival/KarnivalLayout.tsx` (Cengkerang susun atur karnival & status edisi)
+     - `src/pages/karnival/KarnivalVotePage.tsx` (Portal undian elektronik mahasiswa mengikut kategori)
+     - `src/pages/karnival/KarnivalScoreboard.tsx` (Papan skor LCD siaran langsung & kiraan undi rasmi)
+     - `src/pages/karnival/admin/KarnivalAdminDashboard.tsx` (Papan pemuka pengurusan karnival & statistik masa nyata)
+     - `src/pages/karnival/admin/KarnivalAdminBooths.tsx` (Pengurusan pendaftaran gerai bertanding & muat turun QR undian)
+     - `src/pages/karnival/admin/KarnivalAdminCategories.tsx` (Tetapan kategori pertandingan & had undian per pelajar)
+     - `src/pages/karnival/admin/KarnivalAdminEdition.tsx` (Konfigurasi edisi tahunan karnival & penukaran status edisi)
+     - `src/pages/karnival/admin/KarnivalAdminLayout.tsx` (Cengkerang navigasi konsol pentadbir karnival)
+     - `src/pages/karnival/admin/KarnivalAdminResults.tsx` (Keputusan penuh pengundian gerai mengikut pecahan undi)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/kebajikan.json`: **383 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/keusahawanan.json`: **407 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/karnival.json`: **92 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Jumlah Kunci Domain 3:** 882 kunci dwi-bahasa EN & MS disahkan sepenuhnya.
+
+3. **Piawaian Salinan & Fallback Mandatori:**
+   - Semua panggilan `t()` mengamalkan struktur `t('namespace:key', 'Literal BM Asal', { params })` untuk integriti fallback sekiranya terdapat isu resolusi kamus atau ujian unit tanpa enjin i18n penuh.
+   - Sifar `toast.success` atau `toast.error` tidak diterjemahkan.
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain3ExcoCompleteI18n.test.tsx` (20 ujian integrasi merangkumi 100% pariti kamus, rendering SSR/DOM dalam EN dan MS, dan penukaran bahasa langsung).
+   - `src/__tests__/Domain3ExcoUnitsI18n.test.tsx` (30 ujian unit menyeluruh).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master).
+   - **Keputusan:** 70/70 ujian berkaitan Domain 3 lulus dengan cemerlang.

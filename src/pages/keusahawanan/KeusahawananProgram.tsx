@@ -106,7 +106,7 @@ export function KeusahawananProgram() {
       if (error) throw error;
       setPrograms(data || []);
     } catch {
-      toast.error('Gagal memuatkan program');
+      toast.error(t('keusahawanan:toast_program_fetch_failed', 'Gagal memuatkan program'));
     } finally {
       setLoading(false);
     }
@@ -182,12 +182,12 @@ export function KeusahawananProgram() {
 
   // ── Save (create / edit) ──────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!fTitle.trim()) { toast.error('Tajuk wajib diisi'); return; }
+    if (!fTitle.trim()) { toast.error(t('keusahawanan:toast_program_title_required', 'Tajuk wajib diisi')); return; }
     setSaving(true);
     try {
       let imageUrl = fImagePreview && !fImageFile ? fImagePreview : null;
       if (fImageFile) {
-        toast.loading('Memuat naik poster...', { id: 'img_upload' });
+        toast.loading(t('keusahawanan:toast_program_uploading_poster', 'Memuat naik poster...'), { id: 'img_upload' });
         imageUrl = await uploadImage(fImageFile);
         toast.dismiss('img_upload');
       }
@@ -209,7 +209,7 @@ export function KeusahawananProgram() {
       if (formMode === 'edit' && editingId) {
         const { error } = await supabase.from('keusahawanan_programs').update(payload).eq('id', editingId);
         if (error) throw error;
-        toast.success('Program dikemaskini ✓');
+        toast.success(t('keusahawanan:toast_program_updated', 'Program dikemaskini ✓'));
       } else {
         const { error } = await supabase.from('keusahawanan_programs').insert({
           ...payload,
@@ -217,14 +217,14 @@ export function KeusahawananProgram() {
           created_by: user?.id,
         });
         if (error) throw error;
-        toast.success('Program baharu ditambah ✓');
+        toast.success(t('keusahawanan:toast_program_added', 'Program baharu ditambah ✓'));
       }
 
       setShowForm(false);
       resetForm();
       fetchPrograms();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyimpan');
+      toast.error(err.message || t('keusahawanan:toast_program_save_failed', 'Gagal menyimpan'));
     } finally {
       setSaving(false);
     }
@@ -243,11 +243,11 @@ export function KeusahawananProgram() {
       }
       const { error } = await supabase.from('keusahawanan_programs').delete().eq('id', p.id);
       if (error) throw error;
-      toast.success('Program dipadam');
+      toast.success(t('keusahawanan:toast_program_deleted', 'Program dipadam'));
       setSelectedProgram(null);
       fetchPrograms();
     } catch {
-      toast.error('Gagal memadam');
+      toast.error(t('keusahawanan:toast_program_delete_failed', 'Gagal memadam'));
     } finally {
       setDeleting(null);
     }
@@ -258,14 +258,14 @@ export function KeusahawananProgram() {
     e.stopPropagation();
     const next = p.visibility === 'AWAM' ? 'JPP_SAHAJA' : 'AWAM';
     const { error } = await supabase.from('keusahawanan_programs').update({ visibility: next }).eq('id', p.id);
-    if (error) { toast.error('Gagal tukar visibiliti'); return; }
-    toast.success(`Program kini ${next === 'AWAM' ? 'awam 🌍' : 'JPP sahaja 🔒'}`);
+    if (error) { toast.error(t('keusahawanan:toast_program_visibility_failed', 'Gagal tukar visibiliti')); return; }
+    toast.success(t('keusahawanan:toast_program_visibility_changed', 'Program kini {{visibility}}', { visibility: next === 'AWAM' ? 'awam 🌍' : 'JPP sahaja 🔒' }));
     fetchPrograms();
   };
 
   // ── Register interest ─────────────────────────────────────────────────────
   const handleRegister = async (p: Program) => {
-    if (!user?.id) { toast.error('Sila log masuk'); return; }
+    if (!user?.id) { toast.error(t('keusahawanan:toast_login_to_register', 'Sila log masuk')); return; }
     if (myRegistrations.includes(p.id)) { toast('Anda sudah daftar minat!', { icon: '✅' }); return; }
     setRegistering(p.id);
     try {
@@ -274,12 +274,12 @@ export function KeusahawananProgram() {
         user_id:    user.id,
       });
       if (error) throw error;
-      toast.success('Minat berjaya didaftarkan ✓');
+      toast.success(t('keusahawanan:toast_interest_registered', 'Minat berjaya didaftarkan ✓'));
       setMyRegistrations(prev => [...prev, p.id]);
       fetchPrograms(); // refresh count
     } catch (err: any) {
       if (err.code === '23505') toast('Anda sudah daftar minat!', { icon: '✅' });
-      else toast.error('Gagal mendaftar');
+      else toast.error(t('keusahawanan:toast_interest_failed', 'Gagal mendaftar'));
     } finally {
       setRegistering(null);
     }
@@ -491,7 +491,7 @@ export function KeusahawananProgram() {
                       <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                         <button onClick={e => toggleVisibility(program, e)}
                           className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-all"
-                          title={program.visibility === 'AWAM' ? 'Tukar ke JPP Sahaja' : 'Tukar ke Awam'}>
+                          title={program.visibility === 'AWAM' ? t('keusahawanan:program_change_to_jpp', 'Tukar ke JPP Sahaja') : t('keusahawanan:program_change_to_public', 'Tukar ke Awam')}>
                           {program.visibility === 'AWAM' ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                         </button>
                         <button onClick={e => openEdit(program, e)}
@@ -500,7 +500,7 @@ export function KeusahawananProgram() {
                         </button>
                         <button onClick={e => handleDelete(program, e)}
                           disabled={deleting === program.id}
-                          className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-500/10 transition-all" title="Padam">
+                          className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-500/10 transition-all" title={t('common:delete', 'Padam')}>
                           {deleting === program.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -702,13 +702,13 @@ export function KeusahawananProgram() {
                   {/* Date + Venue */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tarikh</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('keusahawanan:program_date_label', 'Tarikh')}</label>
                       <input value={fDate} onChange={e => setFDate(e.target.value)} placeholder="cth: 15–17 April 2026"
                         className="w-full h-11 px-3 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tempat</label>
-                      <input value={fVenue} onChange={e => setFVenue(e.target.value)} placeholder="Dewan, bilik..."
+                      <input value={fVenue} onChange={e => setFVenue(e.target.value)} placeholder={t('keusahawanan:program_venue_placeholder', 'Dewan, bilik...')}
                         className="w-full h-11 px-3 rounded-xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                     </div>
                   </div>
@@ -781,7 +781,7 @@ export function KeusahawananProgram() {
                       <button onClick={() => fileRef.current?.click()}
                         className="w-full h-24 rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-border hover:bg-muted/30 transition-all">
                         <ImageIcon className="w-5 h-5" />
-                        <span className="text-[11px] font-bold">Klik untuk muat naik poster</span>
+                        <span className="text-[11px] font-bold">{t('keusahawanan:program_click_to_upload_poster', 'Klik untuk muat naik poster')}</span>
                       </button>
                     )}
                   </div>

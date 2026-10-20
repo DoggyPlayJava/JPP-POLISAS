@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -24,6 +25,7 @@ interface TopBooth {
 }
 
 export function KarnivalAdminDashboard() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, categories, booths, isActive, votingOpen, lastUpdated, refetch } = useKarnival();
   const [stats, setStats]     = useState<Stats | null>(null);
   const [topList, setTopList] = useState<TopBooth[]>([]);
@@ -84,52 +86,52 @@ export function KarnivalAdminDashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
         <Trophy className="w-20 h-20 text-white/10 mb-6" />
-        <p className="text-white/40 font-black text-2xl">Tiada Edisi Karnival</p>
-        <p className="text-white/25 text-sm mt-3">Pergi ke tab "Edisi" untuk mencipta edisi baharu</p>
+        <p className="text-white/40 font-black text-2xl">{t('karnival:no_carnival_edition', 'Tiada Edisi Karnival')}</p>
+        <p className="text-white/25 text-sm mt-3">{t('karnival:go_to_edition_tab', 'Pergi ke tab "Edisi" untuk mencipta edisi baharu')}</p>
       </div>
     );
   }
 
   const bigStats = [
     {
-      label: 'JUMLAH UNDI',
+      label: t('karnival:stat_total_votes', 'JUMLAH UNDI'),
       value: stats?.totalVotes ?? 0,
       icon: BarChart3,
       color: '#a78bfa',
       glow: 'rgba(167,139,250,0.3)',
       bg: 'rgba(139,92,246,0.08)',
       border: 'rgba(139,92,246,0.25)',
-      suffix: 'undi',
+      suffix: t('karnival:unit_votes', 'undi'),
     },
     {
-      label: 'PENGUNDI UNIK',
+      label: t('karnival:stat_unique_voters', 'PENGUNDI UNIK'),
       value: stats?.totalVoters ?? 0,
       icon: Users,
       color: '#60a5fa',
       glow: 'rgba(96,165,250,0.3)',
       bg: 'rgba(59,130,246,0.08)',
       border: 'rgba(59,130,246,0.25)',
-      suffix: 'pelajar',
+      suffix: t('karnival:unit_students', 'pelajar'),
     },
     {
-      label: 'BOOTH AKTIF',
+      label: t('karnival:stat_active_booths', 'BOOTH AKTIF'),
       value: stats?.totalBooths ?? 0,
       icon: QrCode,
       color: '#34d399',
       glow: 'rgba(52,211,153,0.3)',
       bg: 'rgba(16,185,129,0.08)',
       border: 'rgba(16,185,129,0.25)',
-      suffix: 'booth',
+      suffix: t('karnival:unit_booths', 'booth'),
     },
     {
-      label: 'UNDI / MINIT',
+      label: t('karnival:stat_votes_per_min', 'UNDI / MINIT'),
       value: stats?.recentVotesPerMin ?? 0,
       icon: Activity,
       color: '#fb923c',
       glow: 'rgba(251,146,60,0.3)',
       bg: 'rgba(249,115,22,0.08)',
       border: 'rgba(249,115,22,0.25)',
-      suffix: '/min',
+      suffix: t('karnival:unit_per_min', '/min'),
     },
   ];
 
@@ -166,7 +168,7 @@ export function KarnivalAdminDashboard() {
               {votingOpen && (
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-600/20 border border-emerald-500/30 text-emerald-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Undi Dibuka
+                  {t('karnival:status_voting_open', 'Undi Dibuka')}
                 </span>
               )}
             </div>
@@ -189,7 +191,7 @@ export function KarnivalAdminDashboard() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/[0.08] border border-white/[0.1] transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('karnival:refresh', 'Refresh')}
           </button>
         </div>
       </div>
@@ -245,14 +247,14 @@ export function KarnivalAdminDashboard() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Crown className="w-4 h-4 text-amber-400" />
-              <p className="text-sm font-black uppercase tracking-widest text-white/70">Booth Teratas</p>
+              <p className="text-sm font-black uppercase tracking-widest text-white/70">{t('karnival:top_booths_title', 'Booth Teratas')}</p>
             </div>
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-white/30" />}
           </div>
 
           <div className="space-y-3">
             {topList.length === 0 && !loading && (
-              <p className="text-center text-white/20 text-sm py-8">Tiada undi lagi</p>
+              <p className="text-center text-white/20 text-sm py-8">{t('karnival:no_votes_yet', 'Tiada undi lagi')}</p>
             )}
             {topList.map((b, i) => {
               const pct = stats?.totalVotes ? Math.round((b.votes / stats.totalVotes) * 100) : 0;
@@ -321,12 +323,12 @@ export function KarnivalAdminDashboard() {
               <Monitor className="w-8 h-8 text-violet-300" />
             </div>
             <div>
-              <p className="text-base font-black text-white">Papan Markah LCD</p>
-              <p className="text-xs text-white/40 mt-1">Buka fullscreen untuk LCD display</p>
+              <p className="text-base font-black text-white">{t('karnival:lcd_scoreboard_btn', 'Papan Markah LCD')}</p>
+              <p className="text-xs text-white/40 mt-1">{t('karnival:lcd_scoreboard_sub', 'Buka fullscreen untuk LCD display')}</p>
             </div>
             <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-violet-600 text-white group-hover:bg-violet-500 transition-colors">
               <ExternalLink className="w-3.5 h-3.5" />
-              Buka Sekarang
+              {t('karnival:open_now', 'Buka Sekarang')}
             </div>
           </a>
 
@@ -338,16 +340,16 @@ export function KarnivalAdminDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-emerald-400" />
-                <p className="text-xs font-black uppercase tracking-widest text-white/50">Realtime</p>
+                <p className="text-xs font-black uppercase tracking-widest text-white/50">{t('karnival:realtime_status', 'Realtime')}</p>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Aktif</span>
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{t('karnival:status_active', 'Aktif')}</span>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-white/30 font-medium">Kemas kini terakhir</p>
+                <p className="text-xs text-white/30 font-medium">{t('karnival:last_updated_label', 'Kemas kini terakhir')}</p>
                 <p className="text-xs font-black text-white/60 tabular-nums">
                   {lastUpdated
                     ? lastUpdated.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -355,14 +357,14 @@ export function KarnivalAdminDashboard() {
                 </p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-white/30 font-medium">Status undi</p>
+                <p className="text-xs text-white/30 font-medium">{t('karnival:voting_status_label', 'Status undi')}</p>
                 <p className={`text-xs font-black ${votingOpen ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {votingOpen ? 'Dibuka' : 'Ditutup'}
+                  {votingOpen ? t('karnival:voting_status_open', 'Dibuka') : t('karnival:voting_status_closed', 'Ditutup')}
                 </p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-white/30 font-medium">Kategori</p>
-                <p className="text-xs font-black text-white/60">{categories.length} kategori</p>
+                <p className="text-xs text-white/30 font-medium">{t('karnival:admin_nav_categories', 'Kategori')}</p>
+                <p className="text-xs font-black text-white/60">{t('karnival:categories_count', { count: categories.length, defaultValue: `${categories.length} kategori` })}</p>
               </div>
             </div>
           </div>
@@ -380,9 +382,9 @@ export function KarnivalAdminDashboard() {
               }}
             >
               <p className="text-3xl mb-2">🥇</p>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500/60 mb-1">Booth Paling Popular</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500/60 mb-1">{t('karnival:popular_booth_badge', 'Booth Paling Popular')}</p>
               <p className="text-base font-black text-amber-300 leading-tight">{stats.topBooth}</p>
-              <p className="text-xs text-amber-500/40 font-bold mt-1">{stats.topBoothVotes.toLocaleString()} undi</p>
+              <p className="text-xs text-amber-500/40 font-bold mt-1">{stats.topBoothVotes.toLocaleString()} {t('karnival:unit_votes', 'undi')}</p>
             </motion.div>
           )}
         </div>

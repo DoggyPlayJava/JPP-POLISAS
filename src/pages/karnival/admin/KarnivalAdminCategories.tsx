@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -11,6 +12,7 @@ interface CatForm { name: string; description: string; icon_emoji: string; max_v
 const defaultForm = (): CatForm => ({ name: '', description: '', icon_emoji: '🏆', max_votes: 1 });
 
 export function KarnivalAdminCategories() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, categories, refetch } = useKarnival();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState<CatForm>(defaultForm());
@@ -29,7 +31,7 @@ export function KarnivalAdminCategories() {
 
   const handleSave = async () => {
     if (!edition) return;
-    if (!form.name.trim()) { toast.error('Nama kategori diperlukan'); return; }
+    if (!form.name.trim()) { toast.error(t('karnival:toast_category_name_required', 'Nama kategori diperlukan')); return; }
     setSaving(true);
 
     const payload = {
@@ -50,7 +52,7 @@ export function KarnivalAdminCategories() {
 
     if (error) toast.error(error.message);
     else {
-      toast.success(editId ? 'Kategori dikemas kini!' : 'Kategori ditambah!');
+      toast.success(editId ? t('karnival:toast_category_updated', 'Kategori dikemas kini!') : t('karnival:toast_category_added', 'Kategori ditambah!'));
       setShowForm(false);
       setEditId(null);
       refetch();
@@ -59,11 +61,11 @@ export function KarnivalAdminCategories() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Padam kategori "${name}"? Semua booth dalam kategori ini akan turut dipadam.`)) return;
+    if (!window.confirm(t('karnival:confirm_delete_category', { name, defaultValue: `Padam kategori "${name}"? Semua booth dalam kategori ini akan turut dipadam.` }))) return;
     setDeleting(id);
     const { error } = await supabase.from('karnival_categories').delete().eq('id', id);
     if (error) toast.error(error.message);
-    else { toast.success('Kategori dipadam'); refetch(); }
+    else { toast.success(t('karnival:toast_category_deleted', 'Kategori dipadam')); refetch(); }
     setDeleting(null);
   };
 
@@ -73,7 +75,7 @@ export function KarnivalAdminCategories() {
     return (
       <div className="text-center py-16 text-white/50">
         <Tag className="w-12 h-12 mx-auto mb-3 opacity-20" />
-        <p className="font-bold">Cipta edisi Karnival dahulu</p>
+        <p className="font-bold">{t('karnival:create_edition_first', 'Cipta edisi Karnival dahulu')}</p>
       </div>
     );
   }
@@ -81,18 +83,18 @@ export function KarnivalAdminCategories() {
   return (
     <div className="space-y-5 max-w-2xl">
 
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-white">Kategori Pertandingan</h2>
-          <p className="text-xs text-white/60 mt-0.5">{categories.length} kategori</p>
+          <h2 className="text-base font-black text-white">{t('karnival:categories_management_title', 'Kategori Pertandingan')}</h2>
+          <p className="text-xs text-white/60 mt-0.5">{t('karnival:categories_count_sub', { count: categories.length, defaultValue: `${categories.length} kategori` })}</p>
         </div>
         <button
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" />
-          Tambah Kategori
+          {t('karnival:add_category_btn', 'Tambah Kategori')}
         </button>
       </div>
 
@@ -106,12 +108,12 @@ export function KarnivalAdminCategories() {
             className="rounded-2xl border border-violet-500/25 bg-violet-600/5 p-5 space-y-4 overflow-hidden"
           >
             <p className="text-xs font-black text-violet-300 uppercase tracking-widest">
-              {editId ? 'Edit Kategori' : 'Kategori Baru'}
+              {editId ? t('karnival:edit_category_title', 'Edit Kategori') : t('karnival:new_category_title', 'Kategori Baru')}
             </p>
 
             {/* Emoji picker */}
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2 block">Ikon</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2 block">{t('karnival:icon_label', 'Ikon')}</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {EMOJI_SUGGESTIONS.map(e => (
                   <button
@@ -132,16 +134,16 @@ export function KarnivalAdminCategories() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Nama Kategori *</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:category_name_label', 'Nama Kategori *')}</label>
               <input value={form.name} onChange={e => update('name', e.target.value)} placeholder="Booth Paling Kreatif" className={inputCls} />
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Penerangan (optional)</label>
-              <input value={form.description} onChange={e => update('description', e.target.value)} placeholder="Huraikan kriteria penilaian..." className={inputCls} />
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:description_optional_label', 'Penerangan (optional)')}</label>
+              <input value={form.description} onChange={e => update('description', e.target.value)} placeholder={t('karnival:criteria_placeholder', 'Huraikan kriteria penilaian...')} className={inputCls} />
             </div>
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">
-                Max Undi Per Pelajar
+                {t('karnival:max_votes_per_student_label', 'Max Undi Per Pelajar')}
               </label>
               <input
                 type="number"
@@ -151,7 +153,7 @@ export function KarnivalAdminCategories() {
                 onChange={e => update('max_votes', parseInt(e.target.value) || 1)}
                 className={`${inputCls} w-24`}
               />
-              <p className="text-[10px] text-white/45 mt-1">Berapa kali setiap pelajar boleh undi dalam kategori ini</p>
+              <p className="text-[10px] text-white/45 mt-1">{t('karnival:max_votes_hint', 'Berapa kali setiap pelajar boleh undi dalam kategori ini')}</p>
             </div>
 
             <div className="flex gap-2">
@@ -161,10 +163,10 @@ export function KarnivalAdminCategories() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                {editId ? 'Simpan' : 'Tambah'}
+                {editId ? t('karnival:save_changes_btn', 'Simpan') : t('karnival:add_category_btn', 'Tambah')}
               </button>
               <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all">
-                Batal
+                {t('karnival:cancel_btn', 'Batal')}
               </button>
             </div>
           </motion.div>
@@ -175,7 +177,7 @@ export function KarnivalAdminCategories() {
       {categories.length === 0 ? (
         <div className="text-center py-12 text-white/45">
           <Tag className="w-10 h-10 mx-auto mb-3 opacity-20" />
-          <p className="font-bold text-sm">Belum ada kategori</p>
+          <p className="font-bold text-sm">{t('karnival:no_categories_yet', 'Belum ada kategori')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -192,7 +194,7 @@ export function KarnivalAdminCategories() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-black text-white">{cat.name}</p>
                 <p className="text-[10px] text-white/60 mt-0.5">
-                  Max {cat.max_votes} undi per pelajar
+                  {t('karnival:max_votes_badge', { count: cat.max_votes, defaultValue: `Max ${cat.max_votes} undi per pelajar` })}
                   {cat.description && ` · ${cat.description}`}
                 </p>
               </div>

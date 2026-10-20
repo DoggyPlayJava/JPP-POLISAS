@@ -144,15 +144,15 @@ export function BusinessJadual({
     const { error } = existing
       ? await supabase.from('business_shifts').update(payload).eq('id', existing.id)
       : await supabase.from('business_shifts').insert(payload);
-    if (error) toast.error('Gagal simpan: ' + error.message);
-    else { toast.success('Syif disimpan!'); setAssignModal(null); setSelectedMember(''); fetchData(); }
+    if (error) toast.error(t('keusahawanan:toast_shift_save_failed', 'Gagal simpan: {{error}}', { error: error.message }));
+    else { toast.success(t('keusahawanan:toast_shift_saved', 'Syif disimpan!')); setAssignModal(null); setSelectedMember(''); fetchData(); }
     setSaving(false);
   };
 
   const handleRemove = async (shift: BusinessShift) => {
     const { error } = await supabase.from('business_shifts').delete().eq('id', shift.id);
-    if (error) toast.error('Gagal padam.');
-    else { toast.success('Syif dipadamkan.'); fetchData(); }
+    if (error) toast.error(t('keusahawanan:toast_shift_delete_failed', 'Gagal padam.'));
+    else { toast.success(t('keusahawanan:toast_shift_deleted', 'Syif dipadamkan.')); fetchData(); }
   };
 
   const handleSwapRequest = async () => {
@@ -166,8 +166,8 @@ export function BusinessJadual({
       reason:       swapReason.trim(),
       status:       'PENDING',
     });
-    if (error) toast.error('Gagal hantar request: ' + error.message);
-    else { toast.success('Permintaan tukar syif dihantar!'); setSwapModal(null); setSwapTarget(''); setSwapReason(''); fetchData(); }
+    if (error) toast.error(t('keusahawanan:toast_shift_request_failed', 'Gagal hantar request: {{error}}', { error: error.message }));
+    else { toast.success(t('keusahawanan:toast_shift_swap_sent', 'Permintaan tukar syif dihantar!')); setSwapModal(null); setSwapTarget(''); setSwapReason(''); fetchData(); }
     setSaving(false);
   };
 
@@ -184,9 +184,9 @@ export function BusinessJadual({
       if (sw?.shift_id) {
         await supabase.from('business_shifts').update({ assigned_to: currentUserId }).eq('id', sw.shift_id);
       }
-      toast.success('Tukar syif diterima!');
+      toast.success(t('keusahawanan:toast_shift_swap_accepted', 'Tukar syif diterima!'));
     } else {
-      toast.success('Permintaan ditolak.');
+      toast.success(t('keusahawanan:toast_shift_swap_rejected', 'Permintaan ditolak.'));
     }
     fetchData();
   };
@@ -603,7 +603,7 @@ export function BusinessJadual({
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">{t('keusahawanan:shift_swap_reason', 'Sebab / Alasan')}</p>
                     <textarea
                       value={swapReason} onChange={e => setSwapReason(e.target.value)}
-                      placeholder="cth: Ada kelas pada masa tersebut, ujian, dll..."
+                      placeholder={t('keusahawanan:shift_swap_reason_placeholder', 'cth: Ada kelas pada masa tersebut, ujian, dll...')}
                       className="w-full h-20 px-4 py-3 rounded-2xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none focus:border-amber-500/50"
                     />
                   </div>
@@ -687,8 +687,8 @@ export function SesiBusiness({ businessId, color, profile, initialOpenModal = fa
       opening_notes: openNotes || null,
       status: 'OPEN',
     });
-    if (error) toast.error('Gagal buka kedai: ' + error.message);
-    else { toast.success('Kedai berjaya dibuka!'); setOpenModal(false); fetchSessions(); }
+    if (error) toast.error(t('keusahawanan:toast_store_open_failed', 'Gagal buka kedai: {{error}}', { error: error.message }));
+    else { toast.success(t('keusahawanan:toast_store_opened', 'Kedai berjaya dibuka!')); setOpenModal(false); fetchSessions(); }
     setSaving(false);
   };
 
@@ -704,8 +704,8 @@ export function SesiBusiness({ businessId, color, profile, initialOpenModal = fa
       closing_notes: closeNotes || null,
       status: 'CLOSED',
     }).eq('id', todaySession.id);
-    if (error) toast.error('Gagal tutup kedai: ' + error.message);
-    else { toast.success('Kedai ditutup. Rekod disimpan!'); setCloseModal(false); fetchSessions(); }
+    if (error) toast.error(t('keusahawanan:toast_store_close_failed', 'Gagal tutup kedai: {{error}}', { error: error.message }));
+    else { toast.success(t('keusahawanan:toast_store_closed', 'Kedai ditutup. Rekod disimpan!')); setCloseModal(false); fetchSessions(); }
     setSaving(false);
   };
 

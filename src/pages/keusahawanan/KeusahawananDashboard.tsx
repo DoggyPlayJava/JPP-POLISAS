@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -51,6 +52,7 @@ import { SystemTour } from '@/components/ui/SystemTour';
 
 // --- Dashboard Component ---
 export function KeusahawananDashboard() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { color } = useExcoTheme();
   const { profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isLoading: isSwitcherLoading, refreshBusinesses } = useBusinessSwitcher();
@@ -74,13 +76,13 @@ export function KeusahawananDashboard() {
     try {
       const res = await requestPuskepUpgrade(selectedBusiness.id);
       if (res.success) {
-        toast.success('Permohonan No. Siri PUSKEP berjaya dihantar!');
+        toast.success(t('keusahawanan:dash_toast_puskep_success', 'Permohonan No. Siri PUSKEP berjaya dihantar!'));
         await refreshBusinesses();
       } else {
-        toast.error(res.error || 'Gagal memohon No. Siri PUSKEP.');
+        toast.error(res.error || t('keusahawanan:dash_toast_puskep_failed', 'Gagal memohon No. Siri PUSKEP.'));
       }
     } catch (err: any) {
-      toast.error(err.message || 'Ralat berlaku semasa permohonan.');
+      toast.error(err.message || t('keusahawanan:dash_toast_puskep_error', 'Ralat berlaku semasa permohonan.'));
     } finally {
       setIsSubmittingPuskep(false);
     }
@@ -517,8 +519,8 @@ export function KeusahawananDashboard() {
           className="flex items-center gap-3.5 px-6 py-4 rounded-[1.5rem] bg-amber-500/[0.03] border border-amber-500/20">
           <ShieldCheck className="w-4 h-4 text-amber-500 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-600/80">Admin Preview</p>
-            <p className="text-[10px] text-amber-600/50 font-medium truncate">Modul ini dalam kawalan pentadbiran JPP.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-600/80">{t('keusahawanan:dash_admin_preview_title', 'Admin Preview')}</p>
+            <p className="text-[10px] text-amber-600/50 font-medium truncate">{t('keusahawanan:dash_admin_preview_desc', 'Modul ini dalam kawalan pentadbiran JPP.')}</p>
           </div>
         </motion.div>
       )}
@@ -530,7 +532,7 @@ export function KeusahawananDashboard() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
-              Store Overview
+              {t('keusahawanan:dash_store_overview', 'Store Overview')}
               <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
                 <HelpCircle className="w-4 h-4" />
               </button>
@@ -540,7 +542,7 @@ export function KeusahawananDashboard() {
             </div>
           </div>
           <p className="text-sm font-medium text-muted-foreground">
-            Halo <span style={{ color }}>{displayName}</span>, ini prestasi bisnes anda hari ini.
+            {t('keusahawanan:dash_greeting', 'Halo {{name}}, ini prestasi bisnes anda hari ini.', { name: displayName })}
           </p>
         </div>
 
@@ -557,8 +559,8 @@ export function KeusahawananDashboard() {
               <Calculator className="w-5 h-5" />
             </div>
             <div className="min-w-0 relative z-10 mt-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/80 leading-none">Kaunter</p>
-              <p className="text-sm sm:text-base font-black text-white mt-1 leading-tight">Jualan (POS)</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/80 leading-none">{t('keusahawanan:dash_counter_label', 'Kaunter')}</p>
+              <p className="text-sm sm:text-base font-black text-white mt-1 leading-tight">{t('keusahawanan:dash_counter_pos', 'Jualan (POS)')}</p>
             </div>
           </button>
 
@@ -572,8 +574,8 @@ export function KeusahawananDashboard() {
               <PackageSearch className="w-5 h-5" />
             </div>
             <div className="min-w-0 relative z-10 mt-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 leading-none">Katalog Kedai</p>
-              <p className="text-sm sm:text-base font-black text-foreground mt-1 leading-tight">Tambah Produk</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 leading-none">{t('keusahawanan:dash_catalog_label', 'Katalog Kedai')}</p>
+              <p className="text-sm sm:text-base font-black text-foreground mt-1 leading-tight">{t('keusahawanan:dash_add_product', 'Tambah Produk')}</p>
             </div>
           </button>
         </div>
@@ -586,16 +588,16 @@ export function KeusahawananDashboard() {
         >
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full " />
           <div className="relative z-10">
-            <h3 className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">Perniagaan Tambahan</h3>
+            <h3 className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{t('keusahawanan:dash_extra_biz_title', 'Perniagaan Tambahan')}</h3>
             <p className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-              Anda masih mempunyai kuota untuk menyertai atau mencipta 1 lagi perniagaan.
+              {t('keusahawanan:dash_extra_biz_desc', 'Anda masih mempunyai kuota untuk menyertai atau mencipta 1 lagi perniagaan.')}
             </p>
           </div>
           <button 
             onClick={() => navigate('/keusahawanan/onboarding')}
             className="relative z-10 px-5 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto text-center"
           >
-            Sertai Sekarang
+            {t('keusahawanan:dash_join_now', 'Sertai Sekarang')}
           </button>
         </motion.div>
       )}
@@ -616,10 +618,10 @@ export function KeusahawananDashboard() {
               </div>
               <div className="space-y-1">
                 <h3 className="text-base sm:text-lg font-black text-white">
-                  Perniagaan Siswapreneur EMS
+                  {t('keusahawanan:dash_ems_banner_title', 'Perniagaan Siswapreneur EMS')}
                 </h3>
                 <p className="text-xs sm:text-sm font-medium text-emerald-100/80 max-w-2xl leading-relaxed">
-                  Perniagaan ini didaftarkan secara automatik melalui Acara EMS. Adakah anda berminat mendaftar secara rasmi di bawah PUSKEP bagi mendapatkan No. Siri PUSKEP rasmi & keahlian kekal PUSKEP?
+                  {t('keusahawanan:dash_ems_banner_desc', 'Perniagaan ini didaftarkan secara automatik melalui Acara EMS. Adakah anda berminat mendaftar secara rasmi di bawah PUSKEP bagi mendapatkan No. Siri PUSKEP rasmi & keahlian kekal PUSKEP?')}
                 </p>
               </div>
             </div>
@@ -628,12 +630,12 @@ export function KeusahawananDashboard() {
               {isPuskepApproved ? (
                 <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm ">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Ahli PUSKEP Rasmi (Kekal)</span>
+                  <span>{t('keusahawanan:dash_puskep_official_member', 'Ahli PUSKEP Rasmi (Kekal)')}</span>
                 </div>
               ) : isPuskepPending ? (
                 <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm ">
                   <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>Permohonan No. Siri PUSKEP Sedang Diproses</span>
+                  <span>{t('keusahawanan:dash_puskep_processing', 'Permohonan No. Siri PUSKEP Sedang Diproses')}</span>
                 </div>
               ) : (
                 <button
@@ -642,9 +644,9 @@ export function KeusahawananDashboard() {
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {isSubmittingPuskep ? (
-                    <span>Memohon...</span>
+                    <span>{t('keusahawanan:dash_puskep_applying', 'Memohon...')}</span>
                   ) : (
-                    <span>Mohon No. Siri PUSKEP Rasmi</span>
+                    <span>{t('keusahawanan:dash_puskep_apply_btn', 'Mohon No. Siri PUSKEP Rasmi')}</span>
                   )}
                 </button>
               )}
@@ -667,22 +669,22 @@ export function KeusahawananDashboard() {
               <div className="space-y-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Etalase PolyMart Aktif</span>
+                  <span>{t('keusahawanan:dash_polymart_active_showcase', 'Etalase PolyMart Aktif')}</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-foreground">
-                    {selectedBusiness.name || 'Kedai Anda'} di PolyMart
+                    {t('keusahawanan:dash_polymart_shop_title', '{{name}} di PolyMart', { name: selectedBusiness.name || 'Kedai Anda' })}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Etalase kampus aktif. Pelajar dan staf POLISAS boleh membuat pesanan secara terus.
+                    {t('keusahawanan:dash_polymart_shop_desc', 'Etalase kampus aktif. Pelajar dan staf POLISAS boleh membuat pesanan secara terus.')}
                   </p>
                 </div>
                 {/* Metrics strip */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <div className="px-3 py-1.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground flex items-center gap-2">
                     <span className="font-black text-amber-500">{data.polymartProductsCount}</span>
-                    <span>Produk Dipaparkan</span>
+                    <span>{t('keusahawanan:dash_polymart_products_shown', 'Produk Dipaparkan')}</span>
                   </div>
                   <div className={cn(
                     "px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2",
@@ -693,7 +695,7 @@ export function KeusahawananDashboard() {
                     <span className={cn(data.pendingPmOrdersCount > 0 ? "text-rose-500 font-black" : "text-foreground font-black")}>
                       {data.pendingPmOrdersCount}
                     </span>
-                    <span>Pesanan Baru Menunggu</span>
+                    <span>{t('keusahawanan:dash_polymart_pending_orders', 'Pesanan Baru Menunggu')}</span>
                   </div>
                 </div>
               </div>
@@ -705,14 +707,14 @@ export function KeusahawananDashboard() {
                   className="px-4 py-2.5 rounded-xl text-xs font-black text-foreground bg-muted hover:bg-muted/80 border border-border/50 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Lihat Etalase Kedai</span>
+                  <span>{t('keusahawanan:dash_polymart_view_shop', 'Lihat Etalase Kedai')}</span>
                 </button>
                 <button
                   onClick={() => navigate('/polymart/vendor')}
                   className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
                 >
                   <Store className="w-3.5 h-3.5" />
-                  <span>Urus Pesanan PolyMart</span>
+                  <span>{t('keusahawanan:dash_polymart_manage_orders', 'Urus Pesanan PolyMart')}</span>
                 </button>
               </div>
             </div>
@@ -723,17 +725,17 @@ export function KeusahawananDashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-black text-foreground">
-                  Anda belum mempunyai produk yang aktif di PolyMart!
+                  {t('keusahawanan:dash_polymart_empty_title', 'Anda belum mempunyai produk yang aktif di PolyMart!')}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                  Mula terbitkan produk atau perkhidmatan anda ke PolyMart untuk mula menerima tempahan daripada warga kampus POLISAS secara dalam talian!
+                  {t('keusahawanan:dash_polymart_empty_desc', 'Mula terbitkan produk atau perkhidmatan anda ke PolyMart untuk mula menerima tempahan daripada warga kampus POLISAS secara dalam talian!')}
                 </p>
               </div>
               <button
                 onClick={() => navigate('/keusahawanan/pos/products')}
                 className="mt-2 sm:mt-0 shrink-0 px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
               >
-                + Terbitkan Produk ke PolyMart
+                {t('keusahawanan:dash_polymart_publish_btn', '+ Terbitkan Produk ke PolyMart')}
               </button>
             </div>
           )}
@@ -749,22 +751,22 @@ export function KeusahawananDashboard() {
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500"><DollarSign className="w-4 h-4" /></div>
-              <p className="text-sm font-bold text-foreground">Total Revenue</p>
+              <p className="text-sm font-bold text-foreground">{t('keusahawanan:dash_total_revenue', 'Total Revenue')}</p>
             </div>
             <Activity className="w-4 h-4 text-muted-foreground/30" />
           </div>
           <div className="flex items-end justify-between mt-4">
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mb-0.5">Jumlah Tunai Kasar (Tunai + Bank)</p>
+              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mb-0.5">{t('keusahawanan:dash_gross_cash_collected', 'Jumlah Tunai Kasar (Tunai + Bank)')}</p>
               <p className="text-3xl font-black text-foreground">RM {data.totalCashCollected.toFixed(2)}</p>
               
               <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-border/30 text-[10px] font-bold text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Jualan Selesai (Accrual):</span>
+                  <span>{t('keusahawanan:dash_settled_sales', 'Jualan Selesai (Accrual):')}</span>
                   <span className="text-foreground">RM {data.revenue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Online Pending:</span>
+                  <span>{t('keusahawanan:dash_online_pending', 'Online Pending:')}</span>
                   <span className="text-blue-500">RM {data.onlinePendingRevenue.toFixed(2)}</span>
                 </div>
               </div>
@@ -786,7 +788,7 @@ export function KeusahawananDashboard() {
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500"><ShoppingBag className="w-4 h-4" /></div>
-              <p className="text-sm font-bold text-foreground">Total Orders</p>
+              <p className="text-sm font-bold text-foreground">{t('keusahawanan:dash_total_orders', 'Total Orders')}</p>
             </div>
             <Activity className="w-4 h-4 text-muted-foreground/30" />
           </div>
@@ -794,7 +796,7 @@ export function KeusahawananDashboard() {
             <div>
               <p className="text-3xl font-black text-foreground">{data.orders}</p>
               <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-muted-foreground">
-                <span>Bulan ini</span>
+                <span>{t('keusahawanan:dash_this_month', 'Bulan ini')}</span>
               </div>
             </div>
             {/* Mini Chart */}
@@ -814,15 +816,15 @@ export function KeusahawananDashboard() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500"><Target className="w-4 h-4" /></div>
-              <p className="text-sm font-bold text-foreground">Monthly Goals</p>
+              <p className="text-sm font-bold text-foreground">{t('keusahawanan:dash_monthly_goals', 'Monthly Goals')}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Target</p>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{t('keusahawanan:dash_target_label', 'Target')}</p>
                 <p className="text-lg font-black text-foreground">RM {data.monthlyTarget}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Achieved</p>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{t('keusahawanan:dash_achieved_label', 'Achieved')}</p>
                 <p className="text-lg font-black text-foreground">RM {data.revenue.toFixed(0)}</p>
               </div>
             </div>
@@ -852,8 +854,8 @@ export function KeusahawananDashboard() {
           className="tour-sales-chart lg:col-span-2 bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-h-[350px] min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-black text-foreground">Sales Analytics</h2>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">Trend jualan perniagaan anda</p>
+              <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_sales_analytics', 'Sales Analytics')}</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">{t('keusahawanan:dash_sales_trend_subtitle', 'Trend jualan perniagaan anda')}</p>
             </div>
             {/* Date Range Picker */}
             <div ref={pickerRef} className="relative">
@@ -864,7 +866,7 @@ export function KeusahawananDashboard() {
               </button>
               {isPickerOpen && (
                 <div className="absolute right-0 top-full mt-2 z-50 bg-popover border border-border/50 rounded-2xl shadow-2xl p-4 space-y-3 w-[260px]">
-                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Tempoh Pantas</p>
+                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">{t('keusahawanan:dash_quick_periods', 'Tempoh Pantas')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {[{l:'Hari Ini',d:0},{l:'7 Hari',d:6},{l:'Sebulan',d:29},{l:'Setahun',d:364}].map(p => {
                       const to = new Date(); const from = new Date(); from.setDate(from.getDate()-p.d); from.setHours(0,0,0,0);
@@ -874,18 +876,18 @@ export function KeusahawananDashboard() {
                   <div className="h-px bg-border/50" />
                   <div className="space-y-2">
                     <div>
-                      <label className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-wider block mb-1">Dari</label>
+                      <label className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-wider block mb-1">{t('keusahawanan:dash_from_label', 'Dari')}</label>
                       <input type="date" defaultValue={dateRange.from.toLocaleDateString('en-CA')} max={new Date().toLocaleDateString('en-CA')}
                         onChange={e => { const d=new Date(e.target.value); if(!isNaN(d.getTime())) setDateRange(r=>({...r,from:d})); }}
                         className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border/50 text-xs font-bold text-foreground outline-none focus:border-primary/50" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-wider block mb-1">Hingga</label>
+                      <label className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-wider block mb-1">{t('keusahawanan:dash_to_label', 'Hingga')}</label>
                       <input type="date" defaultValue={dateRange.to.toLocaleDateString('en-CA')} max={new Date().toLocaleDateString('en-CA')}
                         onChange={e => { const d=new Date(e.target.value); if(!isNaN(d.getTime())) setDateRange(r=>({...r,to:d})); }}
                         className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border/50 text-xs font-bold text-foreground outline-none focus:border-primary/50" />
                     </div>
-                    <button onClick={()=>setIsPickerOpen(false)} className="w-full py-2 rounded-xl text-xs font-black text-white transition-colors" style={{background:color}}>Guna Tarikh</button>
+                    <button onClick={()=>setIsPickerOpen(false)} className="w-full py-2 rounded-xl text-xs font-black text-white transition-colors" style={{background:color}}>{t('keusahawanan:dash_apply_date_btn', 'Guna Tarikh')}</button>
                   </div>
                 </div>
               )}
@@ -915,7 +917,7 @@ export function KeusahawananDashboard() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-black text-foreground">Top Products</h2>
+            <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_top_products', 'Top Products')}</h2>
             <div className="px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-bold text-muted-foreground">
               {dateRange.from.toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} – {dateRange.to.toLocaleDateString('ms-MY',{day:'numeric',month:'short'})}
             </div>
@@ -929,12 +931,12 @@ export function KeusahawananDashboard() {
                    </div>
                    <div>
                      <p className="text-sm font-bold text-foreground">{prod.name}</p>
-                     <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{prod.count} terjual</p>
+                     <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{t('keusahawanan:dash_units_sold', '{{count}} terjual', { count: prod.count })}</p>
                    </div>
                  </div>
                </div>
              )) : (
-               <div className="text-center py-8 text-muted-foreground text-xs font-bold">Belum ada jualan direkodkan.</div>
+               <div className="text-center py-8 text-muted-foreground text-xs font-bold">{t('keusahawanan:dash_no_sales_yet', 'Belum ada jualan direkodkan.')}</div>
              )}
           </div>
         </motion.div>
@@ -951,26 +953,26 @@ export function KeusahawananDashboard() {
               <Activity className="w-4 h-4" style={{ color }} />
             </div>
             <div>
-              <h2 className="text-lg font-black text-foreground">Product Activity</h2>
-              <p className="text-xs text-muted-foreground font-medium">Produk terlaris 14 hari terakhir</p>
+              <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_product_activity', 'Product Activity')}</h2>
+              <p className="text-xs text-muted-foreground font-medium">{t('keusahawanan:dash_best_selling_14days', 'Produk terlaris 14 hari terakhir')}</p>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-[11px] text-muted-foreground font-bold">
-            <span>Kurang</span>
+            <span>{t('keusahawanan:dash_less', 'Kurang')}</span>
             <div className="flex gap-1">
               {[0, 0.3, 0.55, 0.78, 1].map((op, i) => (
                 <div key={i} className="w-3 h-3 rounded-sm"
                   style={{ backgroundColor: i === 0 ? 'hsl(var(--muted))' : color, opacity: i === 0 ? 0.35 : op }} />
               ))}
             </div>
-            <span>Lebih</span>
+            <span>{t('keusahawanan:dash_more', 'Lebih')}</span>
           </div>
         </div>
 
         {data.productHeatmap.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
             <BarChart3 className="w-8 h-8 mb-2 opacity-30" />
-            <p className="text-xs font-bold">Tiada data jualan produk dalam 14 hari terakhir</p>
+            <p className="text-xs font-bold">{t('keusahawanan:dash_no_heatmap_data', 'Tiada data jualan produk dalam 14 hari terakhir')}</p>
           </div>
         ) : (
           <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
@@ -1036,13 +1038,13 @@ export function KeusahawananDashboard() {
           className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm min-w-0 w-full max-w-full flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-black text-foreground">Budget Usage</h2>
+              <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_budget_usage', 'Budget Usage')}</h2>
               <button className="p-2 rounded-xl hover:bg-muted transition-colors"><ExternalLink className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="font-bold text-foreground">Jumlah Perbelanjaan</span>
+                  <span className="font-bold text-foreground">{t('keusahawanan:dash_total_expenses', 'Jumlah Perbelanjaan')}</span>
                   <span className="font-black text-muted-foreground">RM {data.expenses.toFixed(2)}</span>
                 </div>
                 <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
@@ -1052,7 +1054,7 @@ export function KeusahawananDashboard() {
             </div>
           </div>
           <div className="mt-6 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-medium leading-relaxed">
-            <span className="font-bold text-indigo-600 dark:text-indigo-300">Tip Bajet:</span> Perbelanjaan operasi anda berada pada tahap yang sihat. Pertimbangkan untuk melabur dalam bahan berkualiti.
+            <span className="font-bold text-indigo-600 dark:text-indigo-300">{t('keusahawanan:dash_budget_tip_title', 'Tip Bajet:')}</span> {t('keusahawanan:dash_budget_tip_desc', 'Perbelanjaan operasi anda berada pada tahap yang sihat. Pertimbangkan untuk melabur dalam bahan berkualiti.')}
           </div>
         </motion.div>
 
@@ -1060,8 +1062,8 @@ export function KeusahawananDashboard() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
           className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm min-w-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-black text-foreground">Customer Review</h2>
-            <div className="px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-bold text-muted-foreground">Terkini</div>
+            <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_customer_reviews', 'Customer Review')}</h2>
+            <div className="px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-bold text-muted-foreground">{t('keusahawanan:dash_latest_reviews', 'Terkini')}</div>
           </div>
           <div className="space-y-4">
             {data.recentReviews.length > 0 ? data.recentReviews.map((rev, i) => (
@@ -1071,7 +1073,7 @@ export function KeusahawananDashboard() {
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-black text-xs text-muted-foreground uppercase">
                       {rev.reviewer_id ? rev.reviewer_id.substring(0, 2) : 'A'}
                     </div>
-                    <p className="text-xs font-bold text-foreground truncate w-24">Pelanggan</p>
+                    <p className="text-xs font-bold text-foreground truncate w-24">{t('keusahawanan:dash_customer_label', 'Pelanggan')}</p>
                   </div>
                   <div className="flex items-center gap-0.5">
                     {[1,2,3,4,5].map(star => (
@@ -1082,7 +1084,7 @@ export function KeusahawananDashboard() {
                 <p className="text-[11px] sm:text-xs text-muted-foreground/80 leading-relaxed font-medium line-clamp-3">"{rev.comment || rev.review_text}"</p>
               </div>
             )) : (
-              <div className="text-center py-8 text-muted-foreground text-xs font-bold">Tiada maklum balas setakat ini.</div>
+              <div className="text-center py-8 text-muted-foreground text-xs font-bold">{t('keusahawanan:dash_no_reviews_yet', 'Tiada maklum balas setakat ini.')}</div>
             )}
           </div>
         </motion.div>
@@ -1092,7 +1094,7 @@ export function KeusahawananDashboard() {
           className="tour-low-stock bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between min-w-0 w-full max-w-full">
           <div>
              <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-black text-foreground">Low Stock Alert</h2>
+              <h2 className="text-lg font-black text-foreground">{t('keusahawanan:dash_low_stock_alert', 'Low Stock Alert')}</h2>
               <BellRing className="w-4 h-4 text-rose-500 animate-pulse" />
             </div>
             
@@ -1109,18 +1111,18 @@ export function KeusahawananDashboard() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-foreground leading-tight">{item.name}</p>
-                      <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-wider">{item.stock_quantity} unit tinggal</p>
+                      <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-wider">{t('keusahawanan:dash_units_left', '{{count}} unit tinggal', { count: item.stock_quantity })}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground text-xs font-bold">Semua stok mencukupi.</div>
+              <div className="text-center py-8 text-muted-foreground text-xs font-bold">{t('keusahawanan:dash_all_stocks_sufficient', 'Semua stok mencukupi.')}</div>
             )}
           </div>
           
           <button className="w-full mt-6 py-3 rounded-2xl bg-rose-500 text-white font-black text-sm hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20 active:scale-[0.98]">
-            Restock Now
+            {t('keusahawanan:dash_restock_now', 'Restock Now')}
           </button>
         </motion.div>
 

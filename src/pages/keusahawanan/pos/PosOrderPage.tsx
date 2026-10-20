@@ -322,7 +322,7 @@ export function PosOrderPage() {
       setDiscountEnabled(false); // mutex: clear manual diskaun
       setDiscountValue('');
       setDiscountNote('');
-      toast.success(`Kupon "${result.promotion.code}" berjaya digunakan!`);
+      toast.success(t('keusahawanan:toast_coupon_used', 'Kupon "{{code}}" berjaya digunakan!', { code: result.promotion.code }));
     } else {
       setCouponError(result.error ?? 'Kod tidak sah.');
       setAppliedPromo(null);
@@ -374,7 +374,7 @@ export function PosOrderPage() {
       setDiscountValue('');
       setDiscountNote('');
       setAppliedEventCoupon(coupon);
-      toast.success(`Kupon "${coupon.code}" berjaya digunakan!`);
+      toast.success(t('keusahawanan:toast_coupon_used', 'Kupon "{{code}}" berjaya digunakan!', { code: coupon.code }));
     } finally {
       setEventCouponApplying(false);
     }
@@ -390,7 +390,7 @@ export function PosOrderPage() {
   const handleProcess = async () => {
     if (!businessId || cart.length === 0) return;
     if (paymentMethod === 'CASH' && receivedRM < totalAmount) {
-      toast.error('Jumlah diterima tidak mencukupi!');
+      toast.error(t('keusahawanan:toast_insufficient_payment', 'Jumlah diterima tidak mencukupi!'));
       return;
     }
 
@@ -453,7 +453,7 @@ export function PosOrderPage() {
       
       setScannedOrder(data);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyemak pesanan PolyMart');
+      toast.error(err.message || t('keusahawanan:toast_polymart_check_failed', 'Gagal menyemak pesanan PolyMart'));
     } finally {
       setProcessing(false);
     }
@@ -474,10 +474,10 @@ export function PosOrderPage() {
         p_served_by: profile?.id
       });
       if (error) throw error;
-      toast.success('Pesanan PolyMart selesai!');
+      toast.success(t('keusahawanan:toast_polymart_order_completed', 'Pesanan PolyMart selesai!'));
       setScannedOrder(null);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyelesaikan pesanan');
+      toast.error(err.message || t('keusahawanan:toast_order_completion_failed', 'Gagal menyelesaikan pesanan'));
     } finally {
       setProcessing(false);
     }
@@ -500,8 +500,8 @@ export function PosOrderPage() {
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center">
-          <p className="text-sm font-black text-muted-foreground/50">Anda belum menyertai mana-mana perniagaan.</p>
-          <p className="text-[10px] text-muted-foreground/30 mt-1">Sertai atau tubuhkan perniagaan untuk menggunakan POS.</p>
+          <p className="text-sm font-black text-muted-foreground/50">{t('keusahawanan:pos_no_biz_joined', 'Anda belum menyertai mana-mana perniagaan.')}</p>
+          <p className="text-[10px] text-muted-foreground/30 mt-1">{t('keusahawanan:pos_no_biz_joined_sub', 'Sertai atau tubuhkan perniagaan untuk menggunakan POS.')}</p>
         </div>
       </div>
     );
@@ -570,7 +570,7 @@ export function PosOrderPage() {
               <div className="h-64 flex flex-col items-center justify-center text-center">
                 <Package className="w-12 h-12 text-muted-foreground/20 mb-3" />
                 <p className="text-sm font-black text-muted-foreground/40">{t('pos_out_of_stock')}</p>
-                <p className="text-[10px] text-muted-foreground/30 mt-1">Tambah produk di halaman Produk.</p>
+                <p className="text-[10px] text-muted-foreground/30 mt-1">{t('keusahawanan:pos_add_product_hint', 'Tambah produk di halaman Produk.')}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="h-40 flex items-center justify-center">
@@ -623,7 +623,7 @@ export function PosOrderPage() {
                 <div className="py-10 text-center">
                   <ShoppingCart className="w-8 h-8 text-muted-foreground/20 mx-auto mb-3" />
                   <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/30">{t('pos_cart_empty')}</p>
-                  <p className="text-[10px] text-muted-foreground/20 mt-1">Pilih produk dari grid kiri</p>
+                  <p className="text-[10px] text-muted-foreground/20 mt-1">{t('keusahawanan:pos_select_product_hint', 'Pilih produk dari grid kiri')}</p>
                 </div>
               ) : (
                 <AnimatePresence mode="popLayout">
@@ -775,7 +775,7 @@ export function PosOrderPage() {
                             type="number" min="0"
                             className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40" />
                           <input value={discountNote} onChange={e => setDiscountNote(e.target.value)}
-                            placeholder="Nota diskaun (e.g. Diskaun Pelajar)"
+                            placeholder={t('keusahawanan:pos_discount_notes_placeholder', 'Nota diskaun (e.g. Diskaun Pelajar)')}
                             className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40" />
                           {eventCouponError && <p className="text-[9px] text-rose-500 mt-1 font-black">{eventCouponError}</p>}
                         </div>
@@ -929,7 +929,7 @@ export function PosOrderPage() {
                     <Package className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-foreground">Pesanan PolyMart</h3>
+                    <h3 className="font-black text-foreground">{t('keusahawanan:pos_polymart_orders_heading', 'Pesanan PolyMart')}</h3>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{scannedOrder.buyer?.full_name}</p>
                   </div>
                 </div>

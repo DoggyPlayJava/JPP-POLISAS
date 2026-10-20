@@ -370,7 +370,7 @@ function CostBuilder({
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Harga Beli (RM)</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">{t('keusahawanan:pos_cost_price_label', 'Harga Beli (RM)')}</p>
                       <div className="flex items-center gap-1 h-8 px-3 rounded-lg bg-card border border-border/50">
                         <span className="text-[10px] font-black text-muted-foreground/40">RM</span>
                         <input
@@ -475,7 +475,7 @@ function CostBuilder({
             <div className="flex items-center justify-between px-4 py-3 rounded-2xl"
               style={{ background: hexToRgba(accent, 0.08), border: `1px solid ${hexToRgba(accent, 0.2)}` }}>
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Jumlah Kos Per Produk</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">{t('keusahawanan:pos_total_cost_per_product', 'Jumlah Kos Per Produk')}</p>
                 <p className="text-[9px] text-muted-foreground/40">{items.filter(i => i.subtotal > 0).length} bahan dikira</p>
               </div>
               <span className="text-lg font-black" style={{ color: accent }}>{fmtRM(totalCost)}</span>
@@ -550,7 +550,7 @@ function MarginPreview({ price, cost, accent }: { price: number; cost: number; a
       <div className="p-3 rounded-2xl border border-border/40 bg-muted/20">
         <div className="flex items-center gap-1.5 mb-2">
           <Lightbulb className="w-3.5 h-3.5" style={{ color: accent }} />
-          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">Cadangan Harga</p>
+          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t('keusahawanan:pos_suggested_price', 'Cadangan Harga')}</p>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
           {[
@@ -592,8 +592,8 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
           <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h3 className="text-sm font-black text-amber-700 dark:text-amber-400 leading-tight">Tingkatkan Jualan Anda di PolyMart! 🚀</h3>
-          <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 font-medium mt-0.5">Berminat letak produk anda di <b className="text-amber-600 dark:text-amber-400">Banner Hadapan</b>? Mesej Exco Keusahawanan sekarang.</p>
+          <h3 className="text-sm font-black text-amber-700 dark:text-amber-400 leading-tight">{t('keusahawanan:pos_polymart_boost_title', 'Tingkatkan Jualan Anda di PolyMart! 🚀')}</h3>
+          <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 font-medium mt-0.5">{t('keusahawanan:pos_polymart_boost_desc', 'Berminat letak produk anda di Banner Hadapan? Mesej Exco Keusahawanan sekarang.')}</p>
         </div>
       </div>
       <button className="h-9 px-4 rounded-xl text-xs font-bold text-white shrink-0 whitespace-nowrap shadow-md hover:scale-105 active:scale-95 transition-transform truncate"
@@ -716,11 +716,11 @@ export function PosProductPage() {
     
     const path = `${businessId}/${Date.now()}.${compressedFile.name.split('.').pop()}`;
     const { error } = await supabase.storage.from('keusahawanan-products').upload(path, compressedFile, { contentType: compressedFile.type });
-    if (error) { toast.error('Gagal muat naik: ' + error.message); setUploading(false); return; }
+    if (error) { toast.error(t('keusahawanan:toast_upload_failed', 'Gagal muat naik: {{error}}', { error: error.message })); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
     setForm(f => ({ ...f, image_url: publicUrl }));
     setUploading(false);
-    toast.success('Gambar dimuat naik!');
+    toast.success(t('keusahawanan:toast_image_uploaded', 'Gambar dimuat naik!'));
   };
 
   const handleUploadAdditional = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -733,16 +733,16 @@ export function PosProductPage() {
       
       const path = `${businessId}/${Date.now()}-${window.crypto.randomUUID()}.${compressedFile.name.split('.').pop()}`;
       const { error } = await supabase.storage.from('keusahawanan-products').upload(path, compressedFile, { contentType: compressedFile.type });
-      if (error) { toast.error('Gagal muat naik: ' + error.message); return; }
+      if (error) { toast.error(t('keusahawanan:toast_upload_failed', 'Gagal muat naik: {{error}}', { error: error.message })); return; }
       const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
       
       setForm(f => ({
         ...f,
         image_urls: [...(f.image_urls || []), publicUrl]
       }));
-      toast.success('Gambar tambahan dimuat naik!');
+      toast.success(t('keusahawanan:toast_extra_image_uploaded', 'Gambar tambahan dimuat naik!'));
     } catch (err: any) {
-      toast.error('Ralat muat naik: ' + err.message);
+      toast.error(t('keusahawanan:toast_image_upload_error', 'Ralat muat naik: {{error}}', { error: err.message }));
     } finally {
       setUploading(false);
     }
@@ -757,7 +757,7 @@ export function PosProductPage() {
 
   const handleSave = async () => {
     if (!businessId) return;
-    if (!form.name.trim()) { toast.error('Nama produk wajib diisi.'); return; }
+    if (!form.name.trim()) { toast.error(t('keusahawanan:toast_product_name_required', 'Nama produk wajib diisi.')); return; }
     if (!form.price || parseFloat(form.price) < 0) { toast.error('Harga tidak sah.'); return; }
     setSaving(true);
 
@@ -825,7 +825,7 @@ export function PosProductPage() {
               <HelpCircle className="w-4 h-4" />
             </button>
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{pos.products.length} produk dalam katalog</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('keusahawanan:pos_products_in_catalog', '{{count}} produk dalam katalog', { count: pos.products.length })}</p>
         </div>
         {isOwner && (
           <button onClick={openAdd}
@@ -961,7 +961,7 @@ export function PosProductPage() {
                 className="relative w-full max-w-lg rounded-3xl bg-card border border-border shadow-2xl max-h-[92vh] overflow-y-auto scrollbar-hide">
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black">{editId ? 'Edit Produk' : 'Produk Baharu'}</h3>
+                    <h3 className="text-sm font-black">{editId ? t('keusahawanan:pos_edit_product_title', 'Edit Produk') : t('keusahawanan:pos_new_product_title', 'Produk Baharu')}</h3>
                     <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"><X className="w-4 h-4" /></button>
                   </div>
 
@@ -1011,7 +1011,7 @@ export function PosProductPage() {
                     <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                       {/* Premium Multi-Image Grid (Shopee Style) */}
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Galeri Gambar Produk (Maks 5 Gambar)</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">{t('keusahawanan:pos_gallery_max_images', 'Galeri Gambar Produk (Maks 5 Gambar)')}</p>
                         <div className="grid grid-cols-5 gap-2">
                           {/* Main Image Slot */}
                           <div className="relative aspect-square rounded-xl overflow-hidden border border-amber-500/30 bg-muted/20 flex items-center justify-center group cursor-pointer">
@@ -1093,7 +1093,7 @@ export function PosProductPage() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_product_desc', 'Penerangan Produk (Pilihan)')}</p>
                         <textarea value={form.description}
                           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                          placeholder="Huraikan keistimewaan produk anda, ramuan, saiz, atau cara penyediaan..."
+                          placeholder={t('keusahawanan:pos_product_desc_placeholder', 'Huraikan keistimewaan produk anda, ramuan, saiz, atau cara penyediaan...')}
                           rows={2}
                           className="w-full p-3 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all resize-none scrollbar-hide" />
                       </div>
@@ -1110,7 +1110,7 @@ export function PosProductPage() {
                             </div>
                             <div className="text-left">
                               <p className="text-xs font-black text-foreground">Smart Pricing</p>
-                              <p className="text-[9px] text-muted-foreground/50">Kos produk & analisis margin</p>
+                              <p className="text-[9px] text-muted-foreground/50">{t('keusahawanan:pos_cost_and_margin_analysis', 'Kos produk & analisis margin')}</p>
                             </div>
                           </div>
                           {showCost ? <ChevronUp className="w-4 h-4 text-muted-foreground/40" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/40" />}
@@ -1171,7 +1171,7 @@ export function PosProductPage() {
                               <div key={index} className="flex items-center justify-between bg-card p-2 rounded-xl border border-border shadow-sm">
                                 <span className="text-xs font-bold px-2 py-1 rounded bg-muted text-foreground">{v.name}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-muted-foreground mr-1">Stok:</span>
+                                  <span className="text-[10px] text-muted-foreground mr-1">{t('keusahawanan:pos_stock_colon', 'Stok:')}</span>
                                   <input
                                     type="number"
                                     min="0"
@@ -1241,7 +1241,7 @@ export function PosProductPage() {
                           <input
                             type="number"
                             id="new-var-stock"
-                            placeholder="Stok"
+                            placeholder={t('keusahawanan:pos_stock_placeholder', 'Stok')}
                             min="0"
                             className="w-20 h-9 px-3 rounded-xl text-xs font-semibold outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/30 focus:border-border transition-all"
                           />
@@ -1254,11 +1254,11 @@ export function PosProductPage() {
                               const stock = parseInt(stockEl?.value) || 0;
                               
                               if (!name) {
-                                toast.error('Masukkan nama variasi.');
+                                toast.error(t('keusahawanan:toast_variation_name_required', 'Masukkan nama variasi.'));
                                 return;
                               }
                               if (form.variations.some(v => v.name.toLowerCase() === name.toLowerCase())) {
-                                toast.error('Variasi ini sudah wujud.');
+                                toast.error(t('keusahawanan:toast_variation_already_exists', 'Variasi ini sudah wujud.'));
                                 return;
                               }
                               
@@ -1269,7 +1269,7 @@ export function PosProductPage() {
                               
                               if (nameEl) nameEl.value = '';
                               if (stockEl) stockEl.value = '';
-                              toast.success(`Variasi ${name} ditambah!`);
+                              toast.success(t('keusahawanan:toast_variation_added', 'Variasi {{name}} ditambah!', { name }));
                             }}
                             className="h-9 px-4 rounded-xl text-xs font-bold text-white uppercase tracking-wider transition-all hover:brightness-110"
                             style={{ background: color }}
@@ -1284,7 +1284,7 @@ export function PosProductPage() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 flex items-center gap-1.5">⚡ Kempen Flash Sale</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="col-span-2">
-                            <p className="text-[9px] text-muted-foreground/50 mb-1">Harga Promosi (RM)</p>
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">{t('keusahawanan:pos_promo_price_label', 'Harga Promosi (RM)')}</p>
                             <input
                               type="number"
                               step="0.01"
@@ -1296,7 +1296,7 @@ export function PosProductPage() {
                             />
                           </div>
                           <div>
-                            <p className="text-[9px] text-muted-foreground/50 mb-1">Tarikh Mula</p>
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">{t('keusahawanan:pos_promo_start_date', 'Tarikh Mula')}</p>
                             <input
                               type="datetime-local"
                               value={form.sale_start_at}
@@ -1305,7 +1305,7 @@ export function PosProductPage() {
                             />
                           </div>
                           <div>
-                            <p className="text-[9px] text-muted-foreground/50 mb-1">Tarikh Tamat</p>
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">{t('keusahawanan:pos_promo_end_date', 'Tarikh Tamat')}</p>
                             <input
                               type="datetime-local"
                               value={form.sale_end_at}
@@ -1338,7 +1338,7 @@ export function PosProductPage() {
                                   {form.publish_to_polymart ? 'Aktif' : 'Nyahaktif'}
                                 </span>
                               </div>
-                              <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5">Paparan & pembelian terus pelajar di Marketplace</p>
+                              <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5">{t('keusahawanan:pos_polymart_marketplace_desc', 'Paparan & pembelian terus pelajar di Marketplace')}</p>
                             </div>
                           </div>
 
@@ -1442,7 +1442,7 @@ export function PosProductPage() {
                             {/* Total summary info row */}
                             <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
                               <div>
-                                <p className="text-xs font-bold text-foreground">Total Stok Keseluruhan</p>
+                                <p className="text-xs font-bold text-foreground">{t('keusahawanan:pos_total_overall_stock', 'Total Stok Keseluruhan')}</p>
                                 <p className="text-[9px] text-muted-foreground/50">Hasil tambah {form.variations.length} variasi di atas</p>
                               </div>
                               <div className="text-right">
@@ -1455,7 +1455,7 @@ export function PosProductPage() {
                         ) : (
                           <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
                             <div>
-                              <p className="text-xs font-bold text-foreground">Stok Produk Tunggal</p>
+                              <p className="text-xs font-bold text-foreground">{t('keusahawanan:pos_single_product_stock', 'Stok Produk Tunggal')}</p>
                               <p className="text-[9px] text-muted-foreground/50">Tiada variasi atau saiz ditetapkan</p>
                             </div>
                             <div className="text-right">
@@ -1488,7 +1488,7 @@ export function PosProductPage() {
                         onClick={() => {
                           // Validasi Langkah 1
                           if (formStep === 1) {
-                            if (!form.name.trim()) { toast.error('Nama produk wajib diisi.'); return; }
+                            if (!form.name.trim()) { toast.error(t('keusahawanan:toast_product_name_required', 'Nama produk wajib diisi.')); return; }
                             if (!form.price || parseFloat(form.price) < 0) { toast.error('Harga tidak sah.'); return; }
                           }
                           setFormStep(s => (s + 1) as any);
