@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Clock, BarChart3, CalendarDays, Trophy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import confetti from 'canvas-confetti';
 import { triggerHaptic } from '@/lib/utils';
 
@@ -10,6 +11,7 @@ export interface SupsasMegaBannerProps {
 }
 
 export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
+  const { t, i18n } = useTranslation('portal');
   const navigate = useNavigate();
   const [supsasCountdown, setSupsasCountdown] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
   const [clickCount, setClickCount] = useState(0);
@@ -80,6 +82,13 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
     };
   }, [supsasEdition?.start_date]);
 
+  const sportsmanshipText = t('portal:supsas_marquee_sportsmanship', {
+    name: supsasEdition?.name ?? 'SUPSAS',
+    defaultValue: '🏆 {{name}} MEMBAWA SEMANGAT KESUKANAN!'
+  });
+  const supportContingentText = t('portal:supsas_marquee_support_contingent', '🏅 SOKONG KONTINJEN ANDA SEKARANG');
+  const sportsOngoingText = t('portal:supsas_marquee_sports_ongoing', '🔥 ACARA SUKAN SEDANG BERLANGSUNG');
+
   return (
     <motion.div
       key="supsas-mega-banner"
@@ -121,14 +130,14 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
         <div className="absolute inset-0 pointer-events-none translate-z-[20px]" style={{ background: 'radial-gradient(ellipse at 80% 100%, rgba(180,83,9,0.2) 0%, transparent 50%)' }} />
 
         {/* Live Status Marquee */}
-        <div className="absolute top-0 left-0 right-0 h-7 bg-amber-900/40 border-b border-amber-500/20 overflow-hidden z-20 flex items-center ">
+        <div className="absolute top-0 left-0 right-0 h-7 bg-amber-900/40 border-b border-amber-500/20 overflow-hidden z-20 flex items-center">
           <div className="whitespace-nowrap flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200" style={{ animation: 'supsas-marquee 20s linear infinite', width: '200%' }}>
-            <span>🏆 {supsasEdition?.name ?? 'SUPSAS'} MEMBAWA SEMANGAT KESUKANAN!</span>
-            <span>🏅 SOKONG KONTINJEN ANDA SEKARANG</span>
-            <span>🔥 ACARA SUKAN SEDANG BERLANGSUNG</span>
-            <span>🏆 {supsasEdition?.name ?? 'SUPSAS'} MEMBAWA SEMANGAT KESUKANAN!</span>
-            <span>🏅 SOKONG KONTINJEN ANDA SEKARANG</span>
-            <span>🔥 ACARA SUKAN SEDANG BERLANGSUNG</span>
+            <span>{sportsmanshipText}</span>
+            <span>{supportContingentText}</span>
+            <span>{sportsOngoingText}</span>
+            <span>{sportsmanshipText}</span>
+            <span>{supportContingentText}</span>
+            <span>{sportsOngoingText}</span>
           </div>
         </div>
 
@@ -138,7 +147,9 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" />
             </span>
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-300">Sedang Berlangsung</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-300">
+              {t('portal:ongoing', 'Sedang Berlangsung')}
+            </span>
           </div>
           <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full" style={{ background: 'rgba(245,158,11,0.2)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>
             🏆 SUPSAS
@@ -168,7 +179,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
             </h2>
             {supsasEdition?.start_date && (
               <p className="text-sm text-white/50 font-medium mt-2 tracking-wide">
-                {new Date(supsasEdition.start_date).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(supsasEdition.start_date).toLocaleDateString(i18n.language?.startsWith('en') ? 'en-MY' : 'ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             )}
           </div>
@@ -176,8 +187,13 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
           {supsasEdition?.start_date && !supsasCountdown.expired && (
             <div className="inline-flex items-center gap-1 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
               <Clock className="w-3.5 h-3.5 text-amber-400 mr-1" />
-              <span className="text-xs text-white/60 font-medium">Bermula dalam</span>
-              {[{ v: supsasCountdown.days, l: 'h' }, { v: supsasCountdown.hours, l: 'j' }, { v: supsasCountdown.mins, l: 'm' }, { v: supsasCountdown.secs, l: 's' }].map(({ v, l }) => (
+              <span className="text-xs text-white/60 font-medium mr-1">{t('portal:starts_in', 'Bermula dalam')}</span>
+              {[
+                { v: supsasCountdown.days, l: t('portal:unit_day', 'h') },
+                { v: supsasCountdown.hours, l: t('portal:unit_hour', 'j') },
+                { v: supsasCountdown.mins, l: t('portal:unit_minute', 'm') },
+                { v: supsasCountdown.secs, l: t('portal:unit_second', 's') }
+              ].map(({ v, l }) => (
                 <span key={l} className="flex items-baseline gap-0.5">
                   <span className="text-lg font-black text-white tabular-nums">{String(v).padStart(2, '0')}</span>
                   <span className="text-[10px] text-white/40 font-bold">{l}</span>
@@ -188,7 +204,9 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
           {supsasEdition?.is_active && supsasCountdown.expired && (
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
               <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" /></span>
-              <span className="text-xs text-amber-300 font-black">Sedang Berlangsung!</span>
+              <span className="text-xs text-amber-300 font-black">
+                {t('portal:ongoing_exclamation', 'Sedang Berlangsung!')}
+              </span>
             </div>
           )}
 
@@ -196,17 +214,17 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
             <button onClick={e => { e.stopPropagation(); triggerHaptic('medium'); navigate('/supsas/scoreboard'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', boxShadow: '0 8px 30px rgba(245,158,11,0.35)', color: '#000' }}>
-              <BarChart3 className="w-4 h-4" /> Papan Markah
+              <BarChart3 className="w-4 h-4" /> {t('portal:scoreboard', 'Papan Markah')}
             </button>
             <button onClick={e => { e.stopPropagation(); triggerHaptic('light'); navigate('/supsas/jadual'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}>
-              <CalendarDays className="w-4 h-4" /> Jadual
+              <CalendarDays className="w-4 h-4" /> {t('portal:schedule_short', 'Jadual')}
             </button>
             <button onClick={e => { e.stopPropagation(); triggerHaptic('light'); navigate('/supsas'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
-              <Trophy className="w-4 h-4" /> Laman SUPSAS
+              <Trophy className="w-4 h-4" /> {t('portal:supsas_page', 'Laman SUPSAS')}
             </button>
           </div>
         </div>

@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation, Trans } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba } from '@/lib/utils';
 import {
   QrCode, Star, Clock, CheckCircle, Smartphone,
-  Camera, Info, ChevronRight, Zap, Loader2, X,
+  Camera, Info, Zap, X,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import jsQR from 'jsqr';
@@ -20,6 +21,7 @@ const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as 
 
 // ─── Camera QR Scanner ───────────────────────────────────────
 function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (url: string) => void }) {
+  const { t } = useTranslation(['akademik', 'common']);
   const videoRef   = useRef<HTMLVideoElement>(null);
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const streamRef  = useRef<MediaStream | null>(null);
@@ -40,7 +42,7 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
           },
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+        if (!active) { stream.getTracks().forEach(track => track.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -50,8 +52,8 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
       } catch (e: any) {
         if (!active) return;
         setError(e.name === 'NotAllowedError'
-          ? 'Akses kamera ditolak. Sila benarkan akses kamera dalam tetapan pelayar.'
-          : 'Kamera tidak dapat dibuka. Cuba semula atau guna kamera native.'
+          ? t('akademik:camera_denied_error', 'Akses kamera ditolak. Sila benarkan akses kamera dalam tetapan pelayar.')
+          : t('akademik:camera_unavailable_error', 'Kamera tidak dapat dibuka. Cuba semula atau guna kamera native.')
         );
       }
     };
@@ -85,7 +87,7 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
     };
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError('Pelayar ini tidak menyokong akses kamera. Cuba guna Safari terkini atau Chrome.');
+      setError(t('akademik:camera_unsupported_error', 'Pelayar ini tidak menyokong akses kamera. Cuba guna Safari terkini atau Chrome.'));
       return;
     }
 
@@ -93,9 +95,9 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
     return () => {
       active = false;
       if (timerRef.current) clearTimeout(timerRef.current);
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach(track => track.stop());
     };
-  }, []);
+  }, [t]);
 
   return (
     <motion.div
@@ -108,10 +110,13 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-10">
         <div className="flex items-center gap-2">
           <QrCode className="w-5 h-5 text-white" />
-          <span className="text-sm font-black text-white uppercase tracking-widest">Scan QR Merit</span>
+          <span className="text-sm font-black text-white uppercase tracking-widest">
+            {t('akademik:scan_qr_merit_title', 'Scan QR Merit')}
+          </span>
         </div>
         <button
           onClick={onClose}
+          aria-label={t('common:close', 'Tutup')}
           className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all"
         >
           <X className="w-5 h-5" />
@@ -126,13 +131,13 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
           <p className="text-sm font-black text-white">{error}</p>
           <p className="text-[11px] text-white/40">
             {isIOS()
-              ? 'iOS tip: Buka app Kamera iPhone anda dan arahkan ke QR kod di skrin atau papan notis.'
-              : 'Alternatif: Buka kamera telefon anda dan scan terus QR di papan notis.'
+              ? t('akademik:ios_camera_tip', 'iOS tip: Buka app Kamera iPhone anda dan arahkan ke QR kod di skrin atau papan notis.')
+              : t('akademik:android_camera_tip', 'Alternatif: Buka kamera telefon anda dan scan terus QR di papan notis.')
             }
           </p>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-5 py-2.5 rounded-2xl bg-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-              Tutup
+              {t('common:close', 'Tutup')}
             </button>
           </div>
         </div>
@@ -162,7 +167,7 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
             )}
           </div>
           <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mt-6">
-            {scanning ? 'Arahkan kamera ke QR kod merit' : 'QR dikesan...'}
+            {scanning ? t('akademik:point_camera_hint', 'Arahkan kamera ke QR kod merit') : t('akademik:qr_detected', 'QR dikesan...')}
           </p>
         </>
       )}
@@ -172,6 +177,8 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
 
 // ─── Main QR Page (dalam sidebar layout) ─────────────────────
 export function AkademikQrPage() {
+  const { t, i18n } = useTranslation(['akademik', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { profile }  = useAuth();
   const navigate     = useNavigate();
   const [scans, setScans]       = useState<any[]>([]);
@@ -198,12 +205,12 @@ export function AkademikQrPage() {
       merit_awarded: tx.points,
       scanned_at: tx.created_at,
       // Extract activity name from reason string e.g. "QR Merit: Nama Aktiviti"
-      _title: tx.reason?.replace(/^QR Merit:\s*/i, '') || 'Aktiviti QR',
+      _title: tx.reason?.replace(/^QR Merit:\s*/i, '') || t('akademik:qr_activity_default', 'Aktiviti QR'),
     }));
     setScans(mapped);
     setTotalQrMerit(txList.reduce((s: number, m: any) => s + (m.points || 0), 0));
     setLoading(false);
-  }, [profile?.id]);
+  }, [profile?.id, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -311,7 +318,7 @@ export function AkademikQrPage() {
       navigate(`/akademik/qr/${uuidMatch[0]}`);
       return;
     }
-    toast.error('QR ini bukan QR Merit JPP atau EMS yang sah.');
+    toast.error(t('akademik:invalid_qr_toast', 'QR ini bukan QR Merit JPP atau EMS yang sah.'));
   };
 
   return (
@@ -328,10 +335,14 @@ export function AkademikQrPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Merit</p>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Scan QR Merit</h1>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">
+            {t('akademik:merit_overline', 'Merit')}
+          </p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+            {t('akademik:scan_qr_merit_title', 'Scan QR Merit')}
+          </h1>
           <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
-            Scan kod QR aktiviti untuk kumpul merit secara terus
+            {t('akademik:scan_qr_merit_subtitle', 'Scan kod QR aktiviti untuk kumpul merit secara terus')}
           </p>
         </div>
 
@@ -352,9 +363,11 @@ export function AkademikQrPage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">Kumpul Merit Aktiviti</h2>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                {t('akademik:collect_activity_merit', 'Kumpul Merit Aktiviti')}
+              </h2>
               <p className="text-[11px] text-slate-600 dark:text-white/40 font-medium mt-1">
-                Scan QR kod yang disediakan oleh Exco KK atau JPP untuk claim merit aktiviti anda
+                {t('akademik:collect_activity_merit_desc', 'Scan QR kod yang disediakan oleh Exco KK atau JPP untuk claim merit aktiviti anda')}
               </p>
             </div>
 
@@ -362,7 +375,9 @@ export function AkademikQrPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.04]">
               <Star className="w-3.5 h-3.5 fill-current text-amber-500 dark:text-amber-400" />
               <span className="text-sm font-black text-slate-900 dark:text-white">{totalQrMerit}</span>
-              <span className="text-[10px] font-black text-slate-500 dark:text-white/30 uppercase tracking-wider">merit dari QR</span>
+              <span className="text-[10px] font-black text-slate-500 dark:text-white/30 uppercase tracking-wider">
+                {t('akademik:merit_from_qr', 'merit dari QR')}
+              </span>
             </div>
 
             {/* Scan Button */}
@@ -373,17 +388,17 @@ export function AkademikQrPage() {
                 style={{ background: THEME, color: '#064E3B', boxShadow: `0 12px 32px ${hexToRgba(THEME, 0.35)}` }}
               >
                 <Camera className="w-4 h-4" />
-                Buka Kamera & Scan
+                {t('akademik:open_camera_and_scan', 'Buka Kamera & Scan')}
               </button>
               {isIOS() && (
                 <p className="text-[10px] text-amber-700 dark:text-amber-400/80 font-bold mt-1 flex items-center justify-center gap-1">
-                  <Smartphone className="w-3.5 h-3.5 inline" /> iOS: Jika kamera tidak mengesan QR, guna app Kamera iPhone terus
+                  <Smartphone className="w-3.5 h-3.5 inline" /> {t('akademik:ios_camera_tip', 'iOS: Jika kamera tidak mengesan QR, guna app Kamera iPhone terus')}
                 </p>
               )}
             </div>
 
             <p className="text-[10px] text-slate-400 dark:text-white/25 font-medium">
-              atau buka kamera telefon anda dan scan QR terus dari papan notis
+              {t('akademik:or_open_phone_camera', 'atau buka kamera telefon anda dan scan QR terus dari papan notis')}
             </p>
           </div>
         </motion.div>
@@ -392,14 +407,14 @@ export function AkademikQrPage() {
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 flex items-center gap-2">
             <Info className="w-3.5 h-3.5" />
-            Cara Kerja QR Merit
+            {t('akademik:how_qr_works_heading', 'Cara Kerja QR Merit')}
           </h3>
           <div className="space-y-3">
             {[
-              { step: '01', text: 'Pergi ke aktiviti atau program yang disediakan QR', icon: Smartphone },
-              { step: '02', text: 'Scan QR kod menggunakan kamera di atas atau kamera telefon', icon: QrCode },
-              { step: '03', text: 'Merit akan dikreditkan terus ke akaun anda', icon: Zap },
-              { step: '04', text: 'Boleh scan semula selepas tempoh cooldown tamat', icon: Clock },
+              { step: '01', text: t('akademik:qr_step_1', 'Pergi ke aktiviti atau program yang disediakan QR'), icon: Smartphone },
+              { step: '02', text: t('akademik:qr_step_2', 'Scan QR kod menggunakan kamera di atas atau kamera telefon'), icon: QrCode },
+              { step: '03', text: t('akademik:qr_step_3', 'Merit akan dikreditkan terus ke akaun anda'), icon: Zap },
+              { step: '04', text: t('akademik:qr_step_4', 'Boleh scan semula selepas tempoh cooldown tamat'), icon: Clock },
             ].map(({ step, text, icon: Icon }) => (
               <div key={step} className="flex items-center gap-4">
                 <div
@@ -417,7 +432,7 @@ export function AkademikQrPage() {
         {/* Scan History */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">
-            Sejarah Scan QR
+            {t('akademik:qr_scan_history', 'Sejarah Scan QR')}
           </h3>
           {loading ? (
             <div className="space-y-2">
@@ -429,17 +444,17 @@ export function AkademikQrPage() {
             <div className="py-10 text-center space-y-3">
               <QrCode className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-                Belum ada scan QR
+                {t('akademik:no_qr_scans_yet', 'Belum ada scan QR')}
               </p>
               <p className="text-[10px] text-slate-400 dark:text-white/15 font-medium">
-                Scan QR kod aktiviti pertama anda untuk mula kumpul merit
+                {t('akademik:scan_first_qr_hint', 'Scan QR kod aktiviti pertama anda untuk mula kumpul merit')}
               </p>
             </div>
           ) : (
             <div className="space-y-2.5">
               {scans.map((scan, i) => {
                 const date  = scan.scanned_at
-                  ? format(parseISO(scan.scanned_at), 'd MMM yyyy, h:mm a', { locale: ms })
+                  ? format(parseISO(scan.scanned_at), 'd MMM yyyy, h:mm a', { locale: dateLocale })
                   : '';
                 return (
                   <motion.div
@@ -457,12 +472,12 @@ export function AkademikQrPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
-                        {scan._title || 'Aktiviti QR'}
+                        {scan._title || t('akademik:qr_activity_default', 'Aktiviti QR')}
                       </p>
                       <p className="text-[9px] text-slate-500 dark:text-white/30 font-bold mt-0.5">{date}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <Star className="w-3 h-3 fill-current text-amber-500 dark:text-amber-400" />
+                      <Star className="w-3.5 h-3.5 fill-current text-amber-500 dark:text-amber-400" />
                       <span className="text-sm font-black text-amber-600 dark:text-amber-300">+{scan.merit_awarded}</span>
                     </div>
                   </motion.div>
@@ -476,7 +491,7 @@ export function AkademikQrPage() {
         <div className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] shadow-xs">
           <Info className="w-4 h-4 text-slate-400 dark:text-white/20 shrink-0 mt-0.5" />
           <p className="text-[10px] text-slate-500 dark:text-white/25 font-medium leading-relaxed">
-            QR kod disediakan oleh <strong className="text-slate-700 dark:text-white/40">Exco KK (Kediaman & Kerohanian)</strong> untuk aktiviti asrama seperti solat berjemaah, gotong-royong, dsbnya. Hubungi Exco KK untuk maklumat lanjut.
+            {t('akademik:exco_kk_qr_note', 'QR kod disediakan oleh Exco KK (Kediaman & Kerohanian) untuk aktiviti asrama seperti solat berjemaah, gotong-royong, dsbnya. Hubungi Exco KK untuk maklumat lanjut.')}
           </p>
         </div>
       </div>

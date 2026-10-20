@@ -1,32 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, Loader2, ArrowLeft, Filter, ChevronRight, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AppNotification, NotificationModule } from '@/lib/notifications';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
-
-// ─── Module config ─────────────────────────────────────────────────────────────
-const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string; emoji: string }> = {
-  KEBAJIKAN:    { label: 'E-Kebajikan',  color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)',   dot: '#2DD4BF', emoji: '🩺' },
-  EKPP:         { label: 'Portal Kelab', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏛️' },
-  AKADEMIK:     { label: 'E-Akademik',   color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1', emoji: '📚' },
-  KEUSAHAWANAN: { label: 'Keusahawanan', color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316', emoji: '🛒' },
-  JPP:          { label: 'JPP HQ',       color: '#ef4444', bg: 'rgba(239,68,68,0.10)',    dot: '#ef4444', emoji: '🏅' },
-  SYSTEM:       { label: 'Sistem',       color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8', emoji: '⚙️' },
-  POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🛍️' },
-  KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6', emoji: '🏠' },
-  KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6', emoji: '🏢' },
-  POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
-  POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa', emoji: '📋' },
-  POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e', emoji: '👻' },
-  POLYRENT:     { label: 'PolyRent',     color: '#34d399', bg: 'rgba(52,211,153,0.12)',   dot: '#34d399', emoji: '🏡' },
-};
 
 const MODULE_FALLBACK: Record<NotificationModule, string> = {
   KEBAJIKAN:    '/kebajikan',
@@ -49,27 +33,21 @@ function getNotifLink(notif: AppNotification): string | null {
   return MODULE_FALLBACK[notif.module] ?? null;
 }
 
-function groupByDate(notifs: AppNotification[]): { label: string; items: AppNotification[] }[] {
-  const groups: Record<string, AppNotification[]> = {};
-
-  for (const n of notifs) {
-    const date = new Date(n.created_at);
-    let label: string;
-    if (isToday(date)) label = 'Hari Ini';
-    else if (isYesterday(date)) label = 'Semalam';
-    else label = format(date, 'd MMMM yyyy', { locale: ms });
-
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(n);
-  }
-
-  return Object.entries(groups).map(([label, items]) => ({ label, items }));
-}
-
 // ─── Single Notif Row ──────────────────────────────────────────────────────────
-function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => void; key?: React.Key }) {
+function NotifRow({
+  notif,
+  onRead,
+  config,
+  dateLocale,
+}: {
+  notif: AppNotification;
+  onRead: () => void;
+  config: { label: string; color: string; bg: string; dot: string; emoji: string };
+  dateLocale: any;
+  key?: React.Key;
+}) {
   const isUnread = !notif.is_read;
-  const cfg = MODULE_CONFIG[notif.module] ?? MODULE_CONFIG.SYSTEM;
+  const cfg = config;
   const hasLink = !!getNotifLink(notif);
 
   return (
@@ -77,7 +55,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, }}
+      exit={{ opacity: 0 }}
       onClick={onRead}
       className={cn(
         'group relative flex items-start gap-4 px-5 py-4 cursor-pointer',
@@ -117,7 +95,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
           {notif.message}
         </p>
         <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
-          {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ms })}
+          {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: dateLocale })}
         </p>
       </div>
 
@@ -138,15 +116,22 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
 const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA', 'POLYRENT'];
 
 function FilterChip({
-  module, active, count, onClick,
+  module,
+  active,
+  count,
+  onClick,
+  config,
+  allLabel,
 }: {
   module: NotificationModule | 'ALL';
   active: boolean;
   count: number;
   onClick: () => void;
+  config?: { label: string; color: string; bg: string; dot: string; emoji: string };
+  allLabel?: string;
   key?: React.Key;
 }) {
-  const cfg = module === 'ALL' ? null : MODULE_CONFIG[module];
+  const cfg = module === 'ALL' ? null : config;
   return (
     <button
       onClick={onClick}
@@ -158,7 +143,7 @@ function FilterChip({
       )}
       style={active && cfg ? { background: cfg.bg, color: cfg.color, borderColor: `${cfg.color}30` } : {}}
     >
-      {module === 'ALL' ? '🔔' : cfg?.emoji} {module === 'ALL' ? 'Semua' : cfg?.label}
+      {module === 'ALL' ? '🔔' : cfg?.emoji} {module === 'ALL' ? allLabel : cfg?.label}
       {count > 0 && (
         <span className={cn(
           'px-1 py-0 rounded-full text-[8px] font-black',
@@ -173,6 +158,8 @@ function FilterChip({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export function NotifikasiPage() {
+  const { t, i18n } = useTranslation(['portal', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const navigate      = useNavigate();
   const { user }      = useAuth();
   const notifs        = useNotificationStore(state => state.notifs);
@@ -183,6 +170,22 @@ export function NotifikasiPage() {
 
   const [activeModule, setActiveModule] = useState<NotificationModule | 'ALL'>('ALL');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  const moduleConfig = useMemo<Record<NotificationModule, { label: string; color: string; bg: string; dot: string; emoji: string }>>(() => ({
+    KEBAJIKAN:    { label: t('portal:module_kebajikan_title', 'e-Kebajikan'),  color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)',   dot: '#2DD4BF', emoji: '🩺' },
+    EKPP:         { label: t('portal:module_ekpp_title', 'Sistem Kelab'),      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏛️' },
+    AKADEMIK:     { label: t('portal:module_akademik_title', 'e-Akademik'),    color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1', emoji: '📚' },
+    KEUSAHAWANAN: { label: t('portal:module_keusahawanan_title', 'e-Keusahawanan'), color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316', emoji: '🛒' },
+    JPP:          { label: 'JPP HQ',       color: '#ef4444', bg: 'rgba(239,68,68,0.10)',    dot: '#ef4444', emoji: '🏅' },
+    SYSTEM:       { label: t('portal:system_title', 'Sistem'),            color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8', emoji: '⚙️' },
+    POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🛍️' },
+    KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6', emoji: '🏠' },
+    KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6', emoji: '🏢' },
+    POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
+    POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa', emoji: '📋' },
+    POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e', emoji: '👻' },
+    POLYRENT:     { label: 'PolyRent',     color: '#34d399', bg: 'rgba(52,211,153,0.12)',   dot: '#34d399', emoji: '🏡' },
+  }), [t]);
 
   const handleNotifClick = async (notif: AppNotification) => {
     if (!notif.is_read) await markRead(notif.id);
@@ -198,7 +201,22 @@ export function NotifikasiPage() {
     return result;
   }, [notifs, activeModule, showUnreadOnly]);
 
-  const grouped = useMemo(() => groupByDate(filtered), [filtered]);
+  const grouped = useMemo(() => {
+    const groups: Record<string, AppNotification[]> = {};
+
+    for (const n of filtered) {
+      const date = new Date(n.created_at);
+      let label: string;
+      if (isToday(date)) label = t('portal:today', 'Hari Ini');
+      else if (isYesterday(date)) label = t('portal:yesterday', 'Semalam');
+      else label = format(date, 'd MMMM yyyy', { locale: dateLocale });
+
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(n);
+    }
+
+    return Object.entries(groups).map(([label, items]) => ({ label, items }));
+  }, [filtered, t, dateLocale]);
 
   // Count per module
   const moduleCount = useMemo(() => {
@@ -215,21 +233,24 @@ export function NotifikasiPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-slate-950/90  border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-slate-950/90 border-b border-white/[0.06]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
+              aria-label={t('common:back', 'Kembali')}
               className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
             >
               <ArrowLeft className="w-4 h-4 text-slate-400" />
             </button>
 
             <div className="flex-1">
-              <h1 className="text-sm font-black text-white tracking-tight">Notifikasi</h1>
+              <h1 className="text-sm font-black text-white tracking-tight">
+                {t('portal:notifications_title', 'Notifikasi')}
+              </h1>
               <p className="text-[10px] text-slate-500 font-medium">
-                {notifs.length} notifikasi
-                {unreadCount > 0 && ` · ${unreadCount} belum dibaca`}
+                {t('portal:notifications_count', { count: notifs.length, defaultValue: `${notifs.length} notifikasi` })}
+                {unreadCount > 0 && t('portal:notifications_unread_count', { count: unreadCount, defaultValue: ` · ${unreadCount} belum dibaca` })}
               </p>
             </div>
 
@@ -246,7 +267,7 @@ export function NotifikasiPage() {
                 ) : (
                   <CheckCheck className="w-3 h-3" />
                 )}
-                {isMarkingAll ? 'Menyimpan...' : 'Baca Semua'}
+                {isMarkingAll ? t('common:saving', 'Menyimpan...') : t('portal:mark_all_read', 'Baca Semua')}
               </Button>
             )}
           </div>
@@ -258,6 +279,7 @@ export function NotifikasiPage() {
               active={activeModule === 'ALL'}
               count={moduleCount.ALL ?? 0}
               onClick={() => setActiveModule('ALL')}
+              allLabel={t('portal:filter_all', 'Semua')}
             />
             {activeModules.map(mod => {
               const handleClick: () => void = () => setActiveModule(mod);
@@ -268,6 +290,7 @@ export function NotifikasiPage() {
                   active={activeModule === mod}
                   count={moduleCount[mod] as number}
                   onClick={handleClick}
+                  config={moduleConfig[mod]}
                 />
               );
             })}
@@ -282,7 +305,7 @@ export function NotifikasiPage() {
               )}
             >
               <Filter className="w-2.5 h-2.5" />
-              Belum Baca
+              {t('portal:filter_unread', 'Belum Baca')}
               {unreadCount > 0 && (
                 <span className="bg-rose-500/30 text-rose-300 px-1 rounded-full text-[8px]">{unreadCount}</span>
               )}
@@ -300,10 +323,10 @@ export function NotifikasiPage() {
             </div>
             <div className="text-center">
               <p className="text-sm font-black text-slate-400">
-                {showUnreadOnly ? 'Tiada notifikasi belum dibaca' : 'Tiada notifikasi'}
+                {showUnreadOnly ? t('portal:no_unread_notifications', 'Tiada notifikasi belum dibaca') : t('portal:no_notifications', 'Tiada notifikasi')}
               </p>
               <p className="text-xs text-slate-600 mt-1">
-                {showUnreadOnly ? 'Semua notifikasi sudah dibaca' : 'Anda akan menerima notifikasi di sini'}
+                {showUnreadOnly ? t('portal:all_notifications_read', 'Semua notifikasi sudah dibaca') : t('portal:will_receive_notifications_here', 'Anda akan menerima notifikasi di sini')}
               </p>
             </div>
             {showUnreadOnly && (
@@ -311,7 +334,7 @@ export function NotifikasiPage() {
                 onClick={() => setShowUnreadOnly(false)}
                 className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors"
               >
-                Papar semua notifikasi
+                {t('portal:show_all_notifications', 'Papar semua notifikasi')}
               </button>
             )}
           </div>
@@ -337,6 +360,8 @@ export function NotifikasiPage() {
                       key={n.id || `${group.label}-${i}`}
                       notif={n}
                       onRead={handleRead}
+                      config={moduleConfig[n.module] ?? moduleConfig.SYSTEM}
+                      dateLocale={dateLocale}
                     />
                   );
                 })}
@@ -352,3 +377,5 @@ export function NotifikasiPage() {
     </div>
   );
 }
+
+export default NotifikasiPage;

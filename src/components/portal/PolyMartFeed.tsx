@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ShoppingBag, ArrowRight, Tag, Flame, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatProductPrice, isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
@@ -11,6 +12,7 @@ export interface PolyMartFeedProps {
 }
 
 export function PolyMartFeed({ products: initialProducts, className }: PolyMartFeedProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'hot' | 'latest'>('hot');
   const [products, setProducts] = useState<any[]>(initialProducts || []);
@@ -124,8 +126,8 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
   }
 
   return (
-    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="PolyMart Siswa">
-      {/* Section Header - Clean 2-Row Spacious Layout */}
+    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label={t('portal:polymart_aria', 'PolyMart Siswa')}>
+      {/* Section Header */}
       <div className="space-y-2.5">
         {/* Row 1: Title and Action */}
         <div className="flex items-center justify-between gap-3">
@@ -135,10 +137,10 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight truncate">
-                PolyMart Siswa
+                {t('portal:polymart_title', 'PolyMart Siswa')}
               </h2>
               <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] hidden sm:block truncate">
-                Produk & makanan usahawan siswa POLISAS
+                {t('portal:polymart_subtitle', 'Produk & makanan usahawan siswa POLISAS')}
               </p>
             </div>
           </div>
@@ -148,12 +150,12 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
             onClick={handleOpenMart}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer group shrink-0 py-1 px-2.5 rounded-xl hover:bg-amber-500/10 active:scale-95"
           >
-            <span>Buka Mart</span>
+            <span>{t('portal:open_mart', 'Buka Mart')}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* Row 2: Filter Chips - Spacious & Non-Colliding */}
+        {/* Row 2: Filter Chips */}
         <div className="flex items-center gap-2">
           <div className="inline-flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/10">
             <button
@@ -167,7 +169,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               )}
             >
               <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Terhangat</span>
+              <span>{t('portal:filter_hot', 'Terhangat')}</span>
             </button>
             <button
               type="button"
@@ -180,7 +182,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               )}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Terkini</span>
+              <span>{t('portal:filter_latest', 'Terkini')}</span>
             </button>
           </div>
         </div>
@@ -235,7 +237,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                     <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 p-2">
                       <ShoppingBag className="w-7 h-7 mb-1 stroke-1" />
                       <span className="text-[10px] text-center line-clamp-1">
-                        {item.category || 'Produk'}
+                        {item.category || t('portal:product_fallback', 'Produk')}
                       </span>
                     </div>
                   )}
@@ -244,7 +246,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                   <div className="absolute top-2 right-2">
                     <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 shadow-sm">
                       <Tag className="w-2.5 h-2.5" />
-                      Pesan
+                      {t('portal:order_tag', 'Pesan')}
                     </span>
                   </div>
                 </div>

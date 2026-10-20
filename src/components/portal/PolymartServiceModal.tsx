@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Store, Bike, X, ArrowRight, MapPin, PhoneCall, Briefcase, Ghost, Puzzle, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Store, X, ArrowRight, MapPin, Briefcase, Ghost, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-
 import { queryCache } from '@/lib/cache';
 
 interface PolymartServiceModalProps {
@@ -13,6 +12,7 @@ interface PolymartServiceModalProps {
 }
 
 export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Record<string, boolean>>({});
 
@@ -53,7 +53,7 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60  z-[200]"
+            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-[200]"
           />
           <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
             <motion.div
@@ -66,6 +66,7 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
               <div className="p-6 pb-4 relative">
                 <button
                   onClick={onClose}
+                  aria-label={t('common:close', 'Tutup')}
                   className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -74,7 +75,7 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   PolyServices
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Pilih perkhidmatan yang anda perlukan.
+                  {t('portal:polyservices_modal_desc', 'Pilih perkhidmatan yang anda perlukan.')}
                 </p>
               </div>
 
@@ -92,7 +93,9 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   
                   <div className="flex-1 min-w-0 ml-4">
                     <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyMart</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Beli & Jual di Marketplace</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      {t('portal:service_polymart_modal_sub', 'Beli & Jual di Marketplace')}
+                    </p>
                   </div>
 
                   <ArrowRight className="w-5 h-5 text-amber-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -112,7 +115,9 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                     
                     <div className="flex-1 min-w-0 ml-4">
                       <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyTask</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Selesaikan Tugas, Jana Pendapatan</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        {t('portal:service_polytask_modal_sub', 'Selesaikan Tugas, Jana Pendapatan')}
+                      </p>
                     </div>
 
                     <ArrowRight className="w-5 h-5 text-violet-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -132,7 +137,9 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   
                   <div className="flex-1 min-w-0 ml-4">
                     <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyMaps</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pemetaan Fasiliti Kampus</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      {t('portal:service_polymaps_modal_sub', 'Pemetaan Fasiliti Kampus')}
+                    </p>
                   </div>
 
                   <ArrowRight className="w-5 h-5 text-indigo-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -152,7 +159,9 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                     
                     <div className="flex-1 min-w-0 ml-4">
                       <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolySuara</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Ruang Luahan & Komuniti Anon</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        {t('portal:service_polysuara_modal_sub', 'Ruang Luahan & Komuniti Anon')}
+                      </p>
                     </div>
 
                     <ArrowRight className="w-5 h-5 text-rose-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -173,7 +182,9 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                     
                     <div className="flex-1 min-w-0 ml-4">
                       <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyRent</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pencari Rakan Bilik & Rumah Sewa</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        {t('portal:service_polyrent_modal_sub', 'Pencari Rakan Bilik & Rumah Sewa')}
+                      </p>
                     </div>
 
                     <ArrowRight className="w-5 h-5 text-teal-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -188,4 +199,3 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
     </AnimatePresence>
   );
 }
-

@@ -4939,3 +4939,21 @@ Pintu gerbang pengesahan akhir menyempurnakan kitaran audit dan penyetempatan me
 4. **Pengesahan Binaan Produksi (Production Build):**
    - Perintah `npm run build` berjaya membina 4,889 modul aplikasi ke dalam direktori `dist/` dalam masa 46.39 saat.
    - Manifest PWA dan skrip service worker `dist/sw.js` (3,923.75 KiB precache) dijana sepenuhnya tanpa ralat.
+
+### 36.19 Penyetempatan Penuh Portal Gateway Hub & Kumpulan 1: Sistem Akademik & Merit (Task 1 Sweep)
+Sesi ini melengkapkan penyetempatan menyeluruh (deep row-by-row localization) merentasi gerbang utama Portal Pelajar, komponen-komponen teras portal, serta modul Kumpulan 1 (Akademik, Merit & Notifikasi):
+
+1. **20 Fail Komponen & Halaman Sasaran:**
+   - **Komponen & Pembantu Portal:** `src/lib/superAppHelpers.ts`, `src/components/portal/SuperAppHeader.tsx`, `src/components/portal/CampusCampaignCarousel.tsx`, `src/components/portal/CampusServicesGrid.tsx`, `src/components/portal/EmsEventsFeed.tsx`, `src/components/portal/ExcoCard.tsx`, `src/components/portal/KarnivalMegaBanner.tsx`, `src/components/portal/NextClassBentoCard.tsx`, `src/components/portal/PolyMartFeed.tsx`, `src/components/portal/PolymartServiceModal.tsx`, `src/components/portal/PortalFooter.tsx`, `src/components/portal/QuickActions.tsx`, `src/components/portal/SupsasMegaBanner.tsx`.
+   - **Halaman Portal & Akademik:** `src/pages/PortalPage.tsx`, `src/pages/akademik/AkademikLeaderboard.tsx`, `src/pages/akademik/AkademikMeritPage.tsx`, `src/pages/akademik/AkademikQrPage.tsx`, `src/pages/LeaderboardPage.tsx`, `src/pages/NotifikasiPage.tsx`, `src/pages/OnboardingPage.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `portal.json`, `akademik.json`, dan `common.json` disegerakkan sepenuhnya antara `ms/` dan `en/` (100% pariti, 0 kunci kosong).
+   - Penggunaan fallback literal Bahasa Melayu mandatori bagi setiap panggilan `t()`.
+   - Penyelesaian isu pembayangan pembolehubah (variable shadowing) pada `PortalPage.tsx` (`timerId` menggantikan `t`).
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup1PortalAndAcademicsI18n.test.tsx` (22/22 lulus).
+   - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus).
+   - Suite ujian regresi penuh: 78 fail ujian, 1,025/1,025 ujian unit & integrasi lulus tanpa ralat.
+

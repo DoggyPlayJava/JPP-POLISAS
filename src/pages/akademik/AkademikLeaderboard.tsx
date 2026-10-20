@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { cn, hexToRgba } from '@/lib/utils';
 import {
-  Trophy, Star, TrendingUp, Crown, Medal, Award,
-  Loader2, Users, BookOpen, BarChart3,
+  Trophy, Star, Crown, Medal, Award,
+  Users, BarChart3,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -52,6 +53,7 @@ interface LeaderEntry {
 
 // ─── Main Leaderboard ─────────────────────────────────────────
 export function AkademikLeaderboard() {
+  const { t } = useTranslation(['akademik', 'common', 'portal']);
   const { profile } = useAuth();
   const [tab,      setTab]      = useState<LeaderTab>('OVERALL');
   const [entries,  setEntries]  = useState<LeaderEntry[]>([]);
@@ -133,9 +135,15 @@ export function AkademikLeaderboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Leaderboard</h1>
-        <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Ranking merit akademik, QR, dan CGPA pelajar</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">
+          {t('akademik:module_title', 'Akademik')}
+        </p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          {t('akademik:leaderboard_title', 'Leaderboard')}
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
+          {t('akademik:leaderboard_subtitle', 'Ranking merit akademik, QR, dan CGPA pelajar')}
+        </p>
       </div>
 
       {/* My rank card */}
@@ -148,7 +156,9 @@ export function AkademikLeaderboard() {
         >
           <RankBadge rank={myRank} />
           <div className="flex-1 min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Kedudukan Anda</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">
+              {t('akademik:your_rank', 'Kedudukan Anda')}
+            </p>
             <p className="text-sm font-black text-slate-900 dark:text-white">#{myRank} — {profile?.full_name?.split(' ')[0]}</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -167,11 +177,11 @@ export function AkademikLeaderboard() {
       {/* Tab selector */}
       <div className="flex gap-2 flex-wrap">
         {([
-          { id: 'OVERALL',  label: 'Keseluruhan', icon: Trophy },
-          { id: 'AKADEMIK', label: 'Pencapaian',  icon: Award },
-          { id: 'QR',       label: 'QR Merit',    icon: Star },
-          { id: 'KELAB',    label: 'Merit Kelab',  icon: Users },
-          { id: 'CGPA',     label: 'HPNM',        icon: BarChart3 },
+          { id: 'OVERALL',  label: t('akademik:tab_overall', 'Keseluruhan'), icon: Trophy },
+          { id: 'AKADEMIK', label: t('akademik:tab_achievements', 'Pencapaian'),  icon: Award },
+          { id: 'QR',       label: t('akademik:tab_qr_merit', 'QR Merit'),    icon: Star },
+          { id: 'KELAB',    label: t('akademik:tab_club_merit', 'Merit Kelab'),  icon: Users },
+          { id: 'CGPA',     label: t('akademik:tab_cgpa', 'HPNM'),        icon: BarChart3 },
         ] as const).map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -263,7 +273,9 @@ export function AkademikLeaderboard() {
       ) : entries.length === 0 ? (
         <div className="py-16 text-center space-y-3">
           <Trophy className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada data lagi</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
+            {t('common:no_data', 'Tiada data lagi')}
+          </p>
         </div>
       ) : (
         <div className="space-y-2 pt-2">
@@ -294,7 +306,11 @@ export function AkademikLeaderboard() {
                 <div className="flex-1 min-w-0">
                   <p className={`text-xs font-black truncate ${isMe ? 'text-indigo-950 dark:text-white' : 'text-slate-900 dark:text-white/80'}`}>
                     {entry.full_name || '—'}
-                    {isMe && <span className="ml-2 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">Anda</span>}
+                    {isMe && (
+                      <span className="ml-2 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        {t('common:you', 'Anda')}
+                      </span>
+                    )}
                   </p>
                   <p className="text-[9px] text-slate-500 dark:text-white/30 font-bold">{entry.department?.toUpperCase()}</p>
                 </div>
