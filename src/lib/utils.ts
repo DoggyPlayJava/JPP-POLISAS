@@ -1,5 +1,9 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -148,7 +152,7 @@ export function triggerHaptic(type: 'light' | 'medium' | 'heavy' | 'success' | '
  * Contoh: "Ahmad Ali Bin Abu" -> "Ahmad A."
  */
 export function formatMaskedName(fullName?: string | null): string {
-  if (!fullName) return 'Pelajar POLISAS';
+  if (!fullName) return t('services:polisas_student', 'Pelajar POLISAS');
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[1].charAt(0).toUpperCase()}.`;

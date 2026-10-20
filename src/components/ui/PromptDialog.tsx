@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -47,13 +48,17 @@ export function PromptDialog({
   required = false,
   minNumber,
   maxNumber,
-  confirmLabel = 'Sahkan',
-  cancelLabel = 'Batal',
+  confirmLabel,
+  cancelLabel,
   variant = 'default',
   isLoading = false,
   onConfirm,
   onCancel,
 }: PromptDialogProps) {
+  const { t } = useTranslation('common');
+  const resolvedConfirmLabel = confirmLabel ?? t('common:confirm', 'Sahkan');
+  const resolvedCancelLabel = cancelLabel ?? t('common:cancel', 'Batal');
+
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +85,7 @@ export function PromptDialog({
       });
 
       if (!validation.valid) {
-        setError(validation.error || 'Input tidak sah');
+        setError(validation.error || t('common:invalid_input', 'Input tidak sah'));
         return;
       }
     }
@@ -170,7 +175,7 @@ export function PromptDialog({
             disabled={isLoading}
             className="rounded-xl text-xs font-bold uppercase tracking-wider h-10 px-4 active:scale-[0.98] transition-all"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             type="button"
@@ -183,7 +188,7 @@ export function PromptDialog({
             )}
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

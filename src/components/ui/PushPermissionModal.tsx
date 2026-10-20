@@ -8,8 +8,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellRing, X, Smartphone, Zap, Shield, ChevronRight, Loader2 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useTranslation } from 'react-i18next';
 
 export function PushPermissionModal() {
+  const { t } = useTranslation();
   const { isSupported, permission, isSubscribed, pushServiceError, requestPermission } = usePushNotifications();
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -138,7 +140,7 @@ export function PushPermissionModal() {
                       <Zap className="w-8 h-8 text-emerald-400" />
                     </motion.div>
                     <h2 className="text-xl font-black text-white mb-2">Notifikasi Diaktifkan! 🎉</h2>
-                    <p className="text-sm text-slate-400">Anda akan menerima notifikasi penting secara langsung.</p>
+                    <p className="text-sm text-slate-400">{t('portal:push_receive_important', 'Anda akan menerima notifikasi penting secara langsung.')}</p>
                   </motion.div>
                 ) : result === 'denied' ? (
                   <motion.div
@@ -149,32 +151,32 @@ export function PushPermissionModal() {
                   >
                     <h2 className="text-lg font-black text-white mb-2">Notifikasi Dihalang</h2>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                      Anda perlu ke <span className="text-white font-bold">Settings &gt; Notifications</span> pada browser untuk mengaktifkan semula.
+                      {t('portal:push_need_to_go_to', 'Anda perlu ke')} <span className="text-white font-bold">Settings &gt; Notifications</span> {t('portal:push_browser_re-enable', 'pada browser untuk mengaktifkan semula.')}
                     </p>
                     <button
                       onClick={handleSnooze}
                       className="mt-4 px-6 py-2.5 rounded-xl bg-white/5 text-white/60 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-colors"
                     >
-                      Tutup
+                      {t('portal:close', 'Tutup')}
                     </button>
                   </motion.div>
                 ) : (
                   <motion.div key="prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <div className="text-center mb-6">
                       <h2 className="text-xl font-black text-white mb-2 tracking-tight">
-                        Jangan Terlepas Maklumat Penting!
+                        {t('portal:push_dont_miss', 'Jangan Terlepas Maklumat Penting!')}
                       </h2>
                       <p className="text-sm text-slate-400 leading-relaxed">
-                        Aktifkan notifikasi untuk menerima makluman segera tentang status permohonan, merit, dan kelulusan anda.
+                        {t('portal:push_enable_desc', 'Aktifkan notifikasi untuk menerima makluman segera tentang status permohonan, merit, dan kelulusan aktiviti.')}
                       </p>
                     </div>
 
                     {/* Feature list */}
                     <div className="space-y-3 mb-6">
                       {[
-                        { icon: Bell, label: 'Status KAMSIS & merit segera', color: '#8B5CF6' },
-                        { icon: Smartphone, label: 'Push notification pada Android & iOS', color: '#10b981' },
-                        { icon: Shield, label: 'Kelulusan & penolakan secara real-time', color: '#f59e0b' },
+                        { icon: Bell, label: t('portal:push_benefit_kamsis_merit', 'Status KAMSIS & merit segera'), color: '#8B5CF6' },
+                        { icon: Smartphone, label: t('portal:push_benefit_platforms', 'Push notification pada Android & iOS'), color: '#10b981' },
+                        { icon: Shield, label: t('portal:push_benefit_realtime', 'Kelulusan & penolakan secara real-time'), color: '#f59e0b' },
                       ].map((item, i) => (
                         <motion.div
                           key={i}
@@ -217,7 +219,7 @@ export function PushPermissionModal() {
                       onClick={handleSnooze}
                       className="w-full mt-3 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors text-center"
                     >
-                      Ingatkan saya esok
+                      {t('portal:push_remind_tomorrow', 'Ingatkan saya esok')}
                     </button>
                   </motion.div>
                 )}

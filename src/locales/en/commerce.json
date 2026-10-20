@@ -956,5 +956,8 @@
   "write_review_title": "Write a Review",
   "yield_prompt": "How many does 1 {{unit}} make / fill?",
   "zoom_in_aria": "Zoom In",
-  "zoom_out_aria": "Zoom Out"
+  "zoom_out_aria": "Zoom Out",
+  "business_label": "Business:",
+  "select_business_placeholder": "Select business...",
+  "switch_business_hint": "You can switch your business view here."
 }

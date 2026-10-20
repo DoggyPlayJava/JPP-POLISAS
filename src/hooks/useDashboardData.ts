@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { queryCache, CACHE_TTL } from '@/lib/cache';
 import { useAuth } from '@/contexts/AuthContext';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface DashboardData {
@@ -192,7 +196,7 @@ export function useDashboardData() {
 
     } catch (err: any) {
       console.error('[useDashboardData] Promise.all error:', err);
-      setError(err.message || 'Gagal memuatkan data dashboard.');
+      setError(err.message || t('portal:dashboard_load_failed', 'Gagal memuatkan data dashboard.'));
 
       // Fallback: cuba guna cache walaupun expired
       const staleCache = queryCache.get<DashboardData>(`dashboard_${clubId}_${user.id}`);

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useJoyride, Step, STATUS, TooltipRenderProps } from 'react-joyride';
 import { X, ChevronRight } from 'lucide-react';
 import { TOUR_STEPS } from '@/config/tourSteps';
@@ -107,6 +108,8 @@ function CustomTooltip({
   isLastStep,
   onCloseTour,
 }: CustomTooltipProps) {
+  const { t } = useTranslation('common');
+
   // Untuk step terakhir: klik "Selesai" juga tutup tour
   const handlePrimaryClick = (e: React.MouseEvent) => {
     if (isLastStep) {
@@ -136,7 +139,7 @@ function CustomTooltip({
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCloseTour(); }}
           className="text-white/40 hover:text-white p-2 -mr-3 -mt-3 transition-colors rounded-full hover:bg-white/10 active:scale-95"
-          aria-label="Tutup tutorial"
+          aria-label={t('common:close_tour', 'Tutup tutorial')}
           type="button"
         >
           <X className="w-5 h-5" />
@@ -162,7 +165,7 @@ function CustomTooltip({
               {...backProps}
               className="px-4 py-2.5 text-xs md:text-sm font-bold text-white/50 hover:text-white transition-colors uppercase tracking-wider"
             >
-              Kembali
+              {t('common:back', 'Kembali')}
             </button>
           )}
           <button
@@ -170,7 +173,7 @@ function CustomTooltip({
             onClick={handlePrimaryClick}
             className="flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs md:text-sm font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 active:scale-95"
           >
-            {isLastStep ? 'Selesai ✓' : 'Seterusnya'}
+            {isLastStep ? t('common:finish_check', 'Selesai ✓') : t('common:next', 'Seterusnya')}
             {!isLastStep && <ChevronRight className="w-4 h-4" />}
           </button>
         </div>

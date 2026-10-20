@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 import {
   Calendar,
   Clock,
@@ -99,7 +103,7 @@ export function getMalaysianNow() {
 export function findNextUpcomingClass(
   entries: StudentTimetableEntry[],
   currentDayOfWeek: number,
-  t?: (key: string, fallback?: string) => string
+  t?: any
 ): { entry: StudentTimetableEntry; dayLabel: string; isTomorrow: boolean } | null {
   if (!entries || entries.length === 0) return null;
 
@@ -136,7 +140,7 @@ export function buildPolyMapsRoomUrl(entry: Pick<StudentTimetableEntry, 'locatio
  */
 export function formatCompactLocation(
   entry?: Pick<StudentTimetableEntry, 'location' | 'room_raw'>,
-  fallbackText: string = 'Dewan / Bilik Kuliah'
+  fallbackText: string = t('portal:hall_lecture_room', 'Dewan / Bilik Kuliah')
 ): string {
   if (!entry) return fallbackText;
   if (entry.location?.room_code) {

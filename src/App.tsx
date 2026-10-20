@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Toaster, ToastBar, resolveValue } from 'react-hot-toast';
 import { motion, MotionConfig } from 'framer-motion';
 import { Check, X, Bell } from 'lucide-react';
@@ -262,10 +263,11 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
 
 // Global Fallback Loader semasa lazy loading
 function InitialPageLoader() {
+  const { t } = useTranslation();
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-950 text-white">
       <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4" />
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 animate-pulse">Memuat turun data...</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 animate-pulse">{t('nav:downloading_data', 'Memuat turun data...')}</p>
     </div>
   );
 }
@@ -590,40 +592,6 @@ function GlobalRedirector() {
 // ── SEO: update title + meta description + canonical ikut route ─────────────
 // SPA kongsi satu index.html, jadi setiap public route perlukan meta unik
 // supaya Google tak nampak semua halaman sebagai satu tajuk sahaja.
-const SEO_MAP: Record<string, { title: string; desc: string }> = {
-  '/': {
-    title: 'JPP Digital Portal — Politeknik Sultan Haji Ahmad Shah',
-    desc: 'Platform pengurusan digital rasmi untuk Jawatankuasa Perwakilan Pelajar (JPP) POLISAS. Urus kelab, persatuan, kebajikan, dan aktiviti perpaduan pelajar secara bersepadu.',
-  },
-  '/polymaps': {
-    title: 'Peta Kampus POLISAS — PolyMaps',
-    desc: 'Navigasi kampus POLISAS secara interaktif. Cari bilik kuliah, kafe, surau, dan fasiliti kampus dengan peta 360 panorama dan pandu arah berjalan kaki.',
-  },
-  '/login': {
-    title: 'Log Masuk — JPP Digital Portal POLISAS',
-    desc: 'Log masuk ke portal pelajar POLISAS menggunakan akaun Google atau emel dan nombor matrik rasmi.',
-  },
-  '/kebajikan/statistik': {
-    title: 'Statistik e-Kebajikan — JPP POLISAS',
-    desc: 'Statistik aduan dan bantuan kebajikan pelajar POLISAS secara telus dan masa nyata.',
-  },
-  '/klk/statistik': {
-    title: 'Statistik KAMSIS — JPP POLISAS',
-    desc: 'Statistik kediaman dan residensi KAMSIS pelajar POLISAS.',
-  },
-  '/makmp': {
-    title: 'MAKMP 2026 — Majlis Anugerah Kecemerlangan POLISAS',
-    desc: 'Borang penyertaan rasmi Majlis Anugerah Kecemerlangan POLISAS (MAKMP). Hantar pencapaian cemerlang anda.',
-  },
-  '/makmp/status': {
-    title: 'Semak Status MAKMP — JPP POLISAS',
-    desc: 'Semak status permohonan dan pencalonan Majlis Anugerah Kecemerlangan POLISAS (MAKMP).',
-  },
-  '/ems/cert/verify': {
-    title: 'Pengesahan Sijil EMS — JPP POLISAS',
-    desc: 'Sahkan kesahihan sijil penyertaan dan kejohanan EMS POLISAS secara dalam talian.',
-  },
-};
 
 function setMeta(name: string, content: string, property = false) {
   const attr = property ? 'property' : 'name';
@@ -638,6 +606,42 @@ function setMeta(name: string, content: string, property = false) {
 
 function SeoManager() {
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const SEO_MAP: Record<string, { title: string; desc: string }> = {
+    '/': {
+      title: 'JPP Digital Portal — Politeknik Sultan Haji Ahmad Shah',
+      desc: t('nav:seo_meta_desc_home', 'Platform pengurusan digital rasmi untuk Jawatankuasa Perwakilan Pelajar (JPP) POLISAS. Urus kelab, program, kebajikan, dan aduan dalam satu ekosistem bersepadu.'),
+    },
+    '/polymaps': {
+      title: 'Peta Kampus POLISAS — PolyMaps',
+      desc: t('nav:seo_meta_desc_maps', 'Navigasi kampus POLISAS secara interaktif. Cari bilik kuliah, kafe, surau, dan fasiliti kampus dengan pantas.'),
+    },
+    '/login': {
+      title: t('nav:seo_meta_title_login', 'Log Masuk — JPP Digital Portal POLISAS'),
+      desc: t('nav:seo_meta_desc_login', 'Log masuk ke portal pelajar POLISAS menggunakan akaun Google atau emel dan nombor matrik rasmi.'),
+    },
+    '/kebajikan/statistik': {
+      title: 'Statistik e-Kebajikan — JPP POLISAS',
+      desc: t('nav:seo_meta_desc_kebajikan', 'Statistik aduan dan bantuan kebajikan pelajar POLISAS secara telus dan masa nyata.'),
+    },
+    '/klk/statistik': {
+      title: t('nav:seo_meta_title_kamsis', 'Statistik KAMSIS — JPP POLISAS'),
+      desc: t('nav:seo_meta_desc_kamsis', 'Statistik kediaman dan residensi KAMSIS pelajar POLISAS.'),
+    },
+    '/makmp': {
+      title: t('nav:seo_meta_title_makmp', 'MAKMP 2026 — Majlis Anugerah Kecemerlangan POLISAS'),
+      desc: t('nav:seo_meta_desc_makmp', 'Borang penyertaan rasmi Majlis Anugerah Kecemerlangan POLISAS (MAKMP). Hantar pencapaian cemerlang anda.'),
+    },
+    '/makmp/status': {
+      title: t('nav:seo_meta_title_makmp_status', 'Semak Status MAKMP — JPP POLISAS'),
+      desc: t('nav:seo_meta_desc_makmp_status', 'Semak status permohonan dan pencalonan Majlis Anugerah Kecemerlangan POLISAS (MAKMP).'),
+    },
+    '/ems/cert/verify': {
+      title: t('nav:seo_meta_title_ems_verify', 'Pengesahan Sijil EMS — JPP POLISAS'),
+      desc: t('nav:seo_meta_desc_ems_verify', 'Sahkan kesahihan sijil penyertaan dan kejohanan EMS POLISAS secara dalam talian.'),
+    },
+  };
 
   useEffect(() => {
     const path = location.pathname === '/' ? '/' : location.pathname.replace(/\/$/, '');
@@ -661,7 +665,7 @@ function SeoManager() {
       setMeta('og:title', meta.title, true);
       setMeta('og:url', url, true);
     }
-  }, [location.pathname]);
+  }, [location.pathname, t]);
 
   return null;
 }

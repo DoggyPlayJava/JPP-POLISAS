@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
@@ -12,6 +13,7 @@ interface FeatureToggleProps {
 }
 
 export function FeatureToggle({ moduleId, label, description, icon }: FeatureToggleProps) {
+  const { t } = useTranslation('common');
   const [isEnabled, setIsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
@@ -41,7 +43,7 @@ export function FeatureToggle({ moduleId, label, description, icon }: FeatureTog
     if (toggling) return;
     setToggling(true);
     const newVal = !isEnabled;
-    const toastId = toast.loading('Mengemaskini status...');
+    const toastId = toast.loading(t('common:updating_status', 'Mengemaskini status...'));
     
     try {
       const { data, error } = await supabase
@@ -66,9 +68,10 @@ export function FeatureToggle({ moduleId, label, description, icon }: FeatureTog
       }
       
       setIsEnabled(newVal);
-      toast.success(`${label || moduleId} kini ${newVal ? 'DIBUKA' : 'DITUTUP'}`, { id: toastId });
+      const statusText = newVal ? t('common:status_open', 'DIBUKA') : t('common:status_closed', 'DITUTUP');
+      toast.success(t('common:module_status_now', '{{label}} kini {{status}}', { label: label || moduleId, status: statusText }), { id: toastId });
     } catch (e: any) {
-      toast.error(e.message || 'Gagal kemaskini status', { id: toastId });
+      toast.error(e.message || t('common:failed_update_status', 'Gagal kemaskini status'), { id: toastId });
     } finally {
       setToggling(false);
     }

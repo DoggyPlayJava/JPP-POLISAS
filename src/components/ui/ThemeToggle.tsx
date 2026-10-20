@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sun, Moon, Laptop } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function ThemeToggle() {
+  const { t } = useTranslation('common');
   const { theme, setTheme } = useTheme();
 
   return (
@@ -33,7 +35,7 @@ export function ThemeToggle() {
               {theme === 'dark' && <Moon className="h-5 w-5 text-blue-400" />}
             </motion.div>
           </AnimatePresence>
-          <span className="sr-only">Tukar Tema</span>
+          <span className="sr-only">{t('common:change_theme', 'Tukar Tema')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="rounded-2xl p-2 border-none shadow-2xl glass min-w-[140px]">

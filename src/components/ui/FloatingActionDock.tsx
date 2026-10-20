@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,8 @@ export function FloatingActionDock({
   actions,
   className,
 }: FloatingActionDockProps) {
+  const { t } = useTranslation('common');
+
   return (
     <AnimatePresence>
       {count > 0 && (
@@ -70,7 +73,7 @@ export function FloatingActionDock({
 
           <button
             onClick={onClear}
-            title="Batal pilihan (Esc)"
+            title={t('common:cancel_selection_esc', 'Batal pilihan (Esc)')}
             className="p-1 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors ml-1 cursor-pointer"
           >
             <X className="w-4 h-4" />

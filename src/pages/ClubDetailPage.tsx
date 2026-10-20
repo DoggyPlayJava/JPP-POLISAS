@@ -70,11 +70,11 @@ export function ClubDetailPage({ initialClub, initialLoading }: ClubDetailPagePr
           const override = overrides.find(o => o.full_name === fullName);
           
           let category = 'AHLI';
-          let position_title = 'Ahli Biasa';
+          let position_title = t('kpp:role_ordinary_member', 'Ahli Biasa');
 
           if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_MT') {
             category = override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO');
-            position_title = override?.position_title || (m.role === 'CLUB_PRESIDENT' ? 'Presiden Kelab' : 'Ahli Jawatankuasa');
+            position_title = override?.position_title || (m.role === 'CLUB_PRESIDENT' ? t('kpp:role_club_president', 'Presiden Kelab') : t('kpp:role_committee_member', 'Ahli Jawatankuasa'));
           }
 
           unifiedMembers.push({

@@ -12,14 +12,8 @@ import { EXCO_MODULES } from '@/config/excoModules';
 import { ExcoIcon } from '@/components/ui/ExcoIcon';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from './BottomNav';
+import { useTranslation } from 'react-i18next';
 
-const KPP_UNIT_LINKS = [
-  { label: 'Senarai Program / Aktiviti', path: '/aktiviti' },
-  { label: 'Senarai Kelab', path: '/kelab' },
-  { label: 'Leaderboard Merit', path: '/leaderboard' },
-  { label: 'Dashboard KPP', path: '/dashboard' },
-  { label: 'Jadual Perjumpaan Kelab', path: '/takwim' },
-];
 
 // Detect exco aktif dari pathname (sama logik dengan Sidebar.tsx)
 const EKPP_ROUTES = [
@@ -42,6 +36,14 @@ function detectExcoFromPath(pathname: string) {
 }
 
 export function AppLayout() {
+  const { t } = useTranslation();
+  const kppUnitLinks = [
+    { label: t('nav:list_programs', 'Senarai Program / Aktiviti'), path: '/aktiviti' },
+    { label: t('nav:list_clubs', 'Senarai Kelab'), path: '/kelab' },
+    { label: t('nav:merit_leaderboard', 'Leaderboard Merit'), path: '/leaderboard' },
+    { label: 'Dashboard KPP', path: '/dashboard' },
+    { label: t('nav:club_meeting_schedule', 'Jadual Perjumpaan Kelab'), path: '/takwim' },
+  ];
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -151,7 +153,7 @@ export function AppLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB - untuk Exco KPP jana QR */}
-        <QrCodeFab unitLinks={KPP_UNIT_LINKS} />
+        <QrCodeFab unitLinks={kppUnitLinks} />
 
         {/* Floating Mobile Navigation Dock */}
         <BottomNav 

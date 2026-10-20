@@ -240,22 +240,22 @@ export function ProgramAttendPage({ initialState }: ProgramAttendPageProps = {})
       // Hantar notifikasi in-app kepada peserta
       if (program.merit_kelab > 0) {
         await sendNotificationToUser(user.id, {
-          title: `+${program.merit_kelab} Merit Program! 🏆`,
-          message: `Anda telah berjaya hadir "${program.title}". Merit Kelab telah dikreditkan.`,
+          title: t('kpp:program_merit_credited_title', '+{{points}} Merit Program! 🏆', { points: program.merit_kelab }),
+          message: t('kpp:program_merit_credited_desc', 'Anda telah berjaya hadir "{{title}}". Merit Kelab telah dikreditkan.', { title: program.title }),
           type: 'MERIT_CREDITED',
           module: 'AKADEMIK',
           link: '/akademik/merit',
           reference_id: program.id,
-          actor_name: 'Sistem Program',
+          actor_name: t('kpp:program_system_sender', 'Sistem Program'),
         });
       } else {
         await sendNotificationToUser(user.id, {
-          title: `Kehadiran Disahkan ✅`,
-          message: `Anda telah berjaya daftar hadir untuk "${program.title}".`,
+          title: t('kpp:attendance_confirmed_title', 'Kehadiran Disahkan ✅'),
+          message: t('kpp:attendance_confirmed_desc', 'Anda telah berjaya daftar hadir untuk "{{title}}".', { title: program.title }),
           type: 'ATTENDANCE_CONFIRMED',
           module: 'EKPP',
           reference_id: program.id,
-          actor_name: 'Sistem Program',
+          actor_name: t('kpp:program_system_sender', 'Sistem Program'),
         });
       }
 

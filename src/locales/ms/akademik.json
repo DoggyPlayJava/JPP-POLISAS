@@ -485,5 +485,6 @@
   "warning_permanent_operation": "Awas: Operasi Kekal",
   "your_rank": "Kedudukan Anda",
   "zip_error_no_files": "Gagal muat turun mana-mana fail. Sila cuba lagi.",
-  "zip_failed_header": "FAIL YANG TIDAK BERJAYA DIMUAT TURUN:"
+  "zip_failed_header": "FAIL YANG TIDAK BERJAYA DIMUAT TURUN:",
+  "failed_load_takwim_data": "Gagal memuatkan data takwim"
 }

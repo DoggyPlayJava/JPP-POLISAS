@@ -10,8 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SystemAnnouncement, AnnouncementFormField } from '@/types';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export function GlobalAnnouncementModal() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -135,7 +137,7 @@ export function GlobalAnnouncementModal() {
     if (current.form_schema) {
       for (const field of current.form_schema) {
         if (field.required && !formData[field.id]) {
-          toast.error(`Sila isi ruangan: ${field.label}`);
+          toast.error(t('portal:please_fill_field', 'Sila isi ruangan: {{field}}', { field: field.label }));
           return;
         }
       }
@@ -151,10 +153,10 @@ export function GlobalAnnouncementModal() {
       });
 
       if (error) throw error;
-      toast.success('Terima kasih. Maklumbalas direkodkan.');
+      toast.success(t('portal:feedback_recorded', 'Terima kasih. Maklumbalas direkodkan.'));
       handleNext();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menghantar');
+      toast.error(err.message || t('portal:failed_to_send', 'Gagal menghantar'));
     } finally {
       setSubmitting(false);
     }
@@ -267,7 +269,7 @@ export function GlobalAnnouncementModal() {
               className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black tracking-wide text-[12px] uppercase shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all group"
             >
               <ExternalLink size={16} className="text-white/90 group-hover:scale-110 transition-transform" />
-              <span>Buka Pautan</span>
+              <span>{t('portal:open_link', 'Buka Pautan')}</span>
             </a>
           </div>
         )}
@@ -285,7 +287,7 @@ export function GlobalAnnouncementModal() {
                 className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40  border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
               >
                 <Maximize2 size={12} />
-                Papar Skrin Penuh
+                {t('portal:view_fullscreen', 'Papar Skrin Penuh')}
               </button>
             </div>
           )}
@@ -312,7 +314,7 @@ export function GlobalAnnouncementModal() {
                 onClick={handleSubmit}
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                {submitting ? 'Memproses...' : 'Hantar Maklumat'}
+                {submitting ? 'Memproses...' : t('portal:submit_info', 'Hantar Maklumat')}
               </Button>
               {!isHigh && (
                 <Button variant="ghost" className="w-full h-12 rounded-full font-bold tracking-wider text-[11px] uppercase border border-white/10 text-white/70 hover:text-white hover:bg-white/5" onClick={() => handleNext()}>
@@ -327,11 +329,11 @@ export function GlobalAnnouncementModal() {
               onClick={handleSubmit}
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              Saya Faham
+              {t('portal:i_understand', 'Saya Faham')}
             </Button>
           ) : (
             <Button className="w-full h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 font-bold tracking-wider text-[11px] uppercase transition-colors" onClick={() => handleNext()}>
-              {currentIdx < announcements.length - 1 ? 'Seterusnya' : 'Tutup Makluman'}
+              {currentIdx < announcements.length - 1 ? 'Seterusnya' : t('portal:close_notice', 'Tutup Makluman')}
             </Button>
           )}
 
@@ -341,7 +343,7 @@ export function GlobalAnnouncementModal() {
               className="flex items-center justify-center gap-1.5 w-full text-[11px] font-bold text-rose-400 uppercase tracking-widest mt-2 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-300 transition-colors text-center"
             >
               <ShieldAlert size={13} className="shrink-0" />
-              Jangan Tunjuk Notis Ini Lagi
+              {t('portal:dont_show_again', 'Jangan Tunjuk Notis Ini Lagi')}
             </button>
           )}
         </div>
@@ -369,7 +371,7 @@ export function GlobalAnnouncementModal() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               src={fullScreenImage}
-              alt="Papar Penuh"
+              alt={t('portal:view_full', 'Papar Penuh')}
               className="max-w-full max-h-[95vh] object-contain rounded-xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />

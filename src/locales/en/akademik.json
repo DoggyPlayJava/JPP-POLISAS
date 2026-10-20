@@ -485,5 +485,6 @@
   "warning_permanent_operation": "Warning: Permanent Action",
   "your_rank": "Your Rank",
   "zip_error_no_files": "Failed to download any files. Please try again.",
-  "zip_failed_header": "FILES FAILED TO DOWNLOAD:"
+  "zip_failed_header": "FILES FAILED TO DOWNLOAD:",
+  "failed_load_takwim_data": "Failed to load academic calendar data"
 }

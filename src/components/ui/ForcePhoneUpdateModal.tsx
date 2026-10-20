@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Check, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function ForcePhoneUpdateModal() {
+  const { t } = useTranslation('common');
   const { profile, user, refetchProfile } = useAuth();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ export function ForcePhoneUpdateModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone.trim()) {
-      toast.error('Sila masukkan nombor telefon yang sah.');
+      toast.error(t('common:enter_valid_phone', 'Sila masukkan nombor telefon yang sah.'));
       return;
     }
 
@@ -33,9 +35,9 @@ export function ForcePhoneUpdateModal() {
       if (error) throw error;
 
       await refetchProfile();
-      toast.success('Nombor telefon berjaya dikemaskini!');
+      toast.success(t('common:phone_updated_success', 'Nombor telefon berjaya dikemaskini!'));
     } catch (error: any) {
-      toast.error(error.message || 'Ralat menyimpan nombor telefon.');
+      toast.error(error.message || t('common:error_saving_phone', 'Ralat menyimpan nombor telefon.'));
     } finally {
       setLoading(false);
     }
@@ -77,29 +79,29 @@ export function ForcePhoneUpdateModal() {
           <div className="p-8 space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
-                Tindakan Diperlukan
+                {t('common:action_required', 'Tindakan Diperlukan')}
               </h2>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                Lengkapkan profil anda dengan nombor telefon bimbit untuk mengaktifkan akses penuh ke portal.
+                {t('common:phone_modal_desc', 'Lengkapkan profil anda dengan nombor telefon bimbit untuk mengaktifkan akses penuh ke portal.')}
               </p>
             </div>
 
             <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4">
               <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs font-bold text-amber-800 dark:text-amber-200">
-                Sistem perlukan nombor telefon ini bagi tujuan notifikasi WhatsApp masa hadapan (contoh: kelulusan perniagaan/laporan).
+                {t('common:phone_whatsapp_notice', 'Sistem perlukan nombor telefon ini bagi tujuan notifikasi WhatsApp masa hadapan (contoh: kelulusan permohonan, aduan & status kebajikan).')}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
-                  No Telefon Bimbit
+                  {t('common:phone_number', 'No Telefon Bimbit')}
                 </Label>
                 <div className="relative group">
                   <Input 
                     type="tel"
-                    placeholder="Contoh: 0123456789" 
+                    placeholder={t('common:example_phone', 'Contoh: 0123456789')}
                     required 
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
@@ -122,9 +124,9 @@ export function ForcePhoneUpdateModal() {
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Menyimpan...
+                    <Loader2 className="w-5 h-5 animate-spin" /> {t('common:saving', 'Menyimpan...')}
                   </span>
-                ) : 'Simpan & Teruskan'}
+                ) : t('common:save_and_continue', 'Simpan & Teruskan')}
               </Button>
             </form>
           </div>

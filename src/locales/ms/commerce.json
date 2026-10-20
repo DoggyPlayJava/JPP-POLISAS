@@ -956,5 +956,8 @@
   "write_review_title": "Beri Ulasan",
   "yield_prompt": "1 {{unit}} ini boleh buat / isi berapa?",
   "zoom_in_aria": "Zum Masuk",
-  "zoom_out_aria": "Zum Keluar"
+  "zoom_out_aria": "Zum Keluar",
+  "business_label": "Perniagaan:",
+  "select_business_placeholder": "Pilih perniagaan...",
+  "switch_business_hint": "Anda boleh menukar paparan perniagaan anda di sini."
 }

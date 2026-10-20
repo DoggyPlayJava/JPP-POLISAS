@@ -700,5 +700,22 @@
   "rpc_comment_emergency_escalate_reason": "🚨 EMERGENCY/CRISIS ESCALATION: Student reported this comment requires immediate Welfare Exco attention.",
   "already_reported_substr": "already reported",
   "notif_comment_emergency_title": "🚨 PolySuara Comment Emergency",
-  "notif_comment_emergency_msg": "Student reported comment (\"{{snippet}}...\") requires immediate welfare action."
+  "notif_comment_emergency_msg": "Student reported comment (\"{{snippet}}...\") requires immediate welfare action.",
+  "failed_compress_image": "Failed to compress image",
+  "failed_read_image": "Failed to read image",
+  "upload_failed_msg": "Upload failed: {{msg}}",
+  "pdf_only_hybrid_drive": "Only PDF files are allowed for hybrid upload to Google Drive.",
+  "please_login_upload": "Please log in to upload files.",
+  "edge_function_error_status": "Edge Function Error ({{status}})",
+  "drive_upload_failed_msg": "Drive upload failed: {{msg}}",
+  "invalid_edge_json_response": "Edge Function response is not valid JSON.",
+  "google_drive_error_msg": "Google Drive error: {{error}}",
+  "drive_no_doc_url_returned": "Document URL was not returned by Drive.",
+  "anonymous_student": "Anonymous Student",
+  "please_enter_required_info": "Please enter the required information.",
+  "please_enter_valid_number": "Please enter a valid number.",
+  "min_value_is": "Minimum value is {{min}}.",
+  "max_value_is": "Maximum value is {{max}}.",
+  "official_calendar_program": "Official Calendar Program",
+  "polisas_student": "POLISAS Student"
 }

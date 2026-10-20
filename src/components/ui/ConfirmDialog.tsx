@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,13 +36,17 @@ export function ConfirmDialog({
   onClose,
   title,
   description,
-  confirmLabel = 'Sahkan',
-  cancelLabel = 'Batal',
+  confirmLabel,
+  cancelLabel,
   variant = 'default',
   isLoading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation('common');
+  const resolvedConfirmLabel = confirmLabel ?? t('common:confirm', 'Sahkan');
+  const resolvedCancelLabel = cancelLabel ?? t('common:cancel', 'Batal');
+
   const isDialogOpen = open !== undefined ? open : (isOpen ?? false);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -89,7 +94,7 @@ export function ConfirmDialog({
             onClick={handleCancel}
             className="rounded-xl border border-slate-200 dark:border-white/10 bg-transparent text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 font-medium px-4 py-2 text-xs"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={isLoading}
@@ -104,7 +109,7 @@ export function ConfirmDialog({
             )}
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

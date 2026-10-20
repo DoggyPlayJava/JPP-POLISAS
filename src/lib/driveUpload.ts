@@ -6,6 +6,10 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 export type UploadSubfolder = 'kertas_kerja' | 'postmortem' | 'aktiviti' | 'avatar' | 'lain' | (string & {});
 
@@ -34,13 +38,13 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promis
       canvas.toBlob(
         (blob) => {
           if (blob) resolve(blob);
-          else reject(new Error('Gagal compress gambar'));
+          else reject(new Error(t('services:failed_compress_image', 'Gagal compress gambar')));
         },
         'image/jpeg',
         quality
       );
     };
-    img.onerror = () => reject(new Error('Gagal baca gambar'));
+    img.onerror = () => reject(new Error(t('services:failed_read_image', 'Gagal baca gambar')));
     img.src = URL.createObjectURL(file);
   });
 }
@@ -104,7 +108,7 @@ export async function uploadFileToDrive(
 
   if (uploadError) {
     console.error('[upload] Storage error:', uploadError.message);
-    throw new Error(`Upload gagal: ${uploadError.message}`);
+    throw new Error(t('services:upload_failed_msg', 'Upload gagal: {{msg}}', { msg: uploadError.message }));
   }
 
   // Get public URL
@@ -145,12 +149,12 @@ export async function uploadPdfToDrive(
   customName?: string
 ): Promise<string> {
   if (file.type !== 'application/pdf') {
-    throw new Error('Hanya fail PDF dibenarkan untuk dimuat naik secara hibrid ke Google Drive.');
+    throw new Error(t('services:pdf_only_hybrid_drive', 'Hanya fail PDF dibenarkan untuk dimuat naik secara hibrid ke Google Drive.'));
   }
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    throw new Error('Sila log masuk untuk memuat naik fail.');
+    throw new Error(t('services:please_login_upload', 'Sila log masuk untuk memuat naik fail.'));
   }
 
   const formData = new FormData();
@@ -171,27 +175,27 @@ export async function uploadPdfToDrive(
   console.log(`[drive-upload] Status: ${response.status}, Body: ${responseText}`);
 
   if (!response.ok) {
-    let errorMsg = `Edge Function Error (${response.status})`;
+    let errorMsg = t('services:edge_function_error_status', 'Edge Function Error ({{status}})', { status: response.status });
     try {
       const errJson = JSON.parse(responseText);
       errorMsg = errJson.error || errorMsg;
     } catch { /* response was not JSON */ }
-    throw new Error(`Muat naik ke Drive gagal: ${errorMsg}`);
+    throw new Error(t('services:drive_upload_failed_msg', 'Muat naik ke Drive gagal: {{msg}}', { msg: errorMsg }));
   }
 
   let data: any;
   try {
     data = JSON.parse(responseText);
   } catch {
-    throw new Error('Respons Edge Function bukan JSON yang sah.');
+    throw new Error(t('services:invalid_edge_json_response', 'Respons Edge Function bukan JSON yang sah.'));
   }
 
   if (data?.error) {
-    throw new Error(`Ralat Google Drive: ${data.error}`);
+    throw new Error(t('services:google_drive_error_msg', 'Ralat Google Drive: {{error}}', { error: data.error }));
   }
 
   if (!data?.url) {
-    throw new Error('URL dokumen tidak dikembalikan oleh Drive.');
+    throw new Error(t('services:drive_no_doc_url_returned', 'URL dokumen tidak dikembalikan oleh Drive.'));
   }
 
   console.log(`[upload-drive] Berjaya PDF: ${data.url}`);

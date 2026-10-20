@@ -22,7 +22,7 @@ export function PortalFooter() {
             </div>
           </div>
           <p className="text-[10px] font-black text-[#556453] dark:text-[#A3B39F] uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
-            &copy; {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar <br />
+            &copy; {new Date().getFullYear()} {t('portal:jpp_full_name', 'Jawatankuasa Perwakilan Pelajar')} <br />
             Politeknik Sultan Haji Ahmad Shah
           </p>
 

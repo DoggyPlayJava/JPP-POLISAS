@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PartyPopper, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -8,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
  *  Fetch winner_status user semasa (dari makmp_submissions) & render banner
  *  hijau (dijemput) atau merah (tidak terpilih) + pautan ke halaman status. */
 export default function MakmpWinnerBanner() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [status, setStatus] = useState<'DIJEMPUT' | 'TIDAK_TERPILIH' | null>(null);
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
@@ -51,9 +53,11 @@ export default function MakmpWinnerBanner() {
             <PartyPopper className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-extrabold text-emerald-800 dark:text-emerald-300">Anda Dijemput ke MAKMP 2026! 🎉</div>
+            <div className="font-extrabold text-emerald-800 dark:text-emerald-300">
+              {t('makmp:invited_to_makmp_title', 'Anda Dijemput ke MAKMP 2026! 🎉')}
+            </div>
             <div className="text-xs text-emerald-700 dark:text-emerald-200/80 mt-0.5">
-              Tahniah! Klik untuk lengkapkan maklumat & gambar passport anda.
+              {t('makmp:invited_to_makmp_desc', 'Tahniah! Klik untuk lengkapkan maklumat & gambar passport anda.')}
             </div>
           </div>
         </div>
@@ -71,9 +75,11 @@ export default function MakmpWinnerBanner() {
           <XCircle className="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-extrabold text-rose-800 dark:text-rose-300">Maaf, Anda Tidak Terpilih</div>
+          <div className="font-extrabold text-rose-800 dark:text-rose-300">
+            {t('makmp:not_selected_title', 'Maaf, Anda Tidak Terpilih')}
+          </div>
           <div className="text-xs text-rose-700 dark:text-rose-200/80 mt-0.5">
-            Terima kasih atas penyertaan anda dalam MAKMP 2026.
+            {t('makmp:not_selected_desc', 'Terima kasih atas penyertaan anda dalam MAKMP 2026.')}
           </div>
         </div>
       </div>

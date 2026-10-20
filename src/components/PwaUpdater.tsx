@@ -3,6 +3,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'react-hot-toast';
 import { RefreshCw } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Halaman yang SELAMAT untuk auto-reload tanpa tanya (tiada borang kritikal)
 const SAFE_AUTO_RELOAD_PATHS = [
@@ -29,6 +30,7 @@ function isSafeToAutoReload(pathname: string): boolean {
 let _updateHasBeenTriggered = false;
 
 export function PwaUpdater() {
+  const { t } = useTranslation();
   const location = useLocation();
 
   const {
@@ -108,16 +110,16 @@ export function PwaUpdater() {
     // ── Extract toast UI supaya boleh dipanggil dari cooldown fallback ────
     const showManualUpdateToast = () => {
       toast(
-        (t) => (
+        (tToast) => (
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full text-blue-600 dark:text-blue-400">
                 <RefreshCw className="w-5 h-5 animate-spin" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm">Versi Baharu Tersedia</span>
+                <span className="font-bold text-sm">{t('portal:new_version_available', 'Versi Baharu Tersedia')}</span>
                 <span className="text-xs opacity-80 normal-case tracking-normal">
-                  Sistem telah dikemas kini. Muat semula untuk fungsi terbaharu.
+                  {t('portal:system_updated_refresh', 'Sistem telah dikemas kini. Muat semula untuk fungsi terbaharu.')}
                 </span>
               </div>
             </div>
@@ -125,7 +127,7 @@ export function PwaUpdater() {
               <button
                 onClick={() => {
                   setNeedRefresh(false);
-                  toast.dismiss(t.id);
+                  toast.dismiss(tToast.id);
                 }}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
@@ -133,7 +135,7 @@ export function PwaUpdater() {
               </button>
               <button
                 onClick={() => {
-                  toast.dismiss(t.id);
+                  toast.dismiss(tToast.id);
                   // Bypass cooldown untuk manual click — user sengaja nak reload
                   _updateHasBeenTriggered = true;
                   sessionStorage.setItem('pwa_last_reload_ts', String(Date.now()));
@@ -141,7 +143,7 @@ export function PwaUpdater() {
                 }}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
               >
-                Muat Semula Sekarang
+                {t('portal:refresh_now', 'Muat Semula Sekarang')}
               </button>
             </div>
           </div>

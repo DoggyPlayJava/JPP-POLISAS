@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Map, MapPin, Navigation, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +10,7 @@ import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
 
 export function PolyMapsModal() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -88,10 +90,10 @@ export function PolyMapsModal() {
             transition={{ delay: 0.3 }}
           >
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-              Sesat Cari Kelas? 😅
+              {t('gig:lost_finding_class', 'Sesat Cari Kelas? 😅')}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-              Khas untuk pelajar Semester 1, kini anda boleh menggunakan <span className="font-bold text-blue-500">POLISAS PolyMaps</span>. Taip sahaja kod kelas (Contoh: A301), sistem akan tunjukkan laluan luar dan panduan dron bangunan tersebut!
+              {t('gig:maps_intro_sem1', 'Khas untuk pelajar Semester 1, kini anda boleh menggunakan')} <span className="font-bold text-blue-500">POLISAS PolyMaps</span>{t('gig:maps_intro_desc', '. Taip sahaja kod kelas (Contoh: A301), sistem akan tunjukkan laluan luar dan panduan dron bangunan untuk bantu anda sampai tepat pada masanya!')}
             </p>
           </motion.div>
 

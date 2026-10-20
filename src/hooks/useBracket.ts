@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import type { DrawEntry } from './useLiveDraw';
 import type { SupsasSport } from '@/contexts/SupsasContext';
@@ -131,6 +132,7 @@ export function buildFixtures(
 
 // ─── Hook ─────────────────────────────────────────────────────
 export function useBracket() {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -167,7 +169,7 @@ export function useBracket() {
         .from('supsas_fixtures')
         .delete()
         .eq('sport_id', sport.id);
-      if (delErr) throw new Error('Gagal padam fixture lama: ' + delErr.message);
+      if (delErr) throw new Error(t('supsas:failed_delete_old_fixture', 'Gagal padam fixture lama:') + ' ' + delErr.message);
 
       const fixtures = buildFixtures(editionId, sport.id, bracketGroups.groups);
 
@@ -176,7 +178,7 @@ export function useBracket() {
         .insert(fixtures)
         .select('id, bracket_round, bracket_position');
 
-      if (insErr || !inserted) throw new Error(insErr?.message ?? 'Ralat insert fixture');
+      if (insErr || !inserted) throw new Error(insErr?.message ?? t('supsas:error_inserting_fixture', 'Ralat insert fixture'));
 
       // ── Kait next_match_id ──────────────────────────────────
       const rows = inserted as Array<{ id: string; bracket_round: number; bracket_position: number }>;
@@ -206,7 +208,7 @@ export function useBracket() {
       setSaving(false);
       return true;
     } catch (e: any) {
-      setErrorMsg(e.message ?? 'Ralat tidak diketahui');
+      setErrorMsg(e.message ?? t('supsas:unknown_error', 'Ralat tidak diketahui'));
       setSaving(false);
       return false;
     }

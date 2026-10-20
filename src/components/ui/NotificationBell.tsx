@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, ChevronRight, CheckCheck, Loader2, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -34,9 +35,9 @@ function getNotifLink(notif: AppNotification): string | null {
 }
 
 // ─── Module badge config ───────────────────────────────────────────────────────
-const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string }> = {
+const MODULE_CONFIG: Record<NotificationModule, { label?: string; color: string; bg: string; dot: string }> = {
   KEBAJIKAN:    { label: 'E-Kebajikan',  color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)',   dot: '#2DD4BF' },
-  EKPP:         { label: 'Portal Kelab', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
+  EKPP:         { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
   AKADEMIK:     { label: 'E-Akademik',   color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1' },
   KEUSAHAWANAN: { label: 'Keusahawanan', color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316' },
   JPP:          { label: 'JPP HQ',       color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',    dot: '#ef4444' },
@@ -51,19 +52,21 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {
+  const { t } = useTranslation('common');
   const cfg = MODULE_CONFIG[module] ?? MODULE_CONFIG.SYSTEM;
+  const label = module === 'EKPP' ? t('common:club_portal', 'Portal Kelab') : (cfg.label ?? '');
   return (
     <span
       className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
       style={{ background: cfg.bg, color: cfg.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
-      {cfg.label}
+      {label}
     </span>
   );
 }
 
-function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => void }) {
+function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => void; key?: React.Key }) {
   const isUnread = !notif.is_read;
   const hasLink = !!getNotifLink(notif);
   return (
@@ -110,6 +113,7 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
 }
 
 export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'light' }) {
+  const { t } = useTranslation('common');
   const notifs        = useNotificationStore(state => state.notifs);
   const unreadCount   = useNotificationStore(state => state.unreadCount);
   const isMarkingAll  = useNotificationStore(state => state.isMarkingAll);
@@ -117,8 +121,8 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
   const markAllRead   = useNotificationStore(state => state.markAllRead);
   const navigate      = useNavigate();
 
-  const handleNotifClick = async (notif: AppNotification) => {
-    await markRead(notif.id);
+  const handleNotifClick = (notif: AppNotification) => {
+    void markRead(notif.id);
     const link = getNotifLink(notif);
     if (link) navigate(link);
   };
@@ -191,12 +195,12 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
               {isMarkingAll ? (
                 <>
                   <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                  <span>Menyimpan...</span>
+                  <span>{t('common:saving', 'Menyimpan...')}</span>
                 </>
               ) : (
                 <>
                   <CheckCheck className="w-2.5 h-2.5" />
-                  <span>Baca semua</span>
+                  <span>{t('common:read_all', 'Baca semua')}</span>
                 </>
               )}
             </button>
@@ -208,13 +212,13 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
           {notifs.length === 0 ? (
             <div className="py-10 text-center">
               <Bell className="w-8 h-8 text-slate-700 mx-auto mb-2 opacity-40" />
-              <p className="text-xs text-slate-500 font-medium">Tiada notifikasi baharu</p>
+              <p className="text-xs text-slate-500 font-medium">{t('common:no_new_notifications', 'Tiada notifikasi baharu')}</p>
             </div>
           ) : (
             <AnimatePresence initial={false}>
               {todayNotifs.length > 0 && (
                 <React.Fragment key="today">
-                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Hari Ini</p>
+                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">{t('common:today', 'Hari Ini')}</p>
                   {todayNotifs.map((n, i) => (
                     <NotifItem key={n.id || `today-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
                   ))}
@@ -222,7 +226,7 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
               )}
               {olderNotifs.length > 0 && (
                 <React.Fragment key="older">
-                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Sebelumnya</p>
+                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">{t('common:previous', 'Sebelumnya')}</p>
                   {olderNotifs.map((n, i) => (
                     <NotifItem key={n.id || `older-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
                   ))}
@@ -242,7 +246,7 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
               onClick={() => navigate('/notifikasi')}
               className="w-full flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors py-0.5"
             >
-              <span>Lihat Semua Notifikasi</span>
+              <span>{t('common:view_all_notifications', 'Lihat Semua Notifikasi')}</span>
               <ArrowRight className="w-2.5 h-2.5" />
             </button>
           </div>
