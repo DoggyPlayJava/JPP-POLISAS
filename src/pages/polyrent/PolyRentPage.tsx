@@ -311,7 +311,7 @@ export function PolyRentPage() {
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <motion.div style={{ opacity: headerOpacity, y: headerY }}>
             <div className="inline-block px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-[9px] uppercase tracking-widest mb-4">
-              {t('polyrent_title', { defaultValue: 'PolyRent — Tempahan Aset & Peralatan' })}
+              {t('commerce:polyrent_title', 'PolyRent — Tempahan Aset & Peralatan')}
             </div>
             
             <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
@@ -321,13 +321,13 @@ export function PolyRentPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] font-bold">
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('rent_asset', { defaultValue: 'Tempah Peralatan / Ruang' })}
+                {t('commerce:rent_asset', 'Tempah Peralatan / Ruang')}
               </span>
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('rental_duration', { defaultValue: 'Tempoh Sewaan (Jam/Hari)' })}
+                {t('commerce:rental_duration', 'Tempoh Sewaan (Jam/Hari)')}
               </span>
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('equipment_condition', { defaultValue: 'Status Keadaan Peralatan' })}
+                {t('commerce:equipment_condition', 'Status Keadaan Peralatan')}
               </span>
             </div>
           </motion.div>

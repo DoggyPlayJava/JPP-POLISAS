@@ -206,7 +206,7 @@ describe('Task 6: Settings Page Language Selection & Configuration', () => {
       );
 
       // Tab label rendered in tab navigation
-      expect(html).toContain('Paparan &amp; Bahasa');
+      expect(html).toContain('Display &amp; Language');
 
       // Section header in English
       expect(html).toContain('System Language');

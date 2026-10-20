@@ -484,7 +484,7 @@ export function EmsAudienceScanPage({
       </div>
 
       <footer className="relative z-10 text-[11px] text-slate-500 text-center mt-8">
-        {t('ems:copyright_notice', 'All Rights Reserved © 2026 POLISAS EMS')}
+        {t('ems:copyright_notice', 'All Rights Reserved (c) 2026 POLISAS EMS')}
       </footer>
     </div>
   );
