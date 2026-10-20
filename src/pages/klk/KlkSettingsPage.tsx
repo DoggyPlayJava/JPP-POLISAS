@@ -261,7 +261,7 @@ export function KlkSettingsPage() {
           <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-black text-amber-300">{t('housing:db_not_ready_title', 'Database Belum Sedia')}</p>
-            <p className="text-xs text-amber-400/70 mt-1">Migration perlu dijalankan sebelum tetapan ini boleh digunakan. Webhook URL sudah boleh dikongsi dengan Google Apps Script.</p>
+            <p className="text-xs text-amber-400/70 mt-1">{t('housing:db_not_ready_desc', 'Migration perlu dijalankan sebelum tetapan ini boleh digunakan. Webhook URL sudah boleh dikongsi dengan Google Apps Script.')}</p>
           </div>
         </motion.div>
       )}
@@ -269,11 +269,11 @@ export function KlkSettingsPage() {
       {/* Tabs */}
       <div className="flex items-center gap-2 mb-6 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.05] flex-wrap">
         {[
-          { id: 'kawasan', label: 'Kawasan', icon: MapPin },
-          { id: 'hotspot', label: 'Hotspot', icon: AlertTriangle },
-          { id: 'formbuilder', label: 'Form Builder', icon: Plus },
-          { id: 'webhook', label: 'Webhook', icon: Wifi },
-          { id: 'csv', label: 'Import CSV', icon: Upload },
+          { id: 'kawasan', label: t('housing:tab_areas', 'Kawasan'), icon: MapPin },
+          { id: 'hotspot', label: t('housing:tab_hotspot', 'Hotspot'), icon: AlertTriangle },
+          { id: 'formbuilder', label: t('housing:tab_form_builder', 'Form Builder'), icon: Plus },
+          { id: 'webhook', label: t('housing:tab_webhook', 'Webhook'), icon: Wifi },
+          { id: 'csv', label: t('housing:tab_csv_import', 'Import CSV'), icon: Upload },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
@@ -298,7 +298,7 @@ export function KlkSettingsPage() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
               <div>
                 <h2 className="font-black text-sm text-slate-100">{t('housing:areas_list', 'Senarai Kawasan')}</h2>
-                <p className="text-[10px] text-slate-500">{kawasanList.filter(k => k.is_active).length} kawasan aktif</p>
+                <p className="text-[10px] text-slate-500">{t('housing:active_areas_count', '{{count}} kawasan aktif', { count: kawasanList.filter(k => k.is_active).length })}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -315,12 +315,12 @@ export function KlkSettingsPage() {
                       : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'
                   }`}>
                   <Merge className="w-3.5 h-3.5" />
-                  {mergeMode ? 'Batal Merge' : 'Merge'}
+                  {mergeMode ? t('housing:cancel_merge', 'Batal Merge') : t('housing:merge', 'Merge')}
                 </button>
                 {!mergeMode && (
                   <button onClick={() => setShowAddKawasan(v => !v)}
                     className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-blue-500/15 text-blue-300 text-[10px] font-black hover:bg-blue-500/25 transition-colors">
-                    <Plus className="w-3.5 h-3.5" /> Tambah
+                    <Plus className="w-3.5 h-3.5" /> {t('housing:add', 'Tambah')}
                   </button>
                 )}
                 <button onClick={fetchSettings} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -332,16 +332,16 @@ export function KlkSettingsPage() {
             {/* Form tambah kawasan baru */}
             {showAddKawasan && (
               <div className="px-5 py-4 border-b border-white/[0.04] bg-blue-500/5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-3">Kawasan Baru</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-3">{t('housing:new_area', 'Kawasan Baru')}</p>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <input value={newKawasan.name} onChange={e => setNewKawasan(p => ({ ...p, name: e.target.value.toUpperCase() }))}
-                    placeholder="Nama kawasan" className="col-span-1 h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
+                    placeholder={t('housing:area_name_placeholder', 'Nama kawasan')} className="col-span-1 h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
                   <input type="number" step="0.0001" value={newKawasan.latitude} onChange={e => setNewKawasan(p => ({ ...p, latitude: e.target.value }))}
-                    placeholder="Latitud (cth: 3.8172)" className="h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
+                    placeholder={t('housing:latitude_placeholder', 'Latitud (cth: 3.8172)')} className="h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
                   <input type="number" step="0.0001" value={newKawasan.longitude} onChange={e => setNewKawasan(p => ({ ...p, longitude: e.target.value }))}
-                    placeholder="Longitud (cth: 103.3414)" className="h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
+                    placeholder={t('housing:longitude_placeholder', 'Longitud (cth: 103.3414)')} className="h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs" />
                 </div>
-                <p className="text-[9px] text-slate-600 mb-3">💡 Dapatkan koordinat dari <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google Maps</a> — klik kanan lokasi → "Apakah yang ada di sini?"</p>
+                <p className="text-[9px] text-slate-600 mb-3">💡 {t('housing:get_coords_help', 'Dapatkan koordinat dari Google Maps — klik kanan lokasi → "Apakah yang ada di sini?"')}</p>
                 <div className="flex gap-2">
                   <button onClick={async () => {
                     if (!newKawasan.name.trim()) { toast.error(t('housing:area_name_required', 'Sila isi nama kawasan.')); return; }
@@ -362,7 +362,7 @@ export function KlkSettingsPage() {
                     {addingKawasan ? t('housing:saving', 'Menyimpan...') : t('housing:save_area', 'Simpan Kawasan')}
                   </button>
                   <button onClick={() => setShowAddKawasan(false)} className="h-8 px-4 rounded-xl bg-white/5 text-slate-400 text-[10px] font-black hover:bg-white/10">
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                 </div>
               </div>
@@ -459,7 +459,7 @@ export function KlkSettingsPage() {
                                 : 'bg-white/5 text-slate-400 hover:bg-blue-500/15 hover:text-blue-300'
                             }`}
                           >
-                            {isMergeTarget ? '✓ Sasaran' : 'Sasaran'}
+                            {isMergeTarget ? '✓ ' + t('housing:target', 'Sasaran') : t('housing:target', 'Sasaran')}
                           </button>
                         ) : editingKawasan === k.id ? (
                           <>
@@ -486,7 +486,7 @@ export function KlkSettingsPage() {
                             </button>
                             <button
                               onClick={async () => {
-                                if (!window.confirm(`Padam kawasan "${k.name}"? Tindakan ini tidak boleh dibatalkan.`)) return;
+                                if (!window.confirm(t('housing:delete_area_confirm', 'Padam kawasan "{{name}}"? Tindakan ini tidak boleh dibatalkan.', { name: k.name }))) return;
                                 const { error } = await supabase.from('klk_kawasan').delete().eq('id', k.id);
                                 if (error) { toast.error(t('housing:delete_failed', 'Gagal padam.')); return; }
                                 setKawasanList(prev => prev.filter(x => x.id !== k.id));
@@ -606,7 +606,7 @@ export function KlkSettingsPage() {
                     onClick={() => { setMergeMode(false); setMergeSources([]); setMergeTarget(''); setMergePreviewCount(null); }}
                     className="h-9 px-4 rounded-xl bg-white/5 text-slate-400 text-[11px] font-black hover:bg-white/10 transition-colors"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                 </div>
               </div>
@@ -758,22 +758,22 @@ export function KlkSettingsPage() {
 
             <div className="space-y-4">
               {/* Red threshold */}
-              {[{ key: 'red' as const, label: 'Merah (Hotspot Kritikal)', color: '#EF4444', desc: 'Kawasan dengan pelajar sangat ramai' },
-                { key: 'yellow' as const, label: 'Kuning (Sederhana)', color: '#F59E0B', desc: 'Kawasan dengan bilangan sederhana' },
-                { key: 'blue' as const, label: 'Biru (Rendah)', color: '#60A5FA', desc: 'Kawasan dengan bilangan kecil' },
-              ].map(t => (
-                <div key={t.key} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: t.color }} />
+              {[{ key: 'red' as const, label: t('housing:hotspot_red', 'Merah (Hotspot Kritikal)'), color: '#EF4444', desc: t('housing:hotspot_red_desc', 'Kawasan dengan pelajar sangat ramai') },
+                { key: 'yellow' as const, label: t('housing:hotspot_yellow', 'Kuning (Sederhana)'), color: '#F59E0B', desc: t('housing:hotspot_yellow_desc', 'Kawasan dengan bilangan sederhana') },
+                { key: 'blue' as const, label: t('housing:hotspot_blue', 'Biru (Rendah)'), color: '#60A5FA', desc: t('housing:hotspot_blue_desc', 'Kawasan dengan bilangan kecil') },
+              ].map(item => (
+                <div key={item.key} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: item.color }} />
                   <div className="flex-1">
-                    <p className="text-xs font-black text-slate-200">{t.label}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{t.desc}</p>
+                    <p className="text-xs font-black text-slate-200">{item.label}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{item.desc}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-500">≥</span>
                     <input
                       type="number" min={1} max={999}
-                      value={thresholds[t.key]}
-                      onChange={e => setThresholds(prev => ({ ...prev, [t.key]: parseInt(e.target.value) || 1 }))}
+                      value={thresholds[item.key]}
+                      onChange={e => setThresholds(prev => ({ ...prev, [item.key]: parseInt(e.target.value) || 1 }))}
                       className="w-20 h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-sm font-black text-center focus:outline-none focus:border-blue-500/50"
                     />
                     <span className="text-[10px] text-slate-500">{t('housing:students', 'pelajar')}</span>
@@ -806,7 +806,7 @@ export function KlkSettingsPage() {
               </button>
 
               <p className="text-[10px] text-slate-600 text-center">
-                Threshold disimpan dalam <code className="font-mono">klk_settings</code> dan dikemaskini serta-merta pada peta.
+                {t('housing:threshold_storage_note', 'Threshold disimpan dalam klk_settings dan dikemaskini serta-merta pada peta.')}
               </p>
             </div>
           </div>
@@ -820,7 +820,7 @@ export function KlkSettingsPage() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
               <div>
                 <h2 className="font-black text-sm text-slate-100">{t('housing:additional_questions', 'Soalan Tambahan')}</h2>
-                <p className="text-[10px] text-slate-500">{formFields.filter(f => f.is_active).length} soalan aktif — akan muncul dalam form pelajar</p>
+                <p className="text-[10px] text-slate-500">{t('housing:active_questions_count', '{{count}} soalan aktif — akan muncul dalam form pelajar', { count: formFields.filter(f => f.is_active).length })}</p>
               </div>
               <button onClick={() => setShowAddField(v => !v)}
                 className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-purple-500/15 text-purple-300 text-[10px] font-black hover:bg-purple-500/25 transition-colors">
@@ -893,7 +893,7 @@ export function KlkSettingsPage() {
                     {addingField ? t('housing:saving', 'Menyimpan...') : t('housing:save_question', 'Simpan Soalan')}
                   </button>
                   <button onClick={() => setShowAddField(false)} className="h-8 px-4 rounded-xl bg-white/5 text-slate-400 text-[10px] font-black hover:bg-white/10">
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                 </div>
               </div>
@@ -901,7 +901,7 @@ export function KlkSettingsPage() {
 
             {/* Senarai soalan */}
             {loading ? (
-              <div className="py-10 text-center text-xs text-slate-500">Memuatkan...</div>
+              <div className="py-10 text-center text-xs text-slate-500">{t('common:loading', 'Memuatkan...')}</div>
             ) : formFields.length === 0 ? (
               <div className="py-12 text-center">
                 <Plus className="w-10 h-10 mx-auto mb-3 text-slate-700" />
@@ -928,7 +928,7 @@ export function KlkSettingsPage() {
                       </div>
                       {f.options && f.options.length > 0 && (
                         <p className="text-[10px] text-slate-600 mt-0.5 truncate">
-                          Pilihan: {f.options.join(', ')}
+                          {t('housing:options_prefix', 'Pilihan: {{opts}}', { opts: f.options.join(', ') })}
                         </p>
                       )}
                       <p className="text-[9px] font-mono text-slate-700 mt-0.5">key: {f.field_key}</p>
@@ -947,7 +947,7 @@ export function KlkSettingsPage() {
                       </button>
                       {/* Delete */}
                       <button onClick={async () => {
-                        if (!window.confirm(`Padam soalan "${f.label}"? Data extra_data sedia ada TIDAK terpadam.`)) return;
+                        if (!window.confirm(t('housing:delete_question_confirm', 'Padam soalan "{{label}}"? Data extra_data sedia ada TIDAK terpadam.', { label: f.label }))) return;
                         const { error } = await supabase.from('klk_form_fields').delete().eq('id', f.id);
                         if (error) { toast.error(t('housing:delete_failed', 'Gagal padam.')); return; }
                         setFormFields(prev => prev.filter(x => x.id !== f.id));
@@ -968,7 +968,7 @@ export function KlkSettingsPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-2">{t('housing:important_notes', 'Nota Penting')}</p>
             <ul className="space-y-1.5 text-[11px] text-slate-400">
               <li>{t('housing:note_auto_appear', '• Soalan di sini akan muncul secara automatik dalam form website pelajar')}</li>
-              <li>• Jawapan disimpan dalam <code className="font-mono text-purple-300">extra_data</code> JSONB — tiada data hilang</li>
+              <li>• {t('housing:note_jsonb_storage', 'Jawapan disimpan dalam extra_data JSONB — tiada data hilang')}</li>
               <li>{t('housing:note_google_form_manual', '• Google Form TIDAK auto-update — Exco perlu tambah soalan yang sama secara manual di Google Form')}</li>
               <li>{t('housing:note_toggle_hide', '• Toggle OFF untuk sembunyikan soalan tanpa memadamnya')}</li>
             </ul>
@@ -1019,7 +1019,7 @@ export function KlkSettingsPage() {
                     {showSecret ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-600">Set <code className="font-mono">KLK_WEBHOOK_SECRET</code> dalam fail <code className="font-mono">.env</code> server anda.</p>
+                <p className="text-[10px] text-slate-600">{t('housing:webhook_env_note', 'Set KLK_WEBHOOK_SECRET dalam fail .env server anda.')}</p>
               </div>
             </div>
           </div>
@@ -1067,9 +1067,9 @@ export function KlkSettingsPage() {
                   <div key={log.id} className="flex items-center gap-4 px-5 py-3">
                     <div className="flex-1">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.source}</span>
-                      <p className="text-xs text-slate-300 mt-0.5">{log.success}/{log.total_rows} berjaya</p>
+                      <p className="text-xs text-slate-300 mt-0.5">{t('housing:sync_success_count', '{{success}}/{{total}} berjaya', { success: log.success, total: log.total_rows })}</p>
                     </div>
-                    {log.failed > 0 && <span className="text-[10px] font-black text-red-400">{log.failed} gagal</span>}
+                    {log.failed > 0 && <span className="text-[10px] font-black text-red-400">{t('housing:sync_failed_count', '{{failed}} gagal', { failed: log.failed })}</span>}
                     <span className="text-[10px] text-slate-600">{new Date(log.created_at).toLocaleDateString('ms-MY')}</span>
                   </div>
                 ))}
@@ -1116,7 +1116,7 @@ export function KlkSettingsPage() {
               </div>
 
               <p className="text-[10px] text-slate-600 text-center">
-                Data akan disimpan dengan source <code className="font-mono">CSV_IMPORT</code>. Duplikasi berdasarkan No Matrik + Semester akan ditangani secara automatik.
+                {t('housing:csv_source_note', 'Data akan disimpan dengan source CSV_IMPORT. Duplikasi berdasarkan No Matrik + Semester akan ditangani secara automatik.')}
               </p>
             </div>
           </div>

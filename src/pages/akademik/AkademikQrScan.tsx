@@ -568,8 +568,8 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-black text-white">QR Merit Manager</h3>
-          <p className="text-[10px] text-white/30 font-medium mt-0.5">Jana dan urus token QR untuk merit aktiviti</p>
+          <h3 className="text-sm font-black text-white">{t('akademik:qr_merit_manager_title', 'QR Merit Manager')}</h3>
+          <p className="text-[10px] text-white/30 font-medium mt-0.5">{t('akademik:qr_merit_manager_subtitle', 'Jana dan urus token QR untuk merit aktiviti')}</p>
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
@@ -577,7 +577,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
           style={{ background: hexToRgba(themeColor, 0.2), color: themeColor, border: `1px solid ${hexToRgba(themeColor, 0.3)}` }}
         >
           <QrCode className="w-3.5 h-3.5" />
-          Jana QR
+          {t('akademik:generate_qr_btn', 'Jana QR')}
         </button>
       </div>
 
@@ -586,7 +586,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
         <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-[10px] font-black text-amber-300">Mod Pembangunan (localhost)</p>
+            <p className="text-[10px] font-black text-amber-300">{t('akademik:dev_mode_title', 'Mod Pembangunan (localhost)')}</p>
             <p className="text-[9px] text-amber-400/60 mt-0.5 font-medium">
               QR kod akan menghala ke <code className="font-mono bg-black/20 px-1 rounded">{BASE_URL}</code> — tidak boleh diakses dari telefon lain.
               Untuk pengeluaran, tetapkan <code className="font-mono bg-black/20 px-1 rounded">VITE_APP_URL</code> dalam fail <code className="font-mono bg-black/20 px-1 rounded">.env.local</code>.
@@ -605,7 +605,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
             className="overflow-hidden"
           >
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Token Baru</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{t('akademik:new_token', 'Token Baru')}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   value={form.title}
@@ -616,33 +616,33 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 <input
                   value={form.description}
                   onChange={e => field('description', e.target.value)}
-                  placeholder="Perihal (optional)"
+                  placeholder={t('akademik:description_optional_placeholder', 'Perihal (optional)')}
                   className="col-span-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
                 />
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Nilai Merit</label>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('akademik:merit_value_label', 'Nilai Merit')}</label>
                   <input type="number" value={form.merit_value} onChange={e => field('merit_value', parseInt(e.target.value))} min={1} max={20}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20" />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Cooldown (jam)</label>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('akademik:cooldown_hours_label', 'Cooldown (jam)')}</label>
                   <input type="number" value={form.cooldown_hours} onChange={e => field('cooldown_hours', parseInt(e.target.value))} min={0}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20" />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Tamat Tempoh</label>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('akademik:expiry_label', 'Tamat Tempoh')}</label>
                   <input type="datetime-local" value={form.expires_at} onChange={e => field('expires_at', e.target.value)}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 [color-scheme:dark]" />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Had Scan (kosong = ∞)</label>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('akademik:max_scans_label', 'Had Scan (kosong = ∞)')}</label>
                   <input type="number" value={form.max_scans_total} onChange={e => field('max_scans_total', e.target.value)} placeholder={t('akademik:no_limit_placeholder', 'Tiada had')}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20" />
                 </div>
               </div>
                {/* Time Window Section */}
               <div className="col-span-full">
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Waktu Aktif (Opsional)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">{t('akademik:active_time_window_optional', 'Waktu Aktif (Opsional)')}</label>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {[
                     { label: 'Subuh',   from: '05:30', until: '07:00' },
@@ -671,18 +671,18 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                       type="button"
                       className="px-3 py-1 rounded-lg text-[9px] font-black text-white/25 hover:text-rose-400 border border-white/[0.06] transition-all"
                     >
-                      × Tanpa Had
+                      {t('akademik:unlimited_time', '× Tanpa Had')}
                     </button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[9px] text-white/25 mb-1 font-bold">Dari (HH:MM)</label>
+                    <label className="block text-[9px] text-white/25 mb-1 font-bold">{t('akademik:from_time_label', 'Dari (HH:MM)')}</label>
                     <input type="time" value={form.available_from} onChange={e => field('available_from', e.target.value)}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-white/20 [color-scheme:dark]" />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-white/25 mb-1 font-bold">Hingga (HH:MM)</label>
+                    <label className="block text-[9px] text-white/25 mb-1 font-bold">{t('akademik:until_time_label', 'Hingga (HH:MM)')}</label>
                     <input type="time" value={form.available_until} onChange={e => field('available_until', e.target.value)}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-white/20 [color-scheme:dark]" />
                   </div>
@@ -694,7 +694,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">{t('akademik:polymaps_anti_cheat_label', 'Perlindungan PolyMaps (Anti-Cheat)')}</label>
-                    <p className="text-[10px] text-white/40">Gunakan semakan jarak lokasi & PIN ganti.</p>
+                    <p className="text-[10px] text-white/40">{t('akademik:anti_cheat_desc', 'Gunakan semakan jarak lokasi & PIN ganti.')}</p>
                   </div>
                   <button type="button" onClick={() => field('use_gps', !form.use_gps)} 
                     className={`w-10 h-6 rounded-full p-1 transition-all ${form.use_gps ? 'bg-emerald-500' : 'bg-white/10'}`}>
@@ -706,7 +706,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                   <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }} className="grid grid-cols-2 gap-2 p-3 bg-black/20 rounded-xl">
                     <div className="col-span-full flex items-center gap-2 mb-1">
                       <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-[10px] font-bold text-emerald-400">Koordinat Pusat Majlis</span>
+                      <span className="text-[10px] font-bold text-emerald-400">{t('akademik:event_center_coords', 'Koordinat Pusat Majlis')}</span>
                     </div>
                     <div>
                       <input placeholder="Latitude (Cth: 3.8291)" value={form.location_lat} onChange={e => field('location_lat', e.target.value)}
@@ -717,7 +717,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500/50" />
                     </div>
                     <div className="col-span-full">
-                      <label className="block text-[9px] text-white/40 mt-1 mb-1">Radius dibenarkan (meter)</label>
+                      <label className="block text-[9px] text-white/40 mt-1 mb-1">{t('akademik:allowed_radius_meters', 'Radius dibenarkan (meter)')}</label>
                       <input type="number" value={form.radius_meters} onChange={e => field('radius_meters', parseInt(e.target.value))}
                         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500/50" />
                     </div>
@@ -727,8 +727,8 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 <div className="flex items-center gap-3 p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
                   <KeyRound className="w-6 h-6 text-amber-400 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-300">PIN Pengesahan (Automatik)</p>
-                    <p className="text-[10px] text-amber-400/60 mt-0.5">Tayangkan PIN ini di dewan. PIN ini melindungi QR sekiranya pelajar diluar radius / tiada GPS.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-300">{t('akademik:verification_pin_auto', 'PIN Pengesahan (Automatik)')}</p>
+                    <p className="text-[10px] text-amber-400/60 mt-0.5">{t('akademik:hall_pin_desc', 'Tayangkan PIN ini di dewan. PIN ini melindungi QR sekiranya pelajar diluar radius / tiada GPS.')}</p>
                   </div>
                   <div className="text-xl font-black tracking-[0.2em] text-white bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
                     {form.verification_pin}
@@ -741,10 +741,10 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                   className="flex items-center gap-2 px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest disabled:opacity-50 transition-all"
                   style={{ background: themeColor, color: '#fff' }}>
                   {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <QrCode className="w-3.5 h-3.5" />}
-                  {creating ? 'Mencipta...' : 'Cipta QR'}
+                  {creating ? t('akademik:creating', 'Mencipta...') : t('akademik:create_qr', 'Cipta QR')}
                 </button>
                 <button onClick={() => setShowCreate(false)} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 bg-white/[0.04] transition-all">
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
               </div>
             </div>
@@ -760,7 +760,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
       ) : tokens.length === 0 ? (
         <div className="py-12 text-center">
           <QrCode className="w-8 h-8 mx-auto text-white/10 mb-3" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada QR Token lagi</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">{t('akademik:no_qr_tokens_yet', 'Tiada QR Token lagi')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -818,7 +818,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                        <div className="mt-3 flex items-center gap-3 p-2 bg-amber-500/10 rounded-xl border border-amber-500/20 inline-flex">
                          <KeyRound className="w-4 h-4 text-amber-400 shrink-0" />
                          <div>
-                           <p className="text-[8px] font-black uppercase tracking-widest text-amber-300">PIN Dewan</p>
+                           <p className="text-[8px] font-black uppercase tracking-widest text-amber-300">{t('akademik:hall_pin_label', 'PIN Dewan')}</p>
                            <p className="text-sm font-black tracking-[0.2em] text-white">{t.verification_pin}</p>
                          </div>
                          <button onClick={() => regeneratePin(t.id)} title={t('akademik:change_pin_now', 'Tukar PIN sekarang')}
@@ -840,12 +840,12 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                     </button>
                     <button onClick={() => deleteToken(t.id)}
                       className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-rose-500/10 text-rose-400 hover:bg-rose-500/10 transition-all">
-                      Padam
+                      {t('akademik:delete', 'Padam')}
                     </button>
                     {qrUrls[t.id] && (
                       <button onClick={() => downloadQr(t.id, t.title)}
                         className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-white/[0.08] text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all">
-                        Download
+                        {t('akademik:download', 'Download')}
                       </button>
                     )}
                   </div>

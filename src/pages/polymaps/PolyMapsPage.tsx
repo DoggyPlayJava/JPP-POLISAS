@@ -1683,12 +1683,12 @@ export function PolyMapsPage() {
                         {loc.room_code}
                         {loc.building?.zone_name && (
                           <span className="text-[10px] bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
-                            Zon {loc.building.zone_name}
+                            {t('services:zone_prefix', 'Zon {{name}}', { name: loc.building.zone_name })}
                           </span>
                         )}
                         {(isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building))) && (
                           <span className="inline-flex items-center gap-1 text-[9px] bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
-                            <Compass className="w-2.5 h-2.5" /> 360 AKTIF
+                            <Compass className="w-2.5 h-2.5" /> {t('services:panorama_360_active', '360 AKTIF')}
                           </span>
                         )}
                         {loc.op_start && loc.op_end && (
@@ -1696,7 +1696,7 @@ export function PolyMapsPage() {
                             "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
                             checkIsOpen(loc.op_start, loc.op_end) ? "bg-[#6B7F5B]/20 text-[#6B7F5B] dark:text-[#A3B39F]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                           )}>
-                            {checkIsOpen(loc.op_start, loc.op_end) ? "BUKA" : "TUTUP"}
+                            {checkIsOpen(loc.op_start, loc.op_end) ? t('services:facility_open', 'BUKA') : t('services:facility_closed', 'TUTUP')}
                           </span>
                         )}
                       </div>
@@ -1943,8 +1943,8 @@ export function PolyMapsPage() {
             >
               <div className="p-5 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B] flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Direktori</h2>
-                  <p className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">Terokai Bangunan & Kelas</p>
+                  <h2 className="text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('services:maps_directory', 'Direktori')}</h2>
+                  <p className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">{t('services:maps_explore_buildings', 'Terokai Bangunan & Kelas')}</p>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full hover:bg-[#D9C9B2]/30 dark:hover:bg-[#1E271F] transition-colors">
                   <X className="w-5 h-5 text-[#556453] dark:text-[#A3B39F]" />
@@ -1953,7 +1953,7 @@ export function PolyMapsPage() {
               <div className="p-2 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
                 <div className="flex bg-[#D9C9B2]/20 dark:bg-[#1E271F] rounded-xl p-1">
                   <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>{t('campus_zones', { defaultValue: 'Zon Kampus POLISAS' })}</button>
-                  <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>Fasiliti Utama</button>
+                  <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>{t('services:maps_main_facilities', 'Fasiliti Utama')}</button>
                 </div>
               </div>
 
@@ -1972,7 +1972,7 @@ export function PolyMapsPage() {
                               <div className="w-8 h-8 rounded-lg bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] flex items-center justify-center">
                                 <Building2 className="w-4 h-4" />
                               </div>
-                              <p className="font-bold text-sm text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">Zon {z.zone_name}</p>
+                              <p className="font-bold text-sm text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('services:zone_prefix', 'Zon {{name}}', { name: z.zone_name })}</p>
                             </div>
                             {isZoneExpanded ? <ChevronDown className="w-4 h-4 text-[#556453] dark:text-[#A3B39F]" /> : <ChevronRight className="w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />}
                           </button>
@@ -2122,7 +2122,7 @@ export function PolyMapsPage() {
                         <Navigation className="w-4 h-4 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-white/80 uppercase tracking-widest">Memandu Arah Ke</p>
+                        <p className="text-xs font-black text-white/80 uppercase tracking-widest">{t('services:navigating_to', 'Memandu Arah Ke')}</p>
                         <p className="text-base font-black text-white truncate leading-tight">
                           {selectedLocation ? selectedLocation.room_code : activeBuilding.code}
                         </p>
@@ -2141,7 +2141,7 @@ export function PolyMapsPage() {
                     <div className="flex items-center gap-2 shrink-0 ml-3">
                       <div className="text-[10px] font-bold text-emerald-300 flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>Active</span>
+                        <span>{t('services:active_status', 'Aktif')}</span>
                       </div>
                       <button
                         onClick={(e) => { 
@@ -2152,7 +2152,7 @@ export function PolyMapsPage() {
                         }}
                         className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl font-bold text-xs transition-colors active:scale-95"
                       >
-                        Tamat
+                        {t('services:end_navigation', 'Tamat')}
                       </button>
                     </div>
                     
@@ -2174,8 +2174,8 @@ export function PolyMapsPage() {
                               <DoorOpen className="w-4 h-4 text-emerald-300" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-black text-emerald-300">Anda Telah Sampai!</p>
-                              <p className="text-[11px] font-bold text-emerald-200/80">Buka Panduan Dalaman →</p>
+                              <p className="text-xs font-black text-emerald-300">{t('services:you_have_arrived', 'Anda Telah Sampai!')}</p>
+                              <p className="text-[11px] font-bold text-emerald-200/80">{t('services:open_indoor_directions', 'Buka Panduan Dalaman →')}</p>
                             </div>
                             <div className="w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center group-hover:bg-emerald-500/50 transition-colors">
                               <ChevronUp className="w-3.5 h-3.5 text-emerald-300" />
@@ -2200,11 +2200,11 @@ export function PolyMapsPage() {
                           <ChevronDown className="w-4 h-4" />
                         </button>
                         <div>
-                          <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
+                          <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">{t('services:navigating_to', 'Memandu Arah Ke')}</p>
                           <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
                           {etaMinutes && (
                             <p className="text-blue-200 text-xs font-bold mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Anggaran: {etaMinutes} minit</span>
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {t('services:estimated_time', 'Anggaran: {{mins}} minit', { mins: etaMinutes })}</span>
                               {navigationStats.distance !== null && (
                                 <span className="text-blue-300 font-medium">({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})</span>
                               )}
@@ -2216,7 +2216,7 @@ export function PolyMapsPage() {
                         onClick={() => { setIsNavigating(false); setHasArrivedManual(false); setCardExpanded(false); }}
                         className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0 ml-3"
                       >
-                        Tamat
+                        {t('services:end_navigation', 'Tamat')}
                       </button>
                     </div>
 
@@ -2224,7 +2224,7 @@ export function PolyMapsPage() {
                     {weather?.isRaining && (
                       <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
                         <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
-                        <span>Hujan dikesan! Laluan berbumbung diutamakan secara automatik.</span>
+                        <span>{t('services:rain_detected_covered_route', 'Hujan dikesan! Laluan berbumbung diutamakan secara automatik.')}</span>
                       </div>
                     )}
 
@@ -2655,7 +2655,7 @@ export function PolyMapsPage() {
                             onClick={(e) => { e.stopPropagation(); navigate('/polymart'); }}
                             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-emerald-600/30 active:scale-95"
                           >
-                            <span>Buka PolyMart</span>
+                            <span>{t('services:open_polymart', 'Buka PolyMart')}</span>
                             <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                           <button
@@ -2700,7 +2700,7 @@ export function PolyMapsPage() {
                         </p>
 
                         <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-3 mb-4 text-xs text-emerald-900 dark:text-emerald-200 font-medium leading-relaxed">
-                          <span className="font-bold block text-emerald-800 dark:text-emerald-300 mb-0.5">Panduan Pengambilan:</span>
+                          <span className="font-bold block text-emerald-800 dark:text-emerald-300 mb-0.5">{t('services:pickup_guide_label', 'Panduan Pengambilan:')}</span>
                           {selectedPolyMartHub.pickup_instructions}
                         </div>
 
@@ -2710,7 +2710,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronUp className="w-3.5 h-3.5" />
-                            <span>Maklumat Lanjut Hub</span>
+                            <span>{t('services:hub_more_info', 'Maklumat Lanjut Hub')}</span>
                           </button>
                         ) : (
                           <button
@@ -2727,14 +2727,14 @@ export function PolyMapsPage() {
                             onClick={() => navigate('/polymart')}
                             className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-emerald-600/30 active:scale-[0.98]"
                           >
-                            <span>Buka PolyMart</span>
+                            <span>{t('services:open_polymart', 'Buka PolyMart')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => startNavigationToCoords(selectedPolyMartHub.lat, selectedPolyMartHub.lng, selectedPolyMartHub.name)}
                             className="w-full flex items-center justify-center gap-2 bg-[#C96F4F] hover:bg-[#B35F41] text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-[#C96F4F]/25 active:scale-[0.98]"
                           >
-                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Hub
+                            <Navigation className="w-3.5 h-3.5" /> {t('services:navigate_to_hub', 'Pandu Arah ke Hub')}
                           </button>
                         </div>
                       </div>
@@ -2767,7 +2767,7 @@ export function PolyMapsPage() {
                             )}
                             {!selectedLocation && (
                               <p className="text-[10px] font-bold text-[#6B7F5B] dark:text-[#A3B39F] truncate">
-                                Kod: {activeBuilding.code}
+                                {t('services:code_prefix', 'Kod: {{code}}', { code: activeBuilding.code })}
                               </p>
                             )}
                           </div>
@@ -2787,7 +2787,7 @@ export function PolyMapsPage() {
                               title="Buka 360 Panorama"
                             >
                               <Compass className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">360 AKTIF</span>
+                              <span className="hidden sm:inline">{t('services:panorama_360_active', '360 AKTIF')}</span>
                             </button>
                           )}
                           <button
@@ -2916,7 +2916,7 @@ export function PolyMapsPage() {
                                       )}
                                     >
                                       <Compass className="w-3 h-3" />
-                                      360 AKTIF
+                                      {t('services:panorama_360_active', '360 AKTIF')}
                                     </button>
                                   )}
                                   {activeBuilding.entrance_image_url && (
@@ -2954,9 +2954,9 @@ export function PolyMapsPage() {
                                       }
                                     }}
                                     className="inline-flex items-center gap-1 text-[10px] bg-[#6B7F5B]/15 hover:bg-[#6B7F5B]/25 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase transition-colors cursor-pointer active:scale-95"
-                                    title="Buka 360 Panorama Penuh"
+                                    title={t('services:open_360_panorama', 'Buka 360 Panorama Penuh')}
                                   >
-                                    <Compass className="w-3 h-3" /> 360 AKTIF
+                                    <Compass className="w-3 h-3" /> {t('services:panorama_360_active', '360 AKTIF')}
                                   </button>
                                 )}
                               </div>
@@ -2966,11 +2966,11 @@ export function PolyMapsPage() {
                                 <div className="mt-1 mb-2 flex items-center gap-1.5">
                                   {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
                                     <span className="inline-flex items-center gap-1 bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-pulse"></span> {t('services:facility_open', 'BUKA')} ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> {t('services:facility_closed', 'TUTUP')}
                                     </span>
                                   )}
                                 </div>
@@ -2983,7 +2983,7 @@ export function PolyMapsPage() {
                               )}
                               {!selectedLocation && (
                                 <p className="text-sm font-bold text-[#6B7F5B] dark:text-[#A3B39F] flex items-center gap-1.5 mt-1">
-                                  Kod: {activeBuilding.code}
+                                  {t('services:code_prefix', 'Kod: {{code}}', { code: activeBuilding.code })}
                                 </p>
                               )}
                             </div>
@@ -2991,13 +2991,13 @@ export function PolyMapsPage() {
                               {selectedLocation && (
                                 <div className="w-12 h-12 rounded-2xl bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] flex flex-col items-center justify-center shrink-0 ml-3">
                                   <Layers className="w-4 h-4" />
-                                  <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                                  <span className="text-[10px] font-black">{t('services:floor_short', 'T{{level}}', { level: selectedLocation.floor_level })}</span>
                                 </div>
                               )}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleShare(); }}
                                 className="p-2 rounded-xl bg-[#F8F6EE] dark:bg-[#1E271F] border border-[#D9C9B2]/60 dark:border-[#3A4A3B] text-[#556453] dark:text-[#A3B39F] hover:bg-[#D9C9B2]/30 transition-colors"
-                                title="Kongsi Lokasi"
+                                title={t('services:share_location', 'Kongsi Lokasi')}
                               >
                                 <Share2 className="w-4 h-4" />
                               </button>
@@ -3019,7 +3019,7 @@ export function PolyMapsPage() {
                               className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors active:scale-95"
                             >
                               <ChevronDown className="w-3.5 h-3.5" />
-                              <span>Lipat Kad</span>
+                              <span>{t('services:collapse_card', 'Lipat Kad')}</span>
                             </button>
                           )}
 
@@ -3036,14 +3036,14 @@ export function PolyMapsPage() {
                               onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
                               className="w-full text-center text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white text-xs font-bold transition-colors mt-1 underline underline-offset-2"
                             >
-                              Memandu dari luar kampus? Buka Google Maps
+                              {t('services:drive_from_outside_google_maps', 'Memandu dari luar kampus? Buka Google Maps')}
                             </button>
 
                             {/* FULL Snap Level: Full Building Directory */}
                             {sheetSnap === 'FULL' && (
                               <div className="mt-3 pt-3 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
                                 <p className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] uppercase tracking-wider mb-2">
-                                  Direktori Bilik & Ruang ({getLocationsForBuilding(activeBuilding.id).length})
+                                  {t('services:room_directory_count', 'Direktori Bilik & Ruang ({{count}})', { count: getLocationsForBuilding(activeBuilding.id).length })}
                                 </p>
                                 <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                                   {getLocationsForBuilding(activeBuilding.id).map(room => (
@@ -3251,7 +3251,7 @@ export function PolyMapsPage() {
                     onClick={() => setIsReportModalOpen(false)}
                     className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors active:scale-95"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                   <button
                     type="submit"
@@ -3261,7 +3261,7 @@ export function PolyMapsPage() {
                     {isSubmittingReport ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Hantar...
+                        {t('services:submitting', 'Hantar...')}
                       </>
                     ) : (
                       t('services:submit_report_button', 'Hantar Laporan')

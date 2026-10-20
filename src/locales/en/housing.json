@@ -186,7 +186,13 @@
   "change_status_failed": "Failed to change status",
   "ad_deleted_success": "Ad deleted",
   "delete_ad_failed": "Failed to delete ad",
-  "mark_rented": "Mark as Rented",
   "reopen_ad": "Reopen",
-  "available_slots_stepper": "Available Slots"
+  "available_slots_stepper": "Available Slots",
+  "delete_ad_confirm": "Are you sure you want to delete this ad? This action cannot be undone.",
+  "delete_search_ad_confirm": "Delete this room search ad?",
+  "ad_title_required": "Ad title cannot be empty",
+  "invalid_rent_price": "Please enter a valid rental price",
+  "search_ad_deleted_success": "Search ad deleted",
+  "search_ad_status_closed": "Closed (Found accommodation)",
+  "search_ad_status_open": "Reopened"
 }
