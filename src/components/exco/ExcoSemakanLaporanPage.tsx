@@ -191,18 +191,18 @@ export function ExcoSemakanLaporanPage() {
   // ── Access Guard Render ───────────────────────────────────────────────────
   if (!hasAccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0a0f] gap-6 text-center px-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white gap-6 text-center px-6">
         <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center">
-          <Lock className="text-rose-400 w-9 h-9" />
+          <Lock className="text-rose-500 dark:text-rose-400 w-9 h-9" />
         </div>
-        <h2 className="text-3xl font-black text-white tracking-tight">{t('common:access_restricted', 'Akses Terhad')}</h2>
-        <p className="text-sm text-white/30 font-medium max-w-xs">
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{t('common:access_restricted', 'Akses Terhad')}</h2>
+        <p className="text-sm text-slate-600 dark:text-white/30 font-medium max-w-xs">
           {t('kpp:restricted_exco_desc', 'Halaman ini hanya untuk MT yang mengesahkan unit {{label}} dan Admin JPP.', { label: excoLabel })}
         </p>
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
-          className="text-white/30 hover:text-white text-xs font-black uppercase tracking-widest"
+          className="text-slate-600 hover:text-slate-900 dark:text-white/30 dark:hover:text-white text-xs font-black uppercase tracking-widest"
         >
           {t('common:back', '← Kembali')}
         </Button>
@@ -212,7 +212,7 @@ export function ExcoSemakanLaporanPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Header */}
@@ -224,20 +224,20 @@ export function ExcoSemakanLaporanPage() {
             >
               {excoUnit}
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 text-white/40">
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-200/80 text-slate-700 dark:bg-white/5 dark:text-white/40">
               {t('kpp:check_report', 'Semak Laporan')}
             </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-white">{t('kpp:report_review', 'Semakan Laporan')}</h1>
-              <p className="text-sm text-white/40 mt-1 font-medium">{excoLabel}</p>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{t('kpp:report_review', 'Semakan Laporan')}</h1>
+              <p className="text-sm text-slate-600 dark:text-white/40 mt-1 font-medium">{excoLabel}</p>
             </div>
             
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] shadow-xs">
               <div className="flex-1 min-w-[120px]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-0.5">{t('kpp:auto_pdf_generation', 'Janaan Auto-PDF')}</p>
-                <p className="text-[10px] text-white/30 font-medium leading-tight">{t('kpp:allow_exco_auto_pdf', 'Benarkan Exco jana PDF automatik')}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/60 mb-0.5">{t('kpp:auto_pdf_generation', 'Janaan Auto-PDF')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-white/30 font-medium leading-tight">{t('kpp:allow_exco_auto_pdf', 'Benarkan Exco jana PDF automatik')}</p>
               </div>
               <button
                 onClick={toggleAutoPdf}
@@ -245,8 +245,8 @@ export function ExcoSemakanLaporanPage() {
                 className={cn(
                   'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all w-16 text-center',
                   autoPdfEnabled
-                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20',
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20',
                   settingsLoading && 'opacity-50 cursor-not-allowed'
                 )}
               >
@@ -267,15 +267,20 @@ export function ExcoSemakanLaporanPage() {
               key={stat.key}
               onClick={() => setFilterTab(stat.key as any)}
               className={cn(
-                'rounded-[1.5rem] p-4 border text-left transition-all',
-                filterTab === stat.key ? 'border-white/20' : 'border-white/[0.05]'
+                'rounded-[1.5rem] p-4 border text-left transition-all shadow-xs',
+                filterTab === stat.key
+                  ? 'border-slate-300 dark:border-white/20'
+                  : 'bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/10'
               )}
-              style={{ background: filterTab === stat.key ? stat.bg : 'rgba(255,255,255,0.02)' }}
+              style={{ background: filterTab === stat.key ? stat.bg : undefined }}
             >
-              <p className="text-2xl font-black" style={{ color: filterTab === stat.key ? stat.color : '#ffffff40' }}>
+              <p
+                className={cn('text-2xl font-black', filterTab !== stat.key && 'text-slate-400 dark:text-white/40')}
+                style={{ color: filterTab === stat.key ? stat.color : undefined }}
+              >
                 {stat.count}
               </p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">{stat.label}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mt-0.5">{stat.label}</p>
             </button>
           ))}
         </div>
@@ -283,12 +288,12 @@ export function ExcoSemakanLaporanPage() {
         {/* Reports list */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/40">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
               {t('kpp:report_filter_tab', 'Laporan {{status}}', { status: filterTab === 'Menunggu' ? t('common:pending', 'Menunggu') : filterTab === 'Diluluskan' ? t('common:approved', 'Diluluskan') : t('common:rejected', 'Ditolak') })}
             </h2>
             <button
               onClick={loadReports}
-              className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 flex items-center gap-1.5 transition-all"
+              className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 dark:text-white/25 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
             >
               <RefreshCw className="w-3 h-3" /> {t('common:refresh', 'Segarkan')}
             </button>
@@ -297,13 +302,13 @@ export function ExcoSemakanLaporanPage() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2].map(i => (
-                <div key={i} className="h-24 rounded-2xl bg-white/[0.03] animate-pulse border border-white/[0.04]" />
+                <div key={i} className="h-24 rounded-2xl bg-slate-100 dark:bg-white/[0.03] animate-pulse border border-slate-200 dark:border-white/[0.04]" />
               ))}
             </div>
           ) : filteredActive.length === 0 ? (
-            <div className="py-16 rounded-[2rem] border-2 border-dashed border-white/[0.05] flex flex-col items-center justify-center gap-3 text-center">
-              <FileText className="w-8 h-8 text-white/10" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
+            <div className="py-16 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-white/[0.05] flex flex-col items-center justify-center gap-3 text-center">
+              <FileText className="w-8 h-8 text-slate-300 dark:text-white/10" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
                 {t('kpp:no_reports_status', 'Tiada laporan {{status}}', { status: filterTab === 'Menunggu' ? t('common:pending', 'Menunggu') : filterTab === 'Diluluskan' ? t('common:approved', 'Diluluskan') : t('common:rejected', 'Ditolak') })}
               </p>
             </div>
@@ -336,7 +341,7 @@ export function ExcoSemakanLaporanPage() {
           <div className="space-y-3">
             <button
               onClick={() => setShowArchived(!showArchived)}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 transition-all"
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 dark:text-white/25 dark:hover:text-white/50 transition-all"
             >
               <Archive className="w-3.5 h-3.5" />
               {t('kpp:reports_archive_count', 'Arkib Laporan ({{count}})', { count: archived.length })}
@@ -369,19 +374,19 @@ export function ExcoSemakanLaporanPage() {
 
       {/* Action Dialog */}
       <Dialog open={actionDialog.open} onOpenChange={open => !open && setActionDialog({ open: false, type: null, report: null })}>
-        <DialogContent className="rounded-[2rem] border-none bg-[#0f0f17] max-w-md p-0 overflow-hidden">
+        <DialogContent className="rounded-[2rem] border border-slate-200 dark:border-none bg-[#F8F6EE] dark:bg-[#0f0f17] text-slate-900 dark:text-white max-w-md p-0 overflow-hidden shadow-xl">
           <DialogHeader
-            className="p-6 text-white"
+            className="p-6 text-slate-900 dark:text-white"
             style={{ background: actionDialog.type === 'Diluluskan' ? '#10b98120' : '#ef444420' }}
           >
-            <DialogTitle className="text-lg font-black flex items-center gap-2">
+            <DialogTitle className="text-lg font-black flex items-center gap-2 text-slate-900 dark:text-white">
               {actionDialog.type === 'Diluluskan'
-                ? <><CheckCircle2 className="w-5 h-5 text-emerald-400" /> {t('kpp:approve_report', 'Lulus Laporan')}</>
-                : <><XCircle className="w-5 h-5 text-rose-400" /> {t('kpp:reject_report', 'Tolak Laporan')}</>
+                ? <><CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> {t('kpp:approve_report', 'Lulus Laporan')}</>
+                : <><XCircle className="w-5 h-5 text-rose-500 dark:text-rose-400" /> {t('kpp:reject_report', 'Tolak Laporan')}</>
               }
             </DialogTitle>
             {actionDialog.report && (
-              <p className="text-[11px] text-white/50 font-medium mt-1 leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-white/50 font-medium mt-1 leading-relaxed">
                 {actionDialog.report.file_name}
               </p>
             )}
@@ -390,32 +395,32 @@ export function ExcoSemakanLaporanPage() {
           <div className="p-6 space-y-4">
             {actionDialog.type === 'Ditolak' && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">
                   {t('kpp:rejection_note_req', 'Nota Penolakan *')}
                 </label>
                 <Textarea
                   value={remarks}
                   onChange={e => setRemarks(e.target.value)}
                   placeholder={t('kpp:rejection_note_placeholder', 'Nyatakan sebab penolakan dengan jelas...')}
-                  className="rounded-2xl bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/20 font-medium resize-none min-h-[100px]"
+                  className="rounded-2xl bg-white dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none min-h-[100px]"
                 />
               </div>
             )}
 
             {actionDialog.type === 'Diluluskan' && (
               <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                <p className="text-xs text-emerald-400 font-medium">
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
                   {t('kpp:report_approve_desc', 'Laporan akan diluluskan, diarkibkan, dan penghantar akan menerima notifikasi.')}
                 </p>
               </div>
             )}
           </div>
 
-          <DialogFooter className="p-6 border-t border-white/[0.06] gap-3">
+          <DialogFooter className="p-6 border-t border-slate-200 dark:border-white/[0.06] bg-slate-100 dark:bg-white/[0.02] gap-3">
             <Button
               variant="ghost"
               onClick={() => { setActionDialog({ open: false, type: null, report: null }); setRemarks(''); }}
-              className="font-black text-[10px] uppercase tracking-widest text-white/30 hover:text-white rounded-xl"
+              className="font-black text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-900 dark:text-white/30 dark:hover:text-white rounded-xl"
             >
               {t('common:cancel', 'Batal')}
             </Button>
@@ -423,7 +428,7 @@ export function ExcoSemakanLaporanPage() {
               onClick={handleAction}
               disabled={submitting}
               className={cn(
-                'flex-1 h-11 rounded-xl font-black text-[10px] uppercase tracking-widest text-white',
+                'flex-1 h-11 rounded-xl font-black text-[10px] uppercase tracking-widest text-white shadow-md',
                 actionDialog.type === 'Diluluskan' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'
               )}
             >
@@ -459,8 +464,10 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
 
   return (
     <div className={cn(
-      'rounded-[1.5rem] p-5 border flex gap-4',
-      report.is_archived ? 'bg-white/[0.02] border-white/[0.04] opacity-60' : 'bg-white/[0.03] border-white/[0.06]'
+      'rounded-[1.5rem] p-5 border flex gap-4 transition-all shadow-xs',
+      report.is_archived
+        ? 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.04] opacity-60'
+        : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06]'
     )}>
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5"
@@ -471,7 +478,7 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
 
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-start justify-between gap-3">
-          <p className="font-black text-sm text-white leading-tight line-clamp-2">{report.file_name}</p>
+          <p className="font-black text-sm text-slate-900 dark:text-white leading-tight line-clamp-2">{report.file_name}</p>
           <span
             className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0"
             style={{ background: sc.bg, color: sc.text }}
@@ -480,7 +487,7 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-[10px] font-bold text-white/25">
+        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500 dark:text-white/25">
           {report.submitter?.full_name && (
             <span className="flex items-center gap-1">
               <MessageSquare className="w-3 h-3" />
@@ -495,7 +502,7 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
 
         {report.admin_feedback && report.status === 'Ditolak' && (
           <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl">
-            <p className="text-[10px] text-rose-400/70 italic font-medium">{report.admin_feedback}</p>
+            <p className="text-[10px] text-rose-600 dark:text-rose-400/70 italic font-medium">{report.admin_feedback}</p>
           </div>
         )}
 
@@ -514,13 +521,13 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
             <div className="flex gap-2 ml-auto">
               <button
                 onClick={onReject}
-                className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
               >
                 {t('common:reject', 'Tolak')}
               </button>
               <button
                 onClick={onApprove}
-                className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
               >
                 {t('common:approve', 'Lulus')}
               </button>
