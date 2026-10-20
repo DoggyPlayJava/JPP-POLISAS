@@ -122,15 +122,16 @@ const tdBold: React.CSSProperties = { ...tdBase, fontWeight: 'bold' };
 
 /** HALAMAN MUKA */
 function HalamanMuka({ data }: { data: KertasKerjaData['halaman_muka'] }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div style={{ textAlign: 'center', lineHeight: 2 }}>
-      <div style={{ fontWeight: 'bold', fontSize: '13pt' }}>KERTAS KERJA</div>
+      <div style={{ fontWeight: 'bold', fontSize: '13pt' }}>{t('kpp:doc_working_paper', 'KERTAS KERJA')}</div>
       <div style={{ fontWeight: 'bold', fontSize: '13pt' }}>{data.tajuk_program}</div>
       <br />
       <div style={{ fontWeight: 'bold' }}>{data.tarikh} ({data.hari})</div>
       <div style={{ fontWeight: 'bold' }}>{data.tempat}</div>
       <br />
-      <div style={{ fontWeight: 'bold' }}>ANJURAN:</div>
+      <div style={{ fontWeight: 'bold' }}>{t('kpp:doc_organized_by', 'ANJURAN:')}</div>
       <div style={{ fontWeight: 'bold' }}>{data.penganjur}</div>
       <div style={{ fontWeight: 'bold' }}>POLITEKNIK SULTAN HAJI AHMAD SHAH</div>
     </div>
@@ -145,29 +146,30 @@ function RingkasanEksekutif({
   data: KertasKerjaData['ringkasan_eksekutif'];
   halaman: KertasKerjaData['halaman_muka'];
 }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <>
       <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 12 }}>
-        RINGKASAN EKSEKUTIF
+        {t('kpp:doc_executive_summary', 'RINGKASAN EKSEKUTIF')}
         <br />
         {halaman.tajuk_program}
       </div>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '10pt' }}>
         <tbody>
           <tr>
-            <td style={{ ...tdBase, width: '35%', fontWeight: 'bold' }}>IPTA</td>
+            <td style={{ ...tdBase, width: '35%', fontWeight: 'bold' }}>{t('kpp:doc_ipta', 'IPTA')}</td>
             <td style={tdBase}>Politeknik Sultan Haji Ahmad Shah</td>
           </tr>
           <tr>
-            <td style={tdBold}>TAJUK PROGRAM</td>
+            <td style={tdBold}>{t('kpp:doc_program_title', 'TAJUK PROGRAM')}</td>
             <td style={tdBase}>{halaman.tajuk_program}</td>
           </tr>
           <tr>
-            <td style={tdBold}>JENIS PROGRAM</td>
+            <td style={tdBold}>{t('kpp:doc_program_type', 'JENIS PROGRAM')}</td>
             <td style={tdBase}>{data.jenis_program}</td>
           </tr>
           <tr>
-            <td style={tdBold}>MATLAMAT/PENCAPAIAN PROGRAM</td>
+            <td style={tdBold}>{t('kpp:doc_program_goals', 'MATLAMAT/PENCAPAIAN PROGRAM')}</td>
             <td style={tdBase}>
               <ol style={{ margin: 0, paddingLeft: 18 }}>
                 {data.matlamat.map((m, i) => (
@@ -177,23 +179,23 @@ function RingkasanEksekutif({
             </td>
           </tr>
           <tr>
-            <td style={tdBold}>ANJURAN</td>
-            <td style={tdBase}>{halaman.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar POLISAS</td>
+            <td style={tdBold}>{t('kpp:doc_organizer', 'ANJURAN')}</td>
+            <td style={tdBase}>{halaman.penganjur} {t('kpp:doc_in_collaboration_with_jhep', 'dengan kerjasama Jabatan Hal Ehwal Pelajar POLISAS')}</td>
           </tr>
           <tr>
-            <td style={tdBold}>TARIKH DAN TEMPAT</td>
+            <td style={tdBold}>{t('kpp:doc_date_and_venue', 'TARIKH DAN TEMPAT')}</td>
             <td style={tdBase}>{halaman.tarikh}, {halaman.tempat}</td>
           </tr>
           <tr>
-            <td style={tdBold}>BILANGAN PESERTA</td>
+            <td style={tdBold}>{t('kpp:doc_total_participants', 'BILANGAN PESERTA')}</td>
             <td style={tdBase}>
-              Peserta: {data.bilangan_peserta} orang
+              {t('kpp:doc_participants_count', 'Peserta: {{count}} orang', { count: data.bilangan_peserta })}
               <br />
-              Pegawai: {data.bilangan_pegawai} orang
+              {t('kpp:doc_officers_count', 'Pegawai: {{count}} orang', { count: data.bilangan_pegawai })}
             </td>
           </tr>
           <tr>
-            <td style={tdBold}>ANGGARAN KOS</td>
+            <td style={tdBold}>{t('kpp:doc_estimated_cost', 'ANGGARAN KOS')}</td>
             <td style={tdBase}>{formatRM(data.anggaran_kos)}</td>
           </tr>
         </tbody>
@@ -214,55 +216,53 @@ function IsiKandungan({
   ringkasan: KertasKerjaData['ringkasan_eksekutif'];
   tandatangan: KertasKerjaData['tandatangan'];
 }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div style={{ lineHeight: 1.8, fontSize: '11pt' }}>
-      <p><strong>1.0 PENDAHULUAN</strong></p>
+      <p><strong>{t('kpp:doc_sec_introduction', '1.0 PENDAHULUAN')}</strong></p>
       <p style={{ textAlign: 'justify' }}>{data.pendahuluan}</p>
 
-      <p><strong>2.0 NAMA PROGRAM</strong></p>
+      <p><strong>{t('kpp:doc_sec_program_name', '2.0 NAMA PROGRAM')}</strong></p>
       <p>{data.nama_program}</p>
 
-      <p><strong>3.0 TUJUAN</strong></p>
+      <p><strong>{t('kpp:doc_sec_purpose', '3.0 TUJUAN')}</strong></p>
       <p>{data.tujuan}</p>
 
-      <p><strong>4.0 MATLAMAT</strong></p>
+      <p><strong>{t('kpp:doc_sec_goals', '4.0 MATLAMAT')}</strong></p>
       <ol>
         {data.matlamat.map((m, i) => (
           <li key={i}>{m}</li>
         ))}
       </ol>
 
-      <p><strong>5.0 PENGANJUR</strong></p>
-      <p>{halaman.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS.</p>
+      <p><strong>{t('kpp:doc_sec_organizer', '5.0 PENGANJUR')}</strong></p>
+      <p>{halaman.penganjur} {t('kpp:doc_in_collaboration_jhep_full', 'dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS.')}</p>
 
-      <p><strong>6.0 TARIKH, MASA DAN TEMPAT</strong></p>
+      <p><strong>{t('kpp:doc_sec_date_time_venue', '6.0 TARIKH, MASA DAN TEMPAT')}</strong></p>
       <p>
-        Tarikh&nbsp;&nbsp;&nbsp;&nbsp;: {halaman.tarikh}<br />
-        Masa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 8:00 Pagi - 5:00 Petang<br />
-        Tempat&nbsp;&nbsp;&nbsp;: {halaman.tempat}
+        {t('kpp:doc_label_date', 'Tarikh')}&nbsp;&nbsp;&nbsp;&nbsp;: {halaman.tarikh}<br />
+        {t('kpp:doc_label_time', 'Masa')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {t('kpp:doc_default_time_range', '8:00 Pagi - 5:00 Petang')}<br />
+        {t('kpp:doc_label_venue', 'Tempat')}&nbsp;&nbsp;&nbsp;: {halaman.tempat}
       </p>
 
-      <p><strong>7.0 PENYERTAAN / SASARAN</strong></p>
-      <p>{ringkasan.bilangan_peserta} orang peserta.</p>
+      <p><strong>{t('kpp:doc_sec_target_audience', '7.0 PENYERTAAN / SASARAN')}</strong></p>
+      <p>{t('kpp:doc_participants_target', '{{count}} orang peserta.', { count: ringkasan.bilangan_peserta })}</p>
 
-      <p><strong>8.0 BENTUK PROGRAM</strong></p>
+      <p><strong>{t('kpp:doc_sec_program_format', '8.0 BENTUK PROGRAM')}</strong></p>
       <p>{data.bentuk_program}</p>
 
-      <p><strong>9.0 CARTA ORGANISASI</strong></p>
-      <p>Rujuk <em>Lampiran I</em>.</p>
+      <p><strong>{t('kpp:doc_sec_org_chart', '9.0 CARTA ORGANISASI')}</strong></p>
+      <p>{t('kpp:doc_refer_appendix_1', 'Rujuk Lampiran I.')}</p>
 
-      <p><strong>10.0 TENTATIF PROGRAM</strong></p>
-      <p>Rujuk <em>Lampiran II</em>.</p>
+      <p><strong>{t('kpp:doc_sec_tentative', '10.0 TENTATIF PROGRAM')}</strong></p>
+      <p>{t('kpp:doc_refer_appendix_2', 'Rujuk Lampiran II.')}</p>
 
-      <p><strong>11.0 ANGGARAN BELANJAWAN</strong></p>
-      <p>Rujuk <em>Lampiran III</em>.</p>
+      <p><strong>{t('kpp:doc_sec_budget', '11.0 ANGGARAN BELANJAWAN')}</strong></p>
+      <p>{t('kpp:doc_refer_appendix_3', 'Rujuk Lampiran III.')}</p>
 
-      <p><strong>12.0 PENUTUP</strong></p>
+      <p><strong>{t('kpp:doc_sec_closing', '12.0 PENUTUP')}</strong></p>
       <p style={{ textAlign: 'justify' }}>
-        Berdasarkan kertas kerja ini, maka dipohon agar pihak pengurusan POLISAS dapat memberi komitmen
-        dan sokongan bagi menjayakan program ini. Semoga yang dirancang ini dapat berjalan dengan lancar
-        dan memenuhi matlamat dan objektif program serta memberi manfaat kepada semua siswa/siswi
-        Politeknik Sultan Haji Ahmad Shah.
+        {t('kpp:doc_closing_body', 'Berdasarkan kertas kerja ini, maka dipohon agar pihak pengurusan POLISAS dapat memberi komitmen dan sokongan bagi menjayakan program ini. Semoga yang dirancang ini dapat berjalan dengan lancar dan memenuhi matlamat dan objektif program serta memberi manfaat kepada semua siswa/siswi Politeknik Sultan Haji Ahmad Shah.')}
       </p>
 
       {/* Blok Tandatangan */}
@@ -271,39 +271,39 @@ function IsiKandungan({
           <tbody>
             <tr>
               <td style={{ width: '50%', verticalAlign: 'top', paddingRight: 24 }}>
-                Disediakan oleh:
+                {t('kpp:doc_prepared_by', 'Disediakan oleh:')}
                 <br /><br /><br />
                 _____________________<br />
                 <strong>{tandatangan.pengarah_program}</strong><br />
-                Pengarah Program<br />
+                {t('kpp:doc_program_director', 'Pengarah Program')}<br />
                 {halaman.tajuk_program}
               </td>
               <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: 24 }}>
-                Disemak oleh:
+                {t('kpp:doc_reviewed_by', 'Disemak oleh:')}
                 <br /><br /><br />
                 _____________________<br />
                 <strong>{tandatangan.penasihat_jpp}</strong><br />
-                Penasihat<br />
-                Jawatankuasa Perwakilan Pelajar<br />
+                {t('kpp:doc_advisor', 'Penasihat')}<br />
+                {t('kpp:doc_jpp_title', 'Jawatankuasa Perwakilan Pelajar')}<br />
                 Politeknik Sultan Haji Ahmad Shah
               </td>
             </tr>
             <tr>
               <td style={{ verticalAlign: 'top', paddingRight: 24, paddingTop: 32 }}>
-                Disokong oleh:
+                {t('kpp:doc_supported_by', 'Disokong oleh:')}
                 <br /><br /><br />
                 _____________________<br />
                 <strong>{tandatangan.ketua_jabatan_hep}</strong><br />
-                Ketua Jabatan<br />
-                Hal Ehwal Pelajar<br />
+                {t('kpp:doc_head_of_department', 'Ketua Jabatan')}<br />
+                {t('kpp:doc_student_affairs', 'Hal Ehwal Pelajar')}<br />
                 Politeknik Sultan Haji Ahmad Shah
               </td>
               <td style={{ verticalAlign: 'top', paddingLeft: 24, paddingTop: 32 }}>
-                Diluluskan oleh:
+                {t('kpp:doc_approved_by', 'Diluluskan oleh:')}
                 <br /><br /><br />
                 _____________________<br />
                 <strong>{tandatangan.timbalan_pengarah}</strong><br />
-                Timbalan Pengarah (Sokongan Akademik)<br />
+                {t('kpp:doc_deputy_director', 'Timbalan Pengarah (Sokongan Akademik)')}<br />
                 Politeknik Sultan Haji Ahmad Shah
               </td>
             </tr>
@@ -316,23 +316,24 @@ function IsiKandungan({
 
 /** LAMPIRAN I — CARTA ORGANISASI */
 function LampiranI({ data }: { data: KertasKerjaData['carta_organisasi']; tajuk: string }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { jawatankuasa_induk: jki, jawatankuasa_majlis_tertinggi: jmt, unit_pelaksana: up } = data;
 
   return (
     <div style={{ textAlign: 'center', lineHeight: 2 }}>
-      <div style={{ fontStyle: 'italic', fontWeight: 'bold' }}>LAMPIRAN I</div>
-      <div style={{ fontWeight: 'bold' }}>AHLI JAWATANKUASA PELAKSANA</div>
+      <div style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{t('kpp:doc_appendix_1', 'LAMPIRAN I')}</div>
+      <div style={{ fontWeight: 'bold' }}>{t('kpp:doc_comm_committee_members', 'AHLI JAWATANKUASA PELAKSANA')}</div>
       <br />
 
-      <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>JAWATANKUASA INDUK</div>
+      <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{t('kpp:doc_comm_main', 'JAWATANKUASA INDUK')}</div>
       <br />
 
-      <div style={{ fontWeight: 'bold' }}>PENAUNG</div>
+      <div style={{ fontWeight: 'bold' }}>{t('kpp:doc_comm_patron', 'PENAUNG')}</div>
       <div style={{ fontWeight: 'bold' }}>{jki.penaung.nama}</div>
       <div>{jki.penaung.jawatan}</div>
       <br />
 
-      <div style={{ fontWeight: 'bold' }}>PENASIHAT</div>
+      <div style={{ fontWeight: 'bold' }}>{t('kpp:doc_comm_advisor', 'PENASIHAT')}</div>
       {jki.penasihat.map((p, i) => (
         <div key={i}>
           <div style={{ fontWeight: 'bold' }}>{p.nama}</div>
@@ -341,12 +342,12 @@ function LampiranI({ data }: { data: KertasKerjaData['carta_organisasi']; tajuk:
         </div>
       ))}
 
-      <div style={{ fontWeight: 'bold' }}>PENGERUSI</div>
+      <div style={{ fontWeight: 'bold' }}>{t('kpp:doc_comm_chairperson', 'PENGERUSI')}</div>
       <div style={{ fontWeight: 'bold' }}>{jki.pengerusi.nama}</div>
       <div>{jki.pengerusi.jawatan}</div>
       <br /><br />
 
-      <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>JAWATANKUASA MAJLIS TERTINGGI</div>
+      <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{t('kpp:doc_comm_high_council', 'JAWATANKUASA MAJLIS TERTINGGI')}</div>
       <br />
       {jmt.map((j, i) => (
         <div key={i}>
@@ -358,7 +359,7 @@ function LampiranI({ data }: { data: KertasKerjaData['carta_organisasi']; tajuk:
 
       {/* PAGE BREAK sebelum Unit Pelaksana */}
       <div style={{ pageBreakBefore: 'always', paddingTop: 16 }}>
-        <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>JAWATANKUASA PELAKSANA UNIT</div>
+        <div style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{t('kpp:doc_comm_unit_exec', 'JAWATANKUASA PELAKSANA UNIT')}</div>
         <br />
         {up.map((unit, i) => (
           <div key={i}>
@@ -376,10 +377,11 @@ function LampiranI({ data }: { data: KertasKerjaData['carta_organisasi']; tajuk:
 
 /** LAMPIRAN II — TENTATIF PROGRAM */
 function LampiranII({ data, tajuk }: { data: TentatifHari[]; tajuk: string }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div>
-      <div style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>LAMPIRAN II</div>
-      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>TENTATIF PROGRAM</div>
+      <div style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>{t('kpp:doc_appendix_2', 'LAMPIRAN II')}</div>
+      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>{t('kpp:doc_tentative_header', 'TENTATIF PROGRAM')}</div>
       <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 16 }}>{tajuk}</div>
 
       {data.map((hari, idx) => (
@@ -403,8 +405,8 @@ function LampiranII({ data, tajuk }: { data: TentatifHari[]; tajuk: string }) {
               </tr>
               {/* Sub-header MASA / AKTIVITI */}
               <tr>
-                <td style={{ ...tdBold, textAlign: 'center', width: '30%' }}>MASA</td>
-                <td style={{ ...tdBold, textAlign: 'center' }}>AKTIVITI</td>
+                <td style={{ ...tdBold, textAlign: 'center', width: '30%' }}>{t('kpp:doc_th_time', 'MASA')}</td>
+                <td style={{ ...tdBold, textAlign: 'center' }}>{t('kpp:doc_th_activity', 'AKTIVITI')}</td>
               </tr>
               {/* Slot aktiviti — React loop, tiada risiko HTML rosak */}
               {hari.slot.map((slot, j) => (
@@ -431,22 +433,23 @@ function LampiranIII({
   data: KertasKerjaData['belanjawan'];
   tajuk: string;
 }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const jumlahKeseluruhan = hitungJumlahKeseluruhan(data.kategori);
 
   return (
     <div>
-      <div style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>LAMPIRAN III</div>
-      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>ANGGARAN PERBELANJAAN</div>
+      <div style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>{t('kpp:doc_appendix_3', 'LAMPIRAN III')}</div>
+      <div style={{ textAlign: 'center', fontWeight: 'bold' }}>{t('kpp:doc_budget_header', 'ANGGARAN PERBELANJAAN')}</div>
       <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 16 }}>{tajuk}</div>
 
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '10pt' }}>
         <thead>
           <tr>
-            <td style={{ ...tdBold, textAlign: 'center', width: '8%' }}>BIL</td>
-            <td style={{ ...tdBold, textAlign: 'center' }}>PERKARA</td>
-            <td style={{ ...tdBold, textAlign: 'center', width: '16%' }}>HARGA<br />SEUNIT</td>
-            <td style={{ ...tdBold, textAlign: 'center', width: '14%' }}>KUANTITI</td>
-            <td style={{ ...tdBold, textAlign: 'center', width: '17%' }}>JUMLAH</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '8%' }}>{t('kpp:doc_th_no', 'BIL')}</td>
+            <td style={{ ...tdBold, textAlign: 'center' }}>{t('kpp:doc_th_item', 'PERKARA')}</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '16%' }}>{t('kpp:doc_th_unit_price', 'HARGA SEUNIT')}</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '14%' }}>{t('kpp:doc_th_qty', 'KUANTITI')}</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '17%' }}>{t('kpp:doc_th_total', 'JUMLAH')}</td>
           </tr>
         </thead>
         <tbody>
@@ -479,7 +482,7 @@ function LampiranIII({
                 {/* Baris Subtotal Kategori */}
                 <tr>
                   <td style={tdBase} colSpan={3}></td>
-                  <td style={{ ...tdBase, textAlign: 'right', fontWeight: 'bold' }}>JUMLAH</td>
+                  <td style={{ ...tdBase, textAlign: 'right', fontWeight: 'bold' }}>{t('kpp:doc_th_total', 'JUMLAH')}</td>
                   <td style={{ ...tdBase, textAlign: 'right', fontWeight: 'bold' }}>
                     {formatRM(subtotal)}
                   </td>
@@ -499,7 +502,7 @@ function LampiranIII({
                 textAlign: 'center',
               }}
             >
-              JUMLAH KESELURUHAN
+              {t('kpp:doc_th_grand_total', 'JUMLAH KESELURUHAN')}
             </td>
             <td
               style={{
@@ -517,7 +520,7 @@ function LampiranIII({
 
       {/* Bahagian Pendapatan */}
       <div style={{ marginTop: 16, fontSize: '10pt' }}>
-        <strong>PENDAPATAN:</strong>
+        <strong>{t('kpp:doc_income_section', 'PENDAPATAN:')}</strong>
         <ol style={{ marginTop: 4 }}>
           {data.pendapatan.map((p, i) => (
             <li key={i}>

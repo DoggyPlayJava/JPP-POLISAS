@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,16 +56,17 @@ interface Props {
 }
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:             { label: 'Menunggu',          color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  kpp_vouched:         { label: 'KPP Vouched',       color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
-  kpp_not_vouched:     { label: 'KPP Tidak Vouch',   color: '#f43f5e', bg: 'rgba(244,63,94,0.1)'  },
-  fully_approved:      { label: 'Diluluskan',        color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-  rejected:            { label: 'Ditolak',           color: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
-};
+const getStatusCfg = (t: (key: string, fb: string) => string): Record<string, { label: string; color: string; bg: string }> => ({
+  pending:             { label: t('kpp:status_pending', 'Menunggu'),          color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  kpp_vouched:         { label: 'KPP Vouched',                                color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
+  kpp_not_vouched:     { label: t('kpp:status_kpp_not_vouched', 'KPP Tidak Vouch'), color: '#f43f5e', bg: 'rgba(244,63,94,0.1)'  },
+  fully_approved:      { label: t('kpp:status_fully_approved', 'Diluluskan'), color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  rejected:            { label: t('kpp:status_rejected', 'Ditolak'),          color: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
+});
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, profile } = useAuth();
   const [apps, setApps]           = useState<Application[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -104,7 +106,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 
       setApps(enriched);
     } catch (e: any) {
-      toast.error('Gagal memuatkan permohonan: ' + e.message);
+      toast.error(t('kpp:failed_to_load_apps', 'Gagal memuatkan permohonan: {{error}}', { error: e.message }));
     } finally {
       setLoading(false);
     }
@@ -138,7 +140,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
         notes: note || null,
       });
 
-      toast.success(vouched ? '✅ Permohonan di-vouch!' : '❌ Permohonan tidak di-vouch.');
+      toast.success(vouched ? t('kpp:toast_vouched_success', 'Permohonan di-vouch!') : t('kpp:toast_not_vouched', 'Permohonan tidak di-vouch.'));
       setExpanded(null);
       setNoteInput(prev => { const n = { ...prev }; delete n[app.id]; return n; });
       load();
@@ -161,7 +163,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
         kediaman_reviewer_id: user?.id,
         kediaman_reviewed_at: new Date().toISOString(),
         kediaman_notes: approved ? (note || null) : null,
-        reject_reason: !approved ? (note || 'Ditolak oleh Exco Kediaman.') : null,
+        reject_reason: !approved ? (note || t('kpp:rejected_by_kediaman_default', 'Ditolak oleh Exco Kediaman.')) : null,
       }).eq('id', app.id);
       if (updateErr) throw updateErr;
 
@@ -188,10 +190,10 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
           const txRows = attendees.map(att => ({
             user_id: att.user_id,
             points: app.merit_value,
-            reason: `Merit Rasmi: ${app.program_title}`,
+            reason: t('kpp:official_merit_reason', 'Merit Rasmi: {{title}}', { title: app.program_title }),
             source: 'PROGRAM_RASMI',
             reference_id: app.program_id,
-            actor_name: profile?.full_name || 'Exco Kediaman',
+            actor_name: profile?.full_name || t('kpp:role_residential_exco', 'Exco Kediaman'),
           }));
           const { error: txErr } = await supabase.from('merit_transactions').insert(txRows);
           if (txErr) console.error('Batch merit_transactions error:', txErr.message);
@@ -211,12 +213,12 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
             .eq('program_id', app.program_id)
             .in('status', ['attended', 'walk_in']);
 
-          toast.success(`✅ Diluluskan! ${attendees.length} peserta dikreditkan ${app.merit_value} merit rasmi.`);
+          toast.success(t('kpp:toast_approved_merit_credited', 'Diluluskan! {{count}} peserta dikreditkan {{merit}} merit rasmi.', { count: attendees.length, merit: app.merit_value }));
         } else {
-          toast.success('✅ Diluluskan! (Tiada peserta hadir untuk dikreditkan)');
+          toast.success(t('kpp:toast_approved_no_attendees', 'Diluluskan! (Tiada peserta hadir untuk dikreditkan)'));
         }
       } else {
-        toast.success('Permohonan ditolak.');
+        toast.success(t('kpp:toast_app_rejected', 'Permohonan ditolak.'));
       }
 
       setExpanded(null);
@@ -248,9 +250,9 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: themeColor }}>
-            {reviewerUnit === 'KPP' ? 'Exco KPP — Voucher' : 'Exco Kediaman — Kuasa Mutlak'}
+            {reviewerUnit === 'KPP' ? t('kpp:exco_kpp_voucher', 'Exco KPP — Voucher') : t('kpp:exco_kediaman_authority', 'Exco Kediaman — Kuasa Mutlak')}
           </p>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">Permohonan Merit Rasmi</h3>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{t('kpp:official_merit_apps_title', 'Permohonan Merit Rasmi')}</h3>
         </div>
         <button
           onClick={load}
@@ -266,8 +268,8 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
         <Info size={14} style={{ color: themeColor }} className="shrink-0 mt-0.5" />
         <p className="text-[11px] font-medium text-slate-700 dark:text-white/70 leading-relaxed">
           {reviewerUnit === 'KPP'
-            ? 'Sebagai Exco KPP, anda berperanan sebagai Supporter (Voucher). Vouch bermakna anda menyokong permohonan ini untuk dipertimbangkan oleh Exco Kediaman. Kuasa mutlak kelulusan adalah pada Exco Kediaman.'
-            : 'Sebagai Exco Kediaman, anda mempunyai kuasa mutlak untuk meluluskan atau menolak permohonan merit rasmi. Merit akan dikreditkan secara automatik kepada semua peserta yang hadir sebaik sahaja anda meluluskan.'
+            ? t('kpp:merit_review_kpp_info', 'Sebagai Exco KPP, anda berperanan sebagai Supporter (Voucher). Vouch bermakna anda menyokong permohonan ini untuk dipertimbangkan oleh Exco Kediaman. Kuasa mutlak kelulusan adalah pada Exco Kediaman.')
+            : t('kpp:merit_review_kediaman_info', 'Sebagai Exco Kediaman, anda mempunyai kuasa mutlak untuk meluluskan atau menolak permohonan merit rasmi. Merit akan dikreditkan secara automatik kepada semua peserta yang hadir sebaik sahaja anda meluluskan.')
           }
         </p>
       </div>
@@ -277,9 +279,9 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       ) : (
         <>
           {/* ── Pending Applications ── */}
-          <Section title={`Menunggu Tindakan (${pending.length})`} color={themeColor} count={pending.length}>
+          <Section title={t('kpp:pending_action_count', 'Menunggu Tindakan ({{count}})', { count: pending.length })} color={themeColor} count={pending.length}>
             {pending.length === 0 ? (
-              <EmptyState label="Tiada permohonan menunggu tindakan" />
+              <EmptyState label={t('kpp:no_pending_applications', 'Tiada permohonan menunggu tindakan')} />
             ) : (
               pending.map(app => (
                 <AppCard
@@ -302,7 +304,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 
           {/* ── History ── */}
           {resolved.length > 0 && (
-            <Section title={`Sejarah (${resolved.length})`} count={resolved.length} collapsed>
+            <Section title={t('kpp:history_count', 'Sejarah ({{count}})', { count: resolved.length })} count={resolved.length} collapsed>
               {resolved.map(app => (
                 <AppCardHistory key={app.id} app={app} reviewerUnit={reviewerUnit} formatDT={formatDT} />
               ))}
@@ -316,7 +318,8 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 
 // ─── Application Card (actionable) ───────────────────────────────────────────
 function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, onToggle, onNoteChange, onAkademikVouch, onKediamanDecide, formatDT }: any) {
-  const cfg = STATUS_CFG[app.status] || STATUS_CFG.pending;
+  const { t } = useTranslation(['kpp', 'common']);
+  const cfg = getStatusCfg(t)[app.status] || getStatusCfg(t).pending;
   const canAct = reviewerUnit === 'KPP'
     ? app.status === 'pending'
     : ['kpp_vouched', 'kpp_not_vouched', 'pending'].includes(app.status);
@@ -343,13 +346,13 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">{app.program_type === 'takwim' ? 'Takwim Rasmi' : 'Aktiviti Kelab'}</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">{app.program_type === 'takwim' ? t('kpp:official_calendar', 'Takwim Rasmi') : t('kpp:club_activity', 'Aktiviti Kelab')}</span>
             <span className="flex items-center gap-1 text-[10px] font-black" style={{ color: themeColor }}>
-              <Trophy size={9} /> +{app.merit_value} merit
+              <Trophy size={9} /> +{app.merit_value} {t('kpp:merit_label', 'merit')}
             </span>
             {app.attendee_count > 0 && (
               <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-white/40">
-                <Users size={9} /> {app.attendee_count} peserta hadir
+                <Users size={9} /> {t('kpp:attendees_count_present', '{{count}} peserta hadir', { count: app.attendee_count })}
               </span>
             )}
           </div>
@@ -374,7 +377,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
               {/* Justification */}
               {app.justification && (
                 <div className="mt-3 p-3 rounded-2xl bg-slate-100/70 dark:bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase text-slate-500 dark:text-white/30 mb-1">Justifikasi Permohonan</p>
+                  <p className="text-[9px] font-black uppercase text-slate-500 dark:text-white/30 mb-1">{t('kpp:application_justification', 'Justifikasi Permohonan')}</p>
                   <p className="text-[11px] text-slate-700 dark:text-white/60">{app.justification}</p>
                 </div>
               )}
@@ -383,7 +386,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
               {reviewerUnit === 'KEDIAMAN' && (
                 <div className="p-3 rounded-2xl" style={{ background: app.status === 'kpp_vouched' ? 'rgba(99,102,241,0.08)' : 'rgba(244,63,94,0.06)', border: `1px solid ${app.status === 'kpp_vouched' ? 'rgba(99,102,241,0.2)' : 'rgba(244,63,94,0.15)'}` }}>
                   <p className="text-[9px] font-black uppercase mb-1" style={{ color: app.status === 'kpp_vouched' ? '#6366f1' : '#f43f5e' }}>
-                    {app.status === 'kpp_vouched' ? '✅ Disokong oleh KPP' : app.status === 'pending' ? '⏳ Belum disemak KPP' : '❌ Tidak disokong KPP'}
+                    {app.status === 'kpp_vouched' ? t('kpp:supported_by_kpp', 'Disokong oleh KPP') : app.status === 'pending' ? t('kpp:pending_kpp_review', 'Belum disemak KPP') : t('kpp:not_supported_by_kpp', 'Tidak disokong KPP')}
                   </p>
                   {app.kpp_vouch_notes && <p className="text-[10px] text-slate-700 dark:text-white/70">{app.kpp_vouch_notes}</p>}
                 </div>
@@ -394,7 +397,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                 <textarea
                   value={noteValue}
                   onChange={e => onNoteChange(e.target.value)}
-                  placeholder={reviewerUnit === 'KPP' ? 'Nota vouch (pilihan)...' : 'Nota keputusan (pilihan)...'}
+                  placeholder={reviewerUnit === 'KPP' ? t('kpp:vouch_note_placeholder', 'Nota vouch (pilihan)...') : t('kpp:decision_note_placeholder', 'Nota keputusan (pilihan)...')}
                   rows={2}
                   className="w-full px-3 py-2.5 rounded-2xl text-[11px] font-medium outline-none resize-none bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500 dark:focus:border-white/25 transition-all shadow-xs"
                 />
@@ -412,7 +415,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                         style={{ background: '#6366f1' }}
                       >
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <ThumbsUp size={13} />}
-                        Vouch
+                        {t('kpp:btn_vouch', 'Vouch')}
                       </button>
                       <button
                         onClick={() => onAkademikVouch(app, false)}
@@ -421,7 +424,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                         style={{ background: '#64748b' }}
                       >
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <ThumbsDown size={13} />}
-                        Tidak Vouch
+                        {t('kpp:btn_not_vouch', 'Tidak Vouch')}
                       </button>
                     </>
                   ) : (
@@ -433,7 +436,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                         style={{ background: '#10b981' }}
                       >
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
-                        Lulus & Kredit Merit
+                        {t('kpp:btn_approve_and_credit', 'Lulus & Kredit Merit')}
                       </button>
                       <button
                         onClick={() => onKediamanDecide(app, false)}
@@ -442,7 +445,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                         style={{ background: '#ef4444' }}
                       >
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
-                        Tolak
+                        {t('kpp:btn_reject', 'Tolak')}
                       </button>
                     </>
                   )}
@@ -458,7 +461,8 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
 
 // ─── History Card ─────────────────────────────────────────────────────────────
 function AppCardHistory({ app, reviewerUnit, formatDT }: any) {
-  const cfg = STATUS_CFG[app.status] || STATUS_CFG.pending;
+  const { t } = useTranslation(['kpp', 'common']);
+  const cfg = getStatusCfg(t)[app.status] || getStatusCfg(t).pending;
   return (
     <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200/70 dark:border-transparent bg-slate-50/60 dark:bg-white/[0.02]">
       <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full shrink-0" style={{ background: cfg.bg, color: cfg.color }}>
@@ -467,7 +471,7 @@ function AppCardHistory({ app, reviewerUnit, formatDT }: any) {
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-black text-slate-800 dark:text-white/70 truncate">{app.program_title}</p>
         <p className="text-[9px] text-slate-500 dark:text-white/30">
-          +{app.merit_value} merit ·{' '}
+          +{app.merit_value} {t('kpp:merit_suffix_dot', 'merit ·')}{' '}
           {reviewerUnit === 'KPP' && app.kpp_reviewed_at ? formatDT(app.kpp_reviewed_at) : ''}
           {reviewerUnit === 'KEDIAMAN' && app.kediaman_reviewed_at ? formatDT(app.kediaman_reviewed_at) : ''}
         </p>

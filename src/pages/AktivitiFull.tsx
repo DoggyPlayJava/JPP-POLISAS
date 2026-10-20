@@ -321,7 +321,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Arkib aktiviti ini? Ia tidak akan dipadam secara kekal.')) return;
+    if (!confirm(t('kpp:confirm_archive_activity', 'Arkib aktiviti ini? Ia tidak akan dipadam secara kekal.'))) return;
     const { error } = await supabase
       .from('club_activities')
       .update({ is_archived: true })
@@ -348,7 +348,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
     const keys: string[] = [];
 
     acts.forEach(a => {
-      let m = 'Tiada Tarikh';
+      let m = t('kpp:no_date', 'Tiada Tarikh');
       if (a.start_date) {
         try {
           const d = parseISO(a.start_date);
@@ -422,8 +422,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             <EmptyTitle className="text-xl font-black uppercase tracking-[0.2em] gradient-text">{t('kpp:no_activities_found')}</EmptyTitle>
             <EmptyDescription className="text-sm font-medium text-muted-foreground/80 max-w-[280px] leading-relaxed">
               {filterStatus === 'semua'
-                ? t('kpp:no_activities_desc')
-                : `Nampaknya tiada aktiviti dengan status '${filterStatus}' buat masa ini.`}
+                ? t('kpp:no_activities_desc', 'Tiada rekod aktiviti setakat ini.')
+                : t('kpp:no_activities_with_status', "Nampaknya tiada aktiviti dengan status '{{status}}' buat masa ini.", { status: filterStatus })}
             </EmptyDescription>
           </EmptyHeader>
           {canManage && (
@@ -486,7 +486,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 <Input
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="Cth: Mesyuarat Bulanan, Gotong-Royong..."
+                  placeholder={t('kpp:activity_title_placeholder', 'Cth: Mesyuarat Bulanan, Gotong-Royong...')}
                   className="h-12 rounded-2xl bg-muted/40 border-border/60 font-bold"
                 />
               </div>
@@ -523,7 +523,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 <Input
                   value={form.venue}
                   onChange={e => setForm({ ...form, venue: e.target.value })}
-                  placeholder="Cth: Bilik Kuliah 203, Dewan Serbaguna..."
+                  placeholder={t('kpp:activity_venue_placeholder', 'Cth: Bilik Kuliah 203, Dewan Serbaguna...')}
                   className="h-12 rounded-2xl bg-muted/40 border-border/60 font-bold"
                 />
               </div>
@@ -954,7 +954,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         const file = filesToUpload[i];
         if (!file.type.startsWith('image/')) continue;
         const fileName = `bukti_${selectedClubId}_${Date.now()}_${i}.png`;
-        const filePath = `program_docs/${fileName}`;
+        const filePath = 'program_docs/' + fileName;
         const { compressImage } = await import('@/lib/imageCompression');
         const compressedFile = await compressImage(file);
         await supabase.storage.from('reports').upload(filePath, compressedFile, { contentType: compressedFile.type });
@@ -1027,8 +1027,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
           try {
             const { sendNotificationToKppExco } = await import('@/lib/notifications');
             await sendNotificationToKppExco({
-              title: 'Program Baru Dihantar Untuk Semakan',
-              message: `Program "${form.title}" telah dihantar untuk semakan JPP.`,
+              title: t('kpp:notif_new_program_submitted_title', 'Program Baru Dihantar Untuk Semakan'),
+              message: t('kpp:notif_new_program_submitted_msg', 'Program "{{title}}" telah dihantar untuk semakan JPP.', { title: form.title }),
               type: 'DOCUMENT_UPLOAD',
               module: 'EKPP',
               link: '/aktiviti'
@@ -1062,7 +1062,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         club_id: selectedClubId,
         user_id: user?.id,
         type: 'UNLOCK_REQUEST',
-        content: `MT [${user?.email}] memohon UNLOCK bagi program: ${targetUnlock.nama_program}. Sebab: ${unlockReason}`
+        content: t('kpp:log_unlock_request', 'MT [{{email}}] memohon UNLOCK bagi program: {{program}}. Sebab: {{reason}}', { email: user?.email, program: targetUnlock.nama_program, reason: unlockReason })
       }]);
 
       toast.success(t('kpp:unlock_request_sent_toast', 'Permohonan Unlock dihantar ke JPP'));
@@ -1073,7 +1073,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   };
 
   const handleDeleteProgram = async (actId: string) => {
-    if (!window.confirm('Padam draf program ini secara kekal? Tindakan ini tidak boleh dibuat semula.')) return;
+    if (!window.confirm(t('kpp:confirm_delete_draft_program', 'Padam draf program ini secara kekal? Tindakan ini tidak boleh dibuat semula.'))) return;
     try {
       setSaving(true);
       const { error } = await supabase
@@ -1138,7 +1138,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         <EmptyHeader>
           <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:audit_no_programs', 'Takwim Belum Dikemaskini')}</EmptyTitle>
           <EmptyDescription className="text-xs">
-            Presiden atau MT kelab anda belum mendaftarkan program rasmi dalam takwim.
+            {t('kpp:no_official_programs_desc', 'Presiden atau MT kelab anda belum mendaftarkan program rasmi dalam takwim.')}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -1209,7 +1209,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
             <SectionHeader title={t('kpp:planning_draft', 'Draf Perancangan')} count={draftingZone.length} color="text-muted-foreground" icon={Pencil} />
             {draftingZone.length === 0 ? (
               <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest px-2">
-                Tiada draf sedia ada
+                {t('kpp:no_drafts_available', 'Tiada draf sedia ada')}
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1224,7 +1224,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
           {archiveZone.length > 0 && (
             <section className="space-y-5 pt-8 border-t border-border">
-              <SectionHeader title="Arkib & Selesai" count={archiveZone.length} color="text-slate-300" icon={Archive} />
+              <SectionHeader title={t('kpp:archive_and_completed', 'Arkib & Selesai')} count={archiveZone.length} color="text-slate-300" icon={Archive} />
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {archiveZone.map(act => (
                   <div key={act.id} className="p-4 bg-card/50 rounded-3xl flex items-center gap-3 border border-border shadow-sm">
@@ -1251,7 +1251,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 {editTarget ? t('common:edit', 'Kemaskini Program') : t('kpp:new_activity', 'Program Baharu')}
               </DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">
-                Program rasmi memerlukan Kertas Kerja dan Post-Mortem
+                {t('kpp:official_program_requires_docs', 'Program rasmi memerlukan Kertas Kerja dan Post-Mortem')}
               </p>
             </DialogHeader>
 
@@ -1264,7 +1264,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
                   className="rounded-3xl border-none bg-muted/30 h-14 font-bold text-lg px-6"
-                  placeholder="Nama program rasmi..."
+                  placeholder={t('kpp:official_program_name_placeholder', 'Nama program rasmi...')}
                 />
               </div>
 
@@ -1297,7 +1297,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">{t('kpp:activity_venue', 'Lokasi')}</Label>
                   <Input value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })}
-                    className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder="Tempat program..." />
+                    className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder={t('kpp:program_venue_placeholder', 'Tempat program...')} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-end mb-1">
@@ -1322,7 +1322,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   value={form.pengarahProgram}
                   onChange={e => setForm({ ...form, pengarahProgram: e.target.value })}
                   className="rounded-3xl border-none bg-muted/30 h-14 font-bold text-lg px-6"
-                  placeholder="Nama Pengarah Program..."
+                  placeholder={t('kpp:program_director_name_placeholder', 'Nama Pengarah Program...')}
                 />
               </div>
 
@@ -1331,7 +1331,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="flex bg-indigo-500/10 rounded-2xl p-4 flex-col sm:flex-row items-center sm:items-start justify-between gap-4 border border-indigo-500/20">
                     <div>
                       <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5" /> Nexus AI Kertas Kerja
+                        <Sparkles className="w-3.5 h-3.5" /> {t('kpp:nexus_ai_working_paper', 'Nexus AI Kertas Kerja')}
                       </h4>
                       <p className="text-[10px] text-muted-foreground font-medium mt-1">{t('kpp:ai_draft_helper', 'Jana draf atau betulkan format dengan bantuan AI.')}</p>
                     </div>
@@ -1341,7 +1341,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
-                  <UploadZone label="Kertas Kerja" isReady={!!form.urlKertasKerja}
+                  <UploadZone label={t('kpp:doc_working_paper_title', 'Kertas Kerja')} isReady={!!form.urlKertasKerja}
                     onUpload={(e: any) => handleFileUpload(e, 'kertas_kerja')} color="bg-emerald-500/100" />
                   <UploadZone label="Post-Mortem PDF" isReady={!!form.urlPostMortem}
                     onUpload={(e: any) => handleFileUpload(e, 'post_mortem')} color="bg-indigo-600"
@@ -1425,7 +1425,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               {/* Seksyen Post-Mortem Tambahan */}
               {(form.status === 'PENDING_POSTMORTEM' || form.status === 'CONFIRMED' || form.status === 'COMPLETED' || form.tindakan || (form.imageUrls && form.imageUrls.length > 0)) && (
                 <div className="space-y-4 p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-[2rem] animate-in slide-in-from-bottom-2 fade-in">
-                  <h3 className="text-xs font-black uppercase text-indigo-500 tracking-widest pl-2">Butiran Tindakan & Gambar Bukti</h3>
+                  <h3 className="text-xs font-black uppercase text-indigo-500 tracking-widest pl-2">{t('kpp:action_details_and_evidence', 'Butiran Tindakan & Gambar Bukti')}</h3>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -1437,7 +1437,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                     <Textarea
                       value={form.description}
                       onChange={e => setForm({ ...form, description: e.target.value })}
-                      placeholder="Matlamat atau objektif asal program ini dijalankan..."
+                      placeholder={t('kpp:objective_placeholder', 'Matlamat atau objektif asal program ini dijalankan...')}
                       className="rounded-3xl border border-border bg-card min-h-[100px] font-bold p-6 resize-none"
                     />
                   </div>
@@ -1445,7 +1445,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <div className="space-y-2">
                     <div className="flex justify-between items-end">
                       <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest mb-1.5 flex-1">
-                        Rumusan Tindakan / Pencapaian
+                        {t('kpp:action_summary_achievements', 'Rumusan Tindakan / Pencapaian')}
                       </Label>
                       <AIGrammarCheck textValue={form.tindakan} onApply={v => setForm({ ...form, tindakan: v })} disabled={saving} />
                     </div>
@@ -1534,7 +1534,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
   const isPastDeadline = daysLeft < 9 && act.status === 'DRAFT';
 
   const submitAction = async (type: string) => {
-    if (!confirm('Hantar permohonan ke JPP sekarang?')) return;
+    if (!confirm(t('kpp:confirm_submit_to_jpp', 'Hantar permohonan ke JPP sekarang?'))) return;
     const { error } = await supabase.from('programs').update({ status: type, jpp_remarks: null }).eq('id', act.id);
     if (!error) {
       toast.success(t('common:submitted_successfully', 'Berjaya dihantar!'));
@@ -1542,7 +1542,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
         club_id: act.club_id,
         user_id: user?.id,
         type: 'PROGRAM_SUBMISSION',
-        content: `MT [${user?.email}] menghantar program [${act.title}] untuk semakan JPP (Status: ${type})`
+        content: t('kpp:log_program_submission', 'MT [{{email}}] menghantar program [{{title}}] untuk semakan JPP (Status: {{status}})', { email: user?.email, title: act.title, status: type })
       }]);
       load();
     }
@@ -1570,7 +1570,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
                     act.status === 'REQUEST_UNLOCK' ? 'bg-indigo-500 text-white' :
                       'bg-muted text-muted-foreground'
             )}>
-              {isRejectedKertasKerja ? '✕ Ditolak JPP' : isRejectedPostMortem ? '✕ Post-Mortem Ditolak' : isPastDeadline ? 'Masa Tamat' : act.status.replace(/_/g, ' ')}
+              {isRejectedKertasKerja ? t('kpp:badge_rejected_by_jpp', '✕ Ditolak JPP') : isRejectedPostMortem ? t('kpp:badge_postmortem_rejected', '✕ Post-Mortem Ditolak') : isPastDeadline ? t('kpp:badge_time_ended', 'Masa Tamat') : act.status.replace(/_/g, ' ')}
             </Badge>
             {canManage && (
               <div className="flex gap-1.5">
@@ -1671,7 +1671,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
                 className={cn('h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all',
                   isPastDeadline ? 'bg-muted text-muted-foreground shadow-none' : 'bg-primary text-primary-foreground hover:brightness-110 active:scale-95')}>
                 {isPastDeadline ? <Lock size={11} className="mr-1" /> : <Send size={11} className="mr-1" />}
-                Hantar
+                {t('common:submit', 'Hantar')}
               </Button>
             )}
             {canManage && act.status === 'CONFIRMED' && (
@@ -1679,7 +1679,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
                 onClick={() => submitAction('PENDING_POSTMORTEM')}
                 className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
                 <Send size={11} className="mr-1" />
-                Hantar Post-Mortem
+                {t('kpp:submit_post_mortem', 'Hantar Post-Mortem')}
               </Button>
             )}
             {canManage && act.status === 'PENDING_POSTMORTEM' && act.jpp_remarks && (
@@ -1687,7 +1687,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
                 onClick={() => submitAction('PENDING_POSTMORTEM')}
                 className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
                 <Send size={11} className="mr-1" />
-                Hantar Semula
+                {t('kpp:resubmit', 'Hantar Semula')}
               </Button>
             )}
           </div>

@@ -12,23 +12,26 @@ export interface CampaignSlide {
   variant: 'gold' | 'emerald' | 'violet' | 'amber' | 'rose';
 }
 
+const fallbackT = (key: string, fallback?: string, _options?: any): string => fallback ?? key;
+
 export function formatGreeting(
   hour: number,
   name: string,
-  t?: (key: string, fallback?: string, options?: any) => string
+  tParam?: any
 ): { title: string; subtitle: string } {
-  let title = t ? t('portal:greeting_morning', 'Selamat Pagi,') : 'Selamat Pagi,';
+  const t = tParam || fallbackT;
+  let title = t('portal:greeting_morning', 'Selamat Pagi,');
   if (hour >= 5 && hour < 12) {
-    title = t ? t('portal:greeting_morning', 'Selamat Pagi,') : 'Selamat Pagi,';
+    title = t('portal:greeting_morning', 'Selamat Pagi,');
   } else if (hour >= 12 && hour < 19) {
-    title = t ? t('portal:greeting_afternoon', 'Selamat Petang,') : 'Selamat Petang,';
+    title = t('portal:greeting_afternoon', 'Selamat Petang,');
   } else if (hour >= 19 && hour < 24) {
-    title = t ? t('portal:greeting_evening', 'Selamat Malam,') : 'Selamat Malam,';
+    title = t('portal:greeting_evening', 'Selamat Malam,');
   } else {
-    title = t ? t('portal:greeting_night', 'Masih Berjaga,') : 'Masih Berjaga,';
+    title = t('portal:greeting_night', 'Masih Berjaga,');
   }
 
-  const defaultStudentName = t ? t('portal:student_polisas', 'Pelajar POLISAS') : 'Pelajar POLISAS';
+  const defaultStudentName = t('portal:student_polisas', 'Pelajar POLISAS');
   const formattedName = name && name.includes(' ') ? getMalaysianNickname(name, name) : (name || defaultStudentName);
 
   return {
@@ -53,17 +56,18 @@ export function buildCampaignSlides(
     karnivalActive: boolean;
     supsasActive: boolean;
   },
-  t?: (key: string, fallback?: string, options?: any) => string
+  tParam?: any
 ): CampaignSlide[] {
+  const t = tParam || fallbackT;
   const slides: CampaignSlide[] = [];
 
   if (params.makmpStatus === 'DIJEMPUT') {
     slides.push({
       id: 'makmp',
-      title: t ? t('portal:campaign_makmp_title', 'Anda Dijemput ke MAKMP 2026!') : 'Anda Dijemput ke MAKMP 2026!',
-      badge: t ? t('portal:campaign_makmp_badge', 'Jemputan Khas') : 'Jemputan Khas',
-      description: t ? t('portal:campaign_makmp_desc', 'Tahniah atas pencapaian cemerlang anda. Sila sahkan kehadiran & muat naik gambar.') : 'Tahniah atas pencapaian cemerlang anda. Sila sahkan kehadiran & muat naik gambar.',
-      actionText: t ? t('portal:campaign_makmp_action', 'Semak Status') : 'Semak Status',
+      title: t('portal:campaign_makmp_title', 'Anda Dijemput ke MAKMP 2026!'),
+      badge: t('portal:campaign_makmp_badge', 'Jemputan Khas'),
+      description: t('portal:campaign_makmp_desc', 'Tahniah atas pencapaian cemerlang anda. Sila sahkan kehadiran & muat naik gambar.'),
+      actionText: t('portal:campaign_makmp_action', 'Semak Status'),
       actionPath: '/makmp',
       variant: 'gold',
     });
@@ -74,15 +78,15 @@ export function buildCampaignSlides(
     slides.push({
       id: 'kamsis',
       title: isApproved
-        ? (t ? t('portal:campaign_kamsis_approved_title', 'Permohonan Asrama DILULUSKAN') : 'Permohonan Asrama DILULUSKAN')
-        : (t ? t('portal:campaign_kamsis_pending_title', 'Status Permohonan Asrama (KAMSIS)') : 'Status Permohonan Asrama (KAMSIS)'),
+        ? t('portal:campaign_kamsis_approved_title', 'Permohonan Asrama DILULUSKAN')
+        : t('portal:campaign_kamsis_pending_title', 'Status Permohonan Asrama (KAMSIS)'),
       badge: isApproved
-        ? (t ? t('portal:campaign_kamsis_approved_badge', 'LULUS') : 'LULUS')
+        ? t('portal:campaign_kamsis_approved_badge', 'LULUS')
         : 'KAMSIS',
       description: isApproved
-        ? (t ? t('portal:campaign_kamsis_approved_desc', 'Tahniah! Anda telah ditawarkan penempatan asrama semester ini.') : 'Tahniah! Anda telah ditawarkan penempatan asrama semester ini.')
-        : (t ? t('portal:campaign_kamsis_pending_desc', 'Permohonan anda sedang diproses atau sedia untuk semakan rayuan.') : 'Permohonan anda sedang diproses atau sedia untuk semakan rayuan.'),
-      actionText: t ? t('portal:campaign_kamsis_action', 'Butiran Asrama') : 'Butiran Asrama',
+        ? t('portal:campaign_kamsis_approved_desc', 'Tahniah! Anda telah ditawarkan penempatan asrama semester ini.')
+        : t('portal:campaign_kamsis_pending_desc', 'Permohonan anda sedang diproses atau sedia untuk semakan rayuan.'),
+      actionText: t('portal:campaign_kamsis_action', 'Butiran Asrama'),
       variant: isApproved ? 'emerald' : 'amber',
     });
   }
@@ -90,10 +94,10 @@ export function buildCampaignSlides(
   if (params.karnivalActive) {
     slides.push({
       id: 'karnival',
-      title: t ? t('portal:campaign_karnival_title', 'Karnival Siswa POLISAS 2026') : 'Karnival Siswa POLISAS 2026',
-      badge: t ? t('portal:campaign_karnival_badge', 'Sedang Berlangsung') : 'Sedang Berlangsung',
-      description: t ? t('portal:campaign_karnival_desc', 'Sertai pelbagai gerai jualan, persembahan pentas dan cabutan bertuah!') : 'Sertai pelbagai gerai jualan, persembahan pentas dan cabutan bertuah!',
-      actionText: t ? t('portal:campaign_karnival_action', 'Masuk Karnival') : 'Masuk Karnival',
+      title: t('portal:campaign_karnival_title', 'Karnival Siswa POLISAS 2026'),
+      badge: t('portal:campaign_karnival_badge', 'Sedang Berlangsung'),
+      description: t('portal:campaign_karnival_desc', 'Sertai pelbagai gerai jualan, persembahan pentas dan cabutan bertuah!'),
+      actionText: t('portal:campaign_karnival_action', 'Masuk Karnival'),
       actionPath: '/karnival',
       variant: 'violet',
     });
@@ -102,10 +106,10 @@ export function buildCampaignSlides(
   if (params.supsasActive) {
     slides.push({
       id: 'supsas',
-      title: t ? t('portal:campaign_supsas_title', 'Sukan Antara Jabatan (SUPSAS)') : 'Sukan Antara Jabatan (SUPSAS)',
-      badge: t ? t('portal:campaign_supsas_badge', 'Langsung') : 'Langsung',
-      description: t ? t('portal:campaign_supsas_desc', 'Pantau kedudukan pingat dan jadual perlawanan sukan jabatan anda.') : 'Pantau kedudukan pingat dan jadual perlawanan sukan jabatan anda.',
-      actionText: t ? t('portal:campaign_supsas_action', 'Papan Skor') : 'Papan Skor',
+      title: t('portal:campaign_supsas_title', 'Sukan Antara Jabatan (SUPSAS)'),
+      badge: t('portal:campaign_supsas_badge', 'Langsung'),
+      description: t('portal:campaign_supsas_desc', 'Pantau kedudukan pingat dan jadual perlawanan sukan jabatan anda.'),
+      actionText: t('portal:campaign_supsas_action', 'Papan Skor'),
       actionPath: '/supsas',
       variant: 'amber',
     });
@@ -116,19 +120,20 @@ export function buildCampaignSlides(
 
 export function getRoleBadgeTitle(
   role?: string,
-  t?: (key: string, fallback?: string, options?: any) => string
+  tParam?: any
 ): string {
-  const studentDefault = t ? t('portal:role_student', 'SISWA POLISAS') : 'SISWA POLISAS';
+  const t = tParam || fallbackT;
+  const studentDefault = t('portal:role_student', 'SISWA POLISAS');
   if (!role) return studentDefault;
   const r = role.trim().toUpperCase();
   if (r === 'SUPERADMIN' || r === 'SUPER_ADMIN' || r === 'SUPER_ADMIN_JPP' || r.includes('SUPER_ADMIN')) {
-    return t ? t('portal:role_superadmin', 'PENTADBIR UTAMA') : 'PENTADBIR UTAMA';
+    return t('portal:role_superadmin', 'PENTADBIR UTAMA');
   }
   if (r === 'JPP') {
-    return t ? t('portal:role_jpp', 'MAJLIS JPP') : 'MAJLIS JPP';
+    return t('portal:role_jpp', 'MAJLIS JPP');
   }
   if (r === 'STAFF' || r === 'PENSYARAH') {
-    return t ? t('portal:role_staff', 'STAF POLISAS') : 'STAF POLISAS';
+    return t('portal:role_staff', 'STAF POLISAS');
   }
   return studentDefault;
 }
@@ -173,30 +178,31 @@ export function getCampusServicesConfig(
     kamsisStatus?: string | null;
     kbOpenCount?: number;
   },
-  t?: (key: string, fallback?: string, options?: any) => string
+  tParam?: any
 ): CampusServiceItem[] {
+  const t = tParam || fallbackT;
   return [
     {
       id: 'polysuara',
       label: 'PolySuara',
-      sublabel: t ? t('portal:service_polysuara_sub', 'Suara Siswa') : 'Suara Siswa',
-      description: t ? t('portal:service_polysuara_sub', 'Suara Siswa') : 'Suara Siswa',
+      sublabel: t('portal:service_polysuara_sub', 'Suara Siswa'),
+      description: t('portal:service_polysuara_sub', 'Suara Siswa'),
       routeOrAction: '/polysuara',
       color: 'rose',
     },
     {
       id: 'polymart',
       label: 'PolyMart',
-      sublabel: t ? t('portal:service_polymart_sub', 'Pasaran Siswa') : 'Pasaran Siswa',
-      description: t ? t('portal:service_polymart_sub', 'Pasaran Siswa') : 'Pasaran Siswa',
+      sublabel: t('portal:service_polymart_sub', 'Pasaran Siswa'),
+      description: t('portal:service_polymart_sub', 'Pasaran Siswa'),
       routeOrAction: '/polymart',
       color: 'amber',
     },
     {
       id: 'takwim',
-      label: t ? t('portal:service_takwim_title', 'Takwim') : 'Takwim',
-      sublabel: t ? t('portal:service_takwim_sub', 'Kalendar Rasmi') : 'Kalendar Rasmi',
-      description: t ? t('portal:service_takwim_sub', 'Kalendar Rasmi') : 'Kalendar Rasmi',
+      label: t('portal:service_takwim_title', 'Takwim'),
+      sublabel: t('portal:service_takwim_sub', 'Kalendar Rasmi'),
+      description: t('portal:service_takwim_sub', 'Kalendar Rasmi'),
       routeOrAction: '/akademik/takwim?tab=pusat',
       color: 'indigo',
       tourClass: 'tour-qa-polyservices',
@@ -204,24 +210,24 @@ export function getCampusServicesConfig(
     {
       id: 'polymaps',
       label: 'PolyMaps',
-      sublabel: t ? t('portal:service_polymaps_sub', 'Peta Kampus') : 'Peta Kampus',
-      description: t ? t('portal:service_polymaps_sub', 'Peta Kampus') : 'Peta Kampus',
+      sublabel: t('portal:service_polymaps_sub', 'Peta Kampus'),
+      description: t('portal:service_polymaps_sub', 'Peta Kampus'),
       routeOrAction: '/polymaps',
       color: 'emerald',
     },
     {
       id: 'polyrent',
       label: 'PolyRent',
-      sublabel: t ? t('portal:service_polyrent_sub', 'Sewa Rumah') : 'Sewa Rumah',
-      description: t ? t('portal:service_polyrent_sub', 'Sewa Rumah') : 'Sewa Rumah',
+      sublabel: t('portal:service_polyrent_sub', 'Sewa Rumah'),
+      description: t('portal:service_polyrent_sub', 'Sewa Rumah'),
       routeOrAction: '/polyrent',
       color: 'cyan',
     },
     {
       id: 'kebajikan',
-      label: t ? t('portal:service_kebajikan_title', 'E-Kebajikan') : 'E-Kebajikan',
-      sublabel: t ? t('portal:service_kebajikan_sub', 'Aduan & Bantuan') : 'Aduan & Bantuan',
-      description: t ? t('portal:service_kebajikan_sub', 'Aduan & Bantuan') : 'Aduan & Bantuan',
+      label: t('portal:service_kebajikan_title', 'E-Kebajikan'),
+      sublabel: t('portal:service_kebajikan_sub', 'Aduan & Bantuan'),
+      description: t('portal:service_kebajikan_sub', 'Aduan & Bantuan'),
       routeOrAction: '/kebajikan',
       badge: params.kbOpenCount && params.kbOpenCount > 0 ? String(params.kbOpenCount) : undefined,
       color: 'teal',
@@ -229,21 +235,21 @@ export function getCampusServicesConfig(
     },
     {
       id: 'akademik_qr',
-      label: t ? t('portal:service_akademik_qr_title', 'Scan QR') : 'Scan QR',
-      sublabel: t ? t('portal:service_akademik_qr_sub', 'Kumpul Merit') : 'Kumpul Merit',
-      description: t ? t('portal:service_akademik_qr_sub', 'Kumpul Merit') : 'Kumpul Merit',
+      label: t('portal:service_akademik_qr_title', 'Scan QR'),
+      sublabel: t('portal:service_akademik_qr_sub', 'Kumpul Merit'),
+      description: t('portal:service_akademik_qr_sub', 'Kumpul Merit'),
       routeOrAction: '/akademik/qr',
-      badge: t ? t('portal:service_akademik_qr_badge', 'MERIT') : 'MERIT',
+      badge: t('portal:service_akademik_qr_badge', 'MERIT'),
       color: 'purple',
       tourClass: 'tour-qa-qr',
     },
     {
       id: 'ekpp',
-      label: t ? t('portal:service_ekpp_title', 'Kelab EKPP') : 'Kelab EKPP',
-      sublabel: t ? t('portal:service_ekpp_sub', 'Persatuan Siswa') : 'Persatuan Siswa',
-      description: t ? t('portal:service_ekpp_sub', 'Persatuan Siswa') : 'Persatuan Siswa',
+      label: t('portal:service_ekpp_title', 'Kelab EKPP'),
+      sublabel: t('portal:service_ekpp_sub', 'Persatuan Siswa'),
+      description: t('portal:service_ekpp_sub', 'Persatuan Siswa'),
       routeOrAction: '/kelab',
-      badge: t ? t('portal:service_ekpp_badge', 'KELAB') : 'KELAB',
+      badge: t('portal:service_ekpp_badge', 'KELAB'),
       color: 'blue',
       tourClass: 'tour-mod-ekpp',
     },
