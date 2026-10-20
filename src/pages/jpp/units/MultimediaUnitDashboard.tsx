@@ -29,7 +29,7 @@ type SubTab = 'siaran' | 'brandkit' | 'copywriter' | 'rekod';
 interface InstitutionalLogo {
   id: string;
   name: string;
-  category: 'Institusi' | 'Jawatankuasa' | 'Kementerian' | 'Jabatan Akademik';
+  category: string;
   format: string;
   resolution: string;
   downloadUrl: string;
@@ -42,88 +42,88 @@ interface InstitutionalColor {
   usage: string;
 }
 
-// ── Master Brandkit Assets Data ───────────────────────────────────────
-const BRANDKIT_LOGOS: InstitutionalLogo[] = [
-  {
-    id: 'logo-polisas',
-    name: 'Logo Rasmi Politeknik Sultan Haji Ahmad Shah (POLISAS)',
-    category: 'Institusi',
-    format: 'PNG Telus & SVG Vektor',
-    resolution: '4000 x 1200 px (UHD)',
-    downloadUrl: '/logo.png',
-  },
-  {
-    id: 'logo-jpp',
-    name: 'Logo Rasmi Jawatankuasa Perwakilan Pelajar (JPP POLISAS)',
-    category: 'Jawatankuasa',
-    format: 'PNG Telus & SVG Vektor',
-    resolution: '2048 x 2048 px (HD)',
-    downloadUrl: '/jpp-logo.png',
-  },
-  {
-    id: 'logo-kpt',
-    name: 'Logo Kementerian Pendidikan Tinggi (KPT) Malaysia',
-    category: 'Kementerian',
-    format: 'PNG Telus',
-    resolution: '3000 x 900 px',
-    downloadUrl: '#',
-  },
-  {
-    id: 'logo-jka',
-    name: 'Jabatan Kejuruteraan Awam (JKA)',
-    category: 'Jabatan Akademik',
-    format: 'PNG Telus',
-    resolution: '1500 x 1500 px',
-    downloadUrl: '#',
-  },
-  {
-    id: 'logo-jke',
-    name: 'Jabatan Kejuruteraan Elektrik (JKE)',
-    category: 'Jabatan Akademik',
-    format: 'PNG Telus',
-    resolution: '1500 x 1500 px',
-    downloadUrl: '#',
-  },
-  {
-    id: 'logo-jkm',
-    name: 'Jabatan Kejuruteraan Mekanikal (JKM)',
-    category: 'Jabatan Akademik',
-    format: 'PNG Telus',
-    resolution: '1500 x 1500 px',
-    downloadUrl: '#',
-  },
-  {
-    id: 'logo-jp',
-    name: 'Jabatan Perdagangan (JP)',
-    category: 'Jabatan Akademik',
-    format: 'PNG Telus',
-    resolution: '1500 x 1500 px',
-    downloadUrl: '#',
-  },
-  {
-    id: 'logo-jmsk',
-    name: 'Jabatan Matematik, Sains & Komputer (JMSK)',
-    category: 'Jabatan Akademik',
-    format: 'PNG Telus',
-    resolution: '1500 x 1500 px',
-    downloadUrl: '#',
-  },
-];
-
-const BRANDKIT_COLORS: InstitutionalColor[] = [
-  { name: 'Kuning Diraja POLISAS', hex: '#F59E0B', rgb: '245, 158, 11', usage: 'Warna identiti utama institusi & jata rasmi' },
-  { name: 'Biru Korporat Utama', hex: '#1E3A8A', rgb: '30, 58, 138', usage: 'Warna latar belakang dokumen rasmi & blazer' },
-  { name: 'Emerald Gemilang', hex: '#10B981', rgb: '16, 185, 129', usage: 'Aksen kejayaan, pengesahan dan kelulusan' },
-  { name: 'Oren Multimedia JPP', hex: '#FB923C', rgb: '251, 146, 60', usage: 'Warna rasmi Exco Multimedia & penyiaran' },
-  { name: 'Hitam Arang Eksklusif', hex: '#0F172A', rgb: '15, 23, 42', usage: 'Warna tipografi dokumen rasmi & kad pelajar' },
-  { name: 'Putih Mutiara Bersih', hex: '#F8FAFC', rgb: '248, 250, 252', usage: 'Warna kanvas digital dan latar belakang poster' },
-];
-
 export function MultimediaUnitDashboard() {
-  const { t } = useTranslation(['jpp', 'common']);
+  const { t } = useTranslation(['portal', 'jpp', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [subTab, setSubTab] = useState<SubTab>('siaran');
+
+  // ── Master Brandkit Assets Data ───────────────────────────────────────
+  const brandkitLogos: InstitutionalLogo[] = useMemo(() => [
+    {
+      id: 'logo-polisas',
+      name: t('portal:logo_polisas_name', 'Logo Rasmi Politeknik Sultan Haji Ahmad Shah (POLISAS)'),
+      category: 'Institusi',
+      format: t('portal:logo_fmt_png_svg', 'PNG Telus & SVG Vektor'),
+      resolution: '4000 x 1200 px (UHD)',
+      downloadUrl: '/logo.png',
+    },
+    {
+      id: 'logo-jpp',
+      name: t('portal:logo_jpp_name', 'Logo Rasmi Jawatankuasa Perwakilan Pelajar (JPP POLISAS)'),
+      category: 'Jawatankuasa',
+      format: t('portal:logo_fmt_png_svg', 'PNG Telus & SVG Vektor'),
+      resolution: '2048 x 2048 px (HD)',
+      downloadUrl: '/jpp-logo.png',
+    },
+    {
+      id: 'logo-kpt',
+      name: t('portal:logo_kpt_name', 'Logo Kementerian Pendidikan Tinggi (KPT) Malaysia'),
+      category: 'Kementerian',
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '3000 x 900 px',
+      downloadUrl: '#',
+    },
+    {
+      id: 'logo-jka',
+      name: t('portal:logo_jka_name', 'Jabatan Kejuruteraan Awam (JKA)'),
+      category: t('portal:cat_academic_dept', 'Jabatan Akademik'),
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '1500 x 1500 px',
+      downloadUrl: '#',
+    },
+    {
+      id: 'logo-jke',
+      name: t('portal:logo_jke_name', 'Jabatan Kejuruteraan Elektrik (JKE)'),
+      category: t('portal:cat_academic_dept', 'Jabatan Akademik'),
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '1500 x 1500 px',
+      downloadUrl: '#',
+    },
+    {
+      id: 'logo-jkm',
+      name: t('portal:logo_jkm_name', 'Jabatan Kejuruteraan Mekanikal (JKM)'),
+      category: t('portal:cat_academic_dept', 'Jabatan Akademik'),
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '1500 x 1500 px',
+      downloadUrl: '#',
+    },
+    {
+      id: 'logo-jp',
+      name: t('portal:logo_jp_name', 'Jabatan Perdagangan (JP)'),
+      category: t('portal:cat_academic_dept', 'Jabatan Akademik'),
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '1500 x 1500 px',
+      downloadUrl: '#',
+    },
+    {
+      id: 'logo-jmsk',
+      name: t('portal:logo_jmsk_name', 'Jabatan Matematik, Sains & Komputer (JMSK)'),
+      category: t('portal:cat_academic_dept', 'Jabatan Akademik'),
+      format: t('portal:logo_fmt_png', 'PNG Telus'),
+      resolution: '1500 x 1500 px',
+      downloadUrl: '#',
+    },
+  ], [t]);
+
+  const brandkitColors: InstitutionalColor[] = useMemo(() => [
+    { name: t('portal:color_kuning_diraja', 'Kuning Diraja POLISAS'), hex: '#F59E0B', rgb: '245, 158, 11', usage: t('portal:color_kuning_usage', 'Warna identiti utama institusi & jata rasmi') },
+    { name: t('portal:color_biru_korporat', 'Biru Korporat Utama'), hex: '#1E3A8A', rgb: '30, 58, 138', usage: t('portal:color_biru_usage', 'Warna latar belakang dokumen rasmi & blazer') },
+    { name: t('portal:color_emerald_gemilang', 'Emerald Gemilang'), hex: '#10B981', rgb: '16, 185, 129', usage: t('portal:color_emerald_usage', 'Aksen kejayaan, pengesahan dan kelulusan') },
+    { name: t('portal:color_oren_multimedia', 'Oren Multimedia JPP'), hex: '#FB923C', rgb: '251, 146, 60', usage: t('portal:color_oren_usage', 'Warna rasmi Exco Multimedia & penyiaran') },
+    { name: t('portal:color_hitam_arang', 'Hitam Arang Eksklusif'), hex: '#0F172A', rgb: '15, 23, 42', usage: t('portal:color_hitam_usage', 'Warna tipografi dokumen rasmi & kad pelajar') },
+    { name: t('portal:color_putih_mutiara', 'Putih Mutiara Bersih'), hex: '#F8FAFC', rgb: '248, 250, 252', usage: t('portal:color_putih_usage', 'Warna kanvas digital dan latar belakang poster') },
+  ], [t]);
 
   // ── Live DB Data ────────────────────────────────────────────────────
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -136,11 +136,11 @@ export function MultimediaUnitDashboard() {
   const [announceFilter, setAnnounceFilter] = useState<'SEMUA' | 'AKTIF' | 'ARKIB'>('SEMUA');
 
   // ── WhatsApp Text Generator State ───────────────────────────────────
-  const [cwTitle, setCwTitle] = useState('Pesta Konvokesyen POLISAS Ke-25');
-  const [cwDate, setCwDate] = useState('24 - 26 Oktober 2026');
-  const [cwTime, setCwTime] = useState('8:00 Pagi - 11:00 Malam');
-  const [cwLocation, setCwLocation] = useState('Dewan Jubli Perak & Dataran Gemilang POLISAS');
-  const [cwOrganizer, setCwOrganizer] = useState('JPP POLISAS & Unit Hal Ehwal Pelajar (HEP)');
+  const [cwTitle, setCwTitle] = useState(() => t('portal:mm_cw_default_title', 'Pesta Konvokesyen POLISAS Ke-25'));
+  const [cwDate, setCwDate] = useState(() => t('portal:mm_cw_default_date', '24 - 26 Oktober 2026'));
+  const [cwTime, setCwTime] = useState(() => t('portal:mm_cw_default_time', '8:00 Pagi - 11:00 Malam'));
+  const [cwLocation, setCwLocation] = useState(() => t('portal:mm_cw_default_loc', 'Dewan Jubli Perak & Dataran Gemilang POLISAS'));
+  const [cwOrganizer, setCwOrganizer] = useState(() => t('portal:mm_cw_default_org', 'JPP POLISAS & Unit Hal Ehwal Pelajar (HEP)'));
   const [cwLink, setCwLink] = useState('https://jpppolisas.my/portal/events');
   const [copiedCw, setCopiedCw] = useState(false);
 
@@ -199,7 +199,7 @@ export function MultimediaUnitDashboard() {
 
   // WhatsApp text template engine
   const generatedWhatsAppText = useMemo(() => {
-    return `📢 *HEBAHAN RASMI JPP POLISAS*\n\n` +
+    return t('portal:mm_whatsapp_template', `📢 *HEBAHAN RASMI JPP POLISAS*\n\n` +
       `🔥 *${cwTitle.toUpperCase()}*\n\n` +
       `📅 *Tarikh:* ${cwDate}\n` +
       `⏰ *Masa:* ${cwTime}\n` +
@@ -207,8 +207,17 @@ export function MultimediaUnitDashboard() {
       `🏛️ *Anjuran:* ${cwOrganizer}\n\n` +
       `Perhatian kepada semua mahasiswa POLISAS! Anda dijemput hadir memberi sokongan dan memeriahkan program ini.\n\n` +
       `🔗 *Pautan Pendaftaran / Maklumat Lanjut:*\n${cwLink}\n\n` +
-      `_Diterbitkan oleh Exco Multimedia, Informasi & Penyiaran JPP POLISAS_`;
-  }, [cwTitle, cwDate, cwTime, cwLocation, cwOrganizer, cwLink]);
+      `_Diterbitkan oleh Exco Multimedia, Informasi & Penyiaran JPP POLISAS_`,
+      {
+        title: cwTitle.toUpperCase(),
+        date: cwDate,
+        time: cwTime,
+        location: cwLocation,
+        organizer: cwOrganizer,
+        link: cwLink,
+      }
+    );
+  }, [cwTitle, cwDate, cwTime, cwLocation, cwOrganizer, cwLink, t]);
 
   const copyWhatsApp = () => {
     navigator.clipboard.writeText(generatedWhatsAppText);
@@ -228,11 +237,11 @@ export function MultimediaUnitDashboard() {
     return {
       activeAnnouncements: activeCount,
       totalAnnouncements: announcements.length,
-      brandkitAssets: BRANDKIT_LOGOS.length,
+      brandkitAssets: brandkitLogos.length,
       activitiesCount: activities.length,
       reportsCount: reports.length,
     };
-  }, [announcements, activities, reports]);
+  }, [announcements, activities, reports, brandkitLogos]);
 
   return (
     <div className="space-y-6">
@@ -502,7 +511,7 @@ export function MultimediaUnitDashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {BRANDKIT_LOGOS.map((logo) => (
+              {brandkitLogos.map((logo) => (
                 <div
                   key={logo.id}
                   className="p-4 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.01] flex items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-all"
@@ -545,7 +554,7 @@ export function MultimediaUnitDashboard() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {BRANDKIT_COLORS.map((col) => (
+              {brandkitColors.map((col) => (
                 <button
                   key={col.hex}
                   onClick={() => copyHex(col.hex, col.name)}

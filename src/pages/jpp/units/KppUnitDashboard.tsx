@@ -8,6 +8,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
+
+const t = (key: string, fallback: string, options?: Record<string, unknown>): string => {
+  if (i18n && typeof i18n.t === 'function' && i18n.isInitialized) {
+    return i18n.t(key, fallback, options);
+  }
+  return fallback;
+};
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -88,7 +96,7 @@ const ACTIVITY_STATUS_COLOR: Record<string, string> = {
 };
 const REPORT_STATUS_COLOR: Record<string, string> = {
   Menunggu: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-  'Dalam Semakan': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+  [t('kpp:status_in_review', 'Dalam Semakan')]: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
   Diluluskan: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
   Ditolak: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
 };
@@ -131,6 +139,7 @@ function StatCard({ label, value, icon: Icon, color, sub }: { label: string; val
 
 // ── Aktiviti Popout Dialog ────────────────────────────────────────────────────
 function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const [filter, setFilter] = useState('ALL');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,16 +167,16 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
       <DialogContent className="rounded-[2.5rem] max-w-3xl border-none shadow-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col">
         <div className="p-6 text-white flex items-center justify-between shrink-0" style={{ backgroundColor: KPP_COLOR }}>
           <div>
-            <h2 className="text-lg font-black tracking-tight">Semakan Aktiviti Kelab</h2>
-            <p className="text-white/80 text-[10px] uppercase tracking-widest font-bold mt-1">Aktiviti rentas semua kelab & persatuan</p>
+            <h2 className="text-lg font-black tracking-tight">{t('kpp:review_club_activities_title', 'Semakan Aktiviti Kelab')}</h2>
+            <p className="text-white/80 text-[10px] uppercase tracking-widest font-bold mt-1">{t('kpp:cross_club_activities_desc', 'Aktiviti rentas semua kelab & persatuan')}</p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="h-9 rounded-xl bg-white/20 border-white/20 text-white text-xs font-bold w-40">
-                <SelectValue placeholder="Tapis Kelab" />
+                <SelectValue placeholder={t('kpp:filter_club_placeholder', 'Tapis Kelab')} />
               </SelectTrigger>
               <SelectContent className="rounded-xl max-h-60">
-                <SelectItem value="ALL" className="font-bold">Semua Kelab</SelectItem>
+                <SelectItem value="ALL" className="font-bold">{t('kpp:all_clubs_option', 'Semua Kelab')}</SelectItem>
                 {ALL_CLUBS.map(c => (
                   <SelectItem key={c.id} value={c.id} className="font-medium">{c.shortName}</SelectItem>
                 ))}
@@ -184,7 +193,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
               <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
             </div>
           ) : data.length === 0 ? (
-            <p className="text-center py-16 text-muted-foreground text-sm">Tiada aktiviti ditemui.</p>
+            <p className="text-center py-16 text-muted-foreground text-sm">{t('kpp:no_activities_found', 'Tiada aktiviti ditemui.')}</p>
           ) : (
             data.map(a => {
               const club = ALL_CLUBS.find(c => c.id === a.club_id);
@@ -193,7 +202,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#6366f1' }} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground truncate">{a.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : 'Tiada tarikh'}</p>
+                    <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : t('kpp:no_date', 'Tiada tarikh')}</p>
                   </div>
                   <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
                 </div>
@@ -208,7 +217,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function KppUnitDashboard() {
-  const { t } = useTranslation(['jpp', 'common']);
+  const { t } = useTranslation(['kpp', 'jpp', 'common']);
   const { isSuperAdmin, profile, refreshClubs } = useAuth();
   const navigate = useNavigate();
 
@@ -364,7 +373,7 @@ export function KppUnitDashboard() {
       const { error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key);
       if (error) throw error;
       setSettings(s => ({ ...s, [key]: newValue }));
-      toast.success('Berjaya dilaras.', { id: toastId });
+      toast.success(t('kpp:setting_adjusted_success', 'Berjaya dilaras.'), { id: toastId });
     } catch (e: any) {
       toast.error(e.message, { id: toastId });
     }
@@ -380,21 +389,21 @@ export function KppUnitDashboard() {
       if (error) throw error;
       if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'max_clubs_per_student', value: newLimit });
       setSettings(s => ({ ...s, max_clubs_per_student: newLimit }));
-      toast.success(`Had keahlian: ${newLimit} kelab`, { id: toastId });
+      toast.success(t('kpp:membership_limit_toast', `Had keahlian: ${newLimit} kelab`, { count: newLimit }), { id: toastId });
     } catch (e: any) {
-      toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+      toast.error(e.message || t('kpp:failed_to_update_limit', 'Gagal kemaskini had'), { id: toastId });
     }
   };
 
   const handleCreateClub = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClubName.trim() || !newClubShortName.trim()) {
-      toast.error('Sila isi nama kelab dan singkatan.');
+      toast.error(t('kpp:fill_club_name_and_short', 'Sila isi nama kelab dan singkatan.'));
       return;
     }
 
     setAddingClub(true);
-    const toastId = toast.loading('Mendaftar kelab...');
+    const toastId = toast.loading(t('kpp:registering_club_toast', 'Mendaftar kelab...'));
     try {
       const { error } = await supabase.from('clubs').insert({
         name: newClubName.trim(),
@@ -407,7 +416,7 @@ export function KppUnitDashboard() {
 
       if (error) throw error;
 
-      toast.success('Kelab baharu berjaya didaftarkan!', { id: toastId });
+      toast.success(t('kpp:new_club_registered_success', 'Kelab baharu berjaya didaftarkan!'), { id: toastId });
       setNewClubName('');
       setNewClubShortName('');
       setNewClubCategory('Akademik');
@@ -419,7 +428,7 @@ export function KppUnitDashboard() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Gagal mendaftar kelab.', { id: toastId });
+      toast.error(err.message || t('kpp:failed_to_register_club', 'Gagal mendaftar kelab.'), { id: toastId });
     } finally {
       setAddingClub(false);
     }
@@ -430,7 +439,7 @@ export function KppUnitDashboard() {
       if (status === 'REJECTED') {
         await supabase.from('club_logs').insert({
           club_id: clubId, action_type: 'MEMBER_REJECTED', actor_id: profile?.id, actor_name: profile?.full_name,
-          description: `Permohonan ditolak oleh unit KPP`, metadata: { target_user_id: userId }
+          description: t('kpp:application_rejected_by_kpp_desc', 'Permohonan ditolak oleh unit KPP'), metadata: { target_user_id: userId }
         });
         await supabase.from('student_club_memberships').delete().eq('user_id', userId).eq('club_id', clubId);
         await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
@@ -445,9 +454,9 @@ export function KppUnitDashboard() {
         }
       }
 
-      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab tersebut';
-      const notifTitle = status === 'APPROVED' ? 'Permohonan Diluluskan' : 'Permohonan Ditolak';
-      const notifMsg = status === 'APPROVED' ? `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.` : `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.`;
+      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || t('kpp:that_club_fallback', 'Kelab tersebut');
+      const notifTitle = status === 'APPROVED' ? t('kpp:application_approved_title', 'Permohonan Diluluskan') : t('kpp:application_rejected_title', 'Permohonan Ditolak');
+      const notifMsg = status === 'APPROVED' ? t('kpp:membership_approved_msg', `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.`, { club: clubName }) : t('kpp:membership_rejected_msg', `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.`, { club: clubName });
       try {
         await sendNotificationToUser(userId, {
           title: notifTitle,
@@ -458,11 +467,11 @@ export function KppUnitDashboard() {
         });
       } catch {}
 
-      toast.success(status === 'APPROVED' ? 'Permohonan diluluskan!' : 'Permohonan ditolak.');
+      toast.success(status === 'APPROVED' ? t('kpp:application_approved_toast', 'Permohonan diluluskan!') : t('kpp:application_rejected_toast', 'Permohonan ditolak.'));
       fetchRingkasanData();
     } catch (e) {
       console.error(e);
-      toast.error('Operasi gagal.');
+      toast.error(t('common:operation_failed', 'Operasi gagal.'));
     }
   };
 
@@ -529,7 +538,7 @@ export function KppUnitDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Dashboard', path: '/karnival/admin', icon: BarChart3 },
-                { label: 'Edisi & Kategori', path: '/karnival/admin/edition', icon: Trophy },
+                { label: t('kpp:carnival_edition_category', 'Edisi & Kategori'), path: '/karnival/admin/edition', icon: Trophy },
                 { label: 'Booth & QR', path: '/karnival/admin/booths', icon: QrCode },
                 { label: 'Scoreboard LCD', path: '/karnival/scoreboard', icon: Building2 },
               ].map(link => (
@@ -653,7 +662,7 @@ export function KppUnitDashboard() {
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#6366f1' }} />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{a.title}</p>
-                            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : 'Tiada tarikh'}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : t('kpp:no_date', 'Tiada tarikh')}</p>
                           </div>
                           <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
                         </div>
@@ -871,13 +880,13 @@ export function KppUnitDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nama Penuh Kelab */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nama Penuh Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">{t('kpp:club_full_name_label', 'Nama Penuh Kelab')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={newClubName}
                                     onChange={(e) => setNewClubName(e.target.value)}
-                                    placeholder="Cth: Kelab Sukan Elektronik POLISAS"
+                                    placeholder={t('kpp:club_name_placeholder', 'Cth: Kelab Sukan Elektronik POLISAS')}
                                     className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all"
                                 />
                             </div>
@@ -897,13 +906,13 @@ export function KppUnitDashboard() {
 
                             {/* Kategori */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Kategori Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">{t('kpp:club_category_label', 'Kategori Kelab')}</label>
                                 <Select
                                     value={newClubCategory}
                                     onValueChange={(val: any) => setNewClubCategory(val)}
                                 >
                                     <SelectTrigger className="h-11 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all">
-                                        <SelectValue placeholder="Pilih Kategori" />
+                                        <SelectValue placeholder={t('kpp:select_category_placeholder', 'Pilih Kategori')} />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
                                         <SelectItem value="Sukan" className="font-semibold">Sukan</SelectItem>
@@ -916,7 +925,7 @@ export function KppUnitDashboard() {
 
                             {/* Warna Tema */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Warna Tema Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">{t('kpp:theme_color_label', 'Warna Tema Kelab')}</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="color"
@@ -940,7 +949,7 @@ export function KppUnitDashboard() {
                                 <textarea
                                     value={newClubDesc}
                                     onChange={(e) => setNewClubDesc(e.target.value)}
-                                    placeholder="Terangkan serba sedikit tentang fokus atau fungsi kelab ini..."
+                                    placeholder={t('kpp:club_desc_placeholder', 'Terangkan serba sedikit tentang fokus atau fungsi kelab ini...')}
                                     className="w-full min-h-[80px] p-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all resize-y"
                                 />
                             </div>
@@ -955,10 +964,10 @@ export function KppUnitDashboard() {
                                 {addingClub ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Mendaftar...
+                                        {t('kpp:registering', 'Mendaftar...')}
                                     </>
                                 ) : (
-                                    'Daftar Kelab'
+                                    t('kpp:register_club_btn', 'Daftar Kelab')
                                 )}
                             </Button>
                         </div>

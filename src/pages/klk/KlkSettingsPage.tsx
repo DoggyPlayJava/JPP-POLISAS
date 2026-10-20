@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Settings, MapPin, Upload, Wifi, Eye, EyeOff,
-  Trash2, Edit3, Plus, Check, X, ArrowLeft,
+  Trash2, Edit3, Plus, Check, CheckCircle, X, ArrowLeft,
   AlertTriangle, RefreshCw, Download, Send, Merge, ChevronRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -48,13 +48,18 @@ interface FormField {
   sort_order: number;
 }
 
-const FIELD_TYPE_LABELS: Record<string, string> = {
-  text: 'Teks Pendek', number: 'Nombor', select: 'Senarai Pilihan',
-  radio: 'Pilihan Tunggal', textarea: 'Teks Panjang', checkbox: 'Kotak Pilihan',
-};
+const getFieldTypeLabels = (t: any): Record<string, string> => ({
+  text: t('housing:field_type_text', 'Teks Pendek'),
+  number: t('housing:field_type_number', 'Nombor'),
+  select: t('housing:field_type_select', 'Senarai Pilihan'),
+  radio: t('housing:field_type_radio', 'Pilihan Tunggal'),
+  textarea: t('housing:field_type_textarea', 'Teks Panjang'),
+  checkbox: t('housing:field_type_checkbox', 'Kotak Pilihan'),
+});
 
 export function KlkSettingsPage() {
   const { t } = useTranslation(['housing', 'common']);
+  const fieldTypeLabels = getFieldTypeLabels(t);
   const { profile, isSuperAdmin } = useAuth();
   const [kawasanList, setKawasanList] = useState<Kawasan[]>([]);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
@@ -142,7 +147,7 @@ export function KlkSettingsPage() {
     setCsvUploading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Sila log masuk semula.');
+      if (!session) throw new Error(t('housing:please_relogin', 'Sila log masuk semula.'));
       const formData = new FormData();
       formData.append('csv', file);
       const res = await fetch('/api/klk-csv-import', {
@@ -151,7 +156,7 @@ export function KlkSettingsPage() {
         body: formData,
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Import gagal.');
+      if (!res.ok) throw new Error(json.error ?? t('housing:import_failed', 'Import gagal.'));
       toast.success(t('housing:import_csv_success', 'Import berjaya! {{inserted}} rekod ditambah, {{failed}} gagal.', { inserted: json.inserted, failed: json.failed }));
       fetchSettings();
     } catch (e: any) {
@@ -199,10 +204,12 @@ export function KlkSettingsPage() {
     const preview = mergePreviewCount ?? 0;
     const srcLabel = mergeSources.join(', ');
     if (!window.confirm(
-      `Merge ${mergeSources.length} kawasan (${srcLabel}) → "${mergeTarget}"?\n\n` +
-      `${preview} rekod pelajar akan dikemas kini.\n` +
-      `Kawasan sumber akan dinyahaktifkan (tidak dipadam).\n\n` +
-      `Tindakan ini TIDAK boleh dibatalkan.`
+      t('housing:merge_confirm_dialog', 'Gabung {{count}} kawasan ({{sources}}) → "{{target}}"?\n\n{{preview}} rekod pelajar akan dikemas kini.\nKawasan sumber akan dinyahaktifkan (tidak dipadam).\n\nTindakan ini TIDAK boleh dibatalkan.', {
+        count: mergeSources.length,
+        sources: srcLabel,
+        target: mergeTarget,
+        preview
+      })
     )) return;
 
     setMerging(true);
@@ -578,10 +585,17 @@ export function KlkSettingsPage() {
                 {mergeSources.length > 0 && mergePreviewCount !== null && (
                   <div className="rounded-xl bg-white/5 border border-white/[0.06] px-4 py-3">
                     <p className="text-xs text-slate-300">
-                      <span className="font-black text-white">{mergePreviewCount}</span> rekod pelajar
+                      <span className="font-black text-white">{mergePreviewCount}</span>{' '}
+                      {t('housing:student_records_label', 'rekod pelajar')}{' '}
                       {mergeTarget ? (
-                        <> akan dipindah ke <span className="font-black text-blue-300">{mergeTarget}</span></>
-                      ) : ' akan terjejas'}.
+                        <>
+                          {t('housing:will_be_moved_to', 'akan dipindah ke')}{' '}
+                          <span className="font-black text-blue-300">{mergeTarget}</span>
+                        </>
+                      ) : (
+                        t('housing:will_be_affected', 'akan terjejas')
+                      )}
+                      .
                     </p>
                     <p className="text-[10px] text-slate-600 mt-0.5">
                       {t('housing:merge_history_note', 'Rekod semua semester termasuk histori akan dikemas kini.')}
@@ -626,14 +640,22 @@ export function KlkSettingsPage() {
                 <h2 className={`font-black text-sm ${
                   lainLainList.length > 0 ? 'text-amber-300' : 'text-slate-400'
                 }`}>
-                  {lainLainList.length > 0
-                    ? `⚠️ ${lainLainList.length} Kawasan Tidak Dikenali`
-                    : '✅ Semua Kawasan Dikenali'}
+                  {lainLainList.length > 0 ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 inline mr-1.5" />
+                      {t('housing:unrecognized_areas_count', '{{count}} Kawasan Tidak Dikenali', { count: lainLainList.length })}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 inline mr-1.5" />
+                      {t('housing:all_areas_recognized', 'Semua Kawasan Dikenali')}
+                    </>
+                  )}
                 </h2>
                 <p className="text-[10px] text-slate-500 mt-0.5">
                   {lainLainList.length > 0
-                    ? 'Pelajar memilih "Lain-lain" — migrate ke kawasan rasmi supaya muncul dalam peta.'
-                    : 'Tiada entri "Lain-lain" yang perlu di-migrate buat masa ini.'}
+                    ? t('housing:migrate_others_desc', 'Pelajar memilih "Lain-lain" — migrate ke kawasan rasmi supaya muncul dalam peta.')
+                    : t('housing:no_others_to_migrate', 'Tiada entri "Lain-lain" yang perlu di-migrate buat masa ini.')}
                 </p>
               </div>
               <button onClick={async () => {
@@ -658,11 +680,11 @@ export function KlkSettingsPage() {
                       onChange={e => setMigrateTarget(prev => ({ ...prev, [item.kawasan_custom]: e.target.value }))}
                       className="h-8 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs flex-shrink-0 min-w-[160px]"
                     >
-                      <option value="">-- Pilih kawasan rasmi --</option>
+                      <option value="">{t('housing:select_official_area_placeholder', '-- Pilih kawasan rasmi --')}</option>
                       {kawasanList.filter(k => k.is_active).map(k => (
                         <option key={k.id} value={k.name}>{k.name}</option>
                       ))}
-                      <option value="__KEEP__">Simpan sebagai baharu</option>
+                      <option value="__KEEP__">{t('housing:save_as_new_area', 'Simpan sebagai baharu')}</option>
                     </select>
                     <button
                       disabled={!migrateTarget[item.kawasan_custom] || migrating === item.kawasan_custom}
@@ -682,7 +704,7 @@ export function KlkSettingsPage() {
                               .insert({ name: newName })
                               .select();
                             if (insErr && insErr.code !== '23505') {
-                              throw new Error('Gagal tambah kawasan: ' + insErr.message);
+                              throw new Error(t('housing:add_area_failed_with_msg', 'Gagal tambah kawasan: {{msg}}', { msg: insErr.message }));
                             }
                             // Step 2: Migrate rekod pelajar ke kawasan baru
                             const { data: migData, error: migErr } = await supabase.rpc('migrate_klk_lain_lain', {
@@ -690,13 +712,13 @@ export function KlkSettingsPage() {
                               p_target_kawasan: newName,
                             });
                             if (migErr || !migData?.success) throw new Error(migData?.error ?? migErr?.message);
-                            toast.success(`Kawasan "${newName}" ditambah & ${migData.updated} rekod dipindah. Sila isi koordinat.`);
+                            toast.success(t('housing:new_area_added_and_migrated', 'Kawasan "{{name}}" ditambah & {{count}} rekod dipindah. Sila isi koordinat.', { name: newName, count: migData.updated }));
                             // Buang dari list
                             setLainLainList(prev => prev.filter(x => x.kawasan_custom !== item.kawasan_custom));
                             setMigrateTarget(prev => { const n = { ...prev }; delete n[item.kawasan_custom]; return n; });
                             fetchSettings(); // refresh kawasan list untuk paparan koordinat
                           } catch (e: any) {
-                            toast.error(e.message ?? 'Gagal simpan kawasan baharu.');
+                            toast.error(e.message ?? t('housing:save_new_area_failed', 'Gagal simpan kawasan baharu.'));
                           } finally { setMigrating(null); }
                           return;
                         }
@@ -711,7 +733,7 @@ export function KlkSettingsPage() {
                           setLainLainList(prev => prev.filter(x => x.kawasan_custom !== item.kawasan_custom));
                           setMigrateTarget(prev => { const n = { ...prev }; delete n[item.kawasan_custom]; return n; });
                         } catch (e: any) {
-                          toast.error(e.message ?? 'Gagal migrate.');
+                          toast.error(e.message ?? t('housing:migrate_failed', 'Gagal migrate.'));
                         } finally { setMigrating(null); }
                       }}
                       className="h-8 px-3 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-300 text-[10px] font-black hover:bg-blue-500/25 transition-colors disabled:opacity-40 flex-shrink-0"
@@ -724,19 +746,19 @@ export function KlkSettingsPage() {
             ) : (
               <div className="px-5 py-6 text-center">
                 <p className="text-[11px] text-slate-600">
-                  Apabila pelajar memasukkan kawasan yang tidak tersenarai, ia akan muncul di sini untuk Exco semak dan migrate.
+                  {t('housing:unlisted_area_help_note', 'Apabila pelajar memasukkan kawasan yang tidak tersenarai, ia akan muncul di sini untuk Exco semak dan migrate.')}
                 </p>
               </div>
             )}
           </div>
           <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Cara Dapatkan Koordinat</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{t('housing:how_to_get_coordinates', 'Cara Dapatkan Koordinat')}</p>
             <ol className="space-y-1 text-[11px] text-slate-400">
-              <li>1. Buka <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google Maps</a></li>
-              <li>2. Cari kawasan berkenaan</li>
-              <li>3. Klik kanan pada lokasi tepat → "Apakah yang ada di sini?"</li>
-              <li>4. Koordinat muncul di bawah (contoh: 3.8172, 103.3414)</li>
-              <li>5. Nombor pertama = Latitud, nombor kedua = Longitud</li>
+              <li>{t('housing:coords_step_1', '1. Buka')} <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google Maps</a></li>
+              <li>{t('housing:coords_step_2', '2. Cari kawasan berkenaan')}</li>
+              <li>{t('housing:coords_step_3', '3. Klik kanan pada lokasi tepat → "Apakah yang ada di sini?"')}</li>
+              <li>{t('housing:coords_step_4', '4. Koordinat muncul di bawah (contoh: 3.8172, 103.3414)')}</li>
+              <li>{t('housing:coords_step_5', '5. Nombor pertama = Latitud, nombor kedua = Longitud')}</li>
             </ol>
           </div>
         </motion.div>
@@ -840,7 +862,7 @@ export function KlkSettingsPage() {
                   <select value={newField.field_type}
                     onChange={e => setNewField(p => ({ ...p, field_type: e.target.value as any }))}
                     className="h-9 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs">
-                    {Object.entries(FIELD_TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    {Object.entries(fieldTypeLabels).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                   <select value={newField.applies_to}
                     onChange={e => setNewField(p => ({ ...p, applies_to: e.target.value as any }))}
@@ -920,10 +942,10 @@ export function KlkSettingsPage() {
                           <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">{t('housing:required_badge', 'WAJIB')}</span>
                         )}
                         <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400">
-                          {FIELD_TYPE_LABELS[f.field_type]}
+                          {fieldTypeLabels[f.field_type]}
                         </span>
                         <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-500/15 text-slate-400">
-                          {f.applies_to === 'LUAR' ? 'Luar Kampus' : f.applies_to === 'KAMSIS' ? 'KAMSIS' : 'Semua'}
+                          {f.applies_to === 'LUAR' ? t('housing:off_campus', 'Luar Kampus') : f.applies_to === 'KAMSIS' ? 'KAMSIS' : t('housing:all', 'Semua')}
                         </span>
                       </div>
                       {f.options && f.options.length > 0 && (
@@ -1029,11 +1051,11 @@ export function KlkSettingsPage() {
             <h3 className="font-black text-sm text-slate-200 mb-4">{t('housing:apps_script_guide_title', 'Panduan Setup Google Apps Script')}</h3>
             <ol className="space-y-3 text-xs text-slate-400">
               {[
-                'Buka Google Form anda → Klik ikon titik tiga (...) → "Skrip"',
-                'Tampal kod Apps Script di bawah ke dalam editor',
-                'Tukar <secret> dengan nilai KLK_WEBHOOK_SECRET',
-                'Simpan → Pergi ke "Pencetus" → Tambah pencetus "onFormSubmit"',
-                'Uji dengan hantar satu submission test form',
+                t('housing:apps_script_step_1', 'Buka Google Form anda → Klik ikon titik tiga (...) → "Skrip"'),
+                t('housing:apps_script_step_2', 'Tampal kod Apps Script di bawah ke dalam editor'),
+                t('housing:apps_script_step_3', 'Tukar <secret> dengan nilai KLK_WEBHOOK_SECRET'),
+                t('housing:apps_script_step_4', 'Simpan → Pergi ke "Pencetus" → Tambah pencetus "onFormSubmit"'),
+                t('housing:apps_script_step_5', 'Uji dengan hantar satu submission test form'),
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-lg bg-blue-500/15 text-blue-400 font-black text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
@@ -1098,8 +1120,8 @@ export function KlkSettingsPage() {
               <div className="rounded-xl p-4 bg-amber-500/5 border border-amber-500/15">
                 <p className="text-[11px] font-black text-amber-300 mb-2">{t('housing:csv_format_accepted', 'Format CSV Yang Diterima')}</p>
                 <p className="text-[10px] text-amber-400/70">
-                  Header bersifat case-insensitive. Kolum yang dikenali: <em>Nama Pelajar, No Matriks, No Telefon, Jabatan, Alamat Kediaman, Kawasan Kediaman, Cadangan/Penambahbaikan</em>.
-                  Kolum lain akan disimpan dalam <code className="font-mono">extra_data</code> JSON.
+                  {t('housing:csv_recognized_columns_note', 'Header bersifat case-insensitive. Kolum yang dikenali: Nama Pelajar, No Matriks, No Telefon, Jabatan, Alamat Kediaman, Kawasan Kediaman, Cadangan/Penambahbaikan.')}{' '}
+                  {t('housing:csv_other_columns_note', 'Kolum lain akan disimpan dalam')} <code className="font-mono">extra_data</code> JSON.
                 </p>
               </div>
 

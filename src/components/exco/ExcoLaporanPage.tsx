@@ -27,6 +27,7 @@ import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
 import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
 import { useJppConfig } from '@/contexts/JppConfigContext';
+import { useTranslation } from 'react-i18next';
 
 // ─── PROPS ───────────────────────────────────────────────────────────────────
 interface Props {
@@ -37,6 +38,7 @@ interface Props {
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
+  const { t } = useTranslation(['portal', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const { positionLabels } = useJppConfig();
 
@@ -151,7 +153,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
         if (profileData) {
           const roleLabel = positionLabels[profileData.jpp_position as string]
             || profileData.jpp_position
-            || 'Majlis Tertinggi';
+            || t('portal:role_mt', 'Majlis Tertinggi');
           setMtReviewer({ name: profileData.full_name || '—', role: roleLabel });
           return;
         }
@@ -169,7 +171,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
       if (data) {
         const roleLabel = positionLabels[data.jpp_position as string]
           || data.jpp_position
-          || 'Majlis Tertinggi';
+          || t('portal:role_mt', 'Majlis Tertinggi');
         setMtReviewer({ name: data.full_name || '—', role: roleLabel });
       }
     };
@@ -213,7 +215,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
     try {
       const data = await fetchReportData();
       if (data.length === 0) {
-        toast.error(gabungMode ? 'Tiada aktiviti selesai dalam tempoh ini.' : 'Tiada aktiviti selesai pada bulan ini.');
+        toast.error(gabungMode ? t('portal:no_completed_activities_in_period', 'Tiada aktiviti selesai dalam tempoh ini.') : t('portal:no_completed_activities_in_month', 'Tiada aktiviti selesai pada bulan ini.'));
         return;
       }
       setPreviewData(data);
@@ -244,9 +246,9 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
           submitterName={profile?.full_name || undefined}
           submitterRole={submitterRoleLabel}
           submitterUnit={excoLabel}
-          presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
-          reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
-          reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
+          presidenName={mtReviewer?.name || t('portal:no_mt_assigned_paren', '( Tiada MT Ditetapkan )')}
+          reviewerRole={mtReviewer?.role || t('portal:mt_upper', 'MAJLIS TERTINGGI')}
+          reviewerUnit={t('portal:jpp_full_upper', 'JAWATANKUASA PERWAKILAN PELAJAR')}
           clubLogoUrl={jppLogoBase64}
           isExco={true}
         />
@@ -256,27 +258,27 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
       const blob = await pdf(doc).toBlob();
       setProgress(70);
 
-      const fileName = `Auto_Laporan_${excoUnit}_${targetMonth}_${Date.now()}`;
+      const fileName = t('portal:auto_laporan_file_prefix', 'Auto_Laporan_{{unit}}_{{month}}_{{ts}}', { unit: excoUnit, month: targetMonth, ts: Date.now() });
       const pdfFile  = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
-      const url      = await uploadPdfToDrive(pdfFile, `exco_${excoUnit.toLowerCase()}` as any, fileName);
+      const url      = await uploadPdfToDrive(pdfFile, t('portal:exco_upload_category', 'exco_{{unit}}', { unit: excoUnit.toLowerCase() }) as any, fileName);
       setProgress(90);
 
       const { error: dbError } = await supabase.from('club_reports').insert({
         exco_unit:    excoUnit,
         club_id:      null,
         submitted_by: user.id,
-        report_type:  'Laporan Aktiviti',
+        report_type:  t('portal:activity_report_label', 'Laporan Aktiviti'),
         file_url:     url,
-        file_name:    `Laporan Bulanan ${excoLabel} - ${dateRangeLabel || monthLabel}.pdf`,
+        file_name:    t('portal:monthly_report_filename', `Laporan Bulanan ${excoLabel} - ${dateRangeLabel || monthLabel}.pdf`, { label: excoLabel, period: dateRangeLabel || monthLabel }),
         status:       'Menunggu',
         is_archived:  false,
       });
       if (dbError) throw dbError;
 
-      toast.success('Laporan berjaya dijana dan dihantar!');
+      toast.success(t('portal:report_generated_submitted_success', 'Laporan berjaya dijana dan dihantar!'));
       loadReports();
     } catch (err: any) {
-      toast.error('Ralat: ' + err.message);
+      toast.error(t('portal:error_prefix', 'Ralat:') + ' ' + err.message);
     } finally {
       setSubmitting(false);
       setProgress(0);
@@ -285,8 +287,8 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
 
   // ── Manual upload ─────────────────────────────────────────────────────────
   const validateFile = (f: File) => {
-    if (f.type !== 'application/pdf') { toast.error('Hanya fail PDF dibenarkan.'); return false; }
-    if (f.size > 25 * 1024 * 1024) { toast.error('Fail terlalu besar. Had: 25MB'); return false; }
+    if (f.type !== 'application/pdf') { toast.error(t('portal:only_pdf_allowed', 'Hanya fail PDF dibenarkan.')); return false; }
+    if (f.size > 25 * 1024 * 1024) { toast.error(t('portal:file_too_large_25mb', 'Fail terlalu besar. Had: 25MB')); return false; }
     return true;
   };
 
@@ -296,22 +298,22 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
     setSubmitting(true); setProgress(20);
     try {
       const ts         = Date.now();
-      const customName = `${excoUnit}_LaporanManual_${ts}`;
+      const customName = t('portal:exco_custom_name_tmpl', '{{unit}}_LaporanManual_{{ts}}', { unit: excoUnit, ts });
       setProgress(50);
-      const url = await uploadPdfToDrive(file, `exco_${excoUnit.toLowerCase()}` as any, customName);
+      const url = await uploadPdfToDrive(file, t('portal:exco_drive_category', 'exco_{{unit}}', { unit: excoUnit.toLowerCase() }) as any, customName);
       setProgress(80);
       const { error } = await supabase.from('club_reports').insert({
         exco_unit:    excoUnit,
         club_id:      null,
         submitted_by: user.id,
-        report_type:  'Laporan Aktiviti',
+        report_type:  t('portal:activity_report_label', 'Laporan Aktiviti'),
         file_url:     url,
         file_name:    file.name,
         status:       'Menunggu',
         is_archived:  false,
       });
       if (error) throw error;
-      toast.success('Laporan dihantar!');
+      toast.success(t('portal:report_submitted_success', 'Laporan dihantar!'));
       setFile(null);
       loadReports();
     } catch (err: any) {
@@ -341,10 +343,10 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
               {excoUnit}
             </span>
             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-200/80 text-slate-700 dark:bg-white/5 dark:text-white/40">
-              Laporan Exco
+              {t('portal:exco_report_badge', 'Laporan Exco')}
             </span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">Laporan</h1>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">{t('portal:report_heading', 'Laporan')}</h1>
           <p className="text-sm text-slate-600 dark:text-white/40 mt-1 font-medium">{excoLabel}</p>
         </motion.div>
 
@@ -352,16 +354,16 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
           {/* Left: Form submit */}
           <div className="lg:col-span-2">
             <div className="rounded-[2rem] p-6 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-sm space-y-6">
-              <h2 className="font-black text-sm uppercase tracking-widest text-slate-700 dark:text-white/60">Hantar Laporan</h2>
+              <h2 className="font-black text-sm uppercase tracking-widest text-slate-700 dark:text-white/60">{t('portal:submit_report_title', 'Hantar Laporan')}</h2>
 
               {!canSubmit ? (
                 <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
                   <div className="w-14 h-14 rounded-[1.5rem] bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center">
                     <Lock className="w-6 h-6 text-slate-400 dark:text-white/15" />
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/20">Akses Terhad</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/20">{t('portal:access_restricted', 'Akses Terhad')}</p>
                   <p className="text-xs text-slate-400 dark:text-white/15 font-medium max-w-[200px] leading-relaxed">
-                    Hanya Ketua Exco atau MT yang mengesahkan boleh menghantar laporan.
+                    {t('portal:exco_report_restricted_desc', 'Hanya Ketua Exco atau MT yang mengesahkan boleh menghantar laporan.')}
                   </p>
                 </div>
               ) : (
@@ -371,7 +373,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                     <div className="flex items-center gap-2">
                       <Zap className="w-3.5 h-3.5" style={{ color: themeColor }} />
                       <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: themeColor }}>
-                        Jana AutoPDF
+                        {t('portal:generate_autopdf', 'Jana AutoPDF')}
                       </p>
                     </div>
 
@@ -379,22 +381,22 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                       <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
                         <Lock className="w-8 h-8 text-rose-500/60 dark:text-rose-400/50 mx-auto mb-2" />
                         <p className="text-xs font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 leading-tight">
-                          Janaan PDF Ditutup Sementara
+                          {t('portal:pdf_generation_temporarily_closed', 'Janaan PDF Ditutup Sementara')}
                         </p>
                         <p className="text-[10px] text-rose-600/70 dark:text-rose-400/60 mt-1.5 font-medium leading-relaxed">
-                          MT telah menutup fungsi ini buat masa ini.
+                          {t('portal:mt_closed_feature_desc', 'MT telah menutup fungsi ini buat masa ini.')}
                         </p>
                       </div>
                     ) : (
                       <form onSubmit={handleAutoGenerateTransition} className="space-y-3">
                         <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] text-[11px] text-slate-500 dark:text-white/30 font-medium">
-                          Sistem akan menarik aktiviti 'Selesai' untuk bulan dipilih dan menjana PDF secara automatik.
+                          {t('portal:auto_pdf_system_pull_desc', "Sistem akan menarik aktiviti 'Selesai' untuk bulan dipilih dan menjana PDF secara automatik.")}
                         </div>
                         <div className="flex items-center gap-1.5 mb-1">
                           <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-white/30 font-medium cursor-pointer select-none">
                             <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
                               className="accent-violet-500 w-3.5 h-3.5" />
-                            Gabung bulan
+                            {t('portal:combine_months', 'Gabung bulan')}
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
@@ -419,7 +421,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                           className="w-full h-12 font-black text-[10px] uppercase tracking-widest text-white rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-md"
                           style={{ background: themeColor }}
                         >
-                          {submitting ? 'Memuatkan...' : 'Pratonton & Jana'}
+                          {submitting ? t('common:loading', 'Memuatkan...') : t('portal:preview_and_generate', 'Pratonton & Jana')}
                         </Button>
                       </form>
                     )}
@@ -427,13 +429,13 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
 
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
-                    <span className="text-[10px] font-black uppercase text-slate-400 dark:text-white/20">atau</span>
+                    <span className="text-[10px] font-black uppercase text-slate-400 dark:text-white/20">{t('common:or', 'atau')}</span>
                     <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
                   </div>
 
                   {/* Manual upload */}
                   <form onSubmit={handleManualSubmit} className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Muat Naik Manual (PDF)</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('portal:manual_upload_pdf', 'Muat Naik Manual (PDF)')}</p>
                     <div
                       onClick={() => fileRef.current?.click()}
                       onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -451,7 +453,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                       <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
                       {file
                         ? <p className="font-bold text-xs truncate" style={{ color: themeColor }}>{file.name}</p>
-                        : <p className="text-xs font-medium text-slate-400 dark:text-white/25">Klik atau seret PDF di sini</p>
+                        : <p className="text-xs font-medium text-slate-400 dark:text-white/25">{t('portal:click_drag_pdf_here', 'Klik atau seret PDF di sini')}</p>
                       }
                     </div>
                     <Button
@@ -460,7 +462,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                       variant="outline"
                       className="w-full h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.1] hover:border-slate-300 dark:hover:border-white/30 hover:text-slate-900 dark:hover:text-white"
                     >
-                      {submitting ? 'Memuat Naik...' : 'Hantar Laporan Manual'}
+                      {submitting ? t('portal:uploading_status', 'Memuat Naik...') : t('portal:submit_manual_report_btn', 'Hantar Laporan Manual')}
                     </Button>
                   </form>
 
@@ -473,12 +475,12 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
           {/* Right: Reports list */}
           <div className="lg:col-span-3 space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-black uppercase tracking-widest text-slate-700 dark:text-white/60">Rekod Laporan</h2>
+              <h2 className="text-base font-black uppercase tracking-widest text-slate-700 dark:text-white/60">{t('portal:report_records_title', 'Rekod Laporan')}</h2>
               <button
                 onClick={loadReports}
                 className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 dark:text-white/30 dark:hover:text-white/60 flex items-center gap-1.5 transition-all"
               >
-                <RefreshCw className="w-3 h-3" /> Segarkan
+                <RefreshCw className="w-3 h-3" /> {t('common:refresh', 'Segarkan')}
               </button>
             </div>
 
@@ -494,7 +496,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                   )}
                   style={filterTab === tab ? { background: themeColor } : {}}
                 >
-                  {tab === 'aktif' ? 'Semasa' : 'Arkib'}
+                  {tab === 'aktif' ? t('common:current', 'Semasa') : t('common:archive', 'Arkib')}
                 </button>
               ))}
             </div>
@@ -509,7 +511,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
               <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-slate-200 dark:border-white/[0.05] rounded-[2rem] gap-3">
                 <FileText className="w-8 h-8 text-slate-300 dark:text-white/10" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-                  Tiada Rekod Di {filterTab === 'aktif' ? 'Semasa' : 'Arkib'}
+                  {t('portal:no_records_in_tab', 'Tiada Rekod Di')} {filterTab === 'aktif' ? t('common:current', 'Semasa') : t('common:archive', 'Arkib')}
                 </p>
               </div>
             ) : (
@@ -544,7 +546,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                           </p>
                           {r.status === 'Ditolak' && r.admin_feedback && !r.is_archived && (
                             <div className="mt-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5">Nota Penolakan MT</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5">{t('portal:mt_rejection_notes', 'Nota Penolakan MT')}</p>
                               <p className="text-xs text-rose-700/80 dark:text-rose-300/70 italic font-medium">{r.admin_feedback}</p>
                             </div>
                           )}
@@ -555,7 +557,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                             className="text-[10px] font-bold uppercase tracking-widest underline underline-offset-2 mt-2 inline-block hover:opacity-80 transition-opacity"
                             style={{ color: themeColor }}
                           >
-                            Lihat Fail
+                            {t('portal:view_file_link', 'Lihat Fail')}
                           </a>
                         </div>
                       </div>
@@ -577,12 +579,12 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
               submitterName={profile?.full_name || undefined}
               submitterRole={submitterRoleLabel}
               submitterUnit={excoLabel}
-              presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
-              reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
-              reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
+              presidenName={mtReviewer?.name || t('portal:no_mt_assigned_paren', '( Tiada MT Ditetapkan )')}
+              reviewerRole={mtReviewer?.role || t('portal:mt_upper', 'MAJLIS TERTINGGI')}
+              reviewerUnit={t('portal:jpp_full_upper', 'JAWATANKUASA PERWAKILAN PELAJAR')}
               clubLogoUrl={jppLogoBase64}
               isExco={true}
-              fileName={`Laporan_${excoUnit}_${targetMonth}`}
+              fileName={t('portal:exco_report_filename_tmpl', `Laporan_${excoUnit}_${targetMonth}`, { unit: excoUnit, month: targetMonth })}
               onClose={() => setIsPreviewOpen(false)}
               onSubmit={handleConfirmGenerate}
             />

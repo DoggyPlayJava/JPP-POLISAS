@@ -5227,6 +5227,19 @@ Melengkapkan gelombang pembersihan pusingan kelima (Batch 5) merentasi 14 fail b
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 2,689 kepada **2,124** (penurunan kumulatif 3,521 kejadian dalam 5 batch).
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.31 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 6): MAKMP/EMS, PolyMaps/Housing & Exco Reports/Dashboards
+Melengkapkan gelombang pembersihan pusingan keenam (Batch 6) merentasi 13 fail berketumpatan tinggi dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 6 Disjoint Sweep):**
+   - **Anugerah MAKMP & Karnival Acara EMS (`makmp.json`, `ems.json`):** `makmp.ts` (132 isu -> 0), `ems.ts` (39 isu -> 0), `EmsJuryAuditMatrix.tsx` (35 isu -> 0), dan `EmsCertificatePage.tsx` (30 isu -> 0) diselaraskan sepenuhnya bagi definisi 18 kategori anugerah lalai MAKMP 2026, kriteria penilaian, ralat kitaran hayat acara EMS, matriks audit pemarkahan juri, dan templat sijil digital. Kunci kamus `makmp.json` dan `ems.json` diselaraskan dengan 100% pariti.
+   - **PolyMaps 360, Kediaman Luar Kampus (KLK) & Sewaan PolyRent (`services.json`, `housing.json`):** `polymaps360Data.ts` (102 isu -> 0), `KlkSettingsPage.tsx` (33 isu -> 0), `KlkDashboard.tsx` (25 isu -> 0), dan `PolyRentForm.tsx` (28 isu -> 0) diselubungi bagi metadata mercu tanda 360 kampus, naratif audio panduan, tetapan integrasi CSV Google Apps Script, borang sewaan kediaman, dan amaran kadar sewa purata pasaran. Kunci kamus `services.json` dan `housing.json` ditambah dengan 100% pariti.
+   - **Penjana Dokumen Word, Laporan Aktiviti & Papan Pemuka Unit (`portal.json`, `kpp.json`):** `docxGenerator.ts` (44 isu -> 0), `ExcoLaporanPage.tsx` (37 isu -> 0), `KppUnitDashboard.tsx` (32 isu -> 0), `MultimediaUnitDashboard.tsx` (27 isu -> 0), dan `LaporanPage.tsx` (27 isu -> 0) diselaraskan sepenuhnya bagi tajuk seksyen kertas kerja DOCX, lejar kewangan belanjawan, penyerahan laporan exco, templat hebahan WhatsApp siaran langsung, dan metrik unit pentadbiran JPP.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 58/58 ujian lulus merentasi suite `masterLocales`, `Domain4EmsMakmpCompleteI18n`, dan `Domain1And8SharedCompleteI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 2,124 kepada **1,533** (penurunan kumulatif 4,112 kejadian dalam 6 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 33 isu.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP
