@@ -345,6 +345,7 @@ import { SupsasScorekeeperPage } from '@/pages/supsas/SupsasScorekeeperPage';
 import { AdminJadualPage } from '@/pages/supsas/admin/AdminJadualPage';
 import { SupsasAdminHome } from '@/pages/supsas/admin/SupsasAdminHome';
 import { AdminSukanPage } from '@/pages/supsas/admin/AdminSukanPage';
+import { AdminBracketPanel } from '@/pages/supsas/admin/components/AdminBracketPanel';
 
 function renderWithProviders(component: React.ReactElement) {
   return renderToString(
@@ -526,6 +527,32 @@ describe('Domain 6 Campus Life (Akademik, KLK, SUPSAS) Localization & Parity Sui
       const htmlMs = renderWithProviders(<AdminSukanPage />);
       expect(htmlMs).toBeTruthy();
       expect(htmlMs).toContain('Urus Sukan &amp; Kejohanan');
+    });
+
+    it('renders AdminBracketPanel with GroupColumn in English and Bahasa Melayu without crashing', async () => {
+      await changeLanguage('en');
+      const htmlEn = renderWithProviders(
+        <AdminBracketPanel
+          sport={mockSports[0] as any}
+          editionId="ed-1"
+          onClose={() => {}}
+          onConfirmed={() => {}}
+        />
+      );
+      expect(htmlEn).toBeTruthy();
+      expect(htmlEn).toContain('Group Stage Draw');
+
+      await changeLanguage('ms');
+      const htmlMs = renderWithProviders(
+        <AdminBracketPanel
+          sport={mockSports[0] as any}
+          editionId="ed-1"
+          onClose={() => {}}
+          onConfirmed={() => {}}
+        />
+      );
+      expect(htmlMs).toBeTruthy();
+      expect(htmlMs).toContain('Undian Kumpulan');
     });
   });
 

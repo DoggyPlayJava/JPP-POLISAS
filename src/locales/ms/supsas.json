@@ -227,5 +227,6 @@
   "wait_sf_left": "Tunggu {{count}} SF lagi",
   "winner_label": "Pemenang",
   "wins": "menang",
-  "yellow_card_for": "Kad Kuning: {{name}}"
+  "yellow_card_for": "Kad Kuning: {{name}}",
+  "search_player_placeholder": "Cari nama atau no. matrik..."
 }

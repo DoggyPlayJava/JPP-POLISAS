@@ -202,5 +202,7 @@
   "uploading": "Uploading...",
   "verification_pin_auto": "Verification PIN (Automatic)",
   "view_transcript": "Transcript",
-  "vs_previous_sem": "vs previous semester"
+  "vs_previous_sem": "vs previous semester",
+  "achievement_name_placeholder": "e.g. 1st Place National Debate Competition 2025",
+  "achievement_organizer_placeholder": "Organizer name"
 }

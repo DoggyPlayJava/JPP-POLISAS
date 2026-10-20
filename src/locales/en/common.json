@@ -172,5 +172,8 @@
   "view": "View",
   "view_all": "View All",
   "warning": "Warning",
-  "yes": "Yes"
+  "yes": "Yes",
+  "thank_you": "Thank You!",
+  "new": "New",
+  "save_changes": "Save Changes"
 }
