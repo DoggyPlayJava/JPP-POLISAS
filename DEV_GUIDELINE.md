@@ -687,6 +687,7 @@ Sistem kohort membolehkan pegawai JPP mengenal pasti tahap pengajian dan program
 | `intake_year` | `SMALLINT` | Tahun pengambilan: 2020–2026 |
 | `intake_1_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 1 sudah dihantar tahun ini |
 | `intake_2_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 2 sudah dihantar tahun ini |
+| `preferred_language` | `VARCHAR(5)` | Pilihan bahasa antaramuka pengguna: `en` atau `ms`. Mempunyai kekangan CHECK `CHECK (preferred_language IS NULL OR preferred_language IN ('en', 'ms'))`. Disegerakkan merentas peranti (*cross-device synchronization*) dengan fallback automatik. |
 
 Admin boleh ubah `intake_1_month` dan `intake_2_month` di `/jpp/settings` → "Konfigurasi Takwim Pengambilan".
 
@@ -782,10 +783,43 @@ const programmes = JABATAN_PROGRAMMES['elektrik'];
   - Sekiranya format matrik sah dan program padanan ditemui dalam katalog rasmi (`matricParsed?.isValidFormat && matricParsed.knownProgramme`), sistem menyuntik kad pengesahan beranimasi lembut (`framer-motion`) berwarna hijau zamrud (`bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300`).
   - Kad mengesahkan secara visual: `JABATAN · Program [KOD] · Sesi Kemasukan [TAHUN]`.
   - Mengisi medan Jabatan dan Program secara automatik, menghapuskan beban pemilihan manual pelajar dan mengurangkan ralat pendaftaran ke sifar.
+- **Sokongan Suis Dwibahasa Segerak (*Real-Time Segmented Language Switcher*) & Penyerahan Borang:**
+  - Bar tajuk modal pendaftaran profil mengintegrasikan suis bersegmen padat `[ 🇲🇾 BM | 🇬🇧 EN ]` berlatar belakang kaca (*frosted glass*).
+  - Membolehkan pengguna menukar bahasa antaramuka serta-merta tanpa mengganggu input borang yang sedang ditaip (*in-flight form state*).
+  - Nilai `preferred_language: currentLang` dihantar secara automatik dalam semua payload mutasi pangkalan data (`isOnlyMissingPhone`, `isOnlyMissingCohort`, `isMissingPhoneAndCohort`, dan pendaftaran penuh Google OAuth SSO), memastikan bahasa pilihan disimpan terus ke profil pengguna.
 
 ### 14.8 Notifikasi Automatik Intake
 
 Apabila mana-mana `SUPER_ADMIN_JPP` atau `ADMIN` log masuk ke `/jpp/settings`, sistem menyemak secara automatik sama ada bulan semasa adalah 1 bulan sebelum `intake_1_month` atau `intake_2_month`. Jika ya, notifikasi dihantar kepada semua admin mengingatkan mereka untuk semak konfigurasi intake. Notifikasi ini hanya dihantar **sekali setahun** per sesi intake (disimpan dalam `system_settings` dengan key `intake_N_alert_sent_{YEAR}`).
+
+### 14.9 Pengesanan Bahasa Tanpa Klik & Penempatan Sejagat LanguageToggle
+
+Sistem menyokong standard antarabangsa moden untuk pengalaman bahasa tanpa geseran:
+
+1. **Pengesanan Sifar-Klik Locale Peranti (*Zero-Click Device Locale Auto-Detection*):**
+   - Apabila pengguna membuka aplikasi kali pertama tanpa sebarang pilihan tersimpan dalam storan setempat (`localStorage.getItem('jpp_language')` kosong), fungsi `detectLanguage()` menyemak bahasa peranti pengguna (`navigator.language` atau `navigator.languages[0]`).
+   - Sekiranya kod bahasa bermula dengan `ms`, `zlm`, atau mengandungi `malay`, sistem secara automatik menetapkan bahasa kepada `'ms'` (Bahasa Melayu).
+   - Sekiranya tiada padanan, sistem secara lalai menggunakan `'en'` (Bahasa Inggeris) untuk memudahkan pengguna antarabangsa.
+   - Ini memastikan sifar klik (*zero-click onboarding*) di mana pengguna mendapat bahasa yang bersesuaian dengan sistem peranti mereka secara automatik.
+
+2. **Penyelarasan Pangkalan Data Merentas Peranti (*Cross-Device Database Synchronization*):**
+   - **Semasa Penghidratan Sesi (`AuthContext.tsx`):** Apabila pengguna log masuk, sistem menyemak `profileData.preferred_language`. Sekiranya berbeza daripada `i18n.language`, fungsi `changeLanguage(pref, false)` dipanggil tanpa mencetuskan penulisan semula ke pangkalan data (`syncToDb = false`) bagi mengelakkan kitaran gelung tak terhingga (*infinite loop prevention*).
+   - **Inisialisasi Pengguna Baharu:** Jika rekod profil pengguna belum mempunyai `preferred_language` (nilai `NULL`), `AuthContext` akan mengemas kini lajur tersebut dengan bahasa aktif semasa pelayar secara tak segerak (*non-blocking*).
+   - **Pertukaran Bahasa Aktif:** Panggilan `changeLanguage(lang)` mengemas kini `localStorage`, `document.documentElement.lang`, dan memutasi jadual `profiles` pengguna aktif secara latar belakang.
+
+3. **Penempatan Sejagat `<LanguageToggle />` Bersebelahan `<ThemeToggle />` (*Universal Toggle Placement*):**
+   - Mematuhi piawaian reka bentuk di mana komponen penukar bahasa `<LanguageToggle />` **WAJIB** dipasangkan bersebelahan suis tema `<ThemeToggle />` merentas semua shell aplikasi.
+   - Merangkumi 16 lokasi teras sistem:
+     * `SuperAppHeader.tsx` (Desktop Header & Mobile Flyout)
+     * `PortalNavbar.tsx` (Bar Navigasi Kaca Terapung Mobile)
+     * `JppSidebar.tsx` (Footer Bar Sisi Admin)
+     * `KebajikanLayout.tsx` & `KebajikanSidebar.tsx`
+     * `KeusahawananLayout.tsx`
+     * `AkademikLayout.tsx`
+     * `MakmpJppChrome.tsx`
+     * `PolySuaraPage.tsx`
+     * Halaman Awam & Kiosk EMS (`EmsAudienceScanPage`, `EmsCertVerifyPage`, `EmsCertificatePage`, `EmsCheckinPage`, `EmsJuryPortalPage`, `EmsLeaderboardPage`, `EmsPublicRegisterPage`).
+   - Menyokong dua varian rupa: `variant="default"` (kapsul rounded-xl) dan `variant="circular"` (`w-9 h-9 rounded-full`) khusus untuk kluster navbar kaca terapung dengan butang bulat.
 
 ---
 
@@ -1193,6 +1227,39 @@ Bagi mengelakkan isu kelambatan (frame drops, laggy scroll, memory spikes) pada 
 ---
 
 *Dikemas kini: Ogos 2026 — Pengoptimuman Prestasi Rendah & PWA Precache.*
+
+---
+
+### 15.9 Skema & Penyelarasan Bahasa Pengguna (Profiles preferred_language & Cross-Device Persistence)
+
+Bagi menyokong pengekalan bahasa pilihan merentas pelbagai peranti (*cross-device persistence*) tanpa menjejaskan prestasi pangkalan data semasa musim orientasi (1,500 pengguna serentak):
+
+#### 1. Migration Skema (`supabase/migrations/100_add_preferred_language_to_profiles.sql`)
+```sql
+ALTER TABLE profiles 
+ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(5) DEFAULT NULL 
+CHECK (preferred_language IS NULL OR preferred_language IN ('en', 'ms'));
+
+COMMENT ON COLUMN profiles.preferred_language IS 'User preferred interface language (en = English, ms = Bahasa Melayu)';
+```
+- **Kekangan CHECK Ketat:** Menjamin integriti data hanya menerima `'en'` atau `'ms'` (atau `NULL` bagi rekod legasi sebelum migrasi).
+- **Penggunaan Ruang Minimum:** `VARCHAR(5)` mempunyai jejak storan minima pada baris jadual `profiles`.
+
+#### 2. Pematuhan RLS & Prestasi Pangkalan Data
+- Pengemaskinian `preferred_language` menggunakan polisi UPDATE sedia ada pada jadual `profiles` (`profiles_update`) yang berpandukan `id = (SELECT auth.uid())` — mematuhi Peraturan RLS §15.1 tanpa menghasilkan polisi duplikat atau imbasan bersiri berlebihan.
+- Operasi mutasi bahasa dalam `src/lib/i18n.ts` dijalankan secara *fire-and-forget* (tidak menyekat kitaran render React):
+  ```typescript
+  supabase
+    .from('profiles')
+    .update({ preferred_language: lang })
+    .eq('id', session.user.id)
+    .then(() => {}, () => {});
+  ```
+  Corak ini memastikan UI bertukar bahasa serta-merta (0ms latensi persepsi) tanpa menunggu sambungan rangkaian pangkalan data. Sekiranya pengguna belum log masuk (*unauthenticated visitor*), operasi ini diabaikan secara selamat.
+
+#### 3. Corak Pencegahan Gelung Kitaran (*Circular Loop Prevention*)
+- `changeLanguage(lang, syncToDb = true)` menerima bendera pilihan `syncToDb`.
+- Semasa penghidratan profil pengguna dalam `AuthContext.tsx`, pemanggilan dilakukan dengan `changeLanguage(pref, false)`. Ini mengemas kini enjin i18next dan DOM tanpa menghantar arahan UPDATE pangkalan data semula ke pelayan.
 
 ---
 
@@ -4507,6 +4574,8 @@ Fungsi `detectLanguage()` dalam `src/lib/i18n.ts` menentukan bahasa permulaan me
    Sekiranya tiada padanan di atas, sistem secara lalai menggunakan `'en'` (Bahasa Inggeris).
 4. **Penyegerakan Dokumen HTML:**
    Fungsi penukaran bahasa `changeLanguage(lang)` mengemas kini `document.documentElement.lang = lang` bagi menjamin aksesibiliti (*screen readers*) serta mematuhi piawaian enjin carian W3C.
+5. **Penyegerakan Pangkalan Data Merentas Peranti (Cross-Device Database Synchronization):**
+   Bagi pengguna yang telah log masuk, pilihan bahasa diselaraskan secara automatik ke kolum `profiles.preferred_language`. Semasa log masuk pada mana-mana peranti baharu, `AuthContext.tsx` menghidrat bahasa pilihan terus dari pangkalan data, menghapuskan keperluan konfigurasi semula oleh pengguna.
 
 ### 36.3 Struktur Ruang Nama Kamus (Translation Namespaces)
 Semua fail terjemahan diuruskan secara modular di bawah folder `src/locales/` merangkumi 17 ruang nama domain menyeluruh:
@@ -4584,8 +4653,13 @@ Bagi mengekalkan keseragaman dan integriti dwibahasa apabila membina modul bahar
 ### 36.5 Komponen Antara Muka Penukar Bahasa
 1. **`<LanguageToggle />` (`src/components/ui/LanguageToggle.tsx`):**
    - Komponen suis padat dengan dropdown Radix UI, memaparkan bendera 🇲🇾 / 🇬🇧 dan lencana ringkas `BM` / `EN`.
-   - Boleh diletakkan di header portal (`SuperAppHeader.tsx`), bar alat `LoginPage.tsx`, atau menu navigasi.
-2. **Kad Pilihan Bahasa di Hab Tetapan (`src/pages/SettingsPage.tsx`):**
+   - Menyokong dua varian rupa:
+     * `variant="default"`: Butang kapsul `rounded-xl h-9 px-2.5` dengan latar `bg-muted/40` dan teks status.
+     * `variant="circular"`: Butang bulat `w-9 h-9 rounded-full bg-transparent hover:bg-white/10` khas untuk kluster navbar kaca terapung (*glass navbar clusters*).
+   - Dipasangkan secara sejagat (*universal pairing*) bersebelahan `<ThemeToggle />` pada kesemua 16 shell navigasi, header, dan halaman EMS sistem.
+2. **Suis Header Bersegmen `<CompleteProfileModal />`:**
+   - Suis kawalan dwibahasa bersegmen `[ 🇲🇾 BM | 🇬🇧 EN ]` terbina dalam bar tajuk modal pendaftaran profil, membolehkan pertukaran serta-merta tanpa mengganggu pengisian borang dan menghantar `preferred_language` dalam payload kemas kini profil.
+3. **Kad Pilihan Bahasa di Hab Tetapan (`src/pages/SettingsPage.tsx`):**
    - Ditempatkan di tab **Paparan & Bahasa** (`tema`).
    - Menyediakan dua kad interaktif reka bentuk 05 Earthy Minimal untuk Bahasa Melayu dan English, lengkap dengan ikon `Languages`, penunjuk sempadan `#6B7F5B`, tanda semakan (checkmark) aktif, dan maklum balas toast interaktif semasa pertukaran bahasa.
 
