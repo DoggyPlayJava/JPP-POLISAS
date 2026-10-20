@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, Navigate, NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ import {
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function KarnivalAdminLayout() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { isKppExco, isSuperAdmin, isLoading: authLoading } = useAuth();
   const { enableRealtime, disableRealtime, isActive, votingOpen, edition } = useKarnival();
   const navigate = useNavigate();
@@ -37,11 +39,11 @@ export function KarnivalAdminLayout() {
   }
 
   const navItems = [
-    { to: '/karnival/admin',            label: 'Dashboard',  icon: LayoutDashboard, end: true },
-    { to: '/karnival/admin/edition',    label: 'Edisi',      icon: Calendar },
-    { to: '/karnival/admin/categories', label: 'Kategori',   icon: Tag },
-    { to: '/karnival/admin/booths',     label: 'Booth & QR', icon: Store },
-    { to: '/karnival/admin/results',    label: 'Keputusan',  icon: BarChart3 },
+    { to: '/karnival/admin',            label: t('karnival:admin_nav_dashboard', 'Dashboard'),  icon: LayoutDashboard, end: true },
+    { to: '/karnival/admin/edition',    label: t('karnival:admin_nav_edition', 'Edisi'),      icon: Calendar },
+    { to: '/karnival/admin/categories', label: t('karnival:admin_nav_categories', 'Kategori'),   icon: Tag },
+    { to: '/karnival/admin/booths',     label: t('karnival:admin_nav_booths', 'Booth & QR'), icon: Store },
+    { to: '/karnival/admin/results',    label: t('karnival:admin_nav_results', 'Keputusan'),  icon: BarChart3 },
   ];
 
   return (
@@ -62,9 +64,9 @@ export function KarnivalAdminLayout() {
               <Trophy className="w-3.5 h-3.5 text-white" />
             </div>
             <div className="leading-none">
-              <p className="text-xs font-black text-white">Admin Karnival</p>
+              <p className="text-xs font-black text-white">{t('karnival:admin_title', 'Admin Karnival')}</p>
               <p className="text-[9px] text-white/30 mt-0.5">
-                {edition?.name ?? 'Tiada edisi aktif'}
+                {edition?.name ?? t('karnival:no_active_edition', 'Tiada edisi aktif')}
               </p>
             </div>
           </div>
@@ -77,14 +79,14 @@ export function KarnivalAdminLayout() {
                 : 'bg-white/[0.04] border-white/[0.08] text-white/30'
             }`}>
               {isActive && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />}
-              {isActive ? 'Aktif' : 'Tidak Aktif'}
+              {isActive ? t('karnival:status_active', 'Aktif') : t('karnival:status_inactive', 'Tidak Aktif')}
             </div>
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
               votingOpen
                 ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-300'
                 : 'bg-white/[0.04] border-white/[0.08] text-white/30'
             }`}>
-              {votingOpen ? 'Undi Buka' : 'Undi Tutup'}
+              {votingOpen ? t('karnival:status_voting_open', 'Undi Buka') : t('karnival:status_voting_closed', 'Undi Tutup')}
             </div>
 
             {isSuperAdmin && !isKppExco && (

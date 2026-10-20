@@ -118,75 +118,115 @@ export function KarnivalScoreboard() {
     timerRef.current = setInterval(() => {
       setCatIndex(i => {
         const next = (i + 1) % categories.length;
-        setDirection(1);
-        setPrevIndex(i);
-        setAnnouncing(true);
-        if (announceTimer.current) clearTimeout(announceTimer.current);
-        announceTimer.current = setTimeout(() => setAnnouncing(false), 1800);
+        goTo(next, 1);
         return next;
       });
       setRotateMs(ROTATE_MS);
     }, ROTATE_MS);
 
     countdownRef.current = setInterval(() => {
-      setRotateMs(m => Math.max(0, m - 100));
+      setRotateMs(ms => Math.max(0, ms - 100));
     }, 100);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [autoPlay, categories.length]);
+  }, [autoPlay, categories.length, goTo]);
 
-  const rotateProgress = 1 - rotateMs / ROTATE_MS; // 0→1
-  const circumference  = 2 * Math.PI * 18;
+  // Keyboard navigation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (categories.length <= 1) return;
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        setAutoPlay(false);
+        const next = (catIndex + 1) % categories.length;
+        goTo(next, 1);
+      } else if (e.key === 'ArrowLeft') {
+        setAutoPlay(false);
+        const prev = (catIndex - 1 + categories.length) % categories.length;
+        goTo(prev, -1);
+      } else if (e.key === 'p' || e.key === 'P') {
+        setAutoPlay(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [catIndex, categories.length, goTo]);
+
+  const top3 = results.slice(0, 3);
+  const rest = results.slice(3);
+
+  // SVG countdown ring calc
+  const rotateProgress = categories.length > 1 ? rotateMs / ROTATE_MS : 0;
+  const radius = 18;
+  const circumference = 2 * Math.PI * radius;
 
   if (ctxLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#05050f]">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-10 h-10 animate-spin text-violet-500" />
-          <p className="text-white/30 font-black text-xs uppercase tracking-widest">Memuatkan...</p>
-        </div>
+      <div className="min-h-screen bg-[#05050f] flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
 
-  const top3    = results.slice(0, 3);
-  const rest    = results.slice(3);
+  if (!edition) {
+    return (
+      <div className="min-h-screen bg-[#05050f] flex flex-col items-center justify-center text-center p-8">
+        <Trophy className="w-20 h-20 text-white/10 mb-6" />
+        <p className="text-white/40 font-black text-2xl">{t('karnival:no_active_carnival_title', 'Tiada Karnival Aktif')}</p>
+        <p className="text-white/20 text-sm mt-2">{t('karnival:no_active_carnival_desc', 'Karnival JPP belum bermula. Pantau laman ini dari masa ke masa.')}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className={`min-h-screen bg-[#05050f] flex flex-col select-none ${isFullscreen ? 'overflow-hidden' : ''}`}>
-
-      {/* ── Ambient background ──────────────────────────────────── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Grid lines */}
-        <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '36px 36px' }} />
-        {/* Horizontal scanline */}
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.6), transparent)' }} />
-      </div>
-
-      {/* ── HEADER ──────────────────────────────────────────────── */}
-      <header className="relative z-20 px-6 md:px-10 py-4"
-        style={{ borderBottom: '1px solid rgba(139,92,246,0.15)', background: 'rgba(5,5,15,0.8)' }}>
-        <div className="grid grid-cols-3 items-center gap-4">
-
-          {/* Left: branding */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.4), rgba(109,40,217,0.6))', border: '1px solid rgba(139,92,246,0.4)', boxShadow: '0 0 30px rgba(139,92,246,0.3)' }}>
+    <div
+      className={`min-h-screen bg-[#05050f] text-white flex flex-col select-none ${
+        isFullscreen ? 'fixed inset-0 z-50 overflow-auto' : ''
+      }`}
+      style={{
+        backgroundImage: `
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(109,40,217,0.25) 0%, transparent 70%),
+          radial-gradient(ellipse 60% 40% at 80% 100%, rgba(124,58,237,0.12) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 30% at 20% 80%, rgba(217,70,239,0.08) 0%, transparent 50%)
+        `,
+      }}
+    >
+      {/* ── TOP BAR / BROADCAST HEADER ──────────────────────────── */}
+      <header
+        className="relative z-20 px-6 md:px-10 py-4 flex items-center justify-between gap-4 flex-wrap"
+        style={{
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(5,5,15,0.8)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
+        {/* Left: Branding */}
+        <div className="grid grid-cols-3 items-center w-full">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-xl flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed, #4c1d95)',
+                boxShadow: '0 0 30px rgba(124,58,237,0.5)',
+              }}
+            >
               🎪
             </div>
-            <div className="min-w-0 hidden sm:block">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-400 block mb-0.5">
-                {t('carnival_scoreboard')}
-              </span>
-              <h1 className="text-base md:text-xl font-black text-white tracking-tight leading-none truncate">
-                {edition?.name ?? 'Karnival JPP'}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] text-violet-400">
+                  {t('karnival:carnival_scoreboard', 'Papan Skor Karnival Langsung')} · {edition.edition_year}
+                </span>
+              </div>
+              <h1 className="text-base md:text-xl font-black tracking-tight text-white leading-tight">
+                {edition.name}
               </h1>
-              {edition?.tagline && (
-                <p className="text-[10px] text-violet-300/50 font-medium mt-0.5 tracking-wide truncate">{edition.tagline}</p>
+              {edition.tagline && (
+                <p className="text-[10px] md:text-xs text-white/40 font-medium hidden sm:block">
+                  {edition.tagline}
+                </p>
               )}
             </div>
           </div>
@@ -196,7 +236,9 @@ export function KarnivalScoreboard() {
             <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full"
               style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)' }}>
               <Zap className="w-3 h-3 text-violet-400" />
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-violet-300">Keputusan Langsung</span>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-violet-300">
+                {t('karnival:scoreboard_live_results', 'Keputusan Langsung')}
+              </span>
             </div>
             <p className="text-xl md:text-3xl font-black text-white tabular-nums tracking-tight">
               {now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -215,7 +257,7 @@ export function KarnivalScoreboard() {
             <button onClick={() => setAutoPlay(v => !v)}
               className="relative flex items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-xl transition-all hover:bg-white/[0.06]"
               style={{ border: `1px solid ${autoPlay ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.08)'}` }}
-              title={autoPlay ? 'Henti auto-rotate' : 'Mula auto-rotate'}>
+              title={autoPlay ? t('karnival:stop_auto_rotate', 'Henti auto-rotate') : t('karnival:start_auto_rotate', 'Mula auto-rotate')}>
               {autoPlay && categories.length > 1 && (
                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
                   <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(139,92,246,0.2)" strokeWidth="2.5" />
@@ -308,7 +350,7 @@ export function KarnivalScoreboard() {
                 {activeCat.icon_emoji}
               </motion.span>
               <div className="text-center">
-                <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-violet-400/70 mb-2">Kategori Seterusnya</p>
+                <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-violet-400/70 mb-2">{t('karnival:next_category_overlay', 'Kategori Seterusnya')}</p>
                 <h2 className="text-4xl md:text-7xl font-black text-white tracking-tight"
                   style={{ textShadow: '0 0 60px rgba(139,92,246,0.6)' }}>
                   {activeCat.name}
@@ -336,37 +378,37 @@ export function KarnivalScoreboard() {
               exit="exit"
               transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             >
-                  {/* Category title with pulse animation */}
-                  <div className="text-center mb-8">
-                    <motion.div
-                      initial={{ scale: 0.85, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 18 }}
-                      className="inline-flex items-center gap-3 px-6 py-2 rounded-full mb-3"
-                      style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                      <span className="text-2xl">{activeCat.icon_emoji}</span>
-                      <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">{activeCat.name}</h2>
-                    </motion.div>
-                    {activeCat.description && (
-                      <p className="text-sm text-white/30 font-medium">{activeCat.description}</p>
-                    )}
-                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-white/50 flex-wrap">
-                      <span className="text-violet-300 font-bold">{t('total_votes_cast')}: {results.reduce((acc, b) => acc + (b.total_votes || 0), 0)}</span>
-                      <span>•</span>
-                      <span className="text-white/40">{t('admin_tally')}</span>
-                    </div>
-                  </div>
+              {/* Category title with pulse animation */}
+              <div className="text-center mb-8">
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 18 }}
+                  className="inline-flex items-center gap-3 px-6 py-2 rounded-full mb-3"
+                  style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <span className="text-2xl">{activeCat.icon_emoji}</span>
+                  <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">{activeCat.name}</h2>
+                </motion.div>
+                {activeCat.description && (
+                  <p className="text-sm text-white/30 font-medium">{activeCat.description}</p>
+                )}
+                <div className="flex items-center justify-center gap-3 mt-2 text-xs text-white/50 flex-wrap">
+                  <span className="text-violet-300 font-bold">{t('karnival:total_votes_cast', 'Jumlah Undian Sah Diterima')}: {results.reduce((acc, b) => acc + (b.total_votes || 0), 0)}</span>
+                  <span>•</span>
+                  <span className="text-white/40">{t('karnival:admin_tally', 'Pusat Kiraan Keputusan Rasmi')}</span>
+                </div>
+              </div>
 
               {loading && results.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <RefreshCw className="w-10 h-10 animate-spin text-violet-500" />
-                  <p className="text-white/25 font-black text-xs uppercase tracking-widest">Memuatkan keputusan...</p>
+                  <p className="text-white/25 font-black text-xs uppercase tracking-widest">{t('karnival:loading_results', 'Memuatkan keputusan...')}</p>
                 </div>
               ) : results.length === 0 ? (
                 <div className="text-center py-24">
                   <Trophy className="w-20 h-20 text-white/10 mx-auto mb-4" />
-                  <p className="text-white/25 font-black text-lg">Belum ada undi lagi</p>
-                  <p className="text-white/15 text-sm mt-2">{t('top_voted_booth')} • {t('total_votes_cast')}</p>
+                  <p className="text-white/25 font-black text-lg">{t('karnival:no_votes_scoreboard', 'Belum ada undi lagi')}</p>
+                  <p className="text-white/15 text-sm mt-2">{t('karnival:top_voted_booth', 'Gerai Paling Popular Semasa')} • {t('karnival:total_votes_cast', 'Jumlah Undian Sah Diterima')}</p>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -400,7 +442,7 @@ export function KarnivalScoreboard() {
                                   style={{ background: `radial-gradient(ellipse at 50% 0%, ${medal.glow} 0%, transparent 60%)` }} />
                                 <div className="mb-2">
                                   <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                    {t('top_voted_booth')}
+                                    {t('karnival:top_voted_booth', 'Gerai Paling Popular Semasa')}
                                   </span>
                                 </div>
                               </>
@@ -445,7 +487,7 @@ export function KarnivalScoreboard() {
                                 {booth.total_votes.toLocaleString()}
                               </motion.p>
                               <p className="text-[10px] font-bold uppercase tracking-widest mt-1"
-                                style={{ color: `${medal.color}50` }}>undi</p>
+                                style={{ color: `${medal.color}50` }}>{t('karnival:unit_votes', 'undi')}</p>
 
                               {/* Mini progress bar */}
                               <div className="mt-3 h-1.5 rounded-full w-full overflow-hidden"
@@ -470,7 +512,7 @@ export function KarnivalScoreboard() {
                   {/* ── RANK 4+ LIST ── */}
                   {rest.length > 0 && (
                     <div className="space-y-2.5">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 px-2 mb-3">Penyertaan Lain</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 px-2 mb-3">{t('karnival:other_entries_title', 'Penyertaan Lain')}</p>
                       {rest.map((booth, i) => {
                         const rank = i + 4;
                         const pct  = (booth.total_votes / maxVotes) * 100;
@@ -539,11 +581,11 @@ export function KarnivalScoreboard() {
         </div>
         <div className="flex items-center gap-4 text-[10px] text-white/25 font-medium">
           {lastFetch && (
-            <span>Kemas kini: {lastFetch.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+            <span>{t('karnival:footer_last_updated', 'Kemas kini:')} {lastFetch.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
           )}
           {autoPlay && categories.length > 1 && (
             <span className="text-violet-400/50 font-black">
-              ↻ Auto-rotate · {Math.ceil(rotateMs / 1000)}s
+              {t('karnival:auto_rotate_indicator', { sec: Math.ceil(rotateMs / 1000), defaultValue: `↻ Auto-rotate · ${Math.ceil(rotateMs / 1000)}s` })}
             </span>
           )}
           {/* Category dots */}

@@ -459,7 +459,7 @@ export function KebajikanSubmitPage() {
           <button
             onClick={startTour}
             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all"
-            title="Bantuan Sistem"
+            title={t('kebajikan:system_help', 'Bantuan Sistem')}
           >
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -614,7 +614,7 @@ export function KebajikanSubmitPage() {
                   <p className="text-xs text-slate-600 dark:text-white/50">{t('submit_select_category_sub')}</p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20">
-                  <span className="text-[10px] font-black uppercase tracking-wider">Kategori:</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider">{t('kebajikan:category_label_prefix', 'Kategori:')}</span>
                   <span className="text-xs font-black">
                     {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : ''}
                   </span>
@@ -685,8 +685,8 @@ export function KebajikanSubmitPage() {
               {form.category === 'LAIN_LAIN' && (
                 <div className="space-y-4 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/80 shadow-sm">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Tajuk Aduan *</label>
-                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder="Ringkasan aduan anda" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_title_label', 'Tajuk Aduan *')}</label>
+                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder={t('kebajikan:complaint_summary_placeholder', 'Ringkasan aduan anda')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
               )}
@@ -1164,7 +1164,7 @@ function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
       </div>
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Lokasi Spesifik</label>
-        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder="Bilik Kuliah JKE-02, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder={t('kebajikan:location_placeholder', 'Bilik Kuliah JKE-02, dsb.')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
       </div>
     </fieldset>
   );
@@ -1191,7 +1191,7 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
       <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Kafeteria</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Pilih Kafeteria *</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:select_cafeteria_label', 'Pilih Kafeteria *')}</label>
         <div className="flex gap-2 flex-wrap">
           {KAFETERIA_LIST.map(k => (
             <button key={k} type="button" onClick={() => upd('kafeteria', k)} className={cn('px-4 py-2 rounded-xl text-xs font-black border transition-all', form.kafeteria === k ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
@@ -1202,7 +1202,7 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
         {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder="Nama kafeteria..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jenis Aduan (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_type_multiple', 'Jenis Aduan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {KAFETERIA_TYPES.map(t => {
             const checked = (form.kafeteria_types as string[] || []).includes(t);
@@ -1229,24 +1229,24 @@ function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function;
       <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">WiFi Kamsis</legend>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Blok Asrama *</label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_block_label', 'Blok Asrama *')}</label>
           <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder="Blok A, B, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Bilik (Opsional)</label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_room_optional', 'Bilik (Opsional)')}</label>
           <Input value={form.wifi_bilik || ''} onChange={e => upd('wifi_bilik', e.target.value)} placeholder="A-214" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
       </div>
       <OptionGrid label="Tahap Kelajuan" options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} />
       <OptionGrid label="Kekerapan Gangguan" options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} />
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Masa Gangguan (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disruption_time_multiple', 'Masa Gangguan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {times.map(t => { const c = (form.wifi_times as string[] || []).includes(t); return (<button key={t} type="button" onClick={() => toggleArr('wifi_times', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{t}</button>); })}
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Aktiviti Terganggu (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disrupted_activity_multiple', 'Aktiviti Terganggu (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {acts.map(a => { const c = (form.wifi_activities as string[] || []).includes(a); return (<button key={a} type="button" onClick={() => toggleArr('wifi_activities', a)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{a}</button>); })}
         </div>

@@ -150,7 +150,7 @@ export function UrusPerniagaanPage() {
     if (!businessId) return;
     setToggSaving(field);
     const { error } = await supabase.from('keusahawanan_businesses').update({ [field]: value }).eq('id', businessId);
-    if (error) { toast.error('Gagal kemaskini tetapan.'); }
+    if (error) { toast.error(t('keusahawanan:toast_settings_update_failed', 'Gagal kemaskini tetapan.')); }
     else {
       let label = '';
       if (field === 'promotions_enabled') { setPromotionsEnabled(value); label = 'Sistem Promosi'; }
@@ -158,7 +158,7 @@ export function UrusPerniagaanPage() {
       else { setUseShiftSystem(value); label = 'Sistem Syif'; }
       
       await pos.writeLog(businessId, 'SETTINGS_UPDATED', `${label} ${value ? 'diaktifkan' : 'dinyahaktifkan'}.`);
-      toast.success(`${label} ${value ? ' diaktifkan.' : ' dinyahaktifkan.'}`);
+      toast.success(t('keusahawanan:toast_setting_status', '{{label}} {{status}}.', { label, status: value ? 'diaktifkan' : 'dinyahaktifkan' }));
     }
     setToggSaving(null);
   };
@@ -187,7 +187,7 @@ export function UrusPerniagaanPage() {
 
   const handleAddPromo = async () => {
     if (!businessId) return;
-    if (!promoForm.code.trim() || !promoForm.name.trim()) { toast.error('Kod dan nama promosi wajib diisi.'); return; }
+    if (!promoForm.code.trim() || !promoForm.name.trim()) { toast.error(t('keusahawanan:toast_promo_required', 'Kod dan nama promosi wajib diisi.')); return; }
     if (!promoForm.discount_value || parseFloat(promoForm.discount_value) <= 0) { toast.error('Nilai diskaun mesti lebih dari 0.'); return; }
     setPromoSaving(true);
     const ok = await pos.addPromotion(businessId, {
@@ -247,7 +247,7 @@ export function UrusPerniagaanPage() {
        registration_history: updatedHistory
     }).eq('id', businessId);
     await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Maklumat perniagaan dikemaskini.');
-    toast.success('Perniagaan disimpan!');
+    toast.success(t('keusahawanan:toast_business_saved', 'Perniagaan disimpan!'));
     await fetchData();
     setSaving(false);
   };
@@ -256,7 +256,7 @@ export function UrusPerniagaanPage() {
   const handleSavePaymentSettings = async () => {
     if (!businessId) return;
     if (onlinePayEnabled && !paymentQrUrl) {
-      toast.error('Sila muat naik gambar QR dahulu.');
+      toast.error(t('keusahawanan:toast_qr_required', 'Sila muat naik gambar QR dahulu.'));
       return;
     }
     setPaymentSaving(true);
@@ -270,14 +270,14 @@ export function UrusPerniagaanPage() {
       payment_deadline_unit: paymentDeadlineUnit,
     }).eq('id', businessId);
     if (error) {
-      toast.error('Gagal menyimpan: ' + error.message);
+      toast.error(t('keusahawanan:toast_save_failed', 'Gagal menyimpan: {{error}}', { error: error.message }));
     } else {
       await pos.writeLog(
         businessId,
         'SETTINGS_UPDATED',
         `Tetapan pembayaran PolyMart dikemaskini. Online QR: ${onlinePayEnabled ? 'ON' : 'OFF'}, COD: ${codEnabled ? 'ON' : 'OFF'}`
       );
-      toast.success('Tetapan pembayaran disimpan!');
+      toast.success(t('keusahawanan:toast_payment_settings_saved', 'Tetapan pembayaran disimpan!'));
     }
     setPaymentSaving(false);
   };
@@ -303,10 +303,10 @@ export function UrusPerniagaanPage() {
       setBusinessData((prev: any) => ({ ...prev, logo_url: publicUrl }));
       
       await refreshBusinesses();
-      toast.success('Logo dikemaskini!');
+      toast.success(t('keusahawanan:toast_logo_updated', 'Logo dikemaskini!'));
       await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Pemilik telah memuat naik logo perniagaan yang baharu.');
     } catch (err: any) {
-      toast.error("Ralat muat naik logo: " + err.message);
+      toast.error(t('keusahawanan:toast_logo_upload_error', 'Ralat muat naik logo: {{error}}', { error: err.message }));
     } finally {
       setUploading(false);
     }
@@ -316,7 +316,7 @@ export function UrusPerniagaanPage() {
   const handleApproveMember = async (memberId: string, userId: string, userName: string) => {
     const { error } = await supabase.from('student_business_memberships').update({ status: 'ACTIVE' }).eq('id', memberId);
     if (error) {
-      toast.error('Gagal meluluskan: ' + error.message);
+      toast.error(t('keusahawanan:toast_member_approve_failed', 'Gagal meluluskan: {{error}}', { error: error.message }));
       return;
     }
     await pos.writeLog(businessId!, 'STAFF_APPROVED', `${userName} telah diluluskan sebagai ahli perniagaan.`, { user_id: userId, user_name: userName });
@@ -329,14 +329,14 @@ export function UrusPerniagaanPage() {
         link: '/keusahawanan/dashboard',
       });
     } catch {}
-    toast.success(`${userName} diluluskan!`);
+    toast.success(t('keusahawanan:toast_member_approved', '{{name}} diluluskan!', { name: userName }));
     fetchData();
   };
 
   const handleRejectMember = async (memberId: string, userId: string, userName: string) => {
     const { error } = await supabase.from('student_business_memberships').update({ status: 'REJECTED' }).eq('id', memberId);
     if (error) {
-      toast.error('Gagal menolak: ' + error.message);
+      toast.error(t('keusahawanan:toast_member_reject_failed', 'Gagal menolak: {{error}}', { error: error.message }));
       return;
     }
     try {
@@ -348,7 +348,7 @@ export function UrusPerniagaanPage() {
         link: '/keusahawanan/dashboard',
       });
     } catch {}
-    toast.success('Permohonan ditolak.');
+    toast.success(t('keusahawanan:toast_member_rejected', 'Permohonan ditolak.'));
     fetchData();
   };
 
@@ -356,7 +356,7 @@ export function UrusPerniagaanPage() {
     if (!window.confirm(`Buang ${userName} dari perniagaan?`)) return;
     const { error } = await supabase.from('student_business_memberships').delete().eq('id', memberId);
     if (error) {
-      toast.error('Gagal membuang: ' + error.message);
+      toast.error(t('keusahawanan:toast_member_remove_failed', 'Gagal membuang: {{error}}', { error: error.message }));
       return;
     }
     await pos.writeLog(businessId!, 'STAFF_REMOVED', `${userName} telah dibuang dari perniagaan.`, { user_id: userId, user_name: userName });
@@ -369,7 +369,7 @@ export function UrusPerniagaanPage() {
         link: '/keusahawanan/dashboard',
       });
     } catch {}
-    toast.success(`${userName} dibuang.`);
+    toast.success(t('keusahawanan:toast_member_removed', '{{name}} dibuang.', { name: userName }));
     fetchData();
   };
 
@@ -407,7 +407,7 @@ export function UrusPerniagaanPage() {
           {pending.length > 0 && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20">
               <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-xs font-black text-amber-600">{pending.length} permohonan baharu</span>
+              <span className="text-xs font-black text-amber-600">{t('keusahawanan:biz_new_applications_count', '{{count}} permohonan baharu', { count: pending.length })}</span>
             </div>
           )}
         </div>
@@ -471,11 +471,11 @@ export function UrusPerniagaanPage() {
                 <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{uploading ? 'Memuat naik...' : 'Klik logo untuk tukar'}</p>
 
                 <div className="p-4 rounded-2xl bg-muted/30">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Kategori</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">{t('keusahawanan:business_category', 'Kategori')}</p>
                   <p className="text-sm font-black">{businessData?.category?.name || '—'}</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-muted/30">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Status Perniagaan</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">{t('keusahawanan:approval_status', 'Status Perniagaan')}</p>
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${businessData?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
                     <p className="text-sm font-black">{businessData?.status === 'ACTIVE' ? 'Aktif' : businessData?.status === 'PENDING_INTERVIEW' ? 'Menunggu Temuduga' : businessData?.status}</p>
@@ -489,7 +489,7 @@ export function UrusPerniagaanPage() {
                   <Building2 className="w-3.5 h-3.5" /> Maklumat Perniagaan
                 </p>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Perniagaan</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">{t('keusahawanan:business_name', 'Nama Perniagaan')}</p>
                   <p className="text-xl font-black text-foreground">{businessData?.name}</p>
                 </div>
 
@@ -561,7 +561,7 @@ export function UrusPerniagaanPage() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">{t('biz_description')}</p>
                   <textarea value={description} onChange={e => setDescription(e.target.value)}
-                    placeholder="Ceritakan tentang perniagaan anda..."
+                    placeholder={t('keusahawanan:biz_desc_placeholder', 'Ceritakan tentang perniagaan anda...')}
                     className="w-full h-28 px-4 py-3 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                 </div>
                 {isOwner && (
@@ -595,7 +595,7 @@ export function UrusPerniagaanPage() {
                 <button onClick={() => {
                     if (!isOwner) return;
                     const newVal = !onlinePayEnabled;
-                    if (!newVal && !codEnabled) { toast.error('Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.'); return; }
+                    if (!newVal && !codEnabled) { toast.error(t('keusahawanan:toast_min_one_payment_method', 'Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.')); return; }
                     setOnlinePayEnabled(newVal);
                   }}
                   disabled={!isOwner}
@@ -613,12 +613,12 @@ export function UrusPerniagaanPage() {
                     <Handshake className="w-4 h-4 text-amber-500" />
                     <p className="text-sm font-black text-foreground">Bayar Bersemuka (COD)</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Pelanggan bayar terus kepada vendor semasa ambil pesanan.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('keusahawanan:biz_cod_desc', 'Pelanggan bayar terus kepada vendor semasa ambil pesanan.')}</p>
                 </div>
                 <button onClick={() => {
                     if (!isOwner) return;
                     const newVal = !codEnabled;
-                    if (!newVal && !onlinePayEnabled) { toast.error('Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.'); return; }
+                    if (!newVal && !onlinePayEnabled) { toast.error(t('keusahawanan:toast_min_one_payment_method', 'Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.')); return; }
                     setCodEnabled(newVal);
                   }}
                   disabled={!isOwner}
@@ -658,7 +658,7 @@ export function UrusPerniagaanPage() {
                                 if (upErr) throw upErr;
                                 const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
                                 setPaymentQrUrl(publicUrl);
-                                toast.success('QR dimuat naik!');
+                                toast.success(t('keusahawanan:toast_qr_uploaded', 'QR dimuat naik!'));
                               } catch (err: any) { toast.error(err.message); }
                               setQrUploading(false);
                             }} />
@@ -668,9 +668,9 @@ export function UrusPerniagaanPage() {
 
                       {/* Bank details / instructions */}
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Arahan / Maklumat Bank (untuk pelanggan salin)</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">{t('keusahawanan:biz_bank_instructions_label', 'Arahan / Maklumat Bank (untuk pelanggan salin)')}</p>
                         <textarea value={paymentInstructions} onChange={e => setPaymentInstructions(e.target.value)}
-                          placeholder="Contoh:&#10;Bank: Maybank&#10;No. Akaun: 1234567890&#10;Nama: Ahmad Bin Ali&#10;&#10;Sila masukkan ID Pesanan dalam rujukan pembayaran."
+                          placeholder={t('keusahawanan:biz_bank_instructions_placeholder', 'Contoh:&#10;Bank: Maybank&#10;No. Akaun: 1234567890&#10;Nama: Ahmad Bin Ali&#10;&#10;Sila masukkan ID Pesanan dalam rujukan pembayaran.')}
                           className="w-full h-28 px-4 py-3 rounded-2xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-blue-500/50 transition-all" />
                       </div>
                     </div>
@@ -694,7 +694,7 @@ export function UrusPerniagaanPage() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-muted-foreground/60" /> Had Masa Pembayaran
                 </p>
-                <p className="text-xs text-muted-foreground mb-3">Pesanan akan auto-cancel jika pembayaran tidak disahkan dalam tempoh ini.</p>
+                <p className="text-xs text-muted-foreground mb-3">{t('keusahawanan:biz_auto_cancel_desc', 'Pesanan akan auto-cancel jika pembayaran tidak disahkan dalam tempoh ini.')}</p>
                 <div className="flex gap-3">
                   <input type="number" min={1} value={paymentDeadlineValue} onChange={e => setPaymentDeadlineValue(parseInt(e.target.value) || 1)}
                     className="w-24 h-11 px-4 rounded-2xl text-sm font-black text-center outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
@@ -729,7 +729,7 @@ export function UrusPerniagaanPage() {
                 <p className="text-2xl font-black text-foreground">{active.length}</p>
               </div>
               <div className="p-4 rounded-2xl bg-card border border-border">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Permohonan Tertunggak</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{t('keusahawanan:biz_pending_requests', 'Permohonan Tertunggak')}</p>
                 <p className={cn("text-2xl font-black", pending.length > 0 ? "text-amber-500" : "text-muted-foreground")}>{pending.length}</p>
               </div>
               <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-card border border-border">
@@ -815,8 +815,8 @@ export function UrusPerniagaanPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">Zon Berbahaya</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Pindah Milik Perniagaan</p>
-                  <p className="text-xs text-muted-foreground mb-4">Pilih ahli untuk diserahkan tanggungjawab sebagai Pemilik baharu. Tindakan ini tidak boleh diundurkan dan selepas berjaya, anda akan berstatus Ahli biasa.</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">{t('keusahawanan:biz_transfer_ownership', 'Pindah Milik Perniagaan')}</p>
+                  <p className="text-xs text-muted-foreground mb-4">{t('keusahawanan:biz_transfer_desc', 'Pilih ahli untuk diserahkan tanggungjawab sebagai Pemilik baharu. Tindakan ini tidak boleh diundurkan dan selepas berjaya, anda akan berstatus Ahli biasa.')}</p>
                   
                   <div className="flex flex-col sm:flex-row gap-2">
                     <select 
@@ -838,7 +838,7 @@ export function UrusPerniagaanPage() {
                     </button>
                   </div>
                   {active.filter(m => m.user_id !== user?.id).length === 0 && (
-                    <p className="text-[10px] text-rose-500/80 mt-2">Perniagaan mesti mempunyai sekurang-kurangnya seorang Ahli Aktif lain sebelum pindah milik boleh dilakukan.</p>
+                    <p className="text-[10px] text-rose-500/80 mt-2">{t('keusahawanan:biz_transfer_requirement', 'Perniagaan mesti mempunyai sekurang-kurangnya seorang Ahli Aktif lain sebelum pindah milik boleh dilakukan.')}</p>
                   )}
                 </div>
               </div>
@@ -1114,7 +1114,7 @@ export function UrusPerniagaanPage() {
               <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5" style={{ color }} /> Log Aktiviti Perniagaan
               </p>
-              <p className="text-[10px] text-muted-foreground/50 italic">Rekod terperinci semua tindakan dalam sistem. Menunjukkan 100 log terkini.</p>
+              <p className="text-[10px] text-muted-foreground/50 italic">{t('keusahawanan:biz_audit_logs_desc', 'Rekod terperinci semua tindakan dalam sistem. Menunjukkan 100 log terkini.')}</p>
               {pos.logs.length === 0 ? (
                 <div className="py-12 text-center">
                   <Activity className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />

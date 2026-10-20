@@ -557,7 +557,7 @@ export function KebajikanReportPage() {
   const exportMonthlyPdf = async () => {
     if (!data || generatingMonthlyPdf) return;
     setGeneratingMonthlyPdf(true);
-    const toastId = toast.loading('Menjana PDF laporan bulanan...');
+    const toastId = toast.loading(t('kebajikan:toast_generating_monthly_pdf', 'Menjana PDF laporan bulanan...'));
     try {
       const [{ pdf }, { KebajikanReportPDF }] = await Promise.all([
         import('@react-pdf/renderer'),
@@ -567,10 +567,10 @@ export function KebajikanReportPage() {
         <KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />
       ).toBlob();
       saveAs(blob, `Laporan_Kebajikan_${monthLabel.replace(' ', '_')}.pdf`);
-      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+      toast.success(t('kebajikan:toast_pdf_download_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('Monthly PDF error:', err);
-      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
     } finally {
       setGeneratingMonthlyPdf(false);
     }
@@ -579,7 +579,7 @@ export function KebajikanReportPage() {
   const exportPicPdf = async () => {
     if (!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf) return;
     setGeneratingPicPdf(true);
-    const toastId = toast.loading('Menjana PDF laporan PIC...');
+    const toastId = toast.loading(t('kebajikan:toast_generating_pic_pdf', 'Menjana PDF laporan PIC...'));
     try {
       const [{ pdf }, { KebajikanPicReportPDF }] = await Promise.all([
         import('@react-pdf/renderer'),
@@ -599,10 +599,10 @@ export function KebajikanReportPage() {
         />
       ).toBlob();
       saveAs(blob, `Laporan_PIC_${reportPicName.replace(/\s+/g, '_') || 'PIC'}_${picMonthLabel.replace(' ', '_')}.pdf`);
-      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+      toast.success(t('kebajikan:toast_pdf_download_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('PIC PDF error:', err);
-      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
     } finally {
       setGeneratingPicPdf(false);
     }
@@ -767,7 +767,7 @@ export function KebajikanReportPage() {
                       </div>
                       <span className="text-xs font-black text-slate-400 w-8 text-right">{c.total}</span>
                       <span className="text-[10px] font-black text-slate-600 w-10 text-right">{pct}%</span>
-                      <span className="text-[10px] text-emerald-400 w-20 text-right">{c.resolved} selesai</span>
+                      <span className="text-[10px] text-emerald-400 w-20 text-right">{t('kebajikan:stat_cases_resolved', '{{count}} selesai', { count: c.resolved })}</span>
                     </div>
                   );
                 })}
@@ -811,9 +811,9 @@ export function KebajikanReportPage() {
 
           {/* 5. Tiket Diescalate */}
           <GlassCard>
-            <SectionTitle num="5" title="Tiket Diescalate" subtitle="Tiket yang melebihi had masa 72 jam" />
+            <SectionTitle num="5" title={t('kebajikan:section_escalated_tickets', 'Tiket Diescalate')} subtitle={t('kebajikan:section_escalated_subtitle', 'Tiket yang melebihi had masa 72 jam')} />
             {data.escalated_tickets.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">✅ Tiada tiket diescalate bulan ini</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_escalated_tickets_month', '✅ Tiada tiket diescalate bulan ini')}</p>
             ) : (
               <div className="space-y-2">
                 {data.escalated_tickets.map(t => (
@@ -830,9 +830,9 @@ export function KebajikanReportPage() {
 
           {/* 6. Prestasi Exco & Pegawai */}
           <GlassCard>
-            <SectionTitle num="6" title="Prestasi Exco & Pegawai" subtitle="Jumlah tiket di-assign, diselesaikan, purata masa" />
+            <SectionTitle num="6" title={t('kebajikan:section_staff_performance', 'Prestasi Exco & Pegawai')} subtitle={t('kebajikan:section_staff_perf_subtitle', 'Jumlah tiket di-assign, diselesaikan, purata masa')} />
             {data.by_assignee.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">Tiada data penugasan</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_assignment_data', 'Tiada data penugasan')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -861,9 +861,9 @@ export function KebajikanReportPage() {
 
           {/* 7. Penilaian Pelajar */}
           <GlassCard>
-            <SectionTitle num="7" title="Penilaian Pelajar" subtitle="Rating kepuasan setelah kes diselesaikan" />
+            <SectionTitle num="7" title={t('kebajikan:section_student_ratings', 'Penilaian Pelajar')} subtitle={t('kebajikan:section_student_ratings_subtitle', 'Rating kepuasan setelah kes diselesaikan')} />
             {data.avg_rating === null ? (
-              <p className="text-sm text-slate-500 text-center py-8">Belum ada penilaian</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_ratings_yet', 'Belum ada penilaian')}</p>
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
@@ -874,21 +874,21 @@ export function KebajikanReportPage() {
                         <Star key={s} className={cn('w-4 h-4', (data.avg_rating ?? 0) >= s ? 'fill-amber-400 text-amber-400' : 'text-white/10')} />
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-1">Purata Rating</p>
+                    <p className="text-[10px] text-slate-500 mt-1">{t('kebajikan:average_rating', 'Purata Rating')}</p>
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-emerald-400 w-20">😊 Puas Hati</span>
+                      <span className="text-xs text-emerald-400 w-20">{t('kebajikan:rating_satisfied', '😊 Puas Hati')}</span>
                       <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${data.avg_rating ? Math.round((data.satisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
                       <span className="text-xs text-slate-400">{data.satisfied_count}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-amber-400 w-20">😐 Neutral</span>
+                      <span className="text-xs text-amber-400 w-20">{t('kebajikan:rating_neutral', '😐 Neutral')}</span>
                       <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-amber-400" style={{ width: `${data.avg_rating ? Math.round((data.neutral_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
                       <span className="text-xs text-slate-400">{data.neutral_count}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-red-400 w-20">😞 Tidak Puas</span>
+                      <span className="text-xs text-red-400 w-20">{t('kebajikan:rating_unsatisfied', '😞 Tidak Puas')}</span>
                       <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-red-500" style={{ width: `${data.avg_rating ? Math.round((data.unsatisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
                       <span className="text-xs text-slate-400">{data.unsatisfied_count}</span>
                     </div>
@@ -896,7 +896,7 @@ export function KebajikanReportPage() {
                 </div>
                 {data.top_comments.length > 0 && (
                   <div className="space-y-2 pt-2 border-t border-white/5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Ulasan Terpilih</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t('kebajikan:featured_reviews', 'Ulasan Terpilih')}</p>
                     {data.top_comments.map((c, i) => (
                       <div key={i} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
                         <div className="flex gap-0.5 flex-shrink-0 mt-0.5">
@@ -913,9 +913,9 @@ export function KebajikanReportPage() {
 
           {/* 8. Tiket Masih Tertunggak */}
           <GlassCard>
-            <SectionTitle num="8" title="Tiket Masih Tertunggak" subtitle="Perlu tindakan bulan hadapan" />
+            <SectionTitle num="8" title={t('kebajikan:section_pending_tickets', 'Tiket Masih Tertunggak')} subtitle={t('kebajikan:section_pending_subtitle', 'Perlu tindakan bulan hadapan')} />
             {data.pending_tickets.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">✅ Semua tiket telah selesai</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:all_tickets_resolved', '✅ Semua tiket telah selesai')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
