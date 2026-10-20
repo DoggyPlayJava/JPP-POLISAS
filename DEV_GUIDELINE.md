@@ -5161,3 +5161,81 @@ Sesi ini melengkapkan fasa kemuncak (Task 7) bagi Inisiatif Penyetempatan Menyel
    - Transformasi 4,889 modul Vite berjaya sepenuhnya tanpa ralat kompilasi TypeScript atau Rollup.
    - PWA Service Worker generasi baharu (`dist/sw.js` & `dist/sw.mjs`) dijana dengan suntikan manifes dan caching penuh (28 entri pra-cache).
    - Tiada perubahan pangkalan data dilakukan (Zero Database Alterations), tiada skema/migrasi diubah, dan pola singleton Supabase (`@/lib/supabase`) dipelihara 100%.
+
+---
+
+## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP
+
+> Dikemas kini: Oktober 2026 (Piawaian Pariti Dwi-Tema Exco & Ergonomik Pengepala Navigasi)
+
+Bagi memastikan kebolehbacaan optimum dan ketekalan reka bentuk merentasi seluruh portal pengurusan dan modul siswa JPP, piawaian berikut diwajibkan bagi sebarang pembangunan atau pengubahsuaian komponen Exco, panel semakan, dan elemen navigasi sidebar.
+
+### 37.1 Piawaian Pariti Dwi-Tema Modul Exco & Panel Tertanam (Dual-Theme Parity Standard)
+
+Setiap halaman Exco tersendiri (`src/components/exco/ExcoAktivitiPage.tsx`, `src/components/exco/ExcoLaporanPage.tsx`, `src/components/exco/ExcoSemakanLaporanPage.tsx`) serta komponen/panel semakan yang boleh dihoskan dalam kad atau kontena cerah (`src/components/program/MeritRasmiReviewPanel.tsx`) WAJIB mematuhi spesifikasi dwi-tema berikut:
+
+1. **Bekas Asas Halaman (Base Container):**
+   - Wajib menggunakan token dwi-tema bersatu dengan warna kanvas institusi:
+     ```tsx
+     min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors duration-300
+     ```
+   - Mengelakkan warna gelap mutlak yang tidak bersyarat pada peringkat akar halaman.
+
+2. **Kad & Permukaan Komponen (Card & Surface Hierarchy):**
+   - Kad dan kontena panel menggunakan kombinasi latar belakang dan sempadan halus adaptif:
+     ```tsx
+     bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-sm
+     ```
+   - Bahagian pengepala (*header*), bar penapis (*filter bar*), dan bar tab:
+     ```tsx
+     bg-white/80 dark:bg-[#12121a]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/10
+     ```
+
+3. **Skala Tipografi Berkontras Tinggi (Text Scale):**
+   - **Teks Primer / Utama (Headings, Nama, Tajuk):**
+     `text-slate-900 dark:text-white`
+   - **Teks Sekunder (Penerangan, Label Borang, Nilai Data):**
+     `text-slate-600 dark:text-white/40` (atau `dark:text-slate-300` / `dark:text-white/60` untuk teks perenggan panjang)
+   - **Teks Meta / Subteks (Cap Masa, ID Rujukan, Pembantu Ringkas):**
+     `text-slate-500 dark:text-white/30`
+
+4. **Prinsip Sifar `text-white` Tanpa Syarat (Zero Unconditioned `text-white`):**
+   - **LARANGAN MUTLAK:** Dilarang meletakkan kelas statik `text-white` tanpa pengubahsuai `dark:` pada mana-mana teks atau elemen yang boleh dipaparkan di atas latar belakang cerah.
+   - Panel tertanam seperti `MeritRasmiReviewPanel` boleh dimuatkan di dalam modal, kad putih, mahupun halaman bertema gelap; oleh itu, semua label, nombor metrik, nama aktiviti, dan butang penolakan/kelulusan WAJIB menggunakan kelas dwi-tema (contoh: `text-slate-900 dark:text-white`, `text-slate-700 dark:text-slate-300`).
+   - Elemen yang dibenarkan menggunakan `text-white` tanpa `dark:` HANYALAH elemen yang mempunyai latar belakang warna gelap/tebal statik yang terjamin, contohnya butang tindakan kecemasan `bg-rose-600 text-white` atau lencana status berpejal gelap.
+
+### 37.2 Pola Sarikata Institusi Ringkas (Concise Institutional Subtitle Pattern)
+
+Bagi mengelakkan isu teks melimpah (*overflow*), terpotong secara hodoh (*clipping*), atau merosakkan hierarki visual pada paparan sempit dan sidebar:
+
+1. **Had Panjang & Format Sarikata / Tagline:**
+   - Tagline atau sarikata modul hendaklah padat, berimpak tinggi, dan berorientasikan fungsi institusi:
+     - **Had perkataan:** 2 hingga 4 patah perkataan.
+     - **Had aksara:** Maksimum **35 aksara**.
+   - Contoh pelaksanaan yang betul:
+     - *"PENGURUSAN MERIT SISWA"* (21 aksara)
+     - *"PUSAT GERAKAN MAHASISWA"* (23 aksara)
+     - *"PENTADBIRAN SUKAN"* (17 aksara)
+     - *"LOGISTIK & KEBAJIKAN"* (20 aksara)
+
+2. **Kawalan Penjarakan Huruf (Letter Tracking in Sidebars):**
+   - Di dalam sidebar navigasi dan bekas bersaiz kompak, penjarakan huruf **tidak boleh melebihi `tracking-[0.15em]`** (disyorkan `tracking-wider` atau `tracking-[0.12em]`).
+   - Elakkan nilai penjejakan melampau seperti `tracking-[0.3em]` atau `tracking-[0.4em]` yang memaksa rentetan teks memanjang dan bertindih dengan butang atau jidar sempadan.
+
+### 37.3 Susun Atur Ergonomik Pengepala JppSidebar (2-Row Layout Architecture)
+
+Untuk menghapuskan isu logo dan nama JPP terhimpit (*header squish*) apabila pelbagai butang utiliti (suis tema, suis bahasa, butang kembali/tutup) berkongsi satu baris yang sama, `JppSidebar` menggunakan arkitektur pengepala **2-Baris (2-Row Layout)** yang dilindungi:
+
+1. **Baris 1 (Row 1 — Kluster Navigasi & Utiliti):**
+   - Menempatkan butang navigasi keluar/kembali (cth. `NavBackToStudentBtn`) di sebelah kiri dan kluster utiliti (`ThemeToggle` & `UniversalLanguageToggle`) di sebelah kanan.
+   - Disusun menggunakan `flex items-center justify-between w-full pb-3 border-b border-rose-200/40 dark:border-white/10`.
+   - Mengelakkan utiliti daripada bersaing ruang dengan logo atau teks identiti organisasi.
+
+2. **Baris 2 (Row 2 — Bekas Identiti Jenama Dilindungi / Protected Branding Container):**
+   - **Bekas Logo:** Wajib mempunyai saiz tetap dengan perlindungan pengecutan:
+     ```tsx
+     shrink-0 w-11 h-11 rounded-2xl overflow-hidden shadow-sm
+     ```
+   - **Bekas Teks & Tipografi:** Menggunakan `min-w-0 flex-1` untuk memastikan teks tajuk dan kapsyen mengalir secara fleksibel tanpa memicit nisbah aspek logo rasmi JPP.
+   - Memastikan identiti visual kekal konsisten, berkontras tajam, dan selesa dipandang pada semua nisbah skrin dari telefon pintar hingga paparan monitor lebar.
+
