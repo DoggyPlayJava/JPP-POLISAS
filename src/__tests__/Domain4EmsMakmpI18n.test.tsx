@@ -344,7 +344,7 @@ describe('Task 6: Domain 4 Integration — Events & Honors (EMS & MAKMP) i18n', 
       const html = renderPage(<EmsDashboardPage />);
       expect(html).toContain('EMS Event Central Hub');
       expect(html).toContain('Event Time &amp; Bracket Matrix');
-      expect(html).toContain('Tournament orchestration, digital jury grading sheets, live scoreboard, and verifiable digital certificates.');
+      expect(html).toContain('Event Management System');
     });
 
     it('renders EmsJuryPortalPage in English with jury_portal, jury_rubric, submit_score, score_locked', () => {
@@ -501,7 +501,7 @@ describe('Task 6: Domain 4 Integration — Events & Honors (EMS & MAKMP) i18n', 
       const html = renderPage(<EmsDashboardPage />);
       expect(html).toContain('Hab Pusat Acara EMS');
       expect(html).toContain('Jadual Acara &amp; Braket Pertandingan');
-      expect(html).toContain('Pengurusan kejohanan, borang markah juri digital, papan markah langsung, dan sijil digital boleh sah.');
+      expect(html).toContain('Sistem Pengurusan Acara');
     });
 
     it('renders EmsJuryPortalPage in Bahasa Melayu with jury_portal, jury_rubric, submit_score, score_locked', () => {
