@@ -211,5 +211,6 @@
   "submit_missing_fields_alert": "Please complete all fields marked with an asterisk (*) before reviewing.",
   "ticket_category": "Category",
   "ticket_title": "Complaint Title",
-  "location": "Location"
+  "location": "Location",
+  "smart_pantry_basket_link": "Want to pick items one-by-one to your preference? Open Smart Pantry Basket"
 }

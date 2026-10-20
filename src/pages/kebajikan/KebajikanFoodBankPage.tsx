@@ -2072,7 +2072,7 @@ export function KebajikanFoodBankPage() {
                     onClick={() => setPackageMode('SMART_PANTRY')}
                     className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
                   >
-                    <span>Mahu pilih item satu-persatu mengikut citarasa? Buka Smart Pantry Basket</span>
+                    <span>{t('kebajikan:smart_pantry_basket_link', 'Mahu pilih item satu-persatu mengikut citarasa? Buka Smart Pantry Basket')}</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

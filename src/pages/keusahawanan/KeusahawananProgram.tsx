@@ -614,7 +614,7 @@ export function KeusahawananProgram() {
                         ) : myRegistrations.includes(selectedProgram.id) ? (
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                         ) : null}
-                        {myRegistrations.includes(selectedProgram.id) ? t('keusahawanan:program_register_interest', 'Sudah Daftar Minat') : t('keusahawanan:program_register_interest', 'Daftar Minat')}
+                        {myRegistrations.includes(selectedProgram.id) ? t('keusahawanan:program_already_registered', 'Sudah Daftar Minat') : t('keusahawanan:program_register_interest', 'Daftar Minat')}
                       </Button>
                     )}
 
