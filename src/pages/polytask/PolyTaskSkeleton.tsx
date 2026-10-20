@@ -1,8 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function PolyTaskSkeletonCard() {
+  const { t } = useTranslation('common');
   return (
-    <div className="relative bg-slate-900 border border-white/5 rounded-3xl p-6 flex flex-col h-full animate-pulse overflow-hidden">
+    <div role="status" aria-label={t('common:loading', 'Memuatkan...')} className="relative bg-slate-900 border border-white/5 rounded-3xl p-6 flex flex-col h-full animate-pulse overflow-hidden">
+      <span className="sr-only">{t('common:loading', 'Memuatkan...')}</span>
       {/* Background shimmer effect */}
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
       
@@ -38,16 +41,11 @@ export function PolyTaskSkeletonCard() {
   );
 }
 
-// Add this into your global index.css or tailwind config:
-// @keyframes shimmer {
-//   100% {
-//     transform: translateX(100%);
-//   }
-// }
-
 export function PolyTaskJobDetailSkeleton() {
+  const { t } = useTranslation('common');
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto min-h-screen pb-24">
+    <div role="status" aria-label={t('common:loading', 'Memuatkan...')} className="p-4 md:p-8 max-w-4xl mx-auto min-h-screen pb-24">
+      <span className="sr-only">{t('common:loading', 'Memuatkan...')}</span>
       {/* Back Button Skeleton */}
       <div className="w-24 h-5 bg-slate-800 rounded animate-pulse mb-6" />
 

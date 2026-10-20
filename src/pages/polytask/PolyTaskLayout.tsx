@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, Clock, PlusCircle, User, ArrowLeft, Menu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +12,7 @@ import { CreateJobModal } from '@/components/polytask/CreateJobModal';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function PolyTaskLayout() {
+  const { t } = useTranslation(['gig', 'portal', 'common']);
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -18,9 +20,9 @@ export function PolyTaskLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const NAV_LINKS = [
-    { name: 'Cari Kerja', path: '/polytask', icon: Briefcase },
-    { name: 'Kerja Saya', path: '/polytask/my-jobs', icon: User },
-    { name: 'Bidaan Saya', path: '/polytask/my-bids', icon: Clock },
+    { name: t('gig:find_tasks', 'Cari Kerja'), path: '/polytask', icon: Briefcase },
+    { name: t('gig:my_tasks', 'Kerja Saya'), path: '/polytask/my-jobs', icon: User },
+    { name: t('gig:my_bids', 'Bidaan Saya'), path: '/polytask/my-bids', icon: Clock },
   ];
 
   // Auto-close mobile sidebar when navigating
@@ -39,20 +41,20 @@ export function PolyTaskLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60  z-[130] md:hidden"
+            className="fixed inset-0 bg-black/60 z-[130] md:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* Mobile Header */}
-      <div className="md:hidden sticky top-0 z-50 bg-slate-900/80  border-b border-white/5 flex items-center justify-between p-4">
+      <div className="md:hidden sticky top-0 z-50 bg-slate-900/80 border-b border-white/5 flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/portal')} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full text-slate-400">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
             <h1 className="text-lg font-bold text-white leading-tight">PolyTask</h1>
-            <p className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">Ekonomi Gig</p>
+            <p className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">{t('gig:polytask_gig_economy', 'Ekonomi Gig')}</p>
           </div>
         </div>
       </div>
@@ -72,7 +74,7 @@ export function PolyTaskLayout() {
 
         <div className="p-6">
           <button onClick={() => navigate('/portal')} className="flex items-center text-sm text-slate-400 hover:text-white mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Portal Utama
+            <ArrowLeft className="w-4 h-4 mr-2" /> {t('portal:main_portal', 'Portal Utama')}
           </button>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.2)]">
@@ -80,7 +82,7 @@ export function PolyTaskLayout() {
             </div>
             <div>
               <h1 className="font-bold text-white text-lg leading-tight">PolyTask</h1>
-              <p className="text-xs text-indigo-400 font-medium">Platform Gig Pelajar</p>
+              <p className="text-xs text-indigo-400 font-medium">{t('gig:student_gig_platform', 'Platform Gig Pelajar')}</p>
             </div>
           </div>
 
@@ -129,11 +131,11 @@ export function PolyTaskLayout() {
             }}
             className="tour-step-create-desktop w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] border-none"
           >
-            <PlusCircle className="w-4 h-4 mr-2" /> Cipta Tugasan
+            <PlusCircle className="w-4 h-4 mr-2" /> {t('gig:create_task_btn', 'Cipta Tugasan')}
           </Button>
           <div className="mt-4 p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/20 hidden md:block">
             <p className="text-xs text-indigo-300/70 text-center leading-relaxed">
-              Jana pendapatan dengan membantu rakan pelajar menyelesaikan tugasan harian.
+              {t('gig:polytask_earn_tagline', 'Jana pendapatan dengan membantu rakan pelajar menyelesaikan tugasan harian.')}
             </p>
           </div>
         </div>

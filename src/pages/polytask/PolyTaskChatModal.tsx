@@ -6,6 +6,7 @@ import { X, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface PolyTaskChatModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface PolyTaskChatModalProps {
 }
 
 export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserName }: PolyTaskChatModalProps) {
+  const { t, i18n } = useTranslation('gig');
   const { profile } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -87,10 +89,6 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
     const msgText = newMessage.trim();
     setNewMessage('');
 
-    // Optimistic UI update could be done here, but since Realtime is fast, 
-    // we'll just wait for the insert or rely on the realtime event to show it.
-    // However, it's safer to just let the Realtime event update the UI.
-
     const { error } = await supabase.from('polytask_chats').insert({
       job_id: jobId,
       sender_id: profile.id,
@@ -98,10 +96,12 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
     });
 
     if (error) {
-      toast.error('Gagal menghantar mesej');
+      toast.error(t('gig:send_message_failed', 'Gagal menghantar mesej'));
       setNewMessage(msgText); // Revert message text on failure
     }
   };
+
+  const dateFnsLocale = i18n.language === 'en' ? undefined : ms;
 
   return (
     <AnimatePresence>
@@ -111,7 +111,7 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/80 "
+            className="absolute inset-0 bg-slate-950/80"
             onClick={onClose}
           />
           <motion.div
@@ -148,14 +148,11 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-500">
                   <MessageCircle className="w-12 h-12 mb-3 opacity-20" />
-                  <p>Mula bersembang dengan {otherUserName}</p>
+                  <p>{t('gig:start_chat_with', 'Mula bersembang dengan {{name}}', { name: otherUserName })}</p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {
                   const isMe = msg.sender_id === profile?.id;
-                  
-                  // Simple logic to group timestamps or handle consecutive messages 
-                  // can be added here. For now, basic display.
 
                   return (
                     <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
@@ -167,7 +164,7 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
                       </div>
                       <span className="text-[10px] text-slate-500 mt-1 px-1">
-                        {format(new Date(msg.created_at), 'hh:mm a', { locale: ms })}
+                        {format(new Date(msg.created_at), 'hh:mm a', { locale: dateFnsLocale })}
                       </span>
                     </div>
                   );
@@ -183,7 +180,7 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Taip mesej anda di sini..."
+                  placeholder={t('gig:type_message_placeholder', 'Taip mesej anda di sini...')}
                   className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
                 />
                 <button

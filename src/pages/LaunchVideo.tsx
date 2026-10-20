@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useAnimation, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-qr-code';
 import { 
   Crown, Activity, Lock, KeyRound, Fingerprint, Menu, Search, Coffee, Moon, Droplet, 
@@ -349,6 +350,7 @@ const LABELS = [
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export function LaunchVideo() {
+  const { t } = useTranslation('portal');
   const navigate = useNavigate();
   const [phase, setPhase] = useState(0);
   const [showHUD, setShowHUD] = useState(false);
@@ -513,7 +515,7 @@ export function LaunchVideo() {
               className="flex flex-col items-center mt-[-8vw] z-20"
             >
               <h1 className="text-[7vw] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-300 drop-shadow-[0_0_40px_rgba(99,102,241,1)]">JPP POLISAS</h1>
-              <p className="text-[1.2vw] font-light tracking-[0.8em] text-indigo-400 uppercase mt-[0.5vw]">Revolusi Ekosistem Digital</p>
+              <p className="text-[1.2vw] font-light tracking-[0.8em] text-indigo-400 uppercase mt-[0.5vw]">{t('portal:digital_ecosystem_revolution', 'Revolusi Ekosistem Digital')}</p>
             </motion.div>
 
             <motion.div initial={{scale:0.5, opacity:0, rotateX:60}} animate={{scale:1, opacity:1, rotateX:0}} transition={{delay:1, duration:1.5, type:'spring'}} className="mt-[4vw] flex flex-col items-center z-20 relative">
@@ -535,7 +537,7 @@ export function LaunchVideo() {
                 </motion.div>
               </div>
 
-              <motion.p animate={{y:[0, -5, 0]}} transition={{duration:4, repeat:Infinity, ease:'easeInOut'}} className="text-[1.5vw] font-black tracking-widest mt-[5vw] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300">Sedia Untuk Diakses.</motion.p>
+              <motion.p animate={{y:[0, -5, 0]}} transition={{duration:4, repeat:Infinity, ease:'easeInOut'}} className="text-[1.5vw] font-black tracking-widest mt-[5vw] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300">{t('portal:ready_to_access', 'Sedia Untuk Diakses.')}</motion.p>
               <p className="text-[1.2vw] font-light tracking-[0.4em] text-white/60 mt-[0.5vw]">jpp.cipher-node.org</p>
             </motion.div>
 
@@ -546,12 +548,12 @@ export function LaunchVideo() {
                 <button onClick={()=>navigate('/login')} className="relative overflow-hidden px-[5vw] py-[1.2vw] rounded-full text-white font-black text-[1.2vw] hover:scale-105 transition-all tracking-[0.2em] uppercase cursor-pointer border border-white/20 bg-black/40 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.3)]">
                   <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
                   <motion.div className="absolute inset-0 pointer-events-none mix-blend-overlay" animate={{x:['-100%', '200%']}} transition={{duration:3, repeat:Infinity, repeatDelay:2, ease:'easeInOut'}} style={{background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', width:'50%', transform:'skewX(-20deg)'}} />
-                  MASUK KE PORTAL
+                  {t('portal:enter_portal', 'MASUK KE PORTAL')}
                 </button>
               </div>
 
               <p className="text-[0.65vw] tracking-[0.3em] text-white/30 uppercase font-light drop-shadow-md">
-                Dibangunkan oleh Jawatankuasa Perwakilan Pelajar POLISAS &copy; 2026.
+                {t('portal:developed_by_jpp', 'Dibangunkan oleh Jawatankuasa Perwakilan Pelajar POLISAS © 2026.')}
               </p>
             </motion.div>
 
@@ -626,7 +628,7 @@ export function LaunchVideo() {
             initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:20}}
             transition={{duration:0.6, ease:SE}}
             className="fixed bottom-[4.5%] right-[3%] z-[97] text-right pointer-events-none">
-            <p className="text-[0.5vw] font-mono tracking-[0.3em] uppercase" style={{color: MODULES[moduleIdx].gc + '90'}}>Modul</p>
+            <p className="text-[0.5vw] font-mono tracking-[0.3em] uppercase" style={{color: MODULES[moduleIdx].gc + '90'}}>{t('portal:module', 'Modul')}</p>
             <p className="text-[1.4vw] font-black leading-none" style={{color: MODULES[moduleIdx].gc}}>
               {String(moduleIdx+1).padStart(2,'0')} <span className="text-white/20 font-light">/ 10</span>
             </p>
