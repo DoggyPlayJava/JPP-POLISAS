@@ -157,7 +157,7 @@
   "program_vis_jpp_only": "Internal JPP Only",
   "program_empty": "No programs found",
   "program_register_interest": "Register Interest",
-  "program_limited_pax": "Limited to {{count}} participants",
+  "program_limited_pax": "Limited to {{count}} pax",
   "program_open_pax": "Open Capacity",
   "program_pax_interested": "participants interested",
   "pos_sort_name": "Name A–Z",

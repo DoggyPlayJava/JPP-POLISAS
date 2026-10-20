@@ -433,7 +433,7 @@
   "announcements_broadcast_created": "Announcement created successfully.",
   "announcements_broadcast_updated": "Announcement updated successfully.",
   "announcements_broadcast_deleted": "Announcement deleted successfully.",
-  "announcements_push_sent": "Push notification broadcast sent successfully.",
+  "announcements_push_sent": "Push broadcast sent successfully.",
   "announcements_fill_title_content": "Please fill in title and content",
   "announcements_status_updated": "Status updated",
   "announcements_actions_and_forms": "Actions & Forms (Optional)",

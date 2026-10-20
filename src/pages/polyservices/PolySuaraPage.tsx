@@ -1342,7 +1342,7 @@ export function PolySuaraPage({
             ) : isCommentDeletedByAuthor ? (
               <div className="py-1">
                 <span className="text-slate-400 dark:text-slate-500 italic text-xs flex items-center gap-1">
-                  <Trash2 className="w-3.5 h-3.5 text-slate-400" /> {t('services:author_deleted_comment', '{{author}} telah memadamkan ruangan ini', { author: displayName })}
+                  <Trash2 className="w-3.5 h-3.5 text-slate-400" /> {t('services:author_deleted_comment', '{{author}} telah memadamkan ruangan ini', { author: displayName }).replace('{{author}}', displayName)}
                 </span>
               </div>
             ) : comment.is_sensitive ? (
@@ -2038,7 +2038,7 @@ export function PolySuaraPage({
                         {isConfessionDeleted ? (
                           <div className="py-2 mb-3.5">
                             <span className="text-slate-400 dark:text-slate-500 italic text-sm flex items-center gap-1.5">
-                              <Trash2 className="w-4 h-4 text-slate-400" /> {t('services:author_deleted_post', '{{author}} telah memadamkan ruangan ini', { author: confession.codename || t('services:author', 'Penulis') })}
+                              <Trash2 className="w-4 h-4 text-slate-400" /> {t('services:author_deleted_post', '{{author}} telah memadamkan ruangan ini', { author: confession.codename || t('services:author', 'Penulis') }).replace('{{author}}', confession.codename || t('services:author', 'Penulis'))}
                             </span>
                           </div>
                         ) : (

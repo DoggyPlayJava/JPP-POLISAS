@@ -235,13 +235,13 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).toContain('JPP RASMI');
 
       // Discrete escalation trigger replacing bulky yellow button
-      expect(pageContent).toContain('title="Eskalasi kecemasan ke Kebajikan (Rahsia)"');
+      expect(pageContent).toMatch(/title="Eskalasi kecemasan ke Kebajikan \(Rahsia\)"|title=\{t\(['"]services:welfare_escalation_tooltip['"],\s*['"]Eskalasi kecemasan ke Kebajikan \(Rahsia\)['"]\)\}/);
       expect(pageContent).not.toContain('bg-amber-500/10 hover:bg-amber-500/20');
     });
 
     it('renders modern floating capsule comment input bar and sensitive comment blur toggle', () => {
       expect(pageContent).toContain('rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center gap-2');
-      expect(pageContent).toContain('placeholder="Tulis ulasan sulit anda..."');
+      expect(pageContent).toMatch(/placeholder="Tulis ulasan sulit anda\.\.\."|placeholder=\{t\(['"]services:write_confidential_comment['"],\s*['"]Tulis ulasan sulit anda\.\.\.['"]\)\}/);
       expect(pageContent).not.toContain('Pelekat Kampus');
       expect(pageContent).toContain('Tanda sebagai Sensitif (Blur)');
     });
@@ -278,14 +278,14 @@ describe('PolySuara Comments Suite (TDD)', () => {
 
       // Discrete ··· action trigger
       expect(pageContent).toContain('···');
-      expect(pageContent).toContain('title="Pilihan ulasan"');
+      expect(pageContent).toMatch(/title="Pilihan ulasan"|title=\{t\(['"]services:comment_options['"],\s*['"]Pilihan ulasan['"]\)\}/);
 
       // Micro-heart like button
-      expect(pageContent).toContain('aria-label="Suka ulasan"');
+      expect(pageContent).toMatch(/aria-label="Suka ulasan"|aria-label=\{t\(['"]services:like_comment['"],\s*['"]Suka ulasan['"]\)\}/);
       expect(pageContent).toContain('comment.upvotes || 0');
 
       // Subtle Balas button
-      expect(pageContent).toContain('aria-label="Balas komen"');
+      expect(pageContent).toMatch(/aria-label="Balas komen"|aria-label=\{t\(['"]services:reply_comment['"],\s*['"]Balas komen['"]\)\}/);
       expect(pageContent).toContain('<MessageCircle className="w-3.5 h-3.5" />');
     });
   });
