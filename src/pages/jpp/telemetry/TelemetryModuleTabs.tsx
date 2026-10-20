@@ -324,55 +324,55 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
             icon={GraduationCap}
             color="#8B5CF6"
             metrics={[
-              { label: 'Rekod CGPA', value: m.akademik_cgpa || 0 },
-              { label: 'Pencapaian Siswa', value: m.akademik_pencapaian || 0 },
-              { label: 'Fail Sijil Repository', value: m.akademik_files || 0 },
+              { label: t('jpp:telemetry_metric_cgpa_records', 'Rekod CGPA'), value: m.akademik_cgpa || 0 },
+              { label: t('jpp:telemetry_metric_student_achievements', 'Pencapaian Siswa'), value: m.akademik_pencapaian || 0 },
+              { label: t('jpp:telemetry_metric_cert_files', 'Fail Sijil Repository'), value: m.akademik_files || 0 },
             ]}
           />
           <SubModuleCard
-            name="Kelab & Persatuan"
+            name={t('jpp:telemetry_module_clubs', 'Kelab & Persatuan')}
             icon={Flag}
             color="#10B981"
             metrics={[
-              { label: 'Jumlah Kelab', value: m.clubs || 0 },
-              { label: 'Aktiviti Dijalankan', value: m.club_activities || 0 },
-              { label: 'Laporan Dihantar', value: m.club_reports || 0 },
-              { label: 'Keahlian Pelajar', value: m.club_memberships || 0 },
+              { label: t('jpp:telemetry_metric_total_clubs', 'Jumlah Kelab'), value: m.clubs || 0 },
+              { label: t('jpp:telemetry_metric_activities_conducted', 'Aktiviti Dijalankan'), value: m.club_activities || 0 },
+              { label: t('jpp:telemetry_metric_reports_submitted', 'Laporan Dihantar'), value: m.club_reports || 0 },
+              { label: t('jpp:telemetry_metric_student_memberships', 'Keahlian Pelajar'), value: m.club_memberships || 0 },
             ]}
           />
           <SubModuleCard
-            name="SUPSAS Sukan"
+            name={t('jpp:telemetry_module_supsas', 'SUPSAS Sukan')}
             icon={Trophy}
             color="#EAB308"
             metrics={[
-              { label: 'Kategori Sukan', value: m.supsas_sports || 0 },
-              { label: 'Perlawanan', value: m.supsas_fixtures || 0 },
-              { label: 'Keputusan Rasmi', value: m.supsas_results || 0 },
+              { label: t('jpp:telemetry_metric_sports_categories', 'Kategori Sukan'), value: m.supsas_sports || 0 },
+              { label: t('jpp:telemetry_metric_matches', 'Perlawanan'), value: m.supsas_fixtures || 0 },
+              { label: t('jpp:telemetry_metric_official_results', 'Keputusan Rasmi'), value: m.supsas_results || 0 },
             ]}
           />
           <SubModuleCard
-            name="Karnival POLISAS"
+            name={t('jpp:telemetry_module_karnival', 'Karnival POLISAS')}
             icon={Tent}
             color="#F472B6"
             metrics={[
-              { label: 'Edisi Karnival', value: m.karnival_editions || 0 },
-              { label: 'Booth Usahawan', value: m.karnival_booths || 0 },
+              { label: t('jpp:telemetry_metric_carnival_editions', 'Edisi Karnival'), value: m.karnival_editions || 0 },
+              { label: t('jpp:telemetry_metric_booths', 'Booth Usahawan'), value: m.karnival_booths || 0 },
             ]}
           />
           <SubModuleCard
-            name="KLK (Kediaman Luar)"
+            name={t('jpp:telemetry_module_klk', 'KLK (Kediaman Luar)')}
             icon={Home}
             color="#A78BFA"
             metrics={[
-              { label: 'Pelajar Luar Berdaftar', value: m.klk_residency || 0 },
-              { label: 'Log Sinkronisasi', value: m.klk_sync_logs || 0 },
+              { label: t('jpp:telemetry_metric_external_students', 'Pelajar Luar Berdaftar'), value: m.klk_residency || 0 },
+              { label: t('jpp:telemetry_metric_sync_logs', 'Log Sinkronisasi'), value: m.klk_sync_logs || 0 },
             ]}
           />
           <SubModuleCard
-            name="Takwim Pusat"
+            name={t('jpp:telemetry_module_central_calendar', 'Takwim Pusat')}
             icon={CalendarDays}
             color="#14B8A6"
-            metrics={[{ label: 'Acara Kalendar', value: m.takwim_events || 0 }]}
+            metrics={[{ label: t('jpp:telemetry_metric_calendar_events', 'Acara Kalendar'), value: m.takwim_events || 0 }]}
           />
         </div>
       )}
@@ -392,9 +392,9 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                 : '✅'
             }
             metrics={[
-              { label: 'Jumlah Pesanan', value: m.polymart_orders || 0 },
+              { label: t('jpp:telemetry_metric_total_orders', 'Jumlah Pesanan'), value: m.polymart_orders || 0 },
               {
-                label: 'Kadar Pembatalan',
+                label: t('jpp:telemetry_metric_cancellation_rate', 'Kadar Pembatalan'),
                 value: `${(d?.polymart?.cancel_rate_pct || 0).toFixed(1)}%`,
               },
               {
@@ -443,9 +443,9 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                 : '✅'
             }
             metrics={[
-              { label: 'Jumlah Trip', value: m.polyrider_jobs || 0 },
+              { label: t('jpp:telemetry_metric_total_trips', 'Jumlah Trip'), value: m.polyrider_jobs || 0 },
               {
-                label: 'Kadar Batal',
+                label: t('jpp:telemetry_metric_cancel_rate', 'Kadar Batal'),
                 value: `${(d?.polyrider?.cancel_rate_pct || 0).toFixed(1)}%`,
               },
               {
@@ -487,9 +487,9 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
             icon={Briefcase}
             color="#F59E0B"
             metrics={[
-              { label: 'Premis Bisnes', value: m.businesses || 0 },
-              { label: 'Katalog Produk', value: m.business_products || 0 },
-              { label: 'Transaksi POS', value: m.business_transactions || 0 },
+              { label: t('jpp:telemetry_metric_business_premises', 'Premis Bisnes'), value: m.businesses || 0 },
+              { label: t('jpp:telemetry_metric_product_catalog', 'Katalog Produk'), value: m.business_products || 0 },
+              { label: t('jpp:telemetry_metric_pos_transactions', 'Transaksi POS'), value: m.business_transactions || 0 },
             ]}
           />
         </div>

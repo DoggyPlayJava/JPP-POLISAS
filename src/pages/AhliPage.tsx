@@ -102,7 +102,7 @@ export function AhliPage() {
 
       if (error) {
         console.error("Supabase Error:", error);
-        toast.error(`${t('common:error', 'Ralat')}: ${error.message}`);
+        toast.error(t('common:error_with_message', 'Ralat: {{message}}', { message: error.message }));
         throw error;
       }
 
@@ -141,7 +141,7 @@ export function AhliPage() {
     if (!targetClubId) return;
     if (!canApprove) return; // ← Ahli biasa keluar di sini
 
-    const channel = supabase.channel(`ahli_page_changes_${targetClubId}`)
+    const channel = supabase.channel(`members_page_changes_${targetClubId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -164,7 +164,7 @@ export function AhliPage() {
       let updateData: any = { account_status: status };
       
       if (status === 'REJECTED' || status === 'KICKED') {
-        const reason = status === 'KICKED' ? kickReason : 'Permohonan ditolak/Keluar dibenarkan';
+        const reason = status === 'KICKED' ? kickReason : t('kpp:reason_rejected_or_leave_allowed', 'Permohonan ditolak/Keluar dibenarkan');
         if (status === 'KICKED' && !kickReason.trim()) {
           toast.error(t('kpp:please_state_kick_reason', 'Sila nyatakan alasan pembuangan.'));
           return;
@@ -176,7 +176,7 @@ export function AhliPage() {
           action_type: 'MEMBER_KICKED',
           actor_id: profile?.id,
           actor_name: profile?.full_name,
-          description: `Telah membuang ahli. Alasan: ${reason}`,
+          description: t('kpp:member_removed_log', 'Telah membuang ahli. Alasan: {{reason}}', { reason }),
           metadata: { target_user_id: userId }
         });
         
@@ -223,13 +223,19 @@ export function AhliPage() {
       }
 
       // Hantar Notifikasi kepada Pengguna Sendiri
-      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab tersebut';
-      const notifTitle = status === 'APPROVED' ? 'Permohonan Diluluskan' : (status === 'REJECTED' ? 'Permohonan Ditolak' : 'Keahlian Dibatalkan');
+      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || t('kpp:that_club', 'Kelab tersebut');
+      const notifTitle = status === 'APPROVED'
+        ? t('kpp:application_approved', 'Permohonan Diluluskan')
+        : (status === 'REJECTED'
+            ? t('kpp:application_rejected', 'Permohonan Ditolak')
+            : t('kpp:membership_cancelled', 'Keahlian Dibatalkan'));
       const notifMsg = status === 'APPROVED' 
-          ? `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.`
+          ? t('kpp:application_approved_msg', 'Tahniah! Permohonan anda untuk menyertai {{clubName}} telah diluluskan.', { clubName })
           : (status === 'REJECTED' 
-              ? `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.` 
-              : `Keahlian anda dalam ${clubName} telah disingkirkan/ditarik balik.${kickReason ? ` Sebab: ${kickReason}` : ''}`);
+              ? t('kpp:application_rejected_msg', 'Dukacita dimaklumkan permohonan anda untuk menyertai {{clubName}} telah ditolak.', { clubName }) 
+              : (kickReason 
+                  ? t('kpp:membership_revoked_with_reason', 'Keahlian anda dalam {{clubName}} telah disingkirkan/ditarik balik. Sebab: {{reason}}', { clubName, reason: kickReason })
+                  : t('kpp:membership_revoked', 'Keahlian anda dalam {{clubName}} telah disingkirkan/ditarik balik.', { clubName })));
 
       try {
         await sendNotificationToUser(userId, {
@@ -243,7 +249,7 @@ export function AhliPage() {
 
       toast.success(status === 'APPROVED' ? t('common:action_success', 'Tindakan berjaya!') : t('kpp:member_removed', 'Ahli/Permohonan telah disingkirkan.'));
     } catch (e: any) {
-      toast.error(`${t('common:error', 'Ralat')}: ` + e.message);
+      toast.error(t('common:error_with_message', 'Ralat: {{message}}', { message: e.message }));
     }
   };
 
@@ -261,15 +267,15 @@ export function AhliPage() {
 
       const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab';
       await sendNotificationToUser(userId, {
-        title: 'Permohonan Berhenti Diluluskan',
-        message: `Permohonan anda untuk keluar dari ${clubName} telah diluluskan.`,
+        title: t('kpp:resign_request_approved', 'Permohonan Berhenti Diluluskan'),
+        message: t('kpp:resign_request_approved_msg', 'Permohonan anda untuk keluar dari {{clubName}} telah diluluskan.', { clubName }),
         type: 'SYSTEM', module: 'EKPP', link: '/kelab',
       }).catch(() => {});
 
       toast.success(t('kpp:resign_approved', 'Berhenti diluluskan.'));
       load();
     } catch (e: any) {
-      toast.error(`${t('common:error', 'Ralat')}: ` + e.message);
+      toast.error(t('common:error_with_message', 'Ralat: {{message}}', { message: e.message }));
     }
   };
 
@@ -356,9 +362,9 @@ export function AhliPage() {
         </div>
       </motion.div>
 
-      <Tabs defaultValue="senarai" className="w-full">
+      <Tabs defaultValue="roster" className="w-full">
         <TabsList className="bg-muted/40 p-1 rounded-2xl mb-8 border border-border/50 shadow-inner flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-start w-full sm:w-fit h-auto">
-          <TabsTrigger value="senarai" className="tour-senarai-mt rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
+          <TabsTrigger value="roster" className="tour-senarai-mt rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
             {t('kpp:committee_roster', 'Senarai Jawatankuasa')}
           </TabsTrigger>
           <TabsTrigger value="pending" className="tour-permohonan-baru rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all relative whitespace-nowrap">
@@ -372,7 +378,7 @@ export function AhliPage() {
         </TabsList>
 
         {/* ── TAB 1: SENARAI AHLI (GRID ASAL ANDA) ── */}
-        <TabsContent value="senarai" className="space-y-8">
+        <TabsContent value="roster" className="space-y-8">
           <div className="relative group w-full max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
             <Input

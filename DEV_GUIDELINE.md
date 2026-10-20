@@ -5253,6 +5253,19 @@ Melengkapkan gelombang pembersihan pusingan ketujuh (Batch 7) merentasi 13 fail 
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 1,533 kepada **1,209** (penurunan kumulatif 4,436 kejadian dalam 7 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 26 isu.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.33 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 8): Dashboard/Nav, JPP HQ/Users & 360 Maps/SUPSAS/EMS
+Melengkapkan gelombang pembersihan pusingan kelapan (Batch 8) merentasi 17 fail berketumpatan sederhana dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 8 Disjoint Sweep):**
+   - **Papan Pemuka Siswa, Palet Perintah & Navigasi (`portal.json`, `nav.json`, `common.json`, `kpp.json`):** `DashboardPage.tsx` (26 isu -> 0), `CommandPalette.tsx` (24 isu -> 0), `AhliPage.tsx` (18 isu -> 0), dan `Sidebar.tsx` (14 isu -> 0) diselaraskan sepenuhnya bagi kad tindakan pantas siswa, carian global palet perintah, direktori jawatankuasa/ahli kelab, dan item menu navigasi sidebar dinamik. Kunci kamus diselaraskan dengan 100% pariti.
+   - **Pentadbiran Pengguna JPP, Unit Kebajikan & Telemetri HQ (`jpp.json`):** `JppUsersPage.tsx` (25 isu -> 0), `KebajikanUnitDashboard.tsx` (23 isu -> 0), `JppHomePage.tsx` (18 isu -> 0), `TelemetryModuleTabs.tsx` (17 isu -> 0), `telemetryUtils.ts` (16 isu -> 0), `QrLinkManager.tsx` (16 isu -> 0), dan `jppConfig.ts` (14 isu -> 0) diselubungi bagi pengurusan peranan pengguna, statistik aduan exco kebajikan, metrik operasi JPP, penjana pautan QR, dan konfigurasi sembilan unit exco JPP. Kunci kamus `jpp.json` meningkat ke 2,209 kunci dengan 100% pariti.
+   - **Peta 360, Sukan SUPSAS, Cabutan Bertuah EMS & Kamsis (`services.json`, `supsas.json`, `ems.json`, `housing.json`):** `Pannellum360Viewer.tsx` (19 isu -> 0), `SupsasLandingPage.tsx` (18 isu -> 0), `EmsLuckyDrawModal.tsx` (18 isu -> 0), `KamsisSettingsModal.tsx` (16 isu -> 0), `EmsCertificateTemplate.tsx` (16 isu -> 0), dan `EmsTieBreakerModal.tsx` (14 isu -> 0) diselaraskan bagi kawalan panorama 360 darjah, carta pingat sukan SUPSAS, pemenang cabutan bertuah karnival, tetapan soalan dinamik asrama Kamsis, templat sijil digital, dan modal pemutus seri juri.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 43/43 ujian lulus merentasi suite `masterLocales`, `SweepGroup5SupsasAndHousingI18n`, dan `SweepGroup2JppUnitsAndTelemetryI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 1,209 kepada **897** (penurunan kumulatif 4,748 kejadian dalam 8 batch, menembusi paras bawah 1,000). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 16 isu.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

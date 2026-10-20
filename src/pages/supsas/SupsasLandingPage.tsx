@@ -78,7 +78,7 @@ function CountdownBlock({ value, label }: { value: number; label: string }) {
 function MiniPodium({ tally }: { tally: any[] }) {
   const top3 = tally.slice(0, 3);
   const heights = ['h-16', 'h-12', 'h-10'];
-  const golds = ['🥇', '🥈', '🥉'];
+
   if (top3.length === 0) return null;
   return (
     <div className="flex items-end justify-center gap-2 mt-6">
@@ -93,7 +93,7 @@ function MiniPodium({ tally }: { tally: any[] }) {
             transition={{ delay: actualRank * 0.15 }}
             className="flex flex-col items-center gap-1"
           >
-            <span className="text-lg">{golds[actualRank]}</span>
+            <Medal className={cn('w-5 h-5', actualRank === 0 ? 'text-amber-400' : actualRank === 1 ? 'text-slate-300' : 'text-orange-400')} />
             <div className="text-[10px] font-black text-white text-center max-w-[72px] truncate">{k.short_code}</div>
             <div
               className={cn(
@@ -162,10 +162,10 @@ export function SupsasLandingPage() {
   }
 
   const QUICK_LINKS = [
-    { label: t('supsas:medal_tally', 'Papan Markah & Pungutan Pingat'), desc: 'Papan markah medal masa nyata', icon: BarChart3, path: '/supsas/scoreboard', color: 'amber' },
-    { label: t('supsas:fixtures_results', 'Jadual Perlawanan & Keputusan Langsung'), desc: 'Semak perlawanan & keputusan', icon: Calendar, path: '/supsas/jadual', color: 'blue' },
-    { label: t('supsas:sports_categories', 'Disiplin Sukan & Olahraga'), desc: `${sports.length} sukan dipertandingkan`, icon: Trophy, path: '/supsas/sukan', color: 'emerald' },
-    { label: 'Kontinjen', desc: `${kontingen.length} jabatan bersaing`, icon: Users, path: '/supsas/kontinjen', color: 'violet' },
+    { label: t('supsas:medal_tally', 'Papan Markah & Pungutan Pingat'), desc: t('supsas:quick_scoreboard_desc', 'Papan markah medal masa nyata'), icon: BarChart3, path: '/supsas/scoreboard', color: 'amber' },
+    { label: t('supsas:fixtures_results', 'Jadual Perlawanan & Keputusan Langsung'), desc: t('supsas:quick_fixtures_desc', 'Semak perlawanan & keputusan'), icon: Calendar, path: '/supsas/jadual', color: 'blue' },
+    { label: t('supsas:sports_categories', 'Disiplin Sukan & Olahraga'), desc: t('supsas:quick_sports_count_desc', '{{count}} sukan dipertandingkan', { count: sports.length }), icon: Trophy, path: '/supsas/sukan', color: 'emerald' },
+    { label: t('supsas:contingent_label', 'Kontinjen'), desc: t('supsas:quick_contingents_count_desc', '{{count}} jabatan bersaing', { count: kontingen.length }), icon: Users, path: '/supsas/kontinjen', color: 'violet' },
   ];
 
   const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -206,7 +206,7 @@ export function SupsasLandingPage() {
             <Trophy className="w-3.5 h-3.5 text-amber-400" />
           )}
           <span className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-300">
-            {isLive ? 'Sedang Berlangsung · ' : ''}{edition?.name}
+            {isLive ? t('supsas:ongoing_prefix', 'Sedang Berlangsung · ') : ''}{edition?.name}
           </span>
         </motion.div>
 
@@ -234,7 +234,7 @@ export function SupsasLandingPage() {
           >
             <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-red-500/20 border border-red-500/30">
               <Flame className="w-5 h-5 text-red-400 animate-pulse" />
-              <span className="text-sm font-black uppercase tracking-widest text-red-300">Acara Sedang Berlangsung</span>
+              <span className="text-sm font-black uppercase tracking-widest text-red-300">{t('supsas:event_ongoing_banner', 'Acara Sedang Berlangsung')}</span>
               <Flame className="w-5 h-5 text-red-400 animate-pulse" />
             </div>
             <MiniPodium tally={medalTally} />
@@ -244,15 +244,15 @@ export function SupsasLandingPage() {
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
             className="flex flex-col items-center gap-6 mb-12"
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Bermula dalam</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">{t('supsas:starts_in', 'Bermula dalam')}</p>
             <div className="flex items-end gap-3 sm:gap-4">
-              <CountdownBlock value={countdown.days}    label="Hari" />
+              <CountdownBlock value={countdown.days}    label={t('supsas:days_label', 'Hari')} />
               <span className="text-2xl font-black text-white/20 pb-6">:</span>
-              <CountdownBlock value={countdown.hours}   label="Jam" />
+              <CountdownBlock value={countdown.hours}   label={t('supsas:hours_label', 'Jam')} />
               <span className="text-2xl font-black text-white/20 pb-6">:</span>
-              <CountdownBlock value={countdown.minutes} label="Minit" />
+              <CountdownBlock value={countdown.minutes} label={t('supsas:minutes_label', 'Minit')} />
               <span className="text-2xl font-black text-white/20 pb-6">:</span>
-              <CountdownBlock value={countdown.seconds} label="Saat" />
+              <CountdownBlock value={countdown.seconds} label={t('supsas:seconds_label', 'Saat')} />
             </div>
           </motion.div>
         ) : null}
@@ -269,7 +269,7 @@ export function SupsasLandingPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
             <span className="relative flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              Lihat Kedudukan
+              {t('supsas:view_standings_btn', 'Lihat Kedudukan')}
             </span>
           </button>
           <button
@@ -277,7 +277,7 @@ export function SupsasLandingPage() {
             className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/70 font-black uppercase text-sm tracking-widest hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300  flex items-center gap-2"
           >
             <Calendar className="w-4 h-4" />
-            Jadual Pertandingan
+            {t('supsas:match_schedule_btn', 'Jadual Pertandingan')}
           </button>
         </motion.div>
       </section>
@@ -286,10 +286,10 @@ export function SupsasLandingPage() {
       <section className="border-y border-white/5 bg-white/[0.02] px-4 py-5 overflow-hidden">
         <div className="flex items-center justify-center gap-8 md:gap-16 flex-wrap">
           {[
-            { icon: Users, value: kontingen.length, label: 'Kontinjen' },
-            { icon: Trophy, value: sports.length, label: 'Sukan' },
-            { icon: Medal, value: medalTally.reduce((a, k) => a + k.total_medals, 0), label: 'Medal Diraih' },
-            { icon: Star, value: edition?.edition_year ?? '—', label: 'Edisi' },
+            { icon: Users, value: kontingen.length, label: t('supsas:stat_contingents', 'Kontinjen') },
+            { icon: Trophy, value: sports.length, label: t('supsas:stat_sports', 'Sukan') },
+            { icon: Medal, value: medalTally.reduce((a, k) => a + k.total_medals, 0), label: t('supsas:stat_medals_won', 'Medal Diraih') },
+            { icon: Star, value: edition?.edition_year ?? '—', label: t('supsas:stat_edition', 'Edisi') },
           ].map(({ icon: Icon, value, label }, i) => (
             <motion.div
               key={label}
@@ -313,9 +313,9 @@ export function SupsasLandingPage() {
       {/* ── Quick Links ── */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-3">Navigasi Pantas</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-3">{t('supsas:quick_navigation_header', 'Navigasi Pantas')}</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Semua Data. Masa Nyata.
+            {t('supsas:all_data_realtime', 'Semua Data. Masa Nyata.')}
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -364,11 +364,11 @@ export function SupsasLandingPage() {
 
             {/* Text */}
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-400/60 mb-1">Untuk Ketua Kontingen</p>
-              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2">Portal Pengurusan Pasukan</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-400/60 mb-1">{t('supsas:for_contingent_leaders', 'Untuk Ketua Kontingen')}</p>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2">{t('supsas:team_management_portal', 'Portal Pengurusan Pasukan')}</h3>
               <p className="text-sm text-white/40 font-medium leading-relaxed max-w-lg">
-                Daftarkan peserta, urus lineup pasukan, dan pantau penyertaan kontinjen anda.
-                Dapatkan <span className="text-amber-400 font-black">kod jemputan</span> daripada Exco Sukan untuk mula.
+                {t('supsas:leader_portal_action_desc', 'Daftarkan peserta, urus lineup pasukan, dan pantau penyertaan kontinjen anda.')}{' '}
+                {t('supsas:get_prefix', 'Dapatkan')} <span className="text-amber-400 font-black">{t('supsas:invitation_code', 'kod jemputan')}</span> {t('supsas:from_exco_to_start', 'daripada Exco Sukan untuk mula.')}
               </p>
             </div>
 
@@ -379,7 +379,7 @@ export function SupsasLandingPage() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               <Shield className="w-3.5 h-3.5 relative" />
-              <span className="relative">{profile ? 'Masuk ke Portal Ketua' : 'Log Masuk Dahulu'}</span>
+              <span className="relative">{profile ? t('supsas:enter_leader_portal', 'Masuk ke Portal Ketua') : t('supsas:login_first', 'Log Masuk Dahulu')}</span>
             </button>
           </div>
         </motion.div>
@@ -390,14 +390,14 @@ export function SupsasLandingPage() {
         <section className="max-w-6xl mx-auto px-4 pb-16">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-1">Papan Markah</p>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Kedudukan Terkini</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-1">{t('supsas:scoreboard_eyebrow', 'Papan Markah')}</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{t('supsas:latest_standings_title', 'Kedudukan Terkini')}</h2>
             </div>
             <button
               onClick={() => navigate('/supsas/scoreboard')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-400 hover:text-amber-300 transition-colors"
             >
-              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+              {t('supsas:view_all_link', 'Lihat Semua')} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 

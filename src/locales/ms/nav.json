@@ -36,6 +36,7 @@
   "housing_short": "Kediaman",
   "join_club": "Sertai Kelab",
   "jpp_admin": "Admin JPP",
+  "jpp_administration": "Pentadbiran JPP",
   "jpp_hq": "JPP HQ",
   "jpp_portal": "Portal JPP HQ",
   "karnival": "Karnival",
@@ -69,10 +70,13 @@
   "search_placeholder": "Cari kelab, acara EMS, MAKMP, kebajikan...",
   "select_club": "— PILIH KELAB —",
   "settings": "Tetapan",
+  "student_club": "Kelab Siswa",
+  "student_dashboard": "Papan Pemuka Pelajar",
   "suggest_uiux": "Cadangan UI/UX",
   "suggest_uiux_desc": "Idea penambahbaikan visual",
   "supsas": "Sukan SUPSAS",
   "switch_language": "Tukar Bahasa",
+  "system_settings": "Tetapan Sistem",
   "takwim": "Takwim",
   "whatsapp_support": "WhatsApp JPP Support"
 }

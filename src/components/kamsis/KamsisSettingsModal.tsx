@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, Save, Loader2, GripVertical } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function KamsisSettingsModal({ onClose }: Props) {
+  const { t } = useTranslation(['housing', 'common']);
   const { fields: initialFields, loading: initialLoading, refresh } = useKamsisDynamicFields();
   const [fields, setFields] = useState<KamsisFormField[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
     const newField: KamsisFormField = {
       id: `new-${Date.now()}`,
       field_key: `q_${Date.now()}`,
-      label: 'Soalan Baru',
+      label: t('housing:settings_new_question', 'Soalan Baru'),
       field_type: 'text',
       options: null,
       is_required: false,
@@ -40,7 +42,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
     // Auto format options if type is changed to select/radio
     if (updates.field_type) {
       if (['select', 'radio'].includes(updates.field_type) && !newFields[index].options) {
-        newFields[index].options = ['Pilihan 1', 'Pilihan 2'];
+        newFields[index].options = [t('housing:settings_option_1', 'Pilihan 1'), t('housing:settings_option_2', 'Pilihan 2')];
       } else if (!['select', 'radio'].includes(updates.field_type)) {
         newFields[index].options = null;
       }
@@ -73,11 +75,11 @@ export function KamsisSettingsModal({ onClose }: Props) {
         if (insertErr) throw insertErr;
       }
 
-      toast.success('Soalan permohonan dikemas kini!');
+      toast.success(t('housing:settings_questions_updated', 'Soalan permohonan dikemas kini!'));
       await refresh();
       onClose();
     } catch (err) {
-      toast.error('Gagal menyimpan tetapan.');
+      toast.error(t('housing:settings_save_failed', 'Gagal menyimpan tetapan.'));
     } finally {
       setLoading(false);
     }
@@ -95,8 +97,8 @@ export function KamsisSettingsModal({ onClose }: Props) {
       >
         <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <div>
-            <h2 className="text-xl font-black text-white">Tetapan Borang Permohonan</h2>
-            <p className="text-xs text-slate-400 mt-1">Urus soalan-soalan dinamik yang ditanya semasa pelajar memohon KAMSIS.</p>
+            <h2 className="text-xl font-black text-white">{t('housing:settings_form_title', 'Tetapan Borang Permohonan')}</h2>
+            <p className="text-xs text-slate-400 mt-1">{t('housing:settings_form_subtitle', 'Urus soalan-soalan dinamik yang ditanya semasa pelajar memohon KAMSIS.')}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 transition-colors">
             <X className="w-5 h-5" />
@@ -114,7 +116,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
                   <div className="flex-1 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Soalan / Label</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('housing:settings_question_label', 'Soalan / Label')}</label>
                         <input
                           type="text"
                           value={f.label}
@@ -123,31 +125,31 @@ export function KamsisSettingsModal({ onClose }: Props) {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jenis Input</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('housing:settings_input_type', 'Jenis Input')}</label>
                         <select
                           value={f.field_type}
                           onChange={e => handleUpdateField(i, { field_type: e.target.value as any })}
                           className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"
                         >
-                          <option value="text">Teks Pendek</option>
-                          <option value="textarea">Teks Panjang</option>
-                          <option value="number">Nombor</option>
-                          <option value="select">Dropdown Select</option>
-                          <option value="radio">Radio Buttons</option>
-                          <option value="checkbox">Checkbox (Ya/Tidak)</option>
+                          <option value="text">{t('housing:type_text_short', 'Teks Pendek')}</option>
+                          <option value="textarea">{t('housing:type_text_long', 'Teks Panjang')}</option>
+                          <option value="number">{t('housing:type_number', 'Nombor')}</option>
+                          <option value="select">{t('housing:type_select', 'Dropdown Select')}</option>
+                          <option value="radio">{t('housing:type_radio', 'Radio Buttons')}</option>
+                          <option value="checkbox">{t('housing:type_checkbox', 'Checkbox (Ya/Tidak)')}</option>
                         </select>
                       </div>
                     </div>
 
                     {['select', 'radio'].includes(f.field_type) && (
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilihan (Pisahkan dengan koma)</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('housing:settings_options_comma_separated', 'Pilihan (Pisahkan dengan koma)')}</label>
                         <input
                           type="text"
                           value={f.options?.join(', ') ?? ''}
                           onChange={e => handleUpdateField(i, { options: e.target.value.split(',').map(s => s.trim()) })}
                           className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"
-                          placeholder="Cth: Ya, Tidak, Mungkin"
+                          placeholder={t('housing:settings_options_placeholder', 'Cth: Ya, Tidak, Mungkin')}
                         />
                       </div>
                     )}
@@ -160,14 +162,14 @@ export function KamsisSettingsModal({ onClose }: Props) {
                           onChange={e => handleUpdateField(i, { is_required: e.target.checked })}
                           className="w-4 h-4 accent-violet-500 rounded bg-slate-900 border-slate-700"
                         />
-                        Wajib Diisi
+                        {t('housing:settings_required', 'Wajib Diisi')}
                       </label>
                       <div className="flex-1" />
                       <button
                         onClick={() => handleRemoveField(i)}
                         className="text-xs font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-rose-500/10"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Buang Soalan
+                        <Trash2 className="w-3.5 h-3.5" /> {t('housing:settings_remove_question', 'Buang Soalan')}
                       </button>
                     </div>
                   </div>
@@ -179,7 +181,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
                 className="w-full py-4 rounded-xl border-2 border-dashed border-slate-700 hover:border-violet-500/50 hover:bg-violet-500/5 text-slate-400 hover:text-violet-400 transition-all flex flex-col items-center gap-2 font-bold text-sm"
               >
                 <Plus className="w-5 h-5" />
-                Tambah Soalan
+                {t('housing:settings_add_question', 'Tambah Soalan')}
               </button>
             </>
           )}
@@ -190,7 +192,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:bg-slate-800 transition-colors"
           >
-            Batal
+            {t('housing:settings_cancel_btn', 'Batal')}
           </button>
           <button
             onClick={handleSave}
@@ -198,7 +200,7 @@ export function KamsisSettingsModal({ onClose }: Props) {
             className="px-6 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-violet-500/25"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Simpan Tetapan
+            {t('housing:settings_save_settings_btn', 'Simpan Tetapan')}
           </button>
         </div>
       </motion.div>

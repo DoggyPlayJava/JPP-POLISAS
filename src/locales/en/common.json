@@ -17,6 +17,7 @@
   "archive": "Archive",
   "archived": "Archived",
   "ascending": "Ascending",
+  "attention": "Attention:",
   "available": "Available",
   "back": "Back",
   "back_to_portal": "Back to Portal",
@@ -64,6 +65,7 @@
   "end_date": "End Date",
   "enter_value": "Enter value...",
   "error": "Error",
+  "error_with_message": "Error: {{message}}",
   "expired": "Expired",
   "export": "Export",
   "export_csv": "Export CSV",
@@ -92,6 +94,7 @@
   "matric_no": "Matric No.",
   "module_under_development": "This module is currently under development.",
   "name": "Name",
+  "navigation": "Navigation",
   "network_error": "Network error. Please check your internet connection.",
   "new": "New",
   "next": "Next",
@@ -191,6 +194,5 @@
   "view_all": "View All",
   "warning": "Warning",
   "yes": "Yes",
-  "you": "You",
-  "attention": "Attention:"
+  "you": "You"
 }
