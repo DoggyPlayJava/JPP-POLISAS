@@ -743,7 +743,7 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <Tag className="w-4 h-4 shrink-0" />
-            <span className="truncate">{t('commerce:vendor_tab_catalog_stock', 'Katalog & Stok')}</span>
+            <span className="truncate">{t('commerce:vendor_tab_catalog_stock', 'Katalog &amp; Stok')}</span>
             {products.length > 0 && (
               <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full text-[10px] font-black bg-zinc-200 dark:bg-zinc-700 text-muted-foreground shrink-0">
                 {products.length}
@@ -762,7 +762,7 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <TrendingUp className="w-4 h-4 shrink-0" />
-            <span className="truncate">{t('commerce:vendor_tab_performance_ads', 'Prestasi & Iklan')}</span>
+            <span className="truncate">{t('commerce:vendor_tab_performance_ads', 'Prestasi &amp; Iklan')}</span>
             {lowStockCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 border border-rose-500/30 text-rose-500 shrink-0">
                 {t('commerce:vendor_warnings_count', '{{count}} Amaran', { count: lowStockCount })}

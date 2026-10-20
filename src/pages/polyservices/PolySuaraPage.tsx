@@ -1657,7 +1657,7 @@ export function PolySuaraPage({
                   ✍️
                 </div>
                 <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-medium truncate">
-                  {t('suara_modal_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
+                  {t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -1693,7 +1693,7 @@ export function PolySuaraPage({
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                   )}
                 >
-                  <Flame className="w-3.5 h-3.5" /> {t('suara_sort_trending', 'Hangat')}
+                  <Flame className="w-3.5 h-3.5" /> {t('services:suara_sort_trending', 'Hangat')}
                 </button>
               </div>
 

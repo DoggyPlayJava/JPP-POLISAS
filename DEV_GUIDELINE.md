@@ -5138,3 +5138,26 @@ Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localiz
    - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup6LogisticsAndUtilityI18n.test.tsx` (20/20 lulus 100%).
    - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
    - Kesemua 6 suite ujian sapuan menyeluruh lulus serentak: 109/109 ujian (100%).
+
+### 36.25 Audit Kod AST Menyeluruh, Penjajaran Pariti Regresi Penuh & Pintu Gerbang Binaan Produksi (Task 7 Sweep)
+Sesi ini melengkapkan fasa kemuncak (Task 7) bagi Inisiatif Penyetempatan Menyeluruh JPP-POLISAS. Melalui audit mendalam tanpa kompromi merentasi seluruh 205 halaman dan 177 komponen:
+
+1. **Hasil Imbasan AST Menyeluruh (`scratch/deep_codebase_scanner.cjs`):**
+   - **Jumlah Halaman Disemak:** 205 daripada 205 halaman (100%).
+   - **Halaman dengan 0 panggilan `t()`:** **0 halaman** (berkurang drastik daripada 83 halaman kepada 0!).
+   - **Kadar Liputan Antara Muka dwibahasa:** 100% halaman kini dilengkapi integrasi cangkuk `useTranslation()` aktif.
+
+2. **Penjajaran Pariti Regresi Penuh & Penyelarasan Literal Fallback:**
+   - Menyelesaikan perselisihan rentetan fallback BM antara komponen dwibahasa dan ujian legasi lama yang dirender secara SSR tanpa instans i18next aktif (`KebajikanLiveTrackerCard.tsx`, `PolyMartVendorDashboard.tsx`, `PolyMartVendorStorefront.tsx`, `PolySuaraPoll.tsx`, `PolySuaraPage.tsx`).
+   - Menyegerakkan pariti kamus `services.json` (`suara_quick_compose_placeholder`, `suara_sort_trending`) dengan 100% padanan simetri `src/locales/en/` dan `src/locales/ms/`.
+   - Mengesahkan semua rentetan proper noun institusi (POLISAS, JPP, HEP, JKE, SUPSAS, MAKMP) kekal utuh dalam Bahasa Melayu sebagai kata nama khas rasmi.
+
+3. **Keputusan Ujian Regresi Lengkap (`npx vitest run`):**
+   - **Jumlah Suite Ujian:** 86 fail ujian (86/86 Lulus — 100%).
+   - **Jumlah Ujian Unit & Integrasi:** 1,138 ujian (1,138/1,138 Lulus — 100% Kadar Kejayaan, 0 Kegagalan, 0 Terabai).
+   - Termasuk kelulusan sempurna kesemua 6 suite ujian sapuan menyeluruh baharu (`SweepGroup1` hingga `SweepGroup6`).
+
+4. **Pintu Gerbang Binaan Produksi PWA (`npm run build`):**
+   - Transformasi 4,889 modul Vite berjaya sepenuhnya tanpa ralat kompilasi TypeScript atau Rollup.
+   - PWA Service Worker generasi baharu (`dist/sw.js` & `dist/sw.mjs`) dijana dengan suntikan manifes dan caching penuh (28 entri pra-cache).
+   - Tiada perubahan pangkalan data dilakukan (Zero Database Alterations), tiada skema/migrasi diubah, dan pola singleton Supabase (`@/lib/supabase`) dipelihara 100%.
