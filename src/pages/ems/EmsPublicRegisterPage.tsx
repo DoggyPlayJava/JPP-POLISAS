@@ -37,6 +37,7 @@ import type { EmsParticipant } from '@/types';
 import { StudentSearchCombobox } from '@/components/ems/StudentSearchCombobox';
 import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 
 interface TeamMember {
   name: string;
@@ -588,6 +589,7 @@ export function EmsPublicRegisterPage({
             <ArrowLeft className="w-4 h-4" /> {t('reg_back_home', 'Kembali ke Portal')}
           </button>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { Home, Menu, Search, User, ChevronLeft, LayoutGrid } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 
 /**
  * MakmpJppChrome — chrome JPP ringan untuk halaman MAKMP awam.
@@ -78,6 +79,7 @@ export function MakmpJppHeader({ subtitle }: { subtitle?: string }) {
               {subtitle}
             </span>
           )}
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>

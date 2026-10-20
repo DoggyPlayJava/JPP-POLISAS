@@ -5,6 +5,7 @@ import { cn, getMalaysianNickname } from '@/lib/utils';
 import { triggerCommandPalette } from '@/lib/commandPalette';
 import { formatGreeting, getRoleBadgeTitle, getHeaderGradientClass } from '@/lib/superAppHelpers';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -86,6 +87,11 @@ export function SuperAppHeader({
 
           {/* Right Side: Floating Discrete Action Circles */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* LanguageToggle circular button */}
+            <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+              <LanguageToggle variant="circular" />
+            </div>
+
             {/* 1. ThemeToggle circular button */}
             <div className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-[#D9C9B2]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 shrink-0 [&_button]:!h-9 [&_button]:!w-9 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <ThemeToggle />

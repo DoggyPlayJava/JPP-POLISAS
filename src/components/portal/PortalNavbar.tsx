@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getMalaysianNickname } from '@/lib/utils';
@@ -95,6 +96,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <LanguageToggle />
         <ThemeToggle />
         <NotificationBell />
 

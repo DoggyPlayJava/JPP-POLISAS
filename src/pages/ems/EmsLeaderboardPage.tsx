@@ -31,6 +31,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import { EmsJuryAuditMatrix } from '@/components/ems/EmsJuryAuditMatrix';
 import {
@@ -556,7 +557,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
         {/* Floating ThemeToggle */}
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle />
         </div>
 
@@ -602,7 +604,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
           {/* Floating ThemeToggle */}
-          <div className="absolute top-4 right-4 z-20">
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <LanguageToggle />
             <ThemeToggle />
           </div>
 
@@ -757,6 +760,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             </button>
 
             {/* Stage Mode ThemeToggle */}
+            <LanguageToggle />
             <ThemeToggle />
 
             {/* Fullscreen Toggle */}
@@ -1094,6 +1098,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           )}
 
           {/* ThemeToggle */}
+          <LanguageToggle />
           <ThemeToggle />
 
           {/* Refresh Button */}

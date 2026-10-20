@@ -13,6 +13,7 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { HelpCircle } from 'lucide-react';
 import { useTour } from '@/hooks/useTour';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const KEBAJIKAN_UNIT_LINKS = [
@@ -153,6 +154,7 @@ export function KebajikanLayout() {
             <button onClick={startTour} className="p-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
               <HelpCircle className="w-4 h-4" />
             </button>
+            <LanguageToggle />
             <ThemeToggle />
             <NotificationBell variant={isDark ? 'dark' : 'light'} />
           </div>
