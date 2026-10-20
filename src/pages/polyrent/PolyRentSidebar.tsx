@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Home, Package, Heart, LogOut, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function PolyRentSidebar({ 
@@ -15,6 +16,7 @@ export function PolyRentSidebar({
   onOpenMyAds: () => void;
   activeTab?: string;
 }) {
+  const { t } = useTranslation(['housing', 'common', 'nav']);
   const navigate = useNavigate();
   const { signOut } = useAuth();
 
@@ -61,7 +63,7 @@ export function PolyRentSidebar({
                   <div className="w-10 h-10 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600">
                     <Home className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Cari Rumah</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{t('housing:find_house', 'Cari Rumah')}</span>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-teal-500 transition-colors" />
               </button>
@@ -75,8 +77,8 @@ export function PolyRentSidebar({
                     <Package className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col items-start">
-                     <span className="font-bold text-slate-700 dark:text-slate-300">Iklan Saya</span>
-                     <span className="text-[10px] text-slate-400 font-medium">Urus iklan rumah anda</span>
+                     <span className="font-bold text-slate-700 dark:text-slate-300">{t('housing:my_listings', 'Iklan Saya')}</span>
+                     <span className="text-[10px] text-slate-400 font-medium">{t('housing:manage_listings_subtitle', 'Urus iklan rumah anda')}</span>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
@@ -93,7 +95,7 @@ export function PolyRentSidebar({
                 className="w-full py-4 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
               >
                 <LogOut className="w-5 h-5" />
-                Log Keluar
+                {t('nav:logout', 'Log Keluar')}
               </button>
             </div>
           </motion.div>

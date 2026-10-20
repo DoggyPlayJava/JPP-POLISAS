@@ -39,6 +39,8 @@ import akademikEn from '../en/akademik.json';
 import akademikMs from '../ms/akademik.json';
 import housingEn from '../en/housing.json';
 import housingMs from '../ms/housing.json';
+import klkEn from '../en/klk.json';
+import klkMs from '../ms/klk.json';
 import supsasEn from '../en/supsas.json';
 import supsasMs from '../ms/supsas.json';
 
@@ -71,6 +73,7 @@ describe('Master Translation Dictionaries Parity (100% All Domains)', () => {
   it('has identical keys for services namespace', () => verifyParity(servicesEn, servicesMs, 'services'));
   it('has identical keys for akademik namespace', () => verifyParity(akademikEn, akademikMs, 'akademik'));
   it('has identical keys for housing namespace', () => verifyParity(housingEn, housingMs, 'housing'));
+  it('has identical keys for klk namespace', () => verifyParity(klkEn, klkMs, 'klk'));
   it('has identical keys for supsas namespace', () => verifyParity(supsasEn, supsasMs, 'supsas'));
 
   it('ensures English translations do not have redundant slashes or overlong parentheticals', () => {

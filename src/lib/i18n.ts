@@ -20,6 +20,7 @@ import commerceEn from '@/locales/en/commerce.json';
 import servicesEn from '@/locales/en/services.json';
 import akademikEn from '@/locales/en/akademik.json';
 import housingEn from '@/locales/en/housing.json';
+import klkEn from '@/locales/en/klk.json';
 import supsasEn from '@/locales/en/supsas.json';
 
 // Bahasa Melayu namespaces
@@ -40,6 +41,7 @@ import commerceMs from '@/locales/ms/commerce.json';
 import servicesMs from '@/locales/ms/services.json';
 import akademikMs from '@/locales/ms/akademik.json';
 import housingMs from '@/locales/ms/housing.json';
+import klkMs from '@/locales/ms/klk.json';
 import supsasMs from '@/locales/ms/supsas.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ms'] as const;
@@ -97,6 +99,7 @@ export const resources = {
     services: servicesEn,
     akademik: akademikEn,
     housing: housingEn,
+    klk: klkEn,
     supsas: supsasEn,
   },
   ms: {
@@ -116,6 +119,7 @@ export const resources = {
     services: servicesMs,
     akademik: akademikMs,
     housing: housingMs,
+    klk: klkMs,
     supsas: supsasMs,
   },
 } as const;

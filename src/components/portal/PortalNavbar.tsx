@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -16,7 +17,8 @@ export interface PortalNavbarProps {
 }
 
 export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile, setIsSidebarOpen }: PortalNavbarProps) {
-  const displayName = getMalaysianNickname(profile?.full_name, 'Pelajar');
+  const { t } = useTranslation(['portal', 'common']);
+  const displayName = getMalaysianNickname(profile?.full_name, t('portal:student', 'Pelajar'));
   // Determine merit tier for Dynamic Avatar Aura
   const meritPoints = profile?.merit_points || profile?.merit || 0;
   let auraClass = "";

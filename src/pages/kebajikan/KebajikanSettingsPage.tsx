@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,6 +59,7 @@ function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.ElementTyp
 }
 
 export function KebajikanSettingsPage() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { user, isSuperAdmin, isKebajikanExco } = useAuth();
   const isAllowed = isSuperAdmin || isKebajikanExco;
 
@@ -276,8 +278,8 @@ export function KebajikanSettingsPage() {
             <Settings className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">Tetapan E-Kebajikan</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Konfigurasi SLA, notifikasi email, dan mesej auto-reply</p>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">{t('kebajikan:settings_title', 'Tetapan E-Kebajikan')}</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('kebajikan:settings_subtitle', 'Konfigurasi SLA, notifikasi email, dan mesej auto-reply')}</p>
           </div>
         </div>
       </div>
@@ -291,10 +293,10 @@ export function KebajikanSettingsPage() {
 
           {/* SLA Configuration */}
           <GlassCard>
-            <SectionHeader icon={Clock} title="Konfigurasi SLA" subtitle="Masa had sebelum sistem menghantar amaran dan escalate tiket" />
+            <SectionHeader icon={Clock} title={t('kebajikan:sla_config', 'Konfigurasi SLA')} subtitle={t('kebajikan:sla_config_subtitle', 'Masa had sebelum sistem menghantar amaran dan escalate tiket')} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-2 block">⚠️ Warning (jam)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-2 block">{t('kebajikan:sla_warning_hours', '⚠️ Warning (jam)')}</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
@@ -309,7 +311,7 @@ export function KebajikanSettingsPage() {
                 <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1.5">Semasa ini: {settings.sla.warning_hours}j</p>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-2 block">🔴 Escalation (jam)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-2 block">{t('kebajikan:sla_escalate_hours', '🔴 Escalation (jam)')}</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
@@ -331,7 +333,7 @@ export function KebajikanSettingsPage() {
                 className="flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/20 shadow-sm"
               >
                 <Save className="w-3.5 h-3.5" />
-                {savingSlA ? 'Menyimpan...' : 'Simpan Konfigurasi SLA'}
+                {savingSlA ? 'Menyimpan...' : t('kebajikan:btn_save_sla', 'Simpan Konfigurasi SLA')}
               </button>
             )}
             <div className="mt-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10">
@@ -341,7 +343,7 @@ export function KebajikanSettingsPage() {
 
           {/* Email Notifications */}
           <GlassCard>
-            <SectionHeader icon={Mail} title="Notifikasi Email" subtitle="Tetapan Global (Master Switch) notifikasi e-mel untuk semua Exco Kebajikan" />
+            <SectionHeader icon={Mail} title={t('kebajikan:email_notifs_title', 'Notifikasi Email')} subtitle={t('kebajikan:email_notifs_subtitle', 'Tetapan Global (Master Switch) notifikasi e-mel untuk semua Exco Kebajikan')} />
             <div className="space-y-3 sm:space-y-4">
               {EMAIL_TOGGLES.map(({ key, label, desc }) => (
                 <div key={key} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-white/[0.01] hover:bg-slate-100/70 dark:hover:bg-white/[0.02] transition-colors">
@@ -365,7 +367,7 @@ export function KebajikanSettingsPage() {
 
           {/* Auto-Reply Message */}
           <GlassCard>
-            <SectionHeader icon={MessageSquare} title="Mesej Auto-Reply" subtitle="Mesej yang dihantar kepada pelajar selepas menghantar aduan" />
+            <SectionHeader icon={MessageSquare} title={t('kebajikan:auto_reply_title', 'Mesej Auto-Reply')} subtitle={t('kebajikan:auto_reply_subtitle', 'Mesej yang dihantar kepada pelajar selepas menghantar aduan')} />
             <div className="mb-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">
                 Placeholder: <code className="bg-slate-100 dark:bg-white/5 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded font-mono font-bold">{'{ticket_no}'}</code>
@@ -389,18 +391,18 @@ export function KebajikanSettingsPage() {
                 className="flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/20 shadow-sm"
               >
                 <Save className="w-3.5 h-3.5" />
-                {savingReply ? 'Menyimpan...' : 'Simpan Mesej Auto-Reply'}
+                {savingReply ? 'Menyimpan...' : t('kebajikan:btn_save_auto_reply', 'Simpan Mesej Auto-Reply')}
               </button>
             )}
           </GlassCard>
 
           {/* Data Retention */}
           <GlassCard>
-            <SectionHeader icon={Database} title="Pengekalan Data & Pembersihan" subtitle="Urus gambar dan data tiket lama untuk menjimatkan ruang storan" />
+            <SectionHeader icon={Database} title={t('kebajikan:data_retention_title', 'Pengekalan Data & Pembersihan')} subtitle={t('kebajikan:data_retention_subtitle', 'Urus gambar dan data tiket lama untuk menjimatkan ruang storan')} />
 
             {/* Retention period config */}
             <div className="mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-3 block">Tempoh Pengekalan Minimum</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-3 block">{t('kebajikan:min_retention_period', 'Tempoh Pengekalan Minimum')}</label>
               <div className="flex flex-wrap gap-2">
                 {[3, 6, 12, 18, 24].map(m => (
                   <button
@@ -430,7 +432,7 @@ export function KebajikanSettingsPage() {
                 className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest mb-6 transition-all bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 hover:bg-teal-100 shadow-sm"
               >
                 <Save className="w-3.5 h-3.5" />
-                {savingRetention ? 'Menyimpan...' : 'Simpan Tempoh'}
+                {savingRetention ? 'Menyimpan...' : t('kebajikan:btn_save_retention', 'Simpan Tempoh')}
               </button>
             )}
 
@@ -441,8 +443,8 @@ export function KebajikanSettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-200">Pratonton Pembersihan</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Semak berapa tiket yang layak untuk dibersihkan</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-200">{t('kebajikan:preview_cleanup_title', 'Pratonton Pembersihan')}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('kebajikan:preview_cleanup_subtitle', 'Semak berapa tiket yang layak untuk dibersihkan')}</p>
                 </div>
                 <button
                   onClick={handlePreviewCleanup}
@@ -527,7 +529,7 @@ export function KebajikanSettingsPage() {
 
           {/* PIC Presets */}
           <GlassCard>
-            <SectionHeader icon={Users} title="Pengurusan Preset PIC" subtitle="Senarai PIC (Person-in-Charge) per jabatan untuk laporan escalated" />
+            <SectionHeader icon={Users} title={t('kebajikan:pic_presets_title', 'Pengurusan Preset PIC')} subtitle={t('kebajikan:pic_presets_subtitle', 'Senarai PIC (Person-in-Charge) per jabatan untuk laporan escalated')} />
             <div className="space-y-3">
               {picLoading ? (
                 <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">Memuatkan...</p>
@@ -561,7 +563,7 @@ export function KebajikanSettingsPage() {
             <div className="mt-4">
               {!showAddPic ? (
                 <button onClick={() => setShowAddPic(true)} className="flex items-center gap-2 text-xs font-black text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 transition-colors">
-                  <Plus className="w-3.5 h-3.5" /> Tambah Preset PIC
+                  <Plus className="w-3.5 h-3.5" /> {t('kebajikan:btn_add_pic_preset', 'Tambah Preset PIC')}
                 </button>
               ) : (
                 <div className="rounded-2xl border border-teal-200 dark:border-teal-500/20 bg-teal-50/50 dark:bg-teal-500/[0.03] p-4 space-y-3">

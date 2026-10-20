@@ -31,7 +31,7 @@ import { KEBAJIKAN_THEME_COLOR } from '@/types';
 const TEAL = KEBAJIKAN_THEME_COLOR; // #2DD4BF
 
 export function KebajikanSidebar() {
-  const { t } = useTranslation(['kebajikan', 'common']);
+  const { t } = useTranslation(['kebajikan', 'nav', 'common']);
   const { user, profile, signOut, isSuperAdmin, isKebajikanExco, isUnitKebajikanStaff, isKediamanExco, isYdp } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -134,7 +134,7 @@ export function KebajikanSidebar() {
           )}
         >
           <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
           <LayoutGrid className="w-3.5 h-3.5 ml-1" />
         </NavLink>
         <div className="flex items-center gap-4 px-6 pb-6 pt-1">
@@ -164,41 +164,41 @@ export function KebajikanSidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto scrollbar-hide relative z-10">
         {/* Hab Kebajikan Landing */}
-        {navItem('/kebajikan', HeartHandshake, 'Hab Kebajikan', true)}
+        {navItem('/kebajikan', HeartHandshake, t('kebajikan:nav_hub', 'Hab Kebajikan'), true)}
 
         {/* Exco / Staff Section */}
         {isStaffOrAbove && (
           <>
             <p className={cn("px-4 mb-3 mt-4 text-[10px] font-black uppercase tracking-[0.25em]", isDark ? "text-teal-500/50" : "text-teal-800/70")}>
-              Pengurusan
+              {t('kebajikan:nav_management', 'Pengurusan')}
             </p>
-            {navItem('/kebajikan/dashboard', LayoutDashboard, 'Dashboard Aduan', false, unreadCount)}
-            {navItem('/kebajikan/tiket', Inbox, isKediamanExco && !isSuperAdmin && !isYdp ? 'Aduan Kafeteria' : 'Senarai Tiket')}
+            {navItem('/kebajikan/dashboard', LayoutDashboard, t('kebajikan:nav_dashboard_aduan', 'Dashboard Aduan'), false, unreadCount)}
+            {navItem('/kebajikan/tiket', Inbox, isKediamanExco && !isSuperAdmin && !isYdp ? t('kebajikan:nav_cafeteria_complaints', 'Aduan Kafeteria') : t('kebajikan:nav_tickets_list', 'Senarai Tiket'))}
             {/* Laporan — KK Exco nampak juga tapi laporan akan difilter oleh peranan */}
-            {navItem('/kebajikan/laporan', FileBarChart2, 'Laporan')}
+            {navItem('/kebajikan/laporan', FileBarChart2, t('kebajikan:nav_reports', 'Laporan'))}
             {/* Unit Staff & Tetapan: hanya Exco Kebajikan + Super Admin */}
-            {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/staff', Users, 'Unit Kebajikan Staff')}
-            {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/tetapan', Settings, 'Tetapan')}
+            {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/staff', Users, t('kebajikan:nav_staff', 'Unit Kebajikan Staff'))}
+            {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/tetapan', Settings, t('nav:settings', 'Tetapan'))}
           </>
         )}
 
         {/* Public section — semua user */}
         <div className="pt-5 pb-2">
           <p className={cn("px-4 text-[10px] font-black uppercase tracking-[0.25em]", isDark ? "text-teal-500/50" : "text-teal-800/70")}>
-            Aduan &amp; Bantuan Pelajar
+            {t('kebajikan:nav_student_complaints', 'Aduan & Bantuan Pelajar')}
           </p>
         </div>
-        {navItem('/kebajikan/buat-aduan', Plus, 'Buat Aduan Baru')}
-        {navItem('/kebajikan/aduan-saya', ClipboardList, 'Aduan Saya')}
-        {navItem('/kebajikan/foodbank', ShoppingBag, 'Food Bank JPP')}
+        {navItem('/kebajikan/buat-aduan', Plus, t('kebajikan:nav_new_complaint', 'Buat Aduan Baru'))}
+        {navItem('/kebajikan/aduan-saya', ClipboardList, t('kebajikan:nav_my_complaints', 'Aduan Saya'))}
+        {navItem('/kebajikan/foodbank', ShoppingBag, t('kebajikan:nav_foodbank', 'Food Bank JPP'))}
 
         {/* Statistik awam */}
         <div className="pt-4 pb-1.5">
           <p className={cn("px-3 text-[9px] font-black uppercase tracking-[0.3em]", isDark ? "text-white/25" : "text-teal-800/50")}>
-            Lain-Lain
+            {t('kebajikan:nav_others', 'Lain-Lain')}
           </p>
         </div>
-        {navItem('/kebajikan/statistik', Bell, 'Statistik Awam')}
+        {navItem('/kebajikan/statistik', Bell, t('kebajikan:nav_public_stats', 'Statistik Awam'))}
       </nav>
 
       {/* ── Global JPP Dashboard Link ── */}
@@ -217,7 +217,7 @@ export function KebajikanSidebar() {
               <Crown className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-500 dark:text-amber-400 text-left">
-              Global JPP<br />Dashboard
+              {t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}
             </span>
           </button>
         </div>
@@ -263,7 +263,7 @@ export function KebajikanSidebar() {
             )}
           >
             <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-            Log Keluar
+            {t('nav:logout', 'Log Keluar')}
           </Button>
           <ThemeToggle />
         </div>
