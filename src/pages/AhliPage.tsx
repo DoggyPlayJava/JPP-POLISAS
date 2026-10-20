@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, UserPlus, Mail, MoreVertical, Trash2, Check, X, Clock, Users, Hash, HelpCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -60,6 +61,7 @@ function getAllowedRoles(actorRole: string, targetCurrentRole: string): string[]
 }
 
 export function AhliPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user, profile, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
   const navigate = useNavigate();
   const [memberships, setMemberships] = useState<any[]>([]);
@@ -100,7 +102,7 @@ export function AhliPage() {
 
       if (error) {
         console.error("Supabase Error:", error);
-        toast.error(`Ralat Supabase: ${error.message}`);
+        toast.error(`${t('common:error', 'Ralat')}: ${error.message}`);
         throw error;
       }
 
@@ -164,7 +166,7 @@ export function AhliPage() {
       if (status === 'REJECTED' || status === 'KICKED') {
         const reason = status === 'KICKED' ? kickReason : 'Permohonan ditolak/Keluar dibenarkan';
         if (status === 'KICKED' && !kickReason.trim()) {
-          toast.error('Sila nyatakan alasan pembuangan.');
+          toast.error(t('kpp:please_state_kick_reason', 'Sila nyatakan alasan pembuangan.'));
           return;
         }
 
@@ -239,9 +241,9 @@ export function AhliPage() {
         });
       } catch {}
 
-      toast.success(status === 'APPROVED' ? 'Tindakan berjaya!' : 'Ahli/Permohonan telah disingkirkan.');
+      toast.success(status === 'APPROVED' ? t('common:action_success', 'Tindakan berjaya!') : t('kpp:member_removed', 'Ahli/Permohonan telah disingkirkan.'));
     } catch (e: any) {
-      toast.error('Ralat: ' + e.message);
+      toast.error(`${t('common:error', 'Ralat')}: ` + e.message);
     }
   };
 
@@ -264,10 +266,10 @@ export function AhliPage() {
         type: 'SYSTEM', module: 'EKPP', link: '/kelab',
       }).catch(() => {});
 
-      toast.success('Berhenti diluluskan.');
+      toast.success(t('kpp:resign_approved', 'Berhenti diluluskan.'));
       load();
     } catch (e: any) {
-      toast.error('Ralat: ' + e.message);
+      toast.error(`${t('common:error', 'Ralat')}: ` + e.message);
     }
   };
 
@@ -284,17 +286,17 @@ export function AhliPage() {
       });
 
       if (error) {
-        toast.error('Gagal tukar peranan: ' + error.message);
+        toast.error(t('kpp:failed_change_role', 'Gagal tukar peranan: ') + error.message);
         return;
       }
-      toast.success('Peranan berjaya dikemaskini!');
+      toast.success(t('kpp:role_updated_success', 'Peranan berjaya dikemaskini!'));
       load();
     } catch (e: any) {
-      toast.error('Ralat tidak dijangka: ' + e.message);
+      toast.error(t('common:unexpected_error', 'Ralat tidak dijangka: ') + e.message);
     }
   };
 
-  const clubName = profile?.club_id ? ALL_CLUBS.find(c => c.id === profile.club_id)?.name : 'Semua Kelab';
+  const clubName = profile?.club_id ? ALL_CLUBS.find(c => c.id === profile.club_id)?.name : t('kpp:all_clubs', 'Semua Kelab');
 
   // Tapis data untuk tab
   const CLUB_ROLES = ['CLUB_MEMBER', 'CLUB_MT', 'CLUB_PRESIDENT', 'CLUB_ADVISOR'];
@@ -329,19 +331,19 @@ export function AhliPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-          {clubName} · {approvedMembers.length} Ahli Aktif
+          {clubName} · {approvedMembers.length} {t('kpp:active_members', 'Ahli Aktif')}
         </Badge>
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter gradient-text leading-none">Pengurusan Ahli</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter gradient-text leading-none">{t('kpp:member_management', 'Pengurusan Ahli')}</h1>
             <p className="text-muted-foreground font-medium leading-relaxed text-sm sm:text-base max-w-xl">
-              Urus permohonan pendaftaran baru dan senarai jawatankuasa sedia ada untuk kelab anda.
+              {t('kpp:member_management_desc', 'Urus permohonan pendaftaran baru dan senarai jawatankuasa sedia ada untuk kelab anda.')}
             </p>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
             {(effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'CLUB_ADVISOR' || effectiveRole?.includes('JPP')) && (
                <Button onClick={() => navigate('/urus-kelab')} className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[11px] uppercase tracking-widest px-8 h-12 shadow-xl shadow-primary/20 shrink-0">
-                 <UserPlus className="w-4 h-4 mr-2" /> Urus Jawatankuasa
+                 <UserPlus className="w-4 h-4 mr-2" /> {t('kpp:manage_committee', 'Urus Jawatankuasa')}
                </Button>
             )}
             <button
@@ -357,10 +359,10 @@ export function AhliPage() {
       <Tabs defaultValue="senarai" className="w-full">
         <TabsList className="bg-muted/40 p-1 rounded-2xl mb-8 border border-border/50 shadow-inner flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-start w-full sm:w-fit h-auto">
           <TabsTrigger value="senarai" className="tour-senarai-mt rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
-            Senarai Jawatankuasa
+            {t('kpp:committee_roster', 'Senarai Jawatankuasa')}
           </TabsTrigger>
           <TabsTrigger value="pending" className="tour-permohonan-baru rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all relative whitespace-nowrap">
-            Permohonan Baru
+            {t('kpp:new_applications', 'Permohonan Baru')}
             {pendingMembers.length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white flex items-center justify-center rounded-full text-[10px] animate-bounce border-2 border-background">
                 {pendingMembers.length}
@@ -374,7 +376,7 @@ export function AhliPage() {
           <div className="relative group w-full max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
             <Input
-              placeholder="Cari nama atau jawatan..."
+              placeholder={t('kpp:search_member_placeholder', 'Cari nama atau jawatan...')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-11 h-12 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 text-sm"
@@ -382,16 +384,16 @@ export function AhliPage() {
           </div>
 
           {isLoading ? (
-            <div className="py-20 text-center animate-pulse font-black uppercase tracking-widest opacity-20 text-xs">Menyusun Data...</div>
+            <div className="py-20 text-center animate-pulse font-black uppercase tracking-widest opacity-20 text-xs">{t('kpp:sorting_data', 'Menyusun Data...')}</div>
           ) : approvedMembers.length === 0 ? (
             <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-muted/30">
               <EmptyMedia variant="icon">
                 <Users className="w-8 h-8" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Ahli Ditemui</EmptyTitle>
+                <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:no_members_found', 'Tiada Ahli Ditemui')}</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  Carian anda tidak memadankan mana-mana ahli berdaftar atau tersenarai.
+                  {t('kpp:no_members_found_desc', 'Carian anda tidak memadankan mana-mana ahli berdaftar atau tersenarai.')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -420,9 +422,9 @@ export function AhliPage() {
                 <Clock className="w-8 h-8" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Permohonan Baru</EmptyTitle>
+                <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:no_new_applications', 'Tiada Permohonan Baru')}</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  Semua permohonan pendaftaran telah disemak buat masa ini.
+                  {t('kpp:no_new_applications_desc', 'Semua permohonan pendaftaran telah disemak buat masa ini.')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -440,7 +442,7 @@ export function AhliPage() {
                         <div>
                           <h3 className="font-black text-base leading-tight">{m.full_name}</h3>
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                            {m.account_status === 'RESIGN_PENDING' ? 'MOHON BERHENTI' : m.role.replace('_', ' ')}
+                            {m.account_status === 'RESIGN_PENDING' ? t('kpp:apply_resign', 'MOHON BERHENTI') : m.role.replace('_', ' ')}
                           </p>
                         </div>
                       </div>
@@ -449,16 +451,16 @@ export function AhliPage() {
                           <>
                             {/* m.id = profiles.id = user_id yang betul untuk handleStatusAction */}
                             <Button onClick={() => handleApproveResign(m.id, m.club_id)} className="flex-1 bg-amber-500 hover:bg-amber-500/90 text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
-                              Luluskan Berhenti
+                              {t('kpp:approve_resign', 'Luluskan Berhenti')}
                             </Button>
                             <Button onClick={() => handleStatusAction(m.id, m.club_id, 'APPROVED')} variant="ghost" className="bg-slate-100/50 hover:bg-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
-                              Batal
+                              {t('common:cancel', 'Batal')}
                             </Button>
                           </>
                         ) : (
                           <>
                             <Button onClick={() => handleStatusAction(m.id, m.club_id, 'APPROVED')} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
-                              <Check className="w-3.5 h-3.5 mr-2" /> Lulus
+                              <Check className="w-3.5 h-3.5 mr-2" /> {t('common:approve', 'Lulus')}
                             </Button>
                             <Button onClick={() => handleStatusAction(m.id, m.club_id, 'REJECTED')} variant="ghost" className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
                               <X className="w-3.5 h-3.5" />
@@ -480,23 +482,23 @@ export function AhliPage() {
         <DialogContent className="max-w-md rounded-[2rem]">
           <DialogHeader>
             <DialogTitle className="font-black text-rose-600 text-xl flex items-center gap-2">
-              <Trash2 className="w-6 h-6" /> Buang Ahli
+              <Trash2 className="w-6 h-6" /> {t('kpp:kick_member', 'Buang Ahli')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-              Anda pasti mahu membuang <strong>{kickingMember?.full_name}</strong> dari kelab ini? Tindakan ini akan direkodkan. Sila nyatakan alasan pembuangan:
+              {t('kpp:remove_member_confirm', 'Anda pasti mahu membuang {{name}} dari kelab ini? Tindakan ini akan direkodkan. Sila nyatakan alasan pembuangan:', { name: kickingMember?.full_name })}
             </p>
             <Input 
               value={kickReason} 
               onChange={e => setKickReason(e.target.value)} 
-              placeholder="Cth: Bertukar Politeknik / Masalah Disiplin" 
+              placeholder={t('kpp:remove_reason_placeholder', 'Cth: Bertukar Politeknik / Masalah Disiplin')} 
               className="bg-muted/40 font-medium h-12 rounded-xl"
             />
           </div>
           <DialogFooter className="mt-4 gap-2">
-             <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setKickingMember(null)}>Batal</Button>
-             <Button variant="destructive" className="rounded-xl font-bold" onClick={() => handleStatusAction(kickingMember?.id, kickingMember?.club_id, 'KICKED')}>Ya, Buang Ahli</Button>
+             <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setKickingMember(null)}>{t('common:cancel', 'Batal')}</Button>
+             <Button variant="destructive" className="rounded-xl font-bold" onClick={() => handleStatusAction(kickingMember?.id, kickingMember?.club_id, 'KICKED')}>{t('kpp:confirm_remove_member', 'Ya, Buang Ahli')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -507,10 +509,12 @@ export function AhliPage() {
 }
 
 function MemberCard({ member: m, isPresident, onRefresh, actorRole, onRoleChange, onKick }: {
+  key?: React.Key;
   member: any; isPresident: boolean; onRefresh: () => void;
   actorRole: string; onRoleChange: (userId: string, newRole: string) => void;
   onKick: () => void;
 }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const displayName = m.full_name ?? m.email ?? '?';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const [isMeritOpen, setIsMeritOpen] = React.useState(false);
@@ -553,11 +557,11 @@ function MemberCard({ member: m, isPresident, onRefresh, actorRole, onRoleChange
 
           <div className="flex items-center justify-between border-t border-border/50 pt-4 mt-auto">
              <div className="bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-black">
-               {(m as any).merit || 0} PTS
+               {(m as any).merit || 0} {t('kpp:pts', 'PTS')}
              </div>
              {isPresident && (
                <Button onClick={() => setIsMeritOpen(true)} variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700">
-                 + Tambah Merit
+                 {t('kpp:add_merit', '+ Tambah Merit')}
                </Button>
              )}
           </div>
@@ -568,7 +572,7 @@ function MemberCard({ member: m, isPresident, onRefresh, actorRole, onRoleChange
               {canChangeRole && (
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">
-                    Tukar Peranan
+                    {t('kpp:change_role', 'Tukar Peranan')}
                   </p>
                   <Select
                     value={(m as any).role || ''}
@@ -589,7 +593,7 @@ function MemberCard({ member: m, isPresident, onRefresh, actorRole, onRoleChange
               )}
               {canKick && (
                 <Button variant="ghost" size="sm" onClick={onKick} className="h-9 w-full text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-500/10">
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Buang Ahli
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t('kpp:kick_member', 'Buang Ahli')}
                 </Button>
               )}
             </div>

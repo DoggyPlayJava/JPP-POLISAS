@@ -213,14 +213,14 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
     e.target.value = '';
     const currentCount = form.imageUrls?.length || 0;
     const remainingSlots = 2 - currentCount;
-    if (remainingSlots <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
+    if (remainingSlots <= 0) { toast.error(t('kpp:max_2_images', 'Maksimum 2 gambar dibenarkan.')); return; }
 
     const filesToUpload = allFiles
       .filter(f => f.type.startsWith('image/'))
       .slice(0, remainingSlots);
 
-    if (filesToUpload.length === 0) { toast.error('Tiada fail imej yang sah.'); return; }
-    const toastId = toast.loading(`Memuat naik ${filesToUpload.length} gambar...`);
+    if (filesToUpload.length === 0) { toast.error(t('kpp:no_valid_image_file', 'Tiada fail imej yang sah.')); return; }
+    const toastId = toast.loading(t('kpp:uploading_images_count', 'Memuat naik {{count}} gambar...', { count: filesToUpload.length }));
     const urls: string[] = [];
     setUploading(true);
     try {
@@ -231,12 +231,12 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       }
       setForm((prev: any) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));
       if (originalCount > remainingSlots) {
-        toast.success(`${urls.length} gambar dimuat naik (Maksimum 2).`, { id: toastId });
+        toast.success(t('kpp:images_uploaded_max', '{{count}} gambar dimuat naik (Maksimum 2).', { count: urls.length }), { id: toastId });
       } else {
-        toast.success(`${urls.length} gambar berjaya dimuat naik! ☁️`, { id: toastId });
+        toast.success(t('kpp:images_uploaded_success', '{{count}} gambar berjaya dimuat naik! ☁️', { count: urls.length }), { id: toastId });
       }
     } catch (err: any) {
-      toast.error(err.message || 'Gagal upload gambar.', { id: toastId });
+      toast.error(err.message || t('kpp:upload_image_failed', 'Gagal upload gambar.'), { id: toastId });
     } finally {
       setUploading(false);
     }
@@ -248,7 +248,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.start_date) {
-      toast.error('Tajuk dan Tarikh Mula wajib diisi.');
+      toast.error(t('kpp:title_and_start_date_required', 'Tajuk dan Tarikh Mula wajib diisi.'));
       return;
     }
     setSaving(true);
@@ -276,11 +276,11 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       if (editTarget) {
         const { error } = await supabase.from('club_activities').update(payload).eq('id', editTarget.id);
         if (error) throw error;
-        toast.success('Aktiviti dikemaskini!');
+        toast.success(t('kpp:activity_updated_toast', 'Aktiviti dikemaskini!'));
       } else {
         const { error } = await supabase.from('club_activities').insert([payload]);
         if (error) throw error;
-        toast.success('Aktiviti baharu ditambah!');
+        toast.success(t('kpp:new_activity_added_toast', 'Aktiviti baharu ditambah!'));
       }
       queryCache.invalidate('dashboard_');
       setDialogOpen(false);
@@ -307,14 +307,14 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               justification: form.description.trim() || null,
               status: 'pending',
             });
-            toast.success('📋 Permohonan Merit Rasmi dihantar untuk kelulusan!', { duration: 5000 });
+            toast.success(t('kpp:official_merit_submitted_toast', '📋 Permohonan Merit Rasmi dihantar untuk kelulusan!'), { duration: 5000 });
           }
         }
       }
 
       load();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyimpan.');
+      toast.error(err.message || t('common:save_failed', 'Gagal menyimpan.'));
     } finally {
       setSaving(false);
     }
@@ -327,11 +327,11 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       .update({ is_archived: true })
       .eq('id', id);
     if (!error) {
-      toast.success('Aktiviti diarkibkan.');
+      toast.success(t('kpp:activity_archived_toast', 'Aktiviti diarkibkan.'));
       queryCache.invalidate('dashboard_');
       load();
     }
-    else toast.error('Gagal mengarkibkan.');
+    else toast.error(t('kpp:archive_failed_toast', 'Gagal mengarkibkan.'));
   };
 
   const filtered = filterStatus === 'semua'
@@ -572,7 +572,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 <Textarea
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Ringkasan aktiviti..."
+                  placeholder={t('kpp:activity_summary_placeholder', 'Ringkasan aktiviti...')}
                   className="rounded-2xl bg-muted/40 border-border/60 font-medium resize-none min-h-[80px]"
                 />
               </div>
@@ -588,7 +588,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 <Textarea
                   value={form.tindakan}
                   onChange={e => setForm({ ...form, tindakan: e.target.value })}
-                  placeholder="Tindakan yang telah diambil atau rumusan aktiviti..."
+                  placeholder={t('kpp:action_notes_placeholder', 'Tindakan yang telah diambil atau rumusan aktiviti...')}
                   className="rounded-2xl bg-muted/40 border-border/60 font-medium resize-none min-h-[80px]"
                 />
               </div>
@@ -690,7 +690,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                   {(!form.imageUrls || form.imageUrls.length < 2) && (
                     <div className="relative border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:bg-card hover:border-emerald-400 transition-colors h-20 cursor-pointer group shadow-sm bg-emerald-500/10/30">
                       <ImageIcon size={16} className="text-emerald-300 group-hover:text-emerald-500" />
-                      <span className="text-[10px] font-black text-emerald-400 uppercase text-center group-hover:text-emerald-600">Tambah</span>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase text-center group-hover:text-emerald-600">{t('common:add', 'Tambah')}</span>
                       <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                     </div>
                   )}
@@ -927,15 +927,15 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'kertas_kerja' | 'post_mortem') => {
     const file = e.target.files?.[0];
-    if (!file || file.type !== 'application/pdf') { toast.error('Hanya PDF!'); return; }
-    const toastId = toast.loading('Memuat naik ke Google Drive...');
+    if (!file || file.type !== 'application/pdf') { toast.error(t('kpp:pdf_only_toast', 'Hanya PDF!')); return; }
+    const toastId = toast.loading(t('kpp:uploading_to_drive', 'Memuat naik ke Google Drive...'));
     try {
       const fileName = `${type}_${selectedClubId}_${Date.now()}`;
       const url = await uploadPdfToDrive(file, 'program_docs', fileName);
       setForm((prev: any) => ({ ...prev, [type === 'kertas_kerja' ? 'urlKertasKerja' : 'urlPostMortem']: url }));
-      toast.success('Fail sedia!', { id: toastId });
+      toast.success(t('kpp:file_ready_toast', 'Fail sedia!'), { id: toastId });
     } catch (err: any) {
-      toast.error(err.message || 'Gagal upload.', { id: toastId });
+      toast.error(err.message || t('kpp:upload_failed_toast', 'Gagal upload.'), { id: toastId });
     }
   };
 
@@ -944,10 +944,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     if (!files || files.length === 0) return;
     const currentCount = form.imageUrls?.length || 0;
     const remainingSlots = 2 - currentCount;
-    if (remainingSlots <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
+    if (remainingSlots <= 0) { toast.error(t('kpp:max_2_images', 'Maksimum 2 gambar dibenarkan.')); return; }
 
     const filesToUpload = (Array.from(files) as File[]).slice(0, remainingSlots);
-    const toastId = toast.loading('Memuat naik gambar...');
+    const toastId = toast.loading(t('kpp:uploading_images', 'Memuat naik gambar...'));
     const urls: string[] = [];
     try {
       for (let i = 0; i < filesToUpload.length; i++) {
@@ -962,10 +962,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         urls.push(publicUrl);
       }
       setForm((prev: any) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));
-      if (files.length > remainingSlots) toast.success(`${urls.length} gambar dimuat naik (Maks 2).`, { id: toastId });
-      else toast.success(`${urls.length} gambar dimuat naik!`, { id: toastId });
+      if (files.length > remainingSlots) toast.success(t('kpp:images_uploaded_max_short', '{{count}} gambar dimuat naik (Maks 2).', { count: urls.length }), { id: toastId });
+      else toast.success(t('kpp:images_uploaded_simple', '{{count}} gambar dimuat naik!', { count: urls.length }), { id: toastId });
     } catch {
-      toast.error('Gagal upload gambar.', { id: toastId });
+      toast.error(t('kpp:upload_image_failed', 'Gagal upload gambar.'), { id: toastId });
     }
   };
 
@@ -990,7 +990,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   };
 
   const handleSave = async () => {
-    if (!form.title || !form.startDate || !form.pengarahProgram) { toast.error('Lengkapkan maklumat asas (termasuk Pengarah).'); return; }
+    if (!form.title || !form.startDate || !form.pengarahProgram) { toast.error(t('kpp:complete_basic_info_toast', 'Lengkapkan maklumat asas (termasuk Pengarah).')); return; }
     setSaving(true);
     const payload = {
       nama_program: form.title,
@@ -1018,7 +1018,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         ? await supabase.from('programs').update(payload).eq('id', editTarget.id)
         : await supabase.from('programs').insert([payload]);
       if (!res.error) {
-        toast.success('Program disimpan.');
+        toast.success(t('kpp:program_saved_toast', 'Program disimpan.'));
 
         // --- Trigger Push Notification ---
         // Hanya hantar notifikasi bila program dihantar (bukan DRAFT)
@@ -1044,12 +1044,12 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       }
       else throw res.error;
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyimpan.');
+      toast.error(err.message || t('common:save_failed', 'Gagal menyimpan.'));
     } finally { setSaving(false); }
   };
 
   const onConfirmUnlock = async () => {
-    if (!unlockReason.trim()) { toast.error('Sila berikan alasan.'); return; }
+    if (!unlockReason.trim()) { toast.error(t('kpp:please_provide_reason', 'Sila berikan alasan.')); return; }
     setSaving(true);
     try {
       const { error } = await supabase.from('programs')
@@ -1065,10 +1065,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         content: `MT [${user?.email}] memohon UNLOCK bagi program: ${targetUnlock.nama_program}. Sebab: ${unlockReason}`
       }]);
 
-      toast.success("Permohonan Unlock dihantar ke JPP");
+      toast.success(t('kpp:unlock_request_sent_toast', 'Permohonan Unlock dihantar ke JPP'));
       setUnlockDialogOpen(false); setUnlockReason(''); load();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menghantar permohonan.');
+      toast.error(err.message || t('kpp:unlock_request_failed_toast', 'Gagal menghantar permohonan.'));
     } finally { setSaving(false); }
   };
 
@@ -1081,10 +1081,10 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         .delete()
         .eq('id', actId);
       if (error) throw error;
-      toast.success('Draf berjaya dipadam.');
+      toast.success(t('kpp:draft_deleted_toast', 'Draf berjaya dipadam.'));
       load();
     } catch (e: any) {
-      toast.error('Gagal memadam draf: ' + e.message);
+      toast.error(t('kpp:draft_delete_failed_toast', 'Gagal memadam draf: ') + e.message);
     } finally {
       setSaving(false);
     }
@@ -1452,7 +1452,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                     <Textarea
                       value={form.tindakan}
                       onChange={e => setForm({ ...form, tindakan: e.target.value })}
-                      placeholder="Tindakan yang telah diambil, ulasan ringkas mengenai pelaksanaan program..."
+                      placeholder={t('kpp:report_action_notes_placeholder', 'Tindakan yang telah diambil, ulasan ringkas mengenai pelaksanaan program...')}
                       className="rounded-3xl border border-border bg-card min-h-[100px] font-bold p-6 resize-none"
                     />
                   </div>
@@ -1506,7 +1506,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
             <div className="py-5 space-y-2">
               <Label className="text-[10px] font-black uppercase text-muted-foreground">{t('kpp:audit_rejection_reason', 'Sebab Permohonan')}</Label>
               <Textarea value={unlockReason} onChange={e => setUnlockReason(e.target.value)}
-                placeholder="Berikan alasan munasabah (cth: Perubahan tarikh exam)..."
+                placeholder={t('kpp:unlock_reason_placeholder', 'Berikan alasan munasabah (cth: Perubahan tarikh exam)...')}
                 className="rounded-[2rem] bg-slate-50 border-none min-h-[120px] p-6 font-bold" />
             </div>
           </div>
@@ -1537,7 +1537,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
     if (!confirm('Hantar permohonan ke JPP sekarang?')) return;
     const { error } = await supabase.from('programs').update({ status: type, jpp_remarks: null }).eq('id', act.id);
     if (!error) {
-      toast.success('Berjaya dihantar!');
+      toast.success(t('common:submitted_successfully', 'Berjaya dihantar!'));
       await supabase.from('club_logs').insert([{
         club_id: act.club_id,
         user_id: user?.id,
