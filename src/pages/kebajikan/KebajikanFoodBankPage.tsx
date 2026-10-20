@@ -84,12 +84,12 @@ import {
 } from '@/lib/foodbankDefaults';
 
 // Tab Kategori Barangan
-const CATEGORY_TABS = [
-  { id: 'SEMUA', label: 'Semua Barangan' },
-  { id: 'MAKANAN', label: 'Makanan Asas' },
-  { id: 'MINUMAN', label: 'Minuman' },
-  { id: 'KEBERSIHAN', label: 'Kebersihan Diri' },
-  { id: 'LAIN_LAIN', label: 'Keperluan Lain' },
+const getCategoryTabs = (t: (key: string, fallback: string) => string) => [
+  { id: 'SEMUA', label: t('kebajikan:tab_all_items', 'Semua Barangan') },
+  { id: 'MAKANAN', label: t('kebajikan:tab_basic_food', 'Makanan Asas') },
+  { id: 'MINUMAN', label: t('kebajikan:tab_beverages', 'Minuman') },
+  { id: 'KEBERSIHAN', label: t('kebajikan:tab_personal_hygiene', 'Kebersihan Diri') },
+  { id: 'LAIN_LAIN', label: t('kebajikan:tab_other_essentials', 'Keperluan Lain') },
 ];
 
 // Masa Slot Pilihan Standard
@@ -100,43 +100,41 @@ const TIME_SLOTS = [
 ];
 
 // Presets Ready Care Box (1-Sentuhan)
-const READY_CARE_BOX_PRESETS = [
+const getReadyCareBoxPresets = (t: (key: string, fallback: string) => string) => [
   {
     id: 'rahmah-standard',
-    name: 'Ready Care Box: Pakej Rahmah Siswa Standard',
+    name: t('kebajikan:foodbank_package_rahmah_title', 'Ready Care Box: Pakej Rahmah Siswa Standard'),
     nameKey: 'foodbank_package_rahmah_title',
-    tagline: '1-Sentuhan • Paling Popular & Seimbang',
+    tagline: t('kebajikan:foodbank_package_rahmah_tagline', '1-Sentuhan • Paling Popular & Seimbang'),
     taglineKey: 'foodbank_package_rahmah_tagline',
-    badge: '1-Sentuhan • Popular',
+    badge: t('kebajikan:foodbank_package_rahmah_badge', '1-Sentuhan • Popular'),
     badgeKey: 'foodbank_package_rahmah_badge',
-    description:
-      'Pakej lengkap mengandungi Beras/Biskut, Mi Segera, Minuman Pek dan Barangan Kebersihan asas.',
+    description: t('kebajikan:foodbank_package_rahmah_desc', 'Pakej lengkap mengandungi Beras/Biskut, Mi Segera, Minuman Pek dan Barangan Kebersihan asas.'),
     descKey: 'foodbank_package_rahmah_desc',
     icon: Package,
     itemsList: [
-      { key: 'foodbank_item_rice_staple', defaultText: 'Beras / Makanan Asas Ruji' },
-      { key: 'foodbank_item_instant_noodles_x2', defaultText: 'Mi Segera (x2)' },
-      { key: 'foodbank_item_energy_biscuits', defaultText: 'Biskut Sarapan Bertenaga' },
-      { key: 'foodbank_item_beverage_pack', defaultText: 'Minuman Pek Kopi/Malt' },
-      { key: 'foodbank_item_hygiene_essentials', defaultText: 'Sabun / Keperluan Kebersihan' },
+      { key: 'foodbank_item_rice_staple', defaultText: t('kebajikan:foodbank_item_rice_staple', 'Beras / Makanan Asas Ruji') },
+      { key: 'foodbank_item_instant_noodles_x2', defaultText: t('kebajikan:foodbank_item_instant_noodles_x2', 'Mi Segera (x2)') },
+      { key: 'foodbank_item_energy_biscuits', defaultText: t('kebajikan:foodbank_item_energy_biscuits', 'Biskut Sarapan Bertenaga') },
+      { key: 'foodbank_item_beverage_pack', defaultText: t('kebajikan:foodbank_item_beverage_pack', 'Minuman Pek Kopi/Malt') },
+      { key: 'foodbank_item_hygiene_essentials', defaultText: t('kebajikan:foodbank_item_hygiene_essentials', 'Sabun / Keperluan Kebersihan') },
     ],
   },
   {
     id: 'express-care',
-    name: 'Ready Care Box: Pakej Makanan Pantas Siswa',
+    name: t('kebajikan:foodbank_package_express_title', 'Ready Care Box: Pakej Makanan Pantas Siswa'),
     nameKey: 'foodbank_package_express_title',
-    tagline: '1-Sentuhan • Cepat Sedia',
+    tagline: t('kebajikan:foodbank_package_express_tagline', '1-Sentuhan • Cepat Sedia'),
     taglineKey: 'foodbank_package_express_tagline',
-    badge: '1-Sentuhan • Ekspres',
+    badge: t('kebajikan:foodbank_package_express_badge', '1-Sentuhan • Ekspres'),
     badgeKey: 'foodbank_package_express_badge',
-    description:
-      'Pakej makanan pantas mudah disediakan untuk musim peperiksaan atau ketiadaan kemudahan memasak.',
+    description: t('kebajikan:foodbank_package_express_desc', 'Pakej makanan pantas mudah disediakan untuk musim peperiksaan atau ketiadaan kemudahan memasak.'),
     descKey: 'foodbank_package_express_desc',
     icon: Sparkles,
     itemsList: [
-      { key: 'foodbank_item_instant_noodles_x3', defaultText: 'Mi Segera Aneka Perisa (x3)' },
-      { key: 'foodbank_item_cracker_biscuits', defaultText: 'Biskut Kraker Sarapan' },
-      { key: 'foodbank_item_condensed_milk', defaultText: 'Susu / Minuman Pekat Manis' },
+      { key: 'foodbank_item_instant_noodles_x3', defaultText: t('kebajikan:foodbank_item_instant_noodles_x3', 'Mi Segera Aneka Perisa (x3)') },
+      { key: 'foodbank_item_cracker_biscuits', defaultText: t('kebajikan:foodbank_item_cracker_biscuits', 'Biskut Kraker Sarapan') },
+      { key: 'foodbank_item_condensed_milk', defaultText: t('kebajikan:foodbank_item_condensed_milk', 'Susu / Minuman Pekat Manis') },
     ],
   },
 ];
@@ -153,6 +151,8 @@ export const renderCategoryIcon = (category: string, className = 'w-4 h-4') => {
 export function KebajikanFoodBankPage() {
   const { t } = useTranslation(['kebajikan', 'common']);
   const { user, profile } = useAuth();
+  const CATEGORY_TABS = getCategoryTabs(t);
+  const READY_CARE_BOX_PRESETS = getReadyCareBoxPresets(t);
 
   // Helper hantar emel Food Bank (fire-and-forget)
   const buildEmailAndSend = async (status: any, data: any, to: string) => {
@@ -166,7 +166,7 @@ export function KebajikanFoodBankPage() {
 
   // State data utama
   const [settings, setSettings] = useState<FoodBankSettings | null>(null);
-  const [locations, setLocations] = useState<FoodBankDistributionLocation[]>(typeof window === 'undefined' ? [{ id: 'loc-main', name: 'Pusat Agihan HEP', room_detail: 'Kaunter HEP', operating_hours: 'Isnin - Khamis: 10AM - 4PM', is_active: true } as any] : []);
+  const [locations, setLocations] = useState<FoodBankDistributionLocation[]>(typeof window === 'undefined' ? [{ id: 'loc-main', name: t('kebajikan:foodbank_loc_main_name', 'Pusat Agihan HEP'), room_detail: t('kebajikan:foodbank_loc_main_room', 'Kaunter HEP'), operating_hours: t('kebajikan:foodbank_loc_main_hours', 'Isnin - Khamis: 10AM - 4PM'), is_active: true } as any] : []);
   const [items, setItems] = useState<FoodBankItem[]>([]);
   const [locationStocks, setLocationStocks] = useState<FoodBankLocationStock[]>([]);
   const [activeApplication, setActiveApplication] = useState<FoodBankApplication | null>(null);
@@ -500,7 +500,7 @@ export function KebajikanFoodBankPage() {
 
   const handleSelectStudent = (student: any) => {
     const matric = (student.matric_no || student.email || '').toUpperCase().trim();
-    const name = (student.full_name || 'Pelajar POLISAS').trim();
+    const name = (student.full_name || t('kebajikan:student_polisas', 'Pelajar POLISAS')).trim();
 
     if (housemates.some((h) => h.ic_or_matric.toUpperCase() === matric)) {
       toast.error(t('kebajikan:toast_roommate_already_added', 'Rakan serumah dengan nombor matrik ini telah dimasukkan.'));
@@ -613,7 +613,7 @@ export function KebajikanFoodBankPage() {
 
     if (hasAdjusted) {
       setSelectedItemQuantities(updatedQuantities);
-      toast('Kuantiti barangan diselaraskan mengikut stok lokasi yang dipilih.');
+      toast(t('kebajikan:toast_items_adjusted_for_location_stock', 'Kuantiti barangan diselaraskan mengikut stok lokasi yang dipilih.'));
     }
   };
 
@@ -796,7 +796,7 @@ export function KebajikanFoodBankPage() {
   const handleCancelActiveApp = async (appId: string) => {
     if (!user) return;
     const confirmed = window.confirm(
-      'Adakah anda pasti ingin membatalkan permohonan Food Bank ini? Tindakan ini tidak boleh diundur.'
+      t('kebajikan:confirm_cancel_foodbank_app', 'Adakah anda pasti ingin membatalkan permohonan Food Bank ini? Tindakan ini tidak boleh diundur.')
     );
     if (!confirmed) return;
 
@@ -823,7 +823,7 @@ export function KebajikanFoodBankPage() {
       await fetchInitialData();
     } catch (err: any) {
       console.error('Error cancelling application:', err);
-      toast.error(t('kebajikan:toast_cancel_failed', 'Gagal membatalkan permohonan') + ': ' + (err.message || 'Sila cuba lagi.'));
+      toast.error(t('kebajikan:toast_cancel_failed', 'Gagal membatalkan permohonan') + ': ' + (err.message || t('kebajikan:please_try_again', 'Sila cuba lagi.')));
     } finally {
       setIsCancelling(false);
     }
@@ -988,8 +988,8 @@ export function KebajikanFoodBankPage() {
       const studentEmail = profile?.email || user?.email;
 
       sendNotificationToKebajikanExco({
-        title: 'Permohonan Food Bank Baru',
-        message: `${profile?.full_name || 'Mahasiswa'} menghantar permohonan ${appNo}.`,
+        title: t('kebajikan:notif_foodbank_new_title', 'Permohonan Food Bank Baru'),
+        message: t('kebajikan:notif_foodbank_new_msg', '{{name}} menghantar permohonan {{appNo}}.', { name: profile?.full_name || t('kebajikan:student_fallback_mahasiswa', 'Mahasiswa'), appNo }),
         type: 'FOODBANK_SUBMISSION',
         module: 'KEBAJIKAN',
         link: '/jpp/foodbank',
@@ -1029,7 +1029,7 @@ export function KebajikanFoodBankPage() {
     } catch (err: any) {
       console.error('Failed to submit foodbank application:', err);
       if (err?.message !== 'STOCK_INSUFFICIENT') {
-        toast.error(t('kebajikan:toast_submit_failed', 'Gagal menghantar permohonan') + ': ' + (err.message || 'Sila cuba lagi.'));
+        toast.error(t('kebajikan:toast_submit_failed', 'Gagal menghantar permohonan') + ': ' + (err.message || t('kebajikan:please_try_again', 'Sila cuba lagi.')));
       }
     } finally {
       setIsSubmitting(false);
@@ -1208,10 +1208,10 @@ export function KebajikanFoodBankPage() {
                     <span>{t('kebajikan:foodbank_dist_location', 'Lokasi Pengagihan')}</span>
                   </div>
                   <p className="font-extrabold text-sm text-white">
-                    {activeApplication.location?.name || 'Pusat Edaran Kaunter JHEP'}
+                    {activeApplication.location?.name || t('kebajikan:foodbank_loc_jhep_default', 'Pusat Edaran Kaunter JHEP')}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    {activeApplication.location?.room_detail || 'Bangunan Pentadbiran Utama'}
+                    {activeApplication.location?.room_detail || t('kebajikan:foodbank_loc_admin_bldg_default', 'Bangunan Pentadbiran Utama')}
                   </p>
 
                   {/* Direct PolyMaps 360 Link */}
@@ -1253,7 +1253,7 @@ export function KebajikanFoodBankPage() {
                           month: 'short',
                           year: 'numeric',
                         })
-                      : 'Akan Diselaraskan'}
+                      : t('kebajikan:to_be_coordinated', 'Akan Diselaraskan')}
                   </p>
                   <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-mono">
                     <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -1365,7 +1365,7 @@ export function KebajikanFoodBankPage() {
                 </span>
                 <p className="leading-relaxed font-normal">
                   {settings?.eligibility_criteria ||
-                    'Terbuka kepada semua mahasiswa POLISAS yang memerlukan bantuan makanan/keperluan asas (keutamaan kepada kategori B40, asnaf, atau kecemasan).'}
+                    t('kebajikan:foodbank_default_eligibility_criteria', 'Terbuka kepada semua mahasiswa POLISAS yang memerlukan bantuan makanan/keperluan asas (keutamaan kepada kategori B40, asnaf, atau kecemasan).')}
                 </p>
               </div>
               <div className="space-y-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
@@ -1374,7 +1374,7 @@ export function KebajikanFoodBankPage() {
                 </span>
                 <p className="leading-relaxed font-normal">
                   {settings?.application_instructions ||
-                    'Sila bawa Pas Pengambilan Digital (QR) ke lokasi agihan pada tarikh & slot masa yang dipilih untuk diimbas oleh petugas kaunter.'}
+                    t('kebajikan:foodbank_default_application_instructions', 'Sila bawa Pas Pengambilan Digital (QR) ke lokasi agihan pada tarikh & slot masa yang dipilih untuk diimbas oleh petugas kaunter.')}
                 </p>
               </div>
             </div>
@@ -1431,7 +1431,7 @@ export function KebajikanFoodBankPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
                   <Pencil className="w-3.5 h-3.5" />
-                  Betulkan Nama / No. Matrik
+                  {t('kebajikan:foodbank_fix_name_matric', 'Betulkan Nama / No. Matrik')}
                 </button>
               </div>
 
@@ -1462,7 +1462,7 @@ export function KebajikanFoodBankPage() {
                 >
                   <option value="B40">B40 (Pendapatan &lt; RM4,850)</option>
                   <option value="M40">M40 (Pendapatan RM4,850 - RM10,959)</option>
-                  <option value="ASNAF">Asnaf / Bantuan Zakat</option>
+                  <option value="ASNAF">{t('kebajikan:foodbank_financial_asnaf', 'Asnaf / Bantuan Zakat')}</option>
                   <option value="KECEMASAN">{t('kebajikan:foodbank_emergency_option', 'Kecemasan / Ketiadaan Wang Saku')}</option>
                 </select>
               </div>
@@ -1472,9 +1472,7 @@ export function KebajikanFoodBankPage() {
               <div className="flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>
-                  Anda telah mengubah <strong>Nama</strong> atau <strong>No. Matrik</strong>. Sila{' '}
-                  <strong>bawa kad matrik fizikal</strong> semasa pengambilan Food Bank — pegawai
-                  kaunter akan membuat pengesahan.
+                  {t('kebajikan:identity_changed_warning', 'Anda telah mengubah Nama atau No. Matrik. Sila bawa kad matrik fizikal semasa pengambilan Food Bank — pegawai kaunter akan membuat pengesahan.')}
                 </span>
               </div>
             )}
@@ -1537,9 +1535,9 @@ export function KebajikanFoodBankPage() {
                   disabled={isSessionClosed}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <option value="KAMSIS">Kolej Kediaman Siswa (Kamsis Dalam Kampus)</option>
-                  <option value="RUMAH_SEWA">Rumah Sewa Luar Kampus</option>
-                  <option value="SENDIRI">Kediaman Sendiri / Ulang-Alik</option>
+                  <option value="KAMSIS">{t('kebajikan:housing_kamsis', 'Kolej Kediaman Siswa (Kamsis Dalam Kampus)')}</option>
+                  <option value="RUMAH_SEWA">{t('kebajikan:housing_rented_house', 'Rumah Sewa Luar Kampus')}</option>
+                  <option value="SENDIRI">{t('kebajikan:housing_own_commute', 'Kediaman Sendiri / Ulang-Alik')}</option>
                 </select>
               </div>
 
@@ -1548,7 +1546,7 @@ export function KebajikanFoodBankPage() {
                   {t('kebajikan:foodbank_room_no')} <span className="text-rose-500">*</span>
                 </label>
                 <Input
-                  placeholder="Contoh: Blok B3-12 (Kamsis) atau No 14, Lorong Semambu"
+                  placeholder={t('kebajikan:housing_address_placeholder', 'Contoh: Blok B3-12 (Kamsis) atau No 14, Lorong Semambu')}
                   value={roomNumber}
                   onChange={(e) => setRoomNumber(e.target.value)}
                   disabled={isSessionClosed}
@@ -1563,10 +1561,10 @@ export function KebajikanFoodBankPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="block text-xs font-extrabold text-slate-900 dark:text-white">
-                      Maklumat Kediaman &amp; Kuota Rakan Serumah
+                      {t('kebajikan:foodbank_residence_housemate_quota_title', 'Maklumat Kediaman & Kuota Rakan Serumah')}
                     </span>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Setiap rakan serumah yang ditambah akan meningkatkan had kuota barangan anda (+{itemsPerPerson} barangan).
+                      {t('kebajikan:foodbank_housemate_quota_desc', 'Setiap rakan serumah yang ditambah akan meningkatkan had kuota barangan anda (+{{count}} barangan).', { count: itemsPerPerson })}
                     </p>
                   </div>
                   <button
@@ -1574,7 +1572,7 @@ export function KebajikanFoodBankPage() {
                     onClick={() => setShowManualHmForm(!showManualHmForm)}
                     className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline"
                   >
-                    {showManualHmForm ? 'Tutup Manual' : 'Input Manual'}
+                    {showManualHmForm ? t('kebajikan:btn_close_manual', 'Tutup Manual') : t('kebajikan:btn_input_manual', 'Input Manual')}
                   </button>
                 </div>
 
@@ -1582,7 +1580,7 @@ export function KebajikanFoodBankPage() {
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <Input
-                      placeholder="Ketik Nama atau No. Matrik kawan (Cth: 06DKM... atau Ali)..."
+                      placeholder={t('kebajikan:housing_search_roommate_placeholder', 'Ketik Nama atau No. Matrik kawan (Cth: 06DKM... atau Ali)...')}
                       value={hmSearchQuery}
                       onChange={(e) => handleSearchStudent(e.target.value)}
                       disabled={isSessionClosed}
@@ -1602,7 +1600,7 @@ export function KebajikanFoodBankPage() {
                         className="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80"
                       >
                         <div className="px-3.5 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          Pilih Pelajar ({hmSuggestions.length} dijumpai)
+                          {t('kebajikan:housing_select_student_count', 'Pilih Pelajar ({{count}} dijumpai)', { count: hmSuggestions.length })}
                         </div>
                         {hmSuggestions.map((st) => (
                           <button
@@ -1626,7 +1624,7 @@ export function KebajikanFoodBankPage() {
                               </div>
                             </div>
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/60 dark:bg-amber-900/40 px-2 py-0.5 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-all shrink-0">
-                              <Plus className="w-3 h-3" /> Tambah
+                              <Plus className="w-3 h-3" /> {t('kebajikan:btn_add', 'Tambah')}
                             </span>
                           </button>
                         ))}
@@ -1636,13 +1634,13 @@ export function KebajikanFoodBankPage() {
 
                   {hmSearchQuery.trim().length >= 2 && !isSearchingHm && hmSuggestions.length === 0 && (
                     <div className="text-[11px] text-slate-400 mt-1 pl-1">
-                      Tiada pelajar sepadan ditemui dalam sistem. Anda boleh guna{' '}
+                      {t('kebajikan:foodbank_no_matching_student_msg', 'Tiada pelajar sepadan ditemui dalam sistem. Anda boleh guna')}{' '}
                       <button
                         type="button"
                         onClick={() => setShowManualHmForm(true)}
                         className="font-bold text-amber-600 underline"
                       >
-                        borang manual
+                        {t('kebajikan:foodbank_manual_form_btn', 'borang manual')}
                       </button>
                       .
                     </div>
@@ -1658,18 +1656,18 @@ export function KebajikanFoodBankPage() {
                       className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5 overflow-hidden"
                     >
                       <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        Borang Manual Rakan Serumah:
+                        {t('kebajikan:foodbank_manual_housemate_form_label', 'Borang Manual Rakan Serumah:')}
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <Input
-                          placeholder="Nama Penuh Rakan"
+                          placeholder={t('kebajikan:foodbank_friend_full_name_ph', 'Nama Penuh Rakan')}
                           value={hmName}
                           onChange={(e) => setHmName(e.target.value)}
                           disabled={isSessionClosed}
                           className="text-xs rounded-xl"
                         />
                         <Input
-                          placeholder="No. Matrik (Cth: 06DKM23F1001)"
+                          placeholder={t('kebajikan:foodbank_friend_matric_ph', 'No. Matrik (Cth: 06DKM23F1001)')}
                           value={hmMatric}
                           onChange={(e) => setHmMatric(e.target.value)}
                           disabled={isSessionClosed}
@@ -1683,7 +1681,7 @@ export function KebajikanFoodBankPage() {
                           className="h-10 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 rounded-xl gap-1.5"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Tambah Manual</span>
+                          <span>{t('kebajikan:foodbank_add_manual_btn', 'Tambah Manual')}</span>
                         </Button>
                       </div>
                     </motion.div>
@@ -1726,17 +1724,16 @@ export function KebajikanFoodBankPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
                 <div>
                   <span className="font-black uppercase tracking-wider text-[11px]">
-                    Formula Kelayakan Kuota:
+                    {t('kebajikan:foodbank_formula_quota_title', 'Formula Kelayakan Kuota:')}
                   </span>
                   <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                    {itemsPerPerson} unit asas + {itemsPerPerson} unit per rakan serumah (Had maksimum:{' '}
-                    {maxItemsLimit} unit)
+                    {t('kebajikan:foodbank_formula_quota_calc', '{{base}} unit asas + {{extra}} unit per rakan serumah (Had maksimum: {{max}} unit)', { base: itemsPerPerson, extra: itemsPerPerson, max: maxItemsLimit })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-bold">Kelayakan Maksimum:</span>
+                  <span className="text-xs font-bold">{t('kebajikan:foodbank_max_eligibility_label', 'Kelayakan Maksimum:')}</span>
                   <span className="ml-1.5 px-2.5 py-0.5 rounded-lg bg-amber-600 text-white font-black font-mono text-xs">
-                    {maxAllowedItems} Barangan
+                    {t('kebajikan:foodbank_items_count_label', '{{count}} Barangan', { count: maxAllowedItems })}
                   </span>
                 </div>
               </div>
@@ -1745,11 +1742,11 @@ export function KebajikanFoodBankPage() {
               <div className="space-y-1 pt-1">
                 <div className="flex items-center justify-between text-[11px] font-bold">
                   <span>
-                    Jumlah Barangan Dipilih:{' '}
+                    {t('kebajikan:total_items_selected_label', 'Jumlah Barangan Dipilih:')}{' '}
                     <span className="font-mono text-amber-600 dark:text-amber-400">
                       {totalSelectedCount}
                     </span>{' '}
-                    / {totalQuota} unit
+                    / {totalQuota} {t('kebajikan:foodbank_unit_count', 'unit')}
                   </span>
                   <span
                     className={cn(
@@ -1761,10 +1758,10 @@ export function KebajikanFoodBankPage() {
                     )}
                   >
                     {totalSelectedCount > totalQuota
-                      ? 'Melebihi Kuota!'
+                      ? t('kebajikan:foodbank_quota_exceeded', 'Melebihi Kuota!')
                       : totalSelectedCount === totalQuota
-                      ? 'Kuota Penuh'
-                      : `${remainingQuota} baki kuota`}
+                      ? t('kebajikan:quota_full', 'Kuota Penuh')
+                      : t('kebajikan:quota_remaining_label', '{{count}} baki kuota', { count: remainingQuota })}
                   </span>
                 </div>
                 <div className="w-full h-2.5 bg-amber-200/60 dark:bg-amber-950/60 rounded-full overflow-hidden">
@@ -1847,7 +1844,7 @@ export function KebajikanFoodBankPage() {
                               {loc.name}
                             </h4>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                              {loc.room_detail || 'Kaunter Hal Ehwal Pelajar'}
+                              {loc.room_detail || t('kebajikan:loc_hep_counter_default', 'Kaunter Hal Ehwal Pelajar')}
                             </p>
                             <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mt-1">
                               {t('kebajikan:foodbank_operating_hours_prefix', 'Waktu Operasi: ')}{loc.operating_hours || 'Isnin - Khamis: 10AM - 4PM'}
@@ -1954,8 +1951,8 @@ export function KebajikanFoodBankPage() {
                     {t('kebajikan:foodbank_section_package', '4. Pilihan Pakej Bantuan Food Bank')}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Pilih antara <strong>Ready Care Box</strong> (1-sentuhan segera) atau{' '}
-                    <strong>Smart Pantry Basket</strong> (pilihan bebas barangan).
+                    {t('kebajikan:foodbank_choose_between_msg', 'Pilih antara')} <strong>Ready Care Box</strong> {t('kebajikan:foodbank_one_touch_instant', '(1-sentuhan segera) atau')}{' '}
+                    <strong>Smart Pantry Basket</strong> {t('kebajikan:foodbank_custom_pantry_choice', '(pilihan bebas barangan).')}
                   </p>
                 </div>
               </div>
@@ -1999,9 +1996,7 @@ export function KebajikanFoodBankPage() {
                   <div>
                     <span className="font-extrabold block">{t('kebajikan:foodbank_ready_box_title', 'Pilihan Pakej Segera (Ready Care Box)')}</span>
                     <p className="text-[11px] text-amber-800 dark:text-amber-300 font-normal mt-0.5">
-                      Satu sentuhan untuk mengisi pakej keperluan secara automatik mengikut baki stok
-                      di {selectedLocationName}. Anda boleh menukar kuantiti pada bila-bila masa di
-                      Smart Pantry Basket.
+                      {t('kebajikan:foodbank_one_touch_desc', 'Satu sentuhan untuk mengisi pakej keperluan secara automatik mengikut baki stok di {{location}}. Anda boleh menukar kuantiti pada bila-bila masa di Smart Pantry Basket.', { location: selectedLocationName })}
                     </p>
                   </div>
                 </div>
@@ -2083,7 +2078,7 @@ export function KebajikanFoodBankPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Pilihan Pantri Bebas di:
+                      {t('kebajikan:foodbank_free_pantry_at_label', 'Pilihan Pantri Bebas di:')}
                     </span>
                     <span className="font-extrabold text-xs text-amber-600 dark:text-amber-400">
                       {selectedLocationName}
@@ -2184,7 +2179,7 @@ export function KebajikanFoodBankPage() {
                                 if (isOutOfStock) {
                                   return (
                                     <span className="px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider shadow-sm bg-rose-500 text-white font-black">
-                                      Habis di pusat ini
+                                      {t('kebajikan:foodbank_out_of_stock_at_center', 'Habis di pusat ini')}
                                     </span>
                                   );
                                 }
@@ -2236,7 +2231,7 @@ export function KebajikanFoodBankPage() {
                               <div className="pt-1">
                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[9px] font-semibold leading-tight">
                                   <Info className="w-3 h-3 shrink-0 text-amber-600 dark:text-amber-400" />
-                                  <span>Berbaki di {altLocName}</span>
+                                  <span>{t('kebajikan:foodbank_remaining_at_location', 'Berbaki di {{location}}', { location: altLocName })}</span>
                                 </span>
                               </div>
                             )}
@@ -2356,7 +2351,7 @@ export function KebajikanFoodBankPage() {
             </div>
             <div className="truncate">
               <p className="text-xs font-black truncate">
-                {totalSelectedCount} Item Dipilih • Baki Kuota: {remainingQuota}
+                {t('kebajikan:foodbank_items_selected_quota_remaining', '{{count}} Item Dipilih • Baki Kuota: {{remaining}}', { count: totalSelectedCount, remaining: remainingQuota })}
               </p>
               <p className="text-[10px] text-slate-400 font-mono">
                 {usedQuota}/{totalQuota} unit
@@ -2396,7 +2391,7 @@ export function KebajikanFoodBankPage() {
                       Smart Pantry Basket
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Semak &amp; selaras barangan pilihan anda
+                      {t('kebajikan:foodbank_review_adjust_items_desc', 'Semak & selaras barangan pilihan anda')}
                     </p>
                   </div>
                 </div>
@@ -2423,7 +2418,7 @@ export function KebajikanFoodBankPage() {
                         : 'text-amber-700 dark:text-amber-300'
                     )}
                   >
-                    Baki Kuota: {remainingQuota} Unit
+                    {t('kebajikan:foodbank_remaining_quota_units_badge', 'Baki Kuota: {{count}} Unit', { count: remainingQuota })}
                   </span>
                 </div>
                 <div className="w-full h-2 bg-amber-200/60 dark:bg-amber-950/60 rounded-full overflow-hidden">
@@ -2444,9 +2439,9 @@ export function KebajikanFoodBankPage() {
                 {totalSelectedCount === 0 ? (
                   <div className="py-10 text-center text-slate-400 space-y-2">
                     <Package className="w-8 h-8 mx-auto text-slate-300" />
-                    <p className="text-xs">Bakul pantri anda masih kosong.</p>
+                    <p className="text-xs">{t('kebajikan:foodbank_pantry_basket_empty_title', 'Bakul pantri anda masih kosong.')}</p>
                     <p className="text-[11px] text-slate-500">
-                      Pilih barangan daripada katalog atau pilih Ready Care Box di atas.
+                      {t('kebajikan:foodbank_pantry_basket_empty_desc', 'Pilih barangan daripada katalog atau pilih Ready Care Box di atas.')}
                     </p>
                   </div>
                 ) : (
@@ -2527,7 +2522,7 @@ export function KebajikanFoodBankPage() {
                   }}
                   className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs gap-1.5 shadow-md shadow-amber-500/10"
                 >
-                  <span>Teruskan ke Pengesahan Slot</span>
+                  <span>{t('kebajikan:proceed_slot_confirmation', 'Teruskan ke Pengesahan Slot')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -2569,12 +2564,12 @@ export function KebajikanFoodBankPage() {
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                    Dihantar pada:{' '}
+                    {t('kebajikan:foodbank_submitted_on_label', 'Dihantar pada:')}{' '}
                     {app.created_at
                       ? new Date(app.created_at).toLocaleDateString('ms-MY')
                       : '-'}
                     {' • '}
-                    {app.selected_items?.length || 0} unit barangan
+                    {t('kebajikan:foodbank_unit_goods_count', '{{count}} unit barangan', { count: app.selected_items?.length || 0 })}
                   </p>
                 </div>
 
@@ -2588,7 +2583,7 @@ export function KebajikanFoodBankPage() {
                   className="h-8 px-3 text-xs font-bold rounded-xl gap-1 text-slate-700 dark:text-slate-300"
                 >
                   <QrCode className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Lihat Pas</span>
+                  <span>{t('kebajikan:view_pass_btn', 'Lihat Pas')}</span>
                 </Button>
               </div>
             ))}
@@ -2628,23 +2623,21 @@ export function KebajikanFoodBankPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    Semak Maklumat Anda
+                    {t('kebajikan:review_details_title', 'Semak Maklumat Anda')}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Sila pastikan <strong className="text-slate-700 dark:text-slate-200">Nama Penuh</strong> dan{' '}
-                    <strong className="text-slate-700 dark:text-slate-200">No. Matrik</strong> anda di bawah adalah{' '}
-                    <strong className="text-amber-600 dark:text-amber-400">betul dan tepat</strong> sebelum meneruskan permohonan.
+                    {t('kebajikan:review_details_notice', 'Sila pastikan Nama Penuh dan No. Matrik anda di bawah adalah betul dan tepat sebelum meneruskan permohonan.')}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3 mb-5">
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3">
-                  <span className="block text-[10px] text-slate-400 uppercase font-bold">Nama Penuh</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold">{t('kebajikan:foodbank_full_name', 'Nama Penuh')}</span>
                   <span className="text-sm font-bold text-slate-900 dark:text-white">{effectiveName || '—'}</span>
                 </div>
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3">
-                  <span className="block text-[10px] text-slate-400 uppercase font-bold">No. Matrik</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold">{t('kebajikan:foodbank_matric_no', 'No. Matrik')}</span>
                   <span className="text-sm font-bold font-mono text-slate-900 dark:text-white">{effectiveMatric || '—'}</span>
                 </div>
               </div>
@@ -2666,7 +2659,7 @@ export function KebajikanFoodBankPage() {
                   }}
                   className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold transition"
                 >
-                  Saya Nak Betulkan Maklumat
+                  {t('kebajikan:btn_want_to_correct_details', 'Saya Nak Betulkan Maklumat')}
                 </button>
               </div>
             </motion.div>
@@ -2696,10 +2689,10 @@ export function KebajikanFoodBankPage() {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                      Betulkan Nama / No. Matrik
+                      {t('kebajikan:foodbank_fix_name_matric_modal_title', 'Betulkan Nama / No. Matrik')}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Isi maklumat yang betul. Sila bawa kad matrik semasa pengambilan.
+                      {t('kebajikan:foodbank_fix_name_matric_modal_desc', 'Isi maklumat yang betul. Sila bawa kad matrik semasa pengambilan.')}
                     </p>
                   </div>
                 </div>
@@ -2715,23 +2708,23 @@ export function KebajikanFoodBankPage() {
               <div className="space-y-3 mb-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Nama Penuh
+                    {t('kebajikan:foodbank_full_name_label', 'Nama Penuh')}
                   </label>
                   <Input
                     value={fullNameOverride}
                     onChange={(e) => setFullNameOverride(e.target.value)}
-                    placeholder="Nama penuh seperti dalam kad matrik"
+                    placeholder={t('kebajikan:fullname_as_in_matric_placeholder', 'Nama penuh seperti dalam kad matrik')}
                     className="text-sm font-medium"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    No. Matrik
+                    {t('kebajikan:foodbank_matric_label', 'No. Matrik')}
                   </label>
                   <Input
                     value={matricOverride}
                     onChange={(e) => setMatricOverride(e.target.value)}
-                    placeholder="Contoh: 02DTM24F1005"
+                    placeholder={t('kebajikan:matric_placeholder_example', 'Contoh: 02DTM24F1005')}
                     className="text-sm font-mono font-medium"
                   />
                 </div>
@@ -2739,8 +2732,9 @@ export function KebajikanFoodBankPage() {
 
               <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 px-4 py-3 text-xs text-amber-800 dark:text-amber-300 mb-4">
                 <AlertTriangle className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-                Anda telah mengubah maklumat. Sila <strong>bawa kad matrik fizikal</strong> semasa
-                pengambilan — pegawai kaunter akan membuat pengesahan.
+                {t('kebajikan:foodbank_modified_info_notice_1', 'Anda telah mengubah maklumat. Sila')}{' '}
+                <strong>{t('kebajikan:foodbank_bring_physical_matric_card', 'bawa kad matrik fizikal')}</strong>{' '}
+                {t('kebajikan:foodbank_modified_info_notice_2', 'semasa pengambilan — pegawai kaunter akan membuat pengesahan.')}
               </div>
 
               <div className="flex gap-2">
@@ -2749,14 +2743,14 @@ export function KebajikanFoodBankPage() {
                   onClick={() => setShowIdentityModal(false)}
                   className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold transition"
                 >
-                  Batal
+                  {t('kebajikan:foodbank_modal_cancel_btn', 'Batal')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowIdentityModal(false)}
                   className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold transition"
                 >
-                  Simpan
+                  {t('kebajikan:foodbank_modal_save_btn', 'Simpan')}
                 </button>
               </div>
             </motion.div>

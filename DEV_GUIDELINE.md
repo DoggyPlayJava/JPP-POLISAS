@@ -5175,6 +5175,19 @@ Bagi merealisasikan mandat *Zero-Malay In English Mode* secara menyeluruh di per
    - 100% pariti kunci kamus dipelihara merentasi semua 18 ruang nama tanpa kunci kosong.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.27 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 2): Nexus AI, Kebajikan Welfare & MAKMP Jury
+Melengkapkan gelombang pembersihan mendalam pusingan kedua (Batch 2) merentasi 10 fail berketumpatan tinggi:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 2 Disjoint Sweep):**
+   - **Nexus & AI Assistant (`portal.json`):** `NexusPage.tsx` (126 isu -> 0), `FloatingAiChat.tsx` (89 isu -> 0), dan `useAiAssistant.ts` (136 isu -> 0) diselubungi sepenuhnya bagi templat promosi pintar, pilihan soalan pantas, penjana kertas kerja/minit AI, dan notifikasi ralat. Kunci `portal.json` meningkat ke 744 kunci dengan 100% pariti.
+   - **Kebajikan Siswa & FoodBank (`kebajikan.json`):** `KebajikanFoodBankPage.tsx` (91 isu -> 0), `KebajikanReportPage.tsx` (68 isu -> 0), dan `KebajikanSubmitPage.tsx` (55 isu -> 0) diselaraskan bagi borang permohonan bakul makanan B40, penapis tarikh aduan fasiliti, dan laporan statistik kebajikan. Kunci `kebajikan.json` meningkat ke 793 kunci dengan 100% pariti.
+   - **Portal Juri & Penarafan MAKMP (`makmp.json`):** `MakmpJuryPortalPage.tsx` (81 isu -> 0), `MakmpStatusTrackingPage.tsx` (43 isu -> 0), `MakmpRankingView.tsx` (40 isu -> 0), dan `MakmpWinnerDocsPanel.tsx` (26 isu -> 0) diselaraskan sepenuhnya bagi penilaian juri, status penjejakan pencalonan, dan panel dokumen pemenang. Kunci `makmp.json` meningkat ke 737 kunci dengan 100% pariti.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 82/82 ujian lulus merentasi suite `SweepGroup1PortalAndAcademicsI18n`, `Domain3ExcoCompleteI18n`, `Domain4EmsMakmpCompleteI18n`, dan `masterLocales`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 5,645 kepada 4,155 (penurunan 1,490 kejadian dalam 2 batch).
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

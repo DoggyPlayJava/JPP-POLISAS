@@ -46,11 +46,20 @@ interface ReportData {
   top_comments:      { comment: string; rating: number }[];
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  NEW: 'Diterima', IN_PROGRESS: 'Dalam Tindakan', WAITING_INFO: 'Menunggu',
-  PENDING_EXTERNAL: 'Menunggu Pihak Lain',
-  DELEGATED: 'Didelegasikan', ESCALATED: 'Diescalate', RESOLVED: 'Selesai',
-  CLOSED: 'Ditutup', CANCELLED: 'Dibatal', REOPENED: 'Dibuka Semula',
+const getStatusLabel = (status: string, t: any): string => {
+  const map: Record<string, string> = {
+    NEW: t('kebajikan:status_new', 'Diterima'),
+    IN_PROGRESS: t('kebajikan:status_in_progress', 'Dalam Tindakan'),
+    WAITING_INFO: t('kebajikan:status_waiting_info', 'Menunggu'),
+    PENDING_EXTERNAL: t('kebajikan:status_pending_external', 'Menunggu Pihak Lain'),
+    DELEGATED: t('kebajikan:status_delegated', 'Didelegasikan'),
+    ESCALATED: t('kebajikan:status_escalated', 'Diescalate'),
+    RESOLVED: t('kebajikan:status_resolved', 'Selesai'),
+    CLOSED: t('kebajikan:status_closed', 'Ditutup'),
+    CANCELLED: t('kebajikan:status_cancelled', 'Dibatal'),
+    REOPENED: t('kebajikan:status_reopened', 'Dibuka Semula'),
+  };
+  return map[status] || status;
 };
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -78,7 +87,7 @@ function SectionTitle({ num, title, subtitle }: { num: string; title: string; su
 export function KebajikanReportPage() {
   const { isKediamanExco, isSuperAdmin, isYdp, isKebajikanExco, user, profile } = useAuth();
   const { t } = useTranslation(['kebajikan', 'common']);
-  const generatedByName = profile?.full_name || user?.email || 'Exco Kebajikan';
+  const generatedByName = profile?.full_name || user?.email || t('kebajikan:role_kebajikan_exco', 'Exco Kebajikan');
   const now   = new Date();
   const [activeTab, setActiveTab] = useState<'bulanan' | 'pic'>('bulanan');
   const [monthOffset, setMonthOffset] = useState(0);
@@ -136,7 +145,7 @@ export function KebajikanReportPage() {
   const addCoverSheet = (wb: ExcelJS.Workbook, title: string, subtitle: string, genBy: string) => {
     const ws = wb.addWorksheet('Muka Hadapan');
     ws.mergeCells('A1:F1');
-    ws.getCell('A1').value = 'JABATAN PERWAKILAN PELAJAR (JPP) POLISAS';
+    ws.getCell('A1').value = t('kebajikan:report_org_heading', 'JABATAN PERWAKILAN PELAJAR (JPP) POLISAS');
     ws.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
     ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(1).height = 36;
@@ -159,8 +168,8 @@ export function KebajikanReportPage() {
     ws.getCell('A4').alignment = { horizontal: 'center' };
 
     ws.addRow([]);
-    ws.addRow(['Tarikh Jana:', format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: ms })]);
-    ws.addRow(['Dijana Oleh:', genBy]);
+    ws.addRow([t('kebajikan:report_gen_date', 'Tarikh Jana:'), format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: ms })]);
+    ws.addRow([t('kebajikan:report_gen_by', 'Dijana Oleh:'), genBy]);
     ws.addRow(['Sistem:', 'Portal E-Kebajikan JPP POLISAS']);
 
     ws.getColumn('A').width = 22;
@@ -179,12 +188,12 @@ export function KebajikanReportPage() {
     const RED_ARGB  = 'FFDC2626';
 
     // Sheet 1: Muka Hadapan
-    addCoverSheet(wb, `Laporan Bulanan E-Kebajikan`, monthLabel, generatedByName);
+    addCoverSheet(wb, t('kebajikan:report_monthly_title', 'Laporan Bulanan E-Kebajikan'), monthLabel, generatedByName);
 
     // Sheet 2: Ringkasan Eksekutif
     const ws2 = wb.addWorksheet('Ringkasan Eksekutif');
     ws2.mergeCells('A1:C1');
-    ws2.getCell('A1').value = `RINGKASAN EKSEKUTIF — ${monthLabel.toUpperCase()}`;
+    ws2.getCell('A1').value = t('kebajikan:report_exec_summary_month', 'RINGKASAN EKSEKUTIF — {{month}}', { month: monthLabel.toUpperCase() });
     ws2.getCell('A1').font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
     ws2.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK_ARGB } };
     ws2.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
@@ -192,19 +201,19 @@ export function KebajikanReportPage() {
     ws2.addRow([]);
 
     const summaryItems = [
-      ['Jumlah Aduan Diterima',   data.total_received],
-      ['Jumlah Aduan Diselesaikan', data.total_resolved],
-      ['Masih Tertunggak',         data.total_pending],
-      ['Kes Dibatalkan',           data.total_cancelled],
-      ['Kes Diescalate',           data.escalated_count],
-      ['Kadar Penyelesaian (%)',   data.resolution_rate],
-      ['Purata Masa Selesai (jam)', data.avg_hours],
-      ['Rating Purata Pelajar',    data.avg_rating ?? 'Tiada Data'],
-      ['Pelajar Berpuas Hati (≥4★)', data.satisfied_count],
-      ['Neutral (3★)',             data.neutral_count],
-      ['Tidak Berpuas Hati (≤2★)', data.unsatisfied_count],
+      [t('kebajikan:report_total_received', 'Jumlah Aduan Diterima'),   data.total_received],
+      [t('kebajikan:report_total_resolved', 'Jumlah Aduan Diselesaikan'), data.total_resolved],
+      [t('kebajikan:report_total_pending', 'Masih Tertunggak'),         data.total_pending],
+      [t('kebajikan:report_total_cancelled', 'Kes Dibatalkan'),           data.total_cancelled],
+      [t('kebajikan:report_total_escalated', 'Kes Diescalate'),           data.escalated_count],
+      [t('kebajikan:report_resolution_rate', 'Kadar Penyelesaian (%)'),   data.resolution_rate],
+      [t('kebajikan:report_avg_hours', 'Purata Masa Selesai (jam)'), data.avg_hours],
+      [t('kebajikan:report_avg_rating', 'Rating Purata Pelajar'),    data.avg_rating ?? t('kebajikan:no_data', 'Tiada Data')],
+      [t('kebajikan:report_satisfied_count', 'Pelajar Berpuas Hati (≥4★)'), data.satisfied_count],
+      [t('kebajikan:report_neutral_count', 'Neutral (3★)'),             data.neutral_count],
+      [t('kebajikan:report_unsatisfied_count', 'Tidak Berpuas Hati (≤2★)'), data.unsatisfied_count],
     ];
-    const hRow2 = ws2.addRow(['Petunjuk Prestasi', 'Nilai']);
+    const hRow2 = ws2.addRow([t('kebajikan:report_kpi_label', 'Petunjuk Prestasi'), t('kebajikan:report_kpi_value', 'Nilai')]);
     styleHeader(ws2, hRow2, TEAL_ARGB);
     summaryItems.forEach((item, i) => {
       const r = ws2.addRow(item);
@@ -214,8 +223,21 @@ export function KebajikanReportPage() {
     ws2.getColumn(2).width = 20;
 
     // Sheet 3: Senarai Semua Tiket
-    const ws3 = wb.addWorksheet('Senarai Semua Tiket');
-    const h3 = ws3.addRow(['No.','No. Tiket','Tarikh Hantar','Kategori','Tajuk Aduan','Nama Pengadu','No. Matrik','Status','Keutamaan','Diselesaikan Pada','Masa Selesai (j)','Rating']);
+    const ws3 = wb.addWorksheet(t('kebajikan:report_sheet_all_tickets', 'Senarai Semua Tiket'));
+    const h3 = ws3.addRow([
+      t('kebajikan:report_col_no', 'No.'),
+      t('kebajikan:report_col_ticket_no', 'No. Tiket'),
+      t('kebajikan:report_col_submit_date', 'Tarikh Hantar'),
+      t('kebajikan:report_col_category', 'Kategori'),
+      t('kebajikan:report_col_complaint_title', 'Tajuk Aduan'),
+      t('kebajikan:report_col_complainant_name', 'Nama Pengadu'),
+      t('kebajikan:report_col_matric_no', 'No. Matrik'),
+      t('kebajikan:report_col_status', 'Status'),
+      t('kebajikan:report_col_priority', 'Keutamaan'),
+      t('kebajikan:report_col_resolved_date', 'Diselesaikan Pada'),
+      t('kebajikan:report_col_resolve_time_hours', 'Masa Selesai (j)'),
+      t('kebajikan:report_col_rating', 'Rating')
+    ]);
     styleHeader(ws3, h3, DARK_ARGB);
     ws3.views = [{ state: 'frozen', ySplit: 1 }];
     const assigneeNamesCopy: Record<string,string> = {};
@@ -231,7 +253,7 @@ export function KebajikanReportPage() {
         t.title || '—',
         t.full_name || '—',
         t.matric_no || '—',
-        STATUS_LABEL[t.status] || t.status,
+        getStatusLabel(t.status, t) || t.status,
         t.priority,
         t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : '—',
         resolvedHours ?? '—',
@@ -248,8 +270,14 @@ export function KebajikanReportPage() {
     ws3.autoFilter = { from: 'A1', to: 'L1' };
 
     // Sheet 4: Analisis Mengikut Kategori
-    const ws4 = wb.addWorksheet('Mengikut Kategori');
-    const h4 = ws4.addRow(['Kategori','Jumlah Aduan','Diselesaikan','Belum Selesai','% Selesai']);
+    const ws4 = wb.addWorksheet(t('kebajikan:report_sheet_by_category', 'Mengikut Kategori'));
+    const h4 = ws4.addRow([
+      t('kebajikan:report_col_category', 'Kategori'),
+      t('kebajikan:report_col_total_complaints', 'Jumlah Aduan'),
+      t('kebajikan:report_col_resolved', 'Diselesaikan'),
+      t('kebajikan:report_col_unresolved', 'Belum Selesai'),
+      t('kebajikan:report_col_pct_resolved', '% Selesai')
+    ]);
     styleHeader(ws4, h4, TEAL_ARGB);
     data.by_category.forEach((c, i) => {
       const pct = c.total > 0 ? Math.round(c.resolved / c.total * 100) : 0;
@@ -263,8 +291,14 @@ export function KebajikanReportPage() {
 
     // Sheet 5: Prestasi Exco
     if (data.by_assignee.length) {
-      const ws5 = wb.addWorksheet('Prestasi Exco');
-      const h5 = ws5.addRow(['Nama Exco','Tiket Diagihkan','Tiket Diselesaikan','% Penyelesaian','Purata Masa (j)']);
+      const ws5 = wb.addWorksheet(t('kebajikan:report_sheet_exco_perf', 'Prestasi Exco'));
+      const h5 = ws5.addRow([
+        t('kebajikan:report_col_exco_name', 'Nama Exco'),
+        t('kebajikan:report_col_assigned_tickets', 'Tiket Diagihkan'),
+        t('kebajikan:report_col_resolved_tickets', 'Tiket Diselesaikan'),
+        t('kebajikan:report_col_pct_resolution', '% Penyelesaian'),
+        t('kebajikan:report_col_avg_hours', 'Purata Masa (j)')
+      ]);
       styleHeader(ws5, h5, DARK_ARGB);
       data.by_assignee.sort((a,b) => b.resolved - a.resolved).forEach((a, i) => {
         const pct = a.assigned > 0 ? Math.round(a.resolved / a.assigned * 100) : 0;
@@ -276,11 +310,16 @@ export function KebajikanReportPage() {
 
     // Sheet 6: Kes Escalated
     if (data.escalated_tickets.length) {
-      const ws6 = wb.addWorksheet('Kes Diescalate');
-      const h6 = ws6.addRow(['No. Tiket','Kategori','Status Semasa','Jam Terbuka']);
+      const ws6 = wb.addWorksheet(t('kebajikan:report_sheet_escalated_cases', 'Kes Diescalate'));
+      const h6 = ws6.addRow([
+        t('kebajikan:report_col_ticket_no', 'No. Tiket'),
+        t('kebajikan:report_col_category', 'Kategori'),
+        t('kebajikan:report_col_current_status', 'Status Semasa'),
+        t('kebajikan:report_col_hours_open', 'Jam Terbuka')
+      ]);
       styleHeader(ws6, h6, RED_ARGB);
       data.escalated_tickets.forEach((t, i) => {
-        const r = ws6.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, STATUS_LABEL[t.status] || t.status, t.hours_open]);
+        const r = ws6.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, getStatusLabel(t.status, t) || t.status, t.hours_open]);
         styleDataRow(r, i % 2 === 0);
       });
       [16,24,18,14].forEach((w,i) => { ws6.getColumn(i+1).width = w; });
@@ -288,12 +327,18 @@ export function KebajikanReportPage() {
 
     // Sheet 7: Kes Tertunggak
     if (data.pending_tickets.length) {
-      const ws7 = wb.addWorksheet('Kes Tertunggak');
-      const h7 = ws7.addRow(['No. Tiket','Kategori','Status','Hari Terbuka','Diuruskan Oleh']);
+      const ws7 = wb.addWorksheet(t('kebajikan:report_sheet_pending_cases', 'Kes Tertunggak'));
+      const h7 = ws7.addRow([
+        t('kebajikan:report_col_ticket_no', 'No. Tiket'),
+        t('kebajikan:report_col_category', 'Kategori'),
+        t('kebajikan:report_col_status', 'Status'),
+        t('kebajikan:report_col_days_open', 'Hari Terbuka'),
+        t('kebajikan:report_col_handled_by', 'Diuruskan Oleh')
+      ]);
       styleHeader(ws7, h7, 'FFF59E0B');
       ws7.getRow(1).eachCell(c => { c.font = { bold: true, color: { argb: 'FF0F172A' }, size: 10 }; });
       data.pending_tickets.sort((a,b) => b.days_open - a.days_open).forEach((t, i) => {
-        const r = ws7.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, STATUS_LABEL[t.status] || t.status, t.days_open, t.assigned_to]);
+        const r = ws7.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, getStatusLabel(t.status, t) || t.status, t.days_open, t.assigned_to]);
         styleDataRow(r, i % 2 === 0);
         if (t.days_open >= 7) r.getCell(4).font = { bold: true, color: { argb: 'FFDC2626' }, size: 9 };
       });
@@ -301,7 +346,7 @@ export function KebajikanReportPage() {
     }
 
     const buf = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Laporan_Kebajikan_${monthLabel.replace(' ','_')}.xlsx`);
+    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), t('kebajikan:report_filename_monthly_xlsx', 'Laporan_Kebajikan_{{month}}.xlsx', { month: monthLabel.replace(' ', '_') }));
   };
 
   // ── Excel Export: Laporan PIC ─────────────────────────────────────────────
@@ -315,16 +360,28 @@ export function KebajikanReportPage() {
     const DARK_ARGB = 'FF1E293B';
 
     // Sheet 1: Muka Hadapan
-    addCoverSheet(wb, `Laporan Kepada PIC — ${reportPicName || 'PIC'}`, picMonthLabelLocal, generatedByName);
+    addCoverSheet(wb, t('kebajikan:report_pic_cover_title', 'Laporan Kepada PIC — {{pic}}', { pic: reportPicName || 'PIC' }), picMonthLabelLocal, generatedByName);
     const ws0 = wb.getWorksheet('Muka Hadapan')!;
     ws0.addRow([]);
-    ws0.addRow(['Nama PIC:',    reportPicName || '—']);
-    ws0.addRow(['Jawatan PIC:', reportPicTitle || '—']);
-    ws0.addRow(['Jumlah Tiket:', tickets.length]);
+    ws0.addRow([t('kebajikan:report_pic_name_row', 'Nama PIC:'),    reportPicName || '—']);
+    ws0.addRow([t('kebajikan:report_pic_position_row', 'Jawatan PIC:'), reportPicTitle || '—']);
+    ws0.addRow([t('kebajikan:report_total_tickets_row', 'Jumlah Tiket:'), tickets.length]);
 
     // Sheet 2: Senarai Lengkap Tiket
-    const ws2 = wb.addWorksheet('Senarai Tiket');
-    const h2 = ws2.addRow(['No.','No. Tiket','Tarikh Hantar','Kategori','Tajuk Aduan','Penerangan Ringkas','Nama Pengadu','No. Matrik','Status','Keutamaan','Tarikh Selesai']);
+    const ws2 = wb.addWorksheet(t('kebajikan:report_sheet_ticket_list', 'Senarai Tiket'));
+    const h2 = ws2.addRow([
+      t('kebajikan:report_col_no', 'No.'),
+      t('kebajikan:report_col_ticket_no', 'No. Tiket'),
+      t('kebajikan:report_col_submit_date', 'Tarikh Hantar'),
+      t('kebajikan:report_col_category', 'Kategori'),
+      t('kebajikan:report_col_complaint_title', 'Tajuk Aduan'),
+      t('kebajikan:report_col_brief_desc', 'Penerangan Ringkas'),
+      t('kebajikan:report_col_complainant_name', 'Nama Pengadu'),
+      t('kebajikan:report_col_matric_no', 'No. Matrik'),
+      t('kebajikan:report_col_status', 'Status'),
+      t('kebajikan:report_col_priority', 'Keutamaan'),
+      t('kebajikan:report_col_resolved_date', 'Tarikh Selesai')
+    ]);
     styleHeader(ws2, h2, DARK_ARGB);
     ws2.views = [{ state: 'frozen', ySplit: 1 }];
     tickets.forEach((t: any, i: number) => {
@@ -338,9 +395,9 @@ export function KebajikanReportPage() {
         desc,
         t.full_name || '—',
         t.matric_no || '—',
-        STATUS_LABEL[t.status] || t.status,
+        getStatusLabel(t.status, t) || t.status,
         t.priority,
-        t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : 'Belum Selesai',
+        t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : t('kebajikan:status_unresolved', 'Belum Selesai'),
       ]);
       styleDataRow(r, i % 2 === 0);
       if (t.status === 'ESCALATED') r.getCell(9).font = { bold: true, color: { argb: 'FFDC2626' }, size: 9 };
@@ -350,22 +407,26 @@ export function KebajikanReportPage() {
     ws2.autoFilter = { from: 'A1', to: 'K1' };
 
     // Sheet 3: Ringkasan Status
-    const ws3 = wb.addWorksheet('Ringkasan Status');
-    const h3 = ws3.addRow(['Status','Bilangan','Peratus (%)']);
+    const ws3 = wb.addWorksheet(t('kebajikan:report_sheet_status_summary', 'Ringkasan Status'));
+    const h3 = ws3.addRow([
+      t('kebajikan:report_col_status', 'Status'),
+      t('kebajikan:report_col_count', 'Bilangan'),
+      t('kebajikan:report_col_percent', 'Peratus (%)')
+    ]);
     styleHeader(ws3, h3, TEAL_ARGB);
     const statMap: Record<string,number> = {};
     tickets.forEach((t:any) => { statMap[t.status] = (statMap[t.status]||0) + 1; });
     Object.entries(statMap).sort((a,b) => b[1]-a[1]).forEach(([s,cnt], i) => {
       const pct = Math.round(cnt / tickets.length * 100);
-      const r = ws3.addRow([STATUS_LABEL[s] || s, cnt, `${pct}%`]);
+      const r = ws3.addRow([getStatusLabel(s, t) || s, cnt, `${pct}%`]);
       styleDataRow(r, i % 2 === 0);
     });
-    const totalRow = ws3.addRow(['JUMLAH', tickets.length, '100%']);
+    const totalRow = ws3.addRow([t('kebajikan:report_total_uppercase', 'JUMLAH'), tickets.length, '100%']);
     totalRow.eachCell(c => { c.font = { bold: true, size: 10 }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2F8F5' } }; });
     [28,14,14].forEach((w,i) => { ws3.getColumn(i+1).width = w; });
 
     const buf = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Laporan_PIC_${(reportPicName||'PIC').replace(/\s+/g,'_')}_${picMonthLabelLocal.replace(' ','_')}.xlsx`);
+    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), t('kebajikan:report_pic_filename_xlsx', 'Laporan_PIC_{{pic}}_{{month}}.xlsx', { pic: (reportPicName || 'PIC').replace(/\s+/g, '_'), month: picMonthLabelLocal.replace(' ', '_') }));
   };
 
   const fetchReport = useCallback(async () => {
@@ -464,13 +525,13 @@ export function KebajikanReportPage() {
 
       // Pending (still open)
       const pending_tickets = tickets
-        .filter(t => !['RESOLVED','CLOSED','CANCELLED'].includes(t.status))
-        .map(t => ({
-          ticket_no:   t.ticket_no,
-          category:    t.category,
-          days_open:   Math.round((new Date().getTime() - new Date(t.created_at).getTime()) / 86400000),
-          status:      t.status,
-          assigned_to: t.assigned_to ? (assigneeNames[t.assigned_to] || 'Tidak ditetapkan') : 'Tidak ditetapkan',
+        .filter(tk => !['RESOLVED','CLOSED','CANCELLED'].includes(tk.status))
+        .map(tk => ({
+          ticket_no:   tk.ticket_no,
+          category:    tk.category,
+          days_open:   Math.round((new Date().getTime() - new Date(tk.created_at).getTime()) / 86400000),
+          status:      tk.status,
+          assigned_to: tk.assigned_to ? (assigneeNames[tk.assigned_to] || t('kebajikan:not_assigned', 'Tidak ditetapkan')) : t('kebajikan:not_assigned', 'Tidak ditetapkan'),
         }));
 
       const top_comments = tickets
@@ -534,15 +595,15 @@ export function KebajikanReportPage() {
   const selectedPic = picPresets.find(p => p.id === reportPicId);
 
   const KEBAJIKAN_STATUSES = [
-    { key: 'ALL', label: 'Semua Status' },
+    { key: 'ALL', label: t('kebajikan:status_filter_all', 'Semua Status') },
     { key: 'ESCALATED', label: 'Escalated' },
     { key: 'NEW', label: 'Baru' },
     { key: 'IN_PROGRESS', label: 'Dalam Proses' },
-    { key: 'WAITING_INFO', label: 'Tunggu Maklumat' },
+    { key: 'WAITING_INFO', label: t('kebajikan:status_filter_waiting_info', 'Tunggu Maklumat') },
     { key: 'RESOLVED', label: 'Selesai' },
   ];
   const KEBAJIKAN_CATS = [
-    { key: 'ALL', label: 'Semua Kategori' },
+    { key: 'ALL', label: t('kebajikan:category_filter_all', 'Semua Kategori') },
     ...Object.entries(KEBAJIKAN_CATEGORY_LABELS).map(([key, label]) => ({ key, label })),
   ];
 
@@ -566,11 +627,11 @@ export function KebajikanReportPage() {
       const blob = await pdf(
         <KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />
       ).toBlob();
-      saveAs(blob, `Laporan_Kebajikan_${monthLabel.replace(' ', '_')}.pdf`);
+      saveAs(blob, t('kebajikan:report_filename_monthly_pdf', 'Laporan_Kebajikan_{{month}}.pdf', { month: monthLabel.replace(' ', '_') }));
       toast.success(t('kebajikan:toast_pdf_download_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('Monthly PDF error:', err);
-      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || t('kebajikan:error_unknown', 'Ralat tidak diketahui')), { id: toastId });
     } finally {
       setGeneratingMonthlyPdf(false);
     }
@@ -598,11 +659,11 @@ export function KebajikanReportPage() {
           generatedBy={generatedByName}
         />
       ).toBlob();
-      saveAs(blob, `Laporan_PIC_${reportPicName.replace(/\s+/g, '_') || 'PIC'}_${picMonthLabel.replace(' ', '_')}.pdf`);
+      saveAs(blob, t('kebajikan:report_pic_filename_pdf', 'Laporan_PIC_{{pic}}_{{month}}.pdf', { pic: reportPicName.replace(/\s+/g, '_') || 'PIC', month: picMonthLabel.replace(' ', '_') }));
       toast.success(t('kebajikan:toast_pdf_download_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('PIC PDF error:', err);
-      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('kebajikan:toast_pdf_generate_failed', 'Gagal menjana PDF') + ': ' + (err?.message || t('kebajikan:error_unknown', 'Ralat tidak diketahui')), { id: toastId });
     } finally {
       setGeneratingPicPdf(false);
     }
@@ -710,13 +771,13 @@ export function KebajikanReportPage() {
           <div className="w-12 h-12 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
         </div>
       ) : !data ? (
-        <GlassCard className="text-center py-20 text-slate-500">Tiada data untuk bulan ini.</GlassCard>
+        <GlassCard className="text-center py-20 text-slate-500">{t('kebajikan:report_empty_month', 'Tiada data untuk bulan ini.')}</GlassCard>
       ) : (
         <div className="space-y-8">
 
           {/* 1. Ringkasan Eksekutif */}
           <GlassCard>
-            <SectionTitle num="1" title={t('report_exec_summary')} subtitle={`Keseluruhan aduan bagi bulan ${monthLabel}`} />
+            <SectionTitle num="1" title={t('report_exec_summary')} subtitle={t('kebajikan:report_exec_summary_subtitle', 'Keseluruhan aduan bagi bulan {{month}}', { month: monthLabel })} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 { label: t('report_total_received'),    value: data.total_received,  icon: BarChart3,    color: '#6366F1' },
@@ -753,7 +814,7 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="2" title={t('report_breakdown_category')} />
             {data.by_category.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">Tiada data</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_data', 'Tiada data')}</p>
             ) : (
               <div className="space-y-3">
                 {data.by_category.sort((a, b) => b.total - a.total).map((c, i) => {
@@ -777,10 +838,10 @@ export function KebajikanReportPage() {
 
           {/* 3. Analisis Mengikut Status */}
           <GlassCard>
-            <SectionTitle num="3" title={t('report_breakdown_status')} subtitle="Keadaan tiket pada akhir bulan" />
+            <SectionTitle num="3" title={t('report_breakdown_status')} subtitle={t('kebajikan:report_status_chart_subtitle', 'Keadaan tiket pada akhir bulan')} />
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie data={data.by_status.map(s => ({ ...s, name: STATUS_LABEL[s.status] || s.status }))} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                <Pie data={data.by_status.map(s => ({ ...s, name: getStatusLabel(s.status, t) || s.status }))} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                   {data.by_status.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 11 }} />
@@ -816,12 +877,12 @@ export function KebajikanReportPage() {
               <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_escalated_tickets_month', '✅ Tiada tiket diescalate bulan ini')}</p>
             ) : (
               <div className="space-y-2">
-                {data.escalated_tickets.map(t => (
-                  <div key={t.ticket_no} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-red-500/10 bg-red-500/5">
-                    <span className="text-xs font-black text-red-400">{t.ticket_no}</span>
-                    <span className="text-xs text-slate-400 flex-1">{KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category}</span>
-                    <span className="text-xs text-slate-500">{t.hours_open}j dibuka</span>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">{STATUS_LABEL[t.status] || t.status}</span>
+                {data.escalated_tickets.map(item => (
+                  <div key={item.ticket_no} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-red-500/10 bg-red-500/5">
+                    <span className="text-xs font-black text-red-400">{item.ticket_no}</span>
+                    <span className="text-xs text-slate-400 flex-1">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</span>
+                    <span className="text-xs text-slate-500">{t('kebajikan:report_hours_open_val', '{{count}}j dibuka', { count: item.hours_open })}</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">{getStatusLabel(item.status, t) || item.status}</span>
                   </div>
                 ))}
               </div>
@@ -841,7 +902,7 @@ export function KebajikanReportPage() {
                       <th className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama</th>
                       <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Di-assign</th>
                       <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Selesai</th>
-                      <th className="text-right py-2 pl-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Purata Masa</th>
+                      <th className="text-right py-2 pl-4 text-[10px] font-black uppercase tracking-widest text-slate-500">{t('kebajikan:report_col_avg_time', 'Purata Masa')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -921,21 +982,27 @@ export function KebajikanReportPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/5">
-                      {['No. Tiket','Kategori','Hari Dibuka','Status','Ditetapkan Kepada'].map(h => (
+                      {[
+    t('kebajikan:report_col_ticket_no', 'No. Tiket'),
+    t('kebajikan:report_col_category', 'Kategori'),
+    t('kebajikan:report_col_days_open', 'Hari Dibuka'),
+    t('kebajikan:report_col_status', 'Status'),
+    t('kebajikan:report_col_assigned_to', 'Ditetapkan Kepada')
+  ].map(h => (
                         <th key={h} className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {data.pending_tickets.map(t => (
-                      <tr key={t.ticket_no} className="border-b border-white/[0.03] hover:bg-white/[0.01] transition-colors">
-                        <td className="py-3 pr-4 font-black text-xs text-teal-400">{t.ticket_no}</td>
-                        <td className="py-3 pr-4 text-xs text-slate-400">{KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category}</td>
-                        <td className="py-3 pr-4 text-xs text-slate-400">{t.days_open}h</td>
+                    {data.pending_tickets.map(item => (
+                      <tr key={item.ticket_no} className="border-b border-white/[0.03] hover:bg-white/[0.01] transition-colors">
+                        <td className="py-3 pr-4 font-black text-xs text-teal-400">{item.ticket_no}</td>
+                        <td className="py-3 pr-4 text-xs text-slate-400">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</td>
+                        <td className="py-3 pr-4 text-xs text-slate-400">{item.days_open}h</td>
                         <td className="py-3 pr-4 text-xs">
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black">{STATUS_LABEL[t.status] || t.status}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black">{getStatusLabel(item.status, t) || item.status}</span>
                         </td>
-                        <td className="py-3 text-xs text-slate-400">{t.assigned_to}</td>
+                        <td className="py-3 text-xs text-slate-400">{item.assigned_to}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1000,7 +1067,7 @@ export function KebajikanReportPage() {
                 {t('kebajikan:report_select_all', '☑ Semua')} ({picTickets.length})
               </button>
               <button onClick={selectEscalated} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all">
-                {t('kebajikan:report_escalated_only', '⚠ Escalated Sahaja')} ({picTickets.filter(t => t.status === 'ESCALATED').length})
+                {t('kebajikan:report_escalated_only', '⚠ Escalated Sahaja')} ({picTickets.filter(tk => tk.status === 'ESCALATED').length})
               </button>
               <button onClick={clearAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.03] hover:bg-white/5 text-white/30 border border-white/5 transition-all">
                 {t('kebajikan:report_clear_all', '☐ Bersih Semua')}
@@ -1059,7 +1126,7 @@ export function KebajikanReportPage() {
               <div className="flex items-center gap-2 mb-5">
                 <UserCheck className="w-4 h-4" style={{ color: TEAL }} />
                 <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">{t('kebajikan:report_generate_heading', 'Jana Laporan')}</p>
-                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTickets.length} tiket dipilih</span>
+                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{t('kebajikan:report_tickets_selected_count', '{{count}} tiket dipilih', { count: selectedTickets.length })}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 <div>
@@ -1070,18 +1137,18 @@ export function KebajikanReportPage() {
                     if (found) { setReportPicName(found.pic_name); setReportPicTitle(found.pic_title || ''); }
                     else { setReportPicName(''); setReportPicTitle(''); }
                   }} className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
-                    <option value="" className="bg-slate-800">— Pilih atau taip manual —</option>
+                    <option value="" className="bg-slate-800">{t('kebajikan:report_pic_manual_option', '— Pilih atau taip manual —')}</option>
                     {picPresets.map(p => <option key={p.id} value={p.id} className="bg-slate-800">{p.jabatan_label} — {p.pic_name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Nama PIC</p>
-                  <input value={reportPicName} onChange={e => setReportPicName(e.target.value)} placeholder="Nama PIC..."
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_pic_name_label', 'Nama PIC')}</p>
+                  <input value={reportPicName} onChange={e => setReportPicName(e.target.value)} placeholder={t('kebajikan:report_pic_name_placeholder', 'Nama PIC...')}
                     className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Jawatan PIC</p>
-                  <input value={reportPicTitle} onChange={e => setReportPicTitle(e.target.value)} placeholder="cth: Ketua Jabatan JKM..."
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_pic_position_label', 'Jawatan PIC')}</p>
+                  <input value={reportPicTitle} onChange={e => setReportPicTitle(e.target.value)} placeholder={t('kebajikan:report_pic_position_placeholder', 'cth: Ketua Jabatan JKM...')}
                     className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
                 </div>
               </div>
@@ -1096,7 +1163,7 @@ export function KebajikanReportPage() {
                   style={{ background: TEAL, color: '#0f172a' }}
                 >
                   <FileDown className={cn('w-4 h-4', generatingPicPdf && 'animate-bounce')} />
-                  {generatingPicPdf ? 'Menjana PDF...' : `PDF (${selectedTickets.length} tiket)`}
+                  {generatingPicPdf ? t('kebajikan:report_generating_pdf', 'Menjana PDF...') : t('kebajikan:report_pdf_count_btn', 'PDF ({{count}} tiket)', { count: selectedTickets.length })}
                 </button>
                 <button
                   onClick={() => exportPicExcel(selectedTickets)}
@@ -1107,10 +1174,10 @@ export function KebajikanReportPage() {
                   )}
                   style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22C55E' }}
                 >
-                  <FileDown className="w-4 h-4" /> Excel ({selectedTickets.length} tiket)
+                  <FileDown className="w-4 h-4" /> {t('kebajikan:report_excel_count_btn', 'Excel ({{count}} tiket)', { count: selectedTickets.length })}
                 </button>
               </div>
-              {!reportPicName.trim() && <p className="text-[10px] text-center text-white/25 mt-2">Sila masukkan nama PIC dahulu</p>}
+              {!reportPicName.trim() && <p className="text-[10px] text-center text-white/25 mt-2">{t('kebajikan:report_enter_pic_name_first', 'Sila masukkan nama PIC dahulu')}</p>}
             </GlassCard>
           )}
 

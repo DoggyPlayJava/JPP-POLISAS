@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { insertNotifications } from '@/lib/notifications';
@@ -123,6 +124,7 @@ interface AiRequestParams {
 }
 
 export function useAiAssistant() {
+  const { t } = useTranslation(['portal', 'common']);
   const [isLoading, setIsLoading] = useState(false);       // for callAi (quick actions, modals)
   const [isChatLoading, setIsChatLoading] = useState(false); // for sendChatMessage (FloatingAiChat)
   const [retryCount, setRetryCount] = useState(0);
@@ -160,22 +162,22 @@ export function useAiAssistant() {
         const { data: tokenCheck, error: tokenError } = await supabase.rpc('check_ai_tokens', { task_name: taskKey });
         if (tokenError) {
            console.error("AI access error:", tokenError);
-           if (tokenError.message?.includes('Akses AI anda sedang digantung')) {
+           if (/Akses AI anda sedang digantung/i.test(tokenError.message || '')) {
              throw new Error(tokenError.message);
            }
-           throw new Error("Sistem gagal menyemak baki token Nexus AI anda.");
+           throw new Error(t('portal:ai_token_check_failed', 'Sistem gagal menyemak baki token Nexus AI anda.'));
         }
         if (!tokenCheck?.can_afford) {
-           throw new Error(`Baki Token Nexus tidak mencukupi untuk tugasan ini. Kos: ${tokenCheck.task_cost} Token. Baki semasa: ${tokenCheck.current_balance} Token.`);
+           throw new Error(t('portal:ai_token_insufficient', `Baki Token Nexus tidak mencukupi untuk tugasan ini. Kos: ${tokenCheck.task_cost} Token. Baki semasa: ${tokenCheck.current_balance} Token.`));
         }
       }
 
-      let systemInstruction = "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu. PERATURAN TERMINOLOGI: Sila kaitkan 'Laporan Bulanan' dengan 'Laporan Aktiviti' dalam pangkalan data. PENTING: JANGAN SEKALI-KALI menggunakan istilah 'Laporan Aktiviti' dalam jawapan anda kepada pengguna. Anda WAJIB menggunakan 'Laporan Bulanan' sahaja walaupun data mentah menunjukkan sebaliknya.";
+      let systemInstruction = t('portal:ai_sys_default', "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu. PERATURAN TERMINOLOGI: Sila kaitkan 'Laporan Bulanan' dengan 'Laporan Aktiviti' dalam pangkalan data. PENTING: JANGAN SEKALI-KALI menggunakan istilah 'Laporan Aktiviti' dalam jawapan anda kepada pengguna. Anda WAJIB menggunakan 'Laporan Bulanan' sahaja walaupun data mentah menunjukkan sebaliknya.");
       let userPrompt = "";
       let outputLimit = params.concise ? 800 : 8192; // Hadkan output jika mod ringkas
 
       if (params.task === 'analyze_performance') {
-        systemInstruction = "Anda adalah Nexus AI, penasihat penganalisis kelab berkaliber untuk platform JPP POLISAS. Anda berfikir secara kritikal dan logik berdasarkan metrik.";
+        systemInstruction = t('portal:ai_sys_analyze_performance', "Anda adalah Nexus AI, penasihat penganalisis kelab berkaliber untuk platform JPP POLISAS. Anda berfikir secara kritikal dan logik berdasarkan metrik.");
         let clubData = params.data;
 
         if (!clubData && params.clubId) {
@@ -186,58 +188,58 @@ export function useAiAssistant() {
             supabase.from("club_tasks").select("id", { count: "exact", head: true }).eq("club_id", params.clubId)
           ]);
           clubData = {
-            clubName: club?.name || "Kelab POLISAS", totalMembers: members || 0,
+            clubName: club?.name || t('portal:polisas_club', 'Kelab POLISAS'), totalMembers: members || 0,
             totalActivities: activities?.length || 0, completedActivities: activities?.filter((a: any) => a.status === 'selesai').length || 0,
             usedBudget: activities?.reduce((sum: number, a: any) => sum + (a.budget || 0), 0) || 0, totalTasksIssued: tasks || 0
           };
         }
-        userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.${params.concise ? '\n\nMOD RINGKAS AKTIF: Sila berikan analisis yang sangat padat, gunakan bullet points untuk setiap bahagian, dan elakkan ayat berbunga. Cukup sekadar 2-3 poin penting bagi setiap kategori.' : ''}`;
+        userPrompt = t('portal:ai_prompt_analyze_performance', `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.${params.concise ? '\n\nMOD RINGKAS AKTIF: Sila berikan analisis yang sangat padat, gunakan bullet points untuk setiap bahagian, dan elakkan ayat berbunga. Cukup sekadar 2-3 poin penting bagi setiap kategori.' : ''}`);
 
       } else if (params.task === 'review_kertas_kerja') {
-        systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Jawatankuasa Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.";
-        if (!params.programId) throw new Error("programId diperlukan untuk semakan kertas kerja.");
+        systemInstruction = t('portal:ai_sys_review_kertas_kerja', "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Jawatankuasa Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.");
+        if (!params.programId) throw new Error(t('portal:ai_err_program_id_required', 'programId diperlukan untuk semakan kertas kerja.'));
 
         const { data: program } = await supabase.from('programs').select('nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, status, club_id').eq('id', params.programId).single();
-        if (!program) throw new Error(`Data program tidak dijumpai.`);
+        if (!program) throw new Error(t('portal:ai_err_program_not_found', 'Data program tidak dijumpai.'));
         const { data: club } = await supabase.from('clubs').select('name').eq('id', program.club_id).single();
 
-        userPrompt = `Buat semakan draf Kertas Kerja Program ini sebelum diluluskan oleh Admin JPP.\n\n[ BUTIRAN KERTAS KERJA ]\n- Kelab: ${club?.name || 'Tidak Dinyatakan'}\n- Nama Program: ${program.nama_program}\n- Tarikh: ${program.tarikh_mula} hingga ${program.tarikh_tamat}\n- Anggaran Bajet: RM ${program.budget || '0'}\n- Objektif & Aktiviti: ${program.deskripsi || 'Tiada deskripsi.'}\n\n[ ARAHAN PENILAIAN ]\nTulis laporan semakan (AI Review) dalam 3 bahagian teras:\n1. Kekuatan Perancangan.\n2. Potensi Risiko & Kekurangan.\n3. Rating Kelulusan JPP.`;
+        userPrompt = t('portal:ai_prompt_review_kertas_kerja', `Buat semakan draf Kertas Kerja Program ini sebelum diluluskan oleh Admin JPP.\n\n[ BUTIRAN KERTAS KERJA ]\n- Kelab: ${club?.name || 'Tidak Dinyatakan'}\n- Nama Program: ${program.nama_program}\n- Tarikh: ${program.tarikh_mula} hingga ${program.tarikh_tamat}\n- Anggaran Bajet: RM ${program.budget || '0'}\n- Objektif & Aktiviti: ${program.deskripsi || 'Tiada deskripsi.'}\n\n[ ARAHAN PENILAIAN ]\nTulis laporan semakan (AI Review) dalam 3 bahagian teras:\n1. Kekuatan Perancangan.\n2. Potensi Risiko & Kekurangan.\n3. Rating Kelulusan JPP.`);
 
       } else if (params.task === 'semak_tatabahasa_laporan') {
-        systemInstruction = `Anda adalah Pakar Tatabahasa Rasmi JPP POLISAS. Tugas anda: semak dan baiki teks pelajar menjadi lebih profesional, formal, dan bebas dari sebarang kesalahan ejaan, tanda baca, atau slanga/dialek (wechat/whatsapp/singkatan).
+        systemInstruction = t('portal:ai_sys_grammar_expert', `Anda adalah Pakar Tatabahasa Rasmi JPP POLISAS. Tugas anda: semak dan baiki teks pelajar menjadi lebih profesional, formal, dan bebas dari sebarang kesalahan ejaan, tanda baca, atau slanga/dialek (wechat/whatsapp/singkatan).
 WAJIB MEMULANGKAN JSON SAHAJA TANPA TEKS LAIN (Jangan tulis backticks markdown \`\`\`json).
 Format Mesti Dipatuhi:
 {
   "teguran": "Menggunakan huruf kecil untuk nama tempat, penggunaan 'diorang'.",
   "teksSemakan": "Ayat yang telah penuh dibaiki dan rasmi."
-}`;
-        userPrompt = `Teks Pelajar: ${params.query}`;
+}`);
+        userPrompt = t('portal:ai_prompt_grammar_query', `Teks Pelajar: ${params.query}`);
         outputLimit = 2500;
 
       } else if (params.task === 'jana_belanjawan_ai') {
-        systemInstruction = `Anda adalah Bendahari Pakar di POLISAS. Pengguna meminta anda menjana pecahan belanjawan automatik berserta anggaran kos logik (Cth: Makan minum RM10/pax).
+        systemInstruction = t('portal:ai_sys_treasurer', `Anda adalah Bendahari Pakar di POLISAS. Pengguna meminta anda menjana pecahan belanjawan automatik berserta anggaran kos logik (Cth: Makan minum RM10/pax).
 WAJIB MEMULANGKAN JSON SAHAJA TANPA BACKTICKS FORMATTING.
 Format Mesti Dipatuhi:
 {
   "anggaran_kasar": 1500,
   "uraian": "1. Makanan (100 pax x RM10) = RM1000\\n2. Cenderahati = RM300\\n3. Luar Jangka = RM200"
-}`;
-        userPrompt = `Matlamat Program: ${params.query}`;
+}`);
+        userPrompt = t('portal:ai_prompt_budget_target', `Matlamat Program: ${params.query}`);
         outputLimit = 2000;
 
       } else if (params.task === 'pecahkan_tugasan_ai') {
-         systemInstruction = `Anda adalah Pengurus Projek Organisasi. Pengguna akan memberi satu senario tugas besar. Pecahkannya kepada 3 hingga 5 sub-tugasan fizikal/praktikal yang jelas untuk diagihkan kepada ahli-ahli lain.
+         systemInstruction = t('portal:ai_sys_project_manager', `Anda adalah Pengurus Projek Organisasi. Pengguna akan memberi satu senario tugas besar. Pecahkannya kepada 3 hingga 5 sub-tugasan fizikal/praktikal yang jelas untuk diagihkan kepada ahli-ahli lain.
 WAJIB MEMULANGKAN JSON (ARRAY) SAHAJA TANPA BACKTICKS FORMATTING.
 Format Mesti Dipatuhi:
 [
   { "title": "Cari Penaja", "description": "Sediakan senarai syarikat penaja berpotensi dan edar surat." },
   { "title": "Urus Makanan", "description": "Dapatkan sebut harga daripada kantin atau katerer luar." }
-]`;
-        userPrompt = `Tugasan Utama: ${params.query}`;
+]`);
+        userPrompt = t('portal:ai_prompt_task_breakdown', `Tugasan Utama: ${params.query}`);
         outputLimit = 2000;
 
       } else if (params.task === 'jana_kertas_kerja') {
-        systemInstruction = `Anda adalah Jurutulis Kertas Kerja Rasmi JPP POLISAS. Tugas anda HANYA menghasilkan data berstruktur dalam format JSON murni.
+        systemInstruction = t('portal:ai_sys_proposal_writer', `Anda adalah Jurutulis Kertas Kerja Rasmi JPP POLISAS. Tugas anda HANYA menghasilkan data berstruktur dalam format JSON murni.
 
 PERATURAN OUTPUT (WAJIB DIPATUHI TANPA PENGECUALIAN):
 1. Pulangkan JSON SAHAJA. TIADA backticks, tiada markdown, tiada teks tambahan, tiada penerangan.
@@ -334,9 +336,9 @@ ARAHAN KHUSUS tentatif:
 
 ARAHAN KHUSUS belanjawan:
 - Cipta minimum 4 kategori perbelanjaan yang logik berdasarkan jenis program.
-- harga_seunit mesti realistik (bukan 0). Agihkan supaya jumlah semua kategori ≈ anggaran_kos.`;
+- harga_seunit mesti realistik (bukan 0). Agihkan supaya jumlah semua kategori ≈ anggaran_kos.`);
 
-        userPrompt = `Jana kertas kerja LENGKAP dalam format JSON yang ditetapkan. Gantikan semua kemunculan "__PENGARAH__" dengan nama pengarah yang diberikan di bawah.
+        userPrompt = t('portal:ai_prompt_generate_proposal', `Jana kertas kerja LENGKAP dalam format JSON yang ditetapkan. Gantikan semua kemunculan "__PENGARAH__" dengan nama pengarah yang diberikan di bawah.
 
 Input Program:
 - Tajuk: ${params.data?.tajuk}
@@ -356,10 +358,10 @@ KONTEKS TAMBAHAN DARIPADA PEMOHON (WAJIB DIAMBIL KIRA):
 ${params.data.konteksTambahan}` : ''}
 
 PERINGATAN MATEMATIK: Agihkan item belanjawan supaya jumlah semua (harga_seunit x kuantiti) ≈ RM ${params.data?.kos}.
-Pulangkan JSON sahaja, tiada teks lain.`;
+Pulangkan JSON sahaja, tiada teks lain.`);
         outputLimit = 8192;
       } else if (params.task === 'jana_minit_mesyuarat') {
-        systemInstruction = `Anda adalah Setiausaha Kehormat Profesional berpengalaman 20 tahun yang pakar dalam penulisan minit mesyuarat rasmi Bahasa Melayu. Anda menghasilkan output dalam format JSON murni.
+        systemInstruction = t('portal:ai_sys_minutes_writer', `Anda adalah Setiausaha Kehormat Profesional berpengalaman 20 tahun yang pakar dalam penulisan minit mesyuarat rasmi Bahasa Melayu. Anda menghasilkan output dalam format JSON murni.
 
 MISI UTAMA (WAJIB DIPATUHI):
 Anda BUKAN sekadar menyalin input. Anda MESTI MENGUBAH dan MEMURNIKAN semua input kepada Bahasa Melayu Rasmi yang sempurna, seperti seorang Setiausaha profesional sebenar.
@@ -430,9 +432,9 @@ ARAHAN KHUSUS AGENDA:
 
 ARAHAN KHUSUS AHLI HADIR:
 - Jika senarai nama diberikan, masukkan secara teratur
-- Jika hanya bilangan, jana placeholder: { "bil": N, "nama": "(NAMA)" }`;
+- Jika hanya bilangan, jana placeholder: { "bil": N, "nama": "(NAMA)" }`);
 
-        userPrompt = `Jana minit mesyuarat LENGKAP dalam format JSON yang ditetapkan.
+        userPrompt = t('portal:ai_prompt_generate_minutes', `Jana minit mesyuarat LENGKAP dalam format JSON yang ditetapkan.
 
 Maklumat Mesyuarat:
 - Tajuk: ${params.data?.tajuk}
@@ -443,21 +445,21 @@ Maklumat Mesyuarat:
 - Nama Pengerusi/YDP: ${params.data?.namaPengerusi || '(NAMA PENGERUSI)'}
 - Senarai Ahli Hadir:\n${params.data?.senaraIHadir || 'Bilangan: ' + (params.data?.kehadiran || 0) + ' orang'}
 
-Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks diberikan)'}\n${(params.data?.images?.length > 0) ? '\nPENTING: Gambar catatan/papan putih telah dilampirkan. BACA dan EKSTRAK semua maklumat daripada gambar tersebut dan masukkan sebagai sub-perkara atau bullet_points dalam agenda.' : ''}\n\nINGATAN: Pulangkan JSON sahaja mengikut skema yang ditetapkan.`;
+Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks diberikan)'}\n${(params.data?.images?.length > 0) ? '\nPENTING: Gambar catatan/papan putih telah dilampirkan. BACA dan EKSTRAK semua maklumat daripada gambar tersebut dan masukkan sebagai sub-perkara atau bullet_points dalam agenda.' : ''}\n\nINGATAN: Pulangkan JSON sahaja mengikut skema yang ditetapkan.`);
         outputLimit = 6000;
 
       } else if (params.task === 'custom_query') {
-        systemInstruction = "Anda adalah Nexus AI, enjin kecerdasan buatan rasmi bagi Portal JPP POLISAS. Nama anda 'Nexus AI' melambangkan peranan anda sebagai pusat integrasi data dan bantuan pintar untuk warga POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan. PERATURAN TERMINOLOGI: JANGAN sebut 'Laporan Aktiviti', gunakan 'Laporan Bulanan' sahaja.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak";
-        userPrompt = `Pertanyaan Pelajar: ${params.query}`;
+        systemInstruction = t('portal:ai_sys_custom_query', "Anda adalah Nexus AI, enjin kecerdasan buatan rasmi bagi Portal JPP POLISAS. Nama anda 'Nexus AI' melambangkan peranan anda sebagai pusat integrasi data dan bantuan pintar untuk warga POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan. PERATURAN TERMINOLOGI: JANGAN sebut 'Laporan Aktiviti', gunakan 'Laporan Bulanan' sahaja.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak");
+        userPrompt = t('portal:ai_prompt_student_query', `Pertanyaan Pelajar: ${params.query}`);
         outputLimit = 700;
 
       } else if (params.task === 'suggest_program') {
-        systemInstruction = "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif and berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.";
-        userPrompt = `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.${params.concise ? '\n\nMOD RINGKAS: Sila berikan 3 idea sahaja dengan penerangan 1 ayat bagi setiap satu.' : ''}`;
+        systemInstruction = t('portal:ai_sys_program_advisor', "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif and berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.");
+        userPrompt = t('portal:ai_prompt_suggest_program', `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.${params.concise ? '\n\nMOD RINGKAS: Sila berikan 3 idea sahaja dengan penerangan 1 ayat bagi setiap satu.' : ''}`);
         outputLimit = params.concise ? 600 : 1500;
 
       } else {
-        systemInstruction = "Anda adalah pembantu AI integrasi JPP POLISAS.";
+        systemInstruction = t('portal:ai_sys_integration_assistant', "Anda adalah pembantu AI integrasi JPP POLISAS.");
         userPrompt = `Selesaikan tugas: ${params.task} berasaskan data berikut: ${JSON.stringify(params.data || {})}`;
       }
 
@@ -521,11 +523,11 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
           });
           
           if (error) {
-             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
+             throw new Error(error.message || t('portal:ai_err_edge_fail', 'Gagal menghubungi Edge Function AI.'));
           }
           
           if (data.status && data.status !== 200) {
-            const errorMsg = data.error?.message || `Google API Error: ${data.status}`;
+            const errorMsg = data.error?.message || 'Google API Error: ' + data.status;
             
             if (errorMsg.toLowerCase().includes("high demand") || data.status === 503) {
               console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
@@ -535,9 +537,9 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
                 body: { action: 'proxy', endpoint: fallbackEndpoint, payload: JSON.parse(requestBody) }
               });
               
-              if (error2) throw new Error(error2.message || "Gagal menghubungi Edge Function AI (Fallback).");
+              if (error2) throw new Error(error2.message || t('portal:ai_err_edge_fallback_fail', 'Gagal menghubungi Edge Function AI (Fallback).'));
               if (data2.status && data2.status !== 200) {
-                 throw new Error(data2.error?.message || `Google API Error (Fallback): ${data2.status}`);
+                 throw new Error(data2.error?.message || 'Google API Error (Fallback): ' + data2.status);
               }
               responseData = data2;
             } else {
@@ -551,7 +553,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         } catch (apiError: any) {
           const apiErrorMsg = apiError.message || String(apiError);
           // Don't retry auth/policy/flagged errors
-          if (apiErrorMsg.includes('API key') || apiErrorMsg.includes('Sila konfigurasikan')) {
+          if (apiErrorMsg.includes('API key') || /Sila konfigurasikan/i.test(apiErrorMsg)) {
             throw apiError;
           }
           
@@ -567,12 +569,12 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       // Safety Filter Checks
       const finishReason = responseData?.candidates?.[0]?.finishReason;
       if (finishReason === 'SAFETY') {
-        throw new Error("Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.");
+        throw new Error(t('portal:ai_err_policy_blocked', 'Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.'));
       }
 
       const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      if (!text) throw new Error("Maklumbalas AI kosong atau tidak sah.");
+      if (!text) throw new Error(t('portal:ai_err_empty_response', 'Maklumbalas AI kosong atau tidak sah.'));
 
       // === TOLAK TOKEN JIKA BERJAYA ===
       let spendKey = params.task as string;
@@ -609,11 +611,11 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
 
       if (errorMsg.includes('flagged') || errorMsg.includes('banned')) {
         toast.error(errorMsg, { duration: 5000 });
-      } else if (errorMsg.includes('Polisi Keselamatan') || errorMsg.includes('kehabisan kuota') || errorMsg.includes('tidak mencukupi')) {
+      } else if (/Polisi Keselamatan|kehabisan kuota|tidak mencukupi/i.test(errorMsg)) {
         toast.error(errorMsg);
       } else {
         // Ralat teknikal (API over quota, crash, dsbgnya)
-        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
+        toast.error(t('portal:ai_err_interrupted', `Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`));
 
         // Beritahu SUPER_ADMIN_JPP secara rahsia
         try {
@@ -621,8 +623,8 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
           if (admins && admins.length > 0) {
             const payload = admins.map((admin: any) => ({
               user_id: admin.id,
-              title: '🚨 Kerosakan Sistem AI',
-              message: `Sistem AI tergendala: ${errorMsg.substring(0, 200)}... Sila semak kuota Gemini API.`,
+              title: t('portal:ai_notif_system_failure_title', '[Kerosakan Sistem AI]'),
+              message: t('portal:ai_notif_system_failure_msg', `Sistem AI tergendala: ${errorMsg.substring(0, 200)}... Sila semak kuota Gemini API.`),
             }));
             await insertNotifications(payload);
           }
@@ -657,7 +659,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
 
       // STATIC SYSTEM PROMPT - Identical for all users (Gemini implicit caching)
       // Gemini auto-caches this prefix at 90% discount ($0.01/1M vs $0.10/1M)
-      const staticSystemPrompt = [
+      const staticSystemPrompt = t('portal:ai_static_system_prompt', [
         'Anda Nexus AI, pembantu rasmi Portal JPP POLISAS.',
         'Persona: Mesra, proaktif, BM santai/rojak. JANGAN robotik. JANGAN perkenal diri. Jawab PENDEK.',
         'Terminologi: "Laporan Aktiviti" DB mesti dipanggil "Laporan Bulanan".',
@@ -667,7 +669,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         'Privasi: JANGAN dedah info kelab lain.',
         'Anti-rekaan: JANGAN reka fakta.',
         'Navigasi: Guna [NAVIGATE:/laluan]. Sah: /, /aktiviti, /akademik, /keusahawanan, /keusahawanan/pos, /kebajikan, /polymart, /polymaps, /polyrider, /jpp'
-      ].join('\n');
+      ].join('\n'));
 
       // Build valid history first to use it for context keyword matching
       // Cap at 6 messages (3 turns) for heavy memory savings (Adaptive History Truncation)
@@ -687,68 +689,68 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       // Combine user text and recent history to decide if we need to inject heavy context
       const searchString = (userText + ' ' + validHistory.slice(-2).map(m => m.content).join(' ')).toLowerCase();
       
-      const takwimKeywords = ['takwim', 'jadual', 'program', 'cuti', 'aktiviti', 'bila', 'tarikh', 'esok', 'lusa', 'minggu depan', 'bulan depan', 'sem ', 'semester', 'exam', 'peperiksaan', 'daftar', 'pendaftaran', 'perayaan', 'sukan'];
-      const clubsKeywords = ['kelab', 'persatuan', 'senarai', 'sukan', 'nama', 'join', 'masuk', 'sertai'];
-      const jppKeywords = ['jpp', 'exco', 'majlis tertinggi', 'presiden', 'organisasi', 'struktur', 'biro', 'tugas', 'siapa', 'wakil', 'mpp'];
+      const takwimRegex = /(takwim|jadual|program|cuti|aktiviti|bila|tarikh|esok|lusa|minggu depan|bulan depan|sem |semester|exam|peperiksaan|daftar|pendaftaran|perayaan|sukan)/i;
+      const clubsRegex = /(kelab|persatuan|senarai|sukan|nama|join|masuk|sertai)/i;
+      const jppRegex = /(jpp|exco|majlis tertinggi|presiden|organisasi|struktur|biro|tugas|siapa|wakil|mpp)/i;
 
-      const needsTakwim = takwimKeywords.some(kw => searchString.includes(kw));
-      const needsClubs = clubsKeywords.some(kw => searchString.includes(kw));
-      const needsJppOrg = jppKeywords.some(kw => searchString.includes(kw));
+      const needsTakwim = takwimRegex.test(searchString);
+      const needsClubs = clubsRegex.test(searchString);
+      const needsJppOrg = jppRegex.test(searchString);
 
       // DYNAMIC CONTEXT - per-user, per-session (injected into contents[0])
       const dynamicContextParts = [];
-      if (context?.currentPage) dynamicContextParts.push(`Halaman semasa: ${context.currentPage}`);
-      if (context?.clubInfo) dynamicContextParts.push(`Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli)`);
-      if (context?.recentNotifications?.length) dynamicContextParts.push(`Notifikasi: ${context.recentNotifications.join('; ')}`);
-      if (context?.tokenBalance !== undefined) dynamicContextParts.push(`Baki Token: ${context.tokenBalance} | Tahap: ${context?.subscriptionTier?.toUpperCase() ?? 'FREE'}`);
-      if (context?.committee) dynamicContextParts.push(`Kepimpinan kelab:\n${context.committee}`);
-      if (context?.pendingTasksCount) dynamicContextParts.push(`Tugasan aktif: ${context.pendingTasksCount}`);
-      if (context?.akademikInfo) dynamicContextParts.push(`[E-Akademik] CGPA: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'} | Merit: ${context.akademikInfo.meritPoints || 0} | Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}`);
+      if (context?.currentPage) dynamicContextParts.push(t('portal:ai_ctx_current_page', `Halaman semasa: ${context.currentPage}`));
+      if (context?.clubInfo) dynamicContextParts.push(t('portal:ai_ctx_club_info', `Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli)`));
+      if (context?.recentNotifications?.length) dynamicContextParts.push(t('portal:ai_ctx_notifications', `Notifikasi: ${context.recentNotifications.join('; ')}`));
+      if (context?.tokenBalance !== undefined) dynamicContextParts.push(t('portal:ai_ctx_token_balance', `Baki Token: ${context.tokenBalance} | Tahap: ${context?.subscriptionTier?.toUpperCase() ?? 'FREE'}`));
+      if (context?.committee) dynamicContextParts.push(t('portal:ai_ctx_committee', `Kepimpinan kelab:\n${context.committee}`));
+      if (context?.pendingTasksCount) dynamicContextParts.push(t('portal:ai_ctx_pending_tasks', `Tugasan aktif: ${context.pendingTasksCount}`));
+      if (context?.akademikInfo) dynamicContextParts.push(t('portal:ai_ctx_akademik_info', `[E-Akademik] CGPA: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'} | Merit: ${context.akademikInfo.meritPoints || 0} | Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}`));
       
       // Heavy payloads - only inject if keywords matched
-      if (needsJppOrg && context?.jppOrganization) dynamicContextParts.push(`Organisasi JPP:\n${context.jppOrganization}`);
-      if (needsClubs && context?.allClubs) dynamicContextParts.push(`Senarai kelab:\n${context.allClubs}`);
-      if (needsTakwim && context?.upcomingPrograms) dynamicContextParts.push(`Program akan datang:\n${context.upcomingPrograms}`);
+      if (needsJppOrg && context?.jppOrganization) dynamicContextParts.push(t('portal:ai_ctx_jpp_org', `Organisasi JPP:\n${context.jppOrganization}`));
+      if (needsClubs && context?.allClubs) dynamicContextParts.push(t('portal:ai_ctx_all_clubs', `Senarai kelab:\n${context.allClubs}`));
+      if (needsTakwim && context?.upcomingPrograms) dynamicContextParts.push(t('portal:ai_ctx_upcoming_progs', `Program akan datang:\n${context.upcomingPrograms}`));
 
       if (context?.keusahawananInfo) {
         const ki = context.keusahawananInfo;
-        dynamicContextParts.push(`[E-Keusahawanan] Kedai: ${ki.shopName || 'Tiada'} | Pengurus: ${ki.isManager ? 'Ya' : 'Tidak'} | Syif: ${ki.activeShifts || 'Tiada'} | Jualan: ${ki.todaySales !== undefined ? 'RM' + ki.todaySales.toFixed(2) : '-'} | Stok rendah: ${ki.lowStockCount || 0}`);
+        dynamicContextParts.push(t('portal:ai_ctx_keusahawanan', `[E-Keusahawanan] Kedai: ${ki.shopName || 'Tiada'} | Pengurus: ${ki.isManager ? 'Ya' : 'Tidak'} | Syif: ${ki.activeShifts || 'Tiada'} | Jualan: ${ki.todaySales !== undefined ? 'RM' + ki.todaySales.toFixed(2) : '-'} | Stok rendah: ${ki.lowStockCount || 0}`));
       }
-      if (context?.jppHqInfo) dynamicContextParts.push(`[HQ JPP] Laporan pending: ${context.jppHqInfo.totalPendingReports || 0} | Merit pending: ${context.jppHqInfo.totalMeritPending || 0}`);
+      if (context?.jppHqInfo) dynamicContextParts.push(t('portal:ai_ctx_jpp_hq', `[HQ JPP] Laporan pending: ${context.jppHqInfo.totalPendingReports || 0} | Merit pending: ${context.jppHqInfo.totalMeritPending || 0}`));
       if (context?.kebajikanInfo) {
         const kb = context.kebajikanInfo;
-        dynamicContextParts.push(`[Kebajikan] Peranan: ${kb.role}${kb.role === 'PELAJAR' ? ` | Tiket aktif: ${kb.activeTicketsCount || 0}` : ` | Urgent: ${kb.urgentTicketsUnresolved || 0} | Assigned: ${kb.assignedToMe || 0}`}`);
+        dynamicContextParts.push(t('portal:ai_ctx_kebajikan', `[Kebajikan] Peranan: ${kb.role}${kb.role === 'PELAJAR' ? ` | Tiket aktif: ${kb.activeTicketsCount || 0}` : ` | Urgent: ${kb.urgentTicketsUnresolved || 0} | Assigned: ${kb.assignedToMe || 0}`}`));
       }
-      if (context?.polymartInfo) dynamicContextParts.push(`[PolyMart] ${context.polymartInfo.userType} | Beli aktif: ${context.polymartInfo.activePurchases || 0} | Masuk: ${context.polymartInfo.pendingIncomingOrders || 0}`);
+      if (context?.polymartInfo) dynamicContextParts.push(t('portal:ai_ctx_polymart', `[PolyMart] ${context.polymartInfo.userType} | Beli aktif: ${context.polymartInfo.activePurchases || 0} | Masuk: ${context.polymartInfo.pendingIncomingOrders || 0}`));
       
       // Heavy Payload - Takwim
       if (needsTakwim && context?.takwimInfo) {
         const ti = context.takwimInfo;
-        const tParts = [`[Takwim] Akses: ${ti.accessScope === 'JPP_FULL' ? 'JPP Penuh' : 'Pelajar'} | Akan datang: ${ti.totalUpcoming || 0}`];
-        if (ti.upcomingEvents) tParts.push(`Aktiviti:\n${ti.upcomingEvents}`);
-        if (ti.upcomingCuti) tParts.push(`Cuti:\n${ti.upcomingCuti}`);
-        if (ti.pastEvents) tParts.push(`Lepas:\n${ti.pastEvents}`);
-        if (ti.clubPrograms) tParts.push(`Program ${ti.clubProgramsName || 'Kelab'}:\n${ti.clubPrograms}`);
+        const tParts = [t('portal:ai_ctx_takwim_scope', `[Takwim] Akses: ${ti.accessScope === 'JPP_FULL' ? 'JPP Penuh' : 'Pelajar'} | Akan datang: ${ti.totalUpcoming || 0}`)];
+        if (ti.upcomingEvents) tParts.push(t('portal:ai_ctx_takwim_activities', `Aktiviti:\n${ti.upcomingEvents}`));
+        if (ti.upcomingCuti) tParts.push(t('portal:ai_ctx_takwim_holidays', `Cuti:\n${ti.upcomingCuti}`));
+        if (ti.pastEvents) tParts.push(t('portal:ai_ctx_takwim_past', `Lepas:\n${ti.pastEvents}`));
+        if (ti.clubPrograms) tParts.push(t('portal:ai_ctx_takwim_club_progs', `Program ${ti.clubProgramsName || 'Kelab'}:\n${ti.clubPrograms}`));
         dynamicContextParts.push(tParts.join('\n'));
       }
       
       if (context?.PolyMapsInfo) {
         const im = context.PolyMapsInfo;
         if (im.isNavigating && im.activeBuildingName) {
-          dynamicContextParts.push(`[PolyMaps] Navigasi ke: ${im.activeBuildingName}${im.targetRoomCode ? ' Bilik: ' + im.targetRoomCode : ''}`);
+          dynamicContextParts.push(t('portal:ai_ctx_polymaps_nav', `[PolyMaps] Navigasi ke: ${im.activeBuildingName}${im.targetRoomCode ? ' Bilik: ' + im.targetRoomCode : ''}`));
         } else if (im.activeBuildingName) {
-          dynamicContextParts.push(`[PolyMaps] Bangunan: ${im.activeBuildingName}${im.activeBuildingZone ? ' Zon: ' + im.activeBuildingZone : ''}${im.facilityStatus ? ' (' + im.facilityStatus + ')' : ''}`);
+          dynamicContextParts.push(t('portal:ai_ctx_polymaps_bldg', `[PolyMaps] Bangunan: ${im.activeBuildingName}${im.activeBuildingZone ? ' Zon: ' + im.activeBuildingZone : ''}${im.facilityStatus ? ' (' + im.facilityStatus + ')' : ''}`));
         }
       }
       if (context?.polyRiderInfo) {
         const pr = context.polyRiderInfo;
         const prParts = [`[PolyRider] ${pr.userType}`];
         if (pr.userType === 'RIDER') {
-          prParts.push(`Status: ${pr.riderStatus || '?'} | Pendapatan: RM${(pr.todayEarnings || 0).toFixed(2)}`);
+          prParts.push(t('portal:ai_ctx_polyrider_status', `Status: ${pr.riderStatus || '?'} | Pendapatan: RM${(pr.todayEarnings || 0).toFixed(2)}`));
           if (pr.activeJobRiderStatus) prParts.push(`Trip: ${pr.activeJobRiderPickup || '?'} > ${pr.activeJobRiderDropoff || '?'} (${pr.activeJobRiderStatus})`);
         } else if (pr.userType === 'PASSENGER' && pr.activeJobStatus) {
           prParts.push(`Trip: ${pr.activeJobPickup || '?'} > ${pr.activeJobDropoff || '?'} (${pr.activeJobStatus})`);
-          if (pr.activeBidsCount) prParts.push(`${pr.activeBidsCount} bidaan menunggu`);
+          if (pr.activeBidsCount) prParts.push(t('portal:ai_ctx_polyrider_bids', `${pr.activeBidsCount} bidaan menunggu`));
         }
         dynamicContextParts.push(prParts.join(' | '));
       }
@@ -758,7 +760,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       const contents = [
         ...(dynamicContext ? [
           { role: 'user', parts: [{ text: `[KONTEKS SESI]\n${dynamicContext}` }] },
-          { role: 'model', parts: [{ text: 'Faham, saya sedia membantu.' }] },
+          { role: 'model', parts: [{ text: t('portal:ai_chat_ack', 'Faham, saya sedia membantu.') }] },
         ] : []),
         ...validHistory.map((m) => ({
           role: m.role === 'user' ? 'user' : 'model',
@@ -791,10 +793,10 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
           });
 
           if (error) {
-             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
+             throw new Error(error.message || t('portal:ai_err_edge_fail', 'Gagal menghubungi Edge Function AI.'));
           }
           if (data.status && data.status !== 200) {
-             throw new Error(data.error?.message || `Google API Error: ${data.status}`);
+             throw new Error(data.error?.message || 'Google API Error: ' + data.status);
           }
           responseData = data;
           setRetryCount(0);
@@ -816,11 +818,11 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       }
       const finishReason = responseData?.candidates?.[0]?.finishReason;
       if (finishReason === 'SAFETY') {
-        throw new Error('Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.');
+        throw new Error(t('portal:ai_err_policy_blocked', 'Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.'));
       }
 
       const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Maklumbalas AI kosong atau tidak sah.');
+      if (!text) throw new Error(t('portal:ai_err_empty_response', 'Maklumbalas AI kosong atau tidak sah.'));
 
       // === LOG PENGGUNAAN CHAT UNTUK AUDIT (DEEP ANALYSIS) ===
       await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
@@ -844,7 +846,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       } else if (errorMsg.includes('Polisi Keselamatan')) {
         toast.error(errorMsg);
       } else {
-        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
+        toast.error(t('portal:ai_err_interrupted', `Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`));
       }
       return null;
     } finally {
@@ -872,27 +874,27 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       const kb = context?.kebajikanInfo;
       const contextLines: string[] = [];
       if (kb) {
-        contextLines.push('== DATA OPERASI SEMASA (DIKEMASKINI SEMASA SESI DIMULAKAN) ==');
-        if (kb.slaConfig)                  contextLines.push(`Konfigurasi SLA: ${kb.slaConfig}`);
-        if (kb.urgentTicketsUnresolved !== undefined) contextLines.push(`Jumlah Tiket Urgent (NEW + ESCALATED + REOPENED): ${kb.urgentTicketsUnresolved}`);
-        if (kb.totalWarning !== undefined) contextLines.push(`Tiket dalam status WARNING: ${kb.totalWarning}`);
-        if (kb.totalEscalated !== undefined) contextLines.push(`Tiket dalam status ESCALATED: ${kb.totalEscalated}`);
-        if (kb.unassignedCount !== undefined) contextLines.push(`Tiket tanpa tugasan (Unassigned): ${kb.unassignedCount}`);
-        if (kb.resolvedThisWeek !== undefined) contextLines.push(`Tiket diselesaikan minggu ini: ${kb.resolvedThisWeek}`);
-        if (kb.topCategoryThisMonth)       contextLines.push(`Kategori aduan terbanyak bulan ini: ${kb.topCategoryThisMonth}`);
-        if (kb.urgentTicketsList)          contextLines.push(`\nSenarai Tiket Urgent (tertua dahulu):\n${kb.urgentTicketsList}`);
-        if (kb.assignedToMe !== undefined) contextLines.push(`\nTiket ditugaskan kepada anda: ${kb.assignedToMe}`);
-        if (kb.assignedToMeList)           contextLines.push(`Senarai tugasan anda:\n${kb.assignedToMeList}`);
+        contextLines.push(t('portal:ai_kb_ctx_header', '== DATA OPERASI SEMASA (DIKEMASKINI SEMASA SESI DIMULAKAN) =='));
+        if (kb.slaConfig)                  contextLines.push(t('portal:ai_kb_ctx_sla', `Konfigurasi SLA: ${kb.slaConfig}`));
+        if (kb.urgentTicketsUnresolved !== undefined) contextLines.push(t('portal:ai_kb_ctx_urgent', `Jumlah Tiket Urgent (NEW + ESCALATED + REOPENED): ${kb.urgentTicketsUnresolved}`));
+        if (kb.totalWarning !== undefined) contextLines.push(t('portal:ai_kb_ctx_warning', `Tiket dalam status WARNING: ${kb.totalWarning}`));
+        if (kb.totalEscalated !== undefined) contextLines.push(t('portal:ai_kb_ctx_escalated', `Tiket dalam status ESCALATED: ${kb.totalEscalated}`));
+        if (kb.unassignedCount !== undefined) contextLines.push(t('portal:ai_kb_ctx_unassigned', `Tiket tanpa tugasan (Unassigned): ${kb.unassignedCount}`));
+        if (kb.resolvedThisWeek !== undefined) contextLines.push(t('portal:ai_kb_ctx_resolved', `Tiket diselesaikan minggu ini: ${kb.resolvedThisWeek}`));
+        if (kb.topCategoryThisMonth)       contextLines.push(t('portal:ai_kb_ctx_top_cat', `Kategori aduan terbanyak bulan ini: ${kb.topCategoryThisMonth}`));
+        if (kb.urgentTicketsList)          contextLines.push(t('portal:ai_kb_ctx_urgent_list', `\nSenarai Tiket Urgent (tertua dahulu):\n${kb.urgentTicketsList}`));
+        if (kb.assignedToMe !== undefined) contextLines.push(t('portal:ai_kb_ctx_assigned_me', `\nTiket ditugaskan kepada anda: ${kb.assignedToMe}`));
+        if (kb.assignedToMeList)           contextLines.push(t('portal:ai_kb_ctx_assigned_list', `Senarai tugasan anda:\n${kb.assignedToMeList}`));
         if (kb.currentTicket) {
           contextLines.push('');
-          contextLines.push('== TIKET SEMASA DI SKRIN EXCO ==');
-          contextLines.push('Exco sedang melihat tiket berikut secara langsung:');
+          contextLines.push(t('portal:ai_kb_ctx_curr_ticket_header', '== TIKET SEMASA DI SKRIN EXCO =='));
+          contextLines.push(t('portal:ai_kb_ctx_curr_ticket_viewing', 'Exco sedang melihat tiket berikut secara langsung:'));
           contextLines.push(kb.currentTicket);
-          contextLines.push('Apabila Exco meminta pendapat, fokus kepada tiket ini secara spesifik.');
+          contextLines.push(t('portal:ai_kb_ctx_curr_ticket_instruction', 'Apabila Exco meminta pendapat, fokus kepada tiket ini secara spesifik.'));
         }
       } // end if (kb)
 
-      const systemInstruction = [
+      const systemInstruction = t('portal:ai_kebajikan_exco_sys_prompt', [
         // ── IDENTITY ──────────────────────────────────────────────────────────
         'Anda adalah pembantu peribadi pintar untuk Exco Kebajikan POLISAS. Anggap diri anda macam kawan rapat yang tahu semua pasal sistem e-Kebajikan — boleh bagi pendapat, cadangan, dan bantuan tanpa perlu bersopan-santun lebih.',
         '',
@@ -932,7 +934,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         '',
         // ── SCOPE ─────────────────────────────────────────────────────────────
         'Boleh bantu apa sahaja yang Exco perlukan — sistem, draf surat, pendapat, nasihat am. Tiada sekatan topik.',
-      ].filter(Boolean).join('\n');
+      ].filter(Boolean).join('\n'));
 
       // Build conversation history (allow 16 messages = 8 turns for Exco)
       const validHistory = history
@@ -980,18 +982,18 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
           });
 
           if (error) {
-             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
+             throw new Error(error.message || t('portal:ai_err_edge_fail', 'Gagal menghubungi Edge Function AI.'));
           }
           
           if (data.status && data.status !== 200) {
-            const errorMsg = data.error?.message || `Google API Error: ${data.status}`;
+            const errorMsg = data.error?.message || 'Google API Error: ' + data.status;
             if (errorMsg.toLowerCase().includes('high demand') || data.status === 503) {
               const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
               const { data: data2, error: error2 } = await invokeLocalApi('ai-assistant', {
                 body: { action: 'proxy', endpoint: fallbackEndpoint, payload: { system_instruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 } } }
               });
               if (error2) throw new Error(error2.message || `Fallback error: Edge function failure`);
-              if (data2.status && data2.status !== 200) throw new Error(data2.error?.message || `Fallback error: ${data2.status}`);
+              if (data2.status && data2.status !== 200) throw new Error(data2.error?.message || 'Fallback error: ' + data2.status);
               responseData = data2;
               setRetryCount(0);
               break;
@@ -1012,11 +1014,11 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
 
       const finishReason = responseData?.candidates?.[0]?.finishReason;
       if (finishReason === 'SAFETY') {
-        throw new Error('Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan.');
+        throw new Error(t('portal:ai_err_policy_blocked_short', 'Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan.'));
       }
 
       const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Maklumbalas AI kosong atau tidak sah.');
+      if (!text) throw new Error(t('portal:ai_err_empty_response', 'Maklumbalas AI kosong atau tidak sah.'));
 
       // Log usage (0 token cost — Exco chat is free)
       await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
@@ -1040,7 +1042,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
       } else if (errorMsg.includes('Polisi Keselamatan')) {
         toast.error(errorMsg);
       } else {
-        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
+        toast.error(t('portal:ai_err_interrupted', `Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`));
       }
       return null;
     } finally {
