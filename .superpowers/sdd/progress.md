@@ -8,7 +8,7 @@ Started: 2026-10-20
 
 - [x] Task 1: Portal Gateway Hub & Group 1 (Academics & Merit System)
 - [x] Task 2: Group 2 (JPP HQ Administration, Exco Unit Dashboards & Telemetry Cockpit)
-- [ ] Task 3: Group 3 (Student Welfare - Kebajikan, FoodBank & Support Chat)
+- [x] Task 3: Group 3 (Student Welfare - Kebajikan, FoodBank & Support Chat)
 - [ ] Task 4: Group 4 (Student Entrepreneurship, POS & PolyMart Marketplace)
 - [ ] Task 5: Group 5 (SUPSAS Sports, KLK Housing & PolyRent Assets)
 - [ ] Task 6: Group 6 (Student Logistics: PolyGig/Rider/Task & Utility/Support Shells)

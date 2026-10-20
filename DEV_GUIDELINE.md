@@ -4976,4 +4976,26 @@ Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localiz
    - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
    - Binaan produksi PWA (`npm run build`) melepasi semua semakan dalam 1m 16s tanpa sebarang ralat.
 
+### 36.21 Penyetempatan Mendalam Task 3: Kumpulan 3 (Kebajikan Mahasiswa, FoodBank & Sembang Sokongan Langsung)
+Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localization sweep) bagi Task 3 merentasi 8 fail komponen dan halaman yang meliputi ekosistem Kebajikan Siswa, FoodBank Siswa, meja tiket aduan/bantuan, dan sembang sokongan langsung:
+
+1. **8 Fail Komponen & Halaman Sasaran:**
+   - **Hub Kebajikan & Penjejak Status:** `src/pages/kebajikan/KebajikanHubPage.tsx`, `src/components/kebajikan/KebajikanLiveTrackerCard.tsx`.
+   - **Papan Pemuka Kebajikan & Pengurusan Petugas:** `src/pages/kebajikan/KebajikanDashboard.tsx`, `src/pages/kebajikan/KebajikanStaffPage.tsx`.
+   - **Sistem Tiket Siswa & Meja Bantuan Sembang Langsung:** `src/pages/kebajikan/KebajikanMyTickets.tsx`, `src/pages/kebajikan/KebajikanStudentChat.tsx`, `src/pages/kebajikan/KebajikanPlaceholders.tsx`.
+   - **Ketelusan Statistik & Metrik Awam:** `src/pages/kebajikan/KebajikanPublicStats.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `kebajikan.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (mencapai 544 entri terjemahan, 0 kunci kosong, 100% dua hala).
+   - Penggunaan fallback literal Bahasa Melayu mandatori pada setiap panggilan `t('kebajikan:key', 'Literal BM Asal', { ... })`.
+   - Tiada pembayangan pembolehubah (`t` tidak digunakan sebagai pembolehubah gelung atau parameter).
+   - Kata nama khas institusi (POLISAS, JPP, HEP, JKE, SUPSAS, MAKMP) dikekalkan dalam Bahasa Melayu.
+   - Pengekalan nilai status domain pangkalan data ('BARU', 'SEDANG_DIPROSES', 'SELESAI', 'DITUTUP') dengan pemetaan paparan antaramuka dwibahasa.
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup3KebajikanSupportI18n.test.tsx` (19/19 lulus 100%).
+   - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
+   - Binaan produksi PWA (`npm run build`) melepasi semua semakan dalam 24.7s tanpa sebarang ralat.
+
+
 
