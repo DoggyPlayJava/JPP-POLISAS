@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import i18n from '@/lib/i18n';
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, fb, opt) as string) : fb);
 
 export interface ProvisionEmsBusinessParams {
   eventId: string;
@@ -119,7 +121,7 @@ export async function provisionEmsSiswapreneurBusiness(
       console.error('Failed to provision Siswapreneur business:', bizError);
       return {
         success: false,
-        error: bizError?.message || 'Gagal mendaftar perniagaan Siswapreneur.',
+        error: bizError?.message || t('keusahawanan:err_register_siswapreneur', 'Gagal mendaftar perniagaan Siswapreneur.'),
       };
     }
 
@@ -218,7 +220,7 @@ export async function requestPuskepUpgrade(businessId: string): Promise<{
       .single();
 
     if (fetchErr || !biz) {
-      return { success: false, error: fetchErr?.message || 'Perniagaan tidak dijumpai.' };
+      return { success: false, error: fetchErr?.message || t('keusahawanan:err_business_not_found', 'Perniagaan tidak dijumpai.') };
     }
 
     const { error: updateErr } = await supabase
@@ -233,8 +235,8 @@ export async function requestPuskepUpgrade(businessId: string): Promise<{
     try {
       const { sendNotificationToKeusahawananExco } = await import('@/lib/notifications');
       await sendNotificationToKeusahawananExco({
-        title: 'Permohonan No. Siri PUSKEP Baru',
-        message: `Perniagaan ${biz.name} (EMS) memohon No. Siri PUSKEP rasmi.`,
+        title: t('keusahawanan:notif_puskep_upgrade_title', 'Permohonan No. Siri PUSKEP Baru'),
+        message: t('keusahawanan:notif_puskep_upgrade_msg', 'Perniagaan {{name}} (EMS) memohon No. Siri PUSKEP rasmi.', { name: biz.name }),
         type: 'PUSKEP_UPGRADE_REQUEST',
         module: 'KEUSAHAWANAN',
         link: '/keusahawanan/dashboard',
@@ -246,7 +248,7 @@ export async function requestPuskepUpgrade(businessId: string): Promise<{
     return { success: true };
   } catch (err: any) {
     console.error('Error requesting PUSKEP upgrade:', err);
-    return { success: false, error: err.message || 'Gagal memohon No. Siri PUSKEP.' };
+    return { success: false, error: err.message || t('keusahawanan:err_request_puskep_failed', 'Gagal memohon No. Siri PUSKEP.') };
   }
 }
 

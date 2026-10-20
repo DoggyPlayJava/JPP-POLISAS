@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Users, BarChart3, Crown, LogOut,
   Lock, ShieldCheck, Palette, Settings, Megaphone,
@@ -19,22 +20,32 @@ import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, getJppSidebarBg, JPP_COLOR_PRESETS } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // Auto-calculate current academic session based on date
-function getCurrentAcademicSession(): string {
+function getCurrentAcademicSession(t: any): string {
   const now = new Date();
   const month = now.getMonth(); // 0-indexed
   const year = now.getFullYear();
   // Malaysian poly: Sem 1 = Jul-Dec, Sem 2 = Jan-Jun
   if (month >= 6) {
-    return `Sem 1 ${year}/${year + 1}`;
+    return t('jpp:academic_session_sem1', '{{sem}} {{year1}}/{{year2}}', {
+      sem: t('jpp:semester_1', 'Sem 1'),
+      year1: year,
+      year2: year + 1,
+    });
   }
-  return `Sem 2 ${year - 1}/${year}`;
+  return t('jpp:academic_session_sem2', '{{sem}} {{year1}}/{{year2}}', {
+    sem: t('jpp:semester_2', 'Sem 2'),
+    year1: year - 1,
+    year2: year,
+  });
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function JppSidebar() {
+  const { t } = useTranslation(['jpp', 'nav', 'common']);
   const { user, profile, signOut, isSuperAdmin, hasKediamanAccess } = useAuth();
   const { positionLabels, unitConfig, unitOrder } = useJppConfig();
   const { theme } = useTheme();
@@ -146,10 +157,10 @@ export function JppSidebar() {
       { onConflict: 'exco_module' }
     );
     setSaving(false);
-    if (error) { toast.error('Gagal simpan warna.'); return; }
+    if (error) { toast.error(t('jpp:color_save_error', 'Gagal simpan warna.')); return; }
     setThemeColor(color);
     setShowPicker(false);
-    toast.success('Tema JPP HQ dikemaskini!');
+    toast.success(t('jpp:theme_updated', 'Tema JPP HQ dikemaskini!'));
   };
 
   // ── Derived display ───────────────────────────────────────────────────
@@ -158,7 +169,7 @@ export function JppSidebar() {
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const posLabel    = jppPosition
     ? (positionLabels[jppPosition] ?? jppPosition)
-    : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+    : isSuperAdmin ? 'Super Admin' : t('jpp:member_default_label', 'Ahli JPP');
 
   const isNormalExco = !isYDP && !isMT && !!jppUnit;
 
@@ -171,19 +182,36 @@ export function JppSidebar() {
       <div
         className="flex-shrink-0 flex flex-col border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
       >
-        {/* Butang balik ke Portal */}
-        <NavLink
-          to="/portal"
-          className="flex items-center gap-2 px-5 pt-4 pb-2 text-[#556453]/70 hover:text-[#2E3A2F] dark:text-[#A3B39F]/70 dark:hover:text-white transition-colors group"
-        >
-          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
-          <LayoutGrid className="w-3 h-3 ml-0.5" />
-        </NavLink>
+        {/* Row 1: Utilities & Navigation */}
+        <div className="flex items-center justify-between px-5 pt-3.5 pb-1">
+          <NavLink
+            to="/portal"
+            className="flex items-center gap-2 text-[#556453]/70 hover:text-[#2E3A2F] dark:text-[#A3B39F]/70 dark:hover:text-white transition-colors group"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
+            <LayoutGrid className="w-3 h-3 ml-0.5" />
+          </NavLink>
 
-        <div className="flex items-center gap-3 px-5 pb-4 pt-1">
+          <div className="flex items-center gap-1">
+            <LanguageToggle />
+            <ThemeToggle />
+            {canCustomize && (
+              <button
+                onClick={() => setShowPicker(v => !v)}
+                className="p-2 rounded-xl transition-all hover:bg-[#2E3A2F]/10 dark:hover:bg-white/10 text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F] dark:hover:text-white"
+                title={t('jpp:change_theme_color', 'Tukar warna tema')}
+              >
+                <Palette className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Branding */}
+        <div className="flex items-center gap-3 px-5 pb-4 pt-1.5">
           <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-[#2E3A2F]/10 border border-[#D9C9B2]/80 dark:bg-white/5 dark:border-[#3A4A3B]/60"
+            className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-[#2E3A2F]/10 border border-[#D9C9B2]/80 dark:bg-white/5 dark:border-[#3A4A3B]/60"
             style={{
               background: isDark ? hexToRgba(themeColor, 0.15) : undefined,
               borderColor: isDark ? hexToRgba(themeColor, 0.3) : undefined,
@@ -191,30 +219,20 @@ export function JppSidebar() {
           >
             <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
           </div>
-          <div>
-            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-none">JPP HQ</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5"
-              style={{ color: isDark ? hexToRgba(themeColor, 0.7) : themeColor }}>
+          <div className="min-w-0 flex-1">
+            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-none truncate">JPP HQ</p>
+            <p
+              className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 truncate"
+              style={{ color: isDark ? hexToRgba(themeColor, 0.7) : themeColor }}
+            >
               Politeknik Polisas
             </p>
             <div className="flex items-center gap-1.5 mt-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]/70">
-                {getCurrentAcademicSession()}
+              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="truncate text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]/70">
+                {getCurrentAcademicSession(t)}
               </span>
             </div>
-          </div>
-          <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle />
-            {canCustomize && (
-              <button
-                onClick={() => setShowPicker(v => !v)}
-                className="p-2 rounded-xl transition-all hover:bg-[#2E3A2F]/10 dark:hover:bg-white/10 text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F] dark:hover:text-white"
-                title="Tukar warna tema"
-              >
-                <Palette className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -249,7 +267,7 @@ export function JppSidebar() {
                     className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all active:scale-95"
                     style={{ background: isDark ? hexToRgba(themeColor, 0.5) : themeColor }}
                   >
-                    {saving ? '...' : 'Simpan'}
+                    {saving ? '...' : t('common:save', 'Simpan')}
                   </button>
                 </div>
                 <div className="flex gap-2">
@@ -306,18 +324,22 @@ export function JppSidebar() {
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
 
         {/* Main nav */}
-        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">Navigasi</p>
+        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+          {t('nav:navigation', 'Navigasi')}
+        </p>
         {[
           { 
             icon: LayoutDashboard, 
-            label: isNormalExco && jppUnit && unitConfig[jppUnit] ? `Dashboard ${unitConfig[jppUnit].shortLabel}` : 'Laman Utama',    
+            label: isNormalExco && jppUnit && unitConfig[jppUnit]
+              ? t('jpp:dashboard_unit', 'Dashboard {{unit}}', { unit: unitConfig[jppUnit].shortLabel })
+              : t('nav:home', 'Laman Utama'),    
             href: isNormalExco && jppUnit ? `/jpp/unit/${jppUnit.toLowerCase()}` : '/jpp',          
             end: !isNormalExco  
           },
-          { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
-          { icon: BarChart3,       label: 'Sistem Keseluruhan', href: '/jpp/overview', end: false },
-          { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },
-          { icon: Map,             label: 'Pentadbiran PolyMaps', href: '/jpp/polymaps',  end: false },
+          { icon: Users,           label: t('jpp:nav_members', 'Ahli JPP'),        href: '/jpp/members',  end: false },
+          { icon: BarChart3,       label: t('jpp:nav_overview', 'Sistem Keseluruhan'), href: '/jpp/overview', end: false },
+          { icon: CalendarDays,    label: t('jpp:nav_takwim', 'Takwim Global'),   href: '/jpp/takwim',   end: false },
+          { icon: Map,             label: t('jpp:nav_polymaps_admin', 'Pentadbiran PolyMaps'), href: '/jpp/polymaps',  end: false },
         ].map(item => (
           <NavLink
             key={item.href}
@@ -365,7 +387,7 @@ export function JppSidebar() {
           <>
             <div className="pt-4 pb-1.5">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
-                Pengurusan Pelajar
+                {t('jpp:nav_student_mgmt', 'Pengurusan Pelajar')}
               </p>
             </div>
             {canAccessFoodBank && (
@@ -381,7 +403,7 @@ export function JppSidebar() {
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#2E3A2F]/15 text-[#2E3A2F] dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] flex-shrink-0">
                   <HeartHandshake className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-bold tracking-tight flex-1">Food Bank JPP</span>
+                <span className="text-xs font-bold tracking-tight flex-1">{t('jpp:nav_foodbank', 'Food Bank JPP')}</span>
                 {pendingFoodBankCount > 0 && (
                   <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-amber-500 text-white shadow-sm flex items-center justify-center min-w-[18px] animate-pulse">
                     {pendingFoodBankCount}
@@ -402,7 +424,7 @@ export function JppSidebar() {
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#2E3A2F]/15 text-[#2E3A2F] dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] flex-shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-bold tracking-tight flex-1">Pengurusan Demerit</span>
+                <span className="text-xs font-bold tracking-tight flex-1">{t('jpp:nav_demerit_mgmt', 'Pengurusan Demerit')}</span>
               </NavLink>
             )}
           </>
@@ -413,15 +435,15 @@ export function JppSidebar() {
           <>
             <div className="pt-4 pb-1.5">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
-                Pentadbiran Portal
+                {t('jpp:nav_portal_admin', 'Pentadbiran Portal')}
               </p>
             </div>
             {[
-              { icon: GraduationCap, label: 'Pelajar',   href: '/jpp/users' },
-              { icon: Sparkles,      label: 'Nexus Hub', href: '/jpp/nexus' },
-              { icon: FileWarning,   label: 'Log Audit', href: '/jpp/logs' },
-              { icon: Settings,      label: 'Tetapan',   href: '/jpp/settings' },
-              ...(isSuperAdmin ? [{ icon: Activity, label: 'Telemetri Sistem', href: '/jpp/telemetry' }] : []),
+              { icon: GraduationCap, label: t('jpp:nav_students', 'Pelajar'),   href: '/jpp/users' },
+              { icon: Sparkles,      label: t('jpp:nav_nexus', 'Nexus Hub'), href: '/jpp/nexus' },
+              { icon: FileWarning,   label: t('jpp:nav_audit_logs', 'Log Audit'), href: '/jpp/logs' },
+              { icon: Settings,      label: t('nav:settings', 'Tetapan'),   href: '/jpp/settings' },
+              ...(isSuperAdmin ? [{ icon: Activity, label: t('jpp:nav_telemetry', 'Telemetri Sistem'), href: '/jpp/telemetry' }] : []),
             ].map(item => (
               <NavLink
                 key={item.href}
@@ -470,7 +492,7 @@ export function JppSidebar() {
           <>
             <div className="pt-4 pb-1.5">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
-                Pengurusan Asrama
+                {t('jpp:nav_asrama_mgmt', 'Pengurusan Asrama')}
               </p>
             </div>
             <NavLink
@@ -493,7 +515,7 @@ export function JppSidebar() {
                   >
                     <Building2 className="w-3.5 h-3.5" style={{ color: '#E879F9' }} />
                   </div>
-                  <span className="text-xs font-bold tracking-tight flex-1">Rujukan Asrama</span>
+                  <span className="text-xs font-bold tracking-tight flex-1">{t('jpp:nav_asrama_ref', 'Rujukan Asrama')}</span>
                   {isActive && (
                     <div
                       className="w-1 h-4 rounded-full flex-shrink-0"
@@ -511,8 +533,8 @@ export function JppSidebar() {
           <>
             <div className="pt-4 pb-1.5">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
-                Unit Exco
-                {isMT && <span className="ml-1.5 opacity-60">(Assigned)</span>}
+                {t('jpp:nav_unit_exco', 'Unit Exco')}
+                {isMT && <span className="ml-1.5 opacity-60">{t('jpp:assigned_tag', '(Assigned)')}</span>}
               </p>
             </div>
 
@@ -538,67 +560,67 @@ export function JppSidebar() {
               if (isOwnExco) {
                 // Exco unit sendiri: Aktiviti + Laporan (universal)
                 subItems.push(
-                  { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
-                  { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
+                  { icon: Zap,      label: t('jpp:nav_activities', 'Aktiviti'), href: `/exco/${unitLower}/aktiviti` },
+                  { icon: FileText, label: t('jpp:nav_reports', 'Laporan'),  href: `/exco/${unitLower}/laporan` },
                 );
                 // KPP tambahan: semak laporan kelab
                 if (code === 'KPP')
-                  subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
+                  subItems.push({ icon: ClipboardCheck, label: t('jpp:nav_review_club_reports', 'Semak Laporan Kelab'), href: '/semakan-laporan' });
                 // Keusahawanan tambahan: portal modul
                 if (code === 'KEUSAHAWANAN') {
-                  subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
-                  subItems.push({ icon: Zap,   label: 'Portal Program',   href: '/keusahawanan/program' });
+                  subItems.push({ icon: Store, label: t('jpp:nav_portal_dashboard', 'Portal Dashboard'), href: '/keusahawanan/dashboard' });
+                  subItems.push({ icon: Zap,   label: t('jpp:nav_portal_programs', 'Portal Program'),   href: '/keusahawanan/program' });
                 }
                 // KK tambahan: rujukan asrama & qr merit
                 if (code === 'KK') {
-                  subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
-                  subItems.push({ icon: QrCode,    label: 'Jana QR Merit',  href: '/jpp/unit/kk?tab=qr' });
+                  subItems.push({ icon: Building2, label: t('jpp:nav_asrama_ref', 'Rujukan Asrama'), href: '/jpp/asrama' });
+                  subItems.push({ icon: QrCode,    label: t('jpp:nav_generate_qr_merit', 'Jana QR Merit'),  href: '/jpp/unit/kk?tab=qr' });
                 }
                 // KEBAJIKAN tambahan: dashboard tiket + laporan
                 if (code === 'KEBAJIKAN') {
-                  subItems.push({ icon: LayoutDashboard, label: 'Dashboard Tiket',  href: '/kebajikan' });
-                  subItems.push({ icon: ClipboardCheck,  label: 'Senarai Tiket',    href: '/kebajikan/tiket' });
-                  subItems.push({ icon: ShieldCheck,     label: 'Moderasi Awam',    href: '/jpp/polyservices' });
-                  subItems.push({ icon: FileText,         label: 'Laporan Bulanan',  href: '/kebajikan/laporan' });
+                  subItems.push({ icon: LayoutDashboard, label: t('jpp:nav_ticket_dashboard', 'Dashboard Tiket'),  href: '/kebajikan' });
+                  subItems.push({ icon: ClipboardCheck,  label: t('jpp:nav_ticket_list', 'Senarai Tiket'),    href: '/kebajikan/tiket' });
+                  subItems.push({ icon: ShieldCheck,     label: t('jpp:nav_public_moderation', 'Moderasi Awam'),    href: '/jpp/polyservices' });
+                  subItems.push({ icon: FileText,         label: t('jpp:nav_monthly_reports', 'Laporan Bulanan'),  href: '/kebajikan/laporan' });
                 }
                 // AKADEMIK tambahan: Pusat Kawalan MAKMP
                 if (code === 'AKADEMIK') {
-                  subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
+                  subItems.push({ icon: Award, label: t('jpp:nav_makmp_control', 'Pusat Kawalan MAKMP'), href: '/jpp/unit/akademik?tab=makmp' });
                 }
                 // SUPSAS shortcuts untuk SRK
                 if (code === 'SRK') {
-                  subItems.push({ icon: ExternalLink,    label: 'SUPSAS Admin',     href: '/supsas/admin' });
-                  subItems.push({ icon: BarChart3,        label: 'Papan Markah',     href: '/supsas/scoreboard' });
-                  subItems.push({ icon: CalendarDays,     label: 'Jadual SUPSAS',    href: '/supsas/jadual' });
+                  subItems.push({ icon: ExternalLink,    label: t('jpp:nav_supsas_admin', 'SUPSAS Admin'),     href: '/supsas/admin' });
+                  subItems.push({ icon: BarChart3,        label: t('jpp:nav_scoreboard', 'Papan Markah'),     href: '/supsas/scoreboard' });
+                  subItems.push({ icon: CalendarDays,     label: t('jpp:nav_supsas_schedule', 'Jadual SUPSAS'),    href: '/supsas/jadual' });
                 }
               } else if (canReview) {
                 // MT / YDP menyemak laporan unit ini
                 if (isYDP) {
                   // YDP boleh tengok semua
                   subItems.push(
-                    { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
-                    { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
+                    { icon: Zap,      label: t('jpp:nav_activities', 'Aktiviti'), href: `/exco/${unitLower}/aktiviti` },
+                    { icon: FileText, label: t('jpp:nav_reports', 'Laporan'),  href: `/exco/${unitLower}/laporan` },
                   );
                   if (code === 'KPP')
-                    subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
+                    subItems.push({ icon: ClipboardCheck, label: t('jpp:nav_review_club_reports', 'Semak Laporan Kelab'), href: '/semakan-laporan' });
                   if (code === 'KEUSAHAWANAN')
-                    subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
+                    subItems.push({ icon: Store, label: t('jpp:nav_portal_dashboard', 'Portal Dashboard'), href: '/keusahawanan/dashboard' });
                   if (code === 'AKADEMIK')
-                    subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
+                    subItems.push({ icon: Award, label: t('jpp:nav_makmp_control', 'Pusat Kawalan MAKMP'), href: '/jpp/unit/akademik?tab=makmp' });
                   // YDP boleh tengok Rujukan Asrama dan QR Merit melalui KK
                   if (code === 'KK') {
-                    subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
-                    subItems.push({ icon: QrCode,    label: 'QR Merit',       href: '/jpp/unit/kk?tab=qr' });
+                    subItems.push({ icon: Building2, label: t('jpp:nav_asrama_ref', 'Rujukan Asrama'), href: '/jpp/asrama' });
+                    subItems.push({ icon: QrCode,    label: t('jpp:nav_qr_merit', 'QR Merit'),       href: '/jpp/unit/kk?tab=qr' });
                   }
                   if (code === 'KEBAJIKAN') {
-                    subItems.push({ icon: LayoutDashboard, label: 'Dashboard Tiket',  href: '/kebajikan' });
-                    subItems.push({ icon: ShieldCheck,     label: 'Moderasi Awam',    href: '/jpp/polyservices' });
+                    subItems.push({ icon: LayoutDashboard, label: t('jpp:nav_ticket_dashboard', 'Dashboard Tiket'),  href: '/kebajikan' });
+                    subItems.push({ icon: ShieldCheck,     label: t('jpp:nav_public_moderation', 'Moderasi Awam'),    href: '/jpp/polyservices' });
                   }
                 }
                 // Semak laporan exco unit ini (universal)
-                subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });
+                subItems.push({ icon: ClipboardCheck, label: t('jpp:nav_review_report', 'Semak Laporan'), href: `/jpp/semak-laporan-exco/${unitLower}` });
                 if (!isYDP && code === 'AKADEMIK') {
-                  subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
+                  subItems.push({ icon: Award, label: t('jpp:nav_makmp_control', 'Pusat Kawalan MAKMP'), href: '/jpp/unit/akademik?tab=makmp' });
                 }
               }
 
@@ -646,7 +668,7 @@ export function JppSidebar() {
                         <button
                           onClick={() => toggleUnit(code)}
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[#556453] bg-[#2E3A2F]/10 hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/20 dark:text-white/50 dark:bg-white/5 dark:hover:text-white dark:hover:bg-white/20 transition-all mr-1 ml-1"
-                          title={isExpanded ? 'Tutup' : 'Buka'}
+                          title={isExpanded ? t('common:close', 'Tutup') : t('common:open', 'Buka')}
                         >
                           <ChevronDown
                             className="w-4 h-4 transition-transform duration-200"
@@ -716,7 +738,9 @@ export function JppSidebar() {
         {(isSuperAdmin || isYDP || profile?.jpp_unit === 'MULTIMEDIA') && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">Hebahan / Lain-Lain</p>
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+                {t('jpp:nav_announcements_misc', 'Hebahan / Lain-Lain')}
+              </p>
             </div>
             <NavLink
               to="/jpp/announcements"
@@ -731,7 +755,7 @@ export function JppSidebar() {
                 <Megaphone className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest flex-1 leading-tight">
-                Hebahan Global
+                {t('jpp:nav_global_announcements', 'Hebahan Global')}
               </span>
             </NavLink>
           </>
@@ -748,7 +772,7 @@ export function JppSidebar() {
           className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/40 dark:hover:text-white transition-all text-left"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Log Keluar
+          {t('nav:logout', 'Log Keluar')}
         </Button>
       </div>
     </aside>

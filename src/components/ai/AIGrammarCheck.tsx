@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Check, Wand2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +14,7 @@ interface AIGrammarCheckProps {
 }
 
 export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGrammarCheckProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ teguran: string; teksSemakan: string } | null>(null);
   const [isError, setIsError] = useState(false);
@@ -21,7 +23,7 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
 
   const handleCheck = async () => {
     if (!textValue || textValue.trim().length < 5) {
-      toast.error('Sila taip sekurang-kurangnya 1 perenggan atau 5 patah perkataan.');
+      toast.error(t('portal:type_at_least_one_paragraph', 'Sila taip sekurang-kurangnya 1 perenggan atau 5 patah perkataan.'));
       return;
     }
     setIsOpen(true);
@@ -41,11 +43,11 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
         if (parsed.teguran && parsed.teksSemakan) {
           setFeedback(parsed);
         } else {
-          throw new Error('Format balasan tiada teguran/teksSemakan');
+          throw new Error('Invalid format: missing feedback fields');
         }
       } catch (err) {
         console.error('Failed to parse AI JSON:', err, rawResponse);
-        toast.error('AI mengembalikan respons dalam format tidak sah. Sila cuba lagi.');
+        toast.error(t('portal:ai_invalid_format_try_again', 'AI mengembalikan respons dalam format tidak sah. Sila cuba lagi.'));
         setIsOpen(false);
       }
     } else {
@@ -56,7 +58,7 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
   const applyChanges = () => {
     if (feedback?.teksSemakan) {
       onApply(feedback.teksSemakan);
-      toast.success('Ayat anda telah dikemas kini!');
+      toast.success(t('portal:sentence_updated_success', 'Ayat anda telah dikemas kini!'));
       setIsOpen(false);
     }
   };
@@ -71,9 +73,9 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
         disabled={disabled || isLoading}
         onClick={handleCheck}
         className="text-[10px] uppercase font-black tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-700 dark:text-indigo-400 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:hover:bg-indigo-500/20 h-7 px-2 rounded-xl mt-1 shrink-0 transition-colors"
-        title="Semak Tatabahasa Bersama AI"
+        title={t('portal:check_grammar_with_ai', 'Semak Tatabahasa Bersama AI')}
       >
-        <Wand2 size={12} className="mr-1.5" /> Semak Ejaan
+        <Wand2 size={12} className="mr-1.5" /> {t('portal:check_spelling', 'Semak Ejaan')}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -83,27 +85,27 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-3">
               <Sparkles size={24} className="text-violet-100" />
             </div>
-            <DialogTitle className="text-xl font-black text-left relative z-10">Semakan Tatabahasa AI</DialogTitle>
-            <p className="text-xs text-indigo-100/90 font-medium pt-1 text-left relative z-10">Laporan rasmi harus bebas daripada slanga & kesalahan ejaan.</p>
+            <DialogTitle className="text-xl font-black text-left relative z-10">{t('portal:ai_grammar_check_title', 'Semakan Tatabahasa AI')}</DialogTitle>
+            <p className="text-xs text-indigo-100/90 font-medium pt-1 text-left relative z-10">{t('portal:official_report_spelling_desc', 'Laporan rasmi harus bebas daripada slanga & kesalahan ejaan.')}</p>
           </DialogHeader>
 
           <div className="p-6 bg-muted/10 h-[350px] overflow-y-auto w-full">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-full space-y-4">
                 <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 animate-pulse text-center">Sedang Menyemak Ayat Anda...</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 animate-pulse text-center">{t('portal:checking_your_sentence', 'Sedang Menyemak Ayat Anda...')}</p>
               </div>
             ) : feedback ? (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <h4 className="text-[10px] uppercase font-black text-rose-500 tracking-widest pl-1">Teguran & Kesalahan Asal</h4>
+                  <h4 className="text-[10px] uppercase font-black text-rose-500 tracking-widest pl-1">{t('portal:original_feedback_errors', 'Teguran & Kesalahan Asal')}</h4>
                   <div className="p-4 rounded-3xl bg-rose-50/50 border border-rose-100 text-rose-900 text-sm font-medium leading-relaxed">
                     {feedback.teguran}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-[10px] uppercase font-black text-emerald-500 tracking-widest pl-1">Cadangan Pembaikan AI</h4>
+                  <h4 className="text-[10px] uppercase font-black text-emerald-500 tracking-widest pl-1">{t('portal:ai_suggested_improvements', 'Cadangan Pembaikan AI')}</h4>
                   <div className="p-4 rounded-3xl bg-emerald-50/50 border border-emerald-100 text-emerald-900 text-sm font-bold leading-relaxed selection:bg-emerald-200">
                     {feedback.teksSemakan}
                   </div>
@@ -115,20 +117,20 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
                   <ShieldAlert size={32} />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-black text-rose-600 uppercase tracking-tight">Sistem sedang sibuk</p>
-                  <p className="text-[11px] font-bold text-muted-foreground mt-1">Sila cuba sebentar lagi atau lapor kepada JPP jika berlarutan.</p>
+                  <p className="text-sm font-black text-rose-600 uppercase tracking-tight">{t('common:system_busy', 'Sistem sedang sibuk')}</p>
+                  <p className="text-[11px] font-bold text-muted-foreground mt-1">{t('portal:ai_busy_try_later', 'Sila cuba sebentar lagi atau lapor kepada JPP jika berlarutan.')}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleCheck} className="rounded-full h-10 px-6 border-rose-200 text-rose-600 hover:bg-rose-50">
-                  Cuba Semula
+                  {t('common:retry', 'Cuba Semula')}
                 </Button>
               </div>
             ) : null}
           </div>
 
           <div className="p-6 bg-card border-t border-border/50 flex justify-end gap-3 shrink-0">
-            <Button variant="ghost" disabled={isLoading} onClick={() => setIsOpen(false)} className="rounded-xl font-black text-[10px] uppercase h-12">Batal</Button>
+            <Button variant="ghost" disabled={isLoading} onClick={() => setIsOpen(false)} className="rounded-xl font-black text-[10px] uppercase h-12">{t('common:cancel', 'Batal')}</Button>
             <Button onClick={applyChanges} disabled={isLoading || !feedback} className="rounded-xl font-black text-[10px] uppercase h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20">
-               Tukar Guna Ayat AI <Check size={14} className="ml-2" />
+               {t('portal:apply_ai_text', 'Tukar Guna Ayat AI')} <Check size={14} className="ml-2" />
             </Button>
           </div>
         </DialogContent>

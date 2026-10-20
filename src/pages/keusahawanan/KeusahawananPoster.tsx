@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   ChevronLeft, Download, Store, Calculator, 
   BarChart3, Megaphone, GraduationCap, Phone, Globe, ArrowRight 
@@ -7,12 +8,13 @@ import {
 import { Button } from '@/components/ui/button';
 
 export function KeusahawananPoster() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const navigate = useNavigate();
   const posterRef = useRef<HTMLDivElement>(null);
 
   // Fungsi mudah untuk screenshot / makluman kepada user
   const handleCapture = () => {
-    alert("Tips: Untuk kualiti terbaik pada WhatsApp Status & Instagram Story, sila buka halaman ini di telefon anda dan tangkap layar (screenshot) terus skrin ini!");
+    alert(t('keusahawanan:poster_capture_tips_alert', 'Tips: Untuk kualiti terbaik pada WhatsApp Status & Instagram Story, sila buka halaman ini di telefon anda dan tangkap layar (screenshot) terus skrin ini!'));
   };
 
   return (
@@ -23,13 +25,13 @@ export function KeusahawananPoster() {
           onClick={() => navigate('/portal')}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-xs font-black uppercase tracking-wider"
         >
-          <ChevronLeft className="w-4 h-4" /> Kembali
+          <ChevronLeft className="w-4 h-4" /> {t('keusahawanan:poster_back', 'Kembali')}
         </button>
         <Button 
           onClick={handleCapture}
           className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-xl h-auto shadow-[0_0_20px_rgba(245,158,11,0.2)]"
         >
-          <Download className="w-3.5 h-3.5 mr-2" /> Tips Muat Turun
+          <Download className="w-3.5 h-3.5 mr-2" /> {t('keusahawanan:poster_download_tips', 'Tips Muat Turun')}
         </Button>
       </div>
 
@@ -76,14 +78,14 @@ export function KeusahawananPoster() {
             </div>
             <div className="bg-gradient-to-r from-[#7A1C1C] to-[#992222] px-5 py-2.5 rounded-[1.25rem] shadow-xl border border-red-900/30">
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-wider uppercase leading-none">
-                Perhatian Usahawan!
+                {t('keusahawanan:poster_attention_title', 'Perhatian Usahawan!')}
               </h1>
             </div>
           </div>
 
           <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#7A1C1C]/90 mt-3 text-center w-full leading-tight">
-            Pendaftaran & Kemaskini Profil Perniagaan <br />
-            <span className="text-slate-800">Sistem e-Keusahawanan & PolyMart POLISAS</span>
+            {t('keusahawanan:poster_subtitle_line1', 'Pendaftaran & Kemaskini Profil Perniagaan')} <br />
+            <span className="text-slate-800">{t('keusahawanan:poster_subtitle_line2', 'Sistem e-Keusahawanan & PolyMart POLISAS')}</span>
           </h2>
         </div>
 
@@ -97,15 +99,21 @@ export function KeusahawananPoster() {
                 <Store className="w-4 h-4 text-amber-400" />
               </div>
               <div className="leading-tight text-left">
-                <p className="text-[7px] font-bold text-white/60 uppercase tracking-widest">Belum Daftar?</p>
-                <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">Daftar Sekarang!</p>
+                <p className="text-[7px] font-bold text-white/60 uppercase tracking-widest">
+                  {t('keusahawanan:poster_not_registered', 'Belum Daftar?')}
+                </p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">
+                  {t('keusahawanan:poster_register_now', 'Daftar Sekarang!')}
+                </p>
               </div>
             </div>
 
             {/* Separator OR */}
             <div className="flex items-center justify-center gap-2 my-0.5">
               <div className="h-[1px] bg-slate-300 flex-1" />
-              <span className="text-[9px] font-black text-slate-400 uppercase bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">ATAU</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                {t('keusahawanan:poster_or', 'ATAU')}
+              </span>
               <div className="h-[1px] bg-slate-300 flex-1" />
             </div>
 
@@ -115,8 +123,12 @@ export function KeusahawananPoster() {
                 <Calculator className="w-4 h-4 text-[#5C0606]" />
               </div>
               <div className="leading-tight text-left">
-                <p className="text-[7px] font-black text-[#5C0606]/60 uppercase tracking-widest">Sudah Daftar?</p>
-                <p className="text-[9px] font-black uppercase tracking-wider text-[#5C0606]">Kemaskini Data!</p>
+                <p className="text-[7px] font-black text-[#5C0606]/60 uppercase tracking-widest">
+                  {t('keusahawanan:poster_already_registered', 'Sudah Daftar?')}
+                </p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#5C0606]">
+                  {t('keusahawanan:poster_update_data', 'Kemaskini Data!')}
+                </p>
               </div>
             </div>
           </div>
@@ -130,7 +142,7 @@ export function KeusahawananPoster() {
               {/* Actual PolyMart App Screenshot (Pixel Perfect!) */}
               <img 
                 src="/poster-polymart-screen.png" 
-                alt="PolyMart App Interface"
+                alt="PolyMart App Interface" 
                 className="w-full h-full object-cover rounded-[1.4rem] select-none"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none rounded-[1.4rem]" />
@@ -147,9 +159,11 @@ export function KeusahawananPoster() {
         <div className="relative z-10 bg-white/95 rounded-[1.75rem] p-3.5 shadow-xl border border-slate-200/50 flex flex-col gap-2.5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
             <h3 className="text-[9px] font-black uppercase tracking-widest text-[#7A1C1C]">
-              Kenapa Perlu Daftar / Kemaskini?
+              {t('keusahawanan:poster_why_register_title', 'Kenapa Perlu Daftar / Kemaskini?')}
             </h3>
-            <span className="text-[7px] font-black bg-[#7A1C1C]/10 text-[#7A1C1C] px-2 py-0.5 rounded-md">5 Manfaat</span>
+            <span className="text-[7px] font-black bg-[#7A1C1C]/10 text-[#7A1C1C] px-2 py-0.5 rounded-md">
+              {t('keusahawanan:poster_benefits_badge', '5 Manfaat')}
+            </span>
           </div>
 
           {/* Grid 5 Kad Faedah Horizontal */}
@@ -160,8 +174,12 @@ export function KeusahawananPoster() {
                 <Store className="w-4 h-4" />
               </div>
               <div className="text-left leading-tight">
-                <h4 className="text-[9px] font-black text-slate-800">Pasaran Terus PolyMart</h4>
-                <p className="text-[7px] font-medium text-slate-500">Jual produk anda terus kepada ribuan warga kampus POLISAS.</p>
+                <h4 className="text-[9px] font-black text-slate-800">
+                  {t('keusahawanan:poster_benefit_1_title', 'Pasaran Terus PolyMart')}
+                </h4>
+                <p className="text-[7px] font-medium text-slate-500">
+                  {t('keusahawanan:poster_benefit_1_desc', 'Jual produk anda terus kepada ribuan warga kampus POLISAS.')}
+                </p>
               </div>
             </div>
 
@@ -171,8 +189,12 @@ export function KeusahawananPoster() {
                 <Calculator className="w-4 h-4" />
               </div>
               <div className="text-left leading-tight">
-                <h4 className="text-[9px] font-black text-slate-800">Sistem POS Kaunter Pintar</h4>
-                <p className="text-[7px] font-medium text-slate-500">Rekod jualan tunai/atas talian dengan kaunter digital yang mudah.</p>
+                <h4 className="text-[9px] font-black text-slate-800">
+                  {t('keusahawanan:poster_benefit_2_title', 'Sistem POS Kaunter Pintar')}
+                </h4>
+                <p className="text-[7px] font-medium text-slate-500">
+                  {t('keusahawanan:poster_benefit_2_desc', 'Rekod jualan tunai/atas talian dengan kaunter digital yang mudah.')}
+                </p>
               </div>
             </div>
 
@@ -182,8 +204,12 @@ export function KeusahawananPoster() {
                 <BarChart3 className="w-4 h-4" />
               </div>
               <div className="text-left leading-tight">
-                <h4 className="text-[9px] font-black text-slate-800">Dashboard Prestasi Real-Time</h4>
-                <p className="text-[7px] font-medium text-slate-500">Pantau prestasi hasil, tempahan, dan graf analisis jualan bulanan.</p>
+                <h4 className="text-[9px] font-black text-slate-800">
+                  {t('keusahawanan:poster_benefit_3_title', 'Dashboard Prestasi Real-Time')}
+                </h4>
+                <p className="text-[7px] font-medium text-slate-500">
+                  {t('keusahawanan:poster_benefit_3_desc', 'Pantau prestasi hasil, tempahan, dan graf analisis jualan bulanan.')}
+                </p>
               </div>
             </div>
 
@@ -194,9 +220,14 @@ export function KeusahawananPoster() {
               </div>
               <div className="text-left leading-tight">
                 <h4 className="text-[9px] font-black text-amber-900 flex items-center gap-1.5">
-                  Promosi Produk Meluas <span className="text-[6px] bg-amber-500 text-amber-950 px-1 rounded-sm">BARU</span>
+                  {t('keusahawanan:poster_benefit_4_title', 'Promosi Produk Meluas')}{' '}
+                  <span className="text-[6px] bg-amber-500 text-amber-950 px-1 rounded-sm">
+                    {t('keusahawanan:poster_benefit_4_badge', 'BARU')}
+                  </span>
                 </h4>
-                <p className="text-[7px] font-semibold text-amber-800">Memperkenalkan dan mengiklankan produk anda ke seluruh kampus POLISAS!</p>
+                <p className="text-[7px] font-semibold text-amber-800">
+                  {t('keusahawanan:poster_benefit_4_desc', 'Memperkenalkan dan mengiklankan produk anda ke seluruh kampus POLISAS!')}
+                </p>
               </div>
             </div>
 
@@ -206,8 +237,12 @@ export function KeusahawananPoster() {
                 <GraduationCap className="w-4 h-4" />
               </div>
               <div className="text-left leading-tight">
-                <h4 className="text-[9px] font-black text-slate-800">Bimbingan Mentor & PUSKEP</h4>
-                <p className="text-[7px] font-medium text-slate-500">Berdaftar rasmi di bawah Pusat Keusahawanan dengan bimbingan mentor.</p>
+                <h4 className="text-[9px] font-black text-slate-800">
+                  {t('keusahawanan:poster_benefit_5_title', 'Bimbingan Mentor & PUSKEP')}
+                </h4>
+                <p className="text-[7px] font-medium text-slate-500">
+                  {t('keusahawanan:poster_benefit_5_desc', 'Berdaftar rasmi di bawah Pusat Keusahawanan dengan bimbingan mentor.')}
+                </p>
               </div>
             </div>
           </div>
@@ -218,7 +253,9 @@ export function KeusahawananPoster() {
           <div className="flex items-center gap-2 pl-1.5">
             <Globe className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
             <div className="leading-tight text-left">
-              <p className="text-[8px] font-black text-amber-400 uppercase tracking-widest">Imbas QR Atau Layari:</p>
+              <p className="text-[8px] font-black text-amber-400 uppercase tracking-widest">
+                {t('keusahawanan:poster_scan_or_visit', 'Imbas QR Atau Layari:')}
+              </p>
               <p className="text-[10px] font-black tracking-tight text-white select-all">jpp.cipher-node.org/keusahawanan/onboarding</p>
             </div>
           </div>
@@ -232,7 +269,7 @@ export function KeusahawananPoster() {
           {/* Sebarang Pertanyaan / Hubungi */}
           <div className="col-span-7 bg-white/95 rounded-[1.5rem] p-3 shadow-lg border border-slate-200/50 flex flex-col gap-1.5">
             <p className="text-[7px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-1 text-left">
-              Sebarang Pertanyaan, Hubungi:
+              {t('keusahawanan:poster_questions_contact', 'Sebarang Pertanyaan, Hubungi:')}
             </p>
             <div className="flex items-center gap-2 text-slate-700">
               <Phone className="w-3.5 h-3.5 text-[#7A1C1C] shrink-0" />
@@ -254,7 +291,7 @@ export function KeusahawananPoster() {
               />
             </div>
             <span className="text-[7px] font-black text-amber-300 uppercase tracking-widest mt-1.5 block drop-shadow-md">
-              Imbas Di Sini
+              {t('keusahawanan:poster_scan_here', 'Imbas Di Sini')}
             </span>
           </div>
         </div>

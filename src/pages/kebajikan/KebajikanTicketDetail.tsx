@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft, Clock, MessageSquare, Send, Lock,
   AlertTriangle, CheckCircle2, ArrowUpRight,
@@ -28,18 +29,24 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
+import i18n from '@/lib/i18n';
+
+const tStatic = (k: string, fb: string, opt?: any) => (i18n?.isInitialized ? i18n.t(k, fb, opt) : fb);
+const t = tStatic;
+
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
 const STATUSES: { key: KebajikanTicketStatus; label: string }[] = [
-  { key: 'NEW',              label: 'Diterima'              },
-  { key: 'IN_PROGRESS',      label: 'Dalam Tindakan'        },
-  { key: 'WAITING_INFO',     label: 'Menunggu Maklumat'     },
-  { key: 'PENDING_EXTERNAL', label: 'Menunggu Pihak Lain'   },
-  { key: 'RESOLVED',         label: 'Selesai'               },
-  { key: 'CLOSED',           label: 'Ditutup'               },
+  { key: 'NEW',              label: t('kebajikan:ticket_status_new', 'Diterima')              },
+  { key: 'IN_PROGRESS',      label: t('kebajikan:ticket_status_in_progress', 'Dalam Tindakan')        },
+  { key: 'WAITING_INFO',     label: t('kebajikan:ticket_status_waiting_info', 'Menunggu Maklumat')     },
+  { key: 'PENDING_EXTERNAL', label: t('kebajikan:ticket_status_pending_external', 'Menunggu Pihak Lain')   },
+  { key: 'RESOLVED',         label: t('kebajikan:ticket_status_resolved', 'Selesai')               },
+  { key: 'CLOSED',           label: t('kebajikan:ticket_status_closed', 'Ditutup')               },
 ];
 
 export function KebajikanTicketDetail() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile, isKebajikanExco, isSuperAdmin, isUnitKebajikanStaff, isKediamanExco } = useAuth();
@@ -134,7 +141,7 @@ export function KebajikanTicketDetail() {
         
         await sendEmail({
           to: profileData.email,
-          subject: `[JPP POLISAS] Aduan Anda Sedang Diuruskan (${ticket.ticket_no})`,
+          subject: t('kebajikan:email_ticket_under_action_subject', `[JPP POLISAS] Aduan Anda Sedang Diuruskan (${ticket.ticket_no})`, { ticket_no: ticket.ticket_no }),
           html
         });
       }
@@ -158,7 +165,7 @@ export function KebajikanTicketDetail() {
     if (!isInternal && isStaff && ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
         title:       `Komen Baru: ${ticket.ticket_no}`,
-        message:     `Pihak kebajikan telah membalas: "${newComment.slice(0, 60)}..."`,
+        message:     t('kebajikan:notif_comment_reply_body', `Pihak kebajikan telah membalas: "${newComment.slice(0, 60)}..."`, { comment: newComment.slice(0, 60) }),
         type:        'COMMENT',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -196,7 +203,7 @@ export function KebajikanTicketDetail() {
       actor_role:  actorRole,
       old_status:  ticket.status,
       new_status:  targetStatus,
-      note:        noteText?.trim() || `Tindakan pantas: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}`,
+      note:        noteText?.trim() || t('kebajikan:quick_action_log_note', `Tindakan pantas: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus] }),
     });
 
     if (noteText?.trim()) {
@@ -208,14 +215,14 @@ export function KebajikanTicketDetail() {
         is_internal: false,
         content:     targetStatus === 'RESOLVED'
           ? `[Resolusi] ${noteText.trim()}`
-          : `[Status: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}] ${noteText.trim()}`,
+          : t('kebajikan:status_note_prefix', `[Status: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}] ${noteText.trim()}`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus], note: noteText.trim() }),
       });
     }
 
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Status Aduan Dikemaskini: ${ticket.ticket_no}`,
-        message:     `Aduan anda telah ditukar status kepada "${KEBAJIKAN_STATUS_LABELS[targetStatus]}"`,
+        title:       t('kebajikan:notif_ticket_status_updated_title', `Status Aduan Dikemaskini: ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_ticket_status_updated_body', `Aduan anda telah ditukar status kepada "${KEBAJIKAN_STATUS_LABELS[targetStatus]}"`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus] }),
         type:        'STATUS_CHANGE',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -262,7 +269,7 @@ export function KebajikanTicketDetail() {
       await supabase.from('kebajikan_ticket_comments').insert({
         ticket_id: ticket.id,
         author_id: user?.id,
-        author_name: profile?.full_name || 'Exco Kebajikan',
+        author_name: profile?.full_name || t('kebajikan:role_exco_kebajikan', 'Exco Kebajikan'),
         author_role: actorRole,
         is_internal: false,
         content: `[Nota Resolusi] ${resolutionNote}`,
@@ -271,8 +278,8 @@ export function KebajikanTicketDetail() {
 
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Status Aduan Dikemaskini: ${ticket.ticket_no}`,
-        message:     `Aduan anda kini dalam status "${KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus]}"`,
+        title:       t('kebajikan:notif_ticket_status_updated_title', `Status Aduan Dikemaskini: ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_ticket_status_updated_body_current', `Aduan anda kini dalam status "${KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus]}"`, { status: KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus] }),
         type:        'STATUS_CHANGE',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -295,17 +302,17 @@ export function KebajikanTicketDetail() {
     await supabase.from('kebajikan_ticket_status_log').insert({
       ticket_id: ticket.id, actor_id: user?.id,
       actor_name: profile?.full_name, actor_role: actorRole,
-      old_status: ticket.status, new_status: 'DELEGATED', note: `Delegasikan ke pegawai. ${delegateNote}`,
+      old_status: ticket.status, new_status: 'DELEGATED', note: t('kebajikan:delegation_log_note', `Delegasikan ke pegawai. ${delegateNote}`, { note: delegateNote }),
     });
     await supabase.from('kebajikan_ticket_comments').insert({
       ticket_id: ticket.id, author_id: user?.id,
       author_name: profile?.full_name || 'Unknown', author_role: actorRole,
       is_internal: true, is_delegation_note: true,
-      content: `[Delegasi] Tiket ini telah didelegasikan kepada pegawai. Nota: ${delegateNote || '(Tiada nota)'}`,
+      content: t('kebajikan:delegation_comment_content', `[Delegasi] Tiket ini telah didelegasikan kepada pegawai. Nota: ${delegateNote || t('kebajikan:no_note', '(Tiada nota)')}`, { note: delegateNote || t('kebajikan:no_note', '(Tiada nota)') }),
     });
     await sendNotificationToUser(delegateId, {
       title:       `Tiket Didelegasikan: ${ticket.ticket_no}`,
-      message:     `Anda telah diassign untuk menguruskan tiket ini. ${delegateNote ? 'Nota: ' + delegateNote : ''}`,
+      message:     t('kebajikan:delegation_notif_body', `Anda telah diassign untuk menguruskan tiket ini. ${delegateNote ? 'Nota: ' + delegateNote : ''}`, { note: delegateNote ? `Nota: ${delegateNote}` : '' }),
       type:        'DELEGATION',
       module:      'KEBAJIKAN',
       link:        `/kebajikan/tiket/${ticket.id}`,
@@ -322,11 +329,11 @@ export function KebajikanTicketDetail() {
     if (!ticket) return;
     setSaving(true);
     await supabase.from('kebajikan_tickets').update({ status: 'NEW', reopen_approved_by: user?.id, reopen_count: ticket.reopen_count + 1 }).eq('id', ticket.id);
-    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'NEW', note: 'Exco luluskan reopen' });
+    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'NEW', note: t('kebajikan:log_note_exco_approved_reopen', 'Exco luluskan reopen') });
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Permohonan Buka Semula Diluluskan — ${ticket.ticket_no}`,
-        message:     `Exco Kebajikan telah meluluskan permohonan anda untuk membuka semula aduan. Ia kini dalam status Diterima.`,
+        title:       t('kebajikan:notif_reopen_approved_title', `Permohonan Buka Semula Diluluskan — ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_reopen_approved_body', 'Exco Kebajikan telah meluluskan permohonan anda untuk membuka semula aduan. Ia kini dalam status Diterima.'),
         type:        'REOPEN_APPROVED',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -342,11 +349,11 @@ export function KebajikanTicketDetail() {
     if (!ticket) return;
     setSaving(true);
     await supabase.from('kebajikan_tickets').update({ status: 'RESOLVED' }).eq('id', ticket.id);
-    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'RESOLVED', note: 'Exco tolak reopen' });
+    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'RESOLVED', note: t('kebajikan:log_note_exco_rejected_reopen', 'Exco tolak reopen') });
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Permohonan Buka Semula Ditolak — ${ticket.ticket_no}`,
-        message:     `Exco Kebajikan telah menolak permohonan untuk membuka semula aduan. Aduan anda kekal dalam status Selesai.`,
+        title:       t('kebajikan:notif_reopen_rejected_title', `Permohonan Buka Semula Ditolak — ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_reopen_rejected_body', 'Exco Kebajikan telah menolak permohonan untuk membuka semula aduan. Aduan anda kekal dalam status Selesai.'),
         type:        'REOPEN_REJECTED',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -367,7 +374,7 @@ export function KebajikanTicketDetail() {
   }
 
   if (!ticket) {
-    return <div className="p-6 text-slate-500 dark:text-white/40 text-center mt-20">Tiket tidak ditemui.</div>;
+    return <div className="p-6 text-slate-500 dark:text-white/40 text-center mt-20">{t('kebajikan:ticket_not_found', 'Tiket tidak ditemui.')}</div>;
   }
 
   const slaHours = ticket.sla_deadline
@@ -378,7 +385,7 @@ export function KebajikanTicketDetail() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto min-h-screen relative transition-colors">
       {/* Back */}
       <button onClick={() => navigate('/kebajikan/tiket')} className="relative z-10 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 mb-6 sm:mb-8 transition-colors group">
-        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Kembali ke Senarai
+        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> {t('kebajikan:back_to_list', 'Kembali ke Senarai')}
       </button>
 
       {/* Title row */}
@@ -395,7 +402,7 @@ export function KebajikanTicketDetail() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-2">{ticket.title}</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-            {KEBAJIKAN_CATEGORY_LABELS[ticket.category]} <span className="opacity-50 mx-2">·</span> Dikemukakan {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}
+            {KEBAJIKAN_CATEGORY_LABELS[ticket.category]} <span className="opacity-50 mx-2">·</span> {t('kebajikan:submitted_date_prefix', 'Dikemukakan')} {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}
           </p>
         </div>
       </div>
@@ -404,18 +411,18 @@ export function KebajikanTicketDetail() {
         {/* LEFT — Main content */}
         <div className="lg:col-span-2 space-y-5">
           {/* Submitter info */}
-          <Section title="Maklumat Pengadu">
+          <Section title={t('kebajikan:submitter_info_title', 'Maklumat Pengadu')}>
             <Grid2>
-              <Info label="Nama" value={ticket.full_name} />
-              <Info label="No. Matrik" value={ticket.matric_no || '—'} />
-              <Info label="No. Telefon" value={ticket.phone || '—'} />
-              <Info label="Kelas" value={ticket.class || '—'} />
-              <Info label="Jantina" value={ticket.gender || '—'} />
+              <Info label={t('kebajikan:field_name', 'Nama')} value={ticket.full_name} />
+              <Info label={t('kebajikan:field_matric', 'No. Matrik')} value={ticket.matric_no || '—'} />
+              <Info label={t('kebajikan:field_phone', 'No. Telefon')} value={ticket.phone || '—'} />
+              <Info label={t('kebajikan:field_class', 'Kelas')} value={ticket.class || '—'} />
+              <Info label={t('kebajikan:field_gender', 'Jantina')} value={ticket.gender || '—'} />
             </Grid2>
           </Section>
 
           {/* Description */}
-          <Section title="Penerangan Aduan">
+          <Section title={t('kebajikan:complaint_desc_title', 'Penerangan Aduan')}>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
             {/* Form data */}
             {Object.keys(ticket.form_data).length > 0 && (
@@ -444,7 +451,7 @@ export function KebajikanTicketDetail() {
           {ticket.resolution_note && (
             <div className="rounded-3xl p-5 sm:p-6 border shadow-sm bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/20">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Nota Resolusi
+                <CheckCircle2 className="w-4 h-4" /> {t('kebajikan:resolution_note_title', 'Nota Resolusi')}
               </p>
               <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{ticket.resolution_note}</p>
             </div>
@@ -453,29 +460,29 @@ export function KebajikanTicketDetail() {
           {/* Reopen request panel */}
           {ticket.status === 'REOPENED' && isStaff && (
             <div className="rounded-2xl p-4 sm:p-5 border bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-500/30">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 mb-2">Permintaan Buka Semula</p>
-              <p className="text-xs text-slate-700 dark:text-white/70 mb-4">Sebab: {ticket.reopen_reason}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 mb-2">{t('kebajikan:reopen_request_title', 'Permintaan Buka Semula')}</p>
+              <p className="text-xs text-slate-700 dark:text-white/70 mb-4">{t('kebajikan:reopen_reason_prefix', 'Sebab')}: {ticket.reopen_reason}</p>
               <div className="flex gap-2">
                 <Button onClick={approveReopen} disabled={saving} size="sm" className="h-8 px-4 text-xs font-black rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300">
-                  ✓ Lulus Reopen
+                  {t('kebajikan:approve_reopen_btn', '✓ Lulus Reopen')}
                 </Button>
                 <Button onClick={rejectReopen} disabled={saving} size="sm" variant="outline" className="h-8 px-4 text-xs font-black rounded-xl border-red-300 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10">
-                  ✗ Tolak
+                  {t('kebajikan:reject_reopen_btn', '✗ Tolak')}
                 </Button>
               </div>
             </div>
           )}
 
           {/* Comments thread */}
-          <Section title="Thread Komunikasi">
+          <Section title={t('kebajikan:communication_thread_title', 'Thread Komunikasi')}>
             {/* Toggle internal/public */}
             <div className="flex gap-2 mb-6 p-1 bg-slate-100 dark:bg-black/20 rounded-2xl w-fit border border-slate-200 dark:border-white/5">
               <button onClick={() => setIsInternal(false)} className={cn('flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all', !isInternal ? 'text-slate-950 bg-teal-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5')}>
-                <MessageSquare className="w-3.5 h-3.5" /> Public
+                <MessageSquare className="w-3.5 h-3.5" /> {t('kebajikan:filter_public', 'Public')}
               </button>
               {isStaff && (
                 <button onClick={() => setIsInternal(true)} className={cn('flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all', isInternal ? 'text-white bg-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5')}>
-                  <Lock className="w-3.5 h-3.5" /> Internal (Exco sahaja)
+                  <Lock className="w-3.5 h-3.5" /> {t('kebajikan:filter_internal', 'Internal (Exco sahaja)')}
                 </button>
               )}
             </div>
@@ -503,11 +510,11 @@ export function KebajikanTicketDetail() {
                           ? 'bg-teal-50 dark:bg-indigo-600/20 border border-teal-200 dark:border-indigo-500/10 text-slate-900 dark:text-slate-200'
                           : 'bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 text-slate-900 dark:text-slate-200'
                   )}>
-                    {c.is_delegation_note && <p className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5"><ArrowUpRight className="w-3 h-3" /> Nota Delegasi</p>}
+                    {c.is_delegation_note && <p className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5"><ArrowUpRight className="w-3 h-3" /> {t('kebajikan:delegation_note_badge', 'Nota Delegasi')}</p>}
                     {c.is_internal && (
                       <div className="flex items-center gap-1.5 mb-2.5 px-2 py-1 rounded-lg bg-indigo-500/20 w-fit">
                         <Lock className="w-3 h-3 text-indigo-700 dark:text-indigo-300" />
-                        <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Nota Dalaman — Exco Sahaja</span>
+                        <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">{t('kebajikan:internal_note_badge', 'Nota Dalaman — Exco Sahaja')}</span>
                       </div>
                     )}
                     <p className="leading-relaxed whitespace-pre-wrap">{c.content}</p>
@@ -516,7 +523,7 @@ export function KebajikanTicketDetail() {
                   </div>
                 </div>
               ))}
-              {comments.length === 0 && <p className="text-center text-xs text-slate-400 dark:text-white/20 py-6">Belum ada komen</p>}
+              {comments.length === 0 && <p className="text-center text-xs text-slate-400 dark:text-white/20 py-6">{t('kebajikan:no_comments_yet', 'Belum ada komen')}</p>}
               <div ref={bottomRef} />
             </div>
 
@@ -547,7 +554,7 @@ export function KebajikanTicketDetail() {
                 value={newComment}
                 onChange={e => setNewComment(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addComment(); }}}
-                placeholder={isInternal ? "Komen internal (Exco sahaja)..." : "Tulis komen..."}
+                placeholder={isInternal ? t('kebajikan:comment_placeholder_internal', 'Komen internal (Exco sahaja)...') : t('kebajikan:comment_placeholder_public', 'Tulis komen...')}
                 rows={3}
                 className={cn('flex-1 rounded-2xl resize-none text-sm border focus:ring-2 transition-all p-3', isInternal ? 'bg-indigo-50/50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-slate-900 dark:text-white focus:ring-indigo-500/30' : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:ring-teal-500/30 placeholder:text-slate-400')}
               />
@@ -567,19 +574,19 @@ export function KebajikanTicketDetail() {
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="w-3.5 h-3.5" style={{ color: slaHours < 12 ? '#EF4444' : '#F59E0B' }} />
                   <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: slaHours < 12 ? '#EF4444' : '#F59E0B' }}>
-                    {slaHours < 0 ? 'SLA TERLAMPAUI' : 'SLA Deadline'}
+                    {slaHours < 0 ? t('kebajikan:sla_breached', 'SLA TERLAMPAUI') : t('kebajikan:sla_deadline_label', 'SLA Deadline')}
                   </p>
                 </div>
-                <p className="text-xl font-black text-slate-900 dark:text-white">{slaHours < 0 ? `${Math.abs(slaHours).toFixed(0)}j terlampaui` : `${slaHours.toFixed(0)}j lagi`}</p>
+                <p className="text-xl font-black text-slate-900 dark:text-white">{slaHours < 0 ? t('kebajikan:sla_hours_breached', { hours: Math.abs(slaHours).toFixed(0), defaultValue: `${Math.abs(slaHours).toFixed(0)}j terlampaui` }) : t('kebajikan:sla_hours_left', { hours: slaHours.toFixed(0), defaultValue: `${slaHours.toFixed(0)}j lagi` })}</p>
                 <p className="text-[10px] text-slate-500 dark:text-white/40 mt-0.5">{format(new Date(ticket.sla_deadline!), 'dd MMM HH:mm')}</p>
               </div>
             )}
 
             {/* Change status */}
-            <Section title="Ubah Status">
+            <Section title={t('kebajikan:change_status_title', 'Ubah Status')}>
               <Select value={statusChange} onValueChange={setStatusChange}>
                 <SelectTrigger className="bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl text-xs h-10">
-                  <SelectValue placeholder="Pilih status baru..." />
+                  <SelectValue placeholder={t('kebajikan:select_new_status_prompt', 'Pilih status baru...')} />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                   {STATUSES.map(s => (
@@ -590,20 +597,20 @@ export function KebajikanTicketDetail() {
                 </SelectContent>
               </Select>
               {statusChange === 'RESOLVED' && (
-                <Textarea value={resolutionNote} onChange={e => setResolutionNote(e.target.value)} placeholder="Nota resolusi (wajib)..." rows={3} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
+                <Textarea value={resolutionNote} onChange={e => setResolutionNote(e.target.value)} placeholder={t('kebajikan:resolution_note_required', 'Nota resolusi (wajib)...')} rows={3} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
               )}
-              <Textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} placeholder="Nota perubahan status (opsional)..." rows={2} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
+              <Textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} placeholder={t('kebajikan:status_change_note_optional', 'Nota perubahan status (opsional)...')} rows={2} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
               <Button onClick={changeStatus} disabled={!statusChange || saving || (statusChange === 'RESOLVED' && !resolutionNote)} className="w-full h-9 mt-2 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-sm">
-                {saving ? 'Menyimpan...' : 'Kemaskini Status'}
+                {saving ? t('kebajikan:saving_label', 'Menyimpan...') : t('kebajikan:update_status_btn', 'Kemaskini Status')}
               </Button>
             </Section>
 
             {/* Delegate */}
             {staffList.length > 0 && (
-              <Section title="Delegasikan ke Pegawai">
+              <Section title={t('kebajikan:delegate_to_officer_title', 'Delegasikan ke Pegawai')}>
                 <Select value={delegateId} onValueChange={setDelegateId}>
                   <SelectTrigger className="bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl text-xs h-10">
-                    <SelectValue placeholder="Pilih pegawai..." />
+                    <SelectValue placeholder={t('kebajikan:select_officer_prompt', 'Pilih pegawai...')} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     {staffList.map(s => (
@@ -613,9 +620,9 @@ export function KebajikanTicketDetail() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Textarea value={delegateNote} onChange={e => setDelegateNote(e.target.value)} placeholder="Nota saranan untuk pegawai..." rows={2} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
+                <Textarea value={delegateNote} onChange={e => setDelegateNote(e.target.value)} placeholder={t('kebajikan:delegate_note_placeholder', 'Nota saranan untuk pegawai...')} rows={2} className="mt-2 bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs rounded-xl resize-none" />
                 <Button onClick={delegateTicket} disabled={!delegateId || saving} className="w-full h-9 mt-2 text-xs font-black uppercase tracking-widest rounded-xl border border-indigo-300 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10" variant="outline">
-                  {saving ? '...' : '🔁 Delegasikan'}
+                  {saving ? '...' : t('kebajikan:delegate_btn', '🔁 Delegasikan')}
                 </Button>
               </Section>
             )}
@@ -655,12 +662,12 @@ export function KebajikanTicketDetail() {
             )}
 
             {/* Pengadu info quick */}
-            <Section title="Pengadu">
+            <Section title={t('kebajikan:complainant_quick_title', 'Pengadu')}>
               <div className="space-y-2">
-                <Info label="Nama" value={ticket.full_name} />
-                <Info label="Matrik" value={ticket.matric_no || '—'} />
-                <Info label="Telefon" value={ticket.phone || '—'} />
-                {ticket.reopen_count > 0 && <Info label="Kali Reopen" value={String(ticket.reopen_count)} />}
+                <Info label={t('kebajikan:field_name', 'Nama')} value={ticket.full_name} />
+                <Info label={t('kebajikan:field_matric', 'Matrik')} value={ticket.matric_no || '—'} />
+                <Info label={t('kebajikan:field_phone', 'Telefon')} value={ticket.phone || '—'} />
+                {ticket.reopen_count > 0 && <Info label={t('kebajikan:reopen_count_label', 'Kali Reopen')} value={String(ticket.reopen_count)} />}
               </div>
             </Section>
           </div>
@@ -682,39 +689,39 @@ interface QuickActionBarProps {
   onCancelResolve: () => void;
 }
 
-const QUICK_TRANSITIONS: Record<string, { key: KebajikanTicketStatus; label: string; icon: string; color: string; bg: string }[]> = {
+const QUICK_TRANSITIONS: Record<string, { key: KebajikanTicketStatus; labelKey: string; defaultLabel: string; icon: string; color: string; bg: string }[]> = {
   NEW: [
-    { key: 'IN_PROGRESS',      label: 'Ambil Tindakan',     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'WAITING_INFO',     label: 'Tunggu Maklumat',    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: t('kebajikan:quick_action_take_action', 'Ambil Tindakan'),     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: t('kebajikan:quick_action_waiting_info', 'Tunggu Maklumat'),    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   IN_PROGRESS: [
-    { key: 'WAITING_INFO',     label: 'Tunggu Maklumat',    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
-    { key: 'PENDING_EXTERNAL', label: 'Tunggu Pihak Lain',  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
-    { key: 'ESCALATED',        label: 'Escalate',           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
+    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: t('kebajikan:quick_action_waiting_info', 'Tunggu Maklumat'),    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
+    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: t('kebajikan:quick_action_waiting_external', 'Tunggu Pihak Lain'),  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: t('kebajikan:quick_action_escalate', 'Escalate'),           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
   ],
   WAITING_INFO: [
-    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'PENDING_EXTERNAL', label: 'Tunggu Pihak Lain',  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: t('kebajikan:quick_action_waiting_external', 'Tunggu Pihak Lain'),  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   PENDING_EXTERNAL: [
-    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
-    { key: 'ESCALATED',        label: 'Escalate',           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: t('kebajikan:quick_action_escalate', 'Escalate'),           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
   ],
   ESCALATED: [
-    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   REOPENED: [
-    { key: 'IN_PROGRESS',      label: 'Ambil Tindakan',     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: t('kebajikan:quick_action_take_action', 'Ambil Tindakan'),     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   DELEGATED: [
-    { key: 'IN_PROGRESS',      label: 'Ambil Semula',       icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_retake', defaultLabel: t('kebajikan:quick_action_retake', 'Ambil Semula'),       icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
 };
 
@@ -722,6 +729,7 @@ function QuickActionBar({
   status, quickTarget, quickNote, quickSaving,
   onSelect, onNoteChange, onConfirmResolve, onCancelResolve,
 }: QuickActionBarProps) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const actions = QUICK_TRANSITIONS[status] ?? [];
   if (actions.length === 0) return null;
 
@@ -730,8 +738,8 @@ function QuickActionBar({
       {/* Label row */}
       <div className="flex items-center gap-2">
         <Zap className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Tindakan Pantas</p>
-        {quickSaving && <span className="ml-auto text-[10px] text-slate-500 dark:text-white/40 animate-pulse">Menyimpan...</span>}
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('kebajikan:quick_action_title', 'Tindakan Pantas')}</p>
+        {quickSaving && <span className="ml-auto text-[10px] text-slate-500 dark:text-white/40 animate-pulse">{t('kebajikan:saving_label', 'Menyimpan...')}</span>}
       </div>
 
       {/* Action buttons */}
@@ -753,7 +761,7 @@ function QuickActionBar({
             }}
           >
             <span>{a.icon}</span>
-            <span>{a.label}</span>
+            <span>{t(`kebajikan:${a.labelKey}`, a.defaultLabel)}</span>
             {a.key === 'RESOLVED' && <ChevronDown className={cn('w-3 h-3 transition-transform', quickTarget === 'RESOLVED' && 'rotate-180')} />}
           </button>
         ))}
@@ -770,11 +778,11 @@ function QuickActionBar({
             className="overflow-hidden"
           >
             <div className="rounded-xl border border-emerald-300 dark:border-green-500/20 bg-emerald-50/50 dark:bg-green-500/[0.04] p-3 space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-800 dark:text-green-400/90 font-bold">Nota Resolusi (wajib)</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-800 dark:text-green-400/90 font-bold">{t('kebajikan:resolution_note_required', 'Nota Resolusi (wajib)')}</p>
               <textarea
                 value={quickNote}
                 onChange={e => onNoteChange(e.target.value)}
-                placeholder="Terangkan bagaimana aduan ini diselesaikan..."
+                placeholder={t('kebajikan:explain_resolution_placeholder', 'Terangkan bagaimana aduan ini diselesaikan...')}
                 rows={3}
                 className="w-full rounded-xl resize-none text-xs p-3 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-green-500/60"
               />
@@ -784,13 +792,13 @@ function QuickActionBar({
                   disabled={!quickNote.trim() || quickSaving}
                   className="flex-1 h-8 rounded-xl text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-30 shadow-sm"
                 >
-                  {quickSaving ? 'Menyimpan...' : '✓ Sahkan Selesai'}
+                  {quickSaving ? t('kebajikan:saving_label', 'Menyimpan...') : t('kebajikan:confirm_resolve_btn', '✓ Sahkan Selesai')}
                 </button>
                 <button
                   onClick={onCancelResolve}
                   className="px-4 h-8 rounded-xl text-xs font-black text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-colors"
                 >
-                  Batal
+                  {t('kebajikan:cancel_action_btn', 'Batal')}
                 </button>
               </div>
             </div>
@@ -846,7 +854,7 @@ function EscalationActionPanel({
   actionText, picId, picManual, saving,
   onActionTextChange, onPicIdChange, onPicManualChange, onSave,
 }: EscalationActionPanelProps) {
-  const RED = '#EF4444';
+  const { t } = useTranslation(['kebajikan', 'common']);
   const selectedPic = picPresets.find(p => p.id === picId);
 
   return (
@@ -860,23 +868,23 @@ function EscalationActionPanel({
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-700 dark:text-red-400">Tindakan Escalated</p>
-            <p className="text-[9px] text-slate-500 dark:text-white/40 mt-0.5">Rekod cadangan / tindakan Exco kepada PIC</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-700 dark:text-red-400">{t('kebajikan:escalation_action_title', 'Tindakan Escalated')}</p>
+            <p className="text-[9px] text-slate-500 dark:text-white/40 mt-0.5">{t('kebajikan:escalation_action_subtitle', 'Rekod cadangan / tindakan Exco kepada PIC')}</p>
           </div>
         </div>
 
         {/* PIC Selection */}
         <div className="mb-3">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 mb-2">PIC yang Dihubungi</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 mb-2">{t('kebajikan:pic_contacted_label', 'PIC yang Dihubungi')}</p>
           <Select
             value={picId === '' ? '__manual__' : picId}
             onValueChange={v => onPicIdChange(v === '__manual__' ? '' : v)}
           >
             <SelectTrigger className="bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl text-xs h-9 mb-2">
-              <SelectValue placeholder="Pilih dari senarai preset..." />
+              <SelectValue placeholder={t('kebajikan:select_pic_preset', 'Pilih dari senarai preset...')} />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 max-h-48">
-              <SelectItem value="__manual__" className="text-slate-500 dark:text-white/50 text-xs focus:bg-slate-100 dark:focus:bg-white/10">— Taip nama manual —</SelectItem>
+              <SelectItem value="__manual__" className="text-slate-500 dark:text-white/50 text-xs focus:bg-slate-100 dark:focus:bg-white/10">{t('kebajikan:manual_pic_option', '— Taip nama manual —')}</SelectItem>
               {picPresets.map(p => (
                 <SelectItem key={p.id} value={p.id} className="text-slate-800 dark:text-white/80 text-xs focus:bg-slate-100 dark:focus:bg-white/10">
                   {p.jabatan_label} — {p.pic_name} {p.pic_title ? `(${p.pic_title})` : ''}
@@ -888,7 +896,7 @@ function EscalationActionPanel({
             <input
               value={picManual}
               onChange={e => onPicManualChange(e.target.value)}
-              placeholder="Nama PIC (taip manual)..."
+              placeholder={t('kebajikan:manual_pic_placeholder', 'Nama PIC (taip manual)...')}
               className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-red-500/50 focus:outline-none transition-all shadow-sm"
             />
           )}
@@ -902,11 +910,11 @@ function EscalationActionPanel({
 
         {/* Action text */}
         <div className="mb-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 mb-2">Cadangan / Tindakan Exco</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 mb-2">{t('kebajikan:exco_proposal_action_label', 'Cadangan / Tindakan Exco')}</p>
           <Textarea
             value={actionText}
             onChange={e => onActionTextChange(e.target.value)}
-            placeholder="Tuliskan cadangan atau tindakan yang telah/akan diambil berhubung isu ini..."
+            placeholder={t('kebajikan:exco_proposal_placeholder', 'Tuliskan cadangan atau tindakan yang telah/akan diambil berhubung isu ini...')}
             rows={3}
             className="bg-white dark:bg-white/[0.03] border-red-200 dark:border-red-500/20 text-slate-900 dark:text-white text-xs rounded-xl resize-none focus:border-red-500/50 focus:ring-red-500/20 focus:ring-1 transition-all placeholder:text-slate-400"
           />
@@ -917,19 +925,19 @@ function EscalationActionPanel({
           disabled={!actionText.trim() || saving}
           className="w-full h-9 text-xs font-black uppercase tracking-widest rounded-xl text-white shadow-sm transition-all bg-red-600 hover:bg-red-500"
         >
-          {saving ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> Menyimpan...</> : '✓ Rekod Tindakan'}
+          {saving ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> {t('kebajikan:saving_label', 'Menyimpan...')}</> : t('kebajikan:record_action_btn', '✓ Rekod Tindakan')}
         </Button>
 
         {/* Previous actions */}
         {actions.length > 0 && (
           <div className="mt-5 pt-4 border-t border-red-200 dark:border-red-500/10">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-3">Rekod Tindakan Sebelum</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-3">{t('kebajikan:previous_action_records', 'Rekod Tindakan Sebelum')}</p>
             <div className="space-y-2.5">
               {actions.map(a => (
                 <div key={a.id} className="rounded-2xl p-3.5 bg-white dark:bg-red-500/[0.05] border border-red-100 dark:border-red-500/15 shadow-sm">
                   {(a.pic?.pic_name || a.pic_name_manual) && (
                     <p className="text-[10px] font-black text-red-700 dark:text-red-400/80 mb-1">
-                      PIC: {a.pic ? `${a.pic.pic_name} (${a.pic.jabatan_label})` : a.pic_name_manual}
+                      PIC: {a.pic ? t('kebajikan:pic_with_dept', `${a.pic.pic_name} (${a.pic.jabatan_label})`, { name: a.pic.pic_name, dept: a.pic.jabatan_label }) : a.pic_name_manual}
                     </p>
                   )}
                   <p className="text-xs text-slate-800 dark:text-white/80 leading-relaxed whitespace-pre-wrap">{a.action_summary}</p>

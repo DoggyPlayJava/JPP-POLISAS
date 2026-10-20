@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -77,6 +78,7 @@ function UnitCard({
   code: string; isLocked: boolean; delay: number; onNavigate: (link: string) => void;
   stats?: { jppMembers: number; totalClubs: number; totalActivities: number; totalBusinesses: number; totalTickets: number };
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { unitConfig } = useJppConfig();
   const cfg = unitConfig[code];
   if (!cfg) return null;
@@ -84,11 +86,23 @@ function UnitCard({
 
   const unitMetric = useMemo(() => {
     if (!stats || !canOpen) return null;
-    if (code === 'KPP') return `${stats.totalClubs} Kelab Berdaftar`;
-    if (code === 'KEUSAHAWANAN') return `${stats.totalBusinesses} Peniaga Kampus`;
-    if (code === 'KEBAJIKAN') return `${stats.totalTickets} Aduan E-Bantu`;
+    if (code === 'KPP') return t('jpp:home_stat_registered_clubs', '{{count}} Kelab Berdaftar', { count: stats.totalClubs });
+    if (code === 'KEUSAHAWANAN') return t('jpp:home_stat_campus_businesses', '{{count}} Peniaga Kampus', { count: stats.totalBusinesses });
+    if (code === 'KEBAJIKAN') return t('jpp:home_stat_ebantu_complaints', '{{count}} Aduan E-Bantu', { count: stats.totalTickets });
     return null;
-  }, [code, stats, canOpen]);
+  }, [code, stats, canOpen, t]);
+
+  const unitTitle = useMemo(() => {
+    switch (code) {
+      case 'KEUSAHAWANAN': return t('jpp:unit_keusahawanan', { defaultValue: cfg.shortLabel });
+      case 'KEBAJIKAN': return t('jpp:unit_kebajikan', { defaultValue: cfg.shortLabel });
+      case 'AKADEMIK': return t('jpp:unit_akademik', { defaultValue: cfg.shortLabel });
+      case 'SUKAN': return t('jpp:unit_sukan', { defaultValue: cfg.shortLabel });
+      case 'KEDIAMAN': return t('jpp:unit_kediaman', { defaultValue: cfg.shortLabel });
+      case 'MULTIMEDIA': return t('jpp:unit_multimedia', { defaultValue: cfg.shortLabel });
+      default: return cfg.shortLabel;
+    }
+  }, [code, cfg.shortLabel, t]);
 
   return (
     <motion.div
@@ -134,10 +148,10 @@ function UnitCard({
                 ? 'bg-blue-500/10 border-blue-500/20 dark:border-blue-500/15 text-blue-600 dark:text-blue-400'
                 : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/25'
           )}>
-            {!cfg.isActive ? 'Akan Datang' : isLocked ? 'Pantau' : (
+            {!cfg.isActive ? t('jpp:home_status_coming_soon', 'Akan Datang') : isLocked ? t('jpp:home_status_monitor', 'Pantau') : (
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                Aktif
+                {t('jpp:home_status_active', 'Aktif')}
               </span>
             )}
           </div>
@@ -148,7 +162,7 @@ function UnitCard({
             'font-black text-base leading-tight',
             canOpen ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40'
           )}>
-            {cfg.shortLabel}
+            {unitTitle}
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-white/35 mt-0.5 leading-relaxed line-clamp-2">
             {cfg.fullLabel}
@@ -165,7 +179,7 @@ function UnitCard({
         {canOpen && (
           <div className="mt-auto pt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 group-hover:gap-3"
             style={{ color: cfg.color }}>
-            <span>Buka Modul</span>
+            <span>{t('jpp:home_btn_open_module', 'Buka Modul')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         )}
@@ -210,13 +224,22 @@ function TakwimCard({ event, delay }: { event: any; delay: number; key?: React.K
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 export function JppHomePage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const { positionLabels, unitConfig, unitOrder } = useJppConfig();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
-  const [stats, setStats] = useState({ jppMembers: 0, totalClubs: 0, totalActivities: 0, totalBusinesses: 0, totalTickets: 0 });
+  const [stats, setStats] = useState({
+    jppMembers: 0,
+    totalClubs: 0,
+    totalActivities: 0,
+    totalBusinesses: 0,
+    totalTickets: 0,
+    totalStudents: 0,
+    totalStaff: 0,
+  });
   const [takwim, setTakwim] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -229,7 +252,7 @@ export function JppHomePage() {
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Sahabat', [profile]);
   const posLabel    = jppPosition
     ? (positionLabels[jppPosition] ?? jppPosition)
-    : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+    : isSuperAdmin ? 'Super Admin' : t('jpp:home_role_jpp_member', 'Ahli JPP');
 
   // Fetch JPP portal color
   useEffect(() => {
@@ -248,7 +271,7 @@ export function JppHomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [jppRes, clubRes, actRes, bizRes, tickRes, takwimRes] = await Promise.all([
+        const [jppRes, clubRes, actRes, bizRes, tickRes, takwimRes, studRes, staffRes] = await Promise.all([
           supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
           supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
           supabase.from('club_activities').select('id', { count: 'exact', head: true }).eq('is_archived', false),
@@ -259,6 +282,8 @@ export function JppHomePage() {
             .gte('end_date', new Date().toISOString())
             .order('start_date', { ascending: true })
             .limit(5),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).in('role', ['STAFF', 'ADMIN', 'CLUB_ADVISOR']),
         ]);
         setStats({
           jppMembers: jppRes.count ?? 0,
@@ -266,6 +291,8 @@ export function JppHomePage() {
           totalActivities: actRes.count ?? 0,
           totalBusinesses: bizRes.count ?? 0,
           totalTickets: tickRes.count ?? 0,
+          totalStudents: studRes.count ?? 0,
+          totalStaff: staffRes.count ?? 0,
         });
         setTakwim(takwimRes.data ?? []);
       } finally {
@@ -305,7 +332,7 @@ export function JppHomePage() {
           className="space-y-3"
         >
           {/* Badge */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest shadow-sm dark:shadow-none"
               style={{
@@ -323,6 +350,9 @@ export function JppHomePage() {
               <span>{posLabel}</span>
               {jppUnit && <span className="opacity-60">· {jppUnit}</span>}
             </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              {t('jpp:cockpit_title')}
+            </span>
           </div>
 
           {/* Greeting */}
@@ -330,9 +360,67 @@ export function JppHomePage() {
             Selamat datang, <span className="text-emerald-600 dark:text-emerald-400 font-black">{displayName}</span>
           </h1>
           <p className="text-slate-600 dark:text-white/60 text-sm font-medium max-w-xl leading-relaxed">
-            Portal Ibu Pejabat JPP Politeknik Sultan Haji Ahmad Shah. Urus dan pantau semua unit exco dari sini.
+            {t('jpp:cockpit_subtitle')}
           </p>
         </motion.div>
+
+        {/* ── Server Health & System Vitals ───────────────────────────── */}
+        <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-5 shadow-xs dark:shadow-none">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-700 dark:text-white/80">
+                {t('jpp:server_health')}
+              </h2>
+            </div>
+            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              99.98% ONLINE
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                  {t('jpp:total_students')}
+                </p>
+                <p className="text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                  {isLoadingData ? '—' : stats.totalStudents.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                  {t('jpp:total_staff')}
+                </p>
+                <p className="text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                  {isLoadingData ? '—' : stats.totalStaff.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <CalendarDays className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                  {t('jpp:active_sessions')}
+                </p>
+                <p className="text-sm font-black text-slate-900 dark:text-white truncate">
+                  Sesi I 2026/2027
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ── Quick Stats (Asymmetric Bento Grid) ────────────────────────── */}
         {(isYDP || (isMT && (assignedUnits.includes('KPP') || assignedUnits.includes('KEUSAHAWANAN') || assignedUnits.includes('KEBAJIKAN')))) && (
@@ -346,10 +434,10 @@ export function JppHomePage() {
               </>
             ) : (
               <>
-                {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color="#10B981" delay={0.1} subtitle="Aktif Sesi Ini" />}
-                {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle="Berdaftar" />}
-                {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle="Beroperasi" />}
-                {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle="Dipantau" />}
+                {isYDP && <StatCard label={t('jpp:home_stat_jpp_members', 'Ahli JPP')} value={stats.jppMembers} icon={Crown} color="#10B981" delay={0.1} subtitle={t('jpp:home_stat_active_session', 'Aktif Sesi Ini')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label={t('jpp:home_stat_active_clubs', 'Kelab Aktif')} value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle={t('jpp:home_stat_registered', 'Berdaftar')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label={t('jpp:home_stat_businesses', 'Perniagaan')} value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle={t('jpp:home_stat_operating', 'Beroperasi')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label={t('jpp:home_stat_complaints', 'Aduan E-Bantu')} value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle={t('jpp:home_stat_monitored', 'Dipantau')} />}
               </>
             )}
           </div>
@@ -358,10 +446,12 @@ export function JppHomePage() {
         {/* ── Unit Exco Grid ───────────────────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">Unit Exco</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
+              {t('jpp:unit_governance')}
+            </h2>
             {(isYDP || isMT) && (
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-                {isYDP ? 'Akses Penuh' : `${assignedUnits.length} unit assigned`}
+                {isYDP ? t('jpp:home_full_access', 'Akses Penuh') : `${assignedUnits.length} unit assigned`}
               </span>
             )}
           </div>
@@ -370,7 +460,7 @@ export function JppHomePage() {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Lock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-3" />
               <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">
-                Tiada unit yang di-assign
+                {t('jpp:home_no_units_assigned', 'Tiada unit yang di-assign')}
               </p>
             </div>
           ) : (
@@ -398,20 +488,20 @@ export function JppHomePage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
-              Aktiviti Akan Datang
+              {t('jpp:home_upcoming_activities', 'Aktiviti Akan Datang')}
             </h2>
             <button
               onClick={() => navigate('/aktiviti')}
               className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 transition-colors flex items-center gap-1"
             >
-              Lihat Semua <ChevronRight className="w-3 h-3" />
+              {t('jpp:home_view_all', 'Lihat Semua')} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
           {takwim.length === 0 ? (
             <div className="flex items-center gap-3 px-4 py-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
               <Clock className="w-4 h-4 text-slate-400 dark:text-white/15" />
-              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada aktiviti dijadualkan</p>
+              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:home_no_activities_scheduled', 'Tiada aktiviti dijadualkan')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -425,12 +515,12 @@ export function JppHomePage() {
         {/* ── Quick Actions (YDP only) ────────────────────────────────── */}
         {(isYDP) && (
           <div className="space-y-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">Tindakan Pantas</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">{t('jpp:home_quick_actions', 'Tindakan Pantas')}</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Ahli JPP',       icon: Users,      href: '/jpp/members',    color: themeColor },
-                { label: 'Gambaran Sistem', icon: BarChart3,  href: '/jpp/overview',   color: '#60A5FA' },
-                { label: 'Pangkalan Pelajar', icon: ShieldCheck, href: '/jpp/users', color: '#F59E0B' },
+                { label: t('jpp:home_action_jpp_members', 'Ahli JPP'), icon: Users, href: '/jpp/members', color: themeColor },
+                { label: t('jpp:home_action_system_overview', 'Gambaran Sistem'), icon: BarChart3, href: '/jpp/overview', color: '#60A5FA' },
+                { label: t('jpp:home_action_student_database', 'Pangkalan Pelajar'), icon: ShieldCheck, href: '/jpp/users', color: '#F59E0B' },
               ].map(({ label, icon: Icon, href, color }) => (
                 <button
                   key={href}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CalendarDays, Clock, BookOpen, Tag, Building2, FileText } from 'lucide-react';
@@ -33,12 +34,13 @@ function useIsDesktop() {
 }
 
 function EventCard({ item }: { item: TakwimItem }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const cfg = TAKWIM_JENIS[item.jenis];
   const color = item.warna_custom || cfg?.color || '#94A3B8';
   const Icon = cfg?.icon ?? Tag;
 
   const dateLabel = item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula
-    ? `${fmtDate(item.tarikh_mula)} — ${fmtDate(item.tarikh_tamat)}`
+    ? t('jpp:date_range_separator', '{{start}} — {{end}}', { start: fmtDate(item.tarikh_mula), end: fmtDate(item.tarikh_tamat) })
     : fmtDate(item.tarikh_mula);
 
   return (
@@ -62,7 +64,7 @@ function EventCard({ item }: { item: TakwimItem }) {
           style={{ background: hexToRgba(color, 0.15), color }}
         >
           {cfg?.label || item.jenis}
-          {item.kelab_kediaman_label ? ` · ${item.kelab_kediaman_label}` : ''}
+          {item.kelab_kediaman_label ? t('jpp:day_detail_club_suffix', ' · {{label}}', { label: item.kelab_kediaman_label }) : ''}
         </span>
       </div>
 
@@ -114,6 +116,7 @@ function EventCard({ item }: { item: TakwimItem }) {
 }
 
 export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const isOpen = !!day;
   const isDesktop = useIsDesktop();
   const dayLabel = day ? format(day, 'EEEE, d MMMM yyyy', { locale: ms }) : '';
@@ -198,8 +201,8 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
               {events.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <CalendarDays className="w-8 h-8 text-slate-300 dark:text-white/10 mb-3" />
-                  <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada aktiviti</p>
-                  <p className="text-[10px] text-slate-400 dark:text-white/15 mt-1">Hari ini tiada takwim berdaftar</p>
+                  <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:day_detail_no_activities', 'Tiada aktiviti')}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-white/15 mt-1">{t('jpp:day_detail_no_registered_takwim', 'Hari ini tiada takwim berdaftar')}</p>
                 </div>
               ) : (
                 events.map((item, i) => (

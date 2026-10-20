@@ -29,6 +29,9 @@ import {
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -272,9 +275,9 @@ function buildActivityTable(act: any): Table {
       new TableRow({
         tableHeader: true,
         children: [
-          headerCell('TARIKH',   W_DATE),
-          headerCell('AKTIVITI', W_ACT),
-          headerCell('TINDAKAN', W_ACT2),
+          headerCell(t('common:date_caps', 'TARIKH'),   W_DATE),
+          headerCell(t('kpp:activity_caps', 'AKTIVITI'), W_ACT),
+          headerCell(t('common:action_caps', 'TINDAKAN'), W_ACT2),
         ],
       }),
       new TableRow({
@@ -294,7 +297,7 @@ function buildActivityTable(act: any): Table {
 
 function buildLampiranHeading(): Paragraph {
   return mkPara(
-    mkRun('BUKTI ATAU GAMBAR', { bold: true, size: hp(12) }),
+    mkRun(t('kpp:evidence_or_photo_caps', 'BUKTI ATAU GAMBAR'), { bold: true, size: hp(12) }),
     { before: convertInchesToTwip(0.2), after: convertInchesToTwip(0.1) },
   );
 }
@@ -305,14 +308,14 @@ function buildLampiranHeading(): Paragraph {
 
 async function buildImageGrid(urls: string[]): Promise<(Paragraph | Table)[]> {
   if (!urls.length) {
-    return [mkPara(mkRun('[ Tiada gambar dilampirkan ]'))];
+    return [mkPara(mkRun(t('kpp:no_photos_attached', '[ Tiada gambar dilampirkan ]')))];
   }
 
   const bufs  = await Promise.all(urls.slice(0, 6).map(fetchBuf));
   const valid = bufs.filter((b): b is ArrayBuffer => b !== null);
 
   if (!valid.length) {
-    return [mkPara(mkRun('[ Gambar tidak dapat dimuatkan ]'))];
+    return [mkPara(mkRun(t('kpp:images_could_not_be_loaded', '[ Gambar tidak dapat dimuatkan ]')))];
   }
 
   /**
@@ -402,11 +405,11 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
     clubName,
     monthYear,
     activities,
-    submitterName = 'SETIAUSAHA',
+    submitterName = t('kpp:secretary_caps', 'SETIAUSAHA'),
     submitterRole,
     submitterUnit,
-    presidenName  = '( Tiada Maklumat )',
-    reviewerRole  = 'PRESIDEN',
+    presidenName  = t('common:no_information_parentheses', '( Tiada Maklumat )'),
+    reviewerRole  = t('kpp:president_caps', 'PRESIDEN'),
     reviewerUnit,
     clubLogoUrl,
     fileName,
@@ -438,7 +441,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   // "LAPORAN BULAN"
   children.push(mkPara(
-    mkRun('LAPORAN BULAN', { bold: true, size: hp(28) }),
+    mkRun(t('kpp:monthly_report_caps', 'LAPORAN BULAN'), { bold: true, size: hp(28) }),
     { align: 'CENTER', after: convertInchesToTwip(0.05) },
   ));
 
@@ -529,7 +532,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   // Label sebelum blok 2
   children.push(mkPara(
-    mkRun('Disemak oleh:', { size: hp(12) }),
+    mkRun(t('kpp:reviewed_by_colon', 'Disemak oleh:'), { size: hp(12) }),
     { before: convertInchesToTwip(0.8) },
   ));
 
@@ -546,7 +549,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   // Label sebelum blok 3
   children.push(mkPara(
-    mkRun('Disahkan oleh:', { size: hp(12) }),
+    mkRun(t('kpp:certified_by_colon', 'Disahkan oleh:'), { size: hp(12) }),
     { before: convertInchesToTwip(0.8) },
   ));
 
@@ -554,8 +557,8 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
   children.push(
     blank(convertInchesToTwip(0.3)),
     ...buildSignBlock(
-      'YANG DIPERTUA',
-      'JAWATANKUASA PERWAKILAN PELAJAR',
+      t('kpp:yang_di_pertua', 'YANG DIPERTUA'),
+      t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR'),
       'POLITEKNIK SULTAN HAJI AHMAD SHAH',
     ),
   );
@@ -564,7 +567,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   const doc = new Document({
     creator: 'JPP POLISAS',
-    title:   `Laporan Bulanan – ${clubName} – ${monthYear}`,
+    title:   t('kpp:monthly_report_title', `Laporan Bulanan – ${clubName} – ${monthYear}`, { clubName, monthYear }),
     styles:  STYLES,
     sections: [
       {
@@ -586,7 +589,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
   const blob = await Packer.toBlob(doc);
   const name  = fileName
     ? `${fileName}.docx`
-    : `Laporan_${clubName}_${monthYear}.docx`;
+    : t('kpp:docx_filename_format', `Laporan_${clubName}_${monthYear}.docx`, { clubName, monthYear });
 
   saveAs(blob, name);
 }

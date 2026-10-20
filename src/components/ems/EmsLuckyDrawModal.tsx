@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import {
@@ -43,6 +44,7 @@ export function EmsLuckyDrawModal({
   eventId,
   eventTitle,
 }: EmsLuckyDrawModalProps) {
+  const { t } = useTranslation(['ems', 'common']);
   const { user, isSuperAdmin, isJppMember, isPresident, isMT: isClubMt, isAdvisor: isClubAdvisor, profile } = useAuth();
   const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
   const [eventCreatorId, setEventCreatorId] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export function EmsLuckyDrawModal({
         email: v.email,
         phone: v.phone,
         sourceType: 'VISITOR',
-        subText: v.matrix_no ? `Pengunjung (${v.matrix_no})` : 'Pengunjung Awam',
+        subText: v.matrix_no ? t('ems:candidate_visitor_matric', 'Pengunjung ({{matrixNo}})', { matrixNo: v.matrix_no }) : t('ems:candidate_visitor_public', 'Pengunjung Awam'),
       }));
 
       const participantCandidates: LuckyDrawCandidate[] = participants.map((p) => ({
@@ -125,7 +127,7 @@ export function EmsLuckyDrawModal({
         email: p.email,
         phone: p.phone,
         sourceType: 'PARTICIPANT',
-        subText: p.leader_name ? `Peserta (Ketua: ${p.leader_name})` : 'Peserta Acara',
+        subText: p.leader_name ? t('ems:candidate_participant_leader', 'Peserta (Ketua: {{leader}})', { leader: p.leader_name }) : t('ems:candidate_participant_event', 'Peserta Acara'),
       }));
 
       let combined: LuckyDrawCandidate[] = [];
@@ -146,7 +148,7 @@ export function EmsLuckyDrawModal({
       setCandidates(uniqueCandidates);
     } catch (err: any) {
       console.error('[LuckyDraw] Failed to load candidates:', err);
-      toast.error('Gagal memuatkan senarai calon cabutan bertuah');
+      toast.error(t('ems:failed_load_lucky_draw_candidates', 'Gagal memuatkan senarai calon cabutan bertuah'));
     } finally {
       setLoadingCandidates(false);
     }
@@ -193,7 +195,7 @@ export function EmsLuckyDrawModal({
 
   const handleStartSpin = () => {
     if (!canManage) {
-      toast.error('Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.');
+      toast.error(t('ems:restricted_lucky_draw_spin', 'Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.'));
       return;
     }
 
@@ -202,7 +204,7 @@ export function EmsLuckyDrawModal({
     const eligible = candidates.filter((c) => !historyIds.has(c.id));
 
     if (eligible.length === 0) {
-      toast.error('Tiada lagi calon baru yang belum dipilih!');
+      toast.error(t('ems:no_eligible_lucky_draw_candidates', 'Tiada lagi calon baru yang belum dipilih!'));
       return;
     }
 
@@ -232,7 +234,7 @@ export function EmsLuckyDrawModal({
         setWinnerHistory((prev) => [finalWinner, ...prev]);
         setIsSpinning(false);
         triggerWinnerConfetti();
-        toast.success(`Tahniah kepada ${finalWinner.name}!`);
+        toast.success(t('ems:congrats_winner', 'Tahniah kepada {{name}}!', { name: finalWinner.name }));
       }
     };
 
@@ -241,7 +243,7 @@ export function EmsLuckyDrawModal({
 
   const removeWinnerFromHistory = (winnerId: string) => {
     setWinnerHistory((prev) => prev.filter((w) => w.id !== winnerId));
-    toast.success('Pemenang dikeluarkan daripada sejarah.');
+    toast.success(t('ems:winner_removed_from_history', 'Pemenang dikeluarkan daripada sejarah.'));
   };
 
   if (!isOpen) return null;
@@ -261,13 +263,13 @@ export function EmsLuckyDrawModal({
         {/* Modal Header */}
         <div className="text-center space-y-1.5 border-b border-slate-200 dark:border-white/10 pb-5">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-300 text-xs font-black uppercase tracking-wider">
-            <Gift className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Roda Cabutan Bertuah Interaktif
+            <Gift className="w-4 h-4 text-amber-500 dark:text-amber-400" /> {t('ems:interactive_lucky_draw_wheel', 'Roda Cabutan Bertuah Interaktif')}
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-amber-300 [text-wrap:balance]">
-            Roda Cabutan Bertuah EMS
+            {t('ems:ems_lucky_draw_wheel', 'Roda Cabutan Bertuah EMS')}
           </h2>
           {eventTitle && (
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 [text-wrap:balance]">Acara: {eventTitle}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 [text-wrap:balance]">{t('ems:event_prefix', 'Acara:')} {eventTitle}</p>
           )}
         </div>
 
@@ -284,7 +286,7 @@ export function EmsLuckyDrawModal({
                   : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
-              Semua Calon
+              {t('ems:filter_all_candidates', 'Semua Calon')}
             </button>
             <button
               onClick={() => setSourceFilter('VISITORS')}
@@ -295,7 +297,7 @@ export function EmsLuckyDrawModal({
                   : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
-              Pengunjung Sahaja
+              {t('ems:filter_visitors_only', 'Pengunjung Sahaja')}
             </button>
             <button
               onClick={() => setSourceFilter('PARTICIPANTS')}
@@ -306,16 +308,16 @@ export function EmsLuckyDrawModal({
                   : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5'
               }`}
             >
-              Peserta Sahaja
+              {t('ems:filter_participants_only', 'Peserta Sahaja')}
             </button>
           </div>
 
           <div className="text-right text-slate-500 dark:text-slate-400 font-semibold shrink-0">
             {loadingCandidates ? (
-              <span className="animate-pulse">Memuatkan...</span>
+              <span className="animate-pulse">{t('ems:loading_dots', 'Memuatkan...')}</span>
             ) : (
               <span>
-                Jumlah Calon: <strong className="text-amber-600 dark:text-amber-400 tabular-nums font-mono">{candidates.length}</strong>
+                {t('ems:total_candidates_label', 'Jumlah Calon:')} <strong className="text-amber-600 dark:text-amber-400 tabular-nums font-mono">{candidates.length}</strong>
               </span>
             )}
           </div>
@@ -332,9 +334,9 @@ export function EmsLuckyDrawModal({
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 dark:text-rose-400 mx-auto">
                 <Lock className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-bold text-rose-500 dark:text-rose-400">Akses Terhad</h3>
+              <h3 className="text-lg font-bold text-rose-500 dark:text-rose-400">{t('ems:restricted_access_title', 'Akses Terhad')}</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-                Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.
+                {t('ems:restricted_lucky_draw_spin', 'Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.')}
               </p>
             </div>
           ) : currentWinner ? (
@@ -346,7 +348,7 @@ export function EmsLuckyDrawModal({
               <div>
                 <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/40 inline-flex items-center gap-1.5 mb-2">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                  <span>PEMENANG CABUTAN BERTUAH!</span>
+                  <span>{t('ems:lucky_draw_winner_title', 'PEMENANG CABUTAN BERTUAH!')}</span>
                 </span>
                 <h3 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-amber-300 leading-tight [text-wrap:balance]">
                   {currentWinner.name}
@@ -360,7 +362,7 @@ export function EmsLuckyDrawModal({
             /* Active Spinning Reel Slot */
             <div className="relative z-10 space-y-2">
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400 animate-pulse">
-                {isSpinning ? 'MEMUTAR RODA CABUTAN...' : 'SEDANG MEMILIH PEMENANG'}
+                {isSpinning ? t('ems:spinning_wheel_status', 'MEMUTAR RODA CABUTAN...') : t('ems:selecting_winner_status', 'SEDANG MEMILIH PEMENANG')}
               </span>
               <h3 className={`text-2xl sm:text-3xl font-black text-slate-900 dark:text-white [text-wrap:balance] ${isSpinning ? 'opacity-90 scale-95 transition-all' : ''}`}>
                 {displayedCandidate.name}
@@ -373,9 +375,9 @@ export function EmsLuckyDrawModal({
             /* Idle Screen */
             <div className="relative z-10 space-y-3">
               <Sparkles className="w-12 h-12 text-amber-500/70 dark:text-amber-400/70 mx-auto animate-pulse" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tekan Butang Untuk Memulakan Cabutan</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('ems:press_button_to_start_draw', 'Tekan Butang Untuk Memulakan Cabutan')}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                Sistem akan memutar senarai calon dan memilih pemenang secara bertuah dan rawak.
+                {t('ems:system_random_pick_desc', 'Sistem akan memutar senarai calon dan memilih pemenang secara bertuah dan rawak.')}
               </p>
             </div>
           )}
@@ -388,7 +390,7 @@ export function EmsLuckyDrawModal({
           className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed"
         >
           <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
-          <span>{isSpinning ? 'Memutar Roda Cabutan...' : 'Putar Roda Cabutan Bertuah'}</span>
+          <span>{isSpinning ? t('ems:spinning_lucky_wheel_btn', 'Memutar Roda Cabutan...') : t('ems:spin_lucky_wheel_btn', 'Putar Roda Cabutan Bertuah')}</span>
         </button>
 
         {/* Winner History Section */}
@@ -397,13 +399,13 @@ export function EmsLuckyDrawModal({
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-2">
                 <History className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                Sejarah Pemenang Cabutan Sesi Ini (<span className="tabular-nums font-mono">{winnerHistory.length}</span>)
+                {t('ems:session_winner_history_title', 'Sejarah Pemenang Cabutan Sesi Ini (')}<span className="tabular-nums font-mono">{winnerHistory.length}</span>)
               </h4>
               <button
                 onClick={() => setWinnerHistory([])}
                 className="text-[11px] text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer"
               >
-                <Trash2 className="w-3 h-3" /> Bersihkan Sejarah
+                <Trash2 className="w-3 h-3" /> {t('ems:clear_winner_history_btn', 'Bersihkan Sejarah')}
               </button>
             </div>
 
@@ -426,7 +428,7 @@ export function EmsLuckyDrawModal({
                   <button
                     onClick={() => removeWinnerFromHistory(winner.id)}
                     className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
-                    title="Padam pemenang"
+                    title={t('ems:delete_winner_tooltip', 'Padam pemenang')}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
@@ -47,21 +48,46 @@ interface Program {
   club_id: string;
 }
 
-const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' },
-  { value: 'Laporan Kewangan', icon: DollarSignIcon, color: 'text-emerald-500', bg: 'bg-emerald-100' },
-  { value: 'Takwim Aktiviti', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-100' },
-  { value: 'Profil Ahli Kelab', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-  { value: 'Struktur Jawatan', icon: Award, color: 'text-purple-500', bg: 'bg-purple-100' },
-  { value: 'Carta Organisasi', icon: Users, color: 'text-pink-500', bg: 'bg-pink-100' },
-  { value: 'Perlembagaan Kelab', icon: BookOpen, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-muted' },
-];
-
 function DollarSignIcon(props: any) {
   return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
 }
 
+function getDocMeta(reportType: string | undefined) {
+  const typeStr = (reportType || '').toLowerCase();
+  if (typeStr.includes('kewangan') || typeStr.includes('finance')) {
+    return { icon: DollarSignIcon, color: 'text-emerald-500', bg: 'bg-emerald-100' };
+  }
+  if (/takwim|calendar/i.test(typeStr)) {
+    return { icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-100' };
+  }
+  if (typeStr.includes('profil') || typeStr.includes('profile')) {
+    return { icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' };
+  }
+  if (typeStr.includes('jawatan') || typeStr.includes('structure')) {
+    return { icon: Award, color: 'text-purple-500', bg: 'bg-purple-100' };
+  }
+  if (typeStr.includes('carta') || typeStr.includes('chart')) {
+    return { icon: Users, color: 'text-pink-500', bg: 'bg-pink-100' };
+  }
+  if (typeStr.includes('perlembagaan') || typeStr.includes('constitution')) {
+    return { icon: BookOpen, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-muted' };
+  }
+  return { icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' };
+}
+
 export function SemakanLaporanPage() {
+  const { t } = useTranslation(['kpp', 'common']);
+
+  const getReportLabel = (type: string) => {
+    if (type === 'Aktiviti' || type === 'Laporan Aktiviti') return t('kpp:monthly_report', 'Laporan Bulanan');
+    if (type === 'Kewangan' || type === 'Laporan Kewangan') return t('kpp:report_type_finance', 'Laporan Kewangan');
+    if (type === 'Takwim Aktiviti') return t('kpp:report_type_takwim', 'Takwim Aktiviti');
+    if (type === 'Profil Ahli Kelab' || type === 'Profil Ahli') return t('kpp:report_type_profile', 'Profil Ahli Kelab');
+    if (type === 'Struktur Jawatan') return t('kpp:report_type_structure', 'Struktur Jawatan');
+    if (type === 'Carta Organisasi') return t('kpp:report_type_org_chart', 'Carta Organisasi');
+    if (type === 'Perlembagaan Kelab' || type === 'Perlembagaan') return t('kpp:report_type_constitution', 'Perlembagaan Kelab');
+    return REPORT_TYPE_LABELS[type as ReportType] || type;
+  };
   const { user, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -72,9 +98,6 @@ export function SemakanLaporanPage() {
   const [actionDialog, setActionDialog] = useState<{ open: boolean, type: 'APPROVE' | 'REJECT' | 'UNLOCK' | 'REJECT_UNLOCK' | null, data: Program | null }>({
     open: false, type: null, data: null
   });
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [reportType, setReportType] = useState('Laporan Aktiviti');
-  const [reportFile, setReportFile] = useState<File | null>(null);
   const [aiReviewProgramId, setAiReviewProgramId] = useState<{id: string, name: string} | null>(null);
   const [remarks, setRemarks] = useState('');
 
@@ -99,8 +122,8 @@ export function SemakanLaporanPage() {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-5 text-center">
         <div className="w-24 h-24 rounded-full bg-rose-500/10 flex items-center justify-center shadow-inner"><Lock className="text-rose-500 w-10 h-10" /></div>
-        <h2 className="text-3xl font-black tracking-tighter">Akses Terhad</h2>
-        <p className="text-muted-foreground font-medium max-w-xs">Halaman ini dikhaskan untuk Unit KPP & Admin JPP sahaja.</p>
+        <h2 className="text-3xl font-black tracking-tighter">{t('common:restricted_access', 'Akses Terhad')}</h2>
+        <p className="text-muted-foreground font-medium max-w-xs">{t('kpp:access_restricted_kpp_admin', 'Halaman ini dikhaskan untuk Unit KPP & Admin JPP sahaja.')}</p>
       </div>
     );
   }
@@ -159,12 +182,12 @@ export function SemakanLaporanPage() {
       const progItems = (completedPrograms.data || []).flatMap((p: any) => {
         const items = [];
         if (p.url_kertas_kerja) items.push({
-          id: `kk-${p.id}`, type: 'kertas_kerja', label: 'Kertas Kerja',
+          id: `kk-${p.id}`, type: 'kertas_kerja', label: t('kpp:proposal_paper', 'Kertas Kerja'),
           name: p.nama_program, file_url: p.url_kertas_kerja,
           club_id: p.club_id, date: p.updated_at
         });
         if (p.url_post_mortem) items.push({
-          id: `pm-${p.id}`, type: 'post_mortem', label: 'Post-Mortem',
+          id: `pm-${p.id}`, type: 'post_mortem', label: t('kpp:post_mortem', 'Post-Mortem'),
           name: p.nama_program, file_url: p.url_post_mortem,
           club_id: p.club_id, date: p.updated_at
         });
@@ -172,7 +195,7 @@ export function SemakanLaporanPage() {
       });
 
       const repItems = (approvedReports.data || []).map((r: any) => ({
-        id: `rp-${r.id}`, type: 'laporan', label: r.report_type || 'Laporan',
+        id: `rp-${r.id}`, type: 'laporan', label: r.report_type || t('kpp:report', 'Laporan'),
         name: r.file_name, file_url: r.file_url,
         club_id: r.club_id, date: r.created_at
       }));
@@ -206,36 +229,41 @@ export function SemakanLaporanPage() {
     if (actionDialog.type === 'APPROVE') {
       nextStatus = actionDialog.data.status === 'PENDING_APPROVAL' ? 'CONFIRMED' : 'COMPLETED';
       isLocked = true;
-      notificationTitle = nextStatus === 'CONFIRMED' ? '✅ Kertas Kerja Diluluskan' : '🎉 Program Selesai & Diarkib';
-      notificationContent = `Program "${actionDialog.data.nama_program}" telah disahkan oleh JPP.`;
+      notificationTitle = nextStatus === 'CONFIRMED'
+        ? t('kpp:notif_proposal_approved_title', 'Kertas Kerja Diluluskan')
+        : t('kpp:notif_program_completed_title', 'Program Selesai & Diarkib');
+      notificationContent = t('kpp:notif_program_confirmed_msg', 'Program "{{programName}}" telah disahkan oleh JPP.', { programName: actionDialog.data.nama_program });
     }
     else if (actionDialog.type === 'REJECT') {
       if (actionDialog.data.status === 'PENDING_POSTMORTEM') {
         nextStatus = 'PENDING_POSTMORTEM';
         isLocked = false;
-        notificationTitle = '❌ Post-Mortem Ditolak';
-        notificationContent = `Post-Mortem "${actionDialog.data.nama_program}" memerlukan pindaan. Sila semak ulasan JPP.`;
+        notificationTitle = t('kpp:notif_postmortem_rejected_title', 'Post-Mortem Ditolak');
+        notificationContent = t('kpp:notif_postmortem_rejected_msg', 'Post-Mortem "{{programName}}" memerlukan pindaan. Sila semak ulasan JPP.', { programName: actionDialog.data.nama_program });
       } else {
         nextStatus = 'DRAFT';
         isLocked = false;
-        notificationTitle = '❌ Kertas Kerja Ditolak';
-        notificationContent = `Program "${actionDialog.data.nama_program}" memerlukan pindaan. Sila semak ulasan JPP.`;
+        notificationTitle = t('kpp:notif_proposal_rejected_title', 'Kertas Kerja Ditolak');
+        notificationContent = t('kpp:notif_proposal_rejected_msg', 'Program "{{programName}}" memerlukan pindaan. Sila semak ulasan JPP.', { programName: actionDialog.data.nama_program });
       }
     }
     else if (actionDialog.type === 'UNLOCK') {
       nextStatus = 'DRAFT';
       isLocked = false;
-      notificationTitle = '🔓 Permohonan Unlock Diluluskan';
-      notificationContent = `JPP telah meluluskan permohonan unlock untuk "${actionDialog.data.nama_program}". Anda kini boleh mengedit tarikh semula.`;
+      notificationTitle = t('kpp:notif_unlock_approved_title', 'Permohonan Unlock Diluluskan');
+      notificationContent = t('kpp:notif_unlock_approved_msg', 'JPP telah meluluskan permohonan unlock untuk "{{programName}}". Anda kini boleh mengedit tarikh semula.', { programName: actionDialog.data.nama_program });
     }
     else if (actionDialog.type === 'REJECT_UNLOCK') {
       nextStatus = 'CONFIRMED';
       isLocked = true;
-      notificationTitle = '⛔ Permohonan Unlock Ditolak';
-      notificationContent = `JPP telah MENOLAK permohonan unlock anda untuk "${actionDialog.data.nama_program}". ${remarks ? 'Alasan: ' + remarks : ''}`;
+      notificationTitle = t('kpp:notif_unlock_rejected_title', 'Permohonan Unlock Ditolak');
+      notificationContent = t('kpp:notif_unlock_rejected_msg', 'JPP telah MENOLAK permohonan unlock anda untuk "{{programName}}". {{remarks}}', {
+        programName: actionDialog.data.nama_program,
+        remarks: remarks ? `${t('kpp:reason_prefix', 'Alasan: ')}${remarks}` : ''
+      });
     }
 
-    const toastId = toast.loading("Mengemaskini...");
+    const toastId = toast.loading(t('common:updating', 'Mengemas kini...'));
 
     // 1. Update Status Program
     const { error } = await supabase
@@ -244,7 +272,7 @@ export function SemakanLaporanPage() {
       .eq('id', actionDialog.data.id);
 
     if (error) {
-      toast.error("Gagal kemaskini.", { id: toastId });
+      toast.error(t('common:update_failed', 'Gagal mengemas kini.'), { id: toastId });
       return;
     }
 
@@ -261,7 +289,7 @@ export function SemakanLaporanPage() {
       } catch {} // Jangan block bisnes logic
     }
 
-    toast.success("Tindakan Berjaya!", { id: toastId });
+    toast.success(t('common:action_successful', 'Tindakan Berjaya!'), { id: toastId });
     loadData();
     setActionDialog({ open: false, type: null, data: null });
     setRemarks('');
@@ -269,13 +297,13 @@ export function SemakanLaporanPage() {
 
   // ── Overdue Reminder Engine ──
   const handleSendOverdueNotices = async () => {
-    const toastId = toast.loading("Mengimbas pangkalan data...");
+    const toastId = toast.loading(t('kpp:scanning_database', 'Mengimbas pangkalan data...'));
 
     // Fetch all active programs
-    const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').not('status', 'eq', 'COMPLETED');
+    const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').neq('status', 'COMPLETED');
 
     if (error || !allPrograms) {
-      toast.error("Ralat mengakses pangkalan data.", { id: toastId });
+      toast.error(t('kpp:db_access_error', 'Ralat mengakses pangkalan data.'), { id: toastId });
       return;
     }
 
@@ -290,21 +318,21 @@ export function SemakanLaporanPage() {
         const daysLeft = differenceInDays(parseISO(prog.tarikh_mula), now);
         if (daysLeft < 9) {
           isOverdue = true;
-          reason = 'Kertas Kerja tertunggak / belum disahkan (Kurang 9 hari)';
+          reason = t('kpp:overdue_proposal_reason', 'Kertas Kerja tertunggak / belum disahkan (Kurang 9 hari)');
         }
       } else if (prog.status === 'CONFIRMED' && prog.tarikh_tamat) {
         const daysAfter = differenceInDays(now, parseISO(prog.tarikh_tamat));
         if (daysAfter > 3) {
           isOverdue = true;
-          reason = 'Post-Mortem tertunggak (Melepasi 3 hari selepas tamat)';
+          reason = t('kpp:overdue_postmortem_reason', 'Post-Mortem tertunggak (Melepasi 3 hari selepas tamat)');
         }
       }
 
       if (isOverdue && prog.user_id) {
         noticesToInsert.push({
           user_id: prog.user_id,
-          title: '⚠️ PERINGATAN JPP: AMARAN TERTUNGGAK',
-          message: `Sila selesaikan dokumen bagi program "${prog.nama_program}" dengan SEGERA. Sebab: ${reason}.`,
+          title: t('kpp:notif_overdue_warning_title', 'PERINGATAN JPP: AMARAN TERTUNGGAK'),
+          message: t('kpp:notif_overdue_warning_msg', 'Sila selesaikan dokumen bagi program "{{programName}}" dengan SEGERA. Sebab: {{reason}}.', { programName: prog.nama_program, reason }),
           type: 'SYSTEM_ALERT',
           module: 'EKPP',
           link: '/laporan',
@@ -314,27 +342,27 @@ export function SemakanLaporanPage() {
     }
 
     if (noticesToInsert.length === 0) {
-      toast.success("Tiada program yang tertunggak. Semua takwim berjalan lancar!", { id: toastId });
+      toast.success(t('kpp:no_overdue_programs', 'Tiada program yang tertunggak. Semua takwim berjalan lancar!'), { id: toastId });
       return;
     }
 
     const { error: insertError } = await supabase.from('notifications').insert(noticesToInsert);
     if (insertError) {
-      toast.error("Gagal menghantar notis peringatan.", { id: toastId });
+      toast.error(t('kpp:reminder_notice_failed', 'Gagal menghantar notis peringatan.'), { id: toastId });
     } else {
-      toast.success(`Berjaya menghantar ${noticesToInsert.length} notis peringatan!`, { id: toastId });
+      toast.success(t('kpp:reminder_notices_sent', 'Berjaya menghantar {{count}} notis peringatan!', { count: noticesToInsert.length }), { id: toastId });
     }
   };
 
   // ── Tab 2: General Report Logic ──
   const filteredReports = reports.filter(r => {
-    const matchStatus = filterStatus === 'Semua' || r.status === filterStatus;
+    const matchStatus = filterStatus === 'Semua' || r.status === filterStatus || (filterStatus === 'IN_REVIEW' && /dalam semakan|in progress/i.test(r.status));
     const matchClub = filterClub === 'Semua' || r.club_id === filterClub;
     return matchStatus && matchClub;
   });
 
   const handleStatusUpdate = async (r: any, newStatus: string, remarksInput: string = '') => {
-    const toastId = toast.loading("Memproses...");
+    const toastId = toast.loading(t('common:processing', 'Memproses...'));
     const { error } = await supabase.from('club_reports').update({ 
       status: newStatus, 
       reviewed_by: user?.id, 
@@ -343,15 +371,18 @@ export function SemakanLaporanPage() {
     }).eq('id', r.id);
     
     if (error) {
-      toast.error('Gagal memproses dokumen.', { id: toastId });
+      toast.error(t('kpp:process_doc_failed', 'Gagal memproses dokumen.'), { id: toastId });
     } else { 
-      toast.success(`Dokumen ${newStatus.toLowerCase()}!`, { id: toastId }); 
+      toast.success(t('kpp:document_status_toast', 'Dokumen {{status}}!', { status: newStatus.toLowerCase() }), { id: toastId }); 
       
       const isApproved = newStatus === 'Diluluskan';
-      const notificationTitle = isApproved ? '✅ Laporan Diluluskan' : '❌ Laporan Ditolak';
-      let notificationContent = `Dokumen "${r.file_name}" telah ${newStatus.toLowerCase()} oleh JPP.`;
+      const notificationTitle = isApproved ? t('kpp:notif_report_approved_title', 'Laporan Diluluskan') : t('kpp:notif_report_rejected_title', 'Laporan Ditolak');
+      let notificationContent = t('kpp:notif_report_status_msg', 'Dokumen "{{fileName}}" telah {{status}} oleh JPP.', {
+        fileName: r.file_name,
+        status: newStatus.toLowerCase()
+      });
       if (!isApproved && remarksInput) {
-        notificationContent += ` Alasan: ${remarksInput}`;
+        notificationContent += ` ${t('kpp:reason_prefix', 'Alasan: ')}${remarksInput}`;
       }
       
       if (r.submitted_by) {
@@ -388,15 +419,15 @@ export function SemakanLaporanPage() {
           <Badge className="bg-white/5 text-amber-400 border border-white/10 px-5 py-2 font-black uppercase tracking-widest text-[10px]  rounded-2xl shadow-xl">
             Super Admin Panel
           </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">Pusat Kawalan JPP</h1>
-          <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">{t('kpp:audit_control_center', 'Pusat Kawalan JPP')}</h1>
+          <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">{t('kpp:audit_control_subtitle', 'Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.')}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center relative z-10 shrink-0">
           <Button onClick={handleSendOverdueNotices} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 hover:text-amber-400 font-black tracking-widest uppercase text-[10px]  transition-all shadow-lg hover:scale-105 active:scale-95">
-            <AlertTriangle className="w-5 h-5" /> Imbas Tunggakan
+            <AlertTriangle className="w-5 h-5" /> {t('kpp:audit_scan_overdue', 'Imbas Tunggakan')}
           </Button>
           <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/5 bg-white/5 hover:bg-white/10 text-white font-black tracking-widest uppercase text-[10px]  transition-all hover:scale-105 active:scale-95">
-            <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> Segarkan Data
+            <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> {t('kpp:audit_refresh_data', 'Segarkan Data')}
           </Button>
           <button
             onClick={startTour}
@@ -410,18 +441,18 @@ export function SemakanLaporanPage() {
       <Tabs defaultValue="programs" className="tour-semakan-menunggu w-full">
         <TabsList className="bg-muted/40 dark:bg-slate-900/40  p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border border-border shadow-inner gap-2">
           {[
-            { value: 'programs', label: 'Pengurusan Program' },
-            { value: 'reports', label: 'Laporan Kelab (General)' },
-            { value: 'takwim', label: 'Pemantauan Takwim' },
-            { value: 'arkib', label: 'Arkib Berpusat', onClick: handleArkibTab }
-          ].map(t => (
+            { value: 'programs', label: t('kpp:audit_tab_programs', 'Pengurusan Program') },
+            { value: 'reports', label: t('kpp:audit_tab_reports', 'Laporan Kelab (General)') },
+            { value: 'takwim', label: t('kpp:audit_tab_takwim', 'Pemantauan Takwim') },
+            { value: 'arkib', label: t('kpp:audit_tab_archive', 'Arkib Berpusat'), onClick: handleArkibTab }
+          ].map(tab => (
             <TabsTrigger
-              key={t.value}
-              value={t.value}
-              onClick={t.onClick}
+              key={tab.value}
+              value={tab.value}
+              onClick={tab.onClick}
               className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-muted-foreground hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-700 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-primary/20 data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
             >
-              {t.label}
+              {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -436,7 +467,7 @@ export function SemakanLaporanPage() {
                 return (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={`alert-${p.id}`} className="bg-rose-500/10 border-2 border-rose-500/20 p-5 rounded-[2rem] flex items-center gap-5 shadow-sm">
                     <div className="bg-rose-500 p-4 rounded-2xl text-white animate-pulse shadow-lg shadow-rose-500/30"><AlertTriangle size={24} /></div>
-                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Kritikal ({Math.floor(diffInDays)} Hari)</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
+                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('kpp:audit_critical', 'Kritikal')} ({Math.floor(diffInDays)} {t('common:days', 'Hari')})</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
                   </motion.div>
                 );
               })}
@@ -447,7 +478,7 @@ export function SemakanLaporanPage() {
             {programs.length === 0 ? (
               <div className="col-span-full py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                 <Calendar className="w-12 h-12 mx-auto mb-4" />
-                <p className="font-black uppercase tracking-widest text-sm">Tiada program untuk disemak</p>
+                <p className="font-black uppercase tracking-widest text-sm">{t('kpp:audit_no_programs', 'Tiada program untuk disemak')}</p>
               </div>
             ) : (
               programs.map((p) => (
@@ -475,7 +506,7 @@ export function SemakanLaporanPage() {
                                     p.status === 'PENDING_APPROVAL' ? "bg-amber-500/10 text-amber-500" :
                                       p.status === 'CONFIRMED' ? "bg-emerald-500/10 text-emerald-500" :
                                         "bg-muted text-muted-foreground")}>
-                                {isRejectedPostmortem ? 'POSTMORTEM (REJECTED)' : p.status.replace('_', ' ')}
+                                {isRejectedPostmortem ? t('kpp:postmortem_rejected', 'POSTMORTEM (REJECTED)') : p.status.replace('_', ' ')}
                               </Badge>
                               {club && (
                                 <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 border-none font-bold text-[10px] px-2 py-0.5 uppercase tracking-widest transition-colors">
@@ -486,11 +517,11 @@ export function SemakanLaporanPage() {
                           );
                         })()}
                         <h3 className="font-black text-xl text-foreground leading-tight">{p.nama_program}</h3>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={12} /> {t('kpp:updated', 'Dikemaskini')} {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
 
                         {p.jpp_remarks && (
                           <div className="mt-2 p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 flex flex-col gap-1 max-w-[400px]">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Nota Semasa / Alasan</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t('kpp:current_note_reason', 'Nota Semasa / Alasan')}</span>
                             <span className="text-xs font-semibold text-foreground/80 italic break-words">{p.jpp_remarks}</span>
                           </div>
                         )}
@@ -504,11 +535,11 @@ export function SemakanLaporanPage() {
                         const isValidUrl = url && url.length > 5;
                         return isValidUrl ? (
                           <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 md:flex-none">
-                            <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> Papar Dokumen</Button>
+                            <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> {t('kpp:audit_view_doc', 'Papar Dokumen')}</Button>
                           </a>
                         ) : (
                           <Button disabled variant="outline" className="flex-1 md:flex-none rounded-xl font-black text-xs h-12 border-border opacity-50 cursor-not-allowed">
-                            <FileText size={16} className="mr-2 text-slate-400" /> Tiada Dokumen
+                            <FileText size={16} className="mr-2 text-slate-400" /> {t('kpp:audit_no_doc', 'Tiada Dokumen')}
                           </Button>
                         );
                       })()}
@@ -516,10 +547,10 @@ export function SemakanLaporanPage() {
                       {p.status === 'REQUEST_UNLOCK' && (
                         <div className="flex gap-2 flex-1">
                           <Button onClick={() => setActionDialog({ open: true, type: 'UNLOCK', data: p })} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs h-12 shadow-lg shadow-indigo-200">
-                            <Unlock size={16} className="mr-1.5" /> Buka Kunci (Unlock)
+                            <Unlock size={16} className="mr-1.5" /> {t('kpp:audit_unlock', 'Buka Kunci (Unlock)')}
                           </Button>
                           <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT_UNLOCK', data: p })} className="rounded-xl font-black text-xs h-12 px-6">
-                            <XCircle size={16} className="mr-1.5" /> Tolak
+                            <XCircle size={16} className="mr-1.5" /> {t('kpp:audit_reject', 'Tolak')}
                           </Button>
                         </div>
                       )}
@@ -532,12 +563,12 @@ export function SemakanLaporanPage() {
                               onClick={() => setAiReviewProgramId({ id: p.id, name: p.nama_program })} 
                               className="w-full rounded-xl font-black text-xs h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
                             >
-                              <Bot size={16} className="mr-1.5" /> Semak Kertas Kerja (AI)
+                              <Bot size={16} className="mr-1.5" /> {t('kpp:audit_ai_review', 'Semak Kertas Kerja (AI)')}
                             </Button>
                           )}
                           <div className="flex gap-2">
                             <Button variant="success" onClick={() => setActionDialog({ open: true, type: 'APPROVE', data: p })} className="flex-1 rounded-xl font-black text-xs h-12 shadow-sm">
-                              <CheckCircle2 size={16} className="mr-1.5" /> Lulus
+                              <CheckCircle2 size={16} className="mr-1.5" /> {t('kpp:audit_approve', 'Lulus')}
                             </Button>
                             <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT', data: p })} className="rounded-xl font-black text-xs h-12 px-6 shadow-sm">
                               <XCircle size={16} />
@@ -561,7 +592,7 @@ export function SemakanLaporanPage() {
               >
                 <Archive className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
                 <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
-                  Arkib Program Selesai ({archivedPrograms.length})
+                  {t('kpp:audit_archived_programs', 'Arkib Program Selesai')} ({archivedPrograms.length})
                 </span>
                 <ChevronRight className={cn("w-4 h-4 text-slate-300 ml-auto transition-transform", showArchive && "rotate-90")} />
               </button>
@@ -575,7 +606,7 @@ export function SemakanLaporanPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-black text-sm text-foreground truncate">{p.nama_program}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mt-1">
-                          Selesai · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
+                          {t('common:completed', 'Selesai')} · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
                           {p.club_id && (
                             <>
                               <span className="w-1 h-1 rounded-full bg-border"></span>
@@ -584,7 +615,7 @@ export function SemakanLaporanPage() {
                           )}
                         </p>
                       </div>
-                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-black uppercase shrink-0">Selesai</Badge>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-black uppercase shrink-0">{t('common:completed', 'Selesai')}</Badge>
                     </div>
                   ))}
                 </div>
@@ -605,24 +636,30 @@ export function SemakanLaporanPage() {
           <div className="flex flex-col xl:flex-row gap-4 items-center justify-between bg-card p-3 rounded-[2rem] shadow-sm border border-border/50">
             <Select value={filterClub} onValueChange={setFilterClub}>
               <SelectTrigger className="w-full xl:w-72 h-14 rounded-2xl border-none bg-muted font-black text-xs px-5 shadow-inner hover:bg-muted/80 transition-colors">
-                <SelectValue placeholder="Semua Kelab & Persatuan" />
+                <SelectValue placeholder={t('kpp:all_clubs_associations', 'Semua Kelab & Persatuan')} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl font-bold">
-                <SelectItem value="Semua">Semua Kelab & Persatuan</SelectItem>
+                <SelectItem value="Semua">{t('kpp:all_clubs_associations', 'Semua Kelab & Persatuan')}</SelectItem>
                 {ALL_CLUBS.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <div className="flex flex-wrap gap-2 w-full xl:w-auto bg-muted/50 p-1.5 rounded-2xl">
-              {['Semua', 'Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak'].map(s => (
+              {[
+                { key: 'Semua', label: t('common:all', 'Semua') },
+                { key: 'Menunggu', label: t('kpp:status_pending', 'Menunggu') },
+                { key: 'IN_REVIEW', label: t('common:in_progress', 'Dalam Semakan') },
+                { key: 'Diluluskan', label: t('kpp:report_status_approved', 'Diluluskan') },
+                { key: 'Ditolak', label: t('kpp:status_rejected', 'Ditolak') },
+              ].map(s => (
                 <button
-                  key={s}
-                  onClick={() => setFilterStatus(s)}
+                  key={s.key}
+                  onClick={() => setFilterStatus(s.key)}
                   className={cn("flex-1 xl:flex-none rounded-xl text-[10px] font-black uppercase tracking-widest px-6 h-11 transition-all",
-                    filterStatus === s ? "bg-foreground text-background shadow-md scale-100" : "text-muted-foreground hover:bg-muted hover:text-foreground scale-95"
+                    filterStatus === s.key ? "bg-foreground text-background shadow-md scale-100" : "text-muted-foreground hover:bg-muted hover:text-foreground scale-95"
                   )}
                 >
-                  {s}
+                  {s.label}
                 </button>
               ))}
             </div>
@@ -633,11 +670,11 @@ export function SemakanLaporanPage() {
               {filteredReports.length === 0 ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                   <FileText className="w-12 h-12 mx-auto mb-4" />
-                  <p className="font-black uppercase tracking-widest text-sm">Tiada dokumen dijumpai</p>
+                  <p className="font-black uppercase tracking-widest text-sm">{t('kpp:audit_no_documents', 'Tiada dokumen dijumpai')}</p>
                 </motion.div>
               ) : (
                 filteredReports.map((r, i) => {
-                  const docMeta = ALL_DOC_TYPES.find(d => d.value === r.report_type) || ALL_DOC_TYPES[0];
+                  const docMeta = getDocMeta(r.report_type);
                   const DocIcon = docMeta.icon;
                   return (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={r.id}>
@@ -652,7 +689,7 @@ export function SemakanLaporanPage() {
                               <div>
                                 <h4 className="font-black text-foreground text-lg leading-tight line-clamp-2">{r.title || r.file_name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}</p>
+                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{getReportLabel(r.report_type)}</p>
                                   {r.club_id && (
                                     <>
                                       <span className="w-1 h-1 rounded-full bg-border"></span>
@@ -672,14 +709,14 @@ export function SemakanLaporanPage() {
                                 r.status === 'Ditolak' ? 'bg-rose-500/10 text-rose-500' :
                                   'bg-muted text-muted-foreground'
                             )}>
-                              {r.status}
+                              {r.status === 'Diluluskan' ? t('kpp:report_status_approved', 'Diluluskan') : r.status === 'Ditolak' ? t('kpp:status_rejected', 'Ditolak') : r.status === 'Menunggu' ? t('kpp:status_pending', 'Menunggu') : r.status}
                             </Badge>
 
                             <div className="flex items-center gap-2">
                               {r.status === 'Menunggu' && (
                                 <>
-                                  <Button variant="success" onClick={() => handleStatusUpdate(r, 'Diluluskan')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Lulus</Button>
-                                  <Button variant="destructive" onClick={() => setReportActionDialog({ open: true, report: r, status: 'Ditolak' })} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Tolak</Button>
+                                  <Button variant="success" onClick={() => handleStatusUpdate(r, 'Diluluskan')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">{t('kpp:audit_approve', 'Lulus')}</Button>
+                                  <Button variant="destructive" onClick={() => setReportActionDialog({ open: true, report: r, status: 'Ditolak' })} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">{t('kpp:audit_reject', 'Tolak')}</Button>
                                 </>
                               )}
                               {r.file_url && r.file_url.length > 5 ? (
@@ -712,20 +749,20 @@ export function SemakanLaporanPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-card p-3 rounded-[2rem] shadow-sm border border-border/50">
             <Select value={arkibClub} onValueChange={setArkibClub}>
               <SelectTrigger className="w-full sm:w-64 h-12 rounded-2xl border-none bg-muted font-black text-xs px-5">
-                <SelectValue placeholder="Semua Kelab" />
+                <SelectValue placeholder={t('kpp:all_clubs', 'Semua Kelab')} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl font-bold">
-                <SelectItem value="Semua">Semua Kelab</SelectItem>
+                <SelectItem value="Semua">{t('kpp:all_clubs', 'Semua Kelab')}</SelectItem>
                 {ALL_CLUBS.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <div className="flex flex-wrap gap-2 bg-muted p-1.5 rounded-2xl">
               {[
-                { key: 'semua', label: 'Semua' },
-                { key: 'kertas_kerja', label: 'Kertas Kerja' },
-                { key: 'post_mortem', label: 'Post-Mortem' },
-                { key: 'laporan', label: 'Laporan' },
+                { key: 'semua', label: t('common:all', 'Semua') },
+                { key: 'kertas_kerja', label: t('kpp:proposal_paper', 'Kertas Kerja') },
+                { key: 'post_mortem', label: t('kpp:post_mortem', 'Post-Mortem') },
+                { key: 'laporan', label: t('kpp:report', 'Laporan') },
               ].map(f => (
                 <button
                   key={f.key}
@@ -749,7 +786,7 @@ export function SemakanLaporanPage() {
               className="rounded-xl h-10 px-4 font-black text-[10px] uppercase tracking-widest ml-auto"
             >
               <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', arkibLoading && 'animate-spin')} />
-              Muat Semula
+              {t('common:reload', 'Muat Semula')}
             </Button>
           </div>
 
@@ -770,7 +807,7 @@ export function SemakanLaporanPage() {
             if (filtered.length === 0) return (
               <div className="py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                 <Archive className="w-12 h-12 mx-auto mb-4" />
-                <p className="font-black uppercase tracking-widest text-sm">Tiada rekod dalam arkib</p>
+                <p className="font-black uppercase tracking-widest text-sm">{t('kpp:no_records_in_archive', 'Tiada rekod dalam arkib')}</p>
               </div>
             );
 
@@ -839,22 +876,22 @@ export function SemakanLaporanPage() {
       <Dialog open={actionDialog.open} onOpenChange={(o) => setActionDialog({ ...actionDialog, open: o })}>
         <DialogContent className="rounded-[3rem] p-10 max-w-md border-none shadow-2xl bg-card">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">{t('kpp:audit_confirm_action', 'Sahkan Tindakan')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
-              {actionDialog.type === 'REJECT_UNLOCK' ? 'Surat Penolakan (WAJIB isi alasan)' : 'Komen Rasmi JPP (Opsyenal)'}
+              {actionDialog.type === 'REJECT_UNLOCK' ? t('kpp:audit_rejection_reason', 'Surat Penolakan (WAJIB isi alasan)') : t('kpp:audit_reviewer_remarks', 'Komen Rasmi JPP (Opsyenal)')}
             </Label>
             <Textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Taip alasan atau ulasan di sini..."
+              placeholder={t('kpp:type_reason_placeholder', 'Taip alasan atau ulasan di sini...')}
               className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-primary/20"
             />
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
-            <Button variant="ghost" onClick={() => setActionDialog({ open: false, type: null, data: null })} className="rounded-xl font-bold flex-1 h-12">Batal</Button>
-            <Button onClick={handleProgramAction} className="rounded-xl font-black flex-1 bg-slate-900 text-white h-12 shadow-xl shadow-slate-900/20">Sahkan</Button>
+            <Button variant="ghost" onClick={() => setActionDialog({ open: false, type: null, data: null })} className="rounded-xl font-bold flex-1 h-12">{t('common:cancel', 'Batal')}</Button>
+            <Button onClick={handleProgramAction} className="rounded-xl font-black flex-1 bg-slate-900 text-white h-12 shadow-xl shadow-slate-900/20">{t('common:confirm', 'Sahkan')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -863,22 +900,22 @@ export function SemakanLaporanPage() {
       <Dialog open={reportActionDialog.open} onOpenChange={(o) => setReportActionDialog({ ...reportActionDialog, open: o })}>
         <DialogContent className="rounded-[3rem] p-10 max-w-md border-none shadow-2xl bg-card">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan Dokumen</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">{t('kpp:audit_confirm_doc_action', 'Sahkan Tindakan Dokumen')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
-              Alasan Penolakan (Opsyenal tetapi digalakkan)
+              {t('kpp:audit_rejection_reason_optional', 'Alasan Penolakan (Opsyenal tetapi digalakkan)')}
             </Label>
             <Textarea
               value={reportRemarks}
               onChange={(e) => setReportRemarks(e.target.value)}
-              placeholder="Berikan alasan kenapa dokumen ini ditolak..."
+              placeholder={t('kpp:reject_reason_placeholder', 'Berikan alasan kenapa dokumen ini ditolak...')}
               className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-rose-500/20"
             />
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
-            <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">Batal</Button>
-            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">Sahkan Tolak</Button>
+            <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">{t('common:cancel', 'Batal')}</Button>
+            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">{t('kpp:audit_confirm_reject', 'Sahkan Tolak')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

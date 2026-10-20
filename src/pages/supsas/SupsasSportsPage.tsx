@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Trophy, Users, Filter, Search, LayoutGrid } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
@@ -6,15 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 
-const GENDER_LABEL: Record<string, string> = { male: 'Lelaki', female: 'Wanita', mixed: 'Campur' };
-const FORMAT_LABEL: Record<string, string> = { knockout: 'Sistem Gugur', round_robin: 'Liga', group_knockout: 'Kumpulan + Gugur' };
 const GENDER_COLOR: Record<string, string> = { male: 'text-blue-400 bg-blue-500/10 border-blue-500/20', female: 'text-pink-400 bg-pink-500/10 border-pink-500/20', mixed: 'text-violet-400 bg-violet-500/10 border-violet-500/20' };
 
 export function SupsasSportsPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { sports, fixtures, edition } = useSupsas();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'team' | 'individual'>('all');
+
+  const GENDER_LABEL: Record<string, string> = {
+    male: t('supsas:gender_male', 'Lelaki'),
+    female: t('supsas:gender_female', 'Wanita'),
+    mixed: t('supsas:gender_mixed', 'Campur'),
+  };
+  const FORMAT_LABEL: Record<string, string> = {
+    knockout: t('supsas:format_knockout', 'Sistem Gugur'),
+    round_robin: t('supsas:format_round_robin', 'Liga'),
+    group_knockout: t('supsas:format_group_knockout', 'Kumpulan + Gugur'),
+  };
 
   // Public view: only show active sports
   const activeSports = sports.filter(s => s.is_active);
@@ -34,7 +45,7 @@ export function SupsasSportsPage() {
               <Trophy className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">Sukan Dipertandingkan</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">{t('supsas:sports_contested_title', 'Sukan Dipertandingkan')}</h1>
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">{edition?.name}</p>
             </div>
           </div>
@@ -46,7 +57,7 @@ export function SupsasSportsPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Cari sukan..."
+                placeholder={t('supsas:search_sport_placeholder', 'Cari sukan...')}
                 className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/20 text-sm font-medium focus:outline-none focus:border-amber-500/40 focus:bg-white/8 transition-all"
               />
             </div>
@@ -62,7 +73,7 @@ export function SupsasSportsPage() {
                       : 'bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10'
                   )}
                 >
-                  {f === 'all' ? 'Semua' : f === 'team' ? 'Berpasukan' : 'Individu'}
+                  {f === 'all' ? t('common:all', 'Semua') : f === 'team' ? t('supsas:category_team', 'Berpasukan') : t('supsas:category_individual', 'Individu')}
                 </button>
               ))}
             </div>
@@ -76,7 +87,7 @@ export function SupsasSportsPage() {
           {filtered.length === 0 ? (
             <div className="text-center py-24">
               <Trophy className="w-10 h-10 text-white/10 mx-auto mb-4" />
-              <p className="text-white/30 font-black uppercase tracking-widest text-sm">Tiada sukan dijumpai</p>
+              <p className="text-white/30 font-black uppercase tracking-widest text-sm">{t('supsas:no_sports_found', 'Tiada sukan dijumpai')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
@@ -106,7 +117,7 @@ export function SupsasSportsPage() {
                         {FORMAT_LABEL[sport.format]}
                       </span>
                       <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10 text-white/30">
-                        {sport.category === 'team' ? `Max ${sport.max_per_team} pemain` : 'Individu'}
+                        {sport.category === 'team' ? t('supsas:max_players_count', 'Max {{count}} pemain', { count: sport.max_per_team }) : t('supsas:category_individual', 'Individu')}
                       </span>
                     </div>
 
@@ -125,7 +136,7 @@ export function SupsasSportsPage() {
                         className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all"
                       >
                         <LayoutGrid className="w-3.5 h-3.5" />
-                        Lihat Bracket
+                        {t('supsas:view_bracket_btn', 'Lihat Bracket')}
                       </button>
                     )}
                   </motion.div>
@@ -136,7 +147,7 @@ export function SupsasSportsPage() {
 
           <div className="mt-6 text-center">
             <p className="text-[9px] font-black uppercase tracking-widest text-white/20">
-              {filtered.length} daripada {activeSports.length} sukan aktif dipapar
+              {t('supsas:sports_display_count', '{{shown}} daripada {{total}} sukan aktif dipapar', { shown: filtered.length, total: activeSports.length })}
             </p>
           </div>
         </div>

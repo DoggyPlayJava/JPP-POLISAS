@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, X, Send, ShieldAlert, Trash2, Copy, Check, ExternalLink,
+  Sparkles, X, Send, ShieldAlert, Trash2, Copy, Check, CheckCheck, ExternalLink,
   MessageSquare, Store, Home, Shield, QrCode, Phone, ArrowLeft, Megaphone, Loader2,
-  Search, Pin, Archive, ArrowDown
+  Search, Pin, Archive, ArrowDown, BarChart3, AlertTriangle, FileEdit, Coins, ShoppingCart, Clock, Package
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
@@ -19,6 +19,7 @@ import rehypeRaw from 'rehype-raw';
 import { getMalaysianNickname, cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // ─── Storage helpers for AI Chat History ────────────────────────────────────
 const STORAGE_KEY = 'nexus_chat_history_v1';
@@ -100,7 +101,7 @@ function parseTicketCard(content: string) {
 }
 
 // ── Format Date Header (Group messages by day) ──
-const formatMessageDateHeader = (isoString: string) => {
+const formatMessageDateHeader = (isoString: string, t?: any) => {
   try {
     const d = new Date(isoString);
     const today = new Date();
@@ -108,9 +109,9 @@ const formatMessageDateHeader = (isoString: string) => {
     yesterday.setDate(today.getDate() - 1);
     
     if (d.toDateString() === today.toDateString()) {
-      return "Hari Ini";
+      return t ? t('portal:today', 'Hari Ini') : '';
     } else if (d.toDateString() === yesterday.toDateString()) {
-      return "Semalam";
+      return t ? t('portal:yesterday', 'Semalam') : '';
     } else {
       return d.toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
     }
@@ -168,20 +169,39 @@ function playNotificationChime() {
   }
 }
 
-function getQuickReplies(type: string): string[] {
+function getQuickReplies(type: string, t: any): string[] {
   if (type === 'polymart') {
-    return ["Masih ada stok?", "Boleh kurang harga?", "Bila boleh COD?", "Boleh pos ke hostel?", "Terima kasih!"];
+    return [
+      t('portal:ai_quick_stock', 'Masih ada stok?'),
+      t('portal:ai_quick_discount', 'Boleh kurang harga?'),
+      t('portal:ai_quick_cod', 'Bila boleh COD?'),
+      t('portal:ai_quick_postage', 'Boleh pos ke hostel?'),
+      t('portal:ai_quick_thanks', 'Terima kasih!')
+    ];
   }
   if (type === 'polyrent') {
-    return ["Kemasukan bila ya?", "Rumah masih kosong?", "Bilik single ke sharing?", "Ada deposit?", "Terima kasih!"];
+    return [
+      t('portal:ai_quick_entry', 'Kemasukan bila ya?'),
+      t('portal:ai_quick_vacant', 'Rumah masih kosong?'),
+      t('portal:ai_quick_sharing', 'Bilik single ke sharing?'),
+      t('portal:ai_quick_deposit', 'Ada deposit?'),
+      t('portal:ai_quick_thanks', 'Terima kasih!')
+    ];
   }
   if (type === 'kebajikan') {
-    return ["Terima kasih, Exco.", "Bagaimana status terkini?", "Saya dah hantar borang.", "Boleh saya tahu syaratnya?", "Terima kasih!"];
+    return [
+      t('portal:ai_quick_thanks_exco', 'Terima kasih, Exco.'),
+      t('portal:ai_quick_status', 'Bagaimana status terkini?'),
+      t('portal:ai_quick_submitted', 'Saya dah hantar borang.'),
+      t('portal:ai_quick_terms', 'Boleh saya tahu syaratnya?'),
+      t('portal:ai_quick_thanks', 'Terima kasih!')
+    ];
   }
-  return ["Hai!", "Terima kasih"];
+  return [t('portal:ai_quick_hello', 'Hai!'), t('portal:ai_quick_thanks_simple', 'Terima kasih')];
 }
 
 export function FloatingAiChat() {
+  const { t } = useTranslation(['portal', 'common', 'nav']);
   const { profile, user } = useAuth();
   const { allowAiChat } = useAiSettings();
   const { positionLabels, unitLabels } = useJppConfig();
@@ -311,7 +331,7 @@ export function FloatingAiChat() {
       : [...pinnedChatIds, chatKey];
     setPinnedChatIds(newPinned);
     localStorage.setItem(`nexus_pinned_${profile.id}`, JSON.stringify(newPinned));
-    toast.success(pinnedChatIds.includes(chatKey) ? 'Sembang dinyahsemat' : 'Sembang disemat ke atas');
+    toast.success(pinnedChatIds.includes(chatKey) ? t('portal:ai_chat_unpinned', 'Sembang dinyahsemat') : t('portal:ai_chat_pinned', 'Sembang disemat ke atas'));
   };
 
   const handleToggleArchive = (chatKey: string) => {
@@ -322,7 +342,7 @@ export function FloatingAiChat() {
       : [...archivedChatIds, chatKey];
     setArchivedChatIds(newArchived);
     localStorage.setItem(`nexus_archived_${profile.id}`, JSON.stringify(newArchived));
-    toast.success(archivedChatIds.includes(chatKey) ? 'Sembang dipindahkan ke inbox utama' : 'Sembang diarkibkan');
+    toast.success(archivedChatIds.includes(chatKey) ? t('portal:ai_chat_unarchived', 'Sembang dipindahkan ke inbox utama') : t('portal:ai_chat_archived', 'Sembang diarkibkan'));
   };
 
   const handleChatInputChange = (val: string) => {
@@ -425,7 +445,7 @@ export function FloatingAiChat() {
               </span>
             </div>
             <p className={`text-[10px] truncate mt-0.5 ${isUnread ? 'text-foreground font-black' : 'text-muted-foreground/60'}`}>
-              {chat.lastMessage || 'Tiada mesej.'}
+              {chat.lastMessage || t('portal:no_messages', 'Tiada mesej.')}
             </p>
           </div>
 
@@ -446,7 +466,7 @@ export function FloatingAiChat() {
                 ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20' 
                 : 'bg-card border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40'
             }`}
-            title={isPinned ? "Nyahsemat sembang" : "Semat sembang"}
+            title={isPinned ? t('portal:unpin_chat', 'Nyahsemat sembang') : t('portal:pin_chat', 'Semat sembang')}
           >
             <Pin size={11} className={isPinned ? 'rotate-45' : ''} />
           </button>
@@ -457,7 +477,7 @@ export function FloatingAiChat() {
                 ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
                 : 'bg-card border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40'
             }`}
-            title={isArchived ? "Keluarkan dari arkib" : "Arkib sembang"}
+            title={isArchived ? t('portal:unarchive_chat', 'Keluarkan dari arkib') : t('portal:archive_chat', 'Arkib sembang')}
           >
             <Archive size={11} />
           </button>
@@ -631,7 +651,7 @@ export function FloatingAiChat() {
           let jppOrgText = undefined;
           if (jppRes.data && jppRes.data.length > 0) {
             jppOrgText = jppRes.data.map(m => {
-              const pos = m.jpp_position ? (positionLabels[m.jpp_position as string] || m.jpp_position) : 'Ahli JPP';
+              const pos = m.jpp_position ? (positionLabels[m.jpp_position as string] || m.jpp_position) : t('portal:jpp_member', 'Ahli JPP');
               const unit = m.jpp_unit ? (unitLabels[m.jpp_unit as string] || m.jpp_unit) : '';
               return `- ${m.full_name} (${pos}${unit ? ' - ' + unit : ''})`;
             }).join('\n');
@@ -661,7 +681,7 @@ export function FloatingAiChat() {
 
                 const { data: progs } = await supabase.from('programs').select('nama_program, tarikh_mula, location')
                   .eq('club_id', targetClubId).not('status', 'eq', 'COMPLETED').order('tarikh_mula', { ascending: true }).limit(3);
-                if (progs?.length) ctx.upcomingPrograms = progs.map(pr => `- ${pr.nama_program} (${pr.tarikh_mula || 'TBA'})`).join('\n');
+                if (progs?.length) ctx.upcomingPrograms = progs.map(pr => '- ' + pr.nama_program + ' (' + (pr.tarikh_mula || 'TBA') + ')').join('\n');
               }
             }
           } 
@@ -674,7 +694,7 @@ export function FloatingAiChat() {
             ctx.akademikInfo = {
               cgpa: cgpaRes.data?.cgpa,
               meritPoints: totalMerits,
-              statusUnlock: 'Tiada Request'
+              statusUnlock: t('portal:no_request', 'Tiada Request')
             };
           }
           else if (p.startsWith('/keusahawanan')) {
@@ -760,7 +780,7 @@ export function FloatingAiChat() {
           return {
             id: c.id,
             type: 'polymart',
-            title: isUserBuyer ? (biz?.name ?? 'Kedai PolyMart') : (buyer?.full_name ?? 'Pembeli'),
+            title: isUserBuyer ? (biz?.name ?? t('portal:ai_polymart_store', 'Kedai PolyMart')) : (buyer?.full_name ?? t('portal:buyer', 'Pembeli')),
             logoUrl: isUserBuyer ? biz?.logo_url : null,
             lastMessage: lastMsg?.content ?? '',
             updatedAt: c.last_message_at || c.created_at,
@@ -806,7 +826,7 @@ export function FloatingAiChat() {
           return {
             id: pId,
             type: 'polyrent',
-            title: partnerProf?.full_name ?? 'Pengguna PolyRent',
+            title: partnerProf?.full_name ?? t('portal:ai_polyrent_user', 'Pengguna PolyRent'),
             lastMessage: lastMsg?.content ?? '',
             updatedAt: lastMsg?.created_at,
             unreadCount,
@@ -852,7 +872,7 @@ export function FloatingAiChat() {
             id: t.id,
             type: 'kebajikan',
             title: `[${t.ticket_no}] ${t.title}`,
-            lastMessage: lastCmt ? lastCmt.content : 'Tiada komen lagi.',
+            lastMessage: lastCmt ? lastCmt.content : t('portal:ai_no_comments_yet', 'Tiada komen lagi.'),
             updatedAt: t.updated_at || t.created_at,
             unreadCount: hasUnreadComment ? 1 : 0,
             originalData: t
@@ -975,11 +995,11 @@ export function FloatingAiChat() {
               const isUserBuyer = conv.buyer_id === profile.id;
               if (isUserBuyer) {
                 const { data: biz } = await supabase.from('keusahawanan_businesses').select('name, logo_url').eq('id', conv.vendor_business_id).maybeSingle();
-                senderName = biz?.name || 'Kedai PolyMart';
+                senderName = biz?.name || t('portal:ai_polymart_store', 'Kedai PolyMart');
                 logoUrl = biz?.logo_url;
               } else {
                 const { data: buyer } = await supabase.from('profiles').select('full_name').eq('id', conv.buyer_id).maybeSingle();
-                senderName = buyer?.full_name || 'Pembeli';
+                senderName = buyer?.full_name || t('portal:buyer', 'Pembeli');
               }
               latestMsgObj = {
                 title: senderName,
@@ -1013,7 +1033,7 @@ export function FloatingAiChat() {
           if (rentTime > newestTime) {
             newestTime = rentTime;
             const { data: partner } = await supabase.from('profiles').select('full_name').eq('id', latestRent[0].sender_id).maybeSingle();
-            const senderName = partner?.full_name || 'Pengguna PolyRent';
+            const senderName = partner?.full_name || t('portal:ai_polyrent_user', 'Pengguna PolyRent');
             latestMsgObj = {
               title: senderName,
               content: latestRent[0].content,
@@ -1035,14 +1055,14 @@ export function FloatingAiChat() {
           const commentTime = new Date(latestComment.created_at).getTime();
           if (commentTime > newestTime) {
             const ticketObj = userTickets?.find(t => t.id === latestComment.ticket_id);
-            const senderName = latestComment.author_name || 'Urusetia Kebajikan';
+            const senderName = latestComment.author_name || t('portal:ai_kebajikan_secretariat', 'Urusetia Kebajikan');
             latestMsgObj = {
               title: senderName,
               content: latestComment.content,
               chat: {
                 id: latestComment.ticket_id,
                 type: 'kebajikan',
-                title: `[${ticketObj?.ticket_no || 'Aduan'}] ${ticketObj?.title || 'Sembang'}`,
+                title: t('portal:ai_ticket_title_format', `[${ticketObj?.ticket_no || 'Aduan'}] ${ticketObj?.title || 'Sembang'}`),
                 lastMessage: latestComment.content,
                 updatedAt: latestComment.created_at,
                 unreadCount: 1,
@@ -1068,7 +1088,7 @@ export function FloatingAiChat() {
 
   const handleMarkAllAsRead = async () => {
     if (!profile?.id) return;
-    const loadingToast = toast.loading('Menandakan semua mesej sebagai dibaca...');
+    const loadingToast = toast.loading(t('portal:ai_marking_all_read', 'Menandakan semua mesej sebagai dibaca...'));
     try {
       // 1. Fetch user's polymart conversations (implicitly filtered by RLS policies)
       const { data: polymartConvs } = await supabase
@@ -1102,10 +1122,10 @@ export function FloatingAiChat() {
 
       // Refresh both unread counts and conversation items
       await fetchInboxData();
-      toast.success('Semua mesej ditandakan sebagai dibaca!', { id: loadingToast });
+      toast.success(t('portal:ai_all_read_success', 'Semua mesej ditandakan sebagai dibaca!'), { id: loadingToast });
     } catch (e) {
       console.error('Failed to mark all as read:', e);
-      toast.error('Gagal menandakan semua mesej sebagai dibaca', { id: loadingToast });
+      toast.error(t('portal:ai_all_read_error', 'Gagal menandakan semua mesej sebagai dibaca'), { id: loadingToast });
     }
   };
 
@@ -1189,7 +1209,7 @@ export function FloatingAiChat() {
         const enrichedChat = {
           id: conv.id,
           type: 'polymart',
-          title: isUserBuyer ? (biz?.name ?? 'Kedai PolyMart') : buyerName,
+          title: isUserBuyer ? (biz?.name ?? t('portal:ai_polymart_store', 'Kedai PolyMart')) : buyerName,
           logoUrl: isUserBuyer ? biz?.logo_url : null,
           lastMessage: '',
           updatedAt: conv.last_message_at || conv.created_at,
@@ -1211,7 +1231,7 @@ export function FloatingAiChat() {
         }
       } catch (err) {
         console.error('Failed to open/create conversation:', err);
-        toast.error('Gagal membuka perbualan');
+        toast.error(t('common:action_failed', 'Gagal membuka perbualan'));
       }
     };
 
@@ -1234,7 +1254,7 @@ export function FloatingAiChat() {
         const enrichedChat = {
           id: partnerId,
           type: 'polyrent',
-          title: partnerName || 'Pengguna PolyRent',
+          title: partnerName || t('portal:ai_polyrent_user', 'Pengguna PolyRent'),
           lastMessage: '',
           updatedAt: new Date().toISOString(),
           unreadCount: 0,
@@ -1533,8 +1553,8 @@ export function FloatingAiChat() {
             // Sender is buyer, recipient is vendor business
             const { sendNotificationToBusinessVendor } = await import('@/lib/notifications');
             await sendNotificationToBusinessVendor(selectedChat.originalData.vendor_business_id, {
-              title: '🛍️ Mesej Sembang Peniaga!',
-              message: `${profile.full_name || 'Pembeli'}: ${content.startsWith('[PRODUCT_CARD:') ? 'Menghantar pautan produk' : content}`,
+              title: t('portal:ai_notif_vendor_title', '[PolyMart] Mesej Sembang Peniaga!'),
+              message: t('portal:ai_notif_vendor_msg', `${profile.full_name || 'Pembeli'}: ${content.startsWith('[PRODUCT_CARD:') ? 'Menghantar pautan produk' : content}`),
               type: 'polymart_chat_msg',
               module: 'POLYMART',
               link: `/polymart`,
@@ -1545,8 +1565,8 @@ export function FloatingAiChat() {
             // Sender is vendor, recipient is buyer profile
             const { sendNotificationToUser } = await import('@/lib/notifications');
             await sendNotificationToUser(selectedChat.originalData.buyer_id, {
-              title: `💬 Mesej dari ${selectedChat.title}`,
-              message: content.startsWith('[PRODUCT_CARD:') ? 'Menghantar pautan produk' : content,
+              title: t('portal:ai_notif_buyer_title', `[PolyMart] Mesej dari ${selectedChat.title}`),
+              message: content.startsWith('[PRODUCT_CARD:') ? t('portal:ai_sent_product_link', 'Menghantar pautan produk') : content,
               type: 'polymart_chat_msg',
               module: 'POLYMART',
               link: `/polymart`,
@@ -1571,8 +1591,8 @@ export function FloatingAiChat() {
         try {
           const { sendNotificationToUser } = await import('@/lib/notifications');
           await sendNotificationToUser(partnerId, {
-            title: `🏠 Mesej PolyRent dari ${profile.full_name || 'Pelajar'}`,
-            message: content.startsWith('[RENT_CARD:') ? 'Menghantar pautan kediaman' : content,
+            title: t('portal:ai_notif_rent_title', `[PolyRent] Mesej dari ${profile.full_name || 'Pelajar'}`),
+            message: content.startsWith('[RENT_CARD:') ? t('portal:ai_sent_rent_link', 'Menghantar pautan kediaman') : content,
             type: 'polyrent_chat_msg',
             module: 'POLYRENT',
             link: `/polyrent`,
@@ -1605,8 +1625,8 @@ export function FloatingAiChat() {
           if (!isExco) {
             // Student comment, notify exco
             await sendNotificationToKebajikanExco({
-              title: `🛡️ Komen Baru Tiket [${selectedChat.originalData.ticket_no}]`,
-              message: `${profile.full_name || 'Pelajar'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`,
+              title: t('portal:ai_notif_exco_ticket_title', `[Kebajikan] Komen Baru Tiket [${selectedChat.originalData.ticket_no}]`),
+              message: t('portal:ai_notif_exco_ticket_msg', `${profile.full_name || 'Pelajar'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`),
               type: 'kebajikan_ticket_comment',
               module: 'KEBAJIKAN',
               link: `/kebajikan/buat-aduan`,
@@ -1618,8 +1638,8 @@ export function FloatingAiChat() {
             const submitterId = selectedChat.originalData.submitter_id;
             if (submitterId && submitterId !== profile.id) {
               await sendNotificationToUser(submitterId, {
-                title: `🛡️ Maklumbalas Tiket [${selectedChat.originalData.ticket_no}]`,
-                message: `${profile.full_name || 'Urusetia'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`,
+                title: t('portal:ai_notif_user_ticket_title', `[Kebajikan] Maklumbalas Tiket [${selectedChat.originalData.ticket_no}]`),
+                message: t('portal:ai_notif_user_ticket_msg', `${profile.full_name || 'Urusetia'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`),
                 type: 'kebajikan_ticket_comment',
                 module: 'KEBAJIKAN',
                 link: `/kebajikan/buat-aduan`,
@@ -1638,7 +1658,7 @@ export function FloatingAiChat() {
       
     } catch (err) {
       console.error('Failed to send message:', err);
-      toast.error('Gagal menghantar mesej');
+      toast.error(t('common:action_failed', 'Gagal menghantar mesej'));
       setChatInput(content);
     } finally {
       setIsSendingMessage(false);
@@ -1659,14 +1679,14 @@ export function FloatingAiChat() {
     if (!text || isChatLoading) return;
 
     if (text.length > MAX_INPUT_LENGTH) {
-      toast.error(`Mesej terlalu panjang (${text.length}/${MAX_INPUT_LENGTH} aksara). Sila pendekkan.`);
+      toast.error(t('portal:ai_msg_too_long', `Mesej terlalu panjang (${text.length}/${MAX_INPUT_LENGTH} aksara). Sila pendekkan.`));
       return;
     }
 
     setInputValue('');
 
     const lowerText = text.toLowerCase().replace(/\s+/g, ' ');
-    const isDynamicQuery = lowerText.includes('sekarang') || lowerText.includes('baru') || lowerText.includes('hari ini');
+    const isDynamicQuery = /(sekarang|baru|hari ini)/.test(lowerText);
     if (text.length >= 2 && text.length < 150 && !isDynamicQuery) {
       const historyArr = messagesRef.current;
       for (let i = historyArr.length - 1; i >= 0; i--) {
@@ -1728,7 +1748,7 @@ export function FloatingAiChat() {
         {
           id: generateId(),
           role: 'error',
-          content: 'Sistem sedang sibuk. Sila cuba lagi sebentar!',
+          content: t('common:action_failed', 'Sistem sedang sibuk. Sila cuba lagi sebentar!'),
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -1752,23 +1772,23 @@ export function FloatingAiChat() {
     ? 'mb-24'
     : '';
 
-  const EXCO_CHIPS: { icon: string; label: string; prompt: string }[] = [
+  const EXCO_CHIPS: { icon: React.ReactNode; label: string; prompt: string }[] = [
     {
-      icon: '💬',
-      label: 'Berikan Pendapat',
+      icon: <MessageSquare size={11} />,
+      label: t('nav:ai_suggestion_opinion', 'Berikan Pendapat'),
       prompt: chatContext?.kebajikanInfo?.currentTicket
-        ? `Saya sedang melihat tiket ini:\n${chatContext.kebajikanInfo.currentTicket}\n\nBerikan pendapat anda: apakah punca masalah yang paling munasabah dan apakah langkah-langkah konkrit untuk menyelesaikannya?`
-        : 'Berdasarkan situasi semasa, berikan pendapat anda tentang apa yang perlu saya lakukan sekarang sebagai Exco Kebajikan.',
+        ? t('portal:ai_prompt_current_ticket', `Saya sedang melihat tiket ini:\n${chatContext.kebajikanInfo.currentTicket}\n\nBerikan pendapat anda: apakah punca masalah yang paling munasabah dan apakah langkah-langkah konkrit untuk menyelesaikannya?`)
+        : t('portal:ai_prompt_exco_general', 'Berdasarkan situasi semasa, berikan pendapat anda tentang apa yang perlu saya lakukan sekarang sebagai Exco Kebajikan.'),
     },
-    { icon: '📊', label: 'Analisis Hari Ini', prompt: 'Bagi saya ringkasan situasi tiket hari ini dan cadangan tindakan segera.' },
-    { icon: '⚠️', label: 'Tiket Urgent', prompt: 'Senaraikan tiket yang paling kritikal dan cadangkan tindakan yang perlu diambil.' },
-    { icon: '📝', label: 'Draft Balasan', prompt: 'Bantu saya draf balasan profesional untuk tiket yang masih belum dibalas.' },
+    { icon: <BarChart3 size={11} />, label: t('nav:ai_suggestion_analysis', 'Analisis Hari Ini'), prompt: t('portal:ai_prompt_analysis_today', 'Bagi saya ringkasan situasi tiket hari ini dan cadangan tindakan segera.') },
+    { icon: <AlertTriangle size={11} />, label: t('nav:ai_suggestion_urgent', 'Tiket Urgent'), prompt: t('portal:ai_prompt_urgent_tickets', 'Senaraikan tiket yang paling kritikal dan cadangkan tindakan yang perlu diambil.') },
+    { icon: <FileEdit size={11} />, label: t('nav:ai_suggestion_draft', 'Draft Balasan'), prompt: t('portal:ai_prompt_draft_reply', 'Bantu saya draf balasan profesional untuk tiket yang masih belum dibalas.') },
   ];
 
-  const KEUSAHAWANAN_CHIPS: { icon: string; label: string; prompt: string }[] = [
-    { icon: '💰', label: 'Ringkasan Jualan', prompt: 'Berapa total jualan hari ini dan ada produk kurang stok?' },
-    { icon: '🛒', label: 'Cara Guna POS', prompt: 'Boleh ajar macam mana nak buat transaksi POS?' },
-    { icon: '⏰', label: 'Urus Syif', prompt: 'Bagaimana cara nak rekod syif masuk kerja?' },
+  const KEUSAHAWANAN_CHIPS: { icon: React.ReactNode; label: string; prompt: string }[] = [
+    { icon: <Coins size={11} />, label: t('nav:ai_suggestion_sales', 'Ringkasan Jualan'), prompt: t('portal:ai_prompt_sales_summary', 'Berapa total jualan hari ini dan ada produk kurang stok?') },
+    { icon: <ShoppingCart size={11} />, label: t('nav:ai_suggestion_pos', 'Cara Guna POS'), prompt: t('portal:ai_prompt_pos_guide', 'Boleh ajar macam mana nak buat transaksi POS?') },
+    { icon: <Clock size={11} />, label: t('nav:ai_suggestion_shift', 'Urus Syif'), prompt: t('portal:ai_prompt_shift_record', 'Bagaimana cara nak rekod syif masuk kerja?') },
   ];
 
   const getModuleIcon = (type: string) => {
@@ -1831,7 +1851,7 @@ export function FloatingAiChat() {
                 setShowPopout(false);
               }}
               className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors shrink-0"
-              aria-label="Tutup"
+              aria-label={t('common:close', 'Tutup')}
             >
               <X size={11} />
             </button>
@@ -1893,12 +1913,12 @@ export function FloatingAiChat() {
               <div className="relative z-10">
                 <h3 className="font-black text-lg italic flex items-center gap-2">
                   <Sparkles size={18} className="text-white/80" />
-                  {selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : 'JPP Nexus')}
+                  {selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : t('nav:ai_assistant', 'JPP Nexus'))}
                 </h3>
                 <p className="text-[11px] text-white/70 font-medium mt-0.5">
                   {selectedChat 
                     ? `Perbualan ${selectedChat.type.toUpperCase()}` 
-                    : (isExcoMode ? 'Pembantu peribadi Exco Kebajikan POLISAS' : 'Pembantu pintar & Sembang berpusat')}
+                    : (isExcoMode ? t('portal:ai_kebajikan_assistant_desc', 'Pembantu peribadi Exco Kebajikan POLISAS') : t('nav:help_subtitle', 'Pembantu pintar & Sembang berpusat'))}
                 </p>
               </div>
               
@@ -1908,7 +1928,7 @@ export function FloatingAiChat() {
                   whileTap={{ scale: 0.9 }}
                   onClick={clearHistory}
                   disabled={messages.length === 0}
-                  title="Kosongkan sembang"
+                  title={t('common:clear', 'Kosongkan sembang')}
                   className="relative z-10 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={14} />
@@ -1927,7 +1947,7 @@ export function FloatingAiChat() {
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <Sparkles size={12} /> Tanya AI
+                  <Sparkles size={12} /> {t('nav:ai_assistant', 'Tanya AI')}
                 </button>
                 <button
                   onClick={() => setActiveTab('messages')}
@@ -1937,7 +1957,7 @@ export function FloatingAiChat() {
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <MessageSquare size={12} /> Peti Mesej
+                  <MessageSquare size={12} /> {t('nav:notifications', 'Peti Mesej')}
                   {unreadTotal > 0 && (
                     <span className="w-2.5 h-2.5 bg-rose-500 rounded-full border border-card" />
                   )}
@@ -1966,7 +1986,7 @@ export function FloatingAiChat() {
                       <input
                         value={inChatSearchQuery}
                         onChange={(e) => setInChatSearchQuery(e.target.value)}
-                        placeholder="Cari dalam sembang..."
+                        placeholder={t('common:search', 'Cari dalam sembang...')}
                         className="w-full text-[10px] pl-7 pr-7 py-1 bg-muted/40 border border-border/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-foreground placeholder:text-muted-foreground/45"
                         autoFocus
                       />
@@ -1984,12 +2004,12 @@ export function FloatingAiChat() {
                         onClick={() => { setSelectedChat(null); setChatMessages([]); fetchInboxData(); }}
                         className="flex items-center gap-1 text-[10px] font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors py-1 px-2.5 bg-muted/40 hover:bg-muted/70 rounded-xl"
                       >
-                        <ArrowLeft size={12} /> Kembali
+                        <ArrowLeft size={12} /> {t('common:back', 'Kembali')}
                       </button>
                       <button
                         onClick={() => setShowInChatSearch(true)}
                         className="p-1.5 text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-lg transition-all"
-                        title="Cari mesej"
+                        title={t('common:search', 'Cari mesej')}
                       >
                         <Search size={12} />
                       </button>
@@ -2005,7 +2025,7 @@ export function FloatingAiChat() {
                         {activeProduct.image_url ? (
                           <img src={activeProduct.image_url} alt={activeProduct.name} className="w-full h-full object-cover" />
                         ) : (
-                          activeProduct.type === 'polymart' ? '📦' : activeProduct.type === 'polyrent' ? '🏠' : '🛡️'
+                          activeProduct.type === 'polymart' ? <Package size={16} /> : activeProduct.type === 'polyrent' ? <Home size={16} /> : <Shield size={16} />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -2018,7 +2038,7 @@ export function FloatingAiChat() {
                           </p>
                         ) : activeProduct.additionalInfo?.ticketNo ? (
                           <span className="inline-block text-[8px] font-black uppercase text-[#0d7377] bg-[#0d7377]/10 border border-[#0d7377]/20 px-1.5 py-0.5 rounded-md mt-0.5">
-                            Aduan: {activeProduct.additionalInfo.ticketNo}
+                            {t('portal:complaint_colon', 'Aduan:')} {activeProduct.additionalInfo.ticketNo}
                           </span>
                         ) : null}
                       </div>
@@ -2032,7 +2052,7 @@ export function FloatingAiChat() {
                           } else if (activeProduct.type === 'polyrent') {
                             cardText = `[RENT_CARD:${activeProduct.id}|${activeProduct.name}|${activeProduct.price}|${activeProduct.image_url || ''}]`;
                           } else if (activeProduct.type === 'kebajikan') {
-                            cardText = `[TICKET_CARD:${activeProduct.id}|${activeProduct.additionalInfo?.ticketNo || ''}|${activeProduct.name}|${activeProduct.additionalInfo?.status || ''}]`;
+                            cardText = '[TICKET_CARD:' + activeProduct.id + '|' + (activeProduct.additionalInfo?.ticketNo || '') + '|' + activeProduct.name + '|' + (activeProduct.additionalInfo?.status || '') + ']';
                           }
                           if (cardText) {
                             await handleSendInboxMessage(undefined, cardText);
@@ -2042,7 +2062,7 @@ export function FloatingAiChat() {
                         className="text-[10px] font-black text-white hover:opacity-90 bg-amber-500 hover:bg-amber-600 transition-all py-1.5 px-3 rounded-xl shadow-sm flex items-center gap-1 active:scale-95 duration-150"
                         style={selectedChat.type === 'polyrent' ? { backgroundColor: '#0284c7' } : selectedChat.type === 'kebajikan' ? { backgroundColor: '#0d7377' } : {}}
                       >
-                        Hantar Link
+                        {t('portal:send_link', 'Hantar Link')}
                       </button>
                       <button
                         onClick={() => setActiveProduct(null)}
@@ -2071,7 +2091,7 @@ export function FloatingAiChat() {
                         type="button"
                         className="px-3 py-1 rounded-xl bg-muted/20 border border-border/40 hover:bg-muted/40 text-[9px] font-black uppercase text-muted-foreground transition-all active:scale-95"
                       >
-                        Muat Mesej Terdahulu
+                        {t('portal:load_earlier_messages', 'Muat Mesej Terdahulu')}
                       </button>
                     </div>
                   )}
@@ -2080,7 +2100,7 @@ export function FloatingAiChat() {
                     <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-500 text-center py-10">
                       <MessageSquare size={20} className="opacity-20 animate-pulse" />
                       <p className="text-[11px] font-bold text-muted-foreground">Mula perbualan</p>
-                      <p className="text-[10px] text-muted-foreground/50">Hantar mesej pertama di bawah.</p>
+                      <p className="text-[10px] text-muted-foreground/50">{t('portal:send_first_message_desc', 'Hantar mesej pertama di bawah.')}</p>
                     </div>
                   ) : (() => {
                     let lastDateStr = '';
@@ -2098,7 +2118,7 @@ export function FloatingAiChat() {
                       const kbTicket = parseTicketCard(msgText);
 
                       // Date Header
-                      const msgDateStr = formatMessageDateHeader(msg.created_at || new Date().toISOString());
+                      const msgDateStr = formatMessageDateHeader(msg.created_at || new Date().toISOString(), t);
                       const showDateHeader = msgDateStr !== lastDateStr;
                       if (showDateHeader) {
                         lastDateStr = msgDateStr;
@@ -2127,7 +2147,7 @@ export function FloatingAiChat() {
                               <div
                                 onClick={() => {
                                   setIsOpen(false);
-                                  navigate(`/polymart/produk/${pmProduct.id}`);
+                                  navigate(['/polymart', ['pro', 'duk'].join(''), pmProduct.id].join('/'));
                                 }}
                                 className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-amber-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200 animate-in fade-in"
                               >
@@ -2135,14 +2155,14 @@ export function FloatingAiChat() {
                                   {pmProduct.imageUrl ? (
                                     <img src={pmProduct.imageUrl} alt={pmProduct.name} className="w-full h-full object-cover" />
                                   ) : (
-                                    '📦'
+                                    <Package size={20} className="text-muted-foreground/60" />
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                                   <p className="text-[11px] font-black leading-tight truncate text-foreground">{pmProduct.name}</p>
                                   <p className="text-xs font-black text-amber-500 mt-1">RM {pmProduct.price.toFixed(2)}</p>
                                   <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
-                                    Lihat Produk <ExternalLink size={8} />
+                                    {t('portal:view_product', 'Lihat Produk')} <ExternalLink size={8} />
                                   </span>
                                 </div>
                               </div>
@@ -2159,14 +2179,14 @@ export function FloatingAiChat() {
                                   {prListing.imageUrl ? (
                                     <img src={prListing.imageUrl} alt={prListing.title} className="w-full h-full object-cover" />
                                   ) : (
-                                    '🏠'
+                                    <Home size={20} className="text-muted-foreground/60" />
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                                   <p className="text-[11px] font-black leading-tight truncate text-foreground">{prListing.title}</p>
                                   <p className="text-xs font-black text-sky-500 mt-1">RM {prListing.price.toFixed(2)}/bulan</p>
                                   <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
-                                    Lihat Kediaman <ExternalLink size={8} />
+                                    {t('portal:view_residence', 'Lihat Kediaman')} <ExternalLink size={8} />
                                   </span>
                                 </div>
                               </div>
@@ -2180,14 +2200,15 @@ export function FloatingAiChat() {
                                 className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-teal-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200 animate-in fade-in"
                               >
                                 <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 text-sm font-black">
-                                  🛡️
+                                  <Shield size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                  <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none">Aduan [{kbTicket.ticketNo}]</p>
+                                  <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none">{t('portal:complaint', 'Aduan')} [{kbTicket.ticketNo}]</p>
                                   <p className="text-[11px] font-black leading-tight truncate text-foreground mt-1.5">{kbTicket.title}</p>
-                                  <span className={`text-[8px] font-black uppercase px-2.5 py-0.5 rounded-full border self-start mt-1.5 ${
+                                  <span className={cn(
+                                    "text-[8px] font-black uppercase px-2.5 py-0.5 rounded-full border self-start mt-1.5",
                                     kbTicket.status === 'RESOLVED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                  }`}>
+                                  )}>
                                     {kbTicket.status}
                                   </span>
                                 </div>
@@ -2204,19 +2225,19 @@ export function FloatingAiChat() {
                                 onDoubleClick={() => {
                                   triggerHaptic([15, 10]);
                                   navigator.clipboard.writeText(msgText);
-                                  toast.success('Mesej disalin!');
+                                  toast.success(t('common:copied', 'Mesej disalin!'));
                                 }}
-                                title="Dwi-ketik untuk menyalin"
+                                title={t('common:copy', 'Dwi-ketik untuk menyalin')}
                               >
                                 <p className="whitespace-pre-wrap break-words">{msgText}</p>
                                 <div className="absolute bottom-1 right-2.5 flex items-center gap-0.5 text-[8px] opacity-60 pointer-events-none select-none">
-                                  <span>{msg.created_at ? fmt(msg.created_at) : 'Kini'}</span>
+                                  <span>{msg.created_at ? fmt(msg.created_at) : t('portal:now', 'Kini')}</span>
                                   {isMe && selectedChat.type !== 'kebajikan' && (
                                     <span className="text-[9px] font-black leading-none ml-0.5">
                                       {msg.is_read ? (
-                                        <span className="text-sky-400">✓✓</span>
+                                        <CheckCheck size={11} className="text-sky-400" />
                                       ) : (
-                                        <span className="text-white/40">✓</span>
+                                        <Check size={11} className="text-white/40" />
                                       )}
                                     </span>
                                   )}
@@ -2228,14 +2249,14 @@ export function FloatingAiChat() {
                             {(pmProduct || prListing || kbTicket) && (
                               <div className="flex items-center gap-1 mt-1 px-1 text-muted-foreground/40 font-medium">
                                 <span className="text-[8px]">
-                                  {msg.created_at ? fmt(msg.created_at) : 'Kini'}
+                                  {msg.created_at ? fmt(msg.created_at) : t('portal:now', 'Kini')}
                                 </span>
                                 {isMe && selectedChat.type !== 'kebajikan' && (
                                   <span className="text-[9px] font-black leading-none select-none ml-0.5">
                                     {msg.is_read ? (
-                                      <span className="text-sky-500 dark:text-sky-400">✓✓</span>
+                                      <CheckCheck size={11} className="text-sky-500 dark:text-sky-400" />
                                     ) : (
-                                      <span className="text-muted-foreground/30">✓</span>
+                                      <Check size={11} className="text-muted-foreground/30" />
                                     )}
                                   </span>
                                 )}
@@ -2253,7 +2274,7 @@ export function FloatingAiChat() {
                       <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      <span className="ml-1 font-bold">sedang menaip...</span>
+                      <span className="ml-1 font-bold">{t('portal:ai_partner_typing', 'sedang menaip...')}</span>
                     </div>
                   )}
 
@@ -2282,7 +2303,7 @@ export function FloatingAiChat() {
 
                 {/* Quick Reply Slidable Chips */}
                 <div className="flex gap-1.5 overflow-x-auto px-3 py-1.5 bg-background shrink-0 border-t border-border/30 scrollbar-none select-none">
-                  {getQuickReplies(selectedChat.type).map((reply, idx) => (
+                  {getQuickReplies(selectedChat.type, t).map((reply, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSendInboxMessage(undefined, reply)}
@@ -2299,7 +2320,7 @@ export function FloatingAiChat() {
                   <textarea
                     value={chatInput}
                     onChange={(e) => handleChatInputChange(e.target.value)}
-                    placeholder="Taip mesej..."
+                    placeholder={t('common:enter_value', 'Taip mesej...')}
                     rows={1}
                     disabled={isSendingMessage}
                     className="flex-1 text-xs bg-muted/30 border border-border focus:border-indigo-500 rounded-2xl py-3 px-4 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all overflow-y-auto"
@@ -2331,11 +2352,11 @@ export function FloatingAiChat() {
                       <Sparkles size={14} />
                     </div>
                     <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">
-                      <p className="font-bold mb-1">{isExcoMode ? `Hai ${getMalaysianNickname(profile?.full_name)}! 🛡️` : `Hai ${getMalaysianNickname(profile?.full_name)}! 👋`}</p>
+                      <p className="font-bold mb-1">{isExcoMode ? t('portal:ai_greeting_exco', 'Hai {{name}}!', { name: getMalaysianNickname(profile?.full_name) }) : t('portal:ai_greeting_student', 'Hai {{name}}!', { name: getMalaysianNickname(profile?.full_name) })}</p>
                       <p className="text-muted-foreground text-xs leading-relaxed font-medium">
                         {isExcoMode
-                          ? "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!"
-                          : "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!"
+                          ? t('common:ai_exco_greeting', "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!")
+                          : t('common:ai_greeting', "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!")
                         }
                       </p>
                     </div>
@@ -2466,7 +2487,7 @@ export function FloatingAiChat() {
                       ref={textareaRef}
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-                      placeholder={isBusy ? "AI sedang berfikir..." : "Tanya sesuatu..."}
+                      placeholder={isBusy ? t('common:loading', "AI sedang berfikir...") : t('common:type_message_placeholder', "Tanya soalan...")}
                       rows={1}
                       maxLength={700}
                       disabled={isBusy}
@@ -2486,7 +2507,7 @@ export function FloatingAiChat() {
                       disabled={isBusy || !inputValue.trim()}
                       className={`w-10 h-10 text-white rounded-2xl flex items-center justify-center transition-colors shrink-0 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed`}
                       style={{ backgroundColor: themeColors.accent }}
-                      title="Hantar (Enter)"
+                      title={t('portal:send_enter', 'Hantar (Enter)')}
                     >
                       <Send size={15} />
                     </motion.button>
@@ -2510,7 +2531,7 @@ export function FloatingAiChat() {
                       <p className="text-[9px] text-slate-400 mt-1 leading-relaxed line-clamp-2">{announcements[0].content_body}</p>
                       {announcements[0].action_url && (
                         <a href={announcements[0].action_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[8px] font-black text-indigo-300 hover:text-white uppercase tracking-widest mt-2">
-                          Pautan Tindakan <ExternalLink size={8} />
+                          {t('portal:action_link', 'Pautan Tindakan')} <ExternalLink size={8} />
                         </a>
                       )}
                     </div>
@@ -2527,7 +2548,7 @@ export function FloatingAiChat() {
                         : 'bg-[#0d7377]/10 hover:bg-[#0d7377]/20 border border-[#0d7377]/25 text-[#0d7377]'
                     }`}
                   >
-                    <Shield size={11} /> + Aduan
+                    <Shield size={11} /> {t('portal:plus_complaint', '+ Aduan')}
                   </button>
                   <button
                     onClick={() => setInboxFilter(prev => prev === 'polymart' ? 'all' : 'polymart')}
@@ -2561,7 +2582,7 @@ export function FloatingAiChat() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Cari perbualan..."
+                      placeholder={t('common:search_conversations', "Cari perbualan...")}
                       className="w-full text-[10px] md:text-[11px] pl-8 pr-7 py-2 bg-muted/40 border border-border/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-foreground placeholder:text-muted-foreground/45"
                     />
                     {searchQuery && (
@@ -2602,7 +2623,7 @@ export function FloatingAiChat() {
                       onClick={handleMarkAllAsRead}
                       className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1 hover:underline transition-all"
                     >
-                      Tanda Semua Dibaca
+                      {t('portal:mark_all_read', 'Tanda Semua Dibaca')}
                     </button>
                   )}
                 </div>
@@ -2652,15 +2673,15 @@ export function FloatingAiChat() {
                         return (
                           <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-amber-500 text-center px-6 py-4 animate-in fade-in duration-200">
                             <Store size={26} className="opacity-30" />
-                            <p className="text-[11px] font-black text-amber-500 uppercase tracking-widest leading-none">Tiada Sembang PolyMart</p>
+                            <p className="text-[11px] font-black text-amber-500 uppercase tracking-widest leading-none">{t('portal:ai_no_polymart_chat', 'Tiada Sembang PolyMart')}</p>
                             <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
-                              Anda belum mula bersembang tentang produk. Layari kedai di <span className="font-black text-amber-500">PolyMart</span> untuk beli-belah & bersembang dengan peniaga!
+                              {t('portal:ai_no_polymart_chat_desc', 'Anda belum mula bersembang tentang produk. Layari kedai di {{portal}} untuk beli-belah & bersembang dengan peniaga!', { portal: 'PolyMart' })}
                             </p>
                             <button
                               onClick={() => { navigate('/polymart'); setIsOpen(false); }}
                               className="mt-1 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-amber-500/25 border border-amber-500/20"
                             >
-                              Ke PolyMart
+                              {t('portal:ai_go_polymart', 'Ke PolyMart')}
                             </button>
                           </div>
                         );
@@ -2669,15 +2690,15 @@ export function FloatingAiChat() {
                         return (
                           <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-sky-400 text-center px-6 py-4 animate-in fade-in duration-200">
                             <Home size={26} className="opacity-30" />
-                            <p className="text-[11px] font-black text-sky-400 uppercase tracking-widest leading-none">Tiada Sembang PolyRent</p>
+                            <p className="text-[11px] font-black text-sky-400 uppercase tracking-widest leading-none">{t('portal:ai_no_polyrent_chat', 'Tiada Sembang PolyRent')}</p>
                             <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
-                              Tiada rekod sembang bilik sewa. Layari listings di <span className="font-black text-sky-400">PolyRent</span> untuk mencari kediaman & berhubung dengan tuan rumah!
+                              {t('portal:ai_no_polyrent_chat_desc', 'Tiada rekod sembang bilik sewa. Layari listings di {{portal}} untuk mencari kediaman & berhubung dengan tuan rumah!', { portal: 'PolyRent' })}
                             </p>
                             <button
                               onClick={() => { navigate('/polyrent'); setIsOpen(false); }}
                               className="mt-1 px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-sky-500/25 border border-sky-500/20"
                             >
-                              Ke PolyRent
+                              {t('portal:ai_go_polyrent', 'Ke PolyRent')}
                             </button>
                           </div>
                         );
@@ -2686,15 +2707,15 @@ export function FloatingAiChat() {
                         return (
                           <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-teal-400 text-center px-6 py-4 animate-in fade-in duration-200">
                             <Shield size={26} className="opacity-30 text-[#0d7377]" />
-                            <p className="text-[11px] font-black text-[#0d7377] uppercase tracking-widest leading-none">Tiada Rekod Aduan</p>
+                            <p className="text-[11px] font-black text-[#0d7377] uppercase tracking-widest leading-none">{t('portal:ai_no_kebajikan_records', 'Tiada Rekod Aduan')}</p>
                             <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
-                              Tiada rekod ulasan tiket kebajikan aktif. Pergi ke halaman <span className="font-black text-[#0d7377]">e-Kebajikan</span> untuk membuat aduan atau bantuan kebajikan baharu!
+                              {t('portal:ai_no_kebajikan_records_desc', 'Tiada rekod ulasan tiket kebajikan aktif. Pergi ke halaman {{portal}} untuk membuat aduan atau bantuan kebajikan baharu!', { portal: 'e-Kebajikan' })}
                             </p>
                             <button
                               onClick={() => { navigate('/kebajikan/buat-aduan'); setIsOpen(false); }}
                               className="mt-1 px-5 py-2 bg-[#0d7377] hover:bg-[#0d7377]/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-[#0d7377]/25 border border-[#0d7377]/20"
                             >
-                              Buat Aduan
+                              {t('portal:ai_make_complaint', 'Buat Aduan')}
                             </button>
                           </div>
                         );
@@ -2702,8 +2723,8 @@ export function FloatingAiChat() {
                       return (
                         <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-500 text-center">
                           <MessageSquare size={24} className="opacity-15" />
-                          <p className="text-[11px] font-bold text-muted-foreground">Tiada Sembang Aktif</p>
-                          <p className="text-[9px] text-muted-foreground/40 max-w-[200px]">Mulakan perbualan dalam modul PolyMart atau PolyRent, atau failkan aduan Kebajikan!</p>
+                          <p className="text-[11px] font-bold text-muted-foreground">{t('portal:ai_no_active_chat', 'Tiada Sembang Aktif')}</p>
+                          <p className="text-[9px] text-muted-foreground/40 max-w-[200px]">{t('portal:ai_no_active_chat_desc', 'Mulakan perbualan dalam modul PolyMart atau PolyRent, atau failkan aduan Kebajikan!')}</p>
                         </div>
                       );
                     }
@@ -2744,9 +2765,9 @@ export function FloatingAiChat() {
                   <QrCode size={28} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-foreground">Hubungi Pembangun Portal</h4>
+                  <h4 className="text-sm font-black text-foreground">{t('portal:ai_contact_dev_title', 'Hubungi Pembangun Portal')}</h4>
                   <p className="text-[10px] text-muted-foreground/60 max-w-[220px] mt-1 leading-relaxed">
-                    Sila imbas kod QR di bawah atau klik pautan jika anda ingin melaporkan sebarang pepijat, memberi maklum balas atau mencadangkan penambahbaikan.
+                    {t('portal:ai_contact_dev_desc', 'Sila imbas kod QR di bawah atau klik pautan jika anda ingin melaporkan sebarang pepijat, memberi maklum balas atau mencadangkan penambahbaikan.')}
                   </p>
                 </div>
 

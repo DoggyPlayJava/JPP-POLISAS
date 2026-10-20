@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Trophy,
   Medal,
@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchMakmpAwardRanking,
   fetchMakmpAwardReviewStatus,
@@ -34,9 +35,9 @@ interface MakmpRankingPanelProps {
 }
 
 const RANK_MEDALS = [
-  { bg: 'from-amber-400 to-yellow-600', icon: Crown, label: 'Tempat Pertama' },
-  { bg: 'from-slate-300 to-slate-500', icon: Medal, label: 'Tempat Kedua' },
-  { bg: 'from-amber-700 to-amber-900', icon: Medal, label: 'Tempat Ketiga' },
+  { bg: 'from-amber-400 to-yellow-600', icon: Crown },
+  { bg: 'from-slate-300 to-slate-500', icon: Medal },
+  { bg: 'from-amber-700 to-amber-900', icon: Medal },
 ];
 
 export default function MakmpRankingPanel({
@@ -45,6 +46,7 @@ export default function MakmpRankingPanel({
   isAdmin = false,
   onChanged,
 }: MakmpRankingPanelProps) {
+  const { t } = useTranslation(['makmp', 'common']);
   const [ranking, setRanking] = useState<MakmpRankingEntry[]>([]);
   const [reviewStatus, setReviewStatus] = useState<MakmpAwardReviewStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,10 +102,10 @@ export default function MakmpRankingPanel({
     const res = await saveMakmpAwardRanking(pinCode || null, award.id, payload, note);
     setSavingRank(false);
     if (!res.success) {
-      setError(res.message || 'Gagal menyimpan ranking.');
+      setError(res.message || t('makmp:err_save_ranking_failed', 'Gagal menyimpan ranking.'));
       return;
     }
-    setMessage('Kedudukan ranking disimpan.');
+    setMessage(t('makmp:msg_ranking_saved', 'Kedudukan ranking disimpan.'));
     setDirty(false);
     onChanged?.();
     setTimeout(() => setMessage(null), 2500);
@@ -111,7 +113,11 @@ export default function MakmpRankingPanel({
 
   const handleFinalize = async () => {
     const ok = window.confirm(
-      `Sahkan keputusan untuk "${award.name}"?\n\nTindakan ini akan KUNCI ranking dan menghantar notifikasi kepada pemenang (Top 3).`
+      t(
+        'makmp:confirm_finalize_award',
+        'Sahkan keputusan untuk "{{awardName}}"?\n\nTindakan ini akan KUNCI ranking dan menghantar notifikasi kepada pemenang (Top 3).',
+        { awardName: award.name }
+      )
     );
     if (!ok) return;
     setFinalizing(true);
@@ -119,43 +125,56 @@ export default function MakmpRankingPanel({
     const res = await finalizeMakmpAward(award.id, 3, pinCode || null);
     setFinalizing(false);
     if (!res.success) {
-      setError(res.message || 'Gagal mengesahkan keputusan.');
+      setError(res.message || t('makmp:err_finalize_award_failed', 'Gagal mengesahkan keputusan.'));
       return;
     }
-    setMessage(`Keputusan disahkan! ${res.winner_count ?? 0} pemenang dijemput.`);
+    setMessage(
+      t('makmp:msg_award_finalized', 'Keputusan disahkan! {{count}} pemenang dijemput.', {
+        count: res.winner_count ?? 0,
+      })
+    );
 
     // Hantar notifikasi (in-app + push) + email kepada pemenang
     try {
       const winners = ranking.filter((_, i) => i < 3);
       for (const w of winners) {
         const userId = w.submission?.user_id;
-        const link = `/makmp/status?code=${w.submission?.tracking_code || ''}`;
+        const link = '/makmp/status?code=' + (w.submission?.tracking_code || '');
 
         // In-app + push notification
         if (userId) {
           await sendNotificationToUser(userId, {
-            title: 'Tahniah! Anda Dijemput ke MAKMP 2026 🎉',
-            message: `Anda terpilih sebagai pemenang "${award.name}". Sila lengkapkan maklumat IC & gambar passport anda.`,
+            title: t('makmp:winner_notif_title', 'Tahniah! Anda Dijemput ke MAKMP 2026'),
+            message: t(
+              'makmp:winner_notif_message',
+              'Anda terpilih sebagai pemenang "{{awardName}}". Sila lengkapkan maklumat IC & gambar passport anda.',
+              { awardName: award.name }
+            ),
             type: 'MAKMP_WINNER',
             module: 'JPP',
             link,
             reference_id: w.submission_id,
-            actor_name: 'Panel Penilai MAKMP',
+            actor_name: t('makmp:jury_panel_actor', 'Panel Penilai MAKMP'),
           });
         }
 
         // Email via Resend
         if (w.submission?.email) {
-          const html = `
-            <div style="font-family:sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px">
-              <h2 style="color:#059669">Tahniah, ${w.submission.full_name}! 🎉</h2>
-              <p>Anda telah <strong>dijemput ke Majlis Anugerah Kecemerlangan Mahasiswa (MAKMP) 2026</strong> sebagai pemenang anugerah:</p>
-              <p style="font-size:18px;font-weight:bold;color:#d97706">${award.name}</p>
-              <p>Sila log masuk ke portal dan lengkapkan <strong>nombor IC</strong> serta <strong>gambar passport</strong> anda.</p>
-              <p>Kod rujukan anda: <code>${w.submission.tracking_code}</code></p>
-              <p style="color:#888">— Panel Penilai MAKMP POLISAS</p>
-            </div>`;
-          sendEmail({ to: w.submission.email, subject: 'Tahniah! Anda Dijemput ke MAKMP 2026', html }).catch(() => {});
+          const html = [
+            '<div style="font-family:sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px">',
+            '<h2 style="color:#059669">' + t('makmp:winner_email_heading', 'Tahniah, {{name}}!', { name: w.submission.full_name }) + '</h2>',
+            '<p>' + t('makmp:winner_email_body1', 'Anda telah dijemput ke Majlis Anugerah Kecemerlangan Mahasiswa (MAKMP) 2026 sebagai pemenang anugerah:') + '</p>',
+            '<p style="font-size:18px;font-weight:bold;color:#d97706">' + award.name + '</p>',
+            '<p>' + t('makmp:winner_email_body2', 'Sila log masuk ke portal dan lengkapkan nombor IC serta gambar passport anda.') + '</p>',
+            '<p>' + t('makmp:winner_email_ref_code', 'Kod rujukan anda: {{code}}', { code: w.submission.tracking_code }) + '</p>',
+            '<p style="color:#888">' + t('makmp:winner_email_signoff', '— Panel Penilai MAKMP POLISAS') + '</p>',
+            '</div>',
+          ].join('');
+          sendEmail({
+            to: w.submission.email,
+            subject: t('makmp:winner_email_subject', 'Tahniah! Anda Dijemput ke MAKMP 2026'),
+            html,
+          }).catch(() => {});
         }
       }
     } catch (e) {
@@ -170,7 +189,7 @@ export default function MakmpRankingPanel({
     return (
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 text-sm shadow-sm">
         <Loader2 className="w-4 h-4 animate-spin text-amber-500 dark:text-amber-400" />
-        <span>Memuat ranking...</span>
+        <span>{t('makmp:loading_ranking', 'Memuat ranking...')}</span>
       </div>
     );
   }
@@ -179,7 +198,7 @@ export default function MakmpRankingPanel({
     return (
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 dark:text-slate-400 text-sm shadow-sm">
         <Users className="w-6 h-6 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
-        Tiada peserta yang disahkan lagi untuk anugerah ini.
+        {t('makmp:no_participants_verified_yet', 'Tiada peserta yang disahkan lagi untuk anugerah ini.')}
       </div>
     );
   }
@@ -203,17 +222,17 @@ export default function MakmpRankingPanel({
         {isLocked ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 text-xs font-bold">
             <Lock className="w-3.5 h-3.5" />
-            Keputusan Disahkan
+            {t('makmp:results_verified', 'Keputusan Disahkan')}
           </span>
         ) : isReady ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 text-xs font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Sedia Disahkan
+            {t('makmp:ready_to_verify', 'Sedia Disahkan')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-xs font-bold">
             <AlertTriangle className="w-3.5 h-3.5" />
-            {pendingCount} Belum Selesai
+            {t('makmp:pending_count_suffix', '{{count}} Belum Selesai', { count: pendingCount })}
           </span>
         )}
       </div>
@@ -225,21 +244,24 @@ export default function MakmpRankingPanel({
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <div className="text-xs text-emerald-800 dark:text-emerald-300">
-                <div className="font-bold text-emerald-900 dark:text-emerald-200">Sedia untuk disahkan</div>
-                Semua {reviewStatus?.total ?? 0} calon telah selesai disemak. Anda boleh{' '}
-                <span className="font-semibold text-emerald-950 dark:text-white">melaraskan kedudukan</span> (butang ↑↓)
-                jika perlu, kemudian tekan <span className="font-semibold text-emerald-950 dark:text-white">SAHKAN KEDUDUKAN CALON</span>.
+                <div className="font-bold text-emerald-900 dark:text-emerald-200">
+                  {t('makmp:ready_for_verification_title', 'Sedia untuk disahkan')}
+                </div>
+                {t('makmp:ready_for_verification_desc', 'Semua {{total}} calon telah selesai disemak. Anda boleh melaraskan kedudukan (butang ↑↓) jika perlu, kemudian tekan SAHKAN KEDUDUKAN CALON.', { total: reviewStatus?.total ?? 0 })}
               </div>
             </div>
           ) : (
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
               <div className="text-xs text-amber-800 dark:text-amber-300">
-                <div className="font-bold text-amber-900 dark:text-amber-200">Belum sedia disahkan</div>
-                Masih ada <span className="font-semibold text-amber-950 dark:text-white">{pendingCount}</span> calon belum selesai
-                {reviewStatus?.menunggu ? ` (${reviewStatus.menunggu} Menunggu` : '('}
-                {reviewStatus?.dalam_semakan ? `, ${reviewStatus.dalam_semakan} Dalam Semakan)` : ')'}.
-                Sila selesaikan semakan semua calon dahulu sebelum mengesahkan kedudukan.
+                <div className="font-bold text-amber-900 dark:text-amber-200">
+                  {t('makmp:not_ready_for_verification_title', 'Belum sedia disahkan')}
+                </div>
+                {t('makmp:not_ready_for_verification_desc', 'Masih ada {{pending}} calon belum selesai ({{menunggu}} Menunggu, {{dalamSemakan}} Dalam Semakan). Sila selesaikan semakan semua calon dahulu sebelum mengesahkan kedudukan.', {
+                  pending: pendingCount,
+                  menunggu: reviewStatus?.menunggu ?? 0,
+                  dalamSemakan: reviewStatus?.dalam_semakan ?? 0,
+                })}
               </div>
             </div>
           )}
@@ -248,9 +270,7 @@ export default function MakmpRankingPanel({
           <div className="flex items-start gap-2 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300">
             <Info className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 mt-0.5 shrink-0" />
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-              Kedudukan calon <span className="text-slate-900 dark:text-slate-200 font-semibold">dikira automatik ikut merit</span>.
-              Jika perlu, anda boleh <span className="text-slate-900 dark:text-slate-200 font-semibold">menukar kedudukan secara manual</span>{' '}
-              menggunakan butang ↑↓ pada senarai di bawah, kemudian tekan "Simpan Kedudukan".
+              {t('makmp:manual_override_guide', 'Kedudukan calon dikira automatik ikut merit. Jika perlu, anda boleh menukar kedudukan secara manual menggunakan butang ↑↓ pada senarai di bawah, kemudian tekan "Simpan Kedudukan".')}
             </p>
           </div>
         </div>
@@ -286,7 +306,7 @@ export default function MakmpRankingPanel({
                         {entry.submission?.matric_no}
                       </div>
                       <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">
-                        +{entry.total_merit_granted} Merit
+                        +{entry.total_merit_granted} {t('makmp:merit_label_short', 'Merit')}
                       </div>
                     </div>
                   </>
@@ -304,7 +324,7 @@ export default function MakmpRankingPanel({
       {/* Senarai penuh ranking */}
       <div className="px-5 py-5 space-y-2">
         <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          Senarai Kedudukan Penuh
+          {t('makmp:full_ranking_list_title', 'Senarai Kedudukan Penuh')}
         </div>
         {ranking.map((entry, idx) => (
           <div
@@ -340,7 +360,7 @@ export default function MakmpRankingPanel({
 
             <div className="text-right shrink-0">
               <div className="font-bold text-amber-600 dark:text-amber-400 text-sm">+{entry.total_merit_granted}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400">merit</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">{t('makmp:merit_unit_lower', 'merit')}</div>
             </div>
 
             {/* Butang laras (sembunyi bila locked) */}
@@ -350,7 +370,7 @@ export default function MakmpRankingPanel({
                   onClick={() => moveRank(idx, -1)}
                   disabled={idx === 0}
                   className="p-1 rounded bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 disabled:opacity-30 transition shadow-xs"
-                  title="Naik kedudukan"
+                  title={t('makmp:move_up_rank', 'Naik kedudukan')}
                 >
                   <ArrowUp className="w-3.5 h-3.5" />
                 </button>
@@ -358,7 +378,7 @@ export default function MakmpRankingPanel({
                   onClick={() => moveRank(idx, 1)}
                   disabled={idx === ranking.length - 1}
                   className="p-1 rounded bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 disabled:opacity-30 transition shadow-xs"
-                  title="Turun kedudukan"
+                  title={t('makmp:move_down_rank', 'Turun kedudukan')}
                 >
                   <ArrowDown className="w-3.5 h-3.5" />
                 </button>
@@ -374,7 +394,7 @@ export default function MakmpRankingPanel({
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Nota sebab laras kedudukan (pilihan)"
+            placeholder={t('makmp:ranking_note_placeholder', 'Nota sebab laras kedudukan (pilihan)')}
             className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition"
           />
 
@@ -385,18 +405,18 @@ export default function MakmpRankingPanel({
               className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-40"
             >
               <Save className="w-3.5 h-3.5" />
-              {savingRank ? 'Menyimpan...' : 'Simpan Kedudukan'}
+              {savingRank ? t('makmp:saving_btn', 'Menyimpan...') : t('makmp:save_ranking_btn', 'Simpan Kedudukan')}
             </button>
 
             <button
-                onClick={handleFinalize}
-                disabled={finalizing || !isReady}
-                title={!isReady ? 'Selesaikan semakan semua calon dahulu' : 'Sahkan & kunci kedudukan calon'}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {finalizing ? 'Mengesahkan...' : 'Sahkan Kedudukan Calon'}
-              </button>
+              onClick={handleFinalize}
+              disabled={finalizing || !isReady}
+              title={!isReady ? t('makmp:finalize_disabled_tooltip', 'Selesaikan semakan semua calon dahulu') : t('makmp:finalize_enabled_tooltip', 'Sahkan & kunci kedudukan calon')}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {finalizing ? t('makmp:confirming_btn', 'Mengesahkan...') : t('makmp:confirm_candidate_ranking_btn', 'Sahkan Kedudukan Calon')}
+            </button>
           </div>
 
           {message && (

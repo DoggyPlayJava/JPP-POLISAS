@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import {
   Award,
+  Building2,
+  Folder,
+  Star,
+  Unlock,
   Users,
   CheckCircle2,
   XCircle,
@@ -36,6 +41,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
@@ -48,7 +54,10 @@ import {
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
   getJabatanLabel,
+  PRESET_CATEGORY_GROUPS,
 } from '@/lib/makmp';
+
+export { PRESET_CATEGORY_GROUPS };
 import type {
   MakmpEdition,
   MakmpCategory,
@@ -62,19 +71,10 @@ import type {
 import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
 import MakmpWinnerDocsPanel from '@/components/makmp/MakmpWinnerDocsPanel';
 
-export const PRESET_CATEGORY_GROUPS = [
-  'ANUGERAH UTAMA',
-  'ANUGERAH AKADEMIK',
-  'ANUGERAH SUKAN',
-  'ANUGERAH KEUSAHAWANAN',
-  'ANUGERAH KELAB DAN PERSATUAN',
-  'ANUGERAH JPP',
-  'ANUGERAH PROGRAM',
-  'ANUGERAH KOLEJ KEDIAMAN',
-  'ANUGERAH KHAS',
-];
+
 
 export default function MakmpAdminDashboardPage() {
+  const { t } = useTranslation(['jpp', 'makmp', 'common']);
   const { user, profile } = useAuth();
   const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
@@ -103,7 +103,7 @@ export default function MakmpAdminDashboardPage() {
   const [isAwardModalOpen, setIsAwardModalOpen] = useState(false);
   const [editingAward, setEditingAward] = useState<MakmpAwardDefinition | null>(null);
   const [awardName, setAwardName] = useState('');
-  const [awardCategoryGroup, setAwardCategoryGroup] = useState('ANUGERAH UTAMA');
+  const [awardCategoryGroup, setAwardCategoryGroup] = useState(PRESET_CATEGORY_GROUPS[0]);
   const [customCategoryGroup, setCustomCategoryGroup] = useState('');
   const [awardTargetType, setAwardTargetType] = useState<'INDIVIDUAL' | 'ENTITY'>('INDIVIDUAL');
   const [awardDocRequirementType, setAwardDocRequirementType] = useState<'CERTIFICATES' | 'REPORT_AND_EVIDENCE'>('CERTIFICATES');
@@ -166,19 +166,19 @@ export default function MakmpAdminDashboardPage() {
   const handleUnlockAward = (awardApplicationId: string, awardName?: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Buka Semula Semakan Juri',
-      description: `Buka semula semakan untuk anugerah "${awardName || 'ini'}"? Ini akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`,
-      confirmLabel: 'Buka Semula',
+      title: t('jpp:makmp_unlock_single_title', 'Buka Semula Semakan Juri'),
+      description: t('makmp:admin_reopen_award_confirm', 'Buka semula semakan untuk anugerah "{{awardName}}"? Ini akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.', { awardName: awardName || 'ini' }),
+      confirmLabel: t('jpp:makmp_reopen_review', 'Buka Semula'),
       variant: 'warning',
       onConfirm: async () => {
         setUnlockingAwardId(awardApplicationId);
         try {
           const res = await unlockJuryAwardReview(awardApplicationId);
           if (!res.success) {
-            toast.error('Gagal membuka semula: ' + res.message);
+            toast.error(t('makmp:admin_err_reopen_failed', 'Gagal membuka semula:') + ' ' + res.message);
             return;
           }
-          toast.success('Permohonan anugerah telah dibuka semula untuk semakan.');
+          toast.success(t('makmp:admin_award_reopened_toast', 'Permohonan anugerah telah dibuka semula untuk semakan.'));
           await loadAllData();
           setActiveSub((prev) =>
             prev
@@ -193,7 +193,7 @@ export default function MakmpAdminDashboardPage() {
               : prev
           );
         } catch (err: any) {
-          toast.error('Ralat: ' + err.message);
+          toast.error(t('makmp:admin_error_prefix', 'Ralat:') + ' ' + err.message);
         } finally {
           setUnlockingAwardId(null);
         }
@@ -211,9 +211,9 @@ export default function MakmpAdminDashboardPage() {
     const names = lockedAwards.map((a) => a.award?.name || 'anugerah').join(', ');
     setConfirmConfig({
       isOpen: true,
-      title: 'Buka Semula Semua Anugerah Terkunci',
-      description: `Buka semula ${lockedAwards.length} anugerah terkunci untuk ${sub.full_name} (${names})? Ini akan reset keputusan juri dan menolak semula merit (jika disahkan).`,
-      confirmLabel: 'Buka Semula',
+      title: t('jpp:makmp_unlock_all_title', 'Buka Semula Semua Anugerah Terkunci'),
+      description: t('makmp:admin_reopen_multiple_confirm', 'Buka semula {{count}} anugerah terkunci untuk {{fullName}} ({{names}})? Ini akan reset keputusan juri dan menolak semula merit (jika disahkan).', { count: lockedAwards.length, fullName: sub.full_name, names }),
+      confirmLabel: t('jpp:makmp_reopen_review', 'Buka Semula'),
       variant: 'warning',
       onConfirm: async () => {
         setUnlockingAwardId('__submission__' + sub.id);
@@ -224,13 +224,13 @@ export default function MakmpAdminDashboardPage() {
             if (!res.success) failed++;
           }
           if (failed > 0) {
-            toast.error(`Selesai dengan ${failed} kegagalan. Sila semak semula.`);
+            toast.error(t('makmp:admin_reopen_completed_with_failures', 'Selesai dengan {{failed}} kegagalan. Sila semak semula.', { failed }));
           } else {
-            toast.success(`${lockedAwards.length} anugerah telah dibuka semula untuk semakan.`);
+            toast.success(t('makmp:admin_reopen_success_multiple', '{{count}} anugerah telah dibuka semula untuk semakan.', { count: lockedAwards.length }));
           }
           await loadAllData();
         } catch (err: any) {
-          toast.error('Ralat: ' + err.message);
+          toast.error(t('makmp:admin_error_prefix', 'Ralat:') + ' ' + err.message);
         } finally {
           setUnlockingAwardId(null);
         }
@@ -481,7 +481,7 @@ export default function MakmpAdminDashboardPage() {
   const handleOpenCreatePin = () => {
     setEditingPin(null);
     setJuryName('');
-    setJuryOrg('Jawatankuasa MAKMP POLISAS');
+    setJuryOrg(t('makmp:admin_default_jury_org', 'Jawatankuasa MAKMP POLISAS'));
     setSelectedJuryCategories(['ALL']);
     setJuryCategorySearch('');
     setIsPinModalOpen(true);
@@ -490,7 +490,7 @@ export default function MakmpAdminDashboardPage() {
   const handleOpenEditPin = (pin: MakmpJuryPin) => {
     setEditingPin(pin);
     setJuryName(pin.jury_name);
-    setJuryOrg(pin.organization || 'Jawatankuasa MAKMP POLISAS');
+    setJuryOrg(pin.organization || t('makmp:admin_default_jury_org', 'Jawatankuasa MAKMP POLISAS'));
     setSelectedJuryCategories(
       Array.isArray(pin.assigned_categories) && pin.assigned_categories.length > 0
         ? pin.assigned_categories
@@ -514,14 +514,14 @@ export default function MakmpAdminDashboardPage() {
 
     if (!user) {
       toast.error(
-        'Akses Ditolak (RLS): Anda belum log masuk ke portal.\n\nPangkalan data memerlukan sesi log masuk Pentadbir JPP yang sah untuk menjana atau mengemas kini kod PIN juri.\n\nSila log masuk di /login terlebih dahulu.'
+        t('makmp:admin_access_denied_rls_login', 'Akses Ditolak (RLS): Anda belum log masuk ke portal.\n\nPangkalan data memerlukan sesi log masuk Pentadbir JPP yang sah untuk menjana atau mengemas kini kod PIN juri.\n\nSila log masuk di /login terlebih dahulu.')
       );
       return;
     }
 
     if (!isJppOrAdmin) {
       toast.error(
-        `Akses Ditolak (RLS): Akaun anda (${profile?.email || user.email}) mempunyai peranan "${profile?.role || 'Pelajar'}".\n\nUntuk menjana atau mengemas kini PIN juri, akaun anda mestilah mempunyai peranan 'JPP' atau 'SUPER_ADMIN_JPP' dalam pangkalan data.`
+        t('makmp:admin_access_denied_rls_role', 'Akses Ditolak (RLS): Akaun anda ({{email}}) mempunyai peranan "{{role}}".\n\nUntuk menjana atau mengemas kini PIN juri, akaun anda mestilah mempunyai peranan \'JPP\' atau \'SUPER_ADMIN_JPP\' dalam pangkalan data.', { email: profile?.email || user.email, role: profile?.role || 'Pelajar' })
       );
       return;
     }
@@ -533,7 +533,7 @@ export default function MakmpAdminDashboardPage() {
         .from('makmp_jury_pins')
         .update({
           jury_name: juryName.trim(),
-          organization: juryOrg.trim() || 'Jawatankuasa MAKMP POLISAS',
+          organization: juryOrg.trim() || t('makmp:admin_default_jury_org', 'Jawatankuasa MAKMP POLISAS'),
           assigned_categories: assigned,
         })
         .eq('id', editingPin.id)
@@ -541,7 +541,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal mengemas kini PIN: ' + error.message);
+        toast.error(t('makmp:admin_err_pin_update_failed', 'Gagal mengemas kini PIN:') + ' ' + error.message);
         return;
       }
 
@@ -557,7 +557,7 @@ export default function MakmpAdminDashboardPage() {
             edition_id: selectedEditionId,
             pin_code: pinCode,
             jury_name: juryName.trim(),
-            organization: juryOrg.trim() || 'Jawatankuasa MAKMP POLISAS',
+            organization: juryOrg.trim() || t('makmp:admin_default_jury_org', 'Jawatankuasa MAKMP POLISAS'),
             assigned_categories: assigned,
             is_active: true,
           },
@@ -566,7 +566,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal menjana PIN: ' + error.message);
+        toast.error(t('makmp:admin_err_pin_generate_failed', 'Gagal menjana PIN:') + ' ' + error.message);
         return;
       }
 
@@ -578,9 +578,9 @@ export default function MakmpAdminDashboardPage() {
   const handleDeletePin = (pin: MakmpJuryPin) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam PIN Juri',
-      description: `Adakah anda pasti mahu memadam PIN juri "${pin.jury_name}" (${pin.pin_code})?`,
-      confirmLabel: 'Padam PIN',
+      title: t('makmp:admin_delete_pin_modal_title', 'Padam PIN Juri'),
+      description: t('makmp:admin_delete_pin_confirm_msg', 'Adakah anda pasti mahu memadam PIN juri "{{juryName}}" ({{pinCode}})?', { juryName: pin.jury_name, pinCode: pin.pin_code }),
+      confirmLabel: t('makmp:admin_delete_pin_btn', 'Padam PIN'),
       variant: 'danger',
       onConfirm: async () => {
         const { error } = await supabase
@@ -589,11 +589,11 @@ export default function MakmpAdminDashboardPage() {
           .eq('id', pin.id);
 
         if (error) {
-          toast.error('Gagal memadam PIN: ' + error.message);
+          toast.error(t('makmp:admin_err_delete_pin_failed', 'Gagal memadam PIN:') + ' ' + error.message);
           return;
         }
 
-        toast.success(`PIN untuk ${pin.jury_name} berjaya dipadam.`);
+        toast.success(t('makmp:admin_pin_deleted_success', 'PIN untuk {{juryName}} berjaya dipadam.', { juryName: pin.jury_name }));
         setPins((prev) => prev.filter((p) => p.id !== pin.id));
       },
     });
@@ -670,7 +670,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal mengemas kini kategori: ' + error.message);
+        toast.error(t('makmp:admin_err_update_cat_failed', 'Gagal mengemas kini kategori:') + ' ' + error.message);
         return;
       }
       setCategories((prev) => prev.map((c) => (c.id === editingCategory.id ? data : c)));
@@ -684,7 +684,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal menambah kategori: ' + error.message);
+        toast.error(t('makmp:admin_err_add_cat_failed', 'Gagal menambah kategori:') + ' ' + error.message);
         return;
       }
       setCategories((prev) => [...prev, data]);
@@ -695,9 +695,9 @@ export default function MakmpAdminDashboardPage() {
   const handleDeleteCategory = (cat: MakmpCategory) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Kategori Asas',
-      description: `Adakah anda pasti mahu memadam kategori asas "${cat.name}"? Tindakan ini tidak boleh diundur.`,
-      confirmLabel: 'Padam Kategori',
+      title: t('makmp:admin_delete_cat_modal_title', 'Padam Kategori Asas'),
+      description: t('makmp:admin_delete_cat_confirm_msg', 'Adakah anda pasti mahu memadam kategori asas "{{catName}}"? Tindakan ini tidak boleh diundur.', { catName: cat.name }),
+      confirmLabel: t('makmp:admin_delete_cat_btn', 'Padam Kategori'),
       variant: 'danger',
       onConfirm: async () => {
         const { error } = await supabase
@@ -707,14 +707,14 @@ export default function MakmpAdminDashboardPage() {
 
         if (error) {
           if (error.code === '23503' || error.message?.includes('foreign key')) {
-            toast.error(`Tidak dapat memadam "${cat.name}" kerana terdapat rekod permohonan yang merujuk kepada kategori ini.`);
+            toast.error(t('makmp:admin_delete_cat_has_records', 'Tidak dapat memadam "{{catName}}" kerana terdapat rekod permohonan yang merujuk kepada kategori ini.', { catName: cat.name }));
           } else {
-            toast.error('Gagal memadam kategori: ' + error.message);
+            toast.error(t('makmp:admin_err_delete_cat_failed', 'Gagal memadam kategori:') + ' ' + error.message);
           }
           return;
         }
 
-        toast.success(`Kategori "${cat.name}" telah dipadam.`);
+        toast.success(t('makmp:admin_cat_deleted_success', 'Kategori "{{catName}}" telah dipadam.', { catName: cat.name }));
         setCategories((prev) => prev.filter((c) => c.id !== cat.id));
       },
     });
@@ -728,7 +728,7 @@ export default function MakmpAdminDashboardPage() {
       .eq('id', cat.id);
 
     if (error) {
-      toast.error('Gagal menukar status: ' + error.message);
+      toast.error(t('makmp:admin_err_change_status_failed', 'Gagal menukar status:') + ' ' + error.message);
       return;
     }
     setCategories((prev) => prev.map((c) => (c.id === cat.id ? { ...c, is_active: newStatus } : c)));
@@ -768,15 +768,15 @@ export default function MakmpAdminDashboardPage() {
 
   const handleSaveEdition = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editionTitle.trim()) { toast.error('Sila nyatakan tajuk edisi.'); return; }
-    if (!editionYear) { toast.error('Sila nyatakan tahun edisi.'); return; }
+    if (!editionTitle.trim()) { toast.error(t('makmp:admin_err_edition_title_required', 'Sila nyatakan tajuk edisi.')); return; }
+    if (!editionYear) { toast.error(t('makmp:admin_err_edition_year_required', 'Sila nyatakan tahun edisi.')); return; }
     setSavingEdition(true);
 
     // Convert local datetime -> ISO (UTC). Empty deadline => null.
     let deadlineIso: string | null = null;
     if (editionDeadline) {
       const d = new Date(editionDeadline);
-      if (isNaN(d.getTime())) { toast.error('Format tarikh tutup tidak sah.'); setSavingEdition(false); return; }
+      if (isNaN(d.getTime())) { toast.error(t('makmp:admin_err_invalid_deadline_format', 'Format tarikh tutup tidak sah.')); setSavingEdition(false); return; }
       deadlineIso = d.toISOString();
     }
 
@@ -795,7 +795,7 @@ export default function MakmpAdminDashboardPage() {
         .eq('id', editingEdition.id)
         .select()
         .single();
-      if (error) { toast.error('Gagal mengemas kini edisi: ' + error.message); setSavingEdition(false); return; }
+      if (error) { toast.error(t('makmp:admin_err_update_edition_failed', 'Gagal mengemas kini edisi:') + ' ' + error.message); setSavingEdition(false); return; }
       setEditions((prev) => prev.map((e) => (e.id === editingEdition.id ? data : e)));
     } else {
       const { data, error } = await supabase
@@ -803,7 +803,7 @@ export default function MakmpAdminDashboardPage() {
         .insert([payload])
         .select()
         .single();
-      if (error) { toast.error('Gagal menambah edisi: ' + error.message); setSavingEdition(false); return; }
+      if (error) { toast.error(t('makmp:admin_err_add_edition_failed', 'Gagal menambah edisi:') + ' ' + error.message); setSavingEdition(false); return; }
       setEditions((prev) => [...prev, data]);
     }
 
@@ -818,16 +818,16 @@ export default function MakmpAdminDashboardPage() {
       .from('makmp_editions')
       .update({ is_active: newStatus })
       .eq('id', ed.id);
-    if (error) { toast.error('Gagal menukar status sesi: ' + error.message); return; }
+    if (error) { toast.error(t('makmp:admin_err_toggle_session_failed', 'Gagal menukar status sesi:') + ' ' + error.message); return; }
     setEditions((prev) => prev.map((e) => (e.id === ed.id ? { ...e, is_active: newStatus } : e)));
   };
 
   const handleDeleteEdition = (ed: MakmpEdition) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Edisi MAKMP',
-      description: `Adakah anda pasti mahu memadam edisi "${ed.title}" (${ed.year})? Tindakan ini tidak boleh diundur.`,
-      confirmLabel: 'Padam Edisi',
+      title: t('makmp:admin_delete_edition_modal_title', 'Padam Edisi MAKMP'),
+      description: t('makmp:admin_delete_edition_confirm_msg', 'Adakah anda pasti mahu memadam edisi "{{title}}" ({{year}})? Tindakan ini tidak boleh diundur.', { title: ed.title, year: ed.year }),
+      confirmLabel: t('makmp:admin_delete_edition_btn', 'Padam Edisi'),
       variant: 'danger',
       onConfirm: async () => {
         const { error } = await supabase
@@ -836,13 +836,13 @@ export default function MakmpAdminDashboardPage() {
           .eq('id', ed.id);
         if (error) {
           if (error.code === '23503' || error.message?.includes('foreign key')) {
-            toast.error('Tidak dapat memadam edisi ini kerana masih ada rekod yang merujuk kepadanya. Nyahaktifkan sesi sebaliknya.');
+            toast.error(t('makmp:admin_delete_edition_has_records', 'Tidak dapat memadam edisi ini kerana masih ada rekod yang merujuk kepadanya. Nyahaktifkan sesi sebaliknya.'));
           } else {
-            toast.error('Gagal memadam edisi: ' + error.message);
+            toast.error(t('makmp:admin_err_delete_edition_failed', 'Gagal memadam edisi:') + ' ' + error.message);
           }
           return;
         }
-        toast.success(`Edisi "${ed.title}" telah dipadam.`);
+        toast.success(t('makmp:admin_edition_deleted_success', 'Edisi "{{title}}" telah dipadam.', { title: ed.title }));
         setEditions((prev) => prev.filter((e) => e.id !== ed.id));
       },
     });
@@ -854,7 +854,7 @@ export default function MakmpAdminDashboardPage() {
   const handleOpenCreateAward = () => {
     setEditingAward(null);
     setAwardName('');
-    setAwardCategoryGroup('ANUGERAH UTAMA');
+    setAwardCategoryGroup(PRESET_CATEGORY_GROUPS[0]);
     setCustomCategoryGroup('');
     setAwardTargetType('INDIVIDUAL');
     setAwardDocRequirementType('CERTIFICATES');
@@ -896,7 +896,7 @@ export default function MakmpAdminDashboardPage() {
 
     const group = awardCategoryGroup === 'CUSTOM' ? customCategoryGroup.trim() : awardCategoryGroup;
     if (!group) {
-      toast.error('Sila tentukan Kumpulan Kategori Anugerah.');
+      toast.error(t('makmp:admin_err_award_group_required', 'Sila tentukan Kumpulan Kategori Anugerah.'));
       return;
     }
 
@@ -924,7 +924,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal mengemas kini anugerah: ' + error.message);
+        toast.error(t('makmp:admin_err_update_award_failed', 'Gagal mengemas kini anugerah:') + ' ' + error.message);
         return;
       }
       setAwards((prev) => prev.map((a) => (a.id === editingAward.id ? data : a)));
@@ -938,7 +938,7 @@ export default function MakmpAdminDashboardPage() {
         .single();
 
       if (error) {
-        toast.error('Gagal menambah anugerah: ' + error.message);
+        toast.error(t('makmp:admin_err_add_award_failed', 'Gagal menambah anugerah:') + ' ' + error.message);
         return;
       }
       setAwards((prev) => [...prev, data]);
@@ -949,9 +949,9 @@ export default function MakmpAdminDashboardPage() {
   const handleDeleteAward = (aw: MakmpAwardDefinition) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Definisi Anugerah',
-      description: `Adakah anda pasti mahu memadam anugerah "${aw.name}"? Tindakan ini tidak boleh diundur.`,
-      confirmLabel: 'Padam Anugerah',
+      title: t('makmp:admin_delete_award_modal_title', 'Padam Definisi Anugerah'),
+      description: t('makmp:admin_delete_award_confirm_msg', 'Adakah anda pasti mahu memadam anugerah "{{awardName}}"? Tindakan ini tidak boleh diundur.', { awardName: aw.name }),
+      confirmLabel: t('makmp:admin_delete_award_btn', 'Padam Anugerah'),
       variant: 'danger',
       onConfirm: async () => {
         const { error } = await supabase
@@ -961,14 +961,14 @@ export default function MakmpAdminDashboardPage() {
 
         if (error) {
           if (error.code === '23503' || error.message?.includes('foreign key')) {
-            toast.error(`Tidak dapat memadam "${aw.name}" kerana anugerah ini sudah mempunyai rekod permohonan. Nyahaktifkan sebaliknya.`);
+            toast.error(t('makmp:admin_delete_award_has_records', 'Tidak dapat memadam "{{awardName}}" kerana anugerah ini sudah mempunyai rekod permohonan. Nyahaktifkan sebaliknya.', { awardName: aw.name }));
           } else {
-            toast.error('Gagal memadam anugerah: ' + error.message);
+            toast.error(t('makmp:admin_err_delete_award_failed', 'Gagal memadam anugerah:') + ' ' + error.message);
           }
           return;
         }
 
-        toast.success(`Anugerah "${aw.name}" telah dipadam.`);
+        toast.success(t('makmp:admin_award_deleted_success', 'Anugerah "{{awardName}}" telah dipadam.', { awardName: aw.name }));
         setAwards((prev) => prev.filter((a) => a.id !== aw.id));
       },
     });
@@ -982,7 +982,7 @@ export default function MakmpAdminDashboardPage() {
       .eq('id', aw.id);
 
     if (error) {
-      toast.error('Gagal mengubah status anugerah: ' + error.message);
+      toast.error(t('makmp:admin_err_change_award_status_failed', 'Gagal mengubah status anugerah:') + ' ' + error.message);
       return;
     }
     setAwards((prev) => prev.map((a) => (a.id === aw.id ? { ...a, is_active: newStatus } : a)));
@@ -991,26 +991,26 @@ export default function MakmpAdminDashboardPage() {
   // Export XLSX Lengkap dengan Pecahan Berbilang Anugerah
   const handleExportCSV = async () => {
     if (submissions.length === 0) {
-      toast.error('Tiada data untuk dieksport.');
+      toast.error(t('makmp:admin_no_data_export', 'Tiada data untuk dieksport.'));
       return;
     }
 
     const columns = [
-      { header: 'Kod Rujukan', width: 16 },
-      { header: 'Nama Penuh', width: 26 },
-      { header: 'No Matrik', width: 16, asText: true },
-      { header: 'Telefon', width: 15, asText: true },
-      { header: 'Emel', width: 24 },
-      { header: 'Jabatan', width: 20 },
-      { header: 'Program', width: 12 },
-      { header: 'Semester', width: 10 },
-      { header: 'Anugerah Dipohon', width: 28 },
-      { header: 'Entiti / Kelab / Peranan', width: 28 },
-      { header: 'Status Keseluruhan', width: 18 },
-      { header: 'Jumlah Merit Diluluskan', width: 20 },
-      { header: 'Pecahan Keputusan Anugerah', width: 34 },
-      { header: 'Bil Dokumen', width: 12 },
-      { header: 'Tarikh Hantar', width: 14 },
+      { header: t('makmp:admin_export_col_ref_code', 'Kod Rujukan'), width: 16 },
+      { header: t('makmp:admin_export_col_fullname', 'Nama Penuh'), width: 26 },
+      { header: t('makmp:admin_export_col_matric', 'No Matrik'), width: 16, asText: true },
+      { header: t('makmp:admin_export_col_phone', 'Telefon'), width: 15, asText: true },
+      { header: t('makmp:admin_export_col_email', 'Emel'), width: 24 },
+      { header: t('makmp:admin_export_col_dept', 'Jabatan'), width: 20 },
+      { header: t('makmp:admin_export_col_programme', 'Program'), width: 12 },
+      { header: t('makmp:admin_export_col_semester', 'Semester'), width: 10 },
+      { header: t('makmp:admin_export_col_applied_awards', 'Anugerah Dipohon'), width: 28 },
+      { header: t('makmp:admin_export_col_entity_role', 'Entiti / Kelab / Peranan'), width: 28 },
+      { header: t('makmp:admin_export_col_overall_status', 'Status Keseluruhan'), width: 18 },
+      { header: t('makmp:admin_export_col_total_merit', 'Jumlah Merit Diluluskan'), width: 20 },
+      { header: t('makmp:admin_export_col_results_breakdown', 'Pecahan Keputusan Anugerah'), width: 34 },
+      { header: t('makmp:admin_export_col_doc_count', 'Bil Dokumen'), width: 12 },
+      { header: t('makmp:admin_export_col_submission_date', 'Tarikh Hantar'), width: 14 },
     ];
 
     const rows = submissions.map((s) => {
@@ -1029,8 +1029,8 @@ export default function MakmpAdminDashboardPage() {
 
       const decisionBreakdown =
         s.awards && s.awards.length > 0
-          ? s.awards.map((a) => `${a.award?.name}: ${a.status} (${a.total_merit_granted}m)`).join('; ')
-          : `${s.status} (${s.total_merit_awarded}m)`;
+          ? s.awards.map((a) => (a.award?.name || '') + ': ' + a.status + ' (' + a.total_merit_granted + 'm)').join('; ')
+          : s.status + ' (' + s.total_merit_awarded + 'm)';
 
       const docCount = s.items?.length || 0;
 
@@ -1055,10 +1055,10 @@ export default function MakmpAdminDashboardPage() {
 
     try {
       await exportXlsx(`MAKMP_Submissions_${selectedEditionId}_${Date.now()}.xlsx`, [
-        { name: 'Senarai Permohonan', columns, rows },
+        { name: t('makmp:admin_export_sheet_name', 'Senarai Permohonan'), columns, rows },
       ]);
     } catch (err: any) {
-      toast.error('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
+      toast.error(t('makmp:admin_error_prefix', 'Ralat:') + ' ' + (err.message || t('makmp:admin_err_generate_xlsx_failed', 'Gagal menghasilkan XLSX')));
     }
   };
 
@@ -1095,11 +1095,11 @@ export default function MakmpAdminDashboardPage() {
               Pusat Kawalan MAKMP POLISAS
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
-              Pengurusan Anugerah
+              {t('makmp:admin_page_badge_title', 'Pengurusan Anugerah')}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Konfigurasi edisi tahunan, kuota kategori anugerah, kod PIN juri & semakan pencalonan pelajar.
+            {t('makmp:admin_dashboard_subtitle', 'Konfigurasi edisi tahunan, kuota kategori anugerah, kod PIN juri & semakan pencalonan pelajar.')}
           </p>
         </div>
 
@@ -1112,14 +1112,14 @@ export default function MakmpAdminDashboardPage() {
           >
             {editions.map((ed) => (
               <option key={ed.id} value={ed.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                {ed.title} ({ed.year}) {ed.is_active ? '• Aktif' : ''}
+                {ed.title} ({ed.year}) {ed.is_active ? t('makmp:admin_active_bullet', '• Aktif') : ''}
               </option>
             ))}
           </select>
 
           <button
             onClick={() => selectedEditionId && loadEditionDetails(selectedEditionId)}
-            title="Muat Semula Data"
+            title={t('makmp:admin_reload_data_title', 'Muat Semula Data')}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shadow-sm transition"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1133,21 +1133,21 @@ export default function MakmpAdminDashboardPage() {
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <div>
-              <span className="font-bold">Mod Pratonton (Belum Log Masuk):</span> Anda sedang melihat data MAKMP sebagai tetamu. Tindakan menjana PIN juri atau mengurus anugerah memerlukan log masuk sebagai JPP / Pentadbir.
+              <span className="font-bold">{t('makmp:admin_preview_mode_warning_title', 'Mod Pratonton (Belum Log Masuk):')}</span> {t('makmp:admin_preview_mode_warning_desc', 'Anda sedang melihat data MAKMP sebagai tetamu. Tindakan menjana PIN juri atau mengurus anugerah memerlukan log masuk pentadbir JPP.')}
             </div>
           </div>
           <Link
             to="/login?redirect=/jpp/unit/akademik?tab=makmp"
             className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 text-center transition shadow-md shadow-amber-500/20"
           >
-            Log Masuk Pentadbir
+            {t('makmp:admin_login_btn', 'Log Masuk Pentadbir')}
           </Link>
         </div>
       ) : !isJppOrAdmin ? (
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 shadow-sm animate-fade-in">
           <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
           <div>
-            <span className="font-bold">Akses Terhad (Bukan JPP):</span> Anda log masuk sebagai <strong className="text-slate-900 dark:text-white">{profile?.full_name || user.email}</strong> (Peranan: <code className="text-amber-600 dark:text-amber-300 font-mono">{profile?.role || 'Pelajar'}</code>). Tindakan menjana PIN dan mengurus anugerah dihadkan kepada akaun JPP / SUPER_ADMIN_JPP.
+            <span className="font-bold">{t('makmp:admin_limited_access_title', 'Akses Terhad (Bukan JPP):')}</span> {t('makmp:admin_logged_in_as_prefix', 'Anda log masuk sebagai')} <strong className="text-slate-900 dark:text-white">{profile?.full_name || user.email}</strong> ({t('makmp:admin_role_prefix', 'Peranan:')} <code className="text-amber-600 dark:text-amber-300 font-mono">{profile?.role || 'Pelajar'}</code>{t('makmp:admin_limited_access_desc', '). Tindakan menjana PIN dan mengurus anugerah dihadkan kepada akaun JPP / SUPER_ADMIN_JPP.')}
           </div>
         </div>
       ) : null}
@@ -1155,27 +1155,27 @@ export default function MakmpAdminDashboardPage() {
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Jumlah Pencalonan</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">{t('admin_stats_total_subs', 'Jumlah Pencalonan')}</div>
           <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{totalSubmissions}</div>
-          <div className="text-[10px] text-slate-400 dark:text-slate-500">{submissions.length} permohonan masuk</div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500">{submissions.length} {t('makmp:admin_incoming_applications', 'permohonan masuk')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">Menunggu Semakan</div>
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">{t('admin_stats_pending_audit', 'Menunggu Semakan')}</div>
           <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-300">{pendingCount}</div>
-          <div className="text-[10px] text-amber-600/80 dark:text-amber-500/80">Perlu tindakan pegawai/juri</div>
+          <div className="text-[10px] text-amber-600/80 dark:text-amber-500/80">{t('makmp:admin_needs_officer_action', 'Perlu tindakan pegawai/juri')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">Diluluskan</div>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">{t('admin_stats_qualified', 'Diluluskan')}</div>
           <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
           <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{rejectedCount} ditolak</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">Merit Dianugerah</div>
+          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">{t('track_merit_score', 'Merit Dianugerah')}</div>
           <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300">+{totalMeritGiven}</div>
-          <div className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">Diselaraskan ke e-akademik</div>
+          <div className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">{t('makmp:admin_synced_to_eakademik', 'Diselaraskan ke e-akademik')}</div>
         </div>
       </div>
 
@@ -1190,7 +1190,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Senarai Permohonan ({submissions.length})</span>
+          <span>{t('admin_tab_submissions', 'Senarai Permohonan')} ({submissions.length})</span>
         </button>
 
         <button
@@ -1202,7 +1202,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Award className="w-3.5 h-3.5" />
-          <span>Kategori Anugerah ({categories.length})</span>
+          <span>{t('admin_tab_awards', 'Kategori Anugerah')} ({categories.length})</span>
         </button>
 
         <button
@@ -1214,7 +1214,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Kod PIN Juri ({pins.length})</span>
+          <span>{t('admin_tab_juries', 'Kod PIN Juri')} ({pins.length})</span>
         </button>
 
         <button
@@ -1226,7 +1226,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <CalendarClock className="w-3.5 h-3.5" />
-          <span>Edisi & Sesi ({editions.length})</span>
+          <span>{t('admin_tab_editions', 'Edisi & Sesi')} ({editions.length})</span>
         </button>
 
         <button
@@ -1238,7 +1238,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
-          <span>Keputusan & Ranking</span>
+          <span>{t('admin_tab_ranking', 'Keputusan & Ranking')}</span>
         </button>
 
         <button
@@ -1250,7 +1250,7 @@ export default function MakmpAdminDashboardPage() {
           }`}
         >
           <IdCard className="w-3.5 h-3.5" />
-          <span>Dokumen Pemenang</span>
+          <span>{t('admin_tab_winner_docs', 'Dokumen Pemenang')}</span>
         </button>
       </div>
 
@@ -1267,11 +1267,11 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white shadow-sm"
               >
-                <option value="ALL">Semua Status</option>
-                <option value="MENUNGGU">Menunggu</option>
-                <option value="DALAM_SEMAKAN">Dalam Semakan</option>
-                <option value="DISAHKAN">Disahkan</option>
-                <option value="DITOLAK">Ditolak</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_status', 'Semua Status')}</option>
+                <option value="MENUNGGU">{t('jpp:makmp_filter_pending', 'Menunggu')}</option>
+                <option value="DALAM_SEMAKAN">{t('jpp:makmp_filter_in_review', 'Dalam Semakan')}</option>
+                <option value="DISAHKAN">{t('jpp:makmp_filter_approved', 'Disahkan')}</option>
+                <option value="DITOLAK">{t('jpp:makmp_filter_rejected', 'Ditolak')}</option>
               </select>
 
               <select
@@ -1279,7 +1279,7 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[200px] shadow-sm"
               >
-                <option value="ALL">Semua Kategori</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_categories', 'Semua Kategori')}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -1293,7 +1293,7 @@ export default function MakmpAdminDashboardPage() {
                 onChange={(e) => setAwardFilter(e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[220px] shadow-sm"
               >
-                <option value="ALL">Semua Anugerah</option>
+                <option value="ALL">{t('jpp:makmp_filter_all_awards', 'Semua Anugerah')}</option>
                 {awards.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -1309,7 +1309,7 @@ export default function MakmpAdminDashboardPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari nama, matrik, kod..."
+                  placeholder={t('makmp:admin_search_subs_placeholder', 'Cari nama, matrik, kod...')}
                   className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                 />
               </div>
@@ -1319,7 +1319,7 @@ export default function MakmpAdminDashboardPage() {
                 className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                <span>Eksport XLSX</span>
+                <span>{t('makmp:admin_export_xlsx_btn', 'Eksport XLSX')}</span>
               </button>
             </div>
           </div>
@@ -1331,21 +1331,21 @@ export default function MakmpAdminDashboardPage() {
                 <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Kod Rujukan</th>
-                    <th className="py-3 px-4">Nama Pelajar</th>
-                    <th className="py-3 px-4">No. Matrik</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_student_name', 'Nama Pelajar')}</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_matric_no', 'No. Matrik')}</th>
                     <th className="py-3 px-4">Jabatan</th>
-                    <th className="py-3 px-4">Kategori Anugerah</th>
-                    <th className="py-3 px-4">Sijil</th>
-                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_award_category', 'Kategori Anugerah')}</th>
+                    <th className="py-3 px-4">{t('jpp:makmp_th_certificates', 'Sijil')}</th>
+                    <th className="py-3 px-4">{t('makmp:admin_col_status', 'Status')}</th>
                     <th className="py-3 px-4">Merit</th>
-                    <th className="py-3 px-4 text-right">Tindakan</th>
+                    <th className="py-3 px-4 text-right">{t('jpp:makmp_th_actions', 'Tindakan')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredSubmissions.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-slate-500">
-                        Tiada rekod penyerahan ditemui.
+                        {t('makmp:admin_no_submissions_found', 'Tiada rekod penyerahan ditemui.')}
                       </td>
                     </tr>
                   ) : (
@@ -1393,19 +1393,20 @@ export default function MakmpAdminDashboardPage() {
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={cn(
+                              'px-2 py-0.5 rounded-full text-[10px] font-bold',
                               sub.status === 'DISAHKAN'
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                 : sub.status === 'DITOLAK'
                                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                                 : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
-                            }`}
+                            )}
                           >
                             {sub.status}
                           </span>
                         </td>
                         <td className="py-3 px-4 font-bold text-amber-600 dark:text-amber-400">
-                          {sub.status === 'DISAHKAN' ? `+${sub.total_merit_awarded}` : '-'}
+                          {sub.status === 'DISAHKAN' ? '+' + sub.total_merit_awarded : '-'}
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -1413,7 +1414,7 @@ export default function MakmpAdminDashboardPage() {
                               <button
                                 onClick={() => handleUnlockSubmission(sub)}
                                 disabled={unlockingAwardId === '__submission__' + sub.id}
-                                title="Buka semula anugerah yang terkunci"
+                                title={t('makmp:admin_unlock_awards_title', 'Buka semula anugerah yang terkunci')}
                                 className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
                               >
                                 {unlockingAwardId === '__submission__' + sub.id ? (
@@ -1421,7 +1422,7 @@ export default function MakmpAdminDashboardPage() {
                                 ) : (
                                   <Lock className="w-3.5 h-3.5" />
                                 )}
-                                <span>Buka Semula</span>
+                                <span>{t('jpp:makmp_reopen_review', 'Buka Semula')}</span>
                               </button>
                             )}
                             <button
@@ -1451,24 +1452,23 @@ export default function MakmpAdminDashboardPage() {
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-              Keputusan & Ranking Mengikut Anugerah
+              {t('makmp:admin_ranking_title', 'Keputusan & Ranking Mengikut Anugerah')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Susun kedudukan Top 1/2/3 bagi setiap anugerah, kemudian sahkan keputusan
-              untuk menghantar notifikasi kepada pemenang.
+              {t('makmp:admin_ranking_subtitle', 'Susun kedudukan Top 1/2/3 bagi setiap anugerah, kemudian sahkan keputusan untuk menghantar notifikasi kepada pemenang.')}
             </p>
           </div>
 
           {awards.length === 0 ? (
             <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 text-sm shadow-sm">
-              Tiada anugerah untuk edisi yang dipilih.
+              {t('makmp:admin_no_awards_for_edition', 'Tiada anugerah untuk edisi yang dipilih.')}
             </div>
           ) : (
             <div className="space-y-8">
               {(() => {
                 const groups = new Map<string, MakmpAwardDefinition[]>();
                 for (const aw of awards) {
-                  const g = aw.category_group || 'ANUGERAH MAKMP';
+                  const g = aw.category_group || t('makmp:admin_award_default_group', 'ANUGERAH MAKMP');
                   if (!groups.has(g)) groups.set(g, []);
                   groups.get(g)!.push(aw);
                 }
@@ -1512,10 +1512,10 @@ export default function MakmpAdminDashboardPage() {
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  Senarai Anugerah Rasmi MAKMP ({awards.length})
+                  {t('makmp:admin_official_awards_list', 'Senarai Anugerah Rasmi MAKMP')} ({awards.length})
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Pengurusan anugerah yang boleh dipohon oleh pelajar, syarat dokumen, merit maksimum dan templat laporan.
+                  {t('makmp:admin_official_awards_desc', 'Pengurusan anugerah yang boleh dipohon oleh pelajar, syarat dokumen, merit maksimum dan templat laporan.')}
                 </p>
               </div>
 
@@ -1524,7 +1524,7 @@ export default function MakmpAdminDashboardPage() {
                 className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition shrink-0 self-start sm:self-auto shadow-md shadow-amber-500/10"
               >
                 <Plus className="w-4 h-4" />
-                <span>Tambah Anugerah Baharu</span>
+                <span>{t('makmp:admin_add_new_award_btn', 'Tambah Anugerah Baharu')}</span>
               </button>
             </div>
 
@@ -1549,12 +1549,12 @@ export default function MakmpAdminDashboardPage() {
                               : 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20'
                           }`}
                         >
-                          {aw.target_type === 'ENTITY' ? 'ENTITI / KELAB' : 'INDIVIDU'}
+                          {aw.target_type === 'ENTITY' ? t('makmp:admin_entity_club_badge', 'ENTITI / KELAB') : t('makmp:admin_individual_badge', 'INDIVIDU')}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleToggleAwardActive(aw)}
-                          title="Klik untuk ubah status aktif/nyahaktif"
+                          title={t('makmp:admin_toggle_active_tooltip', 'Klik untuk ubah status aktif/nyahaktif')}
                           className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition ${
                             aw.is_active
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
@@ -1572,7 +1572,7 @@ export default function MakmpAdminDashboardPage() {
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white">{aw.name}</h4>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                        {aw.doc_instructions || 'Tiada arahan khusus.'}
+                        {aw.doc_instructions || t('makmp:admin_no_specific_instructions', 'Tiada arahan khusus.')}
                       </p>
                     </div>
 
@@ -1588,15 +1588,15 @@ export default function MakmpAdminDashboardPage() {
                           }`}
                         >
                           {aw.doc_requirement_type === 'REPORT_AND_EVIDENCE'
-                            ? 'Laporan Rasmi & Bukti'
-                            : 'Sijil Pencapaian'}
+                            ? t('makmp:admin_official_report_and_evidence', 'Laporan Rasmi & Bukti')
+                            : t('makmp:admin_cert_of_achievement', 'Sijil Pencapaian')}
                         </span>
                       </div>
 
                       {aw.doc_requirement_type === 'REPORT_AND_EVIDENCE' && (
                         <div className="pt-1 border-t border-slate-200 dark:border-slate-800/60 space-y-1">
                           <div className="text-[11px] text-sky-600 dark:text-sky-400 font-medium truncate">
-                            Templat: {aw.template_name || 'Belum Ditetapkan'}
+                            {t('makmp:admin_template_prefix', 'Templat:') + ' ' + (aw.template_name || t('makmp:admin_template_not_set', 'Belum Ditetapkan'))}
                           </div>
                           {aw.template_url ? (
                             <a
@@ -1611,7 +1611,7 @@ export default function MakmpAdminDashboardPage() {
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-[10px] font-semibold">
                               <AlertTriangle className="w-3 h-3 shrink-0" />
-                              Tiada Templat — student akan muat naik format sendiri
+                              {t('makmp:admin_no_template_warning', 'Tiada Templat — student akan muat naik format sendiri')}
                             </span>
                           )}
                         </div>
@@ -1633,7 +1633,7 @@ export default function MakmpAdminDashboardPage() {
                         className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                       >
                         <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
-                        <span>Kemaskini</span>
+                        <span>{t('common:update', 'Kemaskini')}</span>
                       </button>
                       <button
                         type="button"
@@ -1641,7 +1641,7 @@ export default function MakmpAdminDashboardPage() {
                         className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                       >
                         <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
-                        <span>Padam</span>
+                        <span>{t('common:delete', 'Padam')}</span>
                       </button>
                     </div>
                   </div>
@@ -1656,10 +1656,10 @@ export default function MakmpAdminDashboardPage() {
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Layers className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  Kategori Pangkalan Data Asas ({categories.length})
+                  {t('makmp:admin_base_categories_title', 'Kategori Pangkalan Data Asas')} ({categories.length})
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Kategori asas arkib dan klasifikasi lama sistem MAKMP.
+                  {t('makmp:admin_base_categories_desc', 'Kategori asas arkib dan klasifikasi lama sistem MAKMP.')}
                 </p>
               </div>
 
@@ -1668,7 +1668,7 @@ export default function MakmpAdminDashboardPage() {
                 className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                <span>Tambah Kategori Asas</span>
+                <span>{t('makmp:admin_add_base_cat_btn', 'Tambah Kategori Asas')}</span>
               </button>
             </div>
 
@@ -1700,10 +1700,10 @@ export default function MakmpAdminDashboardPage() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400">{cat.description || 'Tiada penerangan.'}</p>
+                    <p className="text-slate-500 dark:text-slate-400">{cat.description || t('makmp:admin_no_description', 'Tiada penerangan.')}</p>
                     <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-                      <span>Maks. Sijil: <strong className="text-slate-900 dark:text-white">{cat.max_certificates}</strong></span>
-                      <span>Maks. Merit: <strong className="text-amber-600 dark:text-amber-400">{cat.max_merit}</strong></span>
+                      <span>{t('makmp:admin_max_certs_label', 'Maks. Sijil') + ': '}<strong className="text-slate-900 dark:text-white">{cat.max_certificates}</strong></span>
+                      <span>{t('makmp:admin_max_merit_label', 'Maks. Merit') + ': '}<strong className="text-amber-600 dark:text-amber-400">{cat.max_merit}</strong></span>
                     </div>
                   </div>
 
@@ -1714,7 +1714,7 @@ export default function MakmpAdminDashboardPage() {
                       className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
                       <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
-                      <span>Kemaskini</span>
+                      <span>{t('common:update', 'Kemaskini')}</span>
                     </button>
                     <button
                       type="button"
@@ -1722,7 +1722,7 @@ export default function MakmpAdminDashboardPage() {
                       className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                     >
                       <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
-                      <span>Padam</span>
+                      <span>{t('common:delete', 'Padam')}</span>
                     </button>
                   </div>
                 </div>
@@ -1739,7 +1739,7 @@ export default function MakmpAdminDashboardPage() {
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                     <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    <span>{editingAward ? 'Kemaskini Anugerah Rasmi' : 'Tambah Anugerah Baharu'}</span>
+                    <span>{editingAward ? t('makmp:admin_edit_award_modal_title', 'Kemaskini Anugerah Rasmi') : t('makmp:admin_add_new_award_btn', 'Tambah Anugerah Baharu')}</span>
                   </h3>
                   <button
                     type="button"
@@ -1752,20 +1752,20 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSaveAward} className="space-y-3.5 text-xs">
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Rasmi Anugerah *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_award_name_label', 'Nama Rasmi Anugerah *')}</label>
                     <input
                       type="text"
                       required
                       value={awardName}
                       onChange={(e) => setAwardName(e.target.value)}
-                      placeholder="cth: Anugerah Khas Pengarah"
+                      placeholder={t('makmp:admin_award_name_placeholder', 'cth: Anugerah Khas Pengarah')}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Kumpulan Kategori *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_category_group_label', 'Kumpulan Kategori *')}</label>
                       <select
                         value={awardCategoryGroup}
                         onChange={(e) => setAwardCategoryGroup(e.target.value)}
@@ -1776,7 +1776,7 @@ export default function MakmpAdminDashboardPage() {
                             {grp}
                           </option>
                         ))}
-                        <option value="CUSTOM" className="bg-white dark:bg-slate-900">+ Kategori Tersuai / Lain-lain...</option>
+                        <option value="CUSTOM" className="bg-white dark:bg-slate-900">{t('makmp:admin_custom_category_option', '+ Kategori Tersuai / Lain-lain...')}</option>
                       </select>
                     </div>
 
@@ -1787,21 +1787,21 @@ export default function MakmpAdminDashboardPage() {
                         onChange={(e) => setAwardTargetType(e.target.value as 'INDIVIDUAL' | 'ENTITY')}
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                       >
-                        <option value="INDIVIDUAL" className="bg-white dark:bg-slate-900">INDIVIDU (Pelajar Sendiri)</option>
-                        <option value="ENTITY" className="bg-white dark:bg-slate-900">ENTITI / KELAB (Organisasi)</option>
+                        <option value="INDIVIDUAL" className="bg-white dark:bg-slate-900">{t('makmp:admin_target_individual', 'INDIVIDU (Pelajar Sendiri)')}</option>
+                        <option value="ENTITY" className="bg-white dark:bg-slate-900">{t('makmp:admin_target_entity', 'ENTITI / KELAB (Organisasi)')}</option>
                       </select>
                     </div>
                   </div>
 
                   {awardCategoryGroup === 'CUSTOM' && (
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Kategori Tersuai *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_custom_category_name_label', 'Nama Kategori Tersuai *')}</label>
                       <input
                         type="text"
                         required
                         value={customCategoryGroup}
                         onChange={(e) => setCustomCategoryGroup(e.target.value)}
-                        placeholder="cth: ANUGERAH INOVASI DIGITAL"
+                        placeholder={t('makmp:admin_custom_category_name_placeholder', 'cth: ANUGERAH INOVASI DIGITAL')}
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono uppercase shadow-sm"
                       />
                     </div>
@@ -1815,13 +1815,13 @@ export default function MakmpAdminDashboardPage() {
                         onChange={(e) => setAwardDocRequirementType(e.target.value as any)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       >
-                        <option value="CERTIFICATES" className="bg-white dark:bg-slate-900">Sijil Pencapaian</option>
-                        <option value="REPORT_AND_EVIDENCE" className="bg-white dark:bg-slate-900">Laporan & Bukti</option>
+                        <option value="CERTIFICATES" className="bg-white dark:bg-slate-900">{t('makmp:admin_cert_of_achievement', 'Sijil Pencapaian')}</option>
+                        <option value="REPORT_AND_EVIDENCE" className="bg-white dark:bg-slate-900">{t('makmp:admin_report_and_evidence_opt', 'Laporan & Bukti')}</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Dokumen / Sijil</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_max_documents_label', 'Maks. Dokumen / Sijil')}</label>
                       <input
                         type="number"
                         min={1}
@@ -1833,7 +1833,7 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Had Maks. Merit</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_max_merit_limit_label', 'Had Maks. Merit')}</label>
                       <input
                         type="number"
                         min={1}
@@ -1846,31 +1846,31 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Arahan Dokumen / Syarat Khas</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_doc_instructions_label', 'Arahan Dokumen / Syarat Khas')}</label>
                     <textarea
                       rows={2}
                       value={awardDocInstructions}
                       onChange={(e) => setAwardDocInstructions(e.target.value)}
-                      placeholder="cth: Sertakan salinan sijil pencapaian peringkat antarabangsa atau kebangsaan..."
+                      placeholder={t('makmp:admin_doc_instructions_placeholder', 'cth: Sertakan salinan sijil pencapaian peringkat antarabangsa atau kebangsaan...')}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
                   {awardDocRequirementType === 'REPORT_AND_EVIDENCE' && (
                     <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-sky-400/30 dark:border-sky-500/30 space-y-3">
-                      <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400">Konfigurasi Templat Laporan Rasmi</div>
+                      <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400">{t('makmp:admin_template_config_title', 'Konfigurasi Templat Laporan Rasmi')}</div>
                       <div>
-                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tajuk Templat Laporan</label>
+                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_template_title_label', 'Tajuk Templat Laporan')}</label>
                         <input
                           type="text"
                           value={awardTemplateName}
                           onChange={(e) => setAwardTemplateName(e.target.value)}
-                          placeholder="cth: Templat Laporan Inkubator Keusahawanan"
+                          placeholder={t('makmp:admin_template_title_placeholder', 'cth: Templat Laporan Inkubator Keusahawanan')}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Pautan Muat Turun (Google Docs / Drive)</label>
+                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_template_url_label', 'Pautan Muat Turun (Google Docs / Drive)')}</label>
                         <input
                           type="url"
                           value={awardTemplateUrl}
@@ -1882,8 +1882,7 @@ export default function MakmpAdminDashboardPage() {
                           <p className="flex items-start gap-1.5 mt-1.5 text-[11px] text-rose-600 dark:text-rose-300 leading-relaxed">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <span>
-                              Tiada templat ditetapkan — pelajar akan diminta muat naik laporan dalam
-                              format sendiri (banner "Muat Turun Templat" tidak akan dipaparkan).
+                              {t('makmp:admin_no_template_set_desc', 'Tiada templat ditetapkan — pelajar akan diminta muat naik laporan dalam format sendiri (banner "Muat Turun Templat" tidak akan dipaparkan).')}
                             </span>
                           </p>
                         )}
@@ -1912,7 +1911,7 @@ export default function MakmpAdminDashboardPage() {
                           onChange={(e) => setAwardIsActive(e.target.checked)}
                           className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                         />
-                        <span className="text-slate-800 dark:text-white font-semibold text-xs">Aktifkan untuk Permohonan</span>
+                        <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('makmp:admin_activate_for_application', 'Aktifkan untuk Permohonan')}</span>
                       </label>
                     </div>
                   </div>
@@ -1923,13 +1922,13 @@ export default function MakmpAdminDashboardPage() {
                       onClick={() => setIsAwardModalOpen(false)}
                       className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                     >
-                      Batal
+                      {t('common:cancel', 'Batal')}
                     </button>
                     <button
                       type="submit"
                       className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow-md shadow-amber-500/20"
                     >
-                      {editingAward ? 'Simpan Kemaskini' : 'Tambah Anugerah'}
+                      {editingAward ? t('makmp:admin_save_update_btn', 'Simpan Kemaskini') : t('makmp:admin_add_award_btn', 'Tambah Anugerah')}
                     </button>
                   </div>
                 </form>
@@ -1945,7 +1944,7 @@ export default function MakmpAdminDashboardPage() {
               <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                    {editingCategory ? 'Kemaskini Kategori Asas' : 'Tambah Kategori Asas'}
+                    {editingCategory ? t('makmp:admin_update_base_cat_modal_title', 'Kemaskini Kategori Asas') : t('makmp:admin_add_base_cat_modal_title', 'Tambah Kategori Asas')}
                   </h3>
                   <button
                     type="button"
@@ -1958,20 +1957,20 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSaveCategory} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Kategori *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_cat_name_label', 'Nama Kategori *')}</label>
                     <input
                       type="text"
                       required
                       value={catName}
                       onChange={(e) => setCatName(e.target.value)}
-                      placeholder="cth: Anugerah Tokoh Siswa"
+                      placeholder={t('makmp:admin_cat_name_placeholder', 'cth: Anugerah Tokoh Siswa')}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Sijil</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_max_certs_label', 'Maks. Sijil')}</label>
                       <input
                         type="number"
                         min={1}
@@ -1982,7 +1981,7 @@ export default function MakmpAdminDashboardPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Merit</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_max_merit_label', 'Maks. Merit')}</label>
                       <input
                         type="number"
                         min={1}
@@ -1995,13 +1994,13 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Skop Jabatan</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_dept_scope_label', 'Skop Jabatan')}</label>
                     <select
                       value={catScope}
                       onChange={(e) => setCatScope(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     >
-                      <option value="UMUM" className="bg-white dark:bg-slate-900">UMUM (Semua Jabatan)</option>
+                      <option value="UMUM" className="bg-white dark:bg-slate-900">{t('makmp:admin_dept_scope_all', 'UMUM (Semua Jabatan)')}</option>
                       <option value="AKADEMIK" className="bg-white dark:bg-slate-900">AKADEMIK</option>
                       <option value="HEP" className="bg-white dark:bg-slate-900">HEP</option>
                       <option value="KEUSAHAWANAN" className="bg-white dark:bg-slate-900">KEUSAHAWANAN</option>
@@ -2010,12 +2009,12 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Penerangan / Syarat</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_cat_desc_label', 'Penerangan / Syarat')}</label>
                     <textarea
                       rows={2}
                       value={catDesc}
                       onChange={(e) => setCatDesc(e.target.value)}
-                      placeholder="Syarat kelayakan kategori ini..."
+                      placeholder={t('makmp:admin_cat_desc_placeholder', 'Syarat kelayakan kategori ini...')}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
@@ -2038,13 +2037,13 @@ export default function MakmpAdminDashboardPage() {
                       onClick={() => setIsCategoryModalOpen(false)}
                       className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                     >
-                      Batal
+                      {t('common:cancel', 'Batal')}
                     </button>
                     <button
                       type="submit"
                       className="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold"
                     >
-                      {editingCategory ? 'Kemaskini Kategori' : 'Simpan Kategori'}
+                      {editingCategory ? t('makmp:admin_update_cat_btn', 'Kemaskini Kategori') : t('makmp:admin_save_cat_btn', 'Simpan Kategori')}
                     </button>
                   </div>
                 </form>
@@ -2063,10 +2062,10 @@ export default function MakmpAdminDashboardPage() {
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                Kod PIN Akses Juri & Pegawai Penilai ({pins.length})
+                {t('makmp:admin_pin_access_title', 'Kod PIN Akses Juri & Pegawai Penilai')} ({pins.length})
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Juri boleh mengakses portal semakan pantas tanpa akaun login. Setiap juri boleh ditugaskan satu atau banyak kategori serentak.
+                {t('makmp:admin_pin_access_desc', 'Juri boleh mengakses portal semakan pantas tanpa akaun login. Setiap juri boleh ditugaskan satu atau banyak kategori serentak.')}
               </p>
             </div>
 
@@ -2075,7 +2074,7 @@ export default function MakmpAdminDashboardPage() {
               className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto shadow-md shadow-amber-500/10"
             >
               <Plus className="w-4 h-4" />
-              <span>Jana PIN Juri Baharu</span>
+              <span>{t('makmp:admin_generate_new_pin_btn', 'Jana PIN Juri Baharu')}</span>
             </button>
           </div>
 
@@ -2115,17 +2114,18 @@ export default function MakmpAdminDashboardPage() {
                     {/* Assigned Categories / Awards Badges */}
                     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
                       <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center justify-between">
-                        <span>Tugasan Semakan:</span>
+                        <span>{t('makmp:admin_review_assignment_label', 'Tugasan Semakan:')}</span>
                         <span className="text-slate-500 dark:text-slate-400 font-mono">
                           {isAll
-                            ? 'Akses Penuh'
-                            : `${pin.assigned_categories.length} Ditugaskan`}
+                            ? t('makmp:admin_full_access', 'Akses Penuh')
+                            : pin.assigned_categories.length + ' ' + t('makmp:admin_assigned_suffix', 'Ditugaskan')}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                         {isAll ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            ⭐ Semua Kategori & Anugerah (Akses Penuh)
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center">
+                            <Star className="w-3.5 h-3.5 text-amber-500 mr-1" />
+                            {t('makmp:admin_all_cats_and_awards_full', 'Semua Kategori & Anugerah (Akses Penuh)')}
                           </span>
                         ) : (
                           pin.assigned_categories.map((cat, i) => {
@@ -2142,7 +2142,10 @@ export default function MakmpAdminDashboardPage() {
                                 }`}
                                 title={cat}
                               >
-                                {isGroup ? `📁 ${cat}` : `🏆 ${cat}`}
+                                <span className="inline-flex items-center">
+                                  {isGroup ? <Folder className="w-3 h-3 mr-1" /> : <Trophy className="w-3 h-3 mr-1" />}
+                                  {cat}
+                                </span>
                               </span>
                             );
                           })
@@ -2172,7 +2175,7 @@ export default function MakmpAdminDashboardPage() {
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Salin Link</span>
+                            <span>{t('makmp:admin_copy_link', 'Salin Link')}</span>
                           </>
                         )}
                       </button>
@@ -2187,7 +2190,7 @@ export default function MakmpAdminDashboardPage() {
                       className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
                       <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
-                      <span>Kemaskini</span>
+                      <span>{t('common:update', 'Kemaskini')}</span>
                     </button>
                     <button
                       type="button"
@@ -2195,7 +2198,7 @@ export default function MakmpAdminDashboardPage() {
                       className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                     >
                       <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
-                      <span>Padam</span>
+                      <span>{t('common:delete', 'Padam')}</span>
                     </button>
                   </div>
                 </div>
@@ -2212,7 +2215,7 @@ export default function MakmpAdminDashboardPage() {
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                     <KeyRound className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    <span>{editingPin ? 'Kemaskini Tugasan Juri & PIN' : 'Jana Kod PIN Juri MAKMP'}</span>
+                    <span>{editingPin ? t('makmp:admin_update_pin_modal_title', 'Kemaskini Tugasan Juri & PIN') : t('makmp:admin_create_pin_modal_title', 'Jana Kod PIN Juri MAKMP')}</span>
                   </h3>
                   <button
                     type="button"
@@ -2225,7 +2228,7 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSavePin} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Pegawai / Juri *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_jury_name_label', 'Nama Pegawai / Juri *')}</label>
                     <input
                       type="text"
                       required
@@ -2237,12 +2240,12 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Organisasi / Jabatan / Unit</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_jury_org_label', 'Organisasi / Jabatan / Unit')}</label>
                     <input
                       type="text"
                       value={juryOrg}
                       onChange={(e) => setJuryOrg(e.target.value)}
-                      placeholder="cth: Jabatan Kejuruteraan Elektrik (JKE) / HEP"
+                      placeholder={t('makmp:admin_jury_org_placeholder', 'cth: Jabatan Kejuruteraan Elektrik (JKE) / HEP')}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
@@ -2251,13 +2254,13 @@ export default function MakmpAdminDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-slate-700 dark:text-slate-300 font-semibold">
-                        Tugasan Anugerah / Kategori Semakan *
+                        {t('makmp:admin_assigned_awards_label', 'Tugasan Anugerah / Kategori Semakan *')}
                       </label>
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                           {selectedJuryCategories.includes('ALL')
-                            ? 'Akses Penuh Semua Anugerah'
-                            : `${selectedJuryCategories.length} Tugasan Dipilih`}
+                            ? t('makmp:admin_all_awards_full_access', 'Akses Penuh Semua Anugerah')
+                            : t('makmp:admin_tasks_selected', '{{count}} Tugasan Dipilih', { count: selectedJuryCategories.length })}
                         </span>
                         {!selectedJuryCategories.includes('ALL') && selectedJuryCategories.length > 0 && (
                           <button
@@ -2288,16 +2291,17 @@ export default function MakmpAdminDashboardPage() {
                           <Square className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                         )}
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-white text-xs">
-                            ⭐ SEMUA KATEGORI & ANUGERAH (Akses Penuh)
+                          <div className="font-bold text-slate-900 dark:text-white text-xs flex items-center">
+                            <Star className="w-3.5 h-3.5 text-amber-500 mr-1" />
+                            {t('makmp:admin_all_cats_and_awards_upper', 'SEMUA KATEGORI & ANUGERAH (Akses Penuh)')}
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Pegawai ini boleh menyemak semua {awards.length || 18} anugerah rasmi tanpa had
+                            {t('makmp:admin_officer_can_review_all', 'Pegawai ini boleh menyemak semua {{count}} anugerah rasmi tanpa had', { count: awards.length || 18 })}
                           </div>
                         </div>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                        Pilihan Utama
+                        {t('makmp:admin_primary_option', 'Pilihan Utama')}
                       </span>
                     </button>
 
@@ -2305,7 +2309,7 @@ export default function MakmpAdminDashboardPage() {
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between gap-2">
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                          Atau peruntukkan anugerah / kategori spesifik bagi pegawai ini:
+                          {t('makmp:admin_specific_awards_prompt', 'Atau peruntukkan anugerah / kategori spesifik bagi pegawai ini:')}
                         </div>
                       </div>
 
@@ -2316,7 +2320,7 @@ export default function MakmpAdminDashboardPage() {
                           type="text"
                           value={juryCategorySearch}
                           onChange={(e) => setJuryCategorySearch(e.target.value)}
-                          placeholder="Cari nama anugerah atau kumpulan... (cth: Keusahawanan, Siswa, Sukan)"
+                          placeholder={t('makmp:admin_search_award_or_group_placeholder', 'Cari nama anugerah atau kumpulan... (cth: Keusahawanan, Siswa, Sukan)')}
                           className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                         />
                         {juryCategorySearch && (
@@ -2334,7 +2338,7 @@ export default function MakmpAdminDashboardPage() {
                       <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
                         {filteredGroupedAwards.length === 0 ? (
                           <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
-                            Tiada anugerah sepadan dengan carian "{juryCategorySearch}".
+                            {t('makmp:admin_no_matching_awards', 'Tiada anugerah sepadan dengan carian "{{query}}".', { query: juryCategorySearch })}
                           </div>
                         ) : (
                           filteredGroupedAwards.map(({ groupName, awards: groupAwards }) => {
@@ -2368,7 +2372,7 @@ export default function MakmpAdminDashboardPage() {
                                       </span>
                                     </button>
                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
-                                      ({groupAwards.length} anugerah)
+                                      {'(' + groupAwards.length + ' ' + t('makmp:admin_awards_count_suffix', 'anugerah') + ')'}
                                     </span>
                                   </div>
 
@@ -2381,7 +2385,7 @@ export default function MakmpAdminDashboardPage() {
                                         : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 border border-slate-200 dark:border-transparent'
                                     }`}
                                   >
-                                    {isGroupSelected ? 'Nyahpilih Kumpulan' : 'Pilih Semua Kumpulan'}
+                                    {isGroupSelected ? t('makmp:admin_unselect_group', 'Nyahpilih Kumpulan') : t('makmp:admin_select_all_group', 'Pilih Semua Kumpulan')}
                                   </button>
                                 </div>
 
@@ -2411,7 +2415,7 @@ export default function MakmpAdminDashboardPage() {
                                           </div>
                                           <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400 dark:text-slate-500">
                                             <span className="px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                              {aw.target_type === 'ENTITY' ? 'ENTITI / KELAB' : 'INDIVIDU'}
+                                              {aw.target_type === 'ENTITY' ? t('makmp:admin_entity_club_badge', 'ENTITI / KELAB') : t('makmp:admin_individual_badge', 'INDIVIDU')}
                                             </span>
                                             <span>Maks {aw.max_merit || 50}m</span>
                                           </div>
@@ -2429,7 +2433,7 @@ export default function MakmpAdminDashboardPage() {
                         {categories.length > 0 && groupedAwards.length === 0 && (
                           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-2.5 space-y-2">
                             <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                              Kategori Asas (Klasik):
+                              {t('makmp:admin_classic_base_cats', 'Kategori Asas (Klasik):')}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                               {categories.map((c) => {
@@ -2468,7 +2472,7 @@ export default function MakmpAdminDashboardPage() {
                     <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                       <span>
-                        Peringatan: Anda belum log masuk sebagai Pentadbir JPP. Sila log masuk dengan akaun JPP di /login sebelum menjana PIN.
+                        {t('makmp:admin_not_logged_in_pin_warning', 'Peringatan: Anda belum log masuk sebagai Pentadbir JPP. Sila log masuk dengan akaun JPP di /login sebelum menjana PIN.')}
                       </span>
                     </div>
                   )}
@@ -2479,13 +2483,13 @@ export default function MakmpAdminDashboardPage() {
                       onClick={() => setIsPinModalOpen(false)}
                       className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                     >
-                      Batal
+                      {t('common:cancel', 'Batal')}
                     </button>
                     <button
                       type="submit"
                       className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition shadow-md shadow-amber-500/20"
                     >
-                      {editingPin ? 'Kemaskini Tugasan' : 'Jana PIN Automatik'}
+                      {editingPin ? t('makmp:admin_update_assignment_btn', 'Kemaskini Tugasan') : t('makmp:admin_generate_auto_pin_btn', 'Jana PIN Automatik')}
                     </button>
                   </div>
                 </form>
@@ -2518,11 +2522,11 @@ export default function MakmpAdminDashboardPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">No. Matrik:</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_matric_no_label', 'No. Matrik:')}</span>
                 <div className="font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.matric_no}</div>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Jabatan & Sem:</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_dept_sem_label', 'Jabatan & Sem:')}</span>
                 <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                   {getJabatanLabel(activeSub.department)} (Sem {activeSub.semester || 1})
                 </div>
@@ -2532,7 +2536,7 @@ export default function MakmpAdminDashboardPage() {
                 <div className="font-bold text-slate-900 dark:text-white mt-0.5">{activeSub.phone}</div>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Status Keseluruhan:</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_overall_status_label', 'Status Keseluruhan:')}</span>
                 <div className="font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.status} (+{activeSub.total_merit_awarded}m)</div>
               </div>
             </div>
@@ -2541,7 +2545,7 @@ export default function MakmpAdminDashboardPage() {
             {activeSub.awards && activeSub.awards.length > 0 ? (
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Pecahan Anugerah Yang Dipohon ({activeSub.awards.length})
+                  {t('makmp:admin_applied_awards_breakdown', 'Pecahan Anugerah Yang Dipohon')} ({activeSub.awards.length})
                 </h4>
                 <div className="space-y-3">
                   {activeSub.awards.map((awApp, idx) => {
@@ -2564,20 +2568,21 @@ export default function MakmpAdminDashboardPage() {
                             </div>
                             {awApp.entity_name && (
                               <div className="text-xs text-purple-600 dark:text-purple-300 mt-1">
-                                Entiti / Kelab: <strong>{awApp.entity_name}</strong> (Peranan: {awApp.applicant_role || 'Calon'})
+                                {t('makmp:admin_entity_club_label', 'Entiti / Kelab:')} <strong>{awApp.entity_name}</strong> ({t('makmp:admin_role_prefix', 'Peranan:') + ' ' + (awApp.applicant_role || t('makmp:admin_candidate_role', 'Calon'))})
                               </div>
                             )}
                           </div>
 
                           <div className="flex items-center gap-2">
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={cn(
+                                'px-2 py-0.5 rounded-full text-[10px] font-bold',
                                 awApp.status === 'DISAHKAN'
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                   : awApp.status === 'DITOLAK'
                                   ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
-                              }`}
+                              )}
                             >
                               {awApp.status}
                             </span>
@@ -2596,7 +2601,7 @@ export default function MakmpAdminDashboardPage() {
                                 }}
                                 className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
                               >
-                                {unlockingAwardId === awApp.id ? 'Membuka...' : '🔓 Buka Semula'}
+                                {unlockingAwardId === awApp.id ? t('jpp:makmp_reopening', 'Membuka...') : (<><Unlock className="w-3 h-3 inline mr-1" />{t('jpp:makmp_reopen_review', 'Buka Semula')}</>)}
                               </button>
                             )}
                           </div>
@@ -2606,7 +2611,7 @@ export default function MakmpAdminDashboardPage() {
                         {reviewLog.filter((l) => l.awardId === awApp.id).length > 0 && (
                           <div className="space-y-1.5 pt-1">
                             <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                              Sejarah Buka Semula:
+                              {t('makmp:admin_reopen_history_label', 'Sejarah Buka Semula:')}
                             </div>
                             {reviewLog
                               .filter((l) => l.awardId === awApp.id)
@@ -2614,8 +2619,8 @@ export default function MakmpAdminDashboardPage() {
                                 <div key={log.id || li} className="text-[11px] text-slate-600 dark:text-slate-400 flex items-start gap-2">
                                   <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
                                   <span>
-                                    {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
-                                    {log.reason ? ` • "${log.reason}"` : ''}
+                                    {(log.jury_name || log.admin_name || t('makmp:admin_role_admin', 'Pentadbir')) + ' \u2014 ' + log.previous_status + ' \u2192 ' + t('makmp:admin_status_in_review', 'DALAM_SEMAKAN')}
+                                    {log.reason ? (' \u2022 "' + log.reason + '"') : ''}
                                     <span className="block text-[10px] text-slate-400 dark:text-slate-600">
                                       {new Date(log.created_at).toLocaleString('ms-MY')}
                                     </span>
@@ -2628,10 +2633,10 @@ export default function MakmpAdminDashboardPage() {
                         {/* Documents for this award */}
                         <div className="space-y-2">
                           <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                            Dokumen / Laporan Disertakan ({awItems.length}):
+                            {t('makmp:admin_attached_docs_label', 'Dokumen / Laporan Disertakan')} ({awItems.length}):
                           </div>
                           {awItems.length === 0 ? (
-                            <p className="text-xs text-slate-400 dark:text-slate-500 italic">Tiada dokumen dilampirkan.</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 italic">{t('makmp:admin_no_docs_attached', 'Tiada dokumen dilampirkan.')}</p>
                           ) : (
                             awItems.map((doc, dIdx) => (
                               <div
@@ -2639,13 +2644,14 @@ export default function MakmpAdminDashboardPage() {
                                 className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs shadow-xs"
                               >
                                 <div className="flex items-center gap-2 truncate">
-                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                  <span className={cn(
+                                    'px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider',
                                     doc.document_type === 'LAPORAN'
                                       ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30'
                                       : doc.document_type === 'BUKTI_SOKONGAN'
                                       ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30'
                                       : 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30'
-                                  }`}>
+                                  )}>
                                     {doc.document_type || 'SIJIL'}
                                   </span>
                                   <span className="text-slate-900 dark:text-white font-medium truncate">{doc.nama_pencapaian}</span>
@@ -2663,7 +2669,7 @@ export default function MakmpAdminDashboardPage() {
                                   className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold text-xs flex items-center gap-1 shrink-0"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
-                                  <span>Buka Dokumen</span>
+                                  <span>{t('makmp:admin_open_doc_btn', 'Buka Dokumen')}</span>
                                 </a>
                               </div>
                             ))
@@ -2677,7 +2683,7 @@ export default function MakmpAdminDashboardPage() {
             ) : (
               <div>
                 <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  Senarai Sijil Dikemukakan ({activeSub.items?.length || 0})
+                  {t('makmp:admin_submitted_certs_title', 'Senarai Sijil Dikemukakan')} ({activeSub.items?.length || 0})
                 </h4>
                 <div className="space-y-2">
                   {activeSub.items?.map((item, i) => (
@@ -2701,7 +2707,7 @@ export default function MakmpAdminDashboardPage() {
                         className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-1 shrink-0"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Buka Sijil</span>
+                        <span>{t('makmp:admin_open_cert_btn', 'Buka Sijil')}</span>
                       </a>
                     </div>
                   ))}
@@ -2718,7 +2724,7 @@ export default function MakmpAdminDashboardPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Urus edisi tahunan MAKMP — tukar tarikh tutup permohonan, tajuk, tahun, dan buka/tutup sesi.
+              {t('makmp:admin_editions_tab_desc', 'Urus edisi tahunan MAKMP — tukar tarikh tutup permohonan, tajuk, tahun, dan buka/tutup sesi.')}
             </p>
             {isJppOrAdmin && (
               <button
@@ -2726,7 +2732,7 @@ export default function MakmpAdminDashboardPage() {
                 className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-sm transition"
               >
                 <Plus className="w-4 h-4" />
-                <span>Edisi Baharu</span>
+                <span>{t('makmp:admin_new_edition_btn', 'Edisi Baharu')}</span>
               </button>
             )}
           </div>
@@ -2747,11 +2753,11 @@ export default function MakmpAdminDashboardPage() {
                     </span>
                     {ed.is_active ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
-                        Sesi Dibuka
+                        {t('makmp:admin_session_open', 'Sesi Dibuka')}
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/20">
-                        Sesi Ditutup
+                        {t('makmp:admin_session_closed', 'Sesi Ditutup')}
                       </span>
                     )}
                   </div>
@@ -2761,12 +2767,12 @@ export default function MakmpAdminDashboardPage() {
                   <div className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
                     <CalendarClock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                     <span>
-                      Tarikh tutup:{' '}
+                      {t('makmp:admin_closing_date_prefix', 'Tarikh tutup:') + ' '}
                       {ed.submission_deadline
                         ? new Date(ed.submission_deadline).toLocaleString('ms-MY', {
                             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
                           })
-                        : '— belum ditetapkan —'}
+                        : t('makmp:admin_not_yet_set', '— belum ditetapkan —')}
                     </span>
                   </div>
                 </div>
@@ -2781,19 +2787,19 @@ export default function MakmpAdminDashboardPage() {
                           : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/20'
                       }`}
                     >
-                      {ed.is_active ? 'Tutup Sesi' : 'Buka Sesi'}
+                      {ed.is_active ? t('makmp:admin_close_session_btn', 'Tutup Sesi') : t('makmp:admin_open_session_btn', 'Buka Sesi')}
                     </button>
                     <button
                       onClick={() => handleOpenEditEdition(ed)}
                       className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
-                      title="Kemaskini edisi"
+                      title={t('makmp:admin_update_edition_title', 'Kemaskini edisi')}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteEdition(ed)}
                       className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition"
-                      title="Padam edisi"
+                      title={t('makmp:admin_delete_edition_title', 'Padam edisi')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -2803,7 +2809,7 @@ export default function MakmpAdminDashboardPage() {
             ))}
             {editions.length === 0 && (
               <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-                Tiada edisi lagi. Klik "Edisi Baharu" untuk mula.
+                {t('makmp:admin_no_editions_yet', 'Tiada edisi lagi. Klik "Edisi Baharu" untuk mula.')}
               </div>
             )}
           </div>
@@ -2816,7 +2822,7 @@ export default function MakmpAdminDashboardPage() {
           <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                {editingEdition ? 'Kemaskini Edisi' : 'Edisi Baharu'}
+                {editingEdition ? t('makmp:admin_update_edition_modal_title', 'Kemaskini Edisi') : t('makmp:admin_new_edition_btn', 'Edisi Baharu')}
               </h3>
               <button
                 type="button"
@@ -2829,20 +2835,20 @@ export default function MakmpAdminDashboardPage() {
 
             <form onSubmit={handleSaveEdition} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tajuk Edisi *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_edition_title_label', 'Tajuk Edisi *')}</label>
                 <input
                   type="text"
                   required
                   value={editionTitle}
                   onChange={(e) => setEditionTitle(e.target.value)}
-                  placeholder="cth: Majlis Anugerah Kecemerlangan POLISAS 2027"
+                  placeholder={t('makmp:admin_edition_title_placeholder', 'cth: Majlis Anugerah Kecemerlangan POLISAS 2027')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tahun *</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_edition_year_label', 'Tahun *')}</label>
                   <input
                     type="number"
                     min={2020}
@@ -2853,7 +2859,7 @@ export default function MakmpAdminDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tarikh Tutup</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_edition_closing_date_label', 'Tarikh Tutup')}</label>
                   <input
                     type="datetime-local"
                     value={editionDeadline}
@@ -2864,12 +2870,12 @@ export default function MakmpAdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Penerangan</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_edition_desc_label', 'Penerangan')}</label>
                 <textarea
                   rows={2}
                   value={editionDesc}
                   onChange={(e) => setEditionDesc(e.target.value)}
-                  placeholder="Penerangan ringkas edisi ini..."
+                  placeholder={t('makmp:admin_edition_desc_placeholder', 'Penerangan ringkas edisi ini...')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
@@ -2882,7 +2888,7 @@ export default function MakmpAdminDashboardPage() {
                     onChange={(e) => setEditionIsActive(e.target.checked)}
                     className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                   />
-                  <span className="text-slate-800 dark:text-white font-semibold text-xs">Sesi Dibuka (aktif)</span>
+                  <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('makmp:admin_session_open_active', 'Sesi Dibuka (aktif)')}</span>
                 </label>
               </div>
 
@@ -2892,14 +2898,14 @@ export default function MakmpAdminDashboardPage() {
                   onClick={() => setIsEditionModalOpen(false)}
                   className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
                 <button
                   type="submit"
                   disabled={savingEdition}
                   className="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold disabled:opacity-50"
                 >
-                  {savingEdition ? 'Menyimpan...' : editingEdition ? 'Kemaskini Edisi' : 'Simpan Edisi'}
+                  {savingEdition ? t('makmp:saving', 'Menyimpan...') : editingEdition ? t('makmp:admin_update_edition_btn', 'Kemaskini Edisi') : t('makmp:admin_save_edition_btn', 'Simpan Edisi')}
                 </button>
               </div>
             </form>

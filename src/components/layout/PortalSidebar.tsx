@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, 
@@ -28,12 +29,13 @@ interface PortalSidebarProps {
 }
 
 export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartTour }: PortalSidebarProps) {
+  const { t } = useTranslation(['portal', 'nav', 'common']);
   const { profile, signOut, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
-  const displayName = getMalaysianNickname(profile?.full_name) || 'Student';
+  const displayName = getMalaysianNickname(profile?.full_name) || t('portal:student', 'Student');
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'ST';
 
   // Desktop Hover Logic
@@ -130,9 +132,9 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
         <div className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide">
           {/* Primary Nav */}
           <div className="space-y-1">
-            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">Utama</p>
-            <SidebarLink icon={Home} label="Laman Utama" to="/portal" onClick={onClose} />
-            <SidebarLink icon={Settings} label="Tetapan Profil" to="/tetapan" onClick={onClose} />
+            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">{t('nav:primary_nav', 'Utama')}</p>
+            <SidebarLink icon={Home} label={t('nav:home', 'Laman Utama')} to="/portal" onClick={onClose} />
+            <SidebarLink icon={Settings} label={t('portal:profile_settings', 'Tetapan Profil')} to="/tetapan" onClick={onClose} />
             {onStartTour && (
               <button
                 type="button"
@@ -145,7 +147,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 bg-black/[0.03] dark:bg-white/10 text-emerald-500">
                   <HelpCircle className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.1em]">Panduan Sistem (Tutorial)</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.1em]">{t('portal:system_guide_tutorial', 'Panduan Sistem (Tutorial)')}</span>
                 <ChevronRight className="ml-auto w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
               </button>
             )}
@@ -154,7 +156,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
           {/* JPP HQ Shortcut */}
           {isJPPMode && (
             <div className="space-y-1">
-              <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-amber-500/50 mb-3">Khas JPP</p>
+              <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-amber-500/50 mb-3">{t('portal:jpp_exclusive', 'Khas JPP')}</p>
               <NavLink
                 to="/jpp"
                 onClick={onClose}
@@ -163,15 +165,15 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
                 <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                   <Crown className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-widest">JPP HQ Portal</span>
-                <Badge className="ml-auto bg-amber-500/20 text-amber-500 text-[8px] border-none font-black h-5">EXCLUSIVE</Badge>
+                <span className="text-[11px] font-black uppercase tracking-widest">{t('nav:jpp_portal', 'JPP HQ Portal')}</span>
+                <Badge className="ml-auto bg-amber-500/20 text-amber-500 text-[8px] border-none font-black h-5">{t('portal:exclusive', 'EXCLUSIVE')}</Badge>
               </NavLink>
             </div>
           )}
 
           {/* Module Shortcuts Grid */}
           <div className="space-y-3">
-            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">Modul Pantas</p>
+            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">{t('portal:quick_modules', 'Modul Pantas')}</p>
             <div className="grid grid-cols-2 gap-2 px-2 pb-4">
               {EXCO_MODULES.map((mod) => {
                 const IconComp = (() => {
@@ -206,7 +208,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Sistem Aktif</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('portal:system_active', 'Sistem Aktif')}</span>
             </div>
             {isSuperAdmin && (
                <span className="text-[9px] font-black bg-slate-800 text-white px-2 py-0.5 rounded-full">ADMIN</span>
@@ -217,7 +219,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
             className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 transition-all font-black text-xs uppercase tracking-[0.15em]"
           >
             <LogOut className="w-4 h-4" />
-            Log Keluar
+            {t('nav:logout', 'Log Keluar')}
           </button>
         </div>
       </aside>

@@ -6,6 +6,10 @@
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 import { sendEmail } from './email';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 interface NotifyOptions {
   tag?: string;
@@ -126,24 +130,32 @@ export async function notifyKLKOnSuspension(
     if (!klkUsers || !klkUsers.length) return;
     
     const emails = klkUsers.map((u: any) => u.email);
+    const valName = studentName || t('gig:unknown', 'Tidak diketahui');
+    const valMatric = matricNo || t('gig:not_stated', 'Tidak dinyatakan');
+    const emailTitle = t('gig:email_suspension_title', 'Notifikasi Sistem: Penggantungan Akaun PolyRider');
+    const emailIntro = t('gig:email_suspension_intro', 'Akaun pelajar berikut telah digantung secara automatik atau melalui tindakan amaran (SOS Khianat):');
+    const nameLabel = t('gig:label_name', 'Nama:');
+    const matricLabel = t('gig:label_matric', 'No. Matrik:');
+    const reasonLabel = t('gig:label_reason', 'Sebab:');
+    const emailFooter = t('gig:email_suspension_footer', 'Akaun ini digantung selama 24 jam. Pelajar boleh membuat rayuan menerusi aplikasi yang akan dipaparkan pada Dashboard KLK anda.');
     const html = `
       <div style="font-family: sans-serif; padding: 20px;">
-        <h2 style="color: #dc2626;">Notifikasi Sistem: Penggantungan Akaun PolyRider</h2>
-        <p>Akaun pelajar berikut telah digantung secara automatik atau melalui tindakan amaran (SOS Khianat):</p>
+        <h2 style="color: #dc2626;">${emailTitle}</h2>
+        <p>${emailIntro}</p>
         <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin: 15px 0;">
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="margin-bottom: 8px;"><strong>Nama:</strong> ${studentName || 'Tidak diketahui'}</li>
-            <li style="margin-bottom: 8px;"><strong>No. Matrik:</strong> ${matricNo || 'Tidak dinyatakan'}</li>
-            <li><strong>Sebab:</strong> ${reason}</li>
+            <li style="margin-bottom: 8px;"><strong>${nameLabel}</strong> ${valName}</li>
+            <li style="margin-bottom: 8px;"><strong>${matricLabel}</strong> ${valMatric}</li>
+            <li><strong>${reasonLabel}</strong> ${reason}</li>
           </ul>
         </div>
-        <p style="color: #475569; font-size: 14px;">Akaun ini digantung selama 24 jam. Pelajar boleh membuat rayuan menerusi aplikasi yang akan dipaparkan pada Dashboard KLK anda.</p>
+        <p style="color: #475569; font-size: 14px;">${emailFooter}</p>
       </div>
     `;
     
     await sendEmail({
       to: emails,
-      subject: `[PolyRider] Amaran: Penggantungan Akaun - ${studentName}`,
+      subject: t('gig:account_suspension_warning', '[PolyRider] Amaran: Penggantungan Akaun - {{name}}', { name: studentName }),
       html
     });
   } catch (e) {

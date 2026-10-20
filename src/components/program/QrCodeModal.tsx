@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'qrcode';
 import { toast } from 'react-hot-toast';
@@ -39,12 +40,13 @@ interface QrCodeModalProps {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const canvasRef       = useRef<HTMLCanvasElement>(null);
   const [ready, setReady]       = useState(false);
   const [imgSrc, setImgSrc]     = useState<string>('');
   const [copied, setCopied]     = useState(false);
 
-  const attendUrl = `${window.location.origin}/program/attend/${program.qr_token}`;
+  const attendUrl = (window.location.origin || '') + '/program/attend/' + program.qr_token;
 
   // ─── Generate QR image ────────────────────────────────────────────────────
   const generateQr = useCallback(async () => {
@@ -64,7 +66,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
       setImgSrc(url);
       setReady(true);
     } catch (err) {
-      toast.error('Gagal menjana QR kod.');
+      toast.error(t('portal:generate_qr_failed', 'Gagal menjana QR kod.'));
     }
   }, [open, attendUrl]);
 
@@ -75,19 +77,19 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
     if (!imgSrc) return;
     const link = document.createElement('a');
     link.href  = imgSrc;
-    link.download = `QR_${program.title.replace(/\s+/g, '_').slice(0, 30)}.png`;
+    link.download = ('QR_' + program.title.replace(/\s+/g, '_').slice(0, 30) + '.png');
     link.click();
-    toast.success('QR berjaya dimuat turun!');
+    toast.success(t('portal:qr_downloaded_success', 'QR berjaya dimuat turun!'));
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(attendUrl);
       setCopied(true);
-      toast.success('Link QR disalin!');
+      toast.success(t('portal:qr_link_copied', 'Link QR disalin!'));
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      toast.error('Gagal menyalin.');
+      toast.error(t('portal:copy_failed', 'Gagal menyalin.'));
     }
   };
 
@@ -95,8 +97,8 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Daftar Hadir: ${program.title}`,
-          text:  `Scan QR atau klik link untuk daftar hadir program ini.`,
+          title: t('portal:attend_registration_title', 'Daftar Hadir: {{title}}', { title: program.title }),
+          text:  t('portal:attend_registration_share_text', 'Scan QR atau klik link untuk daftar hadir program ini.'),
           url:   attendUrl,
         });
       } catch { /* User cancelled */ }
@@ -114,7 +116,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
     } catch { return d; }
   };
 
-  const typeLabel = program.type === 'takwim' ? 'Takwim Rasmi' : 'Aktiviti Kelab';
+  const typeLabel = program.type === 'takwim' ? t('portal:official_takwim', 'Takwim Rasmi') : t('portal:club_activity', 'Aktiviti Kelab');
   const typeColor = program.type === 'takwim'
     ? 'bg-primary/15 text-primary border-primary/25'
     : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25';
@@ -204,7 +206,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                       <p className="text-[10px] font-bold text-slate-400">
                         {program.qr_open_at ? formatDT(program.qr_open_at) : '—'}
                         {' → '}
-                        {program.qr_close_at ? formatDT(program.qr_close_at) : 'Tiada had'}
+                        {program.qr_close_at ? formatDT(program.qr_close_at) : t('portal:no_limit', 'Tiada had')}
                       </p>
                     </div>
                   )}
@@ -216,7 +218,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/20">
                           <Trophy size={11} className="text-amber-400" />
                           <span className="text-[10px] font-black text-amber-300 uppercase tracking-wide">
-                            +{program.merit_kelab} Merit Kelab
+                            +{program.merit_kelab} {t('portal:club_merit', 'Merit Kelab')}
                           </span>
                         </div>
                       )}
@@ -224,7 +226,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/20">
                           <Trophy size={11} className="text-emerald-400" />
                           <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wide">
-                            +{program.merit_eakademik} Merit Rasmi
+                            +{program.merit_eakademik} {t('portal:official_merit', 'Merit Rasmi')}
                           </span>
                         </div>
                       )}
@@ -247,7 +249,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                 <div className="p-4 grid grid-cols-3 gap-2">
                   <ActionBtn
                     icon={Download}
-                    label="Muat Turun"
+                    label={t('portal:download', 'Muat Turun')}
                     onClick={handleDownload}
                     disabled={!ready}
                     className="bg-primary hover:bg-primary/90 text-white"
@@ -255,7 +257,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                   />
                   <ActionBtn
                     icon={copied ? CheckCircle2 : Copy}
-                    label={copied ? 'Disalin!' : 'Salin Link'}
+                    label={copied ? t('portal:copied', 'Disalin!') : t('portal:copy_link', 'Salin Link')}
                     onClick={handleCopy}
                     className={cn(copied ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-white/[0.05] border-white/[0.08] hover:bg-white/[0.10]')}
                     iconColor={copied ? 'text-emerald-400' : 'text-slate-400'}
@@ -280,7 +282,7 @@ export function QrCodeModal({ open, onClose, program }: QrCodeModalProps) {
                     className="flex items-center justify-center gap-2 w-full h-10 rounded-2xl border border-white/[0.06] text-[10px] font-black text-slate-500 hover:text-slate-300 hover:border-white/[0.12] transition-colors uppercase tracking-widest"
                   >
                     <ExternalLink size={11} />
-                    Buka Halaman QR
+                    {t('portal:open_qr_page', 'Buka Halaman QR')}
                   </a>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,6 +35,7 @@ function extractOrderId(text: string): string {
 // ── POS Access Denied ─────────────────────────────────────────────────────────
 
 function PosAccessDenied({ color }: { color: string }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   return (
     <div className="min-h-full flex items-center justify-center p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
@@ -41,12 +43,12 @@ function PosAccessDenied({ color }: { color: string }) {
           style={{ border: `2px solid ${hexToRgba(color, 0.25)}` }}>
           <ShieldOff className="w-9 h-9 text-muted-foreground/40" />
         </div>
-        <h2 className="text-xl font-black mb-2 text-foreground">Akses POS Ditolak</h2>
+        <h2 className="text-xl font-black mb-2 text-foreground">{t('pos_access_denied')}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Hanya <span className="font-bold text-foreground">pemilik perniagaan</span>, <span className="font-bold text-foreground">staff bertugas hari ini</span>, atau <span className="font-bold text-foreground">Exco Keusahawanan</span> boleh mengakses POS.
+          {t('pos_access_desc')}
         </p>
         <div className="mt-5 px-4 py-3 rounded-2xl bg-muted/50 border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-          Hubungi pemilik bisnes untuk penetapan akses hari ini.
+          {t('keusahawanan:pos_access_contact_owner', 'Hubungi pemilik bisnes untuk penetapan akses hari ini.')}
         </div>
       </motion.div>
     </div>
@@ -55,7 +57,8 @@ function PosAccessDenied({ color }: { color: string }) {
 
 // ── Product Card ──────────────────────────────────────────────────────────────
 
-function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAdd: (p: BusinessProduct) => void; color: string }) {
+function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAdd: (p: BusinessProduct) => void; color: string; key?: any }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= product.stock_alert_threshold;
   const isOutOfStock = product.stock_quantity === 0;
 
@@ -86,17 +89,17 @@ function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAd
         {/* Stock badges */}
         {isLowStock && (
           <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black">
-            Stok: {product.stock_quantity}
+            {t('pos_stock_qty')}: {product.stock_quantity}
           </div>
         )}
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span className="text-[10px] font-black uppercase text-white tracking-widest">Habis</span>
+            <span className="text-[10px] font-black uppercase text-white tracking-widest">{t('pos_out_of_stock')}</span>
           </div>
         )}
         {!product.is_available && !isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span className="text-[10px] font-black uppercase text-white tracking-widest">Tidak Aktif</span>
+            <span className="text-[10px] font-black uppercase text-white tracking-widest">{t('pos_inactive')}</span>
           </div>
         )}
       </div>
@@ -118,6 +121,7 @@ function CartItemRow({
   onQtyChange: (productId: string, qty: number) => void;
   onRemove: (productId: string) => void;
   color: string;
+  key?: any;
 }) {
   return (
     <motion.div
@@ -153,6 +157,7 @@ function CartItemRow({
 // ── Main POS Order Page ───────────────────────────────────────────────────────
 
 export function PosOrderPage() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { color } = useExcoTheme();
   const { profile } = useAuth();
   const { selectedBusiness, isLoading: isBusinessLoading, isKeusahawananAdmin } = useBusinessSwitcher();
@@ -318,9 +323,9 @@ export function PosOrderPage() {
       setDiscountEnabled(false); // mutex: clear manual diskaun
       setDiscountValue('');
       setDiscountNote('');
-      toast.success(`Kupon "${result.promotion.code}" berjaya digunakan!`);
+      toast.success(t('keusahawanan:toast_coupon_used', 'Kupon "{{code}}" berjaya digunakan!', { code: result.promotion.code }));
     } else {
-      setCouponError(result.error ?? 'Kod tidak sah.');
+      setCouponError(result.error ?? t('keusahawanan:pos_coupon_invalid', 'Kod tidak sah.'));
       setAppliedPromo(null);
     }
   };
@@ -353,14 +358,14 @@ export function PosOrderPage() {
     setEventCouponError('');
     try {
       const todayStr = new Date().toISOString().split('T')[0];
-      if (!coupon.is_active) { setEventCouponError('Kupon ini tidak aktif.'); return; }
-      if (coupon.valid_from && todayStr < coupon.valid_from) { setEventCouponError('Kupon belum bermula.'); return; }
-      if (coupon.valid_until && todayStr > coupon.valid_until) { setEventCouponError('Kupon telah tamat tempoh.'); return; }
+      if (!coupon.is_active) { setEventCouponError(t('keusahawanan:pos_coupon_not_active', 'Kupon ini tidak aktif.')); return; }
+      if (coupon.valid_from && todayStr < coupon.valid_from) { setEventCouponError(t('keusahawanan:pos_coupon_not_started', 'Kupon belum bermula.')); return; }
+      if (coupon.valid_until && todayStr > coupon.valid_until) { setEventCouponError(t('keusahawanan:pos_coupon_expired', 'Kupon telah tamat tempoh.')); return; }
       if (coupon.max_uses != null && (coupon.uses_count ?? 0) >= coupon.max_uses) {
-        setEventCouponError('Had penggunaan kupon telah dicapai.'); return;
+        setEventCouponError(t('keusahawanan:pos_coupon_limit_reached', 'Had penggunaan kupon telah dicapai.')); return;
       }
       if (subtotal < (Number(coupon.min_purchase) || 0)) {
-        setEventCouponError(`Minimum pembelian RM${Number(coupon.min_purchase).toFixed(2)} diperlukan.`); return;
+        setEventCouponError(t('keusahawanan:pos_coupon_min_purchase', 'Minimum pembelian RM{{amount}} diperlukan.', { amount: Number(coupon.min_purchase).toFixed(2) })); return;
       }
       // Mutex: clear kupon lain + diskaun manual
       setAppliedPromo(null);
@@ -370,7 +375,7 @@ export function PosOrderPage() {
       setDiscountValue('');
       setDiscountNote('');
       setAppliedEventCoupon(coupon);
-      toast.success(`Kupon "${coupon.code}" berjaya digunakan!`);
+      toast.success(t('keusahawanan:toast_coupon_used', 'Kupon "{{code}}" berjaya digunakan!', { code: coupon.code }));
     } finally {
       setEventCouponApplying(false);
     }
@@ -386,7 +391,7 @@ export function PosOrderPage() {
   const handleProcess = async () => {
     if (!businessId || cart.length === 0) return;
     if (paymentMethod === 'CASH' && receivedRM < totalAmount) {
-      toast.error('Jumlah diterima tidak mencukupi!');
+      toast.error(t('keusahawanan:toast_insufficient_payment', 'Jumlah diterima tidak mencukupi!'));
       return;
     }
 
@@ -443,13 +448,13 @@ export function PosOrderPage() {
         .eq('id', cleanText)
         .single();
         
-      if (error || !data) throw new Error('Pesanan tidak wujud');
-      if (data.status !== 'READY' && data.status !== 'CONFIRMED') throw new Error(`Pesanan ini berstatus ${data.status}`);
-      if (data.business_id !== businessId) throw new Error('Pesanan ini bukan untuk perniagaan anda');
+      if (error || !data) throw new Error(t('keusahawanan:pos_order_not_found', 'Pesanan tidak wujud'));
+      if (data.status !== 'READY' && data.status !== 'CONFIRMED') throw new Error(t('keusahawanan:pos_order_status_error', 'Pesanan ini berstatus {{status}}', { status: data.status }));
+      if (data.business_id !== businessId) throw new Error(t('keusahawanan:pos_order_not_for_biz', 'Pesanan ini bukan untuk perniagaan anda'));
       
       setScannedOrder(data);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyemak pesanan PolyMart');
+      toast.error(err.message || t('keusahawanan:toast_polymart_check_failed', 'Gagal menyemak pesanan PolyMart'));
     } finally {
       setProcessing(false);
     }
@@ -470,10 +475,10 @@ export function PosOrderPage() {
         p_served_by: profile?.id
       });
       if (error) throw error;
-      toast.success('Pesanan PolyMart selesai!');
+      toast.success(t('keusahawanan:toast_polymart_order_completed', 'Pesanan PolyMart selesai!'));
       setScannedOrder(null);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyelesaikan pesanan');
+      toast.error(err.message || t('keusahawanan:toast_order_completion_failed', 'Gagal menyelesaikan pesanan'));
     } finally {
       setProcessing(false);
     }
@@ -486,7 +491,7 @@ export function PosOrderPage() {
       <div className="h-full flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-          {isBusinessLoading ? 'Memuatkan perniagaan...' : 'Menyemak akses...'}
+          {isBusinessLoading ? t('keusahawanan:loading_business', 'Memuatkan perniagaan...') : t('keusahawanan:checking_access', 'Menyemak akses...')}
         </p>
       </div>
     );
@@ -496,8 +501,8 @@ export function PosOrderPage() {
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center">
-          <p className="text-sm font-black text-muted-foreground/50">Anda belum menyertai mana-mana perniagaan.</p>
-          <p className="text-[10px] text-muted-foreground/30 mt-1">Sertai atau tubuhkan perniagaan untuk menggunakan POS.</p>
+          <p className="text-sm font-black text-muted-foreground/50">{t('keusahawanan:pos_no_biz_joined', 'Anda belum menyertai mana-mana perniagaan.')}</p>
+          <p className="text-[10px] text-muted-foreground/30 mt-1">{t('keusahawanan:pos_no_biz_joined_sub', 'Sertai atau tubuhkan perniagaan untuk menggunakan POS.')}</p>
         </div>
       </div>
     );
@@ -518,7 +523,7 @@ export function PosOrderPage() {
             className="flex items-center gap-3 px-5 py-3 bg-amber-500/10 border-b border-amber-500/20">
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">
-              Stok Rendah: {lowStockItems.map(p => `${p.name} (${p.stock_quantity})`).join(' · ')}
+              {t('keusahawanan:pos_low_stock_prefix', 'Stok Rendah:')} {lowStockItems.map(p => `${p.name} (${p.stock_quantity})`).join(' · ')}
             </p>
           </motion.div>
         )}
@@ -536,7 +541,7 @@ export function PosOrderPage() {
               <input
                 ref={searchRef}
                 value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Cari produk..."
+                placeholder={t('pos_search_product')}
                 className="w-full h-11 pl-10 pr-10 rounded-2xl text-sm font-medium outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all"
               />
               {search && (
@@ -554,7 +559,7 @@ export function PosOrderPage() {
                     : { background: 'transparent', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground)/0.6)' }
                   }
                 >
-                  {cat}
+                  {cat === 'Semua' ? t('pos_category_all') : cat}
                 </button>
               ))}
             </div>
@@ -565,12 +570,12 @@ export function PosOrderPage() {
             {pos.products.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-center">
                 <Package className="w-12 h-12 text-muted-foreground/20 mb-3" />
-                <p className="text-sm font-black text-muted-foreground/40">Tiada produk dalam katalog.</p>
-                <p className="text-[10px] text-muted-foreground/30 mt-1">Tambah produk di halaman Produk.</p>
+                <p className="text-sm font-black text-muted-foreground/40">{t('pos_out_of_stock')}</p>
+                <p className="text-[10px] text-muted-foreground/30 mt-1">{t('keusahawanan:pos_add_product_hint', 'Tambah produk di halaman Produk.')}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="h-40 flex items-center justify-center">
-                <p className="text-sm font-black text-muted-foreground/40">Tiada produk dijumpai.</p>
+                <p className="text-sm font-black text-muted-foreground/40">{t('pos_out_of_stock')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -589,7 +594,7 @@ export function PosOrderPage() {
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
             <div className="flex items-center gap-2.5">
               <ShoppingCart className="w-4 h-4" style={{ color }} />
-              <span className="text-xs font-black uppercase tracking-wider text-foreground">Troli</span>
+              <span className="text-xs font-black uppercase tracking-wider text-foreground">{t('pos_cart_title')}</span>
               <button onClick={startTour} className="ml-1 w-6 h-6 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
                 <HelpCircle className="w-3.5 h-3.5" />
               </button>
@@ -601,7 +606,7 @@ export function PosOrderPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setShowScanner(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white px-3 py-1.5 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-md" style={{ background: color }}>
-                <QrCode className="w-3 h-3" /> Imbas PolyMart
+                <QrCode className="w-3 h-3" /> {t('keusahawanan:pos_scan_polymart', 'Imbas PolyMart')}
               </button>
               {cart.length > 0 && (
                 <button onClick={clearCart} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 hover:text-rose-500 transition-colors ml-2">
@@ -618,8 +623,8 @@ export function PosOrderPage() {
               {cart.length === 0 ? (
                 <div className="py-10 text-center">
                   <ShoppingCart className="w-8 h-8 text-muted-foreground/20 mx-auto mb-3" />
-                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/30">Troli kosong</p>
-                  <p className="text-[10px] text-muted-foreground/20 mt-1">Pilih produk dari grid kiri</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/30">{t('pos_cart_empty')}</p>
+                  <p className="text-[10px] text-muted-foreground/20 mt-1">{t('keusahawanan:pos_select_product_hint', 'Pilih produk dari grid kiri')}</p>
                 </div>
               ) : (
                 <AnimatePresence mode="popLayout">
@@ -635,19 +640,19 @@ export function PosOrderPage() {
                 {/* Customer info */}
                 <div className="space-y-2">
                   <input value={customerName} onChange={e => setCustomerName(e.target.value)}
-                    placeholder="Nama pelanggan (pilihan)"
+                    placeholder={t('pos_customer_name')}
                     className="w-full h-10 px-4 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                   <input value={customerNote} onChange={e => setCustomerNote(e.target.value)}
-                    placeholder="Catatan pesanan (pilihan)"
+                    placeholder={t('pos_order_notes')}
                     className="w-full h-10 px-4 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                 </div>
 
                 {/* Payment method */}
                 <div className="grid grid-cols-3 gap-2">
                   {([
-                    { key: 'CASH',     icon: Banknote,    label: 'Tunai'    },
-                    { key: 'QR',       icon: QrCode,      label: 'QR'       },
-                    { key: 'TRANSFER', icon: CreditCard,  label: 'Transfer' },
+                    { key: 'CASH',     icon: Banknote,    label: t('payment_method_cash') },
+                    { key: 'QR',       icon: QrCode,      label: t('payment_method_qr')   },
+                    { key: 'TRANSFER', icon: CreditCard,  label: t('payment_method_card') },
                   ] as const).map(({ key, icon: Icon, label }) => (
                     <button key={key} onClick={() => setPaymentMethod(key)}
                       className="h-10 rounded-xl border text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
@@ -666,7 +671,7 @@ export function PosOrderPage() {
                   <div className="rounded-2xl border border-border/50 overflow-hidden">
                     <div className="flex items-center gap-2 px-4 py-3 bg-muted/20">
                       <Ticket className="w-3.5 h-3.5" style={{ color }} />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex-1">Kod Kupon</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex-1">{t('pos_coupon_code')}</span>
                     </div>
                     <div className="p-3 border-t border-border/30">
                       {appliedPromo ? (
@@ -685,12 +690,12 @@ export function PosOrderPage() {
                         <div className="flex gap-2">
                           <input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
                             onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
-                            placeholder="Masukkan kod kupon..."
+                            placeholder={t('pos_coupon_code')}
                             className="flex-1 h-9 px-3 rounded-xl text-xs font-black tracking-widest outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all uppercase" />
                           <button onClick={handleApplyCoupon} disabled={couponValidating || !couponCode.trim()}
                             className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-40 transition-all"
                             style={{ background: hexToRgba(color, 0.1), color }}>
-                            {couponValidating ? '...' : 'Guna'}
+                            {couponValidating ? '...' : t('pos_apply_coupon')}
                           </button>
                         </div>
                       )}
@@ -704,7 +709,7 @@ export function PosOrderPage() {
                                   <div className="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all"
                                     style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.35)' }}>
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-500">
-                                      <Ticket className="w-3.5 h-3.5" /> Kupon Acara: {appliedEventCoupon.code}
+                                      <Ticket className="w-3.5 h-3.5" /> {t('keusahawanan:pos_event_coupon_colon', 'Kupon Acara:')} {appliedEventCoupon.code}
                                       <span className="text-[9px] text-amber-500/60 normal-case font-black">
                                         {appliedEventCoupon.name} · -{fmtRM(eventCouponDiscountRM)}
                                       </span>
@@ -721,9 +726,9 @@ export function PosOrderPage() {
                   <button onClick={() => setDiscountEnabled(v => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                      <Tag className="w-3.5 h-3.5" /> Diskaun Manual
-                      {appliedPromo && <span className="text-[8px] text-rose-600 dark:text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
-                      {appliedEventCoupon && <span className="text-[8px] text-amber-600 dark:text-amber-400 normal-case font-black">(tidak aktif — kupon acara digunakan)</span>}
+                      <Tag className="w-3.5 h-3.5" /> {t('pos_add_discount')}
+                      {appliedPromo && <span className="text-[8px] text-rose-600 dark:text-rose-400 normal-case font-black">{t('keusahawanan:pos_coupon_active_hint', '(tidak aktif — kupon digunakan)')}</span>}
+                      {appliedEventCoupon && <span className="text-[8px] text-amber-600 dark:text-amber-400 normal-case font-black">{t('keusahawanan:pos_event_coupon_active_hint', '(tidak aktif — kupon acara digunakan)')}</span>}
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${discountEnabled ? 'rotate-180' : ''}`} />
                   </button>
@@ -737,14 +742,14 @@ export function PosOrderPage() {
                               style={discountType === 'PERCENT'
                                 ? { background: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.4), color }
                                 : { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>
-                              <Percent className="w-3 h-3" /> Peratus
+                              <Percent className="w-3 h-3" /> {t('pos_percent')}
                             </button>
                             <button onClick={() => setDiscountType('FIXED')}
                               className="flex-1 h-8 rounded-lg text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1"
                               style={discountType === 'FIXED'
                                 ? { background: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.4), color }
                                 : { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>
-                              RM Tetap
+                              {t('pos_fixed')}
                             </button>
                             {/* Ciri 6: Butang kupon acara (MAHRAJAN) di sebelah RM Tetap */}
                             {eventCoupons.length > 0 && eventCoupons.map((ec: any) => {
@@ -771,7 +776,7 @@ export function PosOrderPage() {
                             type="number" min="0"
                             className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40" />
                           <input value={discountNote} onChange={e => setDiscountNote(e.target.value)}
-                            placeholder="Nota diskaun (e.g. Diskaun Pelajar)"
+                            placeholder={t('keusahawanan:pos_discount_notes_placeholder', 'Nota diskaun (e.g. Diskaun Pelajar)')}
                             className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40" />
                           {eventCouponError && <p className="text-[9px] text-rose-500 mt-1 font-black">{eventCouponError}</p>}
                         </div>
@@ -783,7 +788,7 @@ export function PosOrderPage() {
                 {/* Totals */}
                 <div className="rounded-2xl border border-border/50 p-4 space-y-2">
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Subtotal</span>
+                    <span>{t('pos_subtotal')}</span>
                     <span className="font-black">{fmtRM(subtotal)}</span>
                   </div>
                   {appliedPromo && promoDiscountRM > 0 && (
@@ -794,19 +799,19 @@ export function PosOrderPage() {
                   )}
                   {appliedEventCoupon && eventCouponDiscountRM > 0 && (
                     <div className="flex justify-between text-xs" style={{ color: '#f59e0b' }}>
-                      <span className="font-black">🎟️ Kupon Acara: {appliedEventCoupon.code}</span>
+                      <span className="font-black flex items-center gap-1"><Ticket className="w-3 h-3" /> {t('keusahawanan:pos_event_coupon_colon', 'Kupon Acara:')} {appliedEventCoupon.code}</span>
                       <span className="font-black">-{fmtRM(eventCouponDiscountRM)}</span>
                     </div>
                   )}
                   {!appliedPromo && discountRM > 0 && (
                     <div className="flex justify-between text-xs text-emerald-600">
-                      <span>Diskaun {discountNote ? `(${discountNote})` : ''}</span>
+                      <span>{t('pos_discount')} {discountNote ? `(${discountNote})` : ''}</span>
                       <span className="font-black">-{fmtRM(discountRM)}</span>
                     </div>
                   )}
                   <div className="h-px bg-border/50 my-1" />
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-black text-foreground">Jumlah Bayar</span>
+                    <span className="text-sm font-black text-foreground">{t('pos_total')}</span>
                     <span className="text-xl font-black" style={{ color }}>{fmtRM(totalAmount)}</span>
                   </div>
                 </div>
@@ -815,14 +820,14 @@ export function PosOrderPage() {
                 {paymentMethod === 'CASH' && (
                   <div className="space-y-2">
                     <input value={receivedAmount} onChange={e => setReceivedAmount(e.target.value)}
-                      placeholder="Jumlah diterima (RM)"
+                      placeholder={t('pos_received_amount')}
                       type="number" min="0" step="0.01"
                       className="w-full h-11 px-4 rounded-2xl text-sm font-black outline-none bg-muted/40 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                     {receivedRM >= totalAmount && totalAmount > 0 && (
                       <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                         className="flex justify-between items-center px-4 py-3 rounded-2xl"
                         style={{ background: hexToRgba(color, 0.08), border: `1px solid ${hexToRgba(color, 0.2)}` }}>
-                        <span className="text-xs font-black uppercase tracking-wider text-foreground">Baki Kembalian</span>
+                        <span className="text-xs font-black uppercase tracking-wider text-foreground">{t('pos_change_due')}</span>
                         <span className="text-2xl font-black" style={{ color }}>{fmtRM(changeAmount)}</span>
                       </motion.div>
                     )}
@@ -839,7 +844,7 @@ export function PosOrderPage() {
                   className="w-full h-14 rounded-2xl text-white font-black text-sm uppercase tracking-widest transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40 shadow-xl"
                   style={{ background: color }}
                 >
-                  {processing ? 'Memproses...' : '✓ Proses Pembayaran'}
+                  {processing ? t('pos_checkout_processing') : t('pos_checkout_btn')}
                 </button>
               </div>
             )}
@@ -865,22 +870,22 @@ export function PosOrderPage() {
                   style={{ background: hexToRgba(color, 0.1) }}>
                   <CheckCircle2 className="w-8 h-8" style={{ color }} />
                 </motion.div>
-                <h3 className="text-lg font-black mb-1">Pembayaran Berjaya!</h3>
-                <p className="text-xs text-muted-foreground mb-1">No. Invois: <span className="font-black text-foreground">{successTxn.invoice_number}</span></p>
+                <h3 className="text-lg font-black mb-1">{t('pos_sale_completed')}</h3>
+                <p className="text-xs text-muted-foreground mb-1">{t('keusahawanan:pos_invoice_number_label', 'No. Invois:')} <span className="font-black text-foreground">{successTxn.invoice_number}</span></p>
                 <p className="text-2xl font-black mt-3 mb-1" style={{ color }}>{fmtRM(successTxn.totalAmount ?? successTxn.total_amount)}</p>
                 {successTxn.changeAmount > 0 && (
-                  <p className="text-xs text-muted-foreground mb-4">Baki: <span className="font-black text-foreground">{fmtRM(successTxn.changeAmount)}</span></p>
+                  <p className="text-xs text-muted-foreground mb-4">{t('pos_change_due')}: <span className="font-black text-foreground">{fmtRM(successTxn.changeAmount)}</span></p>
                 )}
                 <div className="flex gap-3 mt-6">
                   <button onClick={() => setSuccessTxn(null)}
                     className="flex-1 h-11 rounded-2xl border border-border text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">
-                    Tutup
+                    {t('pos_new_sale')}
                   </button>
                   <button
                     onClick={() => { setShowInvoice(true); }}
                     className="flex-1 h-11 rounded-2xl text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
                     style={{ background: color }}>
-                    <FileText className="w-4 h-4" /> Jana Invois
+                    <FileText className="w-4 h-4" /> {t('receipt_preview')}
                   </button>
                 </div>
               </motion.div>
@@ -925,7 +930,7 @@ export function PosOrderPage() {
                     <Package className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-foreground">Pesanan PolyMart</h3>
+                    <h3 className="font-black text-foreground">{t('keusahawanan:pos_polymart_orders_heading', 'Pesanan PolyMart')}</h3>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{scannedOrder.buyer?.full_name}</p>
                   </div>
                 </div>
@@ -934,19 +939,19 @@ export function PosOrderPage() {
                   <p className="text-muted-foreground">{scannedOrder.business_products?.name} x {scannedOrder.quantity}</p>
                   {scannedOrder.selected_variation && (
                     <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
-                      Saiz: {scannedOrder.selected_variation}
+                      {t('keusahawanan:pos_size_label', 'Saiz:')} {scannedOrder.selected_variation}
                     </span>
                   )}
                   <p className="text-xl mt-1" style={{ color }}>{fmtRM(scannedOrder.total_price)}</p>
                 </div>
 
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Kaedah Pembayaran (POS)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{t('keusahawanan:pos_payment_method_label', 'Kaedah Pembayaran (POS)')}</p>
                 <div className="flex gap-2 mb-6">
                   {['CASH', 'QR', 'TRANSFER'].map(m => (
                     <button key={m} onClick={() => setScannedOrder({ ...scannedOrder, payment_method: m })}
                       className={`flex-1 h-9 rounded-xl text-[11px] font-bold transition-colors ${(scannedOrder.payment_method || 'CASH') === m ? 'border-2' : 'border border-border/50 bg-muted/30 text-muted-foreground'}`}
                       style={(scannedOrder.payment_method || 'CASH') === m ? { borderColor: color, color, background: hexToRgba(color, 0.1) } : {}}>
-                      {m === 'CASH' ? 'Tunai' : m === 'QR' ? 'QR Pay' : 'Transfer'}
+                      {m === 'CASH' ? t('keusahawanan:pos_payment_cash', 'Tunai') : m === 'QR' ? 'QR Pay' : 'Transfer'}
                     </button>
                   ))}
                 </div>
@@ -954,12 +959,12 @@ export function PosOrderPage() {
                 <div className="flex gap-2">
                   <button onClick={() => setScannedOrder(null)} disabled={processing}
                     className="flex-1 h-11 rounded-xl text-xs font-bold border border-border/50 hover:bg-muted/50 transition-colors">
-                    Batal
+                    {t('keusahawanan:btn_cancel', 'Batal')}
                   </button>
                   <button onClick={handleCompletePolyMart} disabled={processing}
                     className="flex-1 h-11 rounded-xl text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
                     style={{ background: color }}>
-                    {processing ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : 'Selesaikan'}
+                    {processing ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : t('keusahawanan:pos_complete_btn', 'Selesaikan')}
                   </button>
                 </div>
               </motion.div>

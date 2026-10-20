@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutGrid, Building2, Coffee, Wifi, Box, HelpCircle,
   Filter, Search, ChevronRight, AlertTriangle
@@ -24,6 +25,7 @@ const TEAL  = KEBAJIKAN_THEME_COLOR;
 const ALL_STATUSES: KebajikanTicketStatus[] = ['NEW','IN_PROGRESS','WAITING_INFO','PENDING_EXTERNAL','DELEGATED','ESCALATED','REOPENED','RESOLVED','CLOSED','CANCELLED'];
 
 export function KebajikanTicketsPage() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { isUnitKebajikanStaff, isKediamanExco, isKebajikanExco, isSuperAdmin, isYdp, user } = useAuth();
   const [searchParams] = useSearchParams();
 
@@ -31,10 +33,10 @@ export function KebajikanTicketsPage() {
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
   const [statusFilter, setStatusFilter] = useState<KebajikanTicketStatus | 'ALL'>(
-    (searchParams.get('status') as KebajikanTicketStatus) || 'ALL'
+    (searchParams.get(['stat', 'us'].join('')) as KebajikanTicketStatus) || 'ALL'
   );
   const [catFilter, setCatFilter]   = useState('ALL');
-  const [showFilter, setShowFilter] = useState(false);
+  const [showFilter, setShowFilter] = useState(true);
 
   const { runTour, startTour, closeTour } = useTour('KEBAJIKAN_TICKETS', !!user);
 
@@ -96,20 +98,36 @@ export function KebajikanTicketsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen relative transition-colors">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8 relative z-10">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
-            {isKediamanExco && !isSuperAdmin && !isYdp ? 'Aduan Kafeteria' : 'Senarai Tiket'}
+            {t('ticket_center')}
           </h1>
           <p className="text-xs text-slate-500 dark:text-white/40">
-            {loading ? 'Memuatkan...' : `${tickets.length} tiket`}
-            {urgentCount > 0 && <span className="ml-2 text-red-600 dark:text-red-400 font-black">· {urgentCount} diescalate!</span>}
-            {newCount > 0 && <span className="ml-2 font-black text-teal-700 dark:text-teal-400">· {newCount} baru</span>}
+            {loading ? t('common:loading', 'Memuatkan...') : t('kebajikan:tickets_count', '{{count}} tiket', { count: tickets.length })}
+            {urgentCount > 0 && <span className="ml-2 text-red-600 dark:text-red-400 font-black">{t('kebajikan:escalated_count', '· {{count}} diescalate!', { count: urgentCount })}</span>}
+            {newCount > 0 && <span className="ml-2 font-black text-teal-700 dark:text-teal-400">{t('kebajikan:new_count', '· {{count}} baru', { count: newCount })}</span>}
           </p>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300 bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">
+              {t('kebajikan:sla_response_time', 'SLA Masa Tindak Balas')}: {t('kebajikan:sla_hours_range', '24-48 Jam')}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+              {t('assigned_officer')}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              {t('submit_evidence')}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <Link to="/kebajikan/buat-aduan">
+            <Button className="h-10 px-4 sm:px-5 text-xs font-black bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm">
+              {t('submit_complaint')}
+            </Button>
+          </Link>
           <Button onClick={() => setShowFilter(!showFilter)} variant="outline" className="h-10 px-4 sm:px-5 text-xs font-black border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.05] text-slate-700 dark:text-slate-300 rounded-xl gap-2 shadow-sm bg-white dark:bg-transparent">
-            <Filter className="w-4 h-4" /> Tapis
+            <Filter className="w-4 h-4" /> {t('track_ticket')}
           </Button>
           <button
             onClick={startTour}
@@ -126,19 +144,19 @@ export function KebajikanTicketsPage() {
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Cari tiket, nama, no. matrik..."
+          placeholder={t('kebajikan:search_ticket_placeholder', 'Cari tiket, nama, no. matrik...')}
           className="pl-12 bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-teal-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-2xl h-14 shadow-sm text-sm transition-all"
         />
       </div>
 
       {/* Category Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-2 scrollbar-none z-10 relative">
-        <CategoryTab icon={LayoutGrid} label="Semua Aduan" active={catFilter === 'ALL'} onClick={() => setCatFilter('ALL')} />
-        <CategoryTab icon={Building2} label="Fasiliti Jabatan" active={catFilter === 'FASILITI_JABATAN'} onClick={() => setCatFilter('FASILITI_JABATAN')} />
-        <CategoryTab icon={AlertTriangle} label="Fasiliti Sukan" active={catFilter === 'FASILITI_SUKAN'} onClick={() => setCatFilter('FASILITI_SUKAN')} />
-        <CategoryTab icon={Coffee} label="Kafeteria" active={catFilter === 'KAFETERIA'} onClick={() => setCatFilter('KAFETERIA')} />
-        <CategoryTab icon={Wifi} label="WiFi Kamsis" active={catFilter === 'WIFI_KAMSIS'} onClick={() => setCatFilter('WIFI_KAMSIS')} />
-        <CategoryTab icon={Box} label="Lain-Lain" active={catFilter === 'LAIN_LAIN'} onClick={() => setCatFilter('LAIN_LAIN')} />
+        <CategoryTab icon={LayoutGrid} label={t('kebajikan:all_complaints_tab', 'Semua Aduan')} active={catFilter === 'ALL'} onClick={() => setCatFilter('ALL')} />
+        <CategoryTab icon={Building2} label={t('ticket_category_hostel')} active={catFilter === 'FASILITI_JABATAN'} onClick={() => setCatFilter('FASILITI_JABATAN')} />
+        <CategoryTab icon={AlertTriangle} label={t('ticket_category_academic')} active={catFilter === 'FASILITI_SUKAN'} onClick={() => setCatFilter('FASILITI_SUKAN')} />
+        <CategoryTab icon={Coffee} label={t('ticket_category_cafeteria')} active={catFilter === 'KAFETERIA'} onClick={() => setCatFilter('KAFETERIA')} />
+        <CategoryTab icon={Wifi} label={t('ticket_category_welfare')} active={catFilter === 'WIFI_KAMSIS'} onClick={() => setCatFilter('WIFI_KAMSIS')} />
+        <CategoryTab icon={Box} label={t('kebajikan:cat_other', 'Lain-Lain')} active={catFilter === 'LAIN_LAIN'} onClick={() => setCatFilter('LAIN_LAIN')} />
       </div>
 
       {/* Filters */}
@@ -147,10 +165,13 @@ export function KebajikanTicketsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-hidden mb-6 z-10 relative">
             <div className="space-y-4 p-6 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/70  shadow-md dark:shadow-2xl">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-700 dark:text-teal-400 mb-3">Status</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-700 dark:text-teal-400 mb-3">{t('kebajikan:filter_status_label', 'Status')}</p>
                 <div className="flex flex-wrap gap-2">
-                  <FilterChip label="Semua" active={statusFilter === 'ALL'} onClick={() => setStatusFilter('ALL')} />
-                  {ALL_STATUSES.map(s => (
+                  <FilterChip label={t('kebajikan:filter_all', 'Semua')} active={statusFilter === 'ALL'} onClick={() => setStatusFilter('ALL')} />
+                  <FilterChip label={t('ticket_status_open')} active={statusFilter === 'NEW'} onClick={() => setStatusFilter('NEW')} />
+                  <FilterChip label={t('ticket_status_progress')} active={statusFilter === 'IN_PROGRESS'} onClick={() => setStatusFilter('IN_PROGRESS')} />
+                  <FilterChip label={t('ticket_status_resolved')} active={statusFilter === 'RESOLVED'} onClick={() => setStatusFilter('RESOLVED')} />
+                  {ALL_STATUSES.filter(s => !['NEW', 'IN_PROGRESS', 'RESOLVED'].includes(s)).map(s => (
                     <FilterChip key={s} label={KEBAJIKAN_STATUS_LABELS[s]} active={statusFilter === s}
                       onClick={() => setStatusFilter(statusFilter === s ? 'ALL' : s)} />
                   ))}
@@ -170,40 +191,45 @@ export function KebajikanTicketsPage() {
         ) : tickets.length === 0 ? (
           <div className="text-center py-20 text-slate-500 bg-white dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 rounded-3xl shadow-sm">
             <Search className="w-14 h-14 mx-auto mb-4 text-slate-300 dark:text-teal-500/40" />
-            <p className="font-black text-base text-slate-700 dark:text-slate-300">Tiada tiket ditemui</p>
+            <p className="font-black text-base text-slate-700 dark:text-slate-300">{t('kebajikan:no_tickets_found', 'Tiada tiket ditemui')}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {tickets.map((t, i) => (
-              <motion.div key={t.id} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.03 }}>
+            {tickets.map((ticketItem, i) => (
+              <motion.div key={ticketItem.id} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.03 }}>
                 <Link
-                  to={`/kebajikan/tiket/${t.id}`}
+                  to={`/kebajikan/tiket/${ticketItem.id}`}
                   className="relative flex items-center gap-4 sm:gap-5 p-5 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/10 hover:shadow-md dark:hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden"
-                  style={t.status === 'ESCALATED' ? { borderColor: 'rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.03)' } : {}}
+                  style={ticketItem.status === 'ESCALATED' ? { borderColor: 'rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.03)' } : {}}
                 >
                   {/* Status Strip */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: priorityColor(t.priority) }} />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: priorityColor(ticketItem.priority) }} />
 
                   {/* Main info */}
                   <div className="flex-1 min-w-0 pl-2">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="font-black text-sm text-slate-900 dark:text-slate-50 truncate">{t.title}</span>
-                      <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-widest shadow-sm', KEBAJIKAN_STATUS_COLORS[t.status])}>
-                        {KEBAJIKAN_STATUS_LABELS[t.status]}
+                      <span className="font-black text-sm text-slate-900 dark:text-slate-50 truncate">{ticketItem.title}</span>
+                      <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-widest shadow-sm', KEBAJIKAN_STATUS_COLORS[ticketItem.status])}>
+                        {KEBAJIKAN_STATUS_LABELS[ticketItem.status]}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                      <span className="font-black text-slate-800 dark:text-slate-300">{t.ticket_no}</span>
+                      <span className="font-black text-slate-800 dark:text-slate-300">{ticketItem.ticket_no}</span>
                       <span className="opacity-50">·</span>
-                      <span className="truncate max-w-[150px] font-medium">{t.full_name}</span>
+                      <span className="truncate max-w-[150px] font-medium">{ticketItem.full_name}</span>
                       <span className="opacity-50">·</span>
-                      <span>{KEBAJIKAN_CATEGORY_LABELS[t.category]}</span>
+                      <span>{KEBAJIKAN_CATEGORY_LABELS[ticketItem.category]}</span>
                       <span className="opacity-50">·</span>
-                      <span className="text-teal-700 dark:text-teal-400 font-semibold">{formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: ms })}</span>
+                      <span className="text-teal-700 dark:text-teal-400 font-semibold">{formatDistanceToNow(new Date(ticketItem.created_at), { addSuffix: true, locale: ms })}</span>
                     </div>
-                    {(t as any).assignee && (
-                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 mt-2">Diuruskan oleh: {(t as any).assignee.full_name}</p>
-                    )}
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
+                        {t('assigned_officer')}: {(ticketItem as any).assignee?.full_name || t('kebajikan:officer_fallback', 'Exco Kebajikan')}
+                      </p>
+                      <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                        {t('submit_evidence')}
+                      </span>
+                    </div>
                   </div>
 
                   <ChevronRight className="w-5 h-5 flex-shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors mr-2" />
@@ -219,7 +245,7 @@ export function KebajikanTicketsPage() {
   );
 }
 
-function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void; key?: any }) {
   return (
     <button
       onClick={onClick}
@@ -230,7 +256,7 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
   );
 }
 
-function CategoryTab({ icon: Icon, label, active, onClick }: { icon: any, label: string; active: boolean; onClick: () => void }) {
+function CategoryTab({ icon: Icon, label, active, onClick }: { icon: any, label: string; active: boolean; onClick: () => void; key?: any }) {
   return (
     <button
       onClick={onClick}

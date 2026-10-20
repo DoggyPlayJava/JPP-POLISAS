@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KALENDAR_AKADEMIK_2026_2027, type KalendarAkademikEntry } from '@/config/takwim-akademik-template';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: Props) {
+  const { t } = useTranslation(['jpp', 'common']);
   const [rows, setRows] = useState<BulkRow[]>(() =>
     KALENDAR_AKADEMIK_2026_2027.map((e, i) => ({ ...e, _id: i, _selected: true }))
   );
@@ -70,7 +72,7 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
   const selected = sortedRows.filter(r => r._selected);
 
   const handleSave = async () => {
-    if (selected.length === 0) { toast.error('Tiada entri dipilih.'); return; }
+    if (selected.length === 0) { toast.error(t('jpp:takwim_bulk_no_entries_selected', 'Tiada entri dipilih.')); return; }
     setSaving(true);
 
     // Guard: Check for existing entries to prevent duplicate import
@@ -80,7 +82,7 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
         .eq('sesi', sesi).eq('jenis', 'AKADEMIK');
       if (count && count > 0) {
         const proceed = window.confirm(
-          `⚠️ Sudah ada ${count} entri Akademik untuk sesi ${sesi}.\n\nTeruskan akan menambah entri baharu (bukan replace).\nAnda pasti?`
+          t('jpp:takwim_bulk_duplicate_confirm', '⚠️ Sudah ada {{count}} entri Akademik untuk sesi {{sesi}}.\n\nTeruskan akan menambah entri baharu (bukan replace).\nAnda pasti?', { count, sesi })
         );
         if (!proceed) { setSaving(false); return; }
       }
@@ -100,10 +102,10 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
     try {
       const { error } = await supabase.from('takwim_pusat').insert(payload);
       if (error) throw error;
-      toast.success(`${payload.length} entri Kalendar Akademik berjaya disimpan!`);
+      toast.success(t('jpp:takwim_bulk_success_toast', '{{count}} entri Kalendar Akademik berjaya disimpan!', { count: payload.length }));
       onSuccess();
       onClose();
-    } catch (e: any) { toast.error(e.message || 'Gagal simpan.'); }
+    } catch (e: any) { toast.error(e.message || t('jpp:takwim_bulk_save_failed', 'Gagal simpan.')); }
     finally { setSaving(false); }
   };
 
@@ -113,10 +115,10 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
         <div className="p-6 border-b border-white/5">
           <DialogHeader>
             <DialogTitle className="text-xl font-black tracking-tight text-white">
-              Auto-Fill Kalendar Akademik {sesi}
+              {t('jpp:takwim_bulk_title', 'Auto-Fill Kalendar Akademik {{sesi}}', { sesi })}
             </DialogTitle>
             <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mt-1">
-              Institusi B · Semak & edit sebelum simpan · {selected.length}/{sortedRows.length} dipilih
+              {t('jpp:takwim_bulk_subtitle', 'Institusi B · Semak & edit sebelum simpan · {{selected}}/{{total}} dipilih', { selected: selected.length, total: sortedRows.length })}
             </p>
           </DialogHeader>
         </div>
@@ -128,11 +130,11 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
               <thead>
                 <tr className="bg-white/[0.04]">
                   <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30 w-10">✓</th>
-                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">Sesi</th>
-                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">Aktiviti</th>
-                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">Tarikh Mula</th>
-                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">Tarikh Tamat</th>
-                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">Minggu</th>
+                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">{t('jpp:takwim_bulk_th_session', 'Sesi')}</th>
+                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">{t('jpp:takwim_bulk_th_activity', 'Aktiviti')}</th>
+                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">{t('jpp:takwim_bulk_th_start_date', 'Tarikh Mula')}</th>
+                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">{t('jpp:takwim_bulk_th_end_date', 'Tarikh Tamat')}</th>
+                  <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30">{t('jpp:takwim_bulk_th_week', 'Minggu')}</th>
                   <th className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-white/30 w-10"></th>
                 </tr>
               </thead>
@@ -146,7 +148,7 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
                     <td className="px-3 py-2">
                       <button
                         onClick={() => toggleSesi(row._id)}
-                        title="Klik untuk tukar Sesi"
+                        title={t('jpp:takwim_bulk_toggle_session_title', 'Klik untuk tukar Sesi')}
                         className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded transition-all hover:scale-105 cursor-pointer ${
                           row.sesi === 'I' ? 'bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25' : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
                         }`}>
@@ -180,25 +182,25 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
           {/* Add Row Button */}
           <button onClick={addRow}
             className="w-full mt-3 py-2.5 rounded-xl border border-dashed border-white/10 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-indigo-400 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all flex items-center justify-center gap-2">
-            <Plus className="w-3 h-3" /> Tambah Baris Baharu
+            <Plus className="w-3 h-3" /> {t('jpp:takwim_bulk_add_new_row', 'Tambah Baris Baharu')}
           </button>
 
           {rows.some(r => r.isCuti && r._selected) && (
             <div className="flex items-start gap-2 mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
               <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
               <p className="text-[10px] font-bold text-amber-400/80">
-                Entri bertanda cuti akan disimpan sebagai jenis <strong>CUTI_UMUM</strong>. Yang lain sebagai <strong>AKADEMIK</strong>.
+                {t('jpp:takwim_bulk_cuti_note', 'Entri bertanda cuti akan disimpan sebagai jenis CUTI_UMUM. Yang lain sebagai AKADEMIK.')}
               </p>
             </div>
           )}
         </div>
 
         <DialogFooter className="p-5 bg-white/[0.02] border-t border-white/5 gap-3">
-          <Button variant="ghost" onClick={onClose} className="flex-1 h-11 rounded-xl text-white/50">Batal</Button>
+          <Button variant="ghost" onClick={onClose} className="flex-1 h-11 rounded-xl text-white/50">{t('jpp:takwim_bulk_cancel', 'Batal')}</Button>
           <Button onClick={handleSave} disabled={saving || selected.length === 0}
             className="flex-[2] h-11 rounded-xl bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest">
             {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Check className="w-3 h-3 mr-2" />}
-            Simpan {selected.length} Entri
+            {t('jpp:takwim_bulk_save_btn', 'Simpan {{count}} Entri', { count: selected.length })}
           </Button>
         </DialogFooter>
       </DialogContent>

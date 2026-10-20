@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Key, X, Copy, Check, Send, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { createJuryCode, toggleJuryCodeActive, deleteJuryCode } from '@/lib/ems';
 import type { EmsEvent, EmsJuryCode } from '@/types';
@@ -11,6 +12,7 @@ export interface EmsJuryCodeModalProps {
 }
 
 export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
+  const { t } = useTranslation(['ems', 'common']);
   const [juryCodes, setJuryCodes] = useState<EmsJuryCode[]>([]);
   const [loadingJuryCodes, setLoadingJuryCodes] = useState(false);
   const [juryForm, setJuryForm] = useState({
@@ -49,7 +51,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
         if (error) throw error;
         setJuryCodes(data || []);
       } catch (err: any) {
-        toast.error('Gagal memuatkan senarai kod juri');
+        toast.error(t('ems:jury_code_toast_load_error', 'Gagal memuatkan senarai kod juri'));
       } finally {
         setLoadingJuryCodes(false);
       }
@@ -104,14 +106,14 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
 
     loadCodes();
     loadOptions();
-  }, [event]);
+  }, [event, t]);
 
   if (!event) return null;
 
   const handleCreateJuryCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!juryForm.code.trim()) {
-      toast.error('Sila masukkan kod juri.');
+      toast.error(t('ems:jury_code_toast_required', 'Sila masukkan kod juri.'));
       return;
     }
 
@@ -132,7 +134,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
         assigned_booths: boothsArray,
       });
 
-      toast.success(`Kod Juri ${created.code} berjaya dicipta!`);
+      toast.success(t('ems:jury_code_toast_success', 'Kod Juri {{code}} berjaya dicipta!', { code: created.code }));
       setJuryCodes((prev) => [created, ...prev]);
 
       const newRandomCode = 'JURI-' + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -144,7 +146,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
         assigned_booths: '',
       });
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal mencipta kod juri');
+      toast.error(err?.message || t('ems:jury_code_toast_error', 'Gagal mencipta kod juri: {{error}}', { error: err?.message || '' }));
     } finally {
       setIsSubmittingJury(false);
     }
@@ -155,7 +157,14 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
     const juryName = j.jury_name || "Dato'/Dr./Tuan/Puan";
     const org = j.organization ? ` (${j.organization})` : '';
 
-    return `*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n*${event.title}*\n\nMaklumat Akses Penjurian Anda:\n- *Nama Juri:* ${j.jury_name || '-'}\n- *Organisasi:* ${j.organization || '-'}\n- *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+    return t('ems:jury_code_wa_intro', {
+      name: juryName,
+      org,
+      title: event.title,
+      code: j.code,
+      url: portalUrl,
+      defaultValue: `*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n*${event.title}*\n\nMaklumat Akses Penjurian Anda:\n- *Nama Juri:* ${j.jury_name || '-'}\n- *Organisasi:* ${j.organization || '-'}\n- *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`
+    });
   };
 
   return (
@@ -164,7 +173,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-          aria-label="Tutup Modal"
+          aria-label={t('ems:cancel', 'Tutup Modal')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -173,17 +182,19 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
           <div className="flex items-center gap-2 text-amber-500 dark:text-amber-400 mb-1">
             <Key className="w-5 h-5" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Jana Kod Akses Juri
+              {t('ems:jury_code_title', 'Jana Kod Akses Juri')}
             </h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Acara: {event.title}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            {t('ems:jury_code_event', 'Acara:')} {event.title}
+          </p>
         </div>
 
         {/* Form Cipta Kod Juri */}
         <form onSubmit={handleCreateJuryCode} className="space-y-4 border-b border-slate-200 dark:border-slate-800 pb-6">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Kod Akses Juri <span className="text-rose-500">*</span>
+              {t('ems:jury_code_label', 'Kod Akses Juri')} <span className="text-rose-500">*</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -191,7 +202,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                 required
                 value={juryForm.code}
                 onChange={(e) => setJuryForm({ ...juryForm, code: e.target.value.toUpperCase() })}
-                placeholder="Contoh: JURI-101"
+                placeholder={t('ems:jury_code_placeholder', 'Contoh: JURI-101')}
                 className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-sm uppercase focus:outline-none focus:border-amber-500"
               />
               <button
@@ -202,30 +213,34 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                 }}
                 className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all"
               >
-                Auto
+                {t('ems:jury_code_auto_btn', 'Auto')}
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Juri</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:jury_code_jury_name', 'Nama Juri')}
+              </label>
               <input
                 type="text"
                 value={juryForm.jury_name}
                 onChange={(e) => setJuryForm({ ...juryForm, jury_name: e.target.value })}
-                placeholder="e.g. Dr. Ahmad Hassan"
+                placeholder={t('ems:jury_code_jury_name_placeholder', 'e.g. Dr. Ahmad Hassan')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Organisasi / Jabatan</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:jury_code_org', 'Organisasi / Jabatan')}
+              </label>
               <input
                 type="text"
                 value={juryForm.organization}
                 onChange={(e) => setJuryForm({ ...juryForm, organization: e.target.value })}
-                placeholder="e.g. JTM POLISAS"
+                placeholder={t('ems:jury_code_org_placeholder', 'e.g. JTM POLISAS')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
@@ -233,13 +248,13 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Kategori Rubrik (Penilaian)
+              {t('ems:jury_code_rubric_cats', 'Kategori Rubrik (Penilaian)')}
             </label>
             {loadingJuryOptions ? (
-              <p className="text-xs text-slate-500 animate-pulse">Memuatkan kategori rubrik...</p>
+              <p className="text-xs text-slate-500 animate-pulse">{t('ems:jury_code_loading_cats', 'Memuatkan kategori rubrik...')}</p>
             ) : juryCategories.length === 0 ? (
               <p className="text-xs text-slate-500 italic">
-                Tiada rubrik berdaftar dalam acara ini. Anda boleh taip manual di bawah.
+                {t('ems:jury_code_no_rubrics', 'Tiada rubrik berdaftar dalam acara ini. Anda boleh taip manual di bawah.')}
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5 mb-2">
@@ -277,20 +292,20 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
               type="text"
               value={juryForm.assigned_categories}
               onChange={(e) => setJuryForm({ ...juryForm, assigned_categories: e.target.value })}
-              placeholder="e.g. Best Pitching, Best Showcase"
+              placeholder={t('ems:jury_code_cats_placeholder', 'e.g. Best Pitching, Best Showcase')}
               className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Booth Ditugaskan
+              {t('ems:jury_code_assigned_booths', 'Booth Ditugaskan')}
             </label>
             {loadingJuryOptions ? (
-              <p className="text-xs text-slate-500 animate-pulse">Memuatkan booth...</p>
+              <p className="text-xs text-slate-500 animate-pulse">{t('ems:jury_code_loading_booths', 'Memuatkan booth...')}</p>
             ) : juryBooths.length === 0 ? (
               <p className="text-xs text-slate-500 italic">
-                Tiada booth berdaftar dalam acara ini. Anda boleh taip manual di bawah.
+                {t('ems:jury_code_no_booths', 'Tiada booth berdaftar dalam acara ini. Anda boleh taip manual di bawah.')}
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 mb-2">
@@ -328,7 +343,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
               type="text"
               value={juryForm.assigned_booths}
               onChange={(e) => setJuryForm({ ...juryForm, assigned_booths: e.target.value })}
-              placeholder="e.g. Booth 1, Booth 2"
+              placeholder={t('ems:jury_code_booths_placeholder', 'e.g. Booth 1, Booth 2')}
               className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
             />
           </div>
@@ -338,19 +353,19 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
             disabled={isSubmittingJury}
             className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 active:scale-98"
           >
-            {isSubmittingJury ? 'Mencipta Kod Juri...' : '+ Cipta Kod Juri'}
+            {isSubmittingJury ? t('ems:jury_code_submitting', 'Menjana Kod...') : t('ems:jury_code_submit_btn', '+ Cipta Kod Juri')}
           </button>
         </form>
 
         {/* Senarai Kod Juri Sedia Ada */}
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-            Senarai Kod Juri Aktif ({juryCodes.length})
+            {t('ems:jury_code_list_title', 'Senarai Kod Juri Rasmi')} ({juryCodes.length})
           </h4>
           {loadingJuryCodes ? (
-            <p className="text-xs text-slate-500 animate-pulse">Memuatkan kod juri...</p>
+            <p className="text-xs text-slate-500 animate-pulse">{t('ems:jury_code_loading_cats', 'Memuatkan kod juri...')}</p>
           ) : juryCodes.length === 0 ? (
-            <p className="text-xs text-slate-500 italic">Belum ada kod juri dicipta.</p>
+            <p className="text-xs text-slate-500 italic">{t('ems:jury_code_no_codes', 'Belum ada kod juri dicipta.')}</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {juryCodes.map((j) => (
@@ -370,7 +385,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                             : 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30'
                         }`}
                       >
-                        {(j.is_active ?? true) ? 'Aktif' : 'Nyahaktif'}
+                        {(j.is_active ?? true) ? t('ems:jury_code_active', 'Aktif') : t('ems:jury_code_inactive', 'Nyahaktif')}
                       </span>
                     </div>
                     {j.jury_name && (
@@ -393,11 +408,9 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                               item.id === j.id ? { ...item, is_active: newActive } : item
                             )
                           );
-                          toast.success(
-                            `Kod Juri ${j.code} kini ${newActive ? 'Aktif' : 'Nyahaktif'}`
-                          );
+                          toast.success(t('ems:jury_code_toast_toggle', 'Status kod juri dikemaskini!'));
                         } catch (err: any) {
-                          toast.error(err.message || 'Gagal mengubah status kod juri');
+                          toast.error(err.message || t('ems:error_occurred', 'Gagal mengubah status kod juri'));
                         }
                       }}
                       className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
@@ -406,7 +419,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                           : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30'
                       }`}
                     >
-                      {(j.is_active ?? true) ? 'Nyahaktif' : 'Aktifkan'}
+                      {(j.is_active ?? true) ? t('ems:jury_code_inactive', 'Nyahaktif') : t('ems:jury_code_active', 'Aktifkan')}
                     </button>
 
                     <button
@@ -415,18 +428,18 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                         const waMsg = getWhatsAppMessage(j);
                         navigator.clipboard.writeText(waMsg);
                         setCopiedCodeId(j.id);
-                        toast.success(`Mesej Jemputan WhatsApp Kod ${j.code} disalin!`);
+                        toast.success(t('ems:jury_code_toast_copied', 'Kod juri disalin ke papan keratan!'));
                         setTimeout(() => setCopiedCodeId(null), 2000);
                       }}
                       className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-all"
-                      title="Salin Teks Mesej WhatsApp Rasmi"
+                      title={t('ems:jury_code_copy', 'Salin Teks Mesej WhatsApp Rasmi')}
                     >
                       {copiedCodeId === j.id ? (
                         <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
-                      <span>{copiedCodeId === j.id ? 'Disalin!' : 'Salin WhatsApp'}</span>
+                      <span>{copiedCodeId === j.id ? t('ems:jury_code_copied', 'Disalin!') : t('ems:jury_code_copy', 'Salin')}</span>
                     </button>
 
                     <button
@@ -436,7 +449,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                         window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, '_blank');
                       }}
                       className="px-2.5 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] flex items-center gap-1 transition-all shadow-sm"
-                      title="Buka terus di WhatsApp"
+                      title={t('ems:jury_code_share_wa', 'Buka terus di WhatsApp')}
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
@@ -445,18 +458,18 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!window.confirm(`Adakah anda pasti untuk memadam kod juri ${j.code}?`))
+                        if (!window.confirm(t('ems:confirm_delete_jury_code', 'Adakah anda pasti untuk memadam kod juri {{code}}?', { code: j.code })))
                           return;
                         try {
                           await deleteJuryCode(j.id);
                           setJuryCodes((prev) => prev.filter((item) => item.id !== j.id));
-                          toast.success(`Kod Juri ${j.code} berjaya dipadam!`);
+                          toast.success(t('ems:jury_code_toast_deleted', 'Kod juri dipadam.'));
                         } catch (err: any) {
-                          toast.error(err.message || 'Gagal memadam kod juri');
+                          toast.error(err.message || t('ems:error_occurred', 'Gagal memadam kod juri'));
                         }
                       }}
                       className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all"
-                      title="Padam Kod Juri"
+                      title={t('ems:jury_code_delete', 'Padam Kod Juri')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, Zap, CalendarDays, HelpCircle
@@ -38,24 +39,25 @@ import { uploadPdfToDrive } from '@/lib/driveUpload';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
-const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan (Auto-Jana)', icon: Zap },
-  { value: 'Laporan Kewangan', label: 'Laporan Kewangan', icon: FileText },
-  { value: 'Takwim Aktiviti', label: 'Takwim Aktiviti', icon: Calendar },
-  { value: 'Profil Ahli', label: 'Profil Ahli Kelab', icon: Users },
-  { value: 'Struktur Jawatan', label: 'Struktur Jawatan', icon: Award },
-  { value: 'Carta Organisasi', label: 'Carta Organisasi', icon: Users },
-  { value: 'Perlembagaan', label: 'Perlembagaan Kelab (Presiden)', icon: BookOpen },
-];
-
 const MAX_MB = 25;
 
 export function LaporanPage() {
+  const { t } = useTranslation(['portal', 'kpp', 'common']);
   const { user, profile, isSuperAdmin, isPresident, isMT, selectedClubId } = useAuth();
   // Role kini dari context (berubah mengikut kelab yang dipilih)
   const canSubmit = isPresident || isMT;
 
-  const [reportType, setReportType] = useState<string>('Laporan Aktiviti');
+  const allDocTypes = useMemo(() => [
+    { value: t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'), label: t('portal:monthly_report_autogen', 'Laporan Bulanan (Auto-Jana)'), icon: Zap },
+    { value: t('portal:financial_report', 'Laporan Kewangan'), label: t('portal:financial_report', 'Laporan Kewangan'), icon: FileText },
+    { value: t('portal:activity_calendar', 'Takwim Aktiviti'), label: t('portal:activity_calendar', 'Takwim Aktiviti'), icon: Calendar },
+    { value: t('portal:club_member_profile', 'Profil Ahli'), label: t('portal:club_member_profile', 'Profil Ahli Kelab'), icon: Users },
+    { value: t('portal:position_structure', 'Struktur Jawatan'), label: t('portal:position_structure', 'Struktur Jawatan'), icon: Award },
+    { value: t('portal:org_chart', 'Carta Organisasi'), label: t('portal:org_chart', 'Carta Organisasi'), icon: Users },
+    { value: 'Perlembagaan', label: t('portal:club_constitution_pres', 'Perlembagaan Kelab (Presiden)'), icon: BookOpen },
+  ], [t]);
+
+  const [reportType, setReportType] = useState<string>(() => t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'));
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -72,7 +74,7 @@ export function LaporanPage() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [logoData, setLogoData] = useState<string | undefined>(undefined);
-  const [presidentName, setPresidentName] = useState<string>('PRESIDEN KELAB');
+  const [presidentName, setPresidentName] = useState<string>(() => t('portal:club_president_upper', 'PRESIDEN KELAB'));
 
   const { runTour, startTour, closeTour } = useTour('EKPP_LAPORAN', !!profile);
 
@@ -86,17 +88,17 @@ export function LaporanPage() {
         return `${sm} - ${em}`;
       })()
     : undefined;
-  const submitterRole = isPresident ? 'PRESIDEN' : isMT ? 'MAJLIS TERTINGGI JPP' : ((profile as any)?.club_role || 'SETIAUSAHA');
+  const submitterRole = isPresident ? 'PRESIDEN' : isMT ? t('portal:jpp_mt_upper', 'MAJLIS TERTINGGI JPP') : ((profile as any)?.club_role || 'SETIAUSAHA');
 
   const clubName = effectiveClubId
     ? ALL_CLUBS.find(c => c.id === effectiveClubId)?.name ?? effectiveClubId
     : '—';
 
   // --- HELPER FUNCTION UNTUK FILTER JENIS DOKUMEN ---
-  const availableDocTypes = ALL_DOC_TYPES.filter(doc => {
+  const availableDocTypes = useMemo(() => allDocTypes.filter(doc => {
     if (doc.value === 'Perlembagaan' && !isPresident) return false;
     return true;
-  });
+  }), [allDocTypes, isPresident]);
 
   useEffect(() => {
     const checkSettings = async () => {
@@ -107,7 +109,7 @@ export function LaporanPage() {
   }, []);
 
   const validateFile = (f: File): boolean => {
-    if (f.type !== 'application/pdf') { toast.error('Hanya fail PDF dibenarkan.'); return false; }
+    if (f.type !== 'application/pdf') { toast.error(t('portal:only_pdf_allowed', 'Hanya fail PDF dibenarkan.')); return false; }
     if (f.size > MAX_MB * 1024 * 1024) { toast.error(`Fail terlalu besar. Had: ${MAX_MB}MB`); return false; }
     return true;
   };
@@ -154,17 +156,17 @@ export function LaporanPage() {
       try {
         const { sendNotificationToKppExco } = await import('@/lib/notifications');
         await sendNotificationToKppExco({
-          title: 'Laporan Kelab Baharu',
-          message: `${clubName} telah menghantar dokumen: ${reportType}. Sila semak di Semakan Laporan.`,
+          title: t('portal:new_club_report_notif_title', 'Laporan Kelab Baharu'),
+          message: t('portal:new_club_report_notif_msg', '{{club}} telah menghantar dokumen: {{doc}}. Sila semak di Semakan Laporan.', { club: clubName, doc: reportType }),
           type: 'INFO',
-          module: 'KPP',
+          module: 'EKPP',
           link: '/semakan-laporan'
         });
       } catch (err) {
         console.error('Notification error:', err);
       }
 
-      toast.success('Berjaya dihantar!');
+      toast.success(t('portal:successfully_submitted', 'Berjaya dihantar!'));
       setFile(null); loadReports();
     } catch (err: any) { toast.error(err.message); } finally { setSubmitting(false); setProgress(0); }
   };
@@ -255,7 +257,7 @@ export function LaporanPage() {
     try {
       const data = await fetchReportData();
       if (data.length === 0) {
-        toast.error(gabungMode ? "Tiada aktiviti atau program selesai dalam tempoh ini." : "Tiada aktiviti atau program selesai pada bulan ini.");
+        toast.error(gabungMode ? t('portal:no_completed_activities_in_period', 'Tiada aktiviti atau program selesai dalam tempoh ini.') : t('portal:no_completed_activities_in_month', 'Tiada aktiviti atau program selesai pada bulan ini.'));
         setSubmitting(false);
         return;
       }
@@ -298,7 +300,7 @@ export function LaporanPage() {
       const blob = await asPdf.toBlob();
       setProgress(70);
 
-      const fileName = `Auto_Laporan_${targetMonth}_${Date.now()}`;
+      const fileName = t('portal:auto_laporan_target_month_filename', 'Auto_Laporan_{{month}}_{{ts}}', { month: targetMonth, ts: Date.now() });
       // Tukar Blob kepada File untuk Edge Function
       const pdfFile = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
       
@@ -308,9 +310,9 @@ export function LaporanPage() {
       const { error: dbError } = await supabase.from('club_reports').insert({
         club_id: effectiveClubId,
         submitted_by: user.id,
-        report_type: 'Laporan Aktiviti',
+        report_type: t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti'),
         file_url: url,
-        file_name: `Laporan Bulanan - ${dateRangeLabel || monthLabel}.pdf`,
+        file_name: t('portal:monthly_report_date_range_filename', 'Laporan Bulanan - {{period}}.pdf', { period: dateRangeLabel || monthLabel }),
         status: 'Menunggu',
         is_archived: false
       });
@@ -321,20 +323,20 @@ export function LaporanPage() {
       try {
         const { sendNotificationToKppExco } = await import('@/lib/notifications');
         await sendNotificationToKppExco({
-          title: 'Laporan Auto-Jana Baharu',
-          message: `${clubName} telah menjana laporan ${dateRangeLabel ? 'gabungan ' + dateRangeLabel : 'bulan ' + monthLabel}. Sila semak di Semakan Laporan.`,
+          title: t('portal:new_autogen_report_notif_title', 'Laporan Auto-Jana Baharu'),
+          message: t('portal:new_autogen_report_notif_msg', '{{club}} telah menjana laporan {{period}}. Sila semak di Semakan Laporan.', { club: clubName, period: dateRangeLabel ? ('gabungan ' + dateRangeLabel) : ('bulan ' + monthLabel) }),
           type: 'INFO',
-          module: 'KPP',
+          module: 'EKPP',
           link: '/semakan-laporan'
         });
       } catch (err) {
         console.error('Notification error:', err);
       }
 
-      toast.success('Laporan berjaya dijana!');
+      toast.success(t('portal:report_generated_success', 'Laporan berjaya dijana!'));
       loadReports();
     } catch (err: any) {
-      toast.error('Ralat: ' + err.message);
+      toast.error(t('portal:error_prefix', 'Ralat:') + ' ' + err.message);
     } finally {
       setSubmitting(false);
       setProgress(0);
@@ -348,7 +350,7 @@ export function LaporanPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
         <div>
           <Badge className="mb-3 bg-primary/10 text-primary border-none">{clubName}</Badge>
-          <h1 className="text-5xl font-black tracking-tighter gradient-text">Pusat Dokumen</h1>
+          <h1 className="text-5xl font-black tracking-tighter gradient-text">{t('kpp:submit_report')}</h1>
         </div>
         <button
           onClick={startTour}
@@ -360,30 +362,30 @@ export function LaporanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <Card className="tour-tab-laporan-semua lg:col-span-2 bento-card border-none">
-          <CardHeader><CardTitle>Pengurusan Laporan</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('kpp:report_management')}</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <Select value={reportType} onValueChange={setReportType}>
               <SelectTrigger className="rounded-xl bg-muted/40 h-12"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {availableDocTypes.map(t => (
-                  <SelectItem key={t.value} value={t.value}>
-                    <div className="flex items-center gap-2"><t.icon className="w-4 h-4" />{t.label}</div>
+                {availableDocTypes.map(doc => (
+                  <SelectItem key={doc.value} value={doc.value}>
+                    <div className="flex items-center gap-2"><doc.icon className="w-4 h-4" />{doc.label}</div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            {reportType === 'Laporan Aktiviti' ? (
+            {reportType === t('portal:doc_type_laporan_aktiviti', 'Laporan Aktiviti') || reportType === 'Laporan Aktiviti' ? (
               <div className="space-y-4">
                 {/* Mode toggle: auto vs manual */}
                 <div className="flex gap-2 bg-muted/40 p-1 rounded-xl">
                   <button type="button" onClick={() => setAktivitiMode('auto')}
                     className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'auto' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
-                    Jana AutoPDF
+                    {t('kpp:auto_generate_pdf', 'Jana AutoPDF')}
                   </button>
                   <button type="button" onClick={() => setAktivitiMode('manual')}
                     className={cn("flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", aktivitiMode === 'manual' ? "bg-white shadow-sm text-emerald-700" : "text-muted-foreground hover:text-foreground")}>
-                    Muat Naik Manual
+                    {t('kpp:manual_upload', 'Muat Naik Manual')}
                   </button>
                 </div>
 
@@ -397,26 +399,26 @@ export function LaporanPage() {
                       className={cn("border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all", dragOver ? "border-primary bg-primary/10" : file ? "border-primary/50 bg-primary/10" : "border-border bg-muted/20")}
                     >
                       <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
-                      {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
+                      {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">{t('kpp:click_drag_pdf', 'Klik atau seret PDF di sini')}</p>}
                     </div>
                     <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
-                      {submitting ? 'Memuat Naik...' : 'Hantar Laporan Manual'}
+                      {submitting ? t('common:loading') : t('kpp:submit_report')}
                     </Button>
                   </form>
                 ) : !allowAutoPdf && !isSuperAdmin ? (
                   <div className="bg-rose-500/10 p-8 rounded-[2rem] text-center border-2 border-dashed border-rose-500/20">
                     <Lock className="w-10 h-10 text-rose-500/50 mx-auto mb-3" />
                     <p className="text-sm font-black text-rose-600 uppercase tracking-widest leading-tight">Sistem Janaan Ditutup</p>
-                    <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.</p>
+                    <p className="text-[10px] text-rose-500/80 mt-2 font-bold max-w-[200px] mx-auto leading-relaxed">{t('kpp:auto_pdf_disabled_notice', 'Fungsi janaan Auto-PDF ditutup sementara waktu oleh pihak JPP bagi mengelakkan lambakan laporan salah.')}</p>
                   </div>
                 ) : (
                   <form onSubmit={handleAutoGenerateTransition} className="space-y-4">
-                    <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.</div>
+                    <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">{t('kpp:auto_pdf_info', "Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.")}</div>
                     <div className="flex items-center gap-1.5">
                       <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
                         <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
                           className="accent-violet-500 w-3.5 h-3.5" />
-                        Gabung bulan
+                        {t('kpp:combine_months', 'Gabung bulan')}
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -425,7 +427,7 @@ export function LaporanPage() {
                         <Input type="month" value={endMonth} onChange={e => setEndMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
                       )}
                     </div>
-                    <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? 'Memuatkan...' : 'Pratonton & Jana'}</Button>
+                    <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? t('common:loading') : t('kpp:preview_and_generate', 'Pratonton & Jana')}</Button>
                   </form>
                 )}
               </div>
@@ -439,10 +441,10 @@ export function LaporanPage() {
                   className={cn("border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all", dragOver ? "border-primary bg-primary/10" : file ? "border-primary/50 bg-primary/10" : "border-border bg-muted/20")}
                 >
                   <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && validateFile(f)) setFile(f); }} />
-                  {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">Klik atau seret PDF di sini</p>}
+                  {file ? <p className="font-bold text-sm truncate text-blue-500">{file.name}</p> : <p className="text-sm font-medium text-muted-foreground">{t('kpp:click_drag_pdf', 'Klik atau seret PDF di sini')}</p>}
                 </div>
                 <Button type="submit" disabled={submitting || !file} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary text-primary-foreground shadow-xl">
-                  {submitting ? 'Memuat Naik...' : 'Hantar Dokumen'}
+                  {submitting ? t('common:loading') : t('kpp:submit_report')}
                 </Button>
               </form>
             )}
@@ -452,8 +454,8 @@ export function LaporanPage() {
 
         <div className="lg:col-span-3 space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-black">Rekod Dokumen</h2>
-            <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> Segarkan</Button>
+            <h2 className="text-xl font-black">{t('kpp:review_reports')}</h2>
+            <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> {t('kpp:audit_refresh_data', 'Segarkan')}</Button>
           </div>
           
           <div className="flex gap-2 mb-4 bg-muted/30 p-1 rounded-2xl w-full max-w-[300px]">
@@ -463,7 +465,7 @@ export function LaporanPage() {
                 onClick={() => setFilterTab('aktif')}
                 className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
              >
-                Semasa
+                {t('kpp:current_reports', 'Semasa')}
              </Button>
              <Button
                 variant={filterTab === 'arkib' ? 'default' : 'ghost'}
@@ -471,7 +473,7 @@ export function LaporanPage() {
                 onClick={() => setFilterTab('arkib')}
                 className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
              >
-                Arkib Laporan
+                {t('kpp:report_archive', 'Arkib Laporan')}
              </Button>
           </div>
 
@@ -483,9 +485,9 @@ export function LaporanPage() {
                 <FileText className="w-8 h-8" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Rekod Di {filterTab === 'aktif' ? 'Semasa' : 'Arkib'}</EmptyTitle>
+                <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:no_records_in', 'Tiada Rekod Di')} {filterTab === 'aktif' ? t('kpp:current_reports', 'Semasa') : t('common:archive', 'Arkib')}</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  {filterTab === 'aktif' ? 'Sila hantar laporan manual atau jana laporan bulanan.' : 'Tiada dokumen yang diarkibkan untuk kohort lepas.'}
+                  {filterTab === 'aktif' ? t('kpp:no_active_reports_desc', 'Sila hantar laporan manual atau jana laporan bulanan.') : t('kpp:no_archived_reports_desc', 'Tiada dokumen yang diarkibkan untuk kohort lepas.')}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -493,7 +495,7 @@ export function LaporanPage() {
             <AnimatePresence mode="popLayout">
               {reports.filter(r => filterTab === 'arkib' ? r.is_archived : !r.is_archived).map((r) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
-                  <Card className={cn("tour-laporan-card bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
+                  <Card className={cn(t('portal:tour_laporan_card_cls', 'tour-laporan-card'), "bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4">
@@ -501,19 +503,19 @@ export function LaporanPage() {
                           <div>
                             <div className="flex items-center gap-2">
                                <p className="font-bold text-sm">{r.file_name}</p>
-                               {r.is_archived && <Badge variant="outline" className="text-[9px] uppercase">Arkib</Badge>}
+                               {r.is_archived && <Badge variant="outline" className="text-[9px] uppercase">{t('common:archive', 'Arkib')}</Badge>}
                             </div>
                             <p className="text-[10px] opacity-50 uppercase tracking-widest font-black mt-1">{format(new Date(r.created_at), 'dd MMM yyyy, h:mm a')}</p>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           <StatusChip status={r.status} size="sm" />
-                          <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">LIHAT FAIL</a>
+                          <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">{t('kpp:view_file', 'LIHAT FAIL')}</a>
                         </div>
                       </div>
                       {r.status === 'Ditolak' && r.admin_feedback && !r.is_archived && (
                         <div className="mt-1 p-3 bg-rose-50/50 border border-rose-100/50 rounded-xl">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Nota Penolakan JPP</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">{t('kpp:jpp_rejection_notes', 'Nota Penolakan JPP')}</p>
                           <p className="text-xs font-semibold text-rose-700 italic">{r.admin_feedback}</p>
                         </div>
                       )}
@@ -540,7 +542,7 @@ export function LaporanPage() {
             reviewerRole="PRESIDEN"
             reviewerUnit={clubName}
             clubLogoUrl={logoData}
-            fileName={`Laporan_${effectiveClubId}_${targetMonth}`}
+            fileName={t('portal:laporan_preview_filename_pattern', 'Laporan_{{clubId}}_{{month}}', { clubId: effectiveClubId, month: targetMonth })}
             onClose={() => setIsPreviewOpen(false)}
             onSubmit={handleConfirmGenerate}
           />

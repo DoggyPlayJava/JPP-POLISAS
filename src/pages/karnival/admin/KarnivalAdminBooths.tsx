@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useKarnival, KarnivalCategory } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -21,9 +22,10 @@ const defaultForm = (): BoothForm => ({
   category_id: '', kelab_name: '', booth_number: '', theme: '', description: '', image_url: '',
 });
 
-const APP_URL = window.location.origin;
+const APP_URL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
 
 export function KarnivalAdminBooths() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, categories, booths, refetch } = useKarnival();
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [showForm, setShowForm]   = useState(false);
@@ -70,11 +72,11 @@ export function KarnivalAdminBooths() {
     const ext  = compressedFile.name.split('.').pop();
     const path = `booth-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('karnival-booths').upload(path, compressedFile, { upsert: true, contentType: compressedFile.type });
-    if (error) { toast.error('Upload gagal: ' + error.message); }
+    if (error) { toast.error(t('karnival:toast_upload_failed', 'Upload gagal') + ': ' + error.message); }
     else {
       const { data: urlData } = supabase.storage.from('karnival-booths').getPublicUrl(path);
       update('image_url', urlData.publicUrl);
-      toast.success('Gambar berjaya dimuatnaik!');
+      toast.success(t('karnival:toast_upload_success', 'Gambar berjaya dimuatnaik!'));
     }
     setUploading(false);
   };
@@ -82,8 +84,8 @@ export function KarnivalAdminBooths() {
   // ── Save booth ──────────────────────────────────────────────
   const handleSave = async () => {
     if (!edition) return;
-    if (!form.kelab_name.trim()) { toast.error('Nama booth/kelab diperlukan'); return; }
-    if (!form.category_id) { toast.error('Pilih kategori'); return; }
+    if (!form.kelab_name.trim()) { toast.error(t('karnival:toast_booth_name_required', 'Nama booth/kelab diperlukan')); return; }
+    if (!form.category_id) { toast.error(t('karnival:toast_choose_category', 'Pilih kategori')); return; }
     setSaving(true);
 
     const payload = {
@@ -105,10 +107,10 @@ export function KarnivalAdminBooths() {
 
     if (error) {
       if (error.code === '23505')
-        toast.error('Nama booth ini sudah wujud dalam kategori yang sama! Tukar nama atau pilih kategori lain.');
+        toast.error(t('karnival:toast_booth_duplicate', 'Nama booth ini sudah wujud dalam kategori yang sama! Tukar nama atau pilih kategori lain.'));
       else toast.error(error.message);
     } else {
-      toast.success(editId ? 'Booth dikemas kini!' : 'Booth ditambah!');
+      toast.success(editId ? t('karnival:toast_booth_updated', 'Booth dikemas kini!') : t('karnival:toast_booth_added', 'Booth ditambah!'));
       setShowForm(false);
       setEditId(null);
       refetch();
@@ -117,11 +119,11 @@ export function KarnivalAdminBooths() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Padam booth "${name}"? Semua undi untuk booth ini akan turut dipadam.`)) return;
+    if (!window.confirm(t('karnival:confirm_delete_booth', { name, defaultValue: `Padam booth "${name}"? Semua undi untuk booth ini akan turut dipadam.` }))) return;
     setDeleting(id);
     const { error } = await supabase.from('karnival_booths').delete().eq('id', id);
     if (error) toast.error(error.message);
-    else { toast.success('Booth dipadam'); refetch(); }
+    else { toast.success(t('karnival:toast_booth_deleted', 'Booth dipadam')); refetch(); }
     setDeleting(null);
   };
 
@@ -151,8 +153,8 @@ export function KarnivalAdminBooths() {
       ctx.fillText(boothName, 200, 370);
       ctx.font      = '13px Arial';
       ctx.fillStyle = '#666';
-      ctx.fillText('Imbas QR untuk mengundi', 200, 395);
-      ctx.fillText('Karnival JPP POLISAS', 200, 415);
+      ctx.fillText(t('karnival:scan_qr_to_vote', 'Imbas QR untuk mengundi'), 200, 395);
+      ctx.fillText(t('karnival:carnival_jpp_polisas', 'Karnival JPP POLISAS'), 200, 415);
 
       const a = document.createElement('a');
       a.download = `QR-${boothName.replace(/\s+/g, '-')}.png`;
@@ -160,7 +162,7 @@ export function KarnivalAdminBooths() {
       a.click();
     };
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-  }, []);
+  }, [t]);
 
   const inputCls = 'w-full px-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-sm font-medium text-white placeholder-white/40 outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all';
 
@@ -168,7 +170,7 @@ export function KarnivalAdminBooths() {
     return (
       <div className="text-center py-16 text-white/30">
         <Store className="w-12 h-12 mx-auto mb-3 opacity-20" />
-        <p className="font-bold">Cipta edisi Karnival dahulu</p>
+        <p className="font-bold">{t('karnival:create_edition_first', 'Cipta edisi Karnival dahulu')}</p>
       </div>
     );
   }
@@ -200,9 +202,9 @@ export function KarnivalAdminBooths() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-black text-white">
-            {selectedCat ? `${selectedCat.icon_emoji} ${selectedCat.name}` : 'Booth'}
+            {selectedCat ? `${selectedCat.icon_emoji} ${selectedCat.name}` : t('karnival:admin_nav_booths', 'Booth & QR')}
           </h2>
-          <p className="text-xs text-white/60 mt-0.5">{filteredBooths.length} booth</p>
+          <p className="text-xs text-white/60 mt-0.5">{t('karnival:booths_count', { count: filteredBooths.length, defaultValue: `${filteredBooths.length} booth` })}</p>
         </div>
         <button
           onClick={openCreate}
@@ -210,7 +212,7 @@ export function KarnivalAdminBooths() {
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40"
         >
           <Plus className="w-3.5 h-3.5" />
-          Tambah Booth
+          {t('karnival:add_booth_btn', 'Tambah Booth')}
         </button>
       </div>
 
@@ -224,17 +226,17 @@ export function KarnivalAdminBooths() {
             className="rounded-2xl border border-violet-500/25 bg-violet-600/5 p-5 space-y-4 overflow-hidden"
           >
             <p className="text-xs font-black text-violet-300 uppercase tracking-widest">
-              {editId ? 'Edit Booth' : 'Tambah Booth'}
+              {editId ? t('karnival:edit_booth_title', 'Edit Booth') : t('karnival:add_booth_title', 'Tambah Booth')}
             </p>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Kategori</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:category_label', 'Kategori')}</label>
               <select
                 value={form.category_id}
                 onChange={e => update('category_id', e.target.value)}
                 className={inputCls}
               >
-                <option value="">Pilih kategori...</option>
+                <option value="">{t('karnival:select_category_prompt', 'Pilih kategori...')}</option>
                 {categories.map((c: KarnivalCategory) => (
                   <option key={c.id} value={c.id}>{c.icon_emoji} {c.name}</option>
                 ))}
@@ -243,28 +245,28 @@ export function KarnivalAdminBooths() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Nama Kelab / Booth *</label>
-                <input value={form.kelab_name} onChange={e => update('kelab_name', e.target.value)} placeholder="Kelab Muzik POLISAS" className={inputCls} />
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:club_booth_name_label', 'Nama Kelab / Booth *')}</label>
+                <input value={form.kelab_name} onChange={e => update('kelab_name', e.target.value)} placeholder={t('karnival:placeholder_club_example', 'Kelab Muzik POLISAS')} className={inputCls} />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">No. Booth</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:booth_number_label', 'No. Booth')}</label>
                 <input value={form.booth_number} onChange={e => update('booth_number', e.target.value)} placeholder="B-01" className={inputCls} />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Tema Booth</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:theme_label', 'Tema Booth')}</label>
               <input value={form.theme} onChange={e => update('theme', e.target.value)} placeholder="Dunia Fantasi" className={inputCls} />
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Penerangan (optional)</label>
-              <textarea value={form.description} onChange={e => update('description', e.target.value)} placeholder="Huraikan booth ini..." rows={2} className={`${inputCls} resize-none`} />
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:description_optional_label', 'Penerangan (optional)')}</label>
+              <textarea value={form.description} onChange={e => update('description', e.target.value)} placeholder={t('karnival:description_placeholder', 'Huraikan booth ini...')} rows={2} className={`${inputCls} resize-none`} />
             </div>
 
             {/* Image upload */}
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">Gambar Booth</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:booth_image_label', 'Gambar Booth')}</label>
               {form.image_url ? (
                 <div className="relative inline-block">
                   <img src={form.image_url} alt="Preview" className="h-24 rounded-xl object-cover" />
@@ -282,7 +284,7 @@ export function KarnivalAdminBooths() {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-xs font-bold text-white/50 hover:text-white hover:bg-white/[0.08] transition-all"
                 >
                   {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                  {uploading ? 'Uploading...' : 'Upload Gambar'}
+                  {uploading ? t('karnival:uploading_label', 'Uploading...') : t('karnival:upload_image_btn', 'Upload Gambar')}
                 </button>
               )}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -295,10 +297,10 @@ export function KarnivalAdminBooths() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                {editId ? 'Simpan' : 'Tambah Booth'}
+                {editId ? t('karnival:save_changes_btn', 'Simpan') : t('karnival:add_booth_title', 'Tambah Booth')}
               </button>
               <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all">
-                Batal
+                {t('karnival:cancel_btn', 'Batal')}
               </button>
             </div>
           </motion.div>
@@ -309,12 +311,12 @@ export function KarnivalAdminBooths() {
       {filteredBooths.length === 0 ? (
         <div className="text-center py-12 text-white/45">
           <Store className="w-10 h-10 mx-auto mb-3 opacity-20" />
-          <p className="font-bold text-sm">Belum ada booth dalam kategori ini</p>
+          <p className="font-bold text-sm">{t('karnival:no_booths_in_cat', 'Belum ada booth dalam kategori ini')}</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {filteredBooths.map((booth, i) => {
-            const qrUrl = `${APP_URL}/karnival/undi?booth=${booth.id}`;
+            const qrUrl = (APP_URL || '') + '/karnival/undi?booth=' + booth.id;
             return (
               <motion.div
                 key={booth.id}

@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   HeartHandshake,
   ShoppingBag,
@@ -35,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { KebajikanLiveTrackerCard } from '@/components/kebajikan/KebajikanLiveTrackerCard';
 
 export function KebajikanHubPage() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { user, isKebajikanExco, isKediamanExco, isSuperAdmin, isYdp } = useAuth();
   const isExcoOrStaff = isKebajikanExco || isKediamanExco || isSuperAdmin || isYdp;
 
@@ -45,7 +47,7 @@ export function KebajikanHubPage() {
   useEffect(() => {
     async function loadHubData() {
       try {
-        const promises: Promise<any>[] = [
+        const promises: PromiseLike<any>[] = [
           supabase
             .from('foodbank_settings')
             .select('is_module_active, is_application_open')
@@ -110,15 +112,15 @@ export function KebajikanHubPage() {
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 mb-3 shadow-xs">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-          Jawatankuasa Perwakilan Pelajar POLISAS
+          {t('kebajikan:hub_badge', 'Jawatankuasa Perwakilan Pelajar POLISAS')}
         </div>
 
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-          Hab E-Kebajikan & Bantuan Siswa
+          {t('kebajikan:hub_title', 'Hab E-Kebajikan & Bantuan Siswa')}
         </h1>
 
         <p className="mt-2.5 text-sm sm:text-base text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
-          Penyelesaian aduan prasarana kampus dan permohonan pakej bantuan makanan Food Bank JPP secara telus dan pantas.
+          {t('kebajikan:hub_subtitle', 'Penyelesaian aduan prasarana kampus dan permohonan pakej bantuan makanan Food Bank JPP secara telus dan pantas.')}
         </p>
       </motion.div>
 
@@ -147,15 +149,15 @@ export function KebajikanHubPage() {
               </div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800">
                 <Clock className="w-3.5 h-3.5" />
-                SLA &lt; 24 Jam
+                {t('kebajikan:hub_sla_badge', 'SLA < 24 Jam')}
               </span>
             </div>
 
             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-              Aduan & Fasiliti Kampus
+              {t('kebajikan:hub_card_complaints_title', 'Aduan & Fasiliti Kampus')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-8">
-              Salurkan isu kamsis, kafeteria, dan kemudahan pembelajaran terus kepada barisan Exco Kebajikan &amp; Pengurusan Asrama dengan sembang langsung dan notifikasi status.
+              {t('kebajikan:hub_card_complaints_desc', 'Salurkan isu kamsis, kafeteria, dan kemudahan pembelajaran terus kepada barisan Exco Kebajikan & Pengurusan Asrama dengan sembang langsung dan notifikasi status.')}
             </p>
           </div>
 
@@ -164,7 +166,7 @@ export function KebajikanHubPage() {
             <Link to="/kebajikan/buat-aduan" className="w-full block">
               <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400 text-white dark:text-slate-950 font-bold rounded-xl gap-2 shadow-sm transition-all group/btn">
                 <Plus className="w-4 h-4" />
-                <span>Hantar Aduan Baharu</span>
+                <span>{t('kebajikan:hub_btn_new_complaint', 'Hantar Aduan Baharu')}</span>
                 <ArrowRight className="w-4 h-4 ml-auto transition-transform group-hover/btn:translate-x-1" />
               </Button>
             </Link>
@@ -176,7 +178,7 @@ export function KebajikanHubPage() {
                   className="w-full h-10 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold rounded-xl text-xs gap-1.5"
                 >
                   <ClipboardList className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                  <span>Aduan Saya</span>
+                  <span>{t('kebajikan:hub_btn_my_complaints', 'Aduan Saya')}</span>
                 </Button>
               </Link>
               <Link to="/kebajikan/statistik">
@@ -185,7 +187,7 @@ export function KebajikanHubPage() {
                   className="w-full h-10 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold rounded-xl text-xs gap-1.5"
                 >
                   <BarChart3 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                  <span>Statistik Awam</span>
+                  <span>{t('kebajikan:hub_btn_public_stats', 'Statistik Awam')}</span>
                 </Button>
               </Link>
             </div>
@@ -215,15 +217,17 @@ export function KebajikanHubPage() {
                   : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800"
               )}>
                 <Sparkles className="w-3.5 h-3.5" />
-                {isFoodBankActive ? 'Pendaftaran Dibuka' : 'Dalam Persediaan'}
+                {isFoodBankActive
+                  ? t('kebajikan:hub_foodbank_status_open', 'Pendaftaran Dibuka')
+                  : t('kebajikan:hub_foodbank_status_prep', 'Dalam Persediaan')}
               </span>
             </div>
 
             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
-              Food Bank JPP
+              {t('kebajikan:hub_foodbank_title', 'Food Bank JPP')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-8">
-              Bantuan pakej makanan asas dan keperluan harian percuma bagi mahasiswa POLISAS dengan kuota rakan serumah automatik dan Pas Pengambilan Digital (QR).
+              {t('kebajikan:hub_foodbank_desc', 'Bantuan pakej makanan asas dan keperluan harian percuma bagi mahasiswa POLISAS dengan kuota rakan serumah automatik dan Pas Pengambilan Digital (QR).')}
             </p>
           </div>
 
@@ -232,7 +236,11 @@ export function KebajikanHubPage() {
             <Link to="/kebajikan/foodbank" className="w-full block">
               <Button className="w-full h-11 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold rounded-xl gap-2 shadow-sm transition-all group/btn">
                 <ShoppingBag className="w-4 h-4" />
-                <span>{isFoodBankActive ? 'Mohon Bantuan Makanan' : 'Semak Info & Katalog Persediaan'}</span>
+                <span>
+                  {isFoodBankActive
+                    ? t('kebajikan:hub_btn_apply_foodbank', 'Mohon Bantuan Makanan')
+                    : t('kebajikan:hub_btn_check_foodbank', 'Semak Info & Katalog Persediaan')}
+                </span>
                 <ArrowRight className="w-4 h-4 ml-auto transition-transform group-hover/btn:translate-x-1" />
               </Button>
             </Link>
@@ -243,7 +251,7 @@ export function KebajikanHubPage() {
                 className="w-full h-10 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 hover:border-amber-500/30 font-semibold rounded-xl text-xs gap-2 transition-colors"
               >
                 <QrCode className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>Semak Pas Pengambilan QR Saya</span>
+                <span>{t('kebajikan:hub_btn_my_qr_pass', 'Semak Pas Pengambilan QR Saya')}</span>
               </Button>
             </Link>
           </div>
@@ -262,7 +270,7 @@ export function KebajikanHubPage() {
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-teal-400" />
               <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                Pusat Pengurusan Pegawai &amp; Exco
+                {t('kebajikan:hub_staff_strip_title', 'Pusat Pengurusan Pegawai & Exco')}
               </span>
             </div>
           </div>
@@ -273,7 +281,7 @@ export function KebajikanHubPage() {
               className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/30 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200"
             >
               <LayoutDashboard className="w-4 h-4 text-teal-400 shrink-0" />
-              <span className="truncate">Papan Pemuka Tiket</span>
+              <span className="truncate">{t('kebajikan:hub_staff_ticket_dashboard', 'Papan Pemuka Tiket')}</span>
             </Link>
 
             <Link
@@ -281,7 +289,7 @@ export function KebajikanHubPage() {
               className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/30 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200"
             >
               <Inbox className="w-4 h-4 text-teal-400 shrink-0" />
-              <span className="truncate">Senarai Tiket Aduan</span>
+              <span className="truncate">{t('kebajikan:hub_staff_ticket_list', 'Senarai Tiket Aduan')}</span>
             </Link>
 
             <Link
@@ -289,7 +297,7 @@ export function KebajikanHubPage() {
               className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-400/40 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200 hover:text-amber-300"
             >
               <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="truncate">Pusat Kawalan Food Bank</span>
+              <span className="truncate">{t('kebajikan:hub_staff_foodbank_ctrl', 'Pusat Kawalan Food Bank')}</span>
             </Link>
 
             <Link
@@ -297,7 +305,7 @@ export function KebajikanHubPage() {
               className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-teal-500/30 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200"
             >
               <FileBarChart2 className="w-4 h-4 text-teal-400 shrink-0" />
-              <span className="truncate">Laporan Statistik</span>
+              <span className="truncate">{t('kebajikan:hub_staff_stat_reports', 'Laporan Statistik')}</span>
             </Link>
           </div>
         </motion.div>

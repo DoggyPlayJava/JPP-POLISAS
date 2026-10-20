@@ -32,6 +32,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PM_GRADIENT } from '../PolyMartLayout';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { GroupedVendorOrder } from './VendorOrdersPipeline';
 
 export interface VendorAnalyticsProduct {
@@ -82,6 +83,7 @@ export function VendorAnalyticsPromo({
   selectedBizId,
   onUpdate,
 }: VendorAnalyticsPromoProps) {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -301,11 +303,11 @@ export function VendorAnalyticsPromo({
     e.preventDefault();
 
     if (!adTitle.trim()) {
-      toast.error('Sila masukkan tajuk promo');
+      toast.error(t('commerce:enter_promo_title', 'Sila masukkan tajuk promo'));
       return;
     }
     if (!adImageFile) {
-      toast.error('Sila muat naik gambar banner');
+      toast.error(t('commerce:upload_banner_image_required', 'Sila muat naik gambar banner'));
       return;
     }
 
@@ -338,7 +340,7 @@ export function VendorAnalyticsPromo({
         parsed.unshift(payload);
         localStorage.setItem('mock_vendor_ads', JSON.stringify(parsed));
 
-        toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
+        toast.success(t('commerce:ad_application_submitted_toast', 'Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.'));
         setShowNewAdModal(false);
         resetAdForm();
         fetchAds();
@@ -376,13 +378,13 @@ export function VendorAnalyticsPromo({
       const { error: insertErr } = await supabase.from('polymart_ads').insert(payload);
       if (insertErr) throw insertErr;
 
-      toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
+      toast.success(t('commerce:ad_application_submitted_toast', 'Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.'));
       setShowNewAdModal(false);
       resetAdForm();
       fetchAds();
       if (onUpdate) onUpdate();
     } catch (err: any) {
-      toast.error('Ralat menghantar permohonan iklan: ' + (err?.message || 'Sila cuba lagi'));
+      toast.error(t('commerce:ad_application_error_toast', 'Ralat menghantar permohonan iklan: {{error}}', { error: err?.message || t('commerce:please_try_again', 'Sila cuba lagi') }));
     } finally {
       setSubmittingAd(false);
     }
@@ -395,10 +397,10 @@ export function VendorAnalyticsPromo({
         <div className="space-y-0.5">
           <h2 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-amber-500" />
-            <span>Prestasi & Promosi Kedai</span>
+            <span>{t('commerce:store_performance_promo_title', 'Prestasi & Promosi Kedai')}</span>
           </h2>
           <p className="text-xs text-muted-foreground">
-            Pantau trend hasil jualan harian, amaran baki stok, dan promosi banner PolyMart.
+            {t('commerce:store_performance_promo_desc', 'Pantau trend hasil jualan harian, amaran baki stok, dan promosi banner PolyMart.')}
           </p>
         </div>
 
@@ -409,7 +411,7 @@ export function VendorAnalyticsPromo({
           style={{ background: PM_GRADIENT }}
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>Lihat Analitik Penuh di POS</span>
+          <span>{t('commerce:view_full_pos_analytics', 'Lihat Analitik Penuh di POS')}</span>
         </button>
       </div>
 
@@ -425,7 +427,7 @@ export function VendorAnalyticsPromo({
           }`}
         >
           <BarChart3 className="w-4 h-4" />
-          <span>Prestasi Jualan & Inventori</span>
+          <span>{t('commerce:tab_sales_inventory', 'Prestasi Jualan & Inventori')}</span>
           {lowStockProducts.length > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/15 text-rose-500">
               {lowStockProducts.length}
@@ -443,7 +445,7 @@ export function VendorAnalyticsPromo({
           }`}
         >
           <Megaphone className="w-4 h-4" />
-          <span>Iklan Promo PolyMart</span>
+          <span>{t('commerce:tab_polymart_ads', 'Iklan Promo PolyMart')}</span>
           {ads.length > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
               {ads.length}
@@ -460,11 +462,11 @@ export function VendorAnalyticsPromo({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
-                <h3 className="text-sm font-black text-foreground">Amaran Inventori & Stok Rendah</h3>
+                <h3 className="text-sm font-black text-foreground">{t('commerce:low_stock_alerts_title', 'Amaran Inventori & Stok Rendah')}</h3>
               </div>
               {lowStockProducts.length > 0 && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                  {lowStockProducts.length} Perlu Perhatian
+                  {lowStockProducts.length} {t('commerce:needs_attention_badge', 'Perlu Perhatian')}
                 </span>
               )}
             </div>
@@ -473,9 +475,9 @@ export function VendorAnalyticsPromo({
               <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/20 border border-zinc-200/80 dark:border-zinc-800/40 flex items-center gap-3">
                 <Package className="w-5 h-5 text-emerald-500 shrink-0" />
                 <div>
-                  <p className="text-xs font-bold text-foreground">Semua Stok Mencukupi</p>
+                  <p className="text-xs font-bold text-foreground">{t('commerce:all_stock_sufficient_title', 'Semua Stok Mencukupi')}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Tiada produk yang berada di bawah baki 5 unit.
+                    {t('commerce:all_stock_sufficient_desc', 'Tiada produk yang berada di bawah baki 5 unit.')}
                   </p>
                 </div>
               </div>
@@ -493,15 +495,15 @@ export function VendorAnalyticsPromo({
                       <div className="min-w-0">
                         <p className="text-xs font-bold text-foreground truncate">{item.name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">
-                          Kedai:{' '}
+                          {t('commerce:store_label', 'Kedai')}:{' '}
                           {myBusinesses.find(b => b.id === item.business_id)?.name ||
-                            'Kedai PolyMart'}
+                            t('commerce:business_default_name', 'Kedai PolyMart')}
                         </p>
                       </div>
                     </div>
                     <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
                       <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
-                      <span>{`Sisa: ${item.available} unit`}</span>
+                      <span>{t('commerce:stock_remaining_units', `Sisa: ${item.available} unit`, { count: item.available })}</span>
                     </div>
                   </div>
                 ))}
@@ -516,21 +518,21 @@ export function VendorAnalyticsPromo({
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-amber-500" />
                   <h3 className="text-sm font-black text-foreground">
-                    Trend Pra-Pesanan (7 Hari Terakhir)
+                    {t('commerce:preorder_sales_trend_title', 'Trend Pra-Pesanan (7 Hari Terakhir)')}
                   </h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Perbandingan jumlah hasil jualan siap berbanding kuantiti tempahan harian.
+                  {t('commerce:preorder_sales_trend_desc', 'Perbandingan jumlah hasil jualan siap berbanding kuantiti tempahan harian.')}
                 </p>
               </div>
               <div className="flex items-center gap-3 text-xs font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <span className="text-muted-foreground text-[11px]">Hasil (RM)</span>
+                  <span className="text-muted-foreground text-[11px]">{t('commerce:chart_legend_revenue', 'Hasil (RM)')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                  <span className="text-muted-foreground text-[11px]">Kuantiti Tempahan</span>
+                  <span className="text-muted-foreground text-[11px]">{t('commerce:chart_legend_orders', 'Kuantiti Tempahan')}</span>
                 </div>
               </div>
             </div>
@@ -540,10 +542,10 @@ export function VendorAnalyticsPromo({
               <div className="h-56 min-h-[200px] rounded-xl bg-zinc-50 dark:bg-zinc-950/20 border border-dashed border-zinc-200 dark:border-zinc-800/60 flex flex-col items-center justify-center p-6 text-center">
                 <BarChart3 className="w-8 h-8 text-muted-foreground/30 mb-2" />
                 <p className="text-xs font-bold text-muted-foreground">
-                  Tiada data jualan untuk tempoh ini.
+                  {t('commerce:no_sales_data_period', 'Tiada data jualan untuk tempoh ini.')}
                 </p>
                 <p className="text-[10px] text-muted-foreground/60 mt-1">
-                  Graf akan memaparkan tren apabila pesanan baru direkodkan.
+                  {t('commerce:chart_trend_placeholder', 'Graf akan memaparkan tren apabila pesanan baru direkodkan.')}
                 </p>
               </div>
             ) : (
@@ -624,9 +626,9 @@ export function VendorAnalyticsPromo({
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-card border border-border/40 rounded-2xl gap-3 shadow-sm">
             <div>
-              <h3 className="text-sm font-black text-foreground">Permohonan Iklan Banner (Promo)</h3>
+              <h3 className="text-sm font-black text-foreground">{t('commerce:banner_ads_application_title', 'Permohonan Iklan Banner (Promo)')}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Iklan anda akan dipaparkan di halaman utama PolyMart selepas disemak dan diluluskan.
+                {t('commerce:banner_ads_application_desc', 'Iklan anda akan dipaparkan di halaman utama PolyMart selepas disemak dan diluluskan.')}
               </p>
             </div>
             <button
@@ -635,7 +637,7 @@ export function VendorAnalyticsPromo({
               className="h-9 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-md hover:scale-105 active:scale-95 whitespace-nowrap self-start sm:self-auto"
               style={{ background: PM_GRADIENT }}
             >
-              + Mohon Iklan Baru
+              {t('commerce:apply_new_ad_btn', '+ Mohon Iklan Baru')}
             </button>
           </div>
 
@@ -647,9 +649,9 @@ export function VendorAnalyticsPromo({
             <div className="text-center py-12 bg-card border border-dashed border-border/60 rounded-2xl space-y-3">
               <Megaphone className="w-10 h-10 text-muted-foreground/30 mx-auto" />
               <div className="space-y-1">
-                <p className="text-xs font-bold text-foreground">Tiada permohonan iklan lagi</p>
+                <p className="text-xs font-bold text-foreground">{t('commerce:no_ad_applications_yet', 'Tiada permohonan iklan lagi')}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  Mohon iklan banner untuk mempromosikan produk anda di muka depan PolyMart.
+                  {t('commerce:apply_banner_hint', 'Mohon iklan banner untuk mempromosikan produk anda di muka depan PolyMart.')}
                 </p>
               </div>
               <button
@@ -658,7 +660,7 @@ export function VendorAnalyticsPromo({
                 className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-bold text-white shadow-sm"
                 style={{ background: PM_GRADIENT }}
               >
-                + Mohon Iklan Baru
+                {t('commerce:apply_new_ad_btn', '+ Mohon Iklan Baru')}
               </button>
             </div>
           ) : (
@@ -689,15 +691,15 @@ export function VendorAnalyticsPromo({
                       <div>
                         {ad.status === 'APPROVED' || ad.status === 'ACTIVE' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                            Diluluskan
+                            {t('commerce:ad_status_approved', 'Diluluskan')}
                           </span>
                         ) : ad.status === 'DRAFT' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                            Menunggu Kelulusan
+                            {t('commerce:ad_status_pending_approval', 'Menunggu Kelulusan')}
                           </span>
                         ) : ad.status === 'REJECTED' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                            Ditolak
+                            {t('commerce:ad_status_rejected', 'Ditolak')}
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">
@@ -708,7 +710,7 @@ export function VendorAnalyticsPromo({
 
                       <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
                         <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{ad.clicks || 0} klik</span>
+                        <span>{t('commerce:clicks_count', `${ad.clicks || 0} klik`, { count: ad.clicks || 0 })}</span>
                       </div>
                     </div>
                   </div>
@@ -732,9 +734,9 @@ export function VendorAnalyticsPromo({
               {/* Modal Header */}
               <div className="p-4 sm:p-5 border-b border-border/30 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-black text-foreground">Permohonan Iklan Baru</h3>
+                  <h3 className="text-sm font-black text-foreground">{t('commerce:apply_new_ad_modal_title', 'Permohonan Iklan Baru')}</h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Isi butiran promosi untuk tatapan pembeli PolyMart.
+                    {t('commerce:apply_new_ad_modal_desc', 'Isi butiran promosi untuk tatapan pembeli PolyMart.')}
                   </p>
                 </div>
                 <button
@@ -750,34 +752,34 @@ export function VendorAnalyticsPromo({
               <form onSubmit={handleApplyNewAd} className="p-4 sm:p-5 space-y-4 overflow-y-auto">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                    Tajuk Promo
+                    {t('commerce:promo_title_label', 'Tajuk Promo')}
                   </label>
                   <input
                     type="text"
                     required
                     value={adTitle}
                     onChange={e => setAdTitle(e.target.value)}
-                    placeholder="Cth: Promosi Kombo Jimat Akhir Semester"
+                    placeholder={t('commerce:promo_title_placeholder', 'Cth: Promosi Kombo Jimat Akhir Semester')}
                     className="w-full h-10 px-3 text-xs bg-muted/30 rounded-xl border border-border/60 outline-none focus:border-amber-500 text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                    Pautan / URL Destinasi (Pilihan)
+                    {t('commerce:destination_url_label', 'Pautan / URL Destinasi (Pilihan)')}
                   </label>
                   <input
                     type="text"
                     value={adLinkUrl}
                     onChange={e => setAdLinkUrl(e.target.value)}
-                    placeholder="Cth: /polymart atau pautan luaran"
+                    placeholder={t('commerce:destination_url_placeholder', 'Cth: /polymart atau pautan luaran')}
                     className="w-full h-10 px-3 text-xs bg-muted/30 rounded-xl border border-border/60 outline-none focus:border-amber-500 text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                    Gambar Banner (Nisbah 2.5:1 Disyorkan)
+                    {t('commerce:banner_image_label', 'Gambar Banner (Nisbah 2.5:1 Disyorkan)')}
                   </label>
                   <input
                     type="file"
@@ -787,7 +789,7 @@ export function VendorAnalyticsPromo({
                     className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-bold file:bg-amber-500/10 file:text-amber-600 outline-none text-foreground"
                   />
                   <p className="text-[10px] text-muted-foreground/70">
-                    Gambar akan dimampatkan secara automatik sebelum dimuat naik.
+                    {t('commerce:auto_compression_note', 'Gambar akan dimampatkan secara automatik sebelum dimuat naik.')}
                   </p>
                 </div>
 
@@ -807,7 +809,7 @@ export function VendorAnalyticsPromo({
                     onClick={() => setShowNewAdModal(false)}
                     className="flex-1 h-10 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/40 transition-colors border border-border/60"
                   >
-                    Batal
+                    {t('commerce:cancel_btn', 'Batal')}
                   </button>
                   <button
                     type="submit"
@@ -815,7 +817,7 @@ export function VendorAnalyticsPromo({
                     className="flex-1 h-10 rounded-xl text-xs font-black text-white transition-all shadow-md disabled:opacity-50"
                     style={{ background: PM_GRADIENT }}
                   >
-                    {submittingAd ? 'Menghantar...' : 'Hantar Permohonan'}
+                    {submittingAd ? t('commerce:submitting_ad_dots', 'Menghantar...') : t('commerce:submit_application_btn', 'Hantar Permohonan')}
                   </button>
                 </div>
               </form>

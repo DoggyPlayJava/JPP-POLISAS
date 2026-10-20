@@ -5,6 +5,7 @@
 // ============================================================
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -54,14 +55,7 @@ const PRIORITY_META: Record<string, { color: string; label: string }> = {
 // ─── Sub-tab button ────────────────────────────────────────────────────────────
 type KbjTab = 'overview' | 'aduan' | 'moderasi' | 'aktiviti' | 'laporan' | 'semakan';
 
-const TABS: { id: KbjTab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'aduan', label: 'Aduan Pelajar' },
-  { id: 'moderasi', label: 'Moderasi Awam' },
-  { id: 'aktiviti', label: 'Aktiviti' },
-  { id: 'laporan', label: 'Laporan' },
-  { id: 'semakan', label: 'Semakan Laporan' },
-];
+
 
 function SubTabBtn({ id, label, active, badge, onClick }: {
   key?: React.Key;
@@ -167,6 +161,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export function KebajikanUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const navigate = useNavigate();
   const { profile, isSuperAdmin } = useAuth();
 
@@ -266,22 +261,44 @@ export function KebajikanUnitDashboard() {
     'ESCALATED', 'REOPENED', 'RESOLVED', 'CLOSED', 'CANCELLED',
   ];
 
+  const tabsList: { id: KbjTab; label: string }[] = [
+    { id: 'overview', label: t('jpp:kebajikan_tab_overview', 'Ringkasan Eksekutif') },
+    { id: 'aduan', label: t('jpp:kebajikan_tab_aduan', 'Aduan Pelajar') },
+    { id: 'moderasi', label: t('jpp:kebajikan_tab_moderasi', 'Moderasi Awam') },
+    { id: 'aktiviti', label: t('jpp:kebajikan_tab_aktiviti', 'Aktiviti') },
+    { id: 'laporan', label: t('jpp:kebajikan_tab_laporan', 'Laporan') },
+    { id: 'semakan', label: t('jpp:kebajikan_tab_semakan', 'Semakan Laporan') },
+  ];
+
   return (
     <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <HeartHandshake className="w-7 h-7" style={{ color: TEAL }} />
+            {t('jpp:kebajikan_dashboard_title', 'Pusat Kawalan Unit Kebajikan & Aduan')}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
+            {t('jpp:kebajikan_dashboard_subtitle', 'Pemantauan kebajikan mahasiswa, bantuan kecemasan, Food Bank, dan saluran aduan.')}
+          </p>
+        </div>
+      </div>
+
       {/* ── Sub-nav ── */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-        {TABS.map(t => (
+        {tabsList.map(tabItem => (
           <SubTabBtn
-            key={t.id}
-            id={t.id}
-            label={t.label}
-            active={tab === t.id}
-            badge={t.id === 'aduan' ? activeCount : t.id === 'semakan' ? pendingReports : undefined}
-            onClick={() => setTab(t.id)}
+            key={tabItem.id}
+            id={tabItem.id}
+            label={tabItem.label}
+            active={tab === tabItem.id}
+            badge={tabItem.id === 'aduan' ? activeCount : tabItem.id === 'semakan' ? pendingReports : undefined}
+            onClick={() => setTab(tabItem.id)}
           />
         ))}
         <button onClick={() => { fetchTickets(); fetchExco(); }} className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-700 dark:hover:text-white/50 transition-all shrink-0">
-          <RefreshCw className="w-3 h-3" /> Segarkan
+          <RefreshCw className="w-3 h-3" /> {t('jpp:kebajikan_refresh_btn', 'Segarkan')}
         </button>
       </div>
 
@@ -300,14 +317,14 @@ export function KebajikanUnitDashboard() {
             >
               <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <div className="flex-1">
-                <p className="text-xs font-black text-blue-700 dark:text-blue-400">{newCount} aduan baharu belum disemak</p>
-                <p className="text-[10px] text-blue-600/70 dark:text-blue-300/50 mt-0.5">Semak dan assign kepada pegawai yang berkenaan.</p>
+                <p className="text-xs font-black text-blue-700 dark:text-blue-400">{t('jpp:kebajikan_new_complaints_alert', '{{count}} aduan baharu belum disemak', { count: newCount })}</p>
+                <p className="text-[10px] text-blue-600/70 dark:text-blue-300/50 mt-0.5">{t('jpp:kebajikan_new_complaints_sub', 'Semak dan assign kepada pegawai yang berkenaan.')}</p>
               </div>
               <button
                 onClick={() => { setStatusFilter('NEW'); setTab('aduan'); }}
                 className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 hover:underline shrink-0"
               >
-                Semak →
+                {t('jpp:kebajikan_review_action', 'Semak')} →
               </button>
             </motion.div>
           )}
@@ -319,12 +336,12 @@ export function KebajikanUnitDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatCard label="Jumlah Aduan" value={tickets.length} icon={TicketCheck} color={TEAL} delay={0.0}
+              <StatCard label={t('jpp:kebajikan_stat_total_complaints', 'Jumlah Aduan')} value={tickets.length} icon={TicketCheck} color={TEAL} delay={0.0}
                 onClick={() => { setStatusFilter('ALL'); setTab('aduan'); }} />
-              <StatCard label="Aktif / Dalam Proses" value={activeCount} icon={TrendingUp} color="#f59e0b" delay={0.06}
+              <StatCard label={t('jpp:kebajikan_stat_active_in_progress', 'Aktif / Dalam Proses')} value={activeCount} icon={TrendingUp} color="#f59e0b" delay={0.06}
                 onClick={() => { setStatusFilter('IN_PROGRESS'); setTab('aduan'); }} />
-              <StatCard label="Selesai" value={resolvedCount} icon={CheckCircle2} color="#34d399" delay={0.12} />
-              <StatCard label="Laporan Menunggu" value={pendingReports}
+              <StatCard label={t('jpp:kebajikan_stat_resolved', 'Selesai')} value={resolvedCount} icon={CheckCircle2} color="#34d399" delay={0.12} />
+              <StatCard label={t('jpp:kebajikan_stat_pending_reports', 'Laporan Menunggu')} value={pendingReports}
                 icon={Clock} color={pendingReports > 0 ? '#f59e0b' : '#94a3b8'} delay={0.18}
                 onClick={() => setTab('semakan')} />
             </div>
@@ -336,13 +353,13 @@ export function KebajikanUnitDashboard() {
             {/* Tiket terkini */}
             <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Aduan Terkini</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:kebajikan_recent_complaints', 'Aduan Terkini')}</h3>
                 <button
                   onClick={() => { setStatusFilter('ALL'); setTab('aduan'); }}
                   className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
                   style={{ color: TEAL }}
                 >
-                  Semua <ArrowRight className="w-3 h-3" />
+                  {t('jpp:kebajikan_all_complaints', 'Semua')} <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
               {ticketLoading ? (
@@ -351,7 +368,7 @@ export function KebajikanUnitDashboard() {
                 </div>
               ) : tickets.slice(0, 4).length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada aduan lagi</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:kebajikan_no_complaints_yet', 'Tiada aduan lagi')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -369,13 +386,13 @@ export function KebajikanUnitDashboard() {
             {/* Aktiviti terkini */}
             <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Aktiviti Exco</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:kebajikan_exco_activities', 'Aktiviti Exco')}</h3>
                 <button
                   onClick={() => setTab('aktiviti')}
                   className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
                   style={{ color: TEAL }}
                 >
-                  Semua <ArrowRight className="w-3 h-3" />
+                  {t('jpp:kebajikan_all_complaints', 'Semua')} <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
               {excoLoading ? (
@@ -384,12 +401,12 @@ export function KebajikanUnitDashboard() {
                 </div>
               ) : activities.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada aktiviti lagi</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:kebajikan_no_activities_yet', 'Tiada aktiviti lagi')}</p>
                   <button
                     onClick={() => navigate('/exco/kebajikan/aktiviti')}
                     className="text-[10px] text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 underline underline-offset-2 mt-2 transition-all font-black uppercase tracking-widest"
                   >
-                    Tambah Aktiviti
+                    {t('jpp:kebajikan_add_activity', 'Tambah Aktiviti')}
                   </button>
                 </div>
               ) : (
@@ -421,32 +438,39 @@ export function KebajikanUnitDashboard() {
 
           {/* Quick actions */}
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">Tindakan Pantas</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:kebajikan_quick_actions', 'Tindakan Pantas')}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
               <QuickAction
-                label="Buka Modul E-Kebajikan"
-                description="Urus tiket, aduan, dan tetapan kebajikan"
+                label={t('jpp:kebajikan_financial_aid_title', 'Bantuan Kewangan & Kecemasan')}
+                description={t('jpp:kebajikan_dashboard_subtitle', 'Bantuan kecemasan dan sara hidup mahasiswa.')}
                 icon={HeartHandshake}
                 color={TEAL}
                 onClick={() => navigate('/kebajikan')}
               />
               <QuickAction
-                label="Rekod Aktiviti Baharu"
-                description="Tambah aktiviti yang dirancang atau sedang berjalan"
+                label={t('jpp:kebajikan_action_open_module', 'Buka Modul E-Kebajikan')}
+                description={t('jpp:kebajikan_action_open_desc', 'Urus tiket, aduan, dan tetapan kebajikan')}
+                icon={HeartHandshake}
+                color={TEAL}
+                onClick={() => navigate('/kebajikan')}
+              />
+              <QuickAction
+                label={t('jpp:kebajikan_action_record_activity', 'Rekod Aktiviti Baharu')}
+                description={t('jpp:kebajikan_action_record_desc', 'Tambah aktiviti yang dirancang atau sedang berjalan')}
                 icon={Activity}
                 color={TEAL}
                 onClick={() => navigate('/exco/kebajikan/aktiviti')}
               />
               <QuickAction
-                label="Semak Laporan Exco"
-                description="Semak dan lulus / tolak laporan exco Kebajikan"
+                label={t('jpp:kebajikan_action_review_report', 'Semak Laporan Exco')}
+                description={t('jpp:kebajikan_action_review_desc', 'Semak dan lulus / tolak laporan exco Kebajikan')}
                 icon={ClipboardCheck}
                 color={TEAL}
                 onClick={() => navigate('/jpp/semak-laporan-exco/kebajikan')}
               />
               <QuickAction
-                label="Moderasi Awam"
-                description="Urus kandungan PolySuara & PolyRent"
+                label={t('jpp:kebajikan_action_public_moderation', 'Moderasi Awam')}
+                description={t('jpp:kebajikan_action_public_desc', 'Urus kandungan PolySuara & PolyRent')}
                 icon={ShieldAlert}
                 color={TEAL}
                 onClick={() => setTab('moderasi')}
@@ -468,9 +492,9 @@ export function KebajikanUnitDashboard() {
             style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.25)} 0%, ${hexToRgba(TEAL, 0.05)} 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}
           >
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>Sistem Aduan Pelajar</p>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Semua Aduan E-Kebajikan</h2>
-              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{tickets.length} aduan dalam sistem</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>{t('jpp:kebajikan_system_complaints_header', 'Sistem Aduan Pelajar')}</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('jpp:kebajikan_all_ekebajikan_complaints', 'Semua Aduan E-Kebajikan')}</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{t('jpp:kebajikan_complaints_in_system', '{{count}} aduan dalam sistem', { count: tickets.length })}</p>
             </div>
             <TicketCheck className="absolute bottom-4 right-6 w-20 h-20 opacity-10" style={{ color: TEAL }} />
           </div>
@@ -488,7 +512,7 @@ export function KebajikanUnitDashboard() {
                 ? { background: hexToRgba(TEAL, 0.2), color: TEAL, border: `1px solid ${hexToRgba(TEAL, 0.3)}` }
                 : {}}
             >
-              Semua ({tickets.length})
+              {t('jpp:kebajikan_filter_all', 'Semua ({{count}})', { count: tickets.length })}
             </button>
             {ALL_STATUSES.map(s => {
               const sm = STATUS_META[s];
@@ -519,7 +543,7 @@ export function KebajikanUnitDashboard() {
             <input
               value={ticketSearch}
               onChange={e => setTicketSearch(e.target.value)}
-              placeholder="Cari ticket no, tajuk, nama, matrik..."
+              placeholder={t('jpp:kebajikan_search_tickets_placeholder', 'Cari ticket no, tajuk, nama, matrik...')}
               className="w-full px-10 py-2.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors shadow-sm"
             />
             {ticketSearch && (
@@ -536,7 +560,7 @@ export function KebajikanUnitDashboard() {
             </div>
           ) : filteredTickets.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada aduan ditemui</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:kebajikan_no_complaints_found', 'Tiada aduan ditemui')}</p>
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -558,7 +582,7 @@ export function KebajikanUnitDashboard() {
             className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all shadow-sm"
             style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.04) }}
           >
-            <span className="text-xs font-black" style={{ color: TEAL }}>Buka Halaman Tiket Penuh dalam E-Kebajikan</span>
+            <span className="text-xs font-black" style={{ color: TEAL }}>{t('jpp:kebajikan_open_full_tickets_page', 'Buka Halaman Tiket Penuh dalam E-Kebajikan')}</span>
             <ExternalLink className="w-3.5 h-3.5" style={{ color: TEAL }} />
           </button>
         </div>
@@ -581,9 +605,9 @@ export function KebajikanUnitDashboard() {
           <div className="rounded-[2rem] p-7 relative overflow-hidden"
             style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.3)} 0%, ${hexToRgba(TEAL, 0.05)} 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}>
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>Exco Kebajikan</p>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Aktiviti Dianjurkan</h2>
-              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{activities.length} aktiviti dalam rekod</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>{t('jpp:kebajikan_unit_title', 'Exco Kebajikan')}</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('jpp:kebajikan_organized_activities', 'Aktiviti Dianjurkan')}</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{t('jpp:kebajikan_activities_count_record', '{{count}} aktiviti dalam rekod', { count: activities.length })}</p>
             </div>
             <Activity className="absolute bottom-4 right-6 w-20 h-20 opacity-10" style={{ color: TEAL }} />
           </div>
@@ -594,13 +618,13 @@ export function KebajikanUnitDashboard() {
             </div>
           ) : activities.length === 0 ? (
             <div className="py-16 text-center space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada aktiviti direkod</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:kebajikan_no_activities_recorded', 'Tiada aktiviti direkod')}</p>
               <button
                 onClick={() => navigate('/exco/kebajikan/aktiviti')}
                 className="text-[11px] font-black uppercase tracking-widest underline underline-offset-2 transition-all"
                 style={{ color: TEAL }}
               >
-                + Tambah Aktiviti
+                + {t('jpp:kebajikan_add_activity', 'Tambah Aktiviti')}
               </button>
             </div>
           ) : (
@@ -638,7 +662,7 @@ export function KebajikanUnitDashboard() {
             className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all shadow-sm"
             style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.04) }}
           >
-            <span className="text-xs font-black" style={{ color: TEAL }}>Urus Semua Aktiviti Exco Kebajikan</span>
+            <span className="text-xs font-black" style={{ color: TEAL }}>{t('jpp:kebajikan_manage_all_activities', 'Urus Semua Aktiviti Exco Kebajikan')}</span>
             <ExternalLink className="w-3.5 h-3.5" style={{ color: TEAL }} />
           </button>
         </div>
@@ -653,8 +677,8 @@ export function KebajikanUnitDashboard() {
             style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.04) 100%)', border: '1px solid rgba(99,102,241,0.2)' }}>
             <div className="relative z-10">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-300/60 mb-1">Kebajikan</p>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Laporan Exco</h2>
-              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{reports.filter(r => !r.is_archived).length} laporan · {pendingReports} menunggu semakan</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('jpp:kebajikan_exco_reports', 'Laporan Exco')}</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{t('jpp:kebajikan_reports_summary', '{{total}} laporan · {{pending}} menunggu semakan', { total: reports.filter(r => !r.is_archived).length, pending: pendingReports })}</p>
             </div>
             <FileText className="absolute bottom-4 right-6 w-20 h-20 text-indigo-500/10" />
           </div>
@@ -665,7 +689,7 @@ export function KebajikanUnitDashboard() {
             </div>
           ) : reports.filter(r => !r.is_archived).length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada laporan lagi</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:kebajikan_no_reports_yet', 'Tiada laporan lagi')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -694,7 +718,7 @@ export function KebajikanUnitDashboard() {
               onClick={() => navigate('/exco/kebajikan/laporan')}
               className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-all shadow-sm"
             >
-              <span className="text-[11px] font-black text-slate-600 dark:text-white/50">Jana / Hantar Laporan</span>
+              <span className="text-[11px] font-black text-slate-600 dark:text-white/50">{t('jpp:kebajikan_generate_submit_report', 'Jana / Hantar Laporan')}</span>
               <ExternalLink className="w-3 h-3 text-slate-400 dark:text-white/25" />
             </button>
             <button
@@ -702,7 +726,7 @@ export function KebajikanUnitDashboard() {
               className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border transition-all shadow-sm"
               style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.05) }}
             >
-              <span className="text-[11px] font-black" style={{ color: TEAL }}>Semak Laporan {pendingReports > 0 && `(${pendingReports})`}</span>
+              <span className="text-[11px] font-black" style={{ color: TEAL }}>{t('jpp:kebajikan_review_reports_btn', 'Semak Laporan')} {pendingReports > 0 && `(${pendingReports})`}</span>
               <ChevronRight className="w-3 h-3" style={{ color: TEAL }} />
             </button>
           </div>
@@ -724,11 +748,11 @@ export function KebajikanUnitDashboard() {
                   <ClipboardCheck className="w-7 h-7" style={{ color: TEAL }} />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl text-slate-900 dark:text-white">Semakan Laporan Exco Kebajikan</h3>
+                  <h3 className="font-black text-xl text-slate-900 dark:text-white">{t('jpp:kebajikan_review_exco_reports_title', 'Semakan Laporan Exco Kebajikan')}</h3>
                   <p className="text-xs text-slate-600 dark:text-white/40 font-medium mt-1">
                     {pendingReports > 0
-                      ? <span className="text-amber-600 dark:text-amber-400 font-black">{pendingReports} laporan menunggu kelulusan anda</span>
-                      : 'Tiada laporan menunggu semakan'}
+                      ? <span className="text-amber-600 dark:text-amber-400 font-black">{t('jpp:kebajikan_reports_awaiting_approval', '{{count}} laporan menunggu kelulusan anda', { count: pendingReports })}</span>
+                      : t('jpp:kebajikan_no_reports_pending_review', 'Tiada laporan menunggu semakan')}
                   </p>
                 </div>
               </div>
@@ -738,7 +762,7 @@ export function KebajikanUnitDashboard() {
                 style={{ background: hexToRgba(TEAL, 0.2), color: TEAL, border: `1px solid ${hexToRgba(TEAL, 0.3)}` }}
               >
                 <ExternalLink className="w-4 h-4" />
-                Buka Halaman Semakan
+                {t('jpp:kebajikan_open_review_page', 'Buka Halaman Semakan')}
               </button>
             </div>
           </div>
@@ -746,7 +770,7 @@ export function KebajikanUnitDashboard() {
           {/* Recent reports pending */}
           {reports.filter(r => r.status === 'Menunggu' && !r.is_archived).length > 0 && (
             <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Laporan Menunggu Semakan</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:kebajikan_reports_awaiting_review_title', 'Laporan Menunggu Semakan')}</h3>
               <div className="space-y-2">
                 {reports.filter(r => r.status === 'Menunggu' && !r.is_archived).map(r => (
                   <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/[0.05] border border-amber-500/20 dark:border-amber-500/10">

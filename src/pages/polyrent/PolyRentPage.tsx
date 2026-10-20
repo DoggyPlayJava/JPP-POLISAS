@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { 
   Home, Plus, X, Search, MapPin, ChevronLeft, ArrowRight, 
   Phone, Heart, Filter, Calculator, Map, List, CheckCircle2, Navigation, Menu, Users, MessageCircle, ShieldCheck, HelpCircle
@@ -34,10 +35,11 @@ const formatWhatsApp = (phone: string) => {
 };
 
 export function PolyRentPage() {
+  const { t } = useTranslation(['housing', 'commerce', 'common']);
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
   const [moduleEnabled, setModuleEnabled] = useState(true);
 
   // Tour
@@ -142,7 +144,7 @@ export function PolyRentPage() {
       setListings(data || []);
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan senarai PolyRent.');
+      toast.error(t('housing:polyrent_load_failed', 'Gagal memuatkan senarai PolyRent.'));
     } finally {
       setLoading(false);
     }
@@ -202,9 +204,9 @@ export function PolyRentPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <Home className="w-16 h-16 text-slate-800 mb-6" />
-        <h1 className="text-2xl font-black text-white tracking-tight mb-2">Modul PolyRent Ditutup</h1>
+        <h1 className="text-2xl font-black text-white tracking-tight mb-2">{t('housing:polyrent_closed', 'Modul PolyRent Ditutup')}</h1>
         <button onClick={() => navigate('/portal')} className="mt-8 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors">
-          Kembali ke Portal
+          {t('housing:back_to_portal', 'Kembali ke Portal')}
         </button>
       </div>
     );
@@ -237,7 +239,7 @@ export function PolyRentPage() {
         {/* Top Left Price Insight (Airbnb "Guest Favorite" style) */}
         {isCheaper && (
           <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-white shadow-lg text-slate-900 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-             Pilihan Berbaloi
+             {t('housing:great_deals_heading', 'Pilihan Berbaloi')}
           </div>
         )}
 
@@ -251,7 +253,7 @@ export function PolyRentPage() {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 animate-pulse">
               <Home className="w-10 h-10 mb-2 text-teal-500/30" />
-              <span className="text-[10px] font-bold text-teal-600/50 uppercase">Tiada Gambar</span>
+              <span className="text-[10px] font-bold text-teal-600/50 uppercase">{t('housing:no_image', 'Tiada Gambar')}</span>
             </div>
           )}
         </div>
@@ -262,10 +264,10 @@ export function PolyRentPage() {
             <h4 className="font-semibold text-slate-900 dark:text-white text-sm truncate">{listing.lokasi}</h4>
             {listing.is_verified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Disahkan KLK" />}
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-xs truncate mb-1">{listing.kekosongan} Kekosongan • {listing.jantina_prefer}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs truncate mb-1">{t('housing:vacancies_summary', '{{count}} Kekosongan • {{gender}}', { count: listing.kekosongan, gender: listing.jantina_prefer })}</p>
           <div className="flex items-center gap-1">
              <span className="font-bold text-slate-900 dark:text-white text-sm">RM{listing.sewa_bulanan}</span>
-             <span className="text-slate-500 text-xs font-medium">/ bulan</span>
+             <span className="text-slate-500 text-xs font-medium">{t('housing:per_month', '/ bulan')}</span>
           </div>
         </div>
       </motion.div>
@@ -293,7 +295,7 @@ export function PolyRentPage() {
             <button
               onClick={startTour}
               className="tour-help-button w-10 h-10 rounded-full bg-white/10  flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors border border-white/10"
-              title="Panduan PolyRent"
+              title={t('housing:guide_polyrent', 'Panduan PolyRent')}
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -309,13 +311,25 @@ export function PolyRentPage() {
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <motion.div style={{ opacity: headerOpacity, y: headerY }}>
             <div className="inline-block px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-[9px] uppercase tracking-widest mb-4">
-              PolyRent by JPP POLISAS
+              {t('commerce:polyrent_title', 'PolyRent — Tempahan Aset & Peralatan')}
             </div>
             
-            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-8">
-              Cari Kawan Sewa.<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">Lebih Jimat.</span>
+            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+              {t('housing:find_roommates_title', 'Cari Kawan Sewa.')}<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">{t('housing:save_more_subtitle', 'Lebih Jimat.')}</span>
             </h1>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] font-bold">
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('commerce:rent_asset', 'Tempah Peralatan / Ruang')}
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('commerce:rental_duration', 'Tempoh Sewaan (Jam/Hari)')}
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
+                {t('commerce:equipment_condition', 'Status Keadaan Peralatan')}
+              </span>
+            </div>
           </motion.div>
           
           {/* Parallax Glassmorphic Search Bar */}
@@ -326,7 +340,7 @@ export function PolyRentPage() {
                  type="text" 
                  value={searchQuery} 
                  onChange={e=>setSearchQuery(e.target.value)} 
-                 placeholder="Cari kawasan (cth: Beserah)..." 
+                 placeholder={t('housing:search_area_placeholder', 'Cari kawasan (cth: Beserah)...')} 
                  className="w-full bg-transparent text-white placeholder:text-white/60 focus:outline-none font-semibold text-sm" 
                />
              </div>
@@ -351,7 +365,7 @@ export function PolyRentPage() {
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             )}
           >
-            Iklan Rumah
+            {t('housing:tab_house_ads', 'Iklan Rumah')}
           </button>
           <button
             onClick={() => setActiveTab('PELAJAR_MENCARI')}
@@ -362,7 +376,7 @@ export function PolyRentPage() {
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             )}
           >
-            Pelajar Mencari
+            {t('housing:tab_student_searching', 'Pelajar Mencari')}
           </button>
         </div>
 
@@ -380,7 +394,7 @@ export function PolyRentPage() {
                     : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
                 )}
               >
-                {filter}
+                {filter === 'SEMUA' ? t('housing:filter_all', 'SEMUA') : filter === 'LELAKI' ? t('housing:filter_male', 'LELAKI') : t('housing:filter_female', 'PEREMPUAN')}
               </button>
             ))}
             <button
@@ -393,7 +407,7 @@ export function PolyRentPage() {
               )}
             >
               <Heart className={cn("w-3 h-3", activeFilter === 'SAVED' ? 'fill-white' : '')} />
-              Tersimpan {wishlist.length > 0 && <span className="ml-0.5 opacity-70">({wishlist.length})</span>}
+              {t('housing:filter_saved', 'Tersimpan')} {wishlist.length > 0 && <span className="ml-0.5 opacity-70">({wishlist.length})</span>}
             </button>
           </div>
         )}
@@ -405,11 +419,11 @@ export function PolyRentPage() {
           <div>
             <div className="flex justify-between items-end mb-6">
                <div>
-                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pelajar Cari Rumah</h2>
-                 <p className="text-xs text-slate-500">Bilik kosong? Tawarkan terus kepada mereka.</p>
+                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:students_finding_home_title', 'Pelajar Cari Rumah')}</h2>
+                 <p className="text-xs text-slate-500">{t('housing:students_finding_home_desc', 'Bilik kosong? Tawarkan terus kepada mereka.')}</p>
                </div>
                <button onClick={() => setIsReverseFormOpen(true)} className="px-4 py-2 rounded-xl bg-teal-500 text-white font-bold text-xs hover:bg-teal-600 transition-colors shadow-sm">
-                 Saya Cari Bilik
+                 {t('housing:i_need_room_btn', 'Saya Cari Bilik')}
                </button>
             </div>
             
@@ -422,10 +436,10 @@ export function PolyRentPage() {
                 <div className="w-20 h-20 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
                   <Users className="w-8 h-8 text-teal-500" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tiada Permintaan Semasa</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">Jadilah yang pertama untuk mengiklankan pencarian rumah/bilik sewa.</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('housing:no_current_requests_title', 'Tiada Permintaan Semasa')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">{t('housing:no_current_requests_desc', 'Jadilah yang pertama untuk mengiklankan pencarian rumah/bilik sewa.')}</p>
                 <button onClick={() => setIsReverseFormOpen(true)} className="px-6 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:scale-105 transition-transform shadow-lg text-sm">
-                  Saya Cari Rumah
+                  {t('housing:i_need_house_btn', 'Saya Cari Rumah')}
                 </button>
               </div>
             ) : (
@@ -462,16 +476,19 @@ export function PolyRentPage() {
                        <button 
                          onClick={() => {
                            if (profile?.id === ad.student_id) {
-                             toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                             toast(t('housing:detail_own_listing', 'Ini adalah iklan anda sendiri'));
                            } else {
                              window.dispatchEvent(
                                new CustomEvent('open-polyrent-chat', {
                                  detail: {
                                    partnerId: ad.student_id,
-                                   partnerName: ad.profiles?.full_name || 'Pelajar',
+                                   partnerName: ad.profiles?.full_name || t('housing:student_single', 'Pelajar'),
                                    listing: {
                                      id: ad.id,
-                                     title: `Bajet RM${ad.budget}: ${ad.lokasi_prefer || 'Mana-mana'}`,
+                                     title: t('housing:budget_title_pattern', 'Bajet RM{{budget}}: {{location}}', {
+                                       budget: ad.budget,
+                                       location: ad.lokasi_prefer || t('common:any', 'Mana-mana')
+                                     }),
                                      sewa_bulanan: ad.budget,
                                      image_url: undefined
                                    }
@@ -512,16 +529,16 @@ export function PolyRentPage() {
             </div>
             {activeFilter === 'SAVED' ? (
               <>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Tiada Iklan Tersimpan</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-sm">Tekan ikon ❤️ pada mana-mana iklan untuk menyimpannya ke sini.</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('housing:no_saved_ads_title', 'Tiada Iklan Tersimpan')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm">{t('housing:no_saved_ads_desc', 'Tekan ikon ❤️ pada mana-mana iklan untuk menyimpannya ke sini.')}</p>
                 <button onClick={() => setActiveFilter('SEMUA')} className="mt-6 px-6 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm hover:scale-105 transition-transform shadow-lg">
-                  Semak Iklan Lain
+                  {t('housing:browse_other_ads_btn', 'Semak Iklan Lain')}
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Tiada Iklan Dijumpai</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-sm">Cuba tukar carian atau tetapan penapis anda.</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('housing:no_ads_found_title', 'Tiada Iklan Dijumpai')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm">{t('housing:no_ads_found_desc', 'Cuba tukar carian atau tetapan penapis anda.')}</p>
               </>
             )}
           </div>
@@ -532,8 +549,8 @@ export function PolyRentPage() {
             {berbaloiListings.length > 0 && (
               <div className="mb-10 -mx-4 sm:mx-0">
                 <div className="px-4 sm:px-0 mb-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pilihan Berbaloi</h2>
-                  <p className="text-slate-500 text-xs">Harga lebih rendah dari purata pasaran</p>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:great_deals_heading', 'Pilihan Berbaloi')}</h2>
+                  <p className="text-slate-500 text-xs">{t('housing:below_market_rate_desc', 'Harga lebih rendah dari purata pasaran')}</p>
                 </div>
                 <div className="flex overflow-x-auto gap-4 px-4 sm:px-0 pb-6 snap-x snap-mandatory no-scrollbar">
                   {berbaloiListings.map(l => renderCard(l, true))}
@@ -542,7 +559,7 @@ export function PolyRentPage() {
             )}
 
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Semua Kediaman</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:all_residences_heading', 'Semua Kediaman')}</h2>
             </div>
             
             {/* 2-Column Grid untuk semua (Airbnb style mobile layout) */}
@@ -580,7 +597,7 @@ export function PolyRentPage() {
             }}
             onOpenChat={(userId, userName) => {
               if (profile?.id === userId) {
-                toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                toast(t('housing:detail_own_listing', 'Ini adalah iklan anda sendiri'));
                 return;
               }
               window.dispatchEvent(

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
@@ -28,6 +29,7 @@ interface DuplicateGroup {
 }
 
 export function JppUsersPage() {
+    const { t } = useTranslation(['jpp', 'common']);
     const { isSuperAdmin, profile } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
 
@@ -151,13 +153,13 @@ export function JppUsersPage() {
         try {
             const { data, error } = await supabase.rpc('detect_duplicate_matric_accounts');
             if (error) {
-                toast.error('Gagal menyemak akaun berganda: ' + error.message);
+                toast.error(t('jpp:users_err_check_duplicates', 'Gagal menyemak akaun berganda:') + ' ' + error.message);
                 return;
             }
             setDuplicates((data || []) as DuplicateGroup[]);
             setShowDuplicates(true);
             if (!data || data.length === 0) {
-                toast.success('Tiada akaun berganda dijumpai! 🎉');
+                toast.success(t('jpp:users_no_duplicates_found', 'Tiada akaun berganda dijumpai!'));
             }
         } finally {
             setDuplicateLoading(false);
@@ -174,10 +176,10 @@ export function JppUsersPage() {
                 p_secondary_id: secondaryId,
             });
             if (error) {
-                toast.error('Gagal menggabungkan akaun: ' + error.message);
+                toast.error(t('jpp:users_err_merge_accounts', 'Gagal menggabungkan akaun:') + ' ' + error.message);
                 return;
             }
-            toast.success(data?.message || 'Akaun berjaya digabungkan.');
+            toast.success(data?.message || t('jpp:users_account_merged_success', 'Akaun berjaya digabungkan.'));
             logAuditAction({
                 actionType: 'ACCOUNT_MERGED',
                 module: 'JPP Admin',
@@ -191,7 +193,7 @@ export function JppUsersPage() {
             fetchUsers(userSearch, filterProg);
             fetchAdminData();
         } catch (err: any) {
-            toast.error(err.message || 'Ralat tidak dijangka.');
+            toast.error(err.message || t('jpp:users_err_unexpected', 'Ralat tidak dijangka.'));
         } finally {
             setMerging(false);
         }
@@ -213,12 +215,12 @@ export function JppUsersPage() {
         const { requestId, userId, newTier, receipt_url } = tierApproveTarget;
         const { error: rpcError } = await supabase.rpc('update_user_ai_tier', { target_user_id: userId, new_tier: newTier });
         if (rpcError) {
-            toast.error("Gagal kemaskini tier.");
+            toast.error(t('jpp:users_err_update_tier', 'Gagal kemaskini tier.'));
             return;
         }
         await supabase.from('ai_tier_requests').update({ status: 'APPROVED' }).eq('id', requestId);
-        toast.success(`Berjaya dinaik taraf ke tier ${newTier.toUpperCase()}.`);
-        logAuditAction({ actionType: 'AI_TIER_APPROVED', module: 'JPP Admin', entityId: userId, description: `Tier AI diluluskan ke ${newTier.toUpperCase()}`, actorId: profile!.id, metadata: { new_tier: newTier, receipt_url } });
+        toast.success(t('jpp:users_tier_upgraded_success', 'Berjaya dinaik taraf ke tier {{tier}}.', { tier: newTier.toUpperCase() }));
+        logAuditAction({ actionType: 'AI_TIER_APPROVED', module: 'JPP Admin', entityId: userId, description: t('jpp:users_tier_approved_desc', 'Tier AI diluluskan ke {{tier}}', { tier: newTier.toUpperCase() }), actorId: profile!.id, metadata: { new_tier: newTier, receipt_url } });
         if (receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
@@ -235,8 +237,8 @@ export function JppUsersPage() {
         if (!tierRejectTarget) return;
         const { requestId, receipt_url, userId } = tierRejectTarget;
         await supabase.from('ai_tier_requests').update({ status: 'REJECTED' }).eq('id', requestId);
-        toast.success("Permohonan ditolak.");
-        logAuditAction({ actionType: 'AI_TIER_REJECTED', module: 'JPP Admin', entityId: userId, description: `Permohonan tier AI ditolak`, actorId: profile!.id, metadata: { receipt_url } });
+        toast.success(t('jpp:users_app_rejected', 'Permohonan ditolak.'));
+        logAuditAction({ actionType: 'AI_TIER_REJECTED', module: 'JPP Admin', entityId: userId, description: t('jpp:users_tier_rejected_desc_log', 'Permohonan tier AI ditolak'), actorId: profile!.id, metadata: { receipt_url } });
         if (receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
@@ -254,8 +256,8 @@ export function JppUsersPage() {
         const { id, name, currentRole } = roleToggleTarget;
         const { error } = await supabase.rpc('toggle_jpp_role', { p_target_id: id });
         if (error) { toast.error(error.message); return; }
-        toast.success('Peranan berjaya dikemaskini.');
-        logAuditAction({ actionType: currentRole === 'JPP' ? 'JPP_ROLE_REMOVED' : 'JPP_ROLE_ASSIGNED', module: 'JPP Admin', entityId: id, description: `${name}: ${currentRole === 'JPP' ? 'Diturunkan dari JPP' : 'Dilantik sebagai JPP'}`, actorId: profile!.id });
+        toast.success(t('jpp:users_role_updated_success', 'Peranan berjaya dikemaskini.'));
+        logAuditAction({ actionType: currentRole === 'JPP' ? 'JPP_ROLE_REMOVED' : 'JPP_ROLE_ASSIGNED', module: 'JPP Admin', entityId: id, description: currentRole === 'JPP' ? t('jpp:users_audit_demoted', '{{name}}: Diturunkan dari JPP', { name }) : t('jpp:users_audit_promoted', '{{name}}: Dilantik sebagai JPP', { name }), actorId: profile!.id });
         setRoleToggleTarget(null);
         fetchAdminData();
     };
@@ -264,7 +266,7 @@ export function JppUsersPage() {
         if (!tierToggleTarget) return;
         const { id, newTier } = tierToggleTarget;
         await supabase.rpc('update_user_ai_tier', { target_user_id: id, new_tier: newTier });
-        toast.success(`Tier berjaya dikemaskini ke ${newTier.toUpperCase()}.`);
+        toast.success(t('jpp:users_tier_updated_to', 'Tier berjaya dikemaskini ke {{tier}}.', { tier: newTier.toUpperCase() }));
         setTierToggleTarget(null);
         fetchAdminData();
     };
@@ -310,8 +312,10 @@ export function JppUsersPage() {
                             <Users className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Pangkalan Data Pelajar</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Urus pengguna dan konfigurasi Nexus Hub</p>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                                {t('jpp:users_management')}
+                            </h1>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:users_management_subtitle')}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -325,8 +329,8 @@ export function JppUsersPage() {
                                     <Sparkles className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">Permohonan Pelan PRO</h3>
-                                    <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1 max-w-xl">Hanya permohonan aktif dikesan. Pelan yang telah diproses (Lulus/Tolak) akan disembunyikan secara automatik selepas 24 jam.</p>
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">{t('jpp:users_pro_applications')}</h3>
+                                    <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1 max-w-xl">{t('jpp:users_pro_desc')}</p>
                                 </div>
                             </div>
                             
@@ -355,7 +359,7 @@ export function JppUsersPage() {
 
                                         <div className="p-3.5 bg-white dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5 mb-4 space-y-2">
                                             <div>
-                                                <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-white/30 block mb-1">Justifikasi</span>
+                                                <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-white/30 block mb-1">{t('jpp:users_justification')}</span>
                                                 <p className="text-[11px] text-slate-700 dark:text-white/70 italic">&quot;{req.reason}&quot;</p>
                                             </div>
                                             
@@ -363,7 +367,7 @@ export function JppUsersPage() {
                                                 <div className="pt-3 mt-3 border-t border-slate-200 dark:border-white/5">
                                                     <button onClick={() => handleViewReceipt(req.receipt_url)} className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors w-full justify-center">
                                                         <FileText className="w-3.5 h-3.5" />
-                                                        <span className="text-[10px] uppercase font-black tracking-widest">Papar Resit</span>
+                                                        <span className="text-[10px] uppercase font-black tracking-widest">{t('jpp:users_view_receipt')}</span>
                                                     </button>
                                                 </div>
                                             )}
@@ -373,11 +377,11 @@ export function JppUsersPage() {
                                             <div className="flex gap-2">
                                                 <button onClick={() => setTierApproveTarget({ requestId: req.id, userId: req.user_id, newTier: 'pro', receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
                                                     <CheckCircle2 className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Luluskan</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:approve', 'Luluskan')}</span>
                                                 </button>
                                                 <button onClick={() => setTierRejectTarget({ requestId: req.id, userId: req.user_id, receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors">
                                                     <XCircle className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Tolak</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:reject', 'Tolak')}</span>
                                                 </button>
                                             </div>
                                         )}
@@ -401,9 +405,9 @@ export function JppUsersPage() {
                                         <AlertTriangle className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">Pengesanan Akaun Berganda</h3>
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{t('jpp:users_duplicate_detection')}</h3>
                                         <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1 max-w-xl">
-                                            Imbas pangkalan data untuk mengesan pelajar yang mempunyai lebih dari satu akaun menggunakan no matrik yang sama.
+                                            {t('jpp:users_duplicate_subtitle')}
                                         </p>
                                     </div>
                                 </div>
@@ -415,12 +419,12 @@ export function JppUsersPage() {
                                     {duplicateLoading ? (
                                         <>
                                             <div className="w-3.5 h-3.5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-                                            Mengimbas...
+                                            {t('jpp:users_scanning')}
                                         </>
                                     ) : (
                                         <>
                                             <Search className="w-3.5 h-3.5" />
-                                            {showDuplicates ? 'Imbas Semula' : 'Imbas Sekarang'}
+                                            {showDuplicates ? t('jpp:users_rescan') : t('jpp:users_scan_now')}
                                         </>
                                     )}
                                 </button>
@@ -439,8 +443,8 @@ export function JppUsersPage() {
                                                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
                                                     <CheckCircle2 className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
                                                 </div>
-                                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Semua Bersih!</p>
-                                                <p className="text-[11px] text-slate-500 dark:text-white/40 max-w-xs">Tiada akaun berganda dikesan. Setiap no matrik hanya wujud dalam satu akaun sahaja.</p>
+                                                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{t('jpp:users_clean_title')}</p>
+                                                <p className="text-[11px] text-slate-500 dark:text-white/40 max-w-xs">{t('jpp:users_clean_desc')}</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-4">
@@ -448,7 +452,7 @@ export function JppUsersPage() {
                                                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
                                                     <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
                                                     <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold">
-                                                        {duplicates.length} no matrik dengan akaun berganda dikesan ({duplicates.reduce((sum, d) => sum + d.account_count, 0)} akaun keseluruhan)
+                                                        {t('jpp:users_duplicate_alert', { count: duplicates.length, total: duplicates.reduce((sum, d) => sum + d.account_count, 0) })}
                                                     </p>
                                                 </div>
 
@@ -473,7 +477,7 @@ export function JppUsersPage() {
                                                                         <span className="text-[11px] font-black text-rose-600 dark:text-rose-400 tracking-wider font-mono">{group.matric_no}</span>
                                                                     </div>
                                                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-                                                                        {group.account_count} akaun
+                                                                        {t('jpp:users_account_count', { count: group.account_count })}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -490,12 +494,12 @@ export function JppUsersPage() {
                                                                                     <span className="text-sm font-bold text-slate-900 dark:text-white">{acc.full_name || 'Tanpa Nama'}</span>
                                                                                     {isPrimary && (
                                                                                         <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
-                                                                                            ★ Kekal (Login Terkini)
+                                                                                            {t('jpp:users_keep_primary')}
                                                                                         </span>
                                                                                     )}
                                                                                     {!isPrimary && (
                                                                                         <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[8px] font-black uppercase tracking-widest border border-rose-500/20">
-                                                                                            Duplikat
+                                                                                            {t('jpp:users_duplicate_badge')}
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
@@ -507,17 +511,17 @@ export function JppUsersPage() {
                                                                                         {acc.providers?.join(', ') || 'email'}
                                                                                     </span>
                                                                                     {acc.email_confirmed ? (
-                                                                                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">✓ Disahkan</span>
+                                                                                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">{t('jpp:users_verified')}</span>
                                                                                     ) : (
-                                                                                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">⚠ Belum Sah</span>
+                                                                                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">{t('jpp:users_unverified')}</span>
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate-400 dark:text-white/25">
-                                                                                    <span>Daftar: {format(new Date(acc.created_at), 'dd MMM yyyy, h:mm a')}</span>
+                                                                                    <span>{t('jpp:users_registered_at')} {format(new Date(acc.created_at), 'dd MMM yyyy, h:mm a')}</span>
                                                                                     <span className={isPrimary ? "text-emerald-600 dark:text-emerald-400/80 font-bold" : ""}>
-                                                                                        Log masuk terakhir: {acc.last_sign_in ? format(new Date(acc.last_sign_in), 'dd MMM yyyy, h:mm a') : 'Tiada rekod'}
+                                                                                        {t('jpp:users_last_login')} {acc.last_sign_in ? format(new Date(acc.last_sign_in), 'dd MMM yyyy, h:mm a') : t('jpp:users_no_record')}
                                                                                     </span>
-                                                                                    {acc.department && <span>Jabatan: {acc.department}</span>}
+                                                                                    {acc.department && <span>{t('jpp:users_lbl_department', 'Jabatan:')} {acc.department}</span>}
                                                                                 </div>
                                                                             </div>
                                                                             <div className="flex items-center gap-2 shrink-0">
@@ -532,10 +536,10 @@ export function JppUsersPage() {
                                                                                 <button
                                                                                     onClick={() => {
                                                                                         navigator.clipboard.writeText(acc.id);
-                                                                                        toast.success('UUID disalin!');
+                                                                                        toast.success(t('jpp:users_uuid_copied', 'UUID disalin!'));
                                                                                     }}
                                                                                     className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60 transition-colors"
-                                                                                    title="Salin UUID"
+                                                                                    title={t('jpp:users_copy_uuid', 'Salin UUID')}
                                                                                 >
                                                                                     <Copy className="w-3.5 h-3.5" />
                                                                                 </button>
@@ -550,10 +554,10 @@ export function JppUsersPage() {
                                                                                             acc.email
                                                                                         )}
                                                                                         className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/25 text-rose-600 dark:text-rose-400 transition-colors flex items-center gap-1.5"
-                                                                                        title={`Gabung data dari akaun ini ke ${primaryAcc.full_name} (login terkini)`}
+                                                                                        title={t('jpp:users_merge_data_to', 'Gabung data dari akaun ini ke {{name}} (login terkini)', { name: primaryAcc.full_name })}
                                                                                     >
                                                                                         <ExternalLink className="w-3 h-3" />
-                                                                                        Gabung ke Aktif
+                                                                                        {t('jpp:users_merge_to_active')}
                                                                                     </button>
                                                                                 )}
                                                                             </div>
@@ -580,15 +584,15 @@ export function JppUsersPage() {
                     <div className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-6 lg:p-8 shadow-sm dark:shadow-none">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Direktori Pengguna</h3>
-                                <p className="text-[11px] text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">Sistem berdaftar keseluruhan — {userCount.toLocaleString()} rekod</p>
+                                <h3 className="font-bold text-lg text-slate-900 dark:text-white">{t('jpp:users_directory')}</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">{t('jpp:users_directory_subtitle', { count: userCount.toLocaleString() })}</p>
                             </div>
                             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                                 {/* Search */}
                                 <div className="relative">
                                     <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30" />
                                     <input
-                                        type="text" placeholder="Cari emel, nama, atau no matrik..."
+                                        type="text" placeholder={t('jpp:users_search_placeholder')}
                                         value={userSearch} onChange={e => setUserSearch(e.target.value)}
                                         className="pl-10 pr-4 h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-sm dark:shadow-none transition-all font-medium w-48"
                                     />
@@ -599,7 +603,7 @@ export function JppUsersPage() {
                                     onChange={e => setFilterLevel(e.target.value)}
                                     className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Semua Tahap</option>
+                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{t('jpp:users_all_levels')}</option>
                                     <option value="Junior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Junior</option>
                                     <option value="Senior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Senior</option>
                                     <option value="Asasi" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Asasi</option>
@@ -610,7 +614,7 @@ export function JppUsersPage() {
                                     onChange={e => setFilterProg(e.target.value)}
                                     className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Semua Program</option>
+                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{t('jpp:users_all_programmes')}</option>
                                     {uniqueProgs.map(p => (
                                         <option key={p} value={p} className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{p}</option>
                                     ))}
@@ -622,11 +626,11 @@ export function JppUsersPage() {
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-white/[0.02]">
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Pengguna</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Kohort</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Tier AI</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">Baki Token</th>
-                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">Tindakan</th>}
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('common:user', 'Pengguna')}</th>
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_cohort')}</th>
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_ai_tier')}</th>
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_token_balance')}</th>
+                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">{t('jpp:manage_roles')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -660,14 +664,14 @@ export function JppUsersPage() {
                                                     <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 mx-auto flex items-center justify-center text-slate-400 dark:text-white/30">
                                                         <Users className="w-6 h-6" />
                                                     </div>
-                                                    <p className="text-sm font-bold text-slate-800 dark:text-white/80">Tiada pengguna dijumpai</p>
-                                                    <p className="text-xs text-slate-500 dark:text-white/40">Tiada rekod sepadan dengan kriteria carian atau penapis kohort semasa.</p>
+                                                    <p className="text-sm font-bold text-slate-800 dark:text-white/80">{t('jpp:users_no_users_found')}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-white/40">{t('jpp:users_no_users_desc')}</p>
                                                     {(userSearch || filterLevel !== 'all' || filterProg !== 'all') && (
                                                         <button
                                                             onClick={() => { setUserSearch(''); setFilterLevel('all'); setFilterProg('all'); }}
                                                             className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline pt-1 inline-block"
                                                         >
-                                                            Set Semula Penapis
+                                                            {t('jpp:users_reset_filters')}
                                                         </button>
                                                     )}
                                                 </div>
@@ -715,8 +719,8 @@ export function JppUsersPage() {
                                                             <span className="text-[9px] text-slate-500 dark:text-white/30 uppercase tracking-widest">
                                                                 {(() => {
                                                                     const diff = Math.ceil((new Date(u.ai_tier_expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                                                                    if (diff < 0) return <span className="text-rose-600 dark:text-rose-400">Luput</span>;
-                                                                    return `${diff} Hari`;
+                                                                    if (diff < 0) return <span className="text-rose-600 dark:text-rose-400">{t('jpp:users_status_expired', 'Luput')}</span>;
+                                                                    return t('jpp:users_days_count', '{{diff}} Hari', { diff });
                                                                 })()}
                                                             </span>
                                                         )}
@@ -741,7 +745,7 @@ export function JppUsersPage() {
                                                                         : "bg-amber-500/20 text-amber-600 dark:text-amber-500 hover:bg-amber-500/30"
                                                                     )}
                                                                 >
-                                                                    {u.role === 'JPP' ? 'Buang JPP' : 'Lantik JPP'}
+                                                                    {u.role === 'JPP' ? t('jpp:users_demote_jpp') : t('jpp:users_promote_jpp')}
                                                                 </button>
                                                             )}
                                                             {u.subscription_tier?.toLowerCase() !== 'pro' ? (
@@ -770,7 +774,7 @@ export function JppUsersPage() {
                             </table>
                         </div>
                         {filteredUsers.length > 100 && userSearch === '' && (
-                            <p className="text-center text-[10px] uppercase tracking-widest text-slate-400 dark:text-white/30 mt-4">Gunakan carian untuk mencari pelajar tertentu</p>
+                            <p className="text-center text-[10px] uppercase tracking-widest text-slate-400 dark:text-white/30 mt-4">{t('jpp:users_search_hint')}</p>
                         )}
                     </div>
                 </motion.div>
@@ -781,14 +785,14 @@ export function JppUsersPage() {
             <ConfirmDialog
                 open={Boolean(mergeTarget)}
                 onOpenChange={(open) => !open && setMergeTarget(null)}
-                title="Sahkan Penggabungan Akaun"
+                title={t('jpp:users_merge_confirm_title')}
                 description={mergeTarget ? (
                     <span>
-                        Tindakan ini <strong>tidak boleh diundur</strong>. Akaun kedua (<strong>{mergeTarget.secondaryName}</strong> - {mergeTarget.secondaryEmail}) akan dipadamkan dan semua rekod keahlian, merit, dan token AI akan dipindahkan ke akaun utama (<strong>{mergeTarget.primaryName}</strong>).
+                        {t('jpp:users_merge_warning_1', 'Tindakan ini')} <strong>{t('jpp:users_merge_warning_irreversible', 'tidak boleh diundur')}</strong>{t('jpp:users_merge_warning_2', '. Akaun kedua (')}<strong>{mergeTarget.secondaryName}</strong> - {mergeTarget.secondaryEmail}{t('jpp:users_merge_warning_3', ') akan dipadamkan dan semua rekod keahlian, merit, dan token AI akan dipindahkan ke akaun utama (')}<strong>{mergeTarget.primaryName}</strong>).
                     </span>
                 ) : ''}
-                confirmLabel="Gabungkan Akaun"
-                cancelLabel="Batal"
+                confirmLabel={t('jpp:users_merge_confirm_btn')}
+                cancelLabel={t('common:cancel')}
                 variant="destructive"
                 isLoading={merging}
                 onConfirm={executeMergeAccounts}
@@ -798,10 +802,10 @@ export function JppUsersPage() {
             <ConfirmDialog
                 open={Boolean(tierApproveTarget)}
                 onOpenChange={(open) => !open && setTierApproveTarget(null)}
-                title="Luluskan Permohonan AI Tier"
-                description="Adakah anda pasti mahu menaik taraf akaun pengguna ini ke tier PRO?"
-                confirmLabel="Luluskan"
-                cancelLabel="Batal"
+                title={t('jpp:users_tier_approve_title')}
+                description={t('jpp:users_tier_approve_desc')}
+                confirmLabel={t('common:approve', 'Luluskan')}
+                cancelLabel={t('common:cancel')}
                 variant="default"
                 onConfirm={executeTierApprove}
             />
@@ -810,10 +814,10 @@ export function JppUsersPage() {
             <ConfirmDialog
                 open={Boolean(tierRejectTarget)}
                 onOpenChange={(open) => !open && setTierRejectTarget(null)}
-                title="Tolak Permohonan AI Tier"
-                description="Adakah anda pasti mahu menolak permohonan kuota AI ini?"
-                confirmLabel="Tolak Permohonan"
-                cancelLabel="Batal"
+                title={t('jpp:users_tier_reject_title')}
+                description={t('jpp:users_tier_reject_desc')}
+                confirmLabel={t('common:reject', 'Tolak Permohonan')}
+                cancelLabel={t('common:cancel')}
                 variant="destructive"
                 onConfirm={executeTierReject}
             />
@@ -822,14 +826,14 @@ export function JppUsersPage() {
             <ConfirmDialog
                 open={Boolean(roleToggleTarget)}
                 onOpenChange={(open) => !open && setRoleToggleTarget(null)}
-                title="Ubah Peranan JPP"
+                title={t('jpp:users_role_toggle_title')}
                 description={roleToggleTarget ? (
                     roleToggleTarget.currentRole === 'JPP'
-                        ? `Adakah anda pasti mahu melucutkan peranan JPP bagi ${roleToggleTarget.name} dan kembalikan ke status ahli biasa?`
-                        : `Adakah anda pasti mahu melantik ${roleToggleTarget.name} secara terus sebagai barisan kepimpinan JPP?`
+                        ? t('jpp:users_demote_confirm_desc', 'Adakah anda pasti mahu melucutkan peranan JPP bagi {{name}} dan kembalikan ke status ahli biasa?', { name: roleToggleTarget.name })
+                        : t('jpp:users_promote_confirm_desc', 'Adakah anda pasti mahu melantik {{name}} secara terus sebagai barisan kepimpinan JPP?', { name: roleToggleTarget.name })
                 ) : ''}
-                confirmLabel="Sahkan Peranan"
-                cancelLabel="Batal"
+                confirmLabel={t('common:confirm', { defaultValue: 'Sahkan Peranan' })}
+                cancelLabel={t('common:cancel')}
                 variant={roleToggleTarget?.currentRole === 'JPP' ? 'destructive' : 'default'}
                 onConfirm={executeRoleToggle}
             />
@@ -838,10 +842,10 @@ export function JppUsersPage() {
             <ConfirmDialog
                 open={Boolean(tierToggleTarget)}
                 onOpenChange={(open) => !open && setTierToggleTarget(null)}
-                title="Ubah Kuota AI Pengguna"
-                description={tierToggleTarget ? `Tukar tier langganan AI bagi ${tierToggleTarget.name} kepada ${tierToggleTarget.newTier.toUpperCase()}?` : ''}
-                confirmLabel="Tukar Tier"
-                cancelLabel="Batal"
+                title={t('jpp:users_tier_toggle_title')}
+                description={tierToggleTarget ? t('jpp:users_tier_toggle_confirm_desc', 'Tukar tier langganan AI bagi {{name}} kepada {{tier}}?', { name: tierToggleTarget.name, tier: tierToggleTarget.newTier.toUpperCase() }) : ''}
+                confirmLabel={t('jpp:users_change_tier')}
+                cancelLabel={t('common:cancel')}
                 onConfirm={executeTierToggle}
             />
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -13,7 +14,7 @@ import { logAuditAction } from '@/lib/auditLogger';
 import TakwimPusatPDFTemplate from '@/components/reports/TakwimPusatPDFTemplate';
 import {
   CalendarDays, Plus, Filter, Download, ChevronLeft, ChevronRight,
-  Pencil, Trash2, X, Table, LayoutGrid, Bell, Loader2, Upload, Check, Palette,
+  Pencil, Trash2, X, Table, LayoutGrid, Bell, Loader2, Upload, Check, Palette, Home,
 } from 'lucide-react';
 import { getContrastColor } from '@/lib/color-utils';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,7 @@ function useRbac() {
 
 // ── Main Page ──
 export function JppTakwimPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [filter, setFilter] = useState('KESELURUHAN');
   const [sesi, setSesi] = useState('2026/2027');
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
@@ -108,14 +110,14 @@ export function JppTakwimPage() {
   }, []);
 
   const handleSaveColor = async () => {
-    if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) { toast.error('Format warna tidak sah.'); return; }
+    if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) { toast.error(t('jpp:takwim_invalid_color_format', 'Format warna tidak sah.')); return; }
     setSavingColor(true);
     try {
       const { error } = await supabase.from('system_settings').update({ value: JSON.stringify(colorInput) }).eq('key', 'jpp_theme_color');
       if (error) { await supabase.from('system_settings').insert({ key: 'jpp_theme_color', value: JSON.stringify(colorInput) }); }
       setThemeColor(colorInput);
-      toast.success('Warna rasmi JPP berjaya dikemaskini.');
-    } catch { toast.error('Gagal menyimpan warna.'); }
+      toast.success(t('jpp:takwim_official_color_updated', 'Warna rasmi JPP berjaya dikemaskini.'));
+    } catch { toast.error(t('jpp:takwim_save_color_failed', 'Gagal menyimpan warna.')); }
     finally { setSavingColor(false); }
   };
 
@@ -140,7 +142,7 @@ export function JppTakwimPage() {
   };
 
   const handleSave = async () => {
-    if (!form.tajuk || !form.tarikh_mula || !form.jenis) { toast.error('Sila lengkapkan tajuk, tarikh & jenis.'); return; }
+    if (!form.tajuk || !form.tarikh_mula || !form.jenis) { toast.error(t('jpp:takwim_form_fill_required', 'Sila lengkapkan tajuk, tarikh & jenis.')); return; }
     setSaving(true);
     const payload = {
       jenis: form.jenis, tajuk: form.tajuk, catatan: form.catatan || null,
@@ -157,8 +159,8 @@ export function JppTakwimPage() {
         ? await supabase.from('takwim_pusat').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editTarget.id)
         : await supabase.from('takwim_pusat').insert([payload]);
       if (res.error) throw res.error;
-      toast.success(editTarget ? 'Entri berjaya dikemaskini.' : 'Entri berjaya ditambah.');
-      if (rbac.userId) logAuditAction({ actionType: editTarget ? 'TAKWIM_UPDATED' : 'TAKWIM_ADDED', module: 'Takwim', entityId: editTarget?.id, description: `Takwim ${editTarget ? 'dikemaskini' : 'ditambah'}: ${form.tajuk} (${TAKWIM_JENIS[form.jenis]?.label || form.jenis})`, actorId: rbac.userId });
+      toast.success(editTarget ? t('jpp:takwim_entry_updated', 'Entri berjaya dikemaskini.') : t('jpp:takwim_entry_added', 'Entri berjaya ditambah.'));
+      if (rbac.userId) logAuditAction({ actionType: editTarget ? 'TAKWIM_UPDATED' : 'TAKWIM_ADDED', module: 'Takwim', entityId: editTarget?.id, description: t('jpp:takwim_audit_entry_changed', 'Takwim {{action}}: {{title}} ({{jenis}})', { action: editTarget ? t('jpp:takwim_action_updated', 'dikemaskini') : t('jpp:takwim_action_added', 'ditambah'), title: form.tajuk, jenis: TAKWIM_JENIS[form.jenis]?.label || form.jenis }), actorId: rbac.userId });
       setDialogOpen(false);
       refresh();
     } catch (e: any) { toast.error(e.message || 'Gagal.'); }
@@ -170,10 +172,10 @@ export function JppTakwimPage() {
     const item = deleteTargetItem;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
     if (error) {
-      toast.error(error.message || 'Gagal memadam item takwim.');
+      toast.error(error.message || t('jpp:takwim_delete_item_failed', 'Gagal memadam item takwim.'));
     } else {
-      toast.success('Entri takwim berjaya dipadam.');
-      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_DELETED', module: 'Takwim', entityId: item.id, description: `Takwim dipadam: ${item.tajuk}`, actorId: rbac.userId });
+      toast.success(t('jpp:takwim_entry_deleted', 'Entri takwim berjaya dipadam.'));
+      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_DELETED', module: 'Takwim', entityId: item.id, description: t('jpp:takwim_audit_deleted', 'Takwim dipadam: {{title}}', { title: item.tajuk }), actorId: rbac.userId });
       setDeleteTargetItem(null);
       refresh();
     }
@@ -186,13 +188,13 @@ export function JppTakwimPage() {
     try {
       const { error } = await supabase.from('takwim_pusat').delete().in('id', ids);
       if (error) throw error;
-      toast.success(`${ids.length} entri berjaya dipadam.`);
-      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_BULK_DELETED', module: 'Takwim', description: `${ids.length} entri takwim dipadam secara pukal`, actorId: rbac.userId, metadata: { count: ids.length } });
+      toast.success(t('jpp:takwim_bulk_deleted_success', '{{count}} entri berjaya dipadam.', { count: ids.length }));
+      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_BULK_DELETED', module: 'Takwim', description: t('jpp:takwim_audit_bulk_deleted', '{{count}} entri takwim dipadam secara pukal', { count: ids.length }), actorId: rbac.userId, metadata: { count: ids.length } });
       setBulkSelected(new Set());
       setBulkConfirmOpen(false);
       refresh();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal memadam.');
+      toast.error(e.message || t('jpp:takwim_delete_failed', 'Gagal memadam.'));
     } finally {
       setBulkDeleting(false);
     }
@@ -201,9 +203,9 @@ export function JppTakwimPage() {
   const handleNotify = async () => {
     try {
       const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
-      await sendNotificationToAkademikExco({ title: 'Takwim Dikemaskini', message: 'Takwim POLISAS Berpusat telah dikemaskini. Sila semak.', type: 'GENERAL', module: 'AKADEMIK', link: '/akademik/takwim' });
-      toast.success('Notifikasi berjaya dihantar.');
-    } catch { toast.error('Gagal hantar notifikasi.'); }
+      await sendNotificationToAkademikExco({ title: t('jpp:takwim_notif_updated_title', 'Takwim Dikemaskini'), message: t('jpp:takwim_notif_updated_msg', 'Takwim POLISAS Berpusat telah dikemaskini. Sila semak.'), type: 'GENERAL', module: 'AKADEMIK', link: '/akademik/takwim' });
+      toast.success(t('jpp:takwim_notif_sent', 'Notifikasi berjaya dihantar.'));
+    } catch { toast.error(t('jpp:takwim_notif_failed', 'Gagal hantar notifikasi.')); }
   };
 
   return (
@@ -216,8 +218,12 @@ export function JppTakwimPage() {
               <CalendarDays className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Takwim POLISAS Berpusat</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{INSTITUSI_LABEL} · {sesi}</p>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {t('jpp:takwim_admin_title', 'Takwim Aktiviti Kampus & Jadual Akademik')}
+              </h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+                {INSTITUSI_LABEL} · {sesi} · {t('jpp:takwim_admin_subtitle', 'Pengurusan kalendar akademik, peperiksaan, cuti umum, dan acara rasmi kampus POLISAS.')}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -227,14 +233,14 @@ export function JppTakwimPage() {
           <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
             <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Warna Rasmi JPP</p>
-              <p className="text-[10px] text-muted-foreground">Digunakan pada header jadual, baris cuti & PDF takwim.</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_official_color', 'Warna Rasmi JPP')}</p>
+              <p className="text-[10px] text-muted-foreground">{t('jpp:takwim_official_color_desc', 'Digunakan pada header jadual, baris cuti & PDF takwim.')}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <input type="color" value={colorInput} onChange={e => setColorInput(e.target.value)} className="w-11 h-11 rounded-xl border-2 border-border cursor-pointer" />
               <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-black text-[10px] uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
               <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">
-                {savingColor ? '...' : 'Simpan'}
+                {savingColor ? '...' : t('common:save', 'Simpan')}
               </Button>
             </div>
           </div>
@@ -260,13 +266,13 @@ export function JppTakwimPage() {
             {rbac.isAkademik && (
               <Button onClick={() => setBulkMode(true)} variant="outline" className="h-10 rounded-xl border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest">
                 <Upload className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Auto-Fill Akademik</span>
+                <span className="hidden md:inline">{t('jpp:takwim_autofill_btn', 'Auto-Fill Akademik')}</span>
               </Button>
             )}
             {rbac.isYDP && (
               <Button onClick={handleNotify} variant="outline" className="h-10 rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest">
                 <Bell className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Hebah</span>
+                <span className="hidden md:inline">{t('jpp:takwim_broadcast_btn', 'Hebah')}</span>
               </Button>
             )}
             {items.length > 0 && (
@@ -278,10 +284,10 @@ export function JppTakwimPage() {
                     const { saveAs } = await import('file-saver');
                     const doc = <TakwimPusatPDFTemplate data={items} themeColor={themeColor} session={sesi} filterLabel={filterLabel} logoPolisas={logoPolisas} />;
                     const blob = await pdf(doc).toBlob();
-                    saveAs(blob, `Takwim_POLISAS_${sesi.replace('/', '-')}_${filterLabel}.pdf`);
+                    saveAs(blob, ['Takwim_POLISAS', sesi.replace('/', '-'), filterLabel].join('_') + '.pdf');
                   } catch (err) {
                     console.error('PDF export error:', err);
-                    toast.error('Gagal menjana PDF takwim.');
+                    toast.error(t('jpp:takwim_pdf_gen_failed', 'Gagal menjana PDF takwim.'));
                   } finally {
                     setIsExportingPdf(false);
                   }
@@ -291,13 +297,13 @@ export function JppTakwimPage() {
                 className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest"
               >
                 {isExportingPdf ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
-                <span className="hidden md:inline">PDF</span>
+                <span className="hidden md:inline">{t('jpp:takwim_export_pdf', 'Eksport PDF')}</span>
               </Button>
             )}
             {rbac.canAdd && (
               <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
                 <Plus className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Tambah</span>
+                <span className="hidden md:inline">{t('jpp:takwim_add_event_btn', 'Tambah Acara Takwim')}</span>
               </Button>
             )}
           </div>
@@ -305,7 +311,7 @@ export function JppTakwimPage() {
 
         {/* ── Stats Badges ── */}
         <div className="flex flex-wrap gap-2">
-          {Object.entries(stats).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
+          {Object.entries(stats || {}).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
             const cfg = TAKWIM_JENIS[k];
             if (!cfg || v === 0) return null;
             return (
@@ -316,7 +322,7 @@ export function JppTakwimPage() {
               </Badge>
             );
           })}
-          {stats.KESELURUHAN > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
+          {(stats?.KESELURUHAN || 0) > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
         </div>
 
         {/* ── Floating Bulk Actions Dock ── */}
@@ -325,7 +331,7 @@ export function JppTakwimPage() {
           onClear={() => setBulkSelected(new Set())}
           actions={[
             {
-              label: bulkDeleting ? 'Memadam...' : 'Padam Pukal',
+              label: bulkDeleting ? t('jpp:takwim_deleting_progress', 'Memadam...') : t('jpp:takwim_bulk_delete_btn', 'Padam Pukal'),
               onClick: () => setBulkConfirmOpen(true),
               icon: Trash2,
               variant: 'destructive',
@@ -370,7 +376,7 @@ export function JppTakwimPage() {
         <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-0 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-6 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:takwim_edit_title', 'Kemaskini') : t('jpp:takwim_new_entry_title', 'Entri Baharu')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -382,15 +388,15 @@ export function JppTakwimPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tajuk *</Label>
-                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="Nama aktiviti / peristiwa..." />
+                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder={t('jpp:takwim_title_placeholder', 'Nama aktiviti / peristiwa...')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tarikh Mula *</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_start_date_required', 'Tarikh Mula *')}</Label>
                   <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tarikh Tamat</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_end_date_label', 'Tarikh Tamat')}</Label>
                   <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
@@ -411,13 +417,13 @@ export function JppTakwimPage() {
               {/* Kelab Kediaman Label */}
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_hostel_club_name', 'Nama Kelab Kediaman')}</Label>
                   <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Warna Custom (Pilihan)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_custom_color', 'Warna Custom (Pilihan)')}</Label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={form.warna_custom || TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <div className="flex-1">
@@ -431,9 +437,9 @@ export function JppTakwimPage() {
             </div>
           </div>
           <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/5 gap-3">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5">Batal</Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5">{t('common:cancel', 'Batal')}</Button>
             <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest">
-              {saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan'}
+              {saving ? t('common:saving', 'Menyimpan...') : editTarget ? t('jpp:takwim_edit_title', 'Kemaskini') : t('common:save', 'Simpan')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -454,10 +460,10 @@ export function JppTakwimPage() {
       <ConfirmDialog
         open={Boolean(deleteTargetItem)}
         onOpenChange={(open) => !open && setDeleteTargetItem(null)}
-        title="Padam Entri Takwim"
-        description={deleteTargetItem ? `Adakah anda pasti mahu memadam "${deleteTargetItem.tajuk}" daripada takwim berpusat?` : ''}
-        confirmLabel="Padam Entri"
-        cancelLabel="Batal"
+        title={t('jpp:takwim_confirm_delete_title', 'Padam Entri Takwim')}
+        description={deleteTargetItem ? t('jpp:takwim_confirm_delete_single_desc', 'Adakah anda pasti mahu memadam "{{title}}" daripada takwim berpusat?', { title: deleteTargetItem.tajuk }) : ''}
+        confirmLabel={t('jpp:takwim_delete_entry_btn', 'Padam Entri')}
+        cancelLabel={t('common:cancel', 'Batal')}
         variant="destructive"
         onConfirm={executeSingleDelete}
       />
@@ -466,10 +472,10 @@ export function JppTakwimPage() {
       <ConfirmDialog
         open={bulkConfirmOpen}
         onOpenChange={setBulkConfirmOpen}
-        title="Padam Entri Pukal"
-        description={`Adakah anda pasti mahu memadam ${bulkSelected.size} entri takwim yang dipilih?`}
-        confirmLabel="Padam Semua"
-        cancelLabel="Batal"
+        title={t('jpp:takwim_delete_bulk_title', 'Padam Entri Pukal')}
+        description={t('jpp:takwim_confirm_delete_bulk_desc', 'Adakah anda pasti mahu memadam {{count}} entri takwim yang dipilih?', { count: bulkSelected.size })}
+        confirmLabel={t('jpp:takwim_delete_all_btn', 'Padam Semua')}
+        cancelLabel={t('common:cancel', 'Batal')}
         variant="destructive"
         isLoading={bulkDeleting}
         onConfirm={executeBulkDelete}
@@ -483,6 +489,7 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
   items: TakwimItem[]; rbac: any; onEdit: (i: TakwimItem) => void; onDelete: (i: TakwimItem) => void;
   bulkSelected: Set<string>; onBulkToggle: (s: Set<string>) => void;
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   if (items.length === 0) return <EmptyState />;
   const fmtDate = (d: string) => { try { return format(parseISO(d), 'd MMM yyyy', { locale: ms }); } catch { return d; } };
   const editableItems = items.filter(i => i.type === 'takwim_pusat' && rbac.canEdit(i));
@@ -510,11 +517,11 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                     className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-rose-500 focus:ring-rose-500/30" />
                 )}
               </th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tarikh</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Catatan</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_type', 'Jenis')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_title', 'Tajuk')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_date', 'Tarikh')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_week', 'Minggu')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_notes', 'Catatan')}</th>
               <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 w-20"></th>
             </tr>
           </thead>
@@ -539,10 +546,10 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                   <td className="px-4 py-3">
                     <p className="text-xs font-black text-slate-900 dark:text-white/90 leading-tight">{item.tajuk}</p>
                     {item.club_name && <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
-                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/60 mt-0.5">🏠 {item.kelab_kediaman_label}</p>}
+                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/60 mt-0.5 flex items-center gap-1"><Home className="w-3 h-3 inline" /> {item.kelab_kediaman_label}</p>}
                   </td>
                   <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
-                    {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}
+                    {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ' — ' + fmtDate(item.tarikh_tamat) : ''}
                   </td>
                   <td className="px-4 py-3 text-xs font-black text-slate-600 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
@@ -566,6 +573,7 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
 
 // ── Calendar View ──
 function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: TakwimItem[]; month: Date; onPrev: () => void; onNext: () => void; onDayClick: (day: Date) => void }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const startDay = getDay(startOfMonth(month));
   const getEvents = (day: Date) => items.filter(i => { const s = parseISO(i.tarikh_mula); const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s; return day >= s && day <= e; });
@@ -605,7 +613,7 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
                   return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(148,163,184,0.15)' }}>+{evts.length - 3} lagi</div>
+                  <div className="text-[8px] font-black text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(148,163,184,0.15)' }}>{t('jpp:takwim_more_items', '+{{count}} lagi', { count: evts.length - 3 })}</div>
                 )}
               </div>
             </div>
@@ -617,11 +625,12 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
 }
 
 function EmptyState() {
+  const { t } = useTranslation(['jpp', 'common']);
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
-      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">Tiada entri takwim</p>
-      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">Gunakan butang "Tambah" untuk menambah entri baru</p>
+      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">{t('jpp:takwim_empty_title', 'Tiada entri takwim')}</p>
+      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{t('jpp:takwim_empty_desc', 'Gunakan butang "Tambah" untuk menambah entri baru')}</p>
     </div>
   );
 }

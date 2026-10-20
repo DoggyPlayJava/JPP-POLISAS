@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
@@ -83,6 +84,7 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
 
 // ── Review Card ────────────────────────────────────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
+  const { t } = useTranslation(['commerce', 'common']);
   return (
     <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/40">
       <div className="flex items-center justify-between mb-1.5">
@@ -92,7 +94,7 @@ function ReviewCard({ review }: { review: Review }) {
           </div>
           <div>
             <p className="text-[11px] font-bold text-foreground">
-              {review.reviewer?.full_name ?? 'Pengguna'}
+              {review.reviewer?.full_name ?? t('commerce:user_default', 'Pengguna')}
             </p>
             <p className="text-[9px] text-muted-foreground/50">
               {new Date(review.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -120,6 +122,7 @@ export function ProductVariationBottomSheet({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { refetchCounts } = usePolymart();
@@ -185,7 +188,7 @@ export function ProductVariationBottomSheet({
       return;
     }
     if (product.variations && product.variations.length > 0 && !selectedVariation) {
-      toast.error('Sila pilih saiz/variasi produk dahulu!');
+      toast.error(t('commerce:select_variation_first', 'Sila pilih saiz/variasi produk dahulu!'));
       return;
     }
 
@@ -201,11 +204,11 @@ export function ProductVariationBottomSheet({
         { onConflict: 'buyer_id, product_id, selected_variation' }
       );
       if (error) throw error;
-      toast.success('Ditambah ke troli!', { style: { borderRadius: '16px', fontWeight: 700 } });
+      toast.success(t('commerce:added_to_cart_success', 'Ditambah ke troli!'), { style: { borderRadius: '16px', fontWeight: 700 } });
       refetchCounts();
       onClose();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal tambah ke troli');
+      toast.error(err.message || t('commerce:add_to_cart_failed', 'Gagal tambah ke troli'));
     } finally {
       setSubmitting(false);
     }
@@ -217,15 +220,15 @@ export function ProductVariationBottomSheet({
       return;
     }
     if (product.variations && product.variations.length > 0 && !selectedVariation) {
-      toast.error('Sila pilih saiz/variasi produk dahulu!');
+      toast.error(t('commerce:select_variation_first', 'Sila pilih saiz/variasi produk dahulu!'));
       return;
     }
     if (!pickupTime.trim()) {
-      toast.error('Sila isi cadangan masa pesanan siap/ambil');
+      toast.error(t('commerce:input_pickup_time_error', 'Sila isi cadangan masa pesanan siap/ambil'));
       return;
     }
     if (!paymentMethod) {
-      toast.error('Sila pilih kaedah pembayaran dahulu!');
+      toast.error(t('commerce:select_payment_method_error', 'Sila pilih kaedah pembayaran dahulu!'));
       return;
     }
 
@@ -233,7 +236,7 @@ export function ProductVariationBottomSheet({
     try {
       // 0. Semak kedai masih aktif
       if (biz && biz.is_active === false) {
-        throw new Error('Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.');
+        throw new Error(t('commerce:err_store_closed', 'Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.'));
       }
 
       // 1. Tempah stok dahulu
@@ -242,7 +245,7 @@ export function ProductVariationBottomSheet({
         p_quantity: qty,
         p_variation: selectedVariation || null,
       });
-      if (reserveError) throw new Error(reserveError.message || 'Stok tidak mencukupi atau sedang ditempah.');
+      if (reserveError) throw new Error(reserveError.message || t('commerce:err_insufficient_stock', 'Stok tidak mencukupi atau sedang ditempah.'));
 
       // 2. Compute payment deadline
       let paymentDeadlineAt: string | null = null;
@@ -284,8 +287,12 @@ export function ProductVariationBottomSheet({
       // 4. Notify vendor (fire-and-forget)
       try {
         await sendNotificationToBusinessVendor(product.business_id, {
-          title: 'Pesanan Baharu!',
-          message: `${profile?.full_name ?? 'Pelajar'} menempah ${qty}x ${product.name}`,
+          title: t('commerce:notif_new_order_title', 'Pesanan Baharu!'),
+          message: t('commerce:notif_new_order_desc', '{{studentName}} menempah {{qty}}x {{prodName}}', {
+            studentName: profile?.full_name ?? t('commerce:student_fallback', 'Pelajar'),
+            qty,
+            prodName: product.name,
+          }),
           type: 'polymart_order_new',
           module: 'POLYMART',
           link: `/polymart/vendor`,
@@ -299,13 +306,13 @@ export function ProductVariationBottomSheet({
       if (paymentMethod === 'QR_ONLINE') {
         navigate(`/polymart/bayar/${order.id}`);
       } else {
-        toast.success('Pesanan berjaya dihantar!', {
+        toast.success(t('commerce:toast_order_sent_success', 'Pesanan berjaya dihantar!'), {
           style: { borderRadius: '16px', fontWeight: 700 },
         });
         onSuccess();
       }
     } catch (err: any) {
-      toast.error(err.message ?? 'Gagal hantar pesanan');
+      toast.error(err.message ?? t('commerce:toast_order_send_failed', 'Gagal hantar pesanan'));
     } finally {
       setSubmitting(false);
     }
@@ -364,7 +371,7 @@ export function ProductVariationBottomSheet({
                     </span>
                   )}
                   <span className="text-[10px] text-muted-foreground/60 font-mono tabular-nums">
-                    (Baki stok: {availableStock})
+                    {t('commerce:available_for_sale_units', `(Baki stok: ${availableStock})`, { count: availableStock })}
                   </span>
                 </div>
               </div>
@@ -392,7 +399,7 @@ export function ProductVariationBottomSheet({
               )}
             >
               <ShoppingCart className="w-3.5 h-3.5 text-amber-500" />
-              <span>Tambah ke Troli</span>
+              <span>{t('commerce:add_to_cart', 'Tambah ke Troli')}</span>
             </button>
             <button
               type="button"
@@ -405,7 +412,7 @@ export function ProductVariationBottomSheet({
               )}
             >
               <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
-              <span>Beli Sekarang</span>
+              <span>{t('commerce:buy_now', 'Beli Sekarang')}</span>
             </button>
           </div>
         </div>
@@ -416,7 +423,7 @@ export function ProductVariationBottomSheet({
           {product.variations && product.variations.length > 0 && (
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
-                Pilih Saiz / Variasi <span className="text-amber-500 font-bold">*</span>
+                {t('commerce:variation_size_label', 'Pilih Saiz / Variasi')} <span className="text-amber-500 font-bold">*</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.variations.map((v) => {
@@ -446,7 +453,7 @@ export function ProductVariationBottomSheet({
 
           {/* Quantity Stepper */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Kuantiti</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:quantity_label', 'Kuantiti')}</p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -475,16 +482,16 @@ export function ProductVariationBottomSheet({
               {/* Pickup Time */}
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">
-                  Cadangan Waktu Ambil <span className="text-rose-400">*</span>
+                  {t('commerce:suggested_pickup_time', 'Cadangan Waktu Ambil')} <span className="text-rose-400">*</span>
                 </p>
 
                 {/* Quick suggestions */}
                 <div className="flex flex-wrap gap-1.5 mb-2.5">
                   {[
-                    { label: 'Segera (Bila Siap)', value: 'Segera (Bila-bila Siap)' },
-                    { label: 'Rehat Pagi (~10.00 AM)', value: 'Rehat Pagi (~10.00 AM)' },
-                    { label: 'Tengah Hari (~1.00 PM)', value: 'Tengah Hari (~1.00 PM)' },
-                    { label: 'Petang (Lepas 4.00 PM)', value: 'Petang (Selepas 4.00 PM)' },
+                    { label: t('commerce:pickup_suggestion_immediate', 'Segera (Bila Siap)'), value: t('commerce:pickup_value_immediate', 'Segera (Bila-bila Siap)') },
+                    { label: t('commerce:pickup_suggestion_morning_break', 'Rehat Pagi (~10.00 AM)'), value: t('commerce:pickup_value_morning_break', 'Rehat Pagi (~10.00 AM)') },
+                    { label: t('commerce:pickup_suggestion_lunch', 'Tengah Hari (~1.00 PM)'), value: t('commerce:pickup_value_lunch', 'Tengah Hari (~1.00 PM)') },
+                    { label: t('commerce:pickup_suggestion_evening', 'Petang (Lepas 4.00 PM)'), value: t('commerce:pickup_value_evening', 'Petang (Selepas 4.00 PM)') },
                   ].map((sug) => {
                     const active = pickupTime === sug.value;
                     return (
@@ -508,18 +515,18 @@ export function ProductVariationBottomSheet({
                 <input
                   value={pickupTime}
                   onChange={(e) => setPickupTime(e.target.value)}
-                  placeholder="Atau taip masa pilihan anda..."
+                  placeholder={t('commerce:custom_pickup_time_placeholder', 'Atau taip masa pilihan anda...')}
                   className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Nota Tambahan (Pilihan)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:special_notes_label', 'Nota Tambahan (Pilihan)')}</p>
                 <input
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Permintaan khas atau alahan makanan..."
+                  placeholder={t('commerce:special_notes_placeholder', 'Permintaan khas atau alahan makanan...')}
                   className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all"
                 />
               </div>
@@ -529,8 +536,8 @@ export function ProductVariationBottomSheet({
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground/60" />
                   <div>
-                    <p className="text-[11px] font-bold text-foreground">Kongsikan No. Telefon</p>
-                    <p className="text-[9px] text-muted-foreground/50">Membolehkan peniaga hubungi pesanan anda</p>
+                    <p className="text-[11px] font-bold text-foreground">{t('commerce:share_phone_toggle', 'Kongsikan No. Telefon')}</p>
+                    <p className="text-[9px] text-muted-foreground/50">{t('commerce:share_phone_desc', 'Membolehkan peniaga hubungi pesanan anda')}</p>
                   </div>
                 </div>
                 <button
@@ -549,7 +556,7 @@ export function ProductVariationBottomSheet({
               {/* Payment Method Selector */}
               {qrEnabled && codEnabled && (
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Kaedah Pembayaran</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('commerce:payment_method_label', 'Kaedah Pembayaran')}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -563,7 +570,7 @@ export function ProductVariationBottomSheet({
                         <CreditCard className={cn("w-4 h-4", paymentMethod === 'QR_ONLINE' ? "text-blue-500" : "text-muted-foreground/50")} />
                         <span className="text-xs font-black">QR Online</span>
                       </div>
-                      <p className="text-[9px] text-muted-foreground/50 mt-0.5">Bayar & muat naik resit</p>
+                      <p className="text-[9px] text-muted-foreground/50 mt-0.5">{t('commerce:pay_and_upload_receipt', 'Bayar & muat naik resit')}</p>
                     </button>
                     <button
                       type="button"
@@ -577,7 +584,7 @@ export function ProductVariationBottomSheet({
                         <Handshake className={cn("w-4 h-4", paymentMethod === 'COD' ? "text-amber-500" : "text-muted-foreground/50")} />
                         <span className="text-xs font-black">Tunai (COD)</span>
                       </div>
-                      <p className="text-[9px] text-muted-foreground/50 mt-0.5">Bayar bersemuka</p>
+                      <p className="text-[9px] text-muted-foreground/50 mt-0.5">{t('commerce:pay_face_to_face', 'Bayar bersemuka')}</p>
                     </button>
                   </div>
                 </div>
@@ -596,7 +603,7 @@ export function ProductVariationBottomSheet({
               className="absolute bottom-[130px] left-1/2 z-20 pointer-events-none"
             >
               <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20  animate-bounce">
-                <span>Skrol ke bawah</span>
+                <span>{t('commerce:scroll_down', 'Skrol ke bawah')}</span>
                 <ChevronDown className="w-3 h-3 animate-pulse" />
               </div>
             </motion.div>
@@ -607,7 +614,7 @@ export function ProductVariationBottomSheet({
         <div className="p-4 border-t border-border/40 bg-card/95  shrink-0">
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-muted-foreground">Jumlah ({qty} unit)</span>
+              <span className="text-xs font-bold text-muted-foreground">{t('commerce:total_units_count', `Jumlah (${qty} unit)`, { count: qty })}</span>
               <span className="text-xl font-black" style={{ color: PM_ACCENT }}>RM {total}</span>
             </div>
 
@@ -616,10 +623,13 @@ export function ProductVariationBottomSheet({
                 <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
                 <span className="truncate">
                   {paymentMethod === 'QR_ONLINE'
-                    ? `Bayar melalui QR & muat naik resit dalam tempoh ${biz?.payment_deadline_value ?? 24} ${(biz?.payment_deadline_unit ?? 'HOURS') === 'HOURS' ? 'jam' : 'hari'}.`
+                    ? t('commerce:qr_deadline_notice', 'Bayar melalui QR & muat naik resit dalam tempoh {{count}} {{unit}}.', {
+                        count: biz?.payment_deadline_value ?? 24,
+                        unit: (biz?.payment_deadline_unit ?? 'HOURS') === 'HOURS' ? t('commerce:unit_hours_lower', 'jam') : t('commerce:unit_days_lower', 'hari')
+                      })
                     : paymentMethod === 'COD'
-                    ? 'Pembayaran dibuat bersemuka semasa ambil pesanan.'
-                    : 'Sila pilih kaedah pembayaran di atas.'}
+                    ? t('commerce:cod_notice', 'Pembayaran dibuat bersemuka semasa ambil pesanan.')
+                    : t('commerce:choose_payment_above', 'Sila pilih kaedah pembayaran di atas.')}
                 </span>
               </div>
             )}
@@ -633,7 +643,7 @@ export function ProductVariationBottomSheet({
                 style={{ background: PM_GRADIENT }}
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>{submitting ? 'Menambah...' : 'Sahkan & Tambah ke Troli'}</span>
+                <span>{submitting ? t('commerce:submitting_dots', 'Menambah...') : t('commerce:confirm_add_cart', 'Sahkan & Tambah ke Troli')}</span>
               </button>
             ) : (
               <button
@@ -644,7 +654,7 @@ export function ProductVariationBottomSheet({
                 style={{ background: PM_GRADIENT }}
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>{submitting ? 'Menghantar...' : 'Teruskan Pesanan'}</span>
+                <span>{submitting ? t('commerce:submitting_dots', 'Menghantar...') : t('commerce:proceed_order', 'Teruskan Pesanan')}</span>
               </button>
             )}
           </div>
@@ -656,6 +666,7 @@ export function ProductVariationBottomSheet({
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartProductDetail() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -834,16 +845,16 @@ export function PolyMartProductDetail() {
           let label = 'Baru';
           let color = '#94a3b8';
           if (score >= 4.5) {
-            label = 'Terbaik';
+            label = t('commerce:vendor_rating_best', 'Terbaik');
             color = '#22c55e';
           } else if (score >= 3.5) {
-            label = 'Bagus';
+            label = t('commerce:vendor_rating_good', 'Bagus');
             color = '#f59e0b';
           } else if (score >= 2.5) {
-            label = 'Sederhana';
+            label = t('commerce:vendor_rating_fair', 'Sederhana');
             color = '#f97316';
           } else if (totalReviews > 0 || total > 3) {
-            label = 'Perlu Perbaiki';
+            label = t('commerce:vendor_rating_needs_improvement', 'Perlu Perbaiki');
             color = '#ef4444';
           }
 
@@ -872,7 +883,7 @@ export function PolyMartProductDetail() {
     if (!error) {
       setReported(true);
       setShowReport(false);
-      toast.success('Laporan dihantar. Terima kasih!');
+      toast.success(t('commerce:toast_report_sent', 'Laporan dihantar. Terima kasih!'));
     }
   };
 
@@ -913,7 +924,7 @@ export function PolyMartProductDetail() {
   if (!product) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground">Produk tidak dijumpai.</p>
+        <p className="text-muted-foreground">{t('commerce:product_not_found', 'Produk tidak dijumpai.')}</p>
       </div>
     );
   }
@@ -937,7 +948,7 @@ export function PolyMartProductDetail() {
             type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-2xl bg-card border border-border/50 flex items-center justify-center text-foreground hover:bg-muted transition-all active:scale-90"
-            title="Kembali"
+            title={t('common:back', 'Kembali')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -1012,7 +1023,7 @@ export function PolyMartProductDetail() {
             {isOut && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                 <span className="text-white text-sm font-black bg-black/70 px-4 py-2 rounded-full border border-white/20">
-                  Stok Habis
+                  {t('commerce:product_out_of_stock', 'Stok Habis')}
                 </span>
               </div>
             )}
@@ -1085,7 +1096,7 @@ export function PolyMartProductDetail() {
               {product.is_preorder && product.preorder_deadline && new Date(product.preorder_deadline) > new Date() && (
                 <p className="text-[10px] font-bold text-indigo-500 mt-1 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>Pra-tempahan tamat: {new Date(product.preorder_deadline).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{t('commerce:preorder_ends_at', 'Pra-tempahan tamat: {{date}}', { date: new Date(product.preorder_deadline).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</span>
                 </p>
               )}
             </div>
@@ -1104,7 +1115,7 @@ export function PolyMartProductDetail() {
           <div className="flex flex-wrap gap-2 pt-1">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/40 border border-border/40">
               <Package className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Baki Stok: {availableStock}</span>
+              <span>{t('commerce:stock_remaining_label', 'Baki Stok: {{stock}}', { stock: availableStock })}</span>
             </div>
             {product.polymart_location && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-muted/40 border border-border/40">
@@ -1140,7 +1151,7 @@ export function PolyMartProductDetail() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">Peniaga Sah POLISAS</p>
+              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">{t('commerce:polisas_verified_vendor', 'Peniaga Sah POLISAS')}</p>
               <p className="text-sm font-black text-foreground truncate group-hover:text-amber-500 transition-colors">{business.name}</p>
               {business.description && (
                 <p className="text-[10px] text-muted-foreground/60 truncate">{business.description}</p>
@@ -1155,7 +1166,7 @@ export function PolyMartProductDetail() {
                   </div>
                 )}
                 <span className="text-[10px] font-bold text-amber-500 flex items-center gap-0.5">
-                  Lawati Kedai <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  {t('commerce:visit_store', 'Lawati Kedai')} <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </span>
               </div>
             </div>
@@ -1172,7 +1183,7 @@ export function PolyMartProductDetail() {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all text-amber-600 dark:text-amber-400 font-black text-xs active:scale-[0.99]"
           >
             <MessageCircle className="w-4 h-4 text-amber-500" />
-            <span>Sembang Bersama Peniaga</span>
+            <span>{t('commerce:product_chat_seller', 'Sembang Bersama Peniaga')}</span>
           </motion.button>
         )}
 
@@ -1184,14 +1195,14 @@ export function PolyMartProductDetail() {
             className="flex flex-col items-center gap-2 py-5 rounded-3xl border border-border/40 bg-muted/20 text-center"
           >
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-            <p className="text-sm font-black text-foreground">Pesanan Dihantar!</p>
-            <p className="text-xs text-muted-foreground/60">Sila tunggu pengesahan status daripada peniaga.</p>
+            <p className="text-sm font-black text-foreground">{t('commerce:order_submitted_title', 'Pesanan Dihantar!')}</p>
+            <p className="text-xs text-muted-foreground/60">{t('commerce:order_awaiting_vendor_confirmation', 'Sila tunggu pengesahan status daripada peniaga.')}</p>
             <button
               onClick={() => navigate('/polymart/pesanan-saya')}
               className="mt-1 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
               style={{ background: PM_LIGHT, color: PM_ACCENT }}
             >
-              Lihat Pesanan Saya →
+              {t('commerce:view_my_orders_arrow', 'Lihat Pesanan Saya →')}
             </button>
           </motion.div>
         ) : (
@@ -1207,7 +1218,7 @@ export function PolyMartProductDetail() {
               style={{ color: isOut ? 'hsl(var(--muted-foreground))' : PM_ACCENT }}
             >
               <ShoppingCart className="w-4 h-4" />
-              <span>Masukkan Troli</span>
+              <span>{t('commerce:product_add_to_cart', 'Masukkan Troli')}</span>
             </button>
             <button
               type="button"
@@ -1224,7 +1235,7 @@ export function PolyMartProductDetail() {
               style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT }}
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>{isOut ? 'Stok Habis' : 'Tempah Sekarang'}</span>
+              <span>{isOut ? t('commerce:product_out_of_stock', 'Stok Habis') : t('commerce:product_buy_now', 'Tempah Sekarang')}</span>
             </button>
           </div>
         )}
@@ -1237,13 +1248,13 @@ export function PolyMartProductDetail() {
               className="w-full text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors text-center py-1.5 flex items-center justify-center gap-1.5"
             >
               <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
-              <span>Laporkan produk ini</span>
+              <span>{t('commerce:report_this_product', 'Laporkan produk ini')}</span>
             </button>
           )}
           {reported && (
             <p className="text-center text-xs text-muted-foreground/60 flex items-center justify-center gap-1.5 py-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Laporan telah dihantar</span>
+              <span>{t('commerce:report_already_sent', 'Laporan telah dihantar')}</span>
             </p>
           )}
 
@@ -1257,11 +1268,11 @@ export function PolyMartProductDetail() {
                 className="overflow-hidden mt-2"
               >
                 <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 space-y-3">
-                  <p className="text-xs font-bold text-rose-500/90">Sebab Laporan</p>
+                  <p className="text-xs font-bold text-rose-500/90">{t('commerce:report_reason_title', 'Sebab Laporan')}</p>
                   <input
                     value={reportReason}
                     onChange={(e) => setReportReason(e.target.value)}
-                    placeholder="Jelaskan masalah dengan produk ini..."
+                    placeholder={t('commerce:report_reason_placeholder', 'Jelaskan masalah dengan produk ini...')}
                     className="w-full h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground placeholder:text-muted-foreground/40"
                   />
                   <button
@@ -1269,7 +1280,7 @@ export function PolyMartProductDetail() {
                     disabled={!reportReason.trim()}
                     className="w-full h-9 rounded-xl text-xs font-bold text-white bg-rose-500 disabled:opacity-50 transition-colors"
                   >
-                    Hantar Laporan
+                    {t('commerce:send_report_btn', 'Hantar Laporan')}
                   </button>
                 </div>
               </motion.div>
@@ -1283,14 +1294,14 @@ export function PolyMartProductDetail() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Store className="w-4 h-4 text-amber-500" />
-                <h2 className="text-sm font-black text-foreground">Produk Lain dari Kedai Ini</h2>
+                <h2 className="text-sm font-black text-foreground">{t('commerce:other_products_from_store', 'Produk Lain dari Kedai Ini')}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => navigate('/polymart/kedai/' + business.id)}
                 className="text-[11px] font-bold text-amber-500 hover:underline flex items-center gap-0.5"
               >
-                Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+                {t('commerce:view_all', 'Lihat Semua')} <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
@@ -1344,7 +1355,7 @@ export function PolyMartProductDetail() {
           </div>
           {reviews.length === 0 ? (
             <div className="text-center py-8 bg-muted/10 rounded-2xl border border-border/30">
-              <p className="text-xs text-muted-foreground/50">Belum ada ulasan untuk produk ini.</p>
+              <p className="text-xs text-muted-foreground/50">{t('commerce:no_reviews_yet', 'Belum ada ulasan untuk produk ini.')}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -1364,27 +1375,27 @@ export function PolyMartProductDetail() {
             type="button"
             onClick={() => business?.id && navigate(`/polymart/kedai/${business.id}`)}
             className="flex flex-col items-center justify-center w-11 h-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors active:scale-95"
-            title="Kedai"
+            title={t('commerce:store', 'Kedai')}
           >
             <Store className="w-4 h-4 text-amber-500" />
-            <span className="text-[9px] font-bold mt-0.5">Kedai</span>
+            <span className="text-[9px] font-bold mt-0.5">{t('commerce:store', 'Kedai')}</span>
           </button>
 
           <button
             type="button"
             onClick={handleOpenChat}
             className="flex flex-col items-center justify-center w-11 h-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors active:scale-95"
-            title="Sembang"
+            title={t('commerce:chat', 'Sembang')}
           >
             <MessageCircle className="w-4 h-4 text-sky-500" />
-            <span className="text-[9px] font-bold mt-0.5">Sembang</span>
+            <span className="text-[9px] font-bold mt-0.5">{t('commerce:chat', 'Sembang')}</span>
           </button>
 
           <button
             type="button"
             onClick={() => (!user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'))}
             className="relative flex flex-col items-center justify-center w-11 h-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors active:scale-95"
-            title="Troli"
+            title={t('commerce:nav_cart', 'Troli')}
           >
             <ShoppingCart className="w-4 h-4 text-amber-500" />
             {cartCount > 0 && (
@@ -1392,7 +1403,7 @@ export function PolyMartProductDetail() {
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
-            <span className="text-[9px] font-bold mt-0.5">Troli</span>
+            <span className="text-[9px] font-bold mt-0.5">{t('commerce:nav_cart', 'Troli')}</span>
           </button>
         </div>
 
@@ -1408,7 +1419,7 @@ export function PolyMartProductDetail() {
             className="flex-1 h-11 rounded-xl font-black text-xs transition-all hover:bg-amber-500/10 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed border border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/5 flex items-center justify-center gap-1.5 shadow-sm"
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            <span>+ Troli</span>
+            <span>{t('commerce:add_to_cart_plus', '+ Troli')}</span>
           </button>
 
           <button
@@ -1426,7 +1437,7 @@ export function PolyMartProductDetail() {
             style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT }}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>{isOut ? 'Stok Habis' : 'Beli Sekarang'}</span>
+            <span>{isOut ? t('commerce:product_out_of_stock', 'Stok Habis') : t('commerce:product_buy_now', 'Beli Sekarang')}</span>
           </button>
         </div>
       </div>

@@ -23,37 +23,38 @@ import {
 import { cn } from '@/lib/utils';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { useTranslation } from 'react-i18next';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
-const JABATAN_LIST = [
-  'Jabatan Perdagangan (JP)',
-  'Jabatan Kejuruteraan Mekanikal (JKM)',
-  'Jabatan Teknologi Makanan (JTM)',
-  'Jabatan Kejuruteraan Elektrik (JKE)',
-  'Jabatan Kejuruteraan Awam (JKA)',
-  'Asasi Teknologi Kejuruteraan (FTV)',
-  'Lain-Lain',
+const getJabatanList = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:dept_jp', 'Jabatan Perdagangan (JP)'),
+  t('kebajikan:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)'),
+  t('kebajikan:dept_jtm', 'Jabatan Teknologi Makanan (JTM)'),
+  t('kebajikan:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)'),
+  t('kebajikan:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)'),
+  t('kebajikan:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
-const SUKAN_LIST = [
-  'Padang Football / Futsal',
-  'Gelanggang Badminton',
-  'Gelanggang Bola Tampar',
-  'Gimnasium',
-  'Dewan Sukan',
-  'Lain-Lain',
+const getSukanList = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:sport_football_futsal', 'Padang Football / Futsal'),
+  t('kebajikan:sport_badminton', 'Gelanggang Badminton'),
+  t('kebajikan:sport_volleyball', 'Gelanggang Bola Tampar'),
+  t('kebajikan:sport_gym', 'Gimnasium'),
+  t('kebajikan:sport_sports_hall', 'Dewan Sukan'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
 const KAFETERIA_LIST = ['Al-Biruni', 'Al-Ghazali', 'Ibn Sina', 'Lain-Lain'];
 
-const KAFETERIA_TYPES = [
-  'Kebersihan & Sanitasi',
-  'Kualiti / Rasa Makanan',
-  'Harga Tidak Berpatutan',
-  'Perkhidmatan Tidak Memuaskan',
-  'Kehabisan Stok / Menu',
-  'Lain-Lain',
+const getKafeteriaTypes = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:cafe_cleanliness', 'Kebersihan & Sanitasi'),
+  t('kebajikan:cafe_food_quality', 'Kualiti / Rasa Makanan'),
+  t('kebajikan:cafe_unfair_price', 'Harga Tidak Berpatutan'),
+  t('kebajikan:cafe_poor_service', 'Perkhidmatan Tidak Memuaskan'),
+  t('kebajikan:cafe_out_of_stock', 'Kehabisan Stok / Menu'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
 type Step = 'STATS' | 'CATEGORY' | 'FORM' | 'PREVIEW' | 'SUCCESS';
@@ -94,7 +95,7 @@ const CATEGORIES: { key: KebajikanTicketCategory; icon: React.ElementType; color
 ];
 
 /** Auto-resolve and map student details from Auth & Profile */
-const getInitialProfileData = (profile: any, user: any) => {
+const getInitialProfileData = (profile: any, user: any, t: any) => {
   const full_name = profile?.name || profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
   const matric_no = profile?.student_id || profile?.matric_no || profile?.matrix_no || user?.user_metadata?.matric_no || user?.user_metadata?.student_id || '';
   const phone = profile?.phone || user?.user_metadata?.phone || '';
@@ -104,21 +105,22 @@ const getInitialProfileData = (profile: any, user: any) => {
   const rawDept = profile?.department || profile?.jabatan || user?.user_metadata?.department || '';
   let jabatan = '';
   if (rawDept) {
-    const matched = JABATAN_LIST.find(j => j.toLowerCase().includes(rawDept.toLowerCase()) || rawDept.toLowerCase().includes(j.toLowerCase()));
+    const list = getJabatanList(t);
+    const matched = list.find(j => j.toLowerCase().includes(rawDept.toLowerCase()) || rawDept.toLowerCase().includes(j.toLowerCase()));
     if (matched) {
       jabatan = matched;
     } else if (/jp|perdagangan/i.test(rawDept)) {
-      jabatan = 'Jabatan Perdagangan (JP)';
+      jabatan = t('kebajikan:dept_jp', 'Jabatan Perdagangan (JP)');
     } else if (/jkm|mekanikal/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Mekanikal (JKM)';
+      jabatan = t('kebajikan:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)');
     } else if (/jtm|makanan/i.test(rawDept)) {
-      jabatan = 'Jabatan Teknologi Makanan (JTM)';
+      jabatan = t('kebajikan:dept_jtm', 'Jabatan Teknologi Makanan (JTM)');
     } else if (/jke|elektrik/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Elektrik (JKE)';
+      jabatan = t('kebajikan:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)');
     } else if (/jka|awam/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Awam (JKA)';
+      jabatan = t('kebajikan:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)');
     } else if (/ftv|asasi/i.test(rawDept)) {
-      jabatan = 'Asasi Teknologi Kejuruteraan (FTV)';
+      jabatan = t('kebajikan:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)');
     } else {
       jabatan = rawDept;
     }
@@ -130,6 +132,7 @@ const getInitialProfileData = (profile: any, user: any) => {
 export function KebajikanSubmitPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation(['kebajikan', 'common']);
 
   const [step, setStep]             = useState<Step>('STATS');
   const [submitting, setSubmitting]   = useState(false);
@@ -152,7 +155,7 @@ export function KebajikanSubmitPage() {
 
   // Form State initialized from Profile / Auth metadata
   const [form, setForm] = useState<FormData>(() => {
-    const initial = getInitialProfileData(profile, user);
+    const initial = getInitialProfileData(profile, user, t);
     return {
       full_name:    initial.full_name,
       gender:       initial.gender,
@@ -169,7 +172,7 @@ export function KebajikanSubmitPage() {
   // Re-sync form state once profile / user asynchronously finishes loading
   useEffect(() => {
     if (profile || user) {
-      const pData = getInitialProfileData(profile, user);
+      const pData = getInitialProfileData(profile, user, t);
       setForm(prev => ({
         ...prev,
         full_name: prev.full_name || pData.full_name,
@@ -180,7 +183,7 @@ export function KebajikanSubmitPage() {
         jabatan:   prev.jabatan || pData.jabatan,
       }));
     }
-  }, [profile, user]);
+  }, [profile, user, t]);
 
   // Load public stats for hero
   useEffect(() => {
@@ -201,7 +204,7 @@ export function KebajikanSubmitPage() {
     if (!file) return;
 
     if (images.length >= 3) {
-      alert('Maksimum 3 keping gambar sahaja dibenarkan.');
+      alert(t('kebajikan:submit_max_images_alert', 'Maksimum 3 keping gambar sahaja dibenarkan.'));
       return;
     }
 
@@ -249,11 +252,24 @@ export function KebajikanSubmitPage() {
   const buildTitle = (): string => {
     if (form.title) return form.title;
     switch (form.category) {
-      case 'FASILITI_JABATAN': return `Aduan Fasiliti — ${form.jabatan === 'Lain-Lain' ? form.jabatan_custom : form.jabatan || 'Jabatan'}`;
-      case 'FASILITI_SUKAN':   return `Aduan Sukan — ${form.sukan === 'Lain-Lain' ? form.sukan_custom : form.sukan || 'Fasiliti Sukan'}`;
-      case 'KAFETERIA':        return `Aduan Kafeteria ${form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom : form.kafeteria || ''}`;
-      case 'WIFI_KAMSIS':      return `Aduan WiFi Blok ${form.wifi_blok || '(Tidak dinyatakan)'}`;
-      default: return form.title || 'Aduan Umum';
+      case 'FASILITI_JABATAN':
+        return t('kebajikan:title_facility_complaint', 'Aduan Fasiliti — {{dept}}', {
+          dept: form.jabatan === 'Lain-Lain' ? form.jabatan_custom : form.jabatan || t('kebajikan:dept_default', 'Jabatan')
+        });
+      case 'FASILITI_SUKAN':
+        return t('kebajikan:title_sport_complaint', 'Aduan Sukan — {{facility}}', {
+          facility: form.sukan === 'Lain-Lain' ? form.sukan_custom : form.sukan || t('kebajikan:sport_facility_default', 'Fasiliti Sukan')
+        });
+      case 'KAFETERIA':
+        return t('kebajikan:title_cafe_complaint', 'Aduan Kafeteria {{cafe}}', {
+          cafe: form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom : form.kafeteria || ''
+        });
+      case 'WIFI_KAMSIS':
+        return t('kebajikan:title_wifi_complaint', 'Aduan WiFi Blok {{block}}', {
+          block: form.wifi_blok || t('kebajikan:not_specified', '(Tidak dinyatakan)')
+        });
+      default:
+        return form.title || t('kebajikan:title_general_complaint', 'Aduan Umum');
     }
   };
 
@@ -266,7 +282,10 @@ export function KebajikanSubmitPage() {
       case 'KAFETERIA':
         return form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom || '' : form.kafeteria || '';
       case 'WIFI_KAMSIS':
-        return [`Blok ${form.wifi_blok || '-'}`, form.wifi_bilik ? `Bilik ${form.wifi_bilik}` : ''].filter(Boolean).join(', ');
+        return [
+          t('kebajikan:summary_block', 'Blok {{block}}', { block: form.wifi_blok || '-' }),
+          form.wifi_bilik ? t('kebajikan:summary_room', 'Bilik {{room}}', { room: form.wifi_bilik }) : ''
+        ].filter(Boolean).join(', ');
       default:
         return form.lokasi || '';
     }
@@ -301,7 +320,7 @@ export function KebajikanSubmitPage() {
   const handleSubmit = async () => {
     if (!user || !form.category) return;
     if (images.length === 0) {
-      alert("Sila muat naik sekurang-kurangnya 1 gambar sokongan.");
+      alert(t('kebajikan:submit_min_image_alert', 'Sila muat naik sekurang-kurangnya 1 gambar sokongan.'));
       return;
     }
     setSubmitting(true);
@@ -351,7 +370,7 @@ export function KebajikanSubmitPage() {
 
       // Fetch auto-reply settings
       const { data: settings } = await supabase.from('kebajikan_settings').select('auto_reply_message').limit(1).single();
-      const rawAutoReply = settings?.auto_reply_message || 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.';
+      const rawAutoReply = settings?.auto_reply_message || t('kebajikan:auto_reply_default_message', 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.');
       const personalizedAutoReply = rawAutoReply.replace('{ticket_no}', data.ticket_no);
 
       // Insert auto-reply as the first comment
@@ -366,11 +385,11 @@ export function KebajikanSubmitPage() {
 
       // Notify the user about the auto-reply
       await sendNotificationToUser(user.id, {
-        title: `Aduan Diterima: ${data.ticket_no}`,
+        title: t('kebajikan:notif_complaint_received', 'Aduan Diterima: {{ticketNo}}', { ticketNo: data.ticket_no }),
         message: personalizedAutoReply.slice(0, 80) + (personalizedAutoReply.length > 80 ? '...' : ''),
         type: 'AUTO_REPLY',
         module: 'KEBAJIKAN',
-        link: `/kebajikan/aduan/${data.id}`,
+        link: '/kebajikan/aduan/' + data.id,
         reference_id: data.ticket_no,
         actor_name: 'Sistem E-Kebajikan',
       });
@@ -378,13 +397,13 @@ export function KebajikanSubmitPage() {
       // Notify unit Exco yang betul tentang tiket baru
       const ticketTitle = buildTitle();
       const newTicketPayload = {
-        title:       `Aduan Baru: ${data.ticket_no}`,
-        message:     `${form.full_name || 'Pelajar'} telah menghantar aduan baharu — "${ticketTitle}" (${KEBAJIKAN_CATEGORY_LABELS[form.category!]})`,
+        title:       t('kebajikan:notif_complaint_new', 'Aduan Baru: {{ticketNo}}', { ticketNo: data.ticket_no }),
+        message:     t('kebajikan:notif_complaint_new_msg', '{{name}} telah menghantar aduan baharu — "{{title}}" ({{category}})', { name: form.full_name || t('kebajikan:student_fallback', 'Pelajar'), title: ticketTitle, category: KEBAJIKAN_CATEGORY_LABELS[form.category!] }),
         type:        'NEW_TICKET',
         module:      'KEBAJIKAN' as const,
-        link:        `/kebajikan/tiket/${data.id}`,
+        link:        '/kebajikan/tiket/' + data.id,
         reference_id: data.ticket_no,
-        actor_name:  form.full_name || profile?.full_name || 'Pelajar',
+        actor_name:  form.full_name || profile?.full_name || t('kebajikan:student_fallback', 'Pelajar'),
       };
 
       if (handled_by_unit === 'KK') {
@@ -415,13 +434,13 @@ export function KebajikanSubmitPage() {
                 'NEW',
                 data.ticket_no,
                 ticketTitle,
-                form.full_name || profile?.full_name || 'Pelajar',
-                `/kebajikan/tiket/${data.id}`
+                form.full_name || profile?.full_name || t('kebajikan:student_fallback', 'Pelajar'),
+                '/kebajikan/tiket/' + data.id
               );
 
               await sendEmail({
                 to: emails,
-                subject: `Aduan Baharu: ${data.ticket_no}`,
+                subject: t('kebajikan:email_subject_new_complaint', 'Aduan Baharu: {{ticketNo}}', { ticketNo: data.ticket_no }),
                 html: emailHtml,
               });
             }
@@ -435,7 +454,7 @@ export function KebajikanSubmitPage() {
       setShowReviewModal(false);
       setStep('SUCCESS');
     } catch (err: any) {
-      alert(`Gagal hantar: ${err.message}`);
+      alert(t('kebajikan:submit_failed_error', 'Gagal hantar: {{message}}', { message: err.message }));
     } finally {
       setSubmitting(false);
     }
@@ -457,7 +476,7 @@ export function KebajikanSubmitPage() {
           <button
             onClick={startTour}
             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all"
-            title="Bantuan Sistem"
+            title={t('kebajikan:system_help', 'Bantuan Sistem')}
           >
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -477,8 +496,8 @@ export function KebajikanSubmitPage() {
               >
                 <HeartHandshake className="w-8 h-8" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Sistem Aduan Pelajar</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-300">Aduan anda akan diproses oleh Exco Kebajikan JPP POLISAS</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">{t('submit_title')}</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{t('submit_subtitle')}</p>
             </div>
 
             {/* Stats Grid */}
@@ -486,14 +505,14 @@ export function KebajikanSubmitPage() {
               <div className="relative rounded-3xl p-6 sm:p-8 mb-8 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none" />
                 <p className="relative z-10 text-[11px] font-black uppercase tracking-[0.3em] mb-6 text-teal-700 dark:text-teal-400 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Prestasi Exco Kebajikan
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> {t('submit_stats_perf')}
                 </p>
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { icon: CheckCircle2, val: publicStats.total_resolved,    label: 'Kes Selesai', col: '#10B981' },
-                    { icon: TrendingUp,   val: `${publicStats.resolution_rate ?? 0}%`, label: 'Kadar Selesai', col: TEAL },
-                    { icon: Clock,        val: `~${publicStats.avg_resolution_hours ?? 0}j`, label: 'Purata Masa', col: '#F59E0B' },
-                    { icon: ListChecks,   val: publicStats.total_active,     label: 'Kes Aktif', col: '#6366F1' },
+                    { icon: CheckCircle2, val: publicStats.total_resolved,    label: t('submit_stats_resolved'), col: '#10B981' },
+                    { icon: TrendingUp,   val: `${publicStats.resolution_rate ?? 0}%`, label: t('submit_stats_rate'), col: TEAL },
+                    { icon: Clock,        val: `~${publicStats.avg_resolution_hours ?? 0}j`, label: t('submit_stats_time'), col: '#F59E0B' },
+                    { icon: ListChecks,   val: publicStats.total_active,     label: t('submit_stats_active'), col: '#6366F1' },
                   ].map(s => (
                     <div key={s.label} className="text-center p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-transparent">
                       <s.icon className="w-5 h-5 mx-auto mb-1.5" style={{ color: s.col }} />
@@ -506,7 +525,7 @@ export function KebajikanSubmitPage() {
                   to="/kebajikan/statistik"
                   className="relative z-10 mt-6 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-colors w-fit mx-auto"
                 >
-                  Lihat statistik penuh <ArrowUpRight className="w-3 h-3" />
+                  {t('submit_stats_view_all')} <ArrowUpRight className="w-3 h-3" />
                 </Link>
               </div>
             )}
@@ -515,18 +534,18 @@ export function KebajikanSubmitPage() {
               onClick={() => setStep('CATEGORY')}
               className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 bg-teal-400 hover:bg-teal-300 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-teal-500/20"
             >
-              Buat Aduan Baru <ChevronRight className="w-5 h-5 ml-1.5" />
+              {t('submit_new_complaint_btn')} <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
             
             <Link to="/kebajikan/aduan-saya" className="block w-full mt-3">
               <button
                 className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border border-slate-300 dark:border-white/20 text-slate-800 dark:text-white bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 transition-all flex items-center justify-center shadow-sm"
               >
-                Semak Status Aduan Saya <ArrowUpRight className="w-4 h-4 ml-1.5" />
+                {t('submit_track_my_complaints')} <ArrowUpRight className="w-4 h-4 ml-1.5" />
               </button>
             </Link>
 
-            <p className="text-center text-[10px] text-slate-500 dark:text-white/30 mt-4">Log masuk diperlukan untuk kemukakan aduan</p>
+            <p className="text-center text-[10px] text-slate-500 dark:text-white/30 mt-4">{t('submit_login_required')}</p>
           </motion.div>
         )}
 
@@ -535,14 +554,14 @@ export function KebajikanSubmitPage() {
           <motion.div key="cat" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
               <button onClick={() => setStep('STATS')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Kembali
+                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn')}
               </button>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Pilih Kategori Aduan</h2>
-              <p className="text-xs text-slate-600 dark:text-white/40">Pilih kategori yang paling sesuai dengan aduan fasiliti anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_select_category')}</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">{t('submit_select_category_sub')}</p>
             </div>
 
             {/* Tactile 1-Touch High-Contrast Category Grid */}
-            <div className="tour-aduan-kategori grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className={cn('tour-aduan-kategori', 'grid grid-cols-1 sm:grid-cols-2 gap-3.5')}>
               {CATEGORIES.map(cat => {
                 const isSelected = form.category === cat.key;
                 return (
@@ -594,7 +613,7 @@ export function KebajikanSubmitPage() {
               disabled={!form.category}
               className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
             >
-              Seterusnya <ChevronRight className="w-5 h-5 ml-1.5" />
+              {t('submit_next_step')} <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
           </motion.div>
         )}
@@ -604,15 +623,15 @@ export function KebajikanSubmitPage() {
           <motion.div key="form" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-28 sm:pb-12">
             <div className="mb-6">
               <button onClick={() => setStep('CATEGORY')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-3 transition-colors font-bold">
-                <ChevronLeft className="w-4 h-4" /> Tukar Kategori
+                <ChevronLeft className="w-4 h-4" /> {t('submit_change_category')}
               </button>
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Maklumat Pengadu & Aduan</h2>
-                  <p className="text-xs text-slate-600 dark:text-white/50">Lengkapkan butiran aduan fasiliti anda</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_complainant_info')}</h2>
+                  <p className="text-xs text-slate-600 dark:text-white/50">{t('submit_select_category_sub')}</p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20">
-                  <span className="text-[10px] font-black uppercase tracking-wider">Kategori:</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider">{t('kebajikan:category_label_prefix', 'Kategori:')}</span>
                   <span className="text-xs font-black">
                     {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : ''}
                   </span>
@@ -625,43 +644,43 @@ export function KebajikanSubmitPage() {
               <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-1">
-                    Maklumat Pengadu
+                    {t('submit_complainant_info')}
                   </legend>
                   {Boolean(profile?.full_name || profile?.matric_no || user?.user_metadata?.full_name) && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-200 dark:border-teal-500/20">
                       <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                      Auto-isi dari Profil
+                      {t('submit_auto_filled_profile')}
                     </span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Nama Penuh *</label>
-                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder="Nama seperti dalam rekod" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_full_name_label')}</label>
+                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder={t('kebajikan:submit_placeholder_fullname', 'Nama seperti dalam rekod')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Matrik</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_matric_label')}</label>
                     <Input value={form.matric_no} onChange={e => upd('matric_no', e.target.value)} placeholder="23DAD00111" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Telefon</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_phone_label')}</label>
                     <Input value={form.phone} onChange={e => upd('phone', e.target.value)} placeholder="010-1234567" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Kelas / Program</label>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_class_label')}</label>
                     <Input value={form.class} onChange={e => upd('class', e.target.value)} placeholder="DAD3A" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jantina</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_gender_label')}</label>
                   <div className="flex gap-3">
                     {['Lelaki', 'Perempuan'].map(g => (
                       <button
                         type="button"
                         key={g} onClick={() => upd('gender', g)}
                         className={cn('flex-1 py-2.5 rounded-xl text-xs font-black border transition-all', form.gender === g ? 'bg-teal-400 border-teal-400 text-slate-950 shadow-sm' : 'text-slate-700 dark:text-white/50 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50 dark:bg-white/[0.03]')}
-                      >{g}</button>
+                      >{g === 'Lelaki' ? t('submit_gender_male') : t('submit_gender_female')}</button>
                     ))}
                   </div>
                 </div>
@@ -683,21 +702,21 @@ export function KebajikanSubmitPage() {
               {form.category === 'LAIN_LAIN' && (
                 <div className="space-y-4 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/80 shadow-sm">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Tajuk Aduan *</label>
-                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder="Ringkasan aduan anda" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_title_label', 'Tajuk Aduan *')}</label>
+                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder={t('kebajikan:complaint_summary_placeholder', 'Ringkasan aduan anda')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
               )}
 
               {/* Description (common) */}
               <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Penerangan Aduan</legend>
+                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('submit_description_title')}</legend>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Huraikan Aduan Anda dengan Terperinci *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_description_label')}</label>
                   <Textarea
                     value={form.description}
                     onChange={e => upd('description', e.target.value)}
-                    placeholder="Terangkan masalah yang anda hadapi dengan lebih lanjut. Sertakan butiran seperti tarikh, masa, dan tempat kejadian..."
+                    placeholder={t('submit_description_placeholder')}
                     rows={4}
                     className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none"
                   />
@@ -707,16 +726,16 @@ export function KebajikanSubmitPage() {
                 <div className="tour-aduan-gambar">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 block">
-                      Gambar Sokongan (Wajib - min. 1, maks. 3) *
+                      {t('submit_evidence_title')}
                     </label>
                     <span className="text-[10px] font-bold text-slate-400">
-                      {images.length}/3 keping
+                      {images.length}/3 {t('kebajikan:submit_images_unit', 'keping')}
                     </span>
                   </div>
 
                   {images.length === 0 && (
                     <p className="text-red-500 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" /> Sila muat naik sekurang-kurangnya 1 gambar/bukti aduan
+                      <AlertCircle className="w-3.5 h-3.5" /> {t('submit_evidence_required_alert')}
                     </p>
                   )}
 
@@ -724,12 +743,12 @@ export function KebajikanSubmitPage() {
                     {/* Thumbnails */}
                     {images.map((img, i) => (
                       <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm group">
-                        <img src={URL.createObjectURL(img)} alt={`Bukti ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         <button
                           type="button"
                           onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
                           className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-slate-900/80 hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-md"
-                          title="Padam gambar"
+                          title={t('kebajikan:submit_delete_image', 'Padam gambar')}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -740,7 +759,7 @@ export function KebajikanSubmitPage() {
                     {isCompressing && (
                       <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-teal-500/40 bg-teal-50/50 dark:bg-teal-500/10 flex flex-col items-center justify-center">
                         <Loader2 className="w-6 h-6 text-teal-600 dark:text-teal-400 animate-spin mb-1" />
-                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300">Memampat...</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300">{t('submit_compressing')}</span>
                       </div>
                     )}
 
@@ -752,7 +771,7 @@ export function KebajikanSubmitPage() {
                           <div className="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                             <Camera className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-black tracking-wider uppercase text-teal-800 dark:text-teal-300">Kamera</span>
+                          <span className="text-[9px] font-black tracking-wider uppercase text-teal-800 dark:text-teal-300">{t('submit_camera_btn')}</span>
                           <input
                             ref={cameraInputRef}
                             type="file"
@@ -768,7 +787,7 @@ export function KebajikanSubmitPage() {
                           <div className="w-8 h-8 rounded-xl bg-slate-200/50 dark:bg-white/10 text-slate-600 dark:text-white/60 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                             <Upload className="w-4 h-4" />
                           </div>
-                          <span className="text-[9px] font-black tracking-wider uppercase text-slate-600 dark:text-white/50">Galeri</span>
+                          <span className="text-[9px] font-black tracking-wider uppercase text-slate-600 dark:text-white/50">{t('submit_gallery_btn')}</span>
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -781,7 +800,7 @@ export function KebajikanSubmitPage() {
                     )}
                   </div>
                   <p className="text-[10px] text-slate-400 mt-2">
-                    Gambar dimampatkan secara automatik sebelum dimuat naik untuk kelajuan & penjimatan data.
+                    {t('submit_evidence_hint')}
                   </p>
                 </div>
               </fieldset>
@@ -795,7 +814,7 @@ export function KebajikanSubmitPage() {
                 onClick={() => setStep('CATEGORY')}
                 className="w-full sm:w-1/3 h-14 text-xs font-black uppercase tracking-widest rounded-2xl border-slate-300 dark:border-white/15"
               >
-                <ChevronLeft className="w-4 h-4 mr-1.5" /> Tukar Kategori
+                <ChevronLeft className="w-4 h-4 mr-1.5" /> {t('submit_change_category')}
               </Button>
               <Button
                 type="button"
@@ -803,7 +822,7 @@ export function KebajikanSubmitPage() {
                 disabled={!isFormReady}
                 className="w-full sm:w-2/3 h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
               >
-                Semak & Hantar <ChevronRight className="w-5 h-5 ml-1.5" />
+                {t('submit_review_and_submit', 'Semak & Hantar')} <ChevronRight className="w-5 h-5 ml-1.5" />
               </Button>
             </div>
 
@@ -815,19 +834,19 @@ export function KebajikanSubmitPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
-                    {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : 'Pilih Kategori'}
+                    {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : t('kebajikan:select_category', 'Pilih Kategori')}
                   </p>
                   <div className="flex items-center gap-1.5 text-xs font-black text-white truncate">
                     {isFormReady ? (
                       <>
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                        <span className="truncate">Sedia Dihantar</span>
+                        <span className="truncate">{t('submit_ready_to_send')}</span>
                       </>
                     ) : (
                       <>
                         <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                         <span className="truncate text-amber-200">
-                          {images.length === 0 ? 'Perlu 1 Gambar' : 'Lengkapkan Borang'}
+                          {images.length === 0 ? t('submit_need_one_photo') : t('submit_incomplete_form')}
                         </span>
                       </>
                     )}
@@ -840,50 +859,51 @@ export function KebajikanSubmitPage() {
                   if (isFormReady) {
                     setShowReviewModal(true);
                   } else if (images.length === 0) {
-                    alert('Sila muat naik sekurang-kurangnya 1 gambar sokongan sebelum menyemak.');
+                    alert(t('kebajikan:submit_min_image_check_alert', 'Sila muat naik sekurang-kurangnya 1 gambar sokongan sebelum menyemak.'));
                   } else {
-                    alert('Sila lengkapkan maklumat yang bertanda bintang (*) sebelum menyemak.');
+                    alert(t('kebajikan:submit_missing_fields_alert', 'Sila lengkapkan maklumat yang bertanda bintang (*) sebelum menyemak.'));
                   }
                 }}
                 disabled={!form.category || !form.full_name || !form.description}
                 className="h-10 px-4 rounded-xl bg-teal-400 hover:bg-teal-300 disabled:opacity-40 disabled:pointer-events-none text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-transform active:scale-95 shadow-md shadow-teal-500/20"
               >
-                Semak & Hantar <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                {t('submit_review_and_submit', 'Semak & Hantar')} <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </div>
           </motion.div>
         )}
 
         {/* ── STEP: PREVIEW (Fallback / Direct Desktop Review) ───────────────── */}
+        {/* ── STEP: PREVIEW (Fallback / Direct Desktop Review) ───────────────── */}
         {step === 'PREVIEW' && (
           <motion.div key="preview" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
               <button onClick={() => setStep('FORM')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
-                <ChevronLeft className="w-4 h-4" /> Edit Aduan
+                <ChevronLeft className="w-4 h-4" /> {t('submit_back_btn', 'Kembali Edit')}
               </button>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Semak & Sahkan Aduan</h2>
-              <p className="text-xs text-slate-600 dark:text-white/40">Sila semak maklumat sebelum menghantar aduan anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">{t('submit_review_title', 'Semak & Sahkan Aduan')}</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">{t('submit_review_subtitle')}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 dark:border-white/[0.1] p-6 space-y-5 bg-white dark:bg-slate-900/80 shadow-sm">
-              <Row label="Nama" value={form.full_name} />
-              <Row label="No. Matrik" value={form.matric_no || '-'} />
-              <Row label="Telefon" value={form.phone || '-'} />
-              <Row label="Kelas" value={form.class || '-'} />
+              <Row label={t('common:name', 'Nama')} value={form.full_name} />
+              <Row label={t('common:matric_no', 'No. Matrik')} value={form.matric_no || '-'} />
+              <Row label={t('submit_phone_label', 'Telefon')} value={form.phone || '-'} />
+              <Row label={t('common:class', 'Kelas')} value={form.class || '-'} />
               <hr className="border-slate-200 dark:border-white/[0.08]" />
-              <Row label="Kategori" value={form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'} highlight />
-              <Row label="Tajuk Aduan" value={buildTitle()} />
-              {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
+              <Row label={t('kebajikan:ticket_category', 'Kategori')} value={form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'} highlight />
+              <Row label={t('kebajikan:ticket_title', 'Tajuk Aduan')} value={buildTitle()} />
+              {getLocationSummary() && <Row label={t('kebajikan:location', 'Lokasi')} value={getLocationSummary()} />}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">Penerangan</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">{t('submit_description_title')}</p>
                 <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{form.description}</p>
               </div>
               {images.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">Gambar ({images.length})</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">{t('submit_evidence_title')} ({images.length})</p>
                   <div className="flex gap-2">
                     {images.map((img, i) => (
-                      <img key={i} src={URL.createObjectURL(img)} alt={`Bukti ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
+                      <img key={i} src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
                     ))}
                   </div>
                 </div>
@@ -892,7 +912,7 @@ export function KebajikanSubmitPage() {
 
             <div className="mt-4 p-4 rounded-2xl flex items-start gap-3 bg-teal-50 dark:bg-teal-500/[0.06] border border-teal-200 dark:border-teal-500/15">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-teal-600 dark:text-teal-400" />
-              <p className="text-xs text-slate-700 dark:text-white/70">Dengan menghantar aduan ini, anda bersetuju maklumat anda dikongsi dengan pihak Exco Kebajikan JPP POLISAS untuk tindakan lanjut.</p>
+              <p className="text-xs text-slate-700 dark:text-white/70">{t('submit_consent_notice')}</p>
             </div>
 
             {/* ── Duplicate Warning ── */}
@@ -901,19 +921,19 @@ export function KebajikanSubmitPage() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                    <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">{t('submit_duplicate_title')}</p>
                     <p className="text-xs text-slate-700 dark:text-white/60 leading-relaxed">
-                      Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
+                      {t('submit_duplicate_desc')}{' '}
                       <span className="font-bold text-slate-900 dark:text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <a
-                    href={`/kebajikan/aduan/${duplicateWarning.id}`}
+                    href={'/kebajikan/aduan/' + duplicateWarning.id}
                     className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                   >
-                    Lihat Tiket Sedia Ada
+                    {t('submit_view_existing_ticket')}
                   </a>
                   <button
                     onClick={() => {
@@ -922,7 +942,7 @@ export function KebajikanSubmitPage() {
                     }}
                     className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-colors"
                   >
-                    Hantar Aduan Tetap
+                    {t('submit_proceed_anyway')}
                   </button>
                 </div>
               </div>
@@ -935,11 +955,11 @@ export function KebajikanSubmitPage() {
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Menghantar...
+                  <Loader2 className="w-4 h-4 animate-spin" /> {t('submit_sending')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Sahkan & Hantar Aduan <ChevronRight className="w-4 h-4" />
+                  {t('submit_confirm_btn', 'Sahkan & Hantar Aduan')} <ChevronRight className="w-4 h-4" />
                 </span>
               )}
             </Button>
@@ -955,24 +975,24 @@ export function KebajikanSubmitPage() {
             >
               <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Aduan Berjaya Dikemukakan!</h2>
-            <p className="text-sm text-slate-600 dark:text-white/50 mb-6">Aduan anda telah diterima oleh sistem. No. aduan anda ialah:</p>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">{t('submit_success_title')}</h2>
+            <p className="text-sm text-slate-600 dark:text-white/50 mb-6">{t('submit_success_desc')}</p>
             <div
               className="inline-block px-8 py-4 rounded-2xl text-2xl font-black tracking-widest mb-8 bg-teal-50 dark:bg-teal-500/10 border-2 border-teal-400 dark:border-teal-500/30 text-teal-800 dark:text-teal-300 shadow-sm"
             >
               {submittedNo}
             </div>
-            <p className="text-xs text-slate-500 dark:text-white/40 mb-8">Exco Kebajikan akan menguruskan aduan anda dalam masa yang singkat. Anda akan dimaklumkan melalui notifikasi dalam portal.</p>
+            <p className="text-xs text-slate-500 dark:text-white/40 mb-8">{t('submit_success_eta')}</p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/kebajikan/aduan-saya" className="flex-1">
                 <Button className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md">
-                  Semak Status Aduan
+                  {t('submit_check_status_btn')}
                 </Button>
               </Link>
               <Link to="/portal" className="flex-1">
                 <Button variant="outline" className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl border-slate-300 dark:border-white/15 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-transparent">
-                  Kembali ke Portal
+                  {t('submit_back_to_portal')}
                 </Button>
               </Link>
             </div>
@@ -1007,8 +1027,8 @@ export function KebajikanSubmitPage() {
               {/* Sheet Header */}
               <div className="px-6 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Semak & Sahkan Aduan</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Pastikan butiran aduan fasiliti anda tepat</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{t('submit_review_title', 'Semak & Sahkan Aduan')}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('submit_review_subtitle')}</p>
                 </div>
                 <button
                   type="button"
@@ -1025,36 +1045,36 @@ export function KebajikanSubmitPage() {
                 {/* Clean Summary Card */}
                 <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-5 space-y-3.5 bg-slate-50 dark:bg-slate-950/60">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Kategori</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('kebajikan:ticket_category', 'Kategori')}</span>
                     <span className="text-xs font-black px-2.5 py-1 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/20">
                       {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'}
                     </span>
                   </div>
 
-                  <Row label="Tajuk Aduan" value={buildTitle()} highlight />
-                  {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
+                  <Row label={t('kebajikan:ticket_title', 'Tajuk Aduan')} value={buildTitle()} highlight />
+                  {getLocationSummary() && <Row label={t('kebajikan:location', 'Lokasi')} value={getLocationSummary()} />}
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Penerangan</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{t('submit_description_title')}</span>
                     <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-4">{form.description}</p>
                   </div>
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3 space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Maklumat Pengadu</span>
-                    <Row label="Nama" value={form.full_name} />
-                    <Row label="No. Matrik" value={form.matric_no || '-'} />
-                    <Row label="Telefon" value={form.phone || '-'} />
-                    <Row label="Kelas / Program" value={form.class || '-'} />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">{t('submit_complainant_info')}</span>
+                    <Row label={t('common:name', 'Nama')} value={form.full_name} />
+                    <Row label={t('common:matric_no', 'No. Matrik')} value={form.matric_no || '-'} />
+                    <Row label={t('submit_phone_label', 'Telefon')} value={form.phone || '-'} />
+                    <Row label={t('submit_class_label', 'Kelas / Program')} value={form.class || '-'} />
                   </div>
 
                   {images.length > 0 && (
                     <div className="border-t border-slate-200 dark:border-white/10 pt-3">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                        Gambar Sokongan ({images.length})
+                        {t('submit_evidence_title')} ({images.length})
                       </span>
                       <div className="flex gap-2">
                         {images.map((img, i) => (
-                          <img key={i} src={URL.createObjectURL(img)} alt={`Bukti ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
+                          <img key={i} src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
                         ))}
                       </div>
                     </div>
@@ -1065,7 +1085,7 @@ export function KebajikanSubmitPage() {
                 <div className="p-3.5 rounded-2xl flex items-start gap-2.5 bg-teal-500/10 border border-teal-500/20">
                   <AlertCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Dengan mengesahkan aduan ini, anda bersetuju maklumat anda dikongsi dengan Exco Kebajikan JPP POLISAS untuk siasatan dan tindakan pembaikan segera.
+                    {t('submit_consent_notice')}
                   </p>
                 </div>
 
@@ -1075,19 +1095,19 @@ export function KebajikanSubmitPage() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                        <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">{t('submit_duplicate_title')}</p>
                         <p className="text-xs text-slate-700 dark:text-white/60 leading-relaxed">
-                          Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
+                          {t('submit_duplicate_desc')}{' '}
                           <span className="font-bold text-slate-900 dark:text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <a
-                        href={`/kebajikan/aduan/${duplicateWarning.id}`}
+                        href={'/kebajikan/aduan/' + duplicateWarning.id}
                         className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                       >
-                        Lihat Tiket Sedia Ada
+                        {t('submit_view_existing_ticket')}
                       </a>
                       <button
                         type="button"
@@ -1097,7 +1117,7 @@ export function KebajikanSubmitPage() {
                         }}
                         className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-colors"
                       >
-                        Hantar Aduan Tetap
+                        {t('submit_proceed_anyway')}
                       </button>
                     </div>
                   </div>
@@ -1113,7 +1133,7 @@ export function KebajikanSubmitPage() {
                   disabled={submitting}
                   className="w-full sm:w-auto flex-1 h-12 rounded-xl text-xs font-black uppercase tracking-wider border-slate-300 dark:border-white/15"
                 >
-                  Kembali Edit
+                  {t('submit_back_btn', 'Kembali Edit')}
                 </Button>
                 <Button
                   type="button"
@@ -1123,11 +1143,11 @@ export function KebajikanSubmitPage() {
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Menghantar...
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t('submit_sending')}
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      Sahkan & Hantar Aduan <ChevronRight className="w-4 h-4" />
+                      {t('submit_confirm_btn', 'Sahkan & Hantar Aduan')} <ChevronRight className="w-4 h-4" />
                     </span>
                   )}
                 </Button>
@@ -1145,50 +1165,56 @@ export function KebajikanSubmitPage() {
 // ── Category sub-forms ──────────────────────────────────────────────────────
 
 function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
+  const jabatanList = getJabatanList(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Jabatan</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_fasiliti_jabatan', 'Fasiliti Jabatan')}</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jabatan *</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:submit_dept_label', 'Jabatan *')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {JABATAN_LIST.map(j => (
+          {jabatanList.map(j => (
             <button key={j} type="button" onClick={() => upd('jabatan', j)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.jabatan === j ? 'text-indigo-900 dark:text-white border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
               {j}
             </button>
           ))}
         </div>
-        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder="Nama jabatan..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder={t('kebajikan:submit_dept_custom_placeholder', 'Nama jabatan...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Lokasi Spesifik</label>
-        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder="Bilik Kuliah JKE-02, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:specific_location', 'Lokasi Spesifik')}</label>
+        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder={t('kebajikan:location_placeholder', 'Bilik Kuliah JKE-02, dsb.')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
       </div>
     </fieldset>
   );
 }
 
 function CategorySukan({ form, upd }: { form: FormData; upd: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
+  const sukanList = getSukanList(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Sukan</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_fasiliti_sukan', 'Fasiliti Sukan')}</legend>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {SUKAN_LIST.map(s => (
+        {sukanList.map(s => (
           <button key={s} type="button" onClick={() => upd('sukan', s)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.sukan === s ? 'text-amber-900 dark:text-white border-amber-500 bg-amber-50 dark:bg-amber-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
             {s}
           </button>
         ))}
       </div>
-      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder="Nama fasiliti..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder={t('kebajikan:submit_sport_custom_placeholder', 'Nama fasiliti...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
     </fieldset>
   );
 }
 
 function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
+  const kafeteriaTypes = getKafeteriaTypes(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Kafeteria</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_kafeteria', 'Kafeteria')}</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Pilih Kafeteria *</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:select_cafeteria_label', 'Pilih Kafeteria *')}</label>
         <div className="flex gap-2 flex-wrap">
           {KAFETERIA_LIST.map(k => (
             <button key={k} type="button" onClick={() => upd('kafeteria', k)} className={cn('px-4 py-2 rounded-xl text-xs font-black border transition-all', form.kafeteria === k ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
@@ -1196,16 +1222,16 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
             </button>
           ))}
         </div>
-        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder="Nama kafeteria..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder={t('kebajikan:submit_cafe_custom_placeholder', 'Nama kafeteria...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jenis Aduan (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_type_multiple', 'Jenis Aduan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {KAFETERIA_TYPES.map(t => {
-            const checked = (form.kafeteria_types as string[] || []).includes(t);
+          {kafeteriaTypes.map(typeItem => {
+            const checked = (form.kafeteria_types as string[] || []).includes(typeItem);
             return (
-              <button key={t} type="button" onClick={() => toggleArr('kafeteria_types', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
-                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{t}
+              <button key={typeItem} type="button" onClick={() => toggleArr('kafeteria_types', typeItem)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
+                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{typeItem}
               </button>
             );
           })}
@@ -1216,41 +1242,65 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
 }
 
 function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
-  const speeds = ['Sangat Perlahan (<1 Mbps)', 'Perlahan (1–5 Mbps)', 'Sederhana (5–10 Mbps)', 'Masih OK (10–20 Mbps)'];
-  const freqs  = ['Hampir Setiap Hari', 'Beberapa Kali/Minggu', 'Sekali/Minggu', 'Kadang-Kadang'];
-  const times  = ['Pagi (6am–12pm)', 'Tengah Hari (12pm–6pm)', 'Malam (6pm–12am)', 'Lewat Malam (12am–6am)'];
-  const acts   = ['Google Classroom/Teams', 'Zoom/Video Call', 'Download/Upload tugasan', 'Streaming', 'Media Sosial', 'Gaming', 'Lain-Lain'];
+  const { t } = useTranslation(['kebajikan', 'common']);
+  const speeds = [
+    t('kebajikan:wifi_speed_very_slow', 'Sangat Perlahan (<1 Mbps)'),
+    t('kebajikan:wifi_speed_slow', 'Perlahan (1–5 Mbps)'),
+    t('kebajikan:wifi_speed_medium', 'Sederhana (5–10 Mbps)'),
+    t('kebajikan:wifi_speed_ok', 'Masih OK (10–20 Mbps)')
+  ];
+  const freqs  = [
+    t('kebajikan:wifi_freq_daily', 'Hampir Setiap Hari'),
+    t('kebajikan:wifi_freq_several_week', 'Beberapa Kali/Minggu'),
+    t('kebajikan:wifi_freq_once_week', 'Sekali/Minggu'),
+    t('kebajikan:wifi_freq_sometimes', 'Kadang-Kadang')
+  ];
+  const times  = [
+    t('kebajikan:wifi_time_morning', 'Pagi (6am–12pm)'),
+    t('kebajikan:wifi_time_afternoon', 'Tengah Hari (12pm–6pm)'),
+    t('kebajikan:wifi_time_evening', 'Malam (6pm–12am)'),
+    t('kebajikan:wifi_time_late_night', 'Lewat Malam (12am–6am)')
+  ];
+  const acts   = [
+    t('kebajikan:wifi_act_classroom', 'Google Classroom/Teams'),
+    t('kebajikan:wifi_act_zoom', 'Zoom/Video Call'),
+    t('kebajikan:wifi_act_assignments', 'Download/Upload tugasan'),
+    t('kebajikan:wifi_act_streaming', 'Streaming'),
+    t('kebajikan:wifi_act_social', 'Media Sosial'),
+    t('kebajikan:wifi_act_gaming', 'Gaming'),
+    t('kebajikan:other', 'Lain-Lain')
+  ];
 
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">WiFi Kamsis</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_wifi_kamsis', 'WiFi Kamsis')}</legend>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Blok Asrama *</label>
-          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder="Blok A, B, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_block_label', 'Blok Asrama *')}</label>
+          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder={t('kebajikan:submit_wifi_block_placeholder', 'Blok A, B, dsb.')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Bilik (Opsional)</label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_room_optional', 'Bilik (Opsional)')}</label>
           <Input value={form.wifi_bilik || ''} onChange={e => upd('wifi_bilik', e.target.value)} placeholder="A-214" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
       </div>
-      <OptionGrid label="Tahap Kelajuan" options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} />
-      <OptionGrid label="Kekerapan Gangguan" options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} />
+      <OptionGrid label={t('kebajikan:wifi_speed_label', 'Tahap Kelajuan')} options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} />
+      <OptionGrid label={t('kebajikan:wifi_freq_label', 'Kekerapan Gangguan')} options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} />
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Masa Gangguan (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disruption_time_multiple', 'Masa Gangguan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {times.map(t => { const c = (form.wifi_times as string[] || []).includes(t); return (<button key={t} type="button" onClick={() => toggleArr('wifi_times', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{t}</button>); })}
+          {times.map(timeItem => { const c = (form.wifi_times as string[] || []).includes(timeItem); return (<button key={timeItem} type="button" onClick={() => toggleArr('wifi_times', timeItem)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{timeItem}</button>); })}
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Aktiviti Terganggu (boleh pilih lebih 1)</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disrupted_activity_multiple', 'Aktiviti Terganggu (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {acts.map(a => { const c = (form.wifi_activities as string[] || []).includes(a); return (<button key={a} type="button" onClick={() => toggleArr('wifi_activities', a)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{a}</button>); })}
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Cadangan / Harapan Anda</label>
-        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder="Cadangan penambahbaikan..." rows={2} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none" />
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:wifi_suggestion_label', 'Cadangan / Harapan Anda')}</label>
+        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder={t('kebajikan:wifi_suggestion_placeholder', 'Cadangan penambahbaikan...')} rows={2} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none" />
       </div>
     </fieldset>
   );

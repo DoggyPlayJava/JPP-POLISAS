@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-qr-code'; // <-- Sebenar!
 
 const appleEase = [0.16, 1, 0.3, 1];
@@ -102,7 +103,7 @@ function AmbientDust() {
         />
       ))}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------
@@ -119,7 +120,7 @@ function Scene0Hook() {
     const t3 = setTimeout(() => setPhase(3), 900); // ONLINE
     const t4 = setTimeout(() => setPhase(4), 1100); // JPP
     const t5 = setTimeout(() => setPhase(5), 1300); // DIGITAL
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); }
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, []);
 
   return (
@@ -214,7 +215,7 @@ function FastWipe({ problem, solutionMain, solutionSub, color, bgModel }: any) {
             )}
         </AnimatePresence>
      </motion.div>
-   )
+   );
 }
 
 // ==========================================
@@ -226,7 +227,7 @@ function WireframeCube({ color, rotate = false }: any) {
     <motion.div animate={rotate ? { rotateZ: 360 } : {}} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className={`w-[50vw] h-[50vw] border-[0.5vw] ${color} rounded-[5vw] flex items-center justify-center shadow-[0_0_100px_currentColor]`} style={{ transformStyle: "preserve-3d" }}>
        <div className={`w-[25vw] h-[25vw] border-[0.2vw] ${color} rounded-[2vw] rotate-45`} style={{ transform: "translateZ(100px)" }} />
     </motion.div>
-  )
+  );
 }
 
 function WireframeSphere({ color, rotate=false }: any) {
@@ -239,7 +240,7 @@ function WireframeSphere({ color, rotate=false }: any) {
           <div key={i+10} className={`absolute w-[40vw] h-[40vw] border-[0.2vw] rounded-full ${color}`} style={{ transform: `rotateX(${i * 30}deg)` }} />
        ))}
     </motion.div>
-  )
+  );
 }
 
 function WireframeCylinder({ color, rotate=false }: any) {
@@ -249,7 +250,7 @@ function WireframeCylinder({ color, rotate=false }: any) {
           <div key={i} className={`absolute w-[30vw] h-[30vw] border-[0.2vw] rounded-full ${color}`} style={{ transform: `translateZ(${(i - 6) * 20}px)` }} />
        ))}
     </motion.div>
-  )
+  );
 }
 
 function WireframeDiamond({ color, rotate=false }: any) {
@@ -262,7 +263,7 @@ function WireframeDiamond({ color, rotate=false }: any) {
           <div key={i+10} className={`absolute border-[0.2vw] ${color} rotate-45`} style={{ width: `${35 - i*4}vw`, height: `${35 - i*4}vw`, transform: `translateZ(${-i * 30}px) rotateZ(45deg)` }} />
        ))}
     </motion.div>
-  )
+  );
 }
 
 function WireframeTorus({ color, rotate=false }: any) {
@@ -272,34 +273,40 @@ function WireframeTorus({ color, rotate=false }: any) {
           <div key={i} className={`absolute w-[15vw] h-[15vw] border-[0.2vw] rounded-full ${color}`} style={{ transform: `rotateY(${i * 30}deg) translateX(15vw)` }} />
        ))}
     </motion.div>
-  )
+  );
 }
 
 // Modul Scenes dengan Geometri Berbeza
 function Scene1Kebajikan() {
-   return <FastWipe problem="Menunggu Bantuan?" solutionMain="2 JAM" solutionSub="Dikuasakan AI" color="#2dd4bf" bgModel={<WireframeSphere color="border-teal-500/50" rotate={true} />} />;
+   const { t } = useTranslation('portal');
+   return <FastWipe problem={t('portal:promo_waiting_help', 'Menunggu Bantuan?')} solutionMain={t('portal:promo_2_hours', '2 JAM')} solutionSub={t('portal:promo_ai_powered', 'Dikuasakan AI')} color="#2dd4bf" bgModel={<WireframeSphere color="border-teal-500/50" rotate={true} />} />;
 }
 
 function Scene2Polymart() {
-   return <FastWipe problem="Harga Luar Mahal?" solutionMain="EKONOMI" solutionSub="Pasaran PolyMart" color="#4ade80" bgModel={<WireframeCylinder color="border-green-500/50" rotate={true} />} />;
+   const { t } = useTranslation('portal');
+   return <FastWipe problem={t('portal:promo_outside_prices_expensive', 'Harga Luar Mahal?')} solutionMain={t('portal:promo_economy', 'EKONOMI')} solutionSub={t('portal:promo_polymart_market', 'Pasaran PolyMart')} color="#4ade80" bgModel={<WireframeCylinder color="border-green-500/50" rotate={true} />} />;
 }
 
 function Scene3Akademik() {
-   return <FastWipe problem="Pencapaian Diabai?" solutionMain="15,000" solutionSub="Mata Merit Digital" color="#818cf8" bgModel={<WireframeDiamond color="border-indigo-500/50" rotate={true} />} />;
+   const { t } = useTranslation('portal');
+   return <FastWipe problem={t('portal:promo_achievements_ignored', 'Pencapaian Diabai?')} solutionMain="15,000" solutionSub={t('portal:promo_digital_merit_points', 'Mata Merit Digital')} color="#818cf8" bgModel={<WireframeDiamond color="border-indigo-500/50" rotate={true} />} />;
 }
 
 function Scene4Kelab() {
-   return <FastWipe problem="Guna Kertas Lagi?" solutionMain="PAPERLESS" solutionSub="Ekosistem Kelab" color="#f87171" bgModel={<WireframeCube color="border-red-500/50" rotate={true} />} />;
+   const { t } = useTranslation('portal');
+   return <FastWipe problem={t('portal:promo_still_using_paper', 'Guna Kertas Lagi?')} solutionMain={t('portal:promo_paperless', 'PAPERLESS')} solutionSub={t('portal:promo_club_ecosystem', 'Ekosistem Kelab')} color="#f87171" bgModel={<WireframeCube color="border-red-500/50" rotate={true} />} />;
 }
 
 function Scene5Supsas() {
-   return <FastWipe problem="Gaya Hidup Pasif?" solutionMain="KARNIVAL" solutionSub="Sukan & Perpaduan" color="#fbbf24" bgModel={<WireframeTorus color="border-amber-500/50" rotate={true} />} />;
+   const { t } = useTranslation('portal');
+   return <FastWipe problem={t('portal:promo_passive_lifestyle', 'Gaya Hidup Pasif?')} solutionMain={t('portal:promo_carnival', 'KARNIVAL')} solutionSub={t('portal:promo_sports_and_unity', 'Sukan & Perpaduan')} color="#fbbf24" bgModel={<WireframeTorus color="border-amber-500/50" rotate={true} />} />;
 }
 
 // ---------------------------------------------------------
 // SCENE 6: THE BREATHE & 3D DEVICE POP (8 SECONDS)
 // ---------------------------------------------------------
 function Scene6BreatheDevice() {
+  const { t } = useTranslation('portal');
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
@@ -315,7 +322,7 @@ function Scene6BreatheDevice() {
         <AnimatePresence>
             {phase < 1 && (
                <motion.div exit={{ opacity: 0, filter: "blur(10px)" }} className="absolute text-[4vw] font-light text-white/50 tracking-widest">
-                  Satu Ekosistem.
+                  {t('portal:promo_one_ecosystem', 'Satu Ekosistem.')}
                </motion.div>
             )}
         </AnimatePresence>
@@ -390,21 +397,22 @@ function Scene6BreatheDevice() {
         </motion.div>
 
     </motion.div>
-  )
+  );
 }
 
 // ---------------------------------------------------------
 // SCENE 7: THE HYPNOTIC CTA (REAL QR CODE)
 // ---------------------------------------------------------
-function Scene7Outro({ navigate }: { navigate: (path: string) => void }) {
+function Scene7Outro({ navigate }: { navigate: (path: string) => void; key?: React.Key }) {
+  const { t } = useTranslation('portal');
   return (
     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 2, ease: appleEase }} className="absolute inset-0 flex items-center justify-center w-full h-full bg-black">
        
        <div className="flex gap-[12vw] items-center p-[10vw] w-full max-w-[90vw]">
           <div className="flex flex-col items-start flex-1">
              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="flex gap-[1vw] mb-[2vw]">
-                 <span className="px-[1vw] py-[0.5vw] border border-white/20 rounded-full text-[1vw] text-white/50 tracking-widest">[ SYSTEM OPTIMIZED ]</span>
-                 <span className="px-[1vw] py-[0.5vw] border border-green-500/30 rounded-full text-[1vw] text-green-400 tracking-widest">[ LATENCY: 1ms ]</span>
+                 <span className="px-[1vw] py-[0.5vw] border border-white/20 rounded-full text-[1vw] text-white/50 tracking-widest">{t('portal:promo_system_optimized', '[ SYSTEM OPTIMIZED ]')}</span>
+                 <span className="px-[1vw] py-[0.5vw] border border-green-500/30 rounded-full text-[1vw] text-green-400 tracking-widest">{t('portal:promo_latency_1ms', '[ LATENCY: 1ms ]')}</span>
              </motion.div>
 
              <motion.h1 
@@ -423,7 +431,7 @@ function Scene7Outro({ navigate }: { navigate: (path: string) => void }) {
                 onClick={() => navigate('/login')}
                 className="mt-[6vw] bg-white text-black font-black text-[2vw] px-[6vw] py-[3vw] rounded-[1vw] uppercase tracking-widest hover:scale-105 pointer-events-auto transition-transform"
              >
-                 LOG MASUK
+                 {t('portal:promo_login_btn', 'LOG MASUK')}
              </motion.button>
           </div>
           
@@ -447,7 +455,9 @@ function Scene7Outro({ navigate }: { navigate: (path: string) => void }) {
                <QRCode value="https://jpp.cipher-node.url" size={256} className="w-[18vw] h-[18vw]" />
              </div>
 
-             <div className="text-black font-black text-[1.5vw] mt-[1vw] tracking-[0.2em] uppercase relative z-10">Imbas Untuk Mula</div>
+             <div className="text-black font-black text-[1.5vw] mt-[1vw] tracking-[0.2em] uppercase relative z-10">
+               {t('portal:promo_scan_to_start', 'Imbas Untuk Mula')}
+             </div>
           </motion.div>
        </div>
     </motion.div>

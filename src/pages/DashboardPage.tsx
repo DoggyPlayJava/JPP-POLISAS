@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Users, Clock, FileText, Activity, AlertCircle,
@@ -45,6 +46,7 @@ import {
 
 // --- 1. KOMPONEN KECIL: ITEM TUGASAN ---
 function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onReject, onVerify }: any) {
+  const { t } = useTranslation(['kpp', 'common']);
   const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'COMPLETED';
 
   return (
@@ -52,15 +54,15 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
       <div className="space-y-1.5 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-bold text-base text-foreground">{task.title}</h4>
-          {isOverdue && <Badge className="bg-rose-600 text-white border-none text-[10px] font-black uppercase animate-pulse">Lewat</Badge>}
-          {task.approval_status === 'WAITING' && <Badge className="bg-amber-500/10 text-amber-600 border-none text-[10px] font-black uppercase">Menunggu Kelulusan Penasihat</Badge>}
-          {task.status === 'COMPLETED' && <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-black uppercase">Selesai</Badge>}
+          {isOverdue && <Badge className="bg-rose-600 text-white border-none text-[10px] font-black uppercase animate-pulse">{t('common:overdue', 'Lewat')}</Badge>}
+          {task.approval_status === 'WAITING' && <Badge className="bg-amber-500/10 text-amber-600 border-none text-[10px] font-black uppercase">{t('kpp:waiting_advisor_approval', 'Menunggu Kelulusan Penasihat')}</Badge>}
+          {task.status === 'COMPLETED' && <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-black uppercase">{t('common:completed', 'Selesai')}</Badge>}
         </div>
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold">
           <span className="flex items-center gap-1"><Clock size={12} /> {format(parseISO(task.due_date), 'dd MMM yyyy')}</span>
           {!isNormalMember && (
             <span className="flex items-center gap-1 text-primary uppercase">
-              <Users size={12} /> {task.assigned_to?.full_name || 'Tiada Nama'}
+              <Users size={12} /> {task.assigned_to?.full_name || t('common:unassigned', 'Tiada Nama')}
             </span>
           )}
         </div>
@@ -68,21 +70,22 @@ function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onRejec
       <div className="flex gap-2 w-full sm:w-auto">
         {canApprove && task.approval_status === 'WAITING' && (
           <>
-            <Button onClick={() => onApprove(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-emerald-600 rounded-xl flex-1 sm:flex-none">Luluskan</Button>
-            <Button onClick={() => onReject(task)} size="sm" variant="destructive" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">Tolak</Button>
+            <Button onClick={() => onApprove(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-emerald-600 rounded-xl flex-1 sm:flex-none">{t('common:approve', 'Luluskan')}</Button>
+            <Button onClick={() => onReject(task)} size="sm" variant="destructive" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">{t('common:reject', 'Tolak')}</Button>
           </>
         )}
         {canApprove && task.status === 'COMPLETED' && task.approval_status === 'APPROVED' && !task.is_archived && (
-          <Button onClick={() => onVerify(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-indigo-600 rounded-xl flex-1 sm:flex-none">Sahkan & Beri Merit</Button>
+          <Button onClick={() => onVerify(task)} size="sm" className="h-9 px-4 text-[10px] font-black bg-indigo-600 rounded-xl flex-1 sm:flex-none">{t('kpp:verify_award_merit', 'Sahkan & Beri Merit')}</Button>
         )}
-        <Button onClick={onOpen} variant="secondary" size="sm" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">Buka</Button>
+        <Button onClick={onOpen} variant="secondary" size="sm" className="h-9 px-4 text-[10px] font-black rounded-xl flex-1 sm:flex-none">{t('common:open', 'Buka')}</Button>
       </div>
     </div>
   );
 }
 
 // --- 2. KOMPONEN KECIL: JEJAK PROGRAM (KERTAS KERJA) ---
-function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: any) => void }) {
+function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onUnlock: (p: any) => void }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const isPending = program.status === 'PENDING_APPROVAL' || program.status === 'PENDING_POSTMORTEM';
   const isConfirmed = program.status === 'CONFIRMED';
   const isRejected = program.status === 'DRAFT' && program.jpp_remarks;
@@ -107,7 +110,7 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
               )}>
                 {program.status.replace('_', ' ')}
               </Badge>
-              {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">Perlu Pindaan</span>}
+              {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">{t('kpp:report_status_rejected', 'Perlu Pindaan')}</span>}
             </div>
           </div>
         </div>
@@ -115,7 +118,7 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
         <div className="flex items-center gap-2 shrink-0">
           {isConfirmed && (
             <Button onClick={() => onUnlock(program)} variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-black uppercase text-indigo-500 hover:bg-indigo-500/10 rounded-lg gap-1 hidden sm:flex">
-              <Unlock size={12} /> Unlock
+              <Unlock size={12} /> {t('kpp:audit_unlock', 'Unlock')}
             </Button>
           )}
           <ChevronRight size={18} className="text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
@@ -124,7 +127,7 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
       
       {program.jpp_remarks && (
         <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-xl">
-          <p className="text-[9px] font-black uppercase tracking-widest text-rose-500 mb-0.5">Ulasan / Nota</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-rose-500 mb-0.5">{t('kpp:notes_remarks', 'Ulasan / Nota')}</p>
           <p className="text-[10px] text-rose-800 font-bold italic line-clamp-2">{program.jpp_remarks}</p>
         </div>
       )}
@@ -134,6 +137,7 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
 
 // --- 3. KOMPONEN UTAMA DASHBOARD ---
 export function DashboardPage() {
+  const { t } = useTranslation(['portal', 'kpp', 'common']);
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
@@ -159,17 +163,17 @@ export function DashboardPage() {
   const activities= dashData.activities|| [];
   const members   = dashData.members   || [];
   const programs  = dashData.programs  || [];
-  const announcement = dashData.announcement?.content || 'Tiada pengumuman terkini.';
+  const announcement = dashData.announcement?.content || t('portal:no_latest_announcement', 'Tiada pengumuman terkini.');
 
   const clubStats = {
     taskProgress: [
-      { name: 'Aktif',   value: dashData.task_stats?.active    || 0, color: '#3b82f6' },
-      { name: 'Selesai', value: dashData.task_stats?.completed || 0, color: '#10b981' },
+      { name: t('common:active', 'Aktif'),   value: dashData.task_stats?.active    || 0, color: '#3b82f6' },
+      { name: t('common:completed', 'Selesai'), value: dashData.task_stats?.completed || 0, color: '#10b981' },
     ].filter(d => d.value > 0),
     activityTrends: [
-      { name: 'Perancangan', count: dashData.act_stats?.perancangan || 0 },
-      { name: 'Aktif',       count: dashData.act_stats?.aktif       || 0 },
-      { name: 'Selesai',     count: dashData.act_stats?.selesai     || 0 },
+      { name: t('portal:planning', 'Perancangan'), count: dashData.act_stats?.perancangan || 0 },
+      { name: t('common:active', 'Aktif'),       count: dashData.act_stats?.aktif       || 0 },
+      { name: t('common:completed', 'Selesai'),     count: dashData.act_stats?.selesai     || 0 },
     ],
   };
 
@@ -183,7 +187,7 @@ export function DashboardPage() {
   useEffect(() => {
     if (profile && userClubIds.length === 1 && !localStorage.getItem('has_seen_kelab_offer')) {
       localStorage.setItem('has_seen_kelab_offer', 'true');
-      toast('Sila pilih kelab/persatuan tambahan anda!', { icon: '👋' });
+      toast(t('portal:select_additional_club', 'Sila pilih kelab/persatuan tambahan anda!'));
       navigate('/sertai-kelab');
     }
   }, [profile, userClubIds, navigate]);
@@ -203,29 +207,29 @@ export function DashboardPage() {
       });
       if (error) {
         console.error('increment_merit error:', error);
-        toast.error('Gagal kemaskini merit: ' + error.message);
+        toast.error(t('kpp:merit_update_failed', 'Gagal kemaskini merit: ') + error.message);
       }
     }
   };
 
   const handleApproveTask = async (task: any) => {
     try {
-      if (task.title.startsWith('[MERIT]') && task.approval_status === 'WAITING') {
+      if (/^\[MERIT\]/.test(task.title) && task.approval_status === 'WAITING') {
         const { error } = await supabase.from('club_tasks').update({
           approval_status: 'APPROVED', is_archived: true, approved_by: user?.id
         }).eq('id', task.id);
         if (error) throw error;
         await awardMerit(task);
-        toast.success("Anugerah merit selesai!");
+        toast.success(t('kpp:merit_award_completed', 'Anugerah merit selesai!'));
       } else if (task.approval_status === 'WAITING') {
         const { error } = await supabase.from('club_tasks').update({
           approval_status: 'APPROVED', status: 'ACTIVE', approved_by: user?.id
         }).eq('id', task.id);
         if (error) throw error;
-        toast.success("Tugasan diluluskan, sedia untuk dijalankan.");
+        toast.success(t('kpp:task_approved_ready', 'Tugasan diluluskan, sedia untuk dijalankan.'));
       }
       fetchData();
-    } catch (error) { toast.error("Ralat semasa meluluskan"); }
+    } catch (error) { toast.error(t('kpp:task_approval_error', 'Ralat semasa meluluskan')); }
   };
 
   const handleVerifyTask = (task: any) => {
@@ -250,12 +254,12 @@ export function DashboardPage() {
       fetchData();
       
       if (meritToGive < 0) {
-        toast.success(`Tugasan diarkibkan & penalti merit (${Math.abs(meritToGive)} pts) dikenakan.`);
+        toast.success(t('kpp:task_archived_penalty', 'Tugasan diarkibkan & penalti merit ({{pts}} pts) dikenakan.', { pts: Math.abs(meritToGive) }));
       } else {
-        toast.success(`Tugasan disahkan & merit (${meritToGive} pts) diberikan!`);
+        toast.success(t('kpp:task_verified_merit', 'Tugasan disahkan & merit ({{pts}} pts) diberikan!', { pts: meritToGive }));
       }
     } catch (e) {
-      toast.error("Ralat semasa pengesahan tugasan");
+      toast.error(t('kpp:task_verify_error', 'Ralat semasa pengesahan tugasan'));
     } finally {
       setIsProcessingAction(false);
       setLateVerifyDialog({ open: false, task: null });
@@ -278,10 +282,10 @@ export function DashboardPage() {
         approved_by: user?.id
       }).eq('id', rejectDialog.task.id);
       if (error) throw error;
-      toast.success("Tugasan telah ditolak.");
+      toast.success(t('kpp:task_rejected_toast', 'Tugasan telah ditolak.'));
       fetchData();
     } catch (error) {
-      toast.error("Gagal menolak tugasan");
+      toast.error(t('kpp:task_reject_error', 'Gagal menolak tugasan'));
     } finally {
       setIsProcessingAction(false);
       setRejectDialog({ open: false, task: null });
@@ -307,13 +311,13 @@ export function DashboardPage() {
         club_id: profile?.club_id,
         user_id: user?.id,
         type: 'UNLOCK_REQUEST',
-        content: `MT [${user?.email}] memohon UNLOCK bagi program: ${unlockDialog.program.nama_program}. Sebab: ${reason}`
+        content: t('portal:unlock_request_log', 'MT [{{email}}] memohon UNLOCK bagi program: {{program}}. Sebab: {{reason}}', { email: user?.email, program: unlockDialog.program.nama_program, reason })
       }]);
 
-      toast.success("Permohonan Unlock dihantar ke JPP");
+      toast.success(t('kpp:unlock_request_sent_toast', 'Permohonan Unlock dihantar ke JPP'));
       fetchData();
     } catch (e) {
-      toast.error("Gagal menghantar permohonan");
+      toast.error(t('kpp:unlock_request_failed_toast', 'Gagal menghantar permohonan.'));
     } finally {
       setIsProcessingAction(false);
       setUnlockDialog({ open: false, program: null });
@@ -327,27 +331,27 @@ export function DashboardPage() {
   const kelabTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke Dashboard Kelab & Persatuan! Ruang ini membolehkan anda memantau aktiviti, mengurus tugasan ahli, dan melihat statistik kelab anda.',
-      title: 'Modul Kelab 🏛️',
+      content: t('portal:tour_welcome_content', 'Selamat datang ke Dashboard Kelab & Persatuan! Ruang ini membolehkan anda memantau aktiviti, mengurus tugasan ahli, dan melihat statistik kelab anda.'),
+      title: t('portal:tour_welcome_title', 'Modul Kelab'),
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-kelab-sidebar',
-      content: isMobile ? 'Buka menu ini untuk mengakses senarai kelab, jadual aktiviti, dan laporan kelab.' : 'Di ruangan tepi ini, anda boleh menavigasi ke senarai kelab lain, jadual aktiviti, laporan, dan tetapan kelab.',
-      title: 'Menu Navigasi 🧭',
+      content: isMobile ? t('portal:tour_nav_mobile', 'Buka menu ini untuk mengakses senarai kelab, jadual aktiviti, dan laporan kelab.') : t('portal:tour_nav_desktop', 'Di ruangan tepi ini, anda boleh menavigasi ke senarai kelab lain, jadual aktiviti, laporan, dan tetapan kelab.'),
+      title: t('portal:tour_nav_title', 'Menu Navigasi'),
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-kelab-stats',
-      content: 'Ini adalah metrik pantas. Anda boleh lihat jumlah tugasan yang belum selesai, jumlah ahli aktif, dan program kelab semasa.',
-      title: 'Statistik Prestasi 📊',
+      content: t('portal:tour_stats_content', 'Ini adalah metrik pantas. Anda boleh lihat jumlah tugasan yang belum selesai, jumlah ahli aktif, dan program kelab semasa.'),
+      title: t('portal:tour_stats_title', 'Statistik Prestasi'),
       placement: 'bottom' as const,
     },
     {
       target: '.tour-kelab-tasks',
-      content: 'Bahagian ini menunjukkan senarai tugasan ahli (untuk AJK) atau tugasan anda (untuk Ahli Biasa). Anda boleh serah tugasan di sini untuk dapatkan Merit!',
-      title: 'Pengurusan Tugasan ✅',
+      content: t('portal:tour_tasks_content', 'Bahagian ini menunjukkan senarai tugasan ahli (untuk AJK) atau tugasan anda (untuk Ahli Biasa). Anda boleh serah tugasan di sini untuk dapatkan Merit!'),
+      title: t('portal:tour_tasks_title', 'Pengurusan Tugasan'),
       placement: 'top' as const,
     }
   ];
@@ -372,9 +376,18 @@ export function DashboardPage() {
             <div className="p-2 bg-primary rounded-xl text-white"><LayoutDashboard size={20} /></div>
             <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">{effectiveRole}</Badge>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
+          <div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">{t('kpp:dashboard_title')}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">{t('kpp:dashboard_subtitle')}</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
+          <Button onClick={() => navigate('/sertai-kelab')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-primary/30 text-primary bg-primary/10 hover:bg-primary/20">
+            <Users className="w-4 h-4 mr-2" /> {t('kpp:join_club')}
+          </Button>
+          <Button onClick={() => navigate('/laporan')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20">
+            <FileText className="w-4 h-4 mr-2" /> {t('kpp:submit_report')}
+          </Button>
           <Button onClick={startTour} variant="outline" size="icon" className="rounded-xl border-amber-500/30 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20">
             <HelpCircle className="w-5 h-5" />
           </Button>
@@ -382,12 +395,12 @@ export function DashboardPage() {
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
             <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
-              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> Analisis AI
+              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> {t('portal:ai_analysis', 'Analisis AI')}
             </Button>
           )}
           {isAdvisor && (
             <Button onClick={() => navigate('/logs')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10">
-              <Activity className="w-4 h-4 mr-2" /> Log Sistem
+              <Activity className="w-4 h-4 mr-2" /> {t('portal:system_logs', 'Log Sistem')}
             </Button>
           )}
           {isMT && <AddTaskModal onTaskAdded={fetchData} />}
@@ -396,10 +409,10 @@ export function DashboardPage() {
 
       {/* ── STAT CARDS ── */}
       <div className="tour-kelab-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {(isAdvisor || isPresident) && <StatCard label="Perlu Kelulusan" val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />}
-        <StatCard label="Ahli Aktif" val={members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
-        <StatCard label="Tugasan" val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
-        <StatCard label="Aktiviti" val={activities.length} color="text-emerald-600" icon={TrendingUp} bg="bg-emerald-500/10" />
+        <StatCard label={t('kpp:stats_pending')} val={tasks.filter((tsk: any) => tsk.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />
+        <StatCard label={t('kpp:stats_clubs')} val={userClubIds.length || members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
+        <StatCard label={t('kpp:stats_reports')} val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
+        <StatCard label={t('kpp:stats_activities')} val={activities.length} color="text-emerald-600" icon={TrendingUp} bg="bg-emerald-500/10" />
       </div>
 
       {/* ── CLUB ANALYTICS ── */}
@@ -407,8 +420,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">Prestasi Tugasan</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Taburan Tugasan Dibekalkan</p>
+              <h3 className="text-xl font-black italic">{t('portal:task_performance', 'Prestasi Tugasan')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('portal:task_distribution', 'Taburan Tugasan Dibekalkan')}</p>
             </div>
             <Activity className="text-primary" size={24} />
           </div>
@@ -446,8 +459,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">Status Aktiviti</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Kitaran Hidup Program</p>
+              <h3 className="text-xl font-black italic">{t('portal:activity_status', 'Status Aktiviti')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('portal:program_lifecycle', 'Kitaran Hidup Program')}</p>
             </div>
             <TrendingUp className="text-emerald-500" size={24} />
           </div>
@@ -494,12 +507,12 @@ export function DashboardPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                    <FileCheck className="text-primary" size={24} /> Jejak Program
+                    <FileCheck className="text-primary" size={24} /> {t('kpp:upcoming_activities')}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Status Kertas Kerja di JPP</p>
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('kpp:working_paper_status_jpp', 'Status Kertas Kerja di JPP')}</p>
                 </div>
                 <Button onClick={() => navigate('/aktiviti')} size="sm" className="w-full sm:w-auto rounded-xl font-black text-[10px] uppercase h-10 bg-slate-900 px-6">
-                  <Send className="w-3 h-3 mr-2" /> Daftar Program
+                  <Send className="w-3 h-3 mr-2" /> {t('kpp:register_program', 'Daftar Program')}
                 </Button>
               </div>
 
@@ -511,13 +524,13 @@ export function DashboardPage() {
                         <FileText className="w-6 h-6" />
                       </EmptyMedia>
                       <EmptyHeader>
-                        <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Program Ditemui</EmptyTitle>
+                        <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('kpp:audit_no_programs', 'Tiada Program Ditemui')}</EmptyTitle>
                         <EmptyDescription className="text-xs">
-                          Anda belum mendaftarkan sebarang program rasmi untuk kitaran ini.
+                          {t('kpp:no_registered_programs_cycle', 'Anda belum mendaftarkan sebarang program rasmi untuk kitaran ini.')}
                         </EmptyDescription>
                       </EmptyHeader>
                       <Button onClick={() => navigate('/aktiviti')} variant="outline" size="sm" className="rounded-xl font-black text-[10px] uppercase h-10 px-6">
-                        Daftar Program Sekarang
+                        {t('kpp:register_program_now', 'Daftar Program Sekarang')}
                       </Button>
                     </Empty>
                   </div>
@@ -531,12 +544,12 @@ export function DashboardPage() {
           <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70  overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                {taskView === 'active' ? (isNormalMember ? 'Tugasan Saya' : 'Senarai Tugasan') : 'Arkib Tugasan'}
+                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs', 'Kelab Saya') : t('portal:my_clubs_tasks', 'Kelab Saya - Tugasan')) : t('kpp:task_archive', 'Arkib Tugasan')}
                 {taskView === 'archive' && <Archive size={20} className="text-muted-foreground" />}
               </CardTitle>
               <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 w-full sm:w-auto">
-                <button onClick={() => setTaskView('active')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Aktif</button>
-                <button onClick={() => setTaskView('archive')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Arkib</button>
+                <button onClick={() => setTaskView('active')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>{t('common:active', 'Aktif')}</button>
+                <button onClick={() => setTaskView('archive')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>{t('common:archive', 'Arkib')}</button>
               </div>
             </CardHeader>
             <CardContent className="p-5 sm:p-8 space-y-4">
@@ -546,9 +559,9 @@ export function DashboardPage() {
                     <CheckCircle2 className="w-6 h-6" />
                   </EmptyMedia>
                   <EmptyHeader>
-                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">Semua Selesai!</EmptyTitle>
+                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('portal:all_completed', 'Semua Selesai!')}</EmptyTitle>
                     <EmptyDescription className="text-xs">
-                      Tiada tugasan {taskView === 'active' ? 'aktif' : 'dalam arkib'} buat masa ini.
+                      {taskView === 'active' ? t('portal:no_active_tasks_desc', 'Tiada tugasan aktif buat masa ini.') : t('portal:no_archived_tasks_desc', 'Tiada tugasan dalam arkib buat masa ini.')}
                     </EmptyDescription>
                   </EmptyHeader>
                   {isMT && taskView === 'active' && <AddTaskModal onTaskAdded={fetchData} />}
@@ -575,8 +588,8 @@ export function DashboardPage() {
                     <Medal size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">Amanat Penasihat</h4>
-                    <p className="text-[10px] font-bold text-white/40 uppercase">Terkini</p>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">{t('portal:advisor_address', 'Amanat Penasihat')}</h4>
+                    <p className="text-[10px] font-bold text-white/40 uppercase">{t('common:latest', 'Terkini')}</p>
                   </div>
                 </div>
                 {isAdvisor && (
@@ -595,7 +608,7 @@ export function DashboardPage() {
 
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 border border-border/40">
             <CardTitle className="text-xl font-black mb-6 flex items-center gap-2">
-              <Trophy className="text-amber-500" size={20} /> Ahli Cemerlang
+              <Trophy className="text-amber-500" size={20} /> {t('portal:outstanding_members', 'Ahli Cemerlang')}
             </CardTitle>
             <div className="space-y-4">
               {members.sort((a, b) => (b.merit || 0) - (a.merit || 0)).slice(0, 3).map((m, i) => (
@@ -609,7 +622,7 @@ export function DashboardPage() {
                   <Badge variant="outline" className="font-black text-primary border-primary/20 bg-background">{m.merit || 0} pts</Badge>
                 </div>
               ))}
-              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">Lihat Semua Ranking <ArrowUpRight size={14} className="ml-2" /></Button>
+              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">{t('portal:view_all_ranking', 'Lihat Semua Ranking')} <ArrowUpRight size={14} className="ml-2" /></Button>
             </div>
           </Card>
         </div>
@@ -625,13 +638,13 @@ export function DashboardPage() {
 
       <PromptDialog
         open={rejectDialog.open}
-        title="Tolak Tugasan"
-        description="Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan."
-        inputLabel="Sebab Penolakan"
+        title={t('kpp:reject_task', 'Tolak Tugasan')}
+        description={t('kpp:reject_task_desc', 'Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan.')}
+        inputLabel={t('kpp:rejection_reason_label', 'Sebab Penolakan')}
         inputType="textarea"
-        placeholder="Contoh: Lampiran minit mesyuarat tidak lengkap..."
-        confirmLabel="Tolak Tugasan"
-        confirmVariant="destructive"
+        placeholder={t('portal:reject_task_placeholder', 'Contoh: Lampiran minit mesyuarat tidak lengkap...')}
+        confirmLabel={t('kpp:reject_task', 'Tolak Tugasan')}
+        variant="destructive"
         isLoading={isProcessingAction}
         onConfirm={executeRejectTask}
         onCancel={() => setRejectDialog({ open: false, task: null })}
@@ -639,12 +652,12 @@ export function DashboardPage() {
 
       <PromptDialog
         open={unlockDialog.open}
-        title="Mohon Buka Semula Program"
-        description="Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan."
-        inputLabel="Sebab Permohonan"
+        title={t('kpp:request_unlock_program', 'Mohon Buka Semula Program')}
+        description={t('kpp:request_unlock_desc', 'Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan.')}
+        inputLabel={t('kpp:unlock_reason_label', 'Sebab Permohonan')}
         inputType="textarea"
-        placeholder="Contoh: Perlu mengemas kini perincian bajet dan tentatif program..."
-        confirmLabel="Hantar Permohonan"
+        placeholder={t('portal:unlock_program_placeholder', 'Contoh: Perlu mengemas kini perincian bajet dan tentatif program...')}
+        confirmLabel={t('kpp:submit_application', 'Hantar Permohonan')}
         isLoading={isProcessingAction}
         onConfirm={executeRequestUnlock}
         onCancel={() => setUnlockDialog({ open: false, program: null })}
@@ -652,12 +665,12 @@ export function DashboardPage() {
 
       <PromptDialog
         open={lateVerifyDialog.open}
-        title="Pengesahan Tugasan Lewat"
-        description={`Tugasan "${lateVerifyDialog.task?.title || ''}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: ${lateVerifyDialog.task?.merit_points || 0} pts.`}
-        inputLabel="Mata Merit Diberikan (Boleh Negatif)"
+        title={t('kpp:late_task_verification', 'Pengesahan Tugasan Lewat')}
+        description={t('portal:late_task_verification_desc', 'Tugasan "{{title}}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: {{points}} pts.', { title: lateVerifyDialog.task?.title || '', points: lateVerifyDialog.task?.merit_points || 0 })}
+        inputLabel={t('kpp:merit_points_awarded', 'Mata Merit Diberikan (Boleh Negatif)')}
         inputType="number"
         initialValue={String(lateVerifyDialog.task?.merit_points || 0)}
-        confirmLabel="Sahkan Tugasan"
+        confirmLabel={t('kpp:confirm_task', 'Sahkan Tugasan')}
         isLoading={isProcessingAction}
         onConfirm={(val) => {
           const num = Number(val);

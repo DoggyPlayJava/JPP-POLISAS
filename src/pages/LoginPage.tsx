@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import {
   Mail,
   Lock,
@@ -41,6 +43,7 @@ type RegisterMode = 'student' | 'leader' | 'staff';
 type Step = 1 | 2;
 
 export function LoginPage() {
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -129,45 +132,49 @@ export function LoginPage() {
     }
     const { data, error } = await supabase.rpc('resolve_login_identifier', { p_identifier: trimmed });
     if (error) return { email: null, error: error.message };
-    if (!data || data.length === 0) return { email: null, error: 'Tiada akaun dijumpai dengan maklumat ini.' };
+    if (!data || data.length === 0) return { email: null, error: t('auth:no_account_found') };
     const result = data[0];
     if (result.match_type === 'matric_no_duplicate') {
-      return { email: null, error: `Terdapat ${result.match_count} akaun dengan no matrik yang sama. Sila log masuk menggunakan emel anda, atau hubungi JPP untuk bantuan.` };
+      return { email: null, error: t('auth:multiple_accounts_found') };
     }
     if (result.match_type === 'full_name_duplicate') {
-      return { email: null, error: `Terdapat ${result.match_count} akaun dengan nama yang sama. Sila gunakan emel atau no matrik untuk log masuk.` };
+      return { email: null, error: t('auth:multiple_accounts_found') };
     }
     if (result.match_type === 'not_found') {
-      return { email: null, error: 'Tiada akaun dijumpai. Sila semak ejaan atau daftar akaun baru.' };
+      return { email: null, error: t('auth:no_account_found') };
     }
     return { email: result.email, error: null };
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || (!isForgotPassword && !password)) {
+      toast.error(t('auth:fill_required_fields'));
+      return;
+    }
     setIsLoading(true);
     try {
       if (isForgotPassword) {
         const resolved = await resolveIdentifier(email);
         if (resolved.error || !resolved.email) {
-          toast.error(resolved.error || 'Emel tidak dapat dikenal pasti.');
+          toast.error(resolved.error || t('auth:login_failed'));
           setIsLoading(false);
           return;
         }
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-        const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
+        const response = await fetch((API_BASE_URL || '') + '/api/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: resolved.email }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Gagal menghantar emel reset.');
+        if (!response.ok) throw new Error(data.error || t('auth:password_reset_failed'));
         setResetSent(true);
-        toast.success('Pautan tetapan semula telah dihantar ke emel anda.');
+        toast.success(t('auth:password_reset_sent'));
       } else {
         const resolved = await resolveIdentifier(email);
         if (resolved.error || !resolved.email) {
-          toast.error(resolved.error || 'Identiti tidak dapat dikenal pasti.');
+          toast.error(resolved.error || t('auth:login_failed'));
           setIsLoading(false);
           return;
         }
@@ -178,7 +185,7 @@ export function LoginPage() {
             const { data: providers } = await supabase.rpc('get_auth_providers', { p_email: resolvedEmail });
             if (providers && providers.includes('google') && !providers.includes('email')) {
               toast.error(
-                'Akaun ini didaftarkan melalui Google dan belum mempunyai kata laluan manual. Sila log masuk dengan Google atau klik "Lupa?" untuk menetapkan kata laluan.',
+                t('auth:google_account_no_password'),
                 { duration: 8000 }
               );
               setIsLoading(false);
@@ -187,16 +194,16 @@ export function LoginPage() {
           }
           throw error;
         }
-        toast.success('Log masuk berjaya. Selamat kembali.');
+        toast.success(t('auth:login_success'));
       }
     } catch (error: any) {
       const msg: Record<string, string> = {
-        'Invalid login credentials': 'Emel/Nama/No Matrik atau kata laluan tidak sah.',
-        'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
-        'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
-        'Email not confirmed': 'Sila sahkan emel anda dahulu.',
+        'Invalid login credentials': t('auth:login_failed'),
+        'User already registered': t('auth:user_already_registered'),
+        'Password should be at least 6 characters': t('auth:password_min_length'),
+        'Email not confirmed': t('auth:email_not_confirmed'),
       };
-      toast.error(msg[error.message] || error.message || 'Operasi gagal. Cuba lagi.');
+      toast.error(msg[error.message] || error.message || t('auth:login_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -217,44 +224,44 @@ export function LoginPage() {
       });
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || 'Gagal menyambung ke Google.');
+      toast.error(error.message || t('auth:google_login_failed'));
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
-      toast.error('Sila lengkapkan semua maklumat asas.');
+      toast.error(t('auth:fill_all_basic_info'));
       return;
     }
 
     if (registerMode !== 'staff' && !matricNo.trim().startsWith('02')) {
-      toast.error('No. Matrik pelajar mestilah bermula dengan "02".');
+      toast.error(t('auth:matric_starts_with_02'));
       return;
     }
 
     if (registerMode !== 'staff' && email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
-      toast.error('Sila guna emel peribadi. Emel pelajar @student.polisas.edu.my tidak dapat menerima kotak pengesahan.');
+      toast.error(t('auth:student_personal_email_warning'));
       return;
     }
 
     if (registerMode === 'staff') {
       const { data: isValid, error: rpcError } = await supabase.rpc('verify_staff_code', { p_code: passcode });
       if (rpcError || !isValid) {
-        toast.error('Kod pengesahan staf tidak sah.');
+        toast.error(t('auth:invalid_staff_code'));
         return;
       }
       if (staffRole === 'CLUB_ADVISOR' && !leaderClubId) {
-        toast.error('Sila pilih kelab yang dinasihati.');
+        toast.error(t('auth:select_club'));
         return;
       }
     } else {
       if (!jabatan) {
-        toast.error('Sila pilih jabatan anda.');
+        toast.error(t('auth:select_department'));
         return;
       }
       if (registerMode === 'leader' && !leaderClubId) {
-        toast.error('Sila pilih kelab anda.');
+        toast.error(t('auth:select_club'));
         return;
       }
     }
@@ -264,17 +271,20 @@ export function LoginPage() {
       if (registerMode !== 'staff') {
         const { data: matricCheck, error: matricErr } = await supabase.rpc('check_matric_registered', { p_matric_no: matricNo.trim() });
         if (matricErr) {
-          toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+          toast.error(t('auth:matric_verify_error', 'Tidak dapat mengesahkan no matrik. Sila cuba lagi.'));
           setIsLoading(false);
           return;
         }
         if (matricCheck?.exists) {
           const hint = matricCheck.email_hint || '***';
           const count = matricCheck.account_count || 1;
+          const accountCount = count > 1 ? t('auth:matric_accounts_count', ' ({{count}} akaun!)', { count }) : '';
           toast.error(
-            `No matrik ${matricNo.trim()} sudah didaftarkan${count > 1 ? ` (${count} akaun!)` : ''}. ` +
-            `Sila log masuk dengan emel asal anda (${hint}), atau tekan "Teruskan dengan Google". ` +
-            `Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.`,
+            t(
+              'auth:matric_already_registered_detailed',
+              'No matrik {{matric}} sudah didaftarkan{{accountCount}}. Sila log masuk dengan emel asal anda ({{hint}}), atau tekan "Teruskan dengan Google". Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.',
+              { matric: matricNo.trim(), accountCount, hint }
+            ),
             { duration: 10000 }
           );
           setIsLoading(false);
@@ -284,7 +294,7 @@ export function LoginPage() {
 
       const { data: emailExists, error: checkError } = await supabase.rpc('check_email_registered', { p_email: email.trim().toLowerCase() });
       if (!checkError && emailExists) {
-        toast.error('Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.');
+        toast.error(t('auth:email_already_registered_prompt', 'Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.'));
         setIsLoading(false);
         return;
       }
@@ -330,21 +340,21 @@ export function LoginPage() {
       }
 
       if (isStaff) {
-        toast.success(isAdvisor ? 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.' : 'Akaun Staf berjaya didaftar dan aktif!');
+        toast.success(isAdvisor ? t('auth:staff_advisor_registered_notice', 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.') : t('auth:staff_registered_active', 'Akaun Staf berjaya didaftar dan aktif!'));
         setIsSignUp(false);
         resetForm();
       } else {
         setRegisteredEmail(email.trim().toLowerCase());
         setVerificationSent(true);
-        toast.success('Akaun berjaya didaftar! Sila semak emel anda.');
+        toast.success(t('auth:account_registered_check_email', 'Akaun berjaya didaftar! Sila semak emel anda.'));
       }
     } catch (error: any) {
       localStorage.removeItem('is_new_register');
       const msg: Record<string, string> = {
-        'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
-        'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
+        'User already registered': t('auth:user_already_registered'),
+        'Password should be at least 6 characters': t('auth:password_min_length'),
       };
-      toast.error(msg[error.message] || error.message || 'Pendaftaran gagal. Cuba lagi.');
+      toast.error(msg[error.message] || error.message || t('common:action_failed', 'Pendaftaran gagal. Cuba lagi.'));
     } finally {
       setIsLoading(false);
     }
@@ -356,14 +366,17 @@ export function LoginPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.08)_0%,transparent_70%)]" />
       <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.06)_0%,transparent_70%)]" />
 
-      {/* Top spacer for balanced optical centering */}
-      <div className="w-full max-w-sm flex items-center justify-between pt-2 opacity-80 relative z-10">
+      {/* Top spacer for balanced optical centering and language switcher */}
+      <div className="w-full max-w-sm flex items-center justify-between pt-2 relative z-10">
         <span className="text-[11px] font-bold tracking-widest uppercase text-[#556453] dark:text-[#A3B39F]">
           JPP POLISAS
         </span>
-        <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
-          Sesi 2026/2027
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
+            Sesi 2026/2027
+          </span>
+          <LanguageToggle />
+        </div>
       </div>
 
       {/* Main Content Column (Authentic Amy-Style Cleanliness) */}
@@ -386,19 +399,19 @@ export function LoginPage() {
         <div className="text-left mb-8">
           <h1 className="text-3xl sm:text-[34px] font-black tracking-tight leading-[1.15] text-[#2E3A2F] dark:text-[#F8F6EE]">
             {isForgotPassword
-              ? 'Tetapkan Semula Kata Laluan'
+              ? t('auth:reset_password', 'Tetapkan Semula Kata Laluan')
               : isSignUp
-              ? (step === 1 ? 'Daftar Akaun Baharu' : 'Maklumat Keahlian')
-              : 'Selamat Datang ke JPP POLISAS'}
+              ? (step === 1 ? t('auth:register_title', 'Daftar Akaun Baharu') : t('auth:membership_info', 'Maklumat Keahlian'))
+              : t('auth:login_title')}
           </h1>
           <p className="text-sm sm:text-[15px] text-[#556453] dark:text-[#A3B39F] font-normal leading-relaxed mt-2.5">
             {isForgotPassword
-              ? 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.'
+              ? t('auth:reset_password_desc', 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.')
               : isSignUp && step === 1
-              ? 'Gunakan Google untuk pendaftaran segera atau daftar manual.'
+              ? t('auth:register_step1_desc', 'Gunakan Google untuk pendaftaran segera atau daftar manual.')
               : isSignUp && step === 2
-              ? 'Pilih jabatan atau kelab untuk pendaftaran peranan.'
-              : 'Satu portal pintar bersepadu untuk aktiviti persatuan, kebajikan, dan mahasiswa POLISAS.'}
+              ? t('auth:register_step2_desc', 'Pilih jabatan atau kelab untuk pendaftaran peranan.')
+              : t('auth:login_subtitle')}
           </p>
 
           {/* QR Redirect Notification Banner */}
@@ -412,7 +425,7 @@ export function LoginPage() {
               >
                 <Link2 className="w-4 h-4 text-[#6B7F5B] shrink-0" />
                 <p className="text-xs font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                  Log masuk untuk meneruskan ke destinasi QR anda.
+                  {t('auth:qr_redirect_notice', 'Log masuk untuk meneruskan ke destinasi QR anda.')}
                 </p>
               </motion.div>
             )}
@@ -426,9 +439,9 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">Sahkan Emel Anda</p>
+              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">{t('auth:verify_your_email', 'Sahkan Emel Anda')}</p>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed mt-1">
-                Akaun anda berjaya didaftarkan. Sila klik butang di bawah untuk menerima pautan pengesahan ke{' '}
+                {t('auth:check_email_verification')}{' '}
                 <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{registeredEmail}</span>.
               </p>
             </div>
@@ -449,29 +462,29 @@ export function LoginPage() {
                     const data = await resp.json();
                     if (resp.ok) {
                       setEmailSentOnce(true);
-                      toast.success(data.message || 'Emel pengesahan berjaya dihantar! Sila semak peti masuk anda.');
+                      toast.success(data.message || t('auth:check_email_verification'));
                     } else {
-                      toast.error(data.error || 'Gagal menghantar emel pengesahan.');
+                      toast.error(data.error || t('common:action_failed', 'Gagal menghantar emel pengesahan.'));
                     }
                   } catch {
-                    toast.error('Gagal menghubungi pelayan. Sila cuba lagi.');
+                    toast.error(t('common:network_error', 'Gagal menghubungi pelayan. Sila cuba lagi.'));
                   } finally {
                     setResendLoading(false);
                   }
                 }}
               >
                 {resendLoading ? (
-                  'Menghantar...'
+                  t('auth:sending', 'Menghantar...')
                 ) : emailSentOnce ? (
-                  <span className="inline-flex items-center gap-2"><Send className="w-3.5 h-3.5" /> Hantar Semula</span>
+                  <span className="inline-flex items-center gap-2"><Send className="w-3.5 h-3.5" /> {t('auth:resend', 'Hantar Semula')}</span>
                 ) : (
-                  <span className="inline-flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Hantar Emel Pengesahan</span>
+                  <span className="inline-flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {t('auth:send_verification_email', 'Hantar Emel Pengesahan')}</span>
                 )}
               </Button>
               {emailSentOnce && (
                 <div className="inline-flex items-center justify-center gap-1.5 text-xs text-[#6B7F5B] font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Emel telah dihantar. Semak peti masuk dan folder spam anda.</span>
+                  <span>{t('auth:email_sent_check_inbox', 'Emel telah dihantar. Semak peti masuk dan folder spam anda.')}</span>
                 </div>
               )}
               <Button
@@ -479,7 +492,7 @@ export function LoginPage() {
                 className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider text-[#556453] dark:text-[#A3B39F]"
                 onClick={() => { setVerificationSent(false); setIsSignUp(false); resetForm(); }}
               >
-                Kembali ke Log Masuk
+                {t('auth:back_to_login')}
               </Button>
             </div>
           </div>
@@ -489,9 +502,9 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">Semak Emel Anda</p>
+              <p className="font-black text-lg text-[#2E3A2F] dark:text-[#F8F6EE]">{t('auth:check_your_email', 'Semak Emel Anda')}</p>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed mt-1">
-                Pautan tetapan semula telah dihantar ke <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{email}</span>.
+                {t('auth:password_reset_sent')} (<span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{email}</span>).
               </p>
             </div>
             <Button
@@ -499,7 +512,7 @@ export function LoginPage() {
               className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#D9C9B2] text-[#2E3A2F] dark:text-[#F8F6EE] hover:bg-[#F8F6EE]"
               onClick={() => { setResetSent(false); setIsForgotPassword(false); }}
             >
-              Kembali ke Log Masuk
+              {t('auth:back_to_login')}
             </Button>
           </div>
         ) : isSignUp ? (
@@ -515,7 +528,7 @@ export function LoginPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
-                    toast.error('Sila lengkapkan semua maklumat.');
+                    toast.error(t('auth:fill_all_basic_info', 'Sila lengkapkan semua maklumat.'));
                     return;
                   }
                   setStep(2);
@@ -566,12 +579,12 @@ export function LoginPage() {
                         <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
                         <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                       </svg>
-                      <span>Daftar bersama Google</span>
+                      <span>{t('auth:register_with_google', 'Daftar bersama Google')}</span>
                     </button>
 
                     <div className="flex items-center gap-3 my-2">
                       <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
-                      <span className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F] uppercase tracking-widest">atau</span>
+                      <span className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F] uppercase tracking-widest">{t('common:or', 'atau')}</span>
                       <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
                     </div>
 
@@ -581,7 +594,7 @@ export function LoginPage() {
                         onClick={() => setShowManualRegister(!showManualRegister)}
                         className="w-full py-2.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <span>{showManualRegister ? 'Tutup Pendaftaran Manual' : 'Isi Borang Manual'}</span>
+                        <span>{showManualRegister ? t('auth:close_manual_register', 'Tutup Pendaftaran Manual') : t('auth:fill_manual_form', 'Isi Borang Manual')}</span>
                         <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
                       </button>
                     )}
@@ -597,7 +610,7 @@ export function LoginPage() {
                       className="space-y-3 pt-1"
                     >
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Nama Penuh</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:name', 'Nama Penuh')}</Label>
                         <Input
                           placeholder="CTH: MUHAMMAD BIN AHMAD ALI"
                           required
@@ -609,7 +622,7 @@ export function LoginPage() {
 
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">
-                          {registerMode === 'staff' ? 'No. Pekerja (Staf ID)' : 'No. Matrik'}
+                          {registerMode === 'staff' ? t('auth:staff_id_label', 'No. Pekerja (Staf ID)') : t('auth:matric_no_label', 'No. Matrik')}
                         </Label>
                         <Input
                           placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"}
@@ -622,10 +635,10 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Emel Peribadi</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:personal_email', 'Emel Peribadi')}</Label>
                         <Input
                           type="email"
-                          placeholder="emel@gmail.com"
+                          placeholder={t('auth:email_placeholder_sample', 'emel@gmail.com')}
                           required
                           value={email}
                           onChange={e => setEmail(e.target.value)}
@@ -634,7 +647,7 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">No Telefon Bimbit</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:phone', 'No Telefon Bimbit')}</Label>
                         <Input
                           placeholder="CTH: 0123456789"
                           required
@@ -645,7 +658,7 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kata Laluan</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:password', 'Kata Laluan')}</Label>
                         <Input
                           type="password"
                           required
@@ -682,7 +695,7 @@ export function LoginPage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] mb-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Kembali ke Langkah 1</span>
+                  <span>{t('auth:back_to_step_1', 'Kembali ke Langkah 1')}</span>
                 </button>
 
                 {registerMode !== 'staff' && (
@@ -696,7 +709,7 @@ export function LoginPage() {
                           registerMode === 'student' ? "bg-white dark:bg-[#2E3A2F] shadow-xs text-[#2E3A2F] dark:text-white" : "text-[#556453] dark:text-[#A3B39F]"
                         )}
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" /> Pelajar Biasa
+                        <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" /> {t('auth:regular_student', 'Pelajar Biasa')}
                       </button>
                       <button
                         type="button"
@@ -712,11 +725,11 @@ export function LoginPage() {
 
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">
-                        Jabatan Akademik Anda
+                        {t('auth:your_academic_dept', 'Jabatan Akademik Anda')}
                       </Label>
                       <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
                         <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] dark:border-[#3A4A3B] text-xs">
-                          <SelectValue placeholder="Pilih jabatan akademik..." />
+                          <SelectValue placeholder={t('auth:select_academic_dept_placeholder', 'Pilih jabatan akademik...')} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-[#D9C9B2] dark:border-[#3A4A3B] shadow-xl">
                           {JABATAN_LIST.map(j => (
@@ -733,17 +746,17 @@ export function LoginPage() {
                 <AnimatePresence mode="wait">
                   {registerMode === 'student' && (
                     <div className="p-3.5 rounded-2xl bg-[#6B7F5B]/10 border border-[#6B7F5B]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                      <span className="font-bold">Info:</span> Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.
+                      <span className="font-bold">{t('common:info', 'Info')}:</span> {t('auth:academic_club_reg_info', 'Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.')}
                     </div>
                   )}
 
                   {registerMode === 'leader' && (
                     <div className="space-y-3">
                       <div className="p-3.5 rounded-2xl bg-[#C96F4F]/10 border border-[#C96F4F]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                        <span className="font-bold">Perhatian:</span> Permohonan jawatan kepimpinan kelab tertakluk kepada kelulusan Penasihat kelab masing-masing.
+                        <span className="font-bold">{t('common:attention', 'Perhatian:')}</span> {t('auth:leadership_advisor_approval_notice', 'Permohonan jawatan kepimpinan kelab tertakluk kepada kelulusan Penasihat kelab masing-masing.')}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Jawatan</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:position', 'Jawatan')}</Label>
                         <Select value={leaderRole} onValueChange={v => setLeaderRole(v as UserRole)}>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
                             <SelectValue />
@@ -758,10 +771,10 @@ export function LoginPage() {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kelab (Diterajui)</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:club_lead_label', 'Kelab (Diterajui)')}</Label>
                         <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                            <SelectValue placeholder="Pilih kelab untuk diterajui..." />
+                            <SelectValue placeholder={t('auth:select_club_lead_placeholder', 'Pilih kelab untuk diterajui...')} />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl border-[#D9C9B2] max-h-60">
                             {ALL_CLUBS.filter(c => !['Badan Beruniform', 'badan_beruniform'].includes(c.category)).map(c => (
@@ -779,10 +792,10 @@ export function LoginPage() {
                   {registerMode === 'staff' && (
                     <div className="space-y-3">
                       <div className="p-3.5 rounded-2xl bg-[#6B7F5B]/10 border border-[#6B7F5B]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                        Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan institusi POLISAS.
+                        {t('auth:staff_reg_service_desc', 'Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan institusi POLISAS.')}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Tujuan Pendaftaran</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:purpose_label', 'Tujuan Pendaftaran')}</Label>
                         <Select value={staffRole} onValueChange={v => setStaffRole(v as UserRole)}>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs font-bold text-[#2E3A2F] dark:text-white">
                             <SelectValue />
@@ -799,10 +812,10 @@ export function LoginPage() {
 
                       {staffRole === 'CLUB_ADVISOR' && (
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kelab Yang Dinasihati</Label>
+                          <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:advised_club_label', 'Kelab Yang Dinasihati')}</Label>
                           <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
                             <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                              <SelectValue placeholder="Sila pilih kelab anda..." />
+                              <SelectValue placeholder={t('auth:select_club_placeholder', 'Sila pilih kelab anda...')} />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-[#D9C9B2] max-h-60">
                               {ALL_CLUBS.map(c => (
@@ -817,10 +830,10 @@ export function LoginPage() {
                       )}
 
                       <div className="space-y-1 pt-1">
-                        <Label className="text-[11px] font-bold text-rose-600">KOD PENGESAHAN STAF</Label>
+                        <Label className="text-[11px] font-bold text-rose-600">{t('auth:staff_passcode_label', 'KOD PENGESAHAN STAF')}</Label>
                         <Input
                           type="password"
-                          placeholder="Dapatkan dari Admin"
+                          placeholder={t('auth:passcode_placeholder', 'Dapatkan dari Admin')}
                           required
                           value={passcode}
                           onChange={e => setPasscode(e.target.value)}
@@ -836,7 +849,7 @@ export function LoginPage() {
                   disabled={isLoading}
                   className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
                 >
-                  <span>{isLoading ? 'Mendaftar...' : 'Daftar Sekarang'}</span>
+                  <span>{isLoading ? t('auth:registering', 'Mendaftar...') : t('auth:register_now', 'Daftar Sekarang')}</span>
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
               </motion.form>
@@ -865,13 +878,13 @@ export function LoginPage() {
                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
                     <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                   </svg>
-                  <span>Teruskan dengan Google</span>
+                  <span>{t('auth:sign_in_with_google', 'Teruskan dengan Google')}</span>
                 </button>
 
                 {/* 2. Microscopic Clean Divider */}
                 <div className="flex items-center gap-3 py-1">
                   <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
-                  <span className="text-xs font-medium text-[#556453]/70 dark:text-[#A3B39F]/70">atau</span>
+                  <span className="text-xs font-medium text-[#556453]/70 dark:text-[#A3B39F]/70">{t('common:or', 'atau')}</span>
                   <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
                 </div>
 
@@ -882,7 +895,7 @@ export function LoginPage() {
                   className="w-full h-14 rounded-2xl bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#58694B] text-[#F8F6EE] font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   <Mail className="w-4 h-4 opacity-90" />
-                  <span>Log masuk menggunakan Emel / No Matrik</span>
+                  <span>{t('auth:login_with_email_matric', 'Log masuk menggunakan Emel / No Matrik')}</span>
                 </button>
               </motion.div>
             ) : (
@@ -901,17 +914,17 @@ export function LoginPage() {
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors cursor-pointer mb-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Kembali ke Pilihan Log Masuk</span>
+                    <span>{t('auth:back_to_login_options', 'Kembali ke Pilihan Log Masuk')}</span>
                   </button>
 
                   <form onSubmit={handleLogin} className="space-y-3.5">
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
-                        {isForgotPassword ? 'Emel Pendaftaran' : 'Emel / No Matrik / Nama'}
+                        {isForgotPassword ? t('auth:email') : t('auth:matrix_no')}
                       </Label>
                       <Input
                         type="text"
-                        placeholder="02DKM1234 / emel@gmail.com"
+                        placeholder={isForgotPassword ? t('auth:email_placeholder_sample', 'emel@gmail.com') : t('auth:matrix_no_placeholder')}
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -923,19 +936,19 @@ export function LoginPage() {
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
-                            Kata Laluan
+                            {t('auth:password')}
                           </Label>
                           <button
                             type="button"
                             onClick={() => setIsForgotPassword(true)}
                             className="text-xs font-semibold text-[#C96F4F] hover:underline cursor-pointer"
                           >
-                            Lupa?
+                            {t('auth:forgot_password')}
                           </button>
                         </div>
                         <Input
                           type="password"
-                          placeholder="Masukkan kata laluan anda"
+                          placeholder={t('auth:password_placeholder')}
                           required
                           value={password}
                           onChange={e => setPassword(e.target.value)}
@@ -949,7 +962,7 @@ export function LoginPage() {
                       disabled={isLoading}
                       className="w-full h-14 rounded-2xl bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] font-bold text-[15px] shadow-sm transition-all active:scale-[0.98] cursor-pointer mt-1"
                     >
-                      {isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan Tetapan Semula' : 'Log Masuk'}
+                      {isLoading ? t('auth:logging_in') : isForgotPassword ? t('auth:reset_password') : t('auth:login_button')}
                     </Button>
                   </form>
                     </motion.div>
@@ -963,13 +976,13 @@ export function LoginPage() {
                     type="button"
                     onClick={() => {
                       localStorage.setItem('use_mock_auth', 'true');
-                      toast.success('Pintasan Developer diaktifkan!');
+                      toast.success(t('auth:dev_shortcut_activated', 'Pintasan Developer diaktifkan!'));
                       setTimeout(() => window.location.href = '/portal', 500);
                     }}
                     className="w-full h-11 rounded-xl border border-dashed border-[#6B7F5B] bg-[#6B7F5B]/10 hover:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                    <span>Pintas Log Masuk (Dev Mode)</span>
+                    <span>{t('auth:bypass_login_dev', 'Pintas Log Masuk (Dev Mode)')}</span>
                   </button>
                 </div>
               )}
@@ -985,11 +998,11 @@ export function LoginPage() {
                 onClick={() => setIsForgotPassword(false)}
                 className="text-xs font-bold text-[#C96F4F] hover:underline cursor-pointer"
               >
-                Kembali ke Log Masuk
+                {t('auth:back_to_login')}
               </button>
             ) : (
               <div>
-                <span>{isSignUp ? 'Sudah mempunyai akaun? ' : 'Belum mempunyai akaun? '}</span>
+                <span>{isSignUp ? t('auth:already_have_account') + ' ' : t('auth:dont_have_account') + ' '}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -999,7 +1012,7 @@ export function LoginPage() {
                   }}
                   className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE] underline underline-offset-4 hover:text-[#6B7F5B] cursor-pointer"
                 >
-                  {isSignUp ? 'Log masuk' : 'Daftar sekarang'}
+                  {isSignUp ? t('auth:login_button') : t('auth:register_now')}
                 </button>
               </div>
             )}
@@ -1015,7 +1028,7 @@ export function LoginPage() {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors"
           >
             <PhoneCall className="w-3 h-3 text-[#6B7F5B]" />
-            <span>Hubungi JPP jika ada masalah</span>
+            <span>{t('auth:contact_support', 'Hubungi JPP jika ada masalah')}</span>
           </a>
         </div>
       </motion.div>
@@ -1023,13 +1036,17 @@ export function LoginPage() {
       {/* Institutional Micro-Footer (Airy, dignified, calm) */}
       <footer className="w-full max-w-sm pb-2 pt-6 text-center border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/40 space-y-1">
         <p className="text-[10px] font-bold text-[#2E3A2F]/80 dark:text-[#F8F6EE]/80 uppercase tracking-widest">
-          Perpaduan Progresif Demi Mahasiswa
+          {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
         </p>
         <p className="text-[10px] text-[#556453]/70 dark:text-[#A3B39F]/60">
-          Jawatankuasa Perwakilan Pelajar &middot; Politeknik Sultan Haji Ahmad Shah
+          {t('auth:footer_org_name', 'Jawatankuasa Perwakilan Pelajar · Politeknik Sultan Haji Ahmad Shah')}
         </p>
         <p className="text-[9px] text-[#556453]/50 dark:text-[#A3B39F]/40 font-mono">
-          {realStats.clubCount} Kelab &middot; {realStats.unitCount} Unit Exco JPP &middot; {realStats.deptCount} Jabatan Akademik
+          {t('auth:footer_stats', '{{clubCount}} Kelab · {{unitCount}} Unit Exco JPP · {{deptCount}} Jabatan Akademik', {
+            clubCount: realStats.clubCount,
+            unitCount: realStats.unitCount,
+            deptCount: realStats.deptCount,
+          })}
         </p>
       </footer>
     </div>

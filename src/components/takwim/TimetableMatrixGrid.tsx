@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   MapPin,
@@ -44,6 +45,7 @@ export function TimetableMatrixGrid({
   onSlotClick,
   onSlotDelete,
 }: TimetableMatrixGridProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const currentDayOfWeek = new Date().getDay();
 
   // Group entries by day
@@ -63,7 +65,7 @@ export function TimetableMatrixGrid({
       <div className="flex md:hidden items-center justify-between px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-[10px] text-slate-500 dark:text-white/50">
         <span className="flex items-center gap-1.5 font-bold">
           <Clock className="w-3 h-3 text-indigo-500" />
-          <span>← Leret untuk lihat jadual penuh (8:00 PG - 5:00 PTG) →</span>
+          <span>{t('jpp:timetable_swipe_full', '← Leret untuk lihat jadual penuh (8:00 PG - 5:00 PTG) →')}</span>
         </span>
         <ChevronRight className="w-3 h-3 shrink-0 animate-pulse text-indigo-500" />
       </div>
@@ -77,7 +79,7 @@ export function TimetableMatrixGrid({
               {/* Corner Cell: Sticky Top & Left */}
               <div className="w-24 sm:w-28 shrink-0 p-3 flex flex-col justify-center items-center border-r border-slate-200 dark:border-white/10 bg-slate-100/95 dark:bg-zinc-900/95 sticky left-0 z-40">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
-                  HARI \ MASA
+                  {t('jpp:timetable_day_time', 'HARI \\ MASA')}
                 </span>
               </div>
 
@@ -98,7 +100,7 @@ export function TimetableMatrixGrid({
                     </span>
                     {slot.isBreak && (
                       <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                        REHAT / SOLAT
+                        {t('jpp:timetable_break_prayer', 'REHAT / SOLAT')}
                       </span>
                     )}
                   </div>
@@ -136,7 +138,7 @@ export function TimetableMatrixGrid({
                       </span>
                       {isToday && (
                         <Badge className="mt-1 bg-indigo-600 text-white border-none text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2">
-                          HARI INI
+                          {t('jpp:timetable_today_badge', 'HARI INI')}
                         </Badge>
                       )}
                       <span className="text-[9px] font-bold text-slate-400 dark:text-white/30 mt-0.5">
@@ -213,8 +215,8 @@ export function TimetableMatrixGrid({
                                       onSlotDelete(slot.id);
                                     }}
                                     className="opacity-0 group-hover/slot:opacity-100 p-0.5 rounded text-slate-400 hover:text-rose-600 transition-opacity"
-                                    title="Padam Slot"
-                                    aria-label="Padam Slot"
+                                    title={t('jpp:timetable_delete_slot', 'Padam Slot')}
+                                    aria-label={t('jpp:timetable_delete_slot', 'Padam Slot')}
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </button>
@@ -233,7 +235,7 @@ export function TimetableMatrixGrid({
                             <div className="flex items-center justify-between gap-1 text-[9px] font-bold text-slate-600 dark:text-white/70 mt-auto pt-0.5 border-t border-black/5 dark:border-white/5">
                               <span className="flex items-center gap-0.5 truncate">
                                 <MapPin className="w-2.5 h-2.5 shrink-0 opacity-70" />
-                                <span className="truncate">{slot.room_raw || 'Bilik'}</span>
+                                <span className="truncate">{slot.room_raw || t('jpp:timetable_room_default', 'Bilik')}</span>
                               </span>
                               {slot.lecturer_code && (
                                 <span className="text-[8px] uppercase tracking-wider text-slate-500 dark:text-white/50 shrink-0">

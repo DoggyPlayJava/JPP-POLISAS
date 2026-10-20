@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -10,23 +11,21 @@ import {
 import { cn, hexToRgba } from '@/lib/utils';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG } from './jppConfig';
 import { JPP_MT_POSITIONS, JPP_UNIT_LABELS } from '@/types';
-import { KppUnitDashboard }          from './units/KppUnitDashboard';
+import { KppUnitDashboard } from './units/KppUnitDashboard';
 import { KeusahawananUnitDashboard } from './units/KeusahawananUnitDashboard';
-import { AkademikUnitDashboard }     from './units/AkademikUnitDashboard';
-import { KkUnitDashboard }           from './units/KkUnitDashboard';
-import { ExcoGenericDashboard }      from './units/ExcoGenericDashboard';
-import { KebajikanUnitDashboard }    from './units/KebajikanUnitDashboard';
-import { SrkUnitDashboard }          from './units/SrkUnitDashboard';
-import { KlsUnitDashboard }          from './units/KlsUnitDashboard';
-import { MultimediaUnitDashboard }   from './units/MultimediaUnitDashboard';
-import { KolaborasiUnitDashboard }   from './units/KolaborasiUnitDashboard';
+import { AkademikUnitDashboard } from './units/AkademikUnitDashboard';
+import { KkUnitDashboard } from './units/KkUnitDashboard';
+import { ExcoGenericDashboard } from './units/ExcoGenericDashboard';
+import { KebajikanUnitDashboard } from './units/KebajikanUnitDashboard';
+import { SrkUnitDashboard } from './units/SrkUnitDashboard';
+import { KlsUnitDashboard } from './units/KlsUnitDashboard';
+import { MultimediaUnitDashboard } from './units/MultimediaUnitDashboard';
+import { KolaborasiUnitDashboard } from './units/KolaborasiUnitDashboard';
 
 // ── Units that have a full dedicated dashboard component ─────────────────────
 const FULL_DASHBOARD_UNITS = new Set([
   'KPP', 'KEUSAHAWANAN', 'AKADEMIK', 'KK', 'KEBAJIKAN', 'SRK', 'KLS', 'MULTIMEDIA', 'KOLAB'
 ]);
-
-
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, delay }: any) {
@@ -51,8 +50,16 @@ function StatCard({ label, value, icon: Icon, color, delay }: any) {
 
 // ── Coming Soon placeholder ───────────────────────────────────────────────────
 function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor: string }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const cfg = UNIT_CFG[code.toUpperCase()];
   const navigate = useNavigate();
+
+  const milestoneSteps = [
+    t('jpp:milestone_ui_ux', 'Reka bentuk UI/UX'),
+    t('jpp:milestone_backend', 'Pembangunan Backend'),
+    t('jpp:milestone_testing_qa', 'Ujian & QA'),
+    t('jpp:milestone_official_launch', 'Pelancaran Rasmi')
+  ];
 
   return (
     <motion.div
@@ -86,7 +93,7 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
         }}
       >
         <Construction className="w-3 h-3" />
-        Dalam Pembangunan
+        {t('jpp:in_development', 'Dalam Pembangunan')}
       </div>
 
       <div className="space-y-2 max-w-sm">
@@ -97,13 +104,13 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
           {cfg?.fullLabel ?? JPP_UNIT_LABELS[code.toUpperCase()] ?? code}
         </p>
         <p className="text-[11px] text-slate-500 dark:text-white/25 mt-4 leading-relaxed">
-          Modul exco ini sedang dalam pembangunan. Pasukan JPP Digital sedang membangunkan ciri-ciri yang diperlukan untuk unit ini.
+          {t('jpp:module_under_development_desc', 'Modul exco ini sedang dalam pembangunan. Pasukan JPP Digital sedang membangunkan ciri-ciri yang diperlukan untuk unit ini.')}
         </p>
       </div>
 
       {/* Milestones */}
       <div className="w-full max-w-xs space-y-2.5 text-left">
-        {['Reka bentuk UI/UX', 'Pembangunan Backend', 'Ujian & QA', 'Pelancaran Rasmi'].map((step, i) => (
+        {milestoneSteps.map((step, i) => (
           <div key={step} className="flex items-center gap-3">
             <div className={cn(
               'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-black',
@@ -123,7 +130,7 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
         className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 bg-white dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06] shadow-sm transition-all"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Kembali ke JPP HQ
+        {t('jpp:back_to_hq', 'Kembali ke JPP HQ')}
       </button>
     </motion.div>
   );
@@ -131,17 +138,18 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
 
 // ── Main component ────────────────────────────────────────────────────────────
 export function JppUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { unitCode = '' } = useParams<{ unitCode: string }>();
   const { user, profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const upperCode   = unitCode.toUpperCase();
-  const cfg         = UNIT_CFG[upperCode];
+  const upperCode = unitCode.toUpperCase();
+  const cfg = UNIT_CFG[upperCode];
 
   const jppPosition = profile?.jpp_position as string | undefined;
-  const jppUnit     = profile?.jpp_unit as string | undefined;
-  const isYDP       = jppPosition === 'YDP' || isSuperAdmin;
-  const isMT        = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
+  const jppUnit = profile?.jpp_unit as string | undefined;
+  const isYDP = jppPosition === 'YDP' || isSuperAdmin;
+  const isMT = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
@@ -166,7 +174,7 @@ export function JppUnitDashboard() {
   // Access check
   const hasAccess = useMemo(() => {
     if (isYDP) return true;
-    if (isMT)  return assignedUnits.includes(upperCode);
+    if (isMT) return assignedUnits.includes(upperCode);
     return jppUnit === upperCode;
   }, [isYDP, isMT, assignedUnits, upperCode, jppUnit]);
 
@@ -189,13 +197,13 @@ export function JppUnitDashboard() {
         <div className="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-white/5 flex items-center justify-center">
           <Lock className="w-7 h-7 text-slate-400 dark:text-white/20" />
         </div>
-        <h1 className="text-xl font-black text-slate-700 dark:text-white/40">Akses Terhad</h1>
-        <p className="text-xs text-slate-500 dark:text-white/20 max-w-xs">Anda tidak mempunyai akses ke unit ini.</p>
+        <h1 className="text-xl font-black text-slate-700 dark:text-white/40">{t('common:access_restricted', 'Akses Terhad')}</h1>
+        <p className="text-xs text-slate-500 dark:text-white/20 max-w-xs">{t('jpp:no_access_unit', 'Anda tidak mempunyai akses ke unit ini.')}</p>
         <button
           onClick={() => navigate('/jpp')}
           className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60 transition-all"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Kembali
+          <ArrowLeft className="w-3.5 h-3.5" /> {t('common:back', 'Kembali')}
         </button>
       </div>
     );
@@ -205,7 +213,7 @@ export function JppUnitDashboard() {
     <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full  opacity-5"
+        <div className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full opacity-5"
           style={{ background: cfg.color }} />
       </div>
 
@@ -220,7 +228,7 @@ export function JppUnitDashboard() {
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60 transition-all group"
         >
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-          Kembali
+          {t('common:back', 'Kembali')}
         </motion.button>
 
         {/* Not active → show placeholder */}
@@ -256,10 +264,10 @@ export function JppUnitDashboard() {
                           borderColor: hexToRgba(cfg.color, 0.3) 
                         }}
                       >
-                        Unit Exco
+                        {t('jpp:exco_unit_badge', 'Unit Exco')}
                       </span>
                       <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> Aktif
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> {t('common:active', 'Aktif')}
                       </span>
                     </div>
                     <h1 className="text-[28px] md:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{cfg.shortLabel}</h1>
@@ -283,7 +291,7 @@ export function JppUnitDashboard() {
                       className="text-[11px] font-black uppercase tracking-widest relative z-10"
                       style={{ color: cfg.color }}
                     >
-                      Buka Modul Utama
+                      {t('jpp:open_main_module', 'Buka Modul Utama')}
                     </span>
                   </button>
                 </div>
@@ -293,15 +301,15 @@ export function JppUnitDashboard() {
             {/* ── Full Unit Dashboard (Semua 9 Unit Exco) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
               <div className="bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/[0.06] p-5 sm:p-6 shadow-xs">
-                {upperCode === 'KPP'          && <KppUnitDashboard />}
+                {upperCode === 'KPP' && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
-                {upperCode === 'AKADEMIK'     && <AkademikUnitDashboard />}
-                {upperCode === 'KK'           && <KkUnitDashboard />}
-                {upperCode === 'KEBAJIKAN'    && <KebajikanUnitDashboard />}
-                {upperCode === 'SRK'          && <SrkUnitDashboard />}
-                {upperCode === 'KLS'          && <KlsUnitDashboard />}
-                {upperCode === 'MULTIMEDIA'   && <MultimediaUnitDashboard />}
-                {upperCode === 'KOLAB'        && <KolaborasiUnitDashboard />}
+                {upperCode === 'AKADEMIK' && <AkademikUnitDashboard />}
+                {upperCode === 'KK' && <KkUnitDashboard />}
+                {upperCode === 'KEBAJIKAN' && <KebajikanUnitDashboard />}
+                {upperCode === 'SRK' && <SrkUnitDashboard />}
+                {upperCode === 'KLS' && <KlsUnitDashboard />}
+                {upperCode === 'MULTIMEDIA' && <MultimediaUnitDashboard />}
+                {upperCode === 'KOLAB' && <KolaborasiUnitDashboard />}
               </div>
             ) : (
               /* ── Exco Generic Dashboard untuk semua unit aktif lain ─── */

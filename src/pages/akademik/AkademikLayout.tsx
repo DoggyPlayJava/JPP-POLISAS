@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,33 +20,25 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
-const AKADEMIK_UNIT_LINKS = [
-  { label: 'Dashboard Akademik', path: '/akademik' },
-  { label: 'Pencapaian Pelajar', path: '/akademik/pencapaian' },
-  { label: 'Leaderboard Merit Akademik', path: '/akademik/leaderboard' },
-  { label: 'Scan QR Merit', path: '/akademik/qr' },
-  { label: 'Takwim Akademik', path: '/akademik/takwim' },
-];
 
-const NAV_ITEMS = [
-  { path: '/akademik',            label: 'Dashboard',    icon: LayoutDashboard },
-  { path: '/akademik/pencapaian', label: 'Pencapaian',   icon: Trophy },
-  { path: '/akademik/cgpa',       label: 'HPNM / CGPA',  icon: BookOpen },
-  { path: '/akademik/merit',      label: 'Merit Saya',   icon: Star },
-  { path: '/akademik/folder',     label: 'Dokumen',      icon: FileText },
-  { path: '/akademik/leaderboard',label: 'Leaderboard',  icon: BarChart3 },
-  { path: '/akademik/takwim',     label: 'Takwim',       icon: CalendarDays },
-  { path: '/akademik/qr',         label: 'Scan QR',      icon: QrCode },
-];
 
 const THEME = '#818CF8';
 
 export function AkademikLayout() {
+  const { t } = useTranslation(['akademik', 'nav', 'common']);
   const { profile } = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { runTour, startTour, closeTour } = useTour('akademik_module_tour', false);
+
+  const akademikUnitLinks = React.useMemo(() => [
+    { label: t('akademik:academic_dashboard_btn', 'Dashboard Akademik'), path: '/akademik' },
+    { label: t('akademik:student_achievements', 'Pencapaian Pelajar'), path: '/akademik/pencapaian' },
+    { label: t('akademik:merit_leaderboard', 'Leaderboard Merit Akademik'), path: '/akademik/leaderboard' },
+    { label: t('akademik:scan_qr_merit', 'Scan QR Merit'), path: '/akademik/qr' },
+    { label: t('akademik:academic_takwim', 'Takwim Akademik'), path: '/akademik/takwim' },
+  ], [t]);
 
   const isActive = (path: string) =>
     path === '/akademik' ? location.pathname === '/akademik' : location.pathname.startsWith(path);
@@ -70,27 +64,29 @@ export function AkademikLayout() {
   const akademikTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.',
-      title: 'Modul e-Akademik',
+      content: t('akademik:tour_welcome_content', 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.'),
+      title: t('akademik:tour_welcome_title', 'Modul e-Akademik'),
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-akademik-sidebar',
-      content: isMobile ? 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.' : 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.',
-      title: 'Navigasi Menu',
+      content: isMobile
+        ? t('akademik:tour_nav_mobile_content', 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.')
+        : t('akademik:tour_nav_desktop_content', 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.'),
+      title: t('akademik:tour_nav_title', 'Navigasi Menu'),
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-akademik-cgpa',
-      content: 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.',
-      title: 'Prestasi Akademik',
+      content: t('akademik:tour_cgpa_content', 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.'),
+      title: t('akademik:tour_cgpa_title', 'Prestasi Akademik'),
       placement: 'bottom' as const,
     },
     {
       target: '.tour-akademik-merit',
-      content: 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.',
-      title: 'Status Merit',
+      content: t('akademik:tour_merit_content', 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.'),
+      title: t('akademik:tour_merit_title', 'Status Merit'),
       placement: 'bottom' as const,
     }
   ];
@@ -172,6 +168,7 @@ export function AkademikLayout() {
             <button onClick={startTour} className="p-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-xl transition-all">
                <HelpCircle className="w-4 h-4" />
             </button>
+            <LanguageToggle />
             <ThemeToggle />
             <NotificationBell />
             <button
@@ -179,7 +176,7 @@ export function AkademikLayout() {
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all text-[10px] font-black uppercase tracking-widest"
             >
               <ArrowLeft className="w-3 h-3" />
-              Portal
+              {t('nav:portal', 'Portal')}
             </button>
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.08]">
               <Avatar className="w-full h-full rounded-none">
@@ -201,7 +198,7 @@ export function AkademikLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB — untuk Exco Akademik jana QR */}
-        <QrCodeFab unitLinks={AKADEMIK_UNIT_LINKS} accentColor="#818CF8" />
+        <QrCodeFab unitLinks={akademikUnitLinks} accentColor="#818CF8" />
         <div className="tour-akademik-mobile-nav">
           <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
         </div>
@@ -212,6 +209,7 @@ export function AkademikLayout() {
 
 // ─── Sidebar Component ────────────────────────────────────────
 function Sidebar({ onClose, isActive, navigate, profile }: any) {
+  const { t } = useTranslation(['akademik', 'nav', 'common']);
   const { signOut, isSuperAdmin } = useAuth();
   const isJpp = isSuperAdmin || profile?.role === 'JPP';
   const displayName = profile?.full_name || profile?.email?.split('@')[0] || '?';
@@ -226,7 +224,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
           className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/75 w-max"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
         </button>
         <div className="flex items-center justify-between px-5 pb-4 pt-1">
           <div className="flex items-center gap-3">
@@ -238,7 +236,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
             </div>
             <div>
               <p className="text-sm font-black text-slate-900 dark:text-white">e-Akademik</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">Exco Akademik</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">{t('akademik:exco_academic', 'Exco Akademik')}</p>
             </div>
           </div>
           <button
@@ -252,8 +250,17 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
 
       {/* Nav */}
       <nav className="tour-akademik-sidebar flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">Navigasi</p>
-        {NAV_ITEMS.map(item => {
+        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">{t('nav:navigation', 'Navigasi')}</p>
+        {[
+          { path: '/akademik',            label: t('nav:dashboard', 'Dashboard'), icon: LayoutDashboard },
+          { path: '/akademik/pencapaian', label: t('akademik:nav_achievements', 'Pencapaian'), icon: Trophy },
+          { path: '/akademik/cgpa',       label: t('akademik:nav_cgpa', 'HPNM / CGPA'), icon: BookOpen },
+          { path: '/akademik/merit',      label: t('akademik:nav_my_merit', 'Merit Saya'), icon: Star },
+          { path: '/akademik/folder',     label: t('akademik:nav_documents', 'Dokumen'), icon: FileText },
+          { path: '/akademik/leaderboard',label: t('akademik:nav_leaderboard', 'Leaderboard'), icon: BarChart3 },
+          { path: '/akademik/takwim',     label: t('nav:takwim', 'Takwim'), icon: CalendarDays },
+          { path: '/akademik/qr',         label: t('nav:scan_qr', 'Scan QR'), icon: QrCode },
+        ].map(item => {
           const active = isActive(item.path);
           const Icon   = item.icon;
           return (
@@ -293,7 +300,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
             <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-600 dark:text-amber-400 text-left">Global JPP<br />Dashboard</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-600 dark:text-amber-400 text-left">{t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}</span>
           </button>
         </div>
       )}
@@ -324,7 +331,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
           className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-slate-500 dark:text-white/30 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Log Keluar
+          {t('nav:logout', 'Log Keluar')}
         </Button>
       </div>
     </div>

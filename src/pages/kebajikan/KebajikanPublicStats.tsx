@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle2, Clock, TrendingUp, ListChecks,
   HeartHandshake, Star, BarChart3, ChevronRight,
@@ -29,6 +30,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export function KebajikanStatsPage() {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [stats, setStats]       = useState<KebajikanPublicStats | null>(null);
@@ -57,32 +59,32 @@ export function KebajikanStatsPage() {
 
   const statCards = [
     {
-      label: 'Kes Diselesaikan',
+      label: t('kebajikan:stats_cases_resolved', 'Kes Diselesaikan'),
       value: loading ? '—' : stats?.total_resolved ?? 0,
       icon: CheckCircle2,
       color: '#10B981',
-      description: 'Sejak sistem dilancarkan',
+      description: t('kebajikan:stats_since_launch', 'Sejak sistem dilancarkan'),
     },
     {
-      label: 'Kadar Penyelesaian',
+      label: t('kebajikan:stats_resolution_rate', 'Kadar Penyelesaian'),
       value: loading ? '—' : `${stats?.resolution_rate ?? 0}%`,
       icon: TrendingUp,
       color: TEAL,
-      description: 'Peratus kes berjaya diselesaikan',
+      description: t('kebajikan:stats_resolution_rate_desc', 'Peratus kes berjaya diselesaikan'),
     },
     {
-      label: 'Purata Masa Selesai',
+      label: t('kebajikan:stats_avg_time', 'Purata Masa Selesai'),
       value: loading ? '—' : stats?.avg_resolution_hours ? `~${stats.avg_resolution_hours}j` : 'N/A',
       icon: Clock,
       color: '#F59E0B',
-      description: 'Purata masa dari aduan hingga selesai',
+      description: t('kebajikan:stats_avg_time_desc', 'Purata masa dari aduan hingga selesai'),
     },
     {
-      label: 'Kes Aktif Sekarang',
+      label: t('kebajikan:stats_active_now', 'Kes Aktif Sekarang'),
       value: loading ? '—'  : stats?.total_active ?? 0,
       icon: ListChecks,
       color: '#6366F1',
-      description: 'Kes yang sedang dalam pemprosesan',
+      description: t('kebajikan:stats_active_desc', 'Kes yang sedang dalam pemprosesan'),
     },
   ];
 
@@ -90,18 +92,16 @@ export function KebajikanStatsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
-      {/* Glow Effects */}
-      
       {/* Hero */}
-      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/40  transition-colors">
+      <div className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/40 transition-colors">
         <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20 text-center relative z-10">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <div
-              className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-8 shadow-sm  bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-300"
+              className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-8 shadow-sm bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-300"
             >
               <HeartHandshake className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-[11px] font-black uppercase tracking-[0.25em]">
-                Exco Kebajikan JPP POLISAS
+                {t('kebajikan:stats_badge', 'Exco Kebajikan JPP POLISAS')}
               </span>
             </div>
           </motion.div>
@@ -109,15 +109,14 @@ export function KebajikanStatsPage() {
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
             className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-50 mb-6 leading-tight tracking-tight"
           >
-            Kami Sentiasa{' '}
-            <span className="text-teal-600 dark:text-teal-400">Membantu Anda</span>
+            {t('kebajikan:stats_hero_title_1', 'Kami Sentiasa')}{' '}
+            <span className="text-teal-600 dark:text-teal-400">{t('kebajikan:stats_hero_title_2', 'Membantu Anda')}</span>
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
             className="text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed font-normal"
           >
-            Statistik prestasi pengurusan aduan pelajar oleh Exco Kebajikan JPP POLISAS.
-            Data dikemaskini secara masa nyata.
+            {t('kebajikan:stats_hero_desc', 'Statistik prestasi pengurusan aduan pelajar oleh Exco Kebajikan JPP POLISAS. Data dikemaskini secara masa nyata.')}
           </motion.p>
 
           {/* This Month Chip */}
@@ -127,7 +126,7 @@ export function KebajikanStatsPage() {
                 className="inline-flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-full shadow-sm bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05]"
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
-                <span className="font-semibold">Bulan ini:</span> {stats.this_month_received} aduan kes · <span className="text-emerald-600 dark:text-emerald-400 font-bold">{stats.this_month_resolved} diselesaikan</span>
+                <span className="font-semibold">{t('kebajikan:stats_this_month', 'Bulan ini:')}</span> {stats.this_month_received} {t('kebajikan:stats_cases_count', 'aduan kes')} · <span className="text-emerald-600 dark:text-emerald-400 font-bold">{stats.this_month_resolved} {t('kebajikan:stats_resolved_count', 'diselesaikan')}</span>
               </div>
             </motion.div>
           )}
@@ -141,9 +140,9 @@ export function KebajikanStatsPage() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-transparent to-indigo-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
           <HeartHandshake className="relative z-10 w-16 h-16 mx-auto mb-6 text-teal-600 dark:text-teal-400" />
-          <h3 className="relative z-10 font-black text-2xl text-slate-900 dark:text-slate-50 mb-3">Ada Masalah? Biar Kami Bantu</h3>
+          <h3 className="relative z-10 font-black text-2xl text-slate-900 dark:text-slate-50 mb-3">{t('kebajikan:stats_cta_title', 'Ada Masalah? Biar Kami Bantu')}</h3>
           <p className="relative z-10 text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            Aduan anda penting kepada kami. Log masuk ke portal JPP POLISAS untuk melaporkan masalah dan kami akan cuba menyelesaikannya secepat mungkin.
+            {t('kebajikan:stats_cta_desc', 'Aduan anda penting kepada kami. Log masuk ke portal JPP POLISAS untuk melaporkan masalah dan kami akan cuba menyelesaikannya secepat mungkin.')}
           </p>
           <button
             onClick={() => {
@@ -152,7 +151,7 @@ export function KebajikanStatsPage() {
             }}
             className="relative z-10 inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-sm text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            Buat Aduan Sekarang <ChevronRight className="w-5 h-5 ml-1" />
+            {t('kebajikan:stats_cta_btn', 'Buat Aduan Sekarang')} <ChevronRight className="w-5 h-5 ml-1" />
           </button>
         </div>
 
@@ -164,7 +163,7 @@ export function KebajikanStatsPage() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-3xl p-5 sm:p-6 text-center border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80  relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+              className="rounded-3xl p-5 sm:p-6 text-center border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: `linear-gradient(to bottom right, rgba(${hexColorToRgb(card.color)}, 0.4), transparent)` }} />
               <div className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner" style={{ background: isDark ? `rgba(${hexColorToRgb(card.color)}, 0.15)` : `rgba(${hexColorToRgb(card.color)}, 0.1)` }}>
@@ -180,9 +179,9 @@ export function KebajikanStatsPage() {
         {/* Charts Section */}
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           {/* Bar Chart — Monthly */}
-          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl">
-            <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">Aduan Bulanan</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">Diterima vs Diselesaikan — 6 bulan lepas</p>
+          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl">
+            <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">{t('kebajikan:stats_monthly_title', 'Aduan Bulanan')}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">{t('kebajikan:stats_monthly_subtitle', 'Diterima vs Diselesaikan — 6 bulan lepas')}</p>
             {monthly.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={monthly} barGap={4} barCategoryGap="30%">
@@ -194,19 +193,19 @@ export function KebajikanStatsPage() {
                     labelStyle={{ color: isDark ? 'white' : '#0f172a', fontWeight: 700 }}
                     itemStyle={{ color: isDark ? 'rgba(255,255,255,0.7)' : '#334155' }}
                   />
-                  <Bar dataKey="received" name="Diterima" fill="rgba(99,102,241,0.7)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="resolved" name="Diselesaikan" fill={TEAL} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="received" name={t('kebajikan:dash_bar_received', 'Diterima')} fill="rgba(99,102,241,0.7)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="resolved" name={t('kebajikan:dash_bar_resolved', 'Diselesaikan')} fill={TEAL} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart />
+              <EmptyChart text={t('kebajikan:stats_empty_data', 'Belum ada data yang mencukupi')} />
             )}
           </div>
 
           {/* Donut — Categories */}
-          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl flex flex-col">
-            <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">Pecahan Kategori</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">Peratus setiap kategori aduan keseluruhan</p>
+          <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl flex flex-col">
+            <h2 className="font-black text-lg text-slate-900 dark:text-slate-100 mb-1">{t('kebajikan:stats_category_breakdown', 'Pecahan Kategori')}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium">{t('kebajikan:stats_category_subtitle', 'Peratus setiap kategori aduan keseluruhan')}</p>
             {categories.length > 0 ? (
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
                 <div className="w-full sm:w-[55%] h-[180px] flex items-center justify-center">
@@ -219,7 +218,7 @@ export function KebajikanStatsPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{ background: isDark ? '#1e293b' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', borderRadius: 10, fontSize: 11, color: isDark ? '#ffffff' : '#0f172a' }}
-                        formatter={(v: any, _n: any, props: any) => [v, KEBAJIKAN_CATEGORY_LABELS[props.payload.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? props.payload.category]}
+                        formatter={(v: any, _n: any, props: any) => [v, t(`kebajikan:cat_${String(props.payload.category).toLowerCase()}`, KEBAJIKAN_CATEGORY_LABELS[props.payload.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? props.payload.category)]}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -228,24 +227,26 @@ export function KebajikanStatsPage() {
                   {categories.slice(0, 5).map((cat) => (
                     <div key={cat.category} className="flex items-center gap-3">
                       <div className="w-3 h-3 rounded-full flex-shrink-0 shadow-inner" style={{ background: CATEGORY_COLORS[cat.category] ?? '#666' }} />
-                      <span className="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate font-medium">{KEBAJIKAN_CATEGORY_LABELS[cat.category] ?? cat.category}</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 flex-1 truncate font-medium">
+                        {t(`kebajikan:cat_${cat.category.toLowerCase()}`, KEBAJIKAN_CATEGORY_LABELS[cat.category] ?? cat.category)}
+                      </span>
                       <span className="text-xs font-black text-slate-900 dark:text-slate-200">{cat.percentage}%</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <EmptyChart />
+              <EmptyChart text={t('kebajikan:stats_empty_data', 'Belum ada data yang mencukupi')} />
             )}
           </div>
         </div>
 
         {/* Rating Section */}
-        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl">
+        <div className="rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl">
           <div className="flex items-start justify-between mb-8">
             <div>
-              <h2 className="font-black text-xl text-slate-900 dark:text-slate-100 mb-2">Penilaian Pelajar</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Penilaian kepuasan terhadap perkhidmatan kami</p>
+              <h2 className="font-black text-xl text-slate-900 dark:text-slate-100 mb-2">{t('kebajikan:section_student_ratings', 'Penilaian Pelajar')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:stats_rating_subtitle', 'Penilaian kepuasan terhadap perkhidmatan kami')}</p>
             </div>
             {!loading && avgStars > 0 && (
               <div className="text-right">
@@ -260,7 +261,7 @@ export function KebajikanStatsPage() {
                     />
                   ))}
                 </div>
-                <p className="text-[9px] text-slate-500 dark:text-white/30 mt-0.5">daripada 5 bintang</p>
+                <p className="text-[9px] text-slate-500 dark:text-white/30 mt-0.5">{t('kebajikan:stats_out_of_5_stars', 'daripada 5 bintang')}</p>
               </div>
             )}
           </div>
@@ -275,14 +276,16 @@ export function KebajikanStatsPage() {
                         <Star key={s} className="w-3 h-3" fill={s <= r.rating ? '#F59E0B' : 'transparent'} style={{ color: s <= r.rating ? '#F59E0B' : isDark ? 'rgba(255,255,255,0.15)' : '#cbd5e1' }} />
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-200/70 dark:bg-white/5 px-2 py-0.5 rounded-full">{KEBAJIKAN_CATEGORY_LABELS[r.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? r.category}</span>
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-200/70 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                      {t(`kebajikan:cat_${String(r.category).toLowerCase()}`, KEBAJIKAN_CATEGORY_LABELS[r.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? r.category)}
+                    </span>
                   </div>
                   <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">"{r.rating_comment}"</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center text-xs text-slate-400 dark:text-white/30 py-8">Tiada penilaian lagi. Baharu mulai!</p>
+            <p className="text-center text-xs text-slate-400 dark:text-white/30 py-8">{t('kebajikan:stats_no_ratings_yet', 'Tiada penilaian lagi. Baharu mulai!')}</p>
           )}
         </div>
 
@@ -291,11 +294,12 @@ export function KebajikanStatsPage() {
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ text }: { text?: string }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   return (
     <div className="h-[180px] flex flex-col items-center justify-center">
       <BarChart3 className="w-10 h-10 text-slate-300 dark:text-white/10 mb-2" />
-      <p className="text-[10px] text-slate-400 dark:text-white/20">Belum ada data yang mencukupi</p>
+      <p className="text-[10px] text-slate-400 dark:text-white/20">{text || t('kebajikan:not_enough_data', 'Belum ada data yang mencukupi')}</p>
     </div>
   );
 }

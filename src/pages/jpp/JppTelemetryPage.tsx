@@ -20,10 +20,12 @@ import { TelemetryTopologyFlow } from './telemetry/TelemetryTopologyFlow';
 import { TelemetryLiveTimeline } from './telemetry/TelemetryLiveTimeline';
 import { TelemetryQuickMetrics } from './telemetry/TelemetryQuickMetrics';
 import { TelemetryModuleTabs } from './telemetry/TelemetryModuleTabs';
+import { useTranslation } from 'react-i18next';
 
 type TopNavTab = 'overview' | 'alerts' | 'insights' | 'modules';
 
 export function JppTelemetryPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { isSuperAdmin, user } = useAuth();
   const [data, setData] = useState<TelemetryData | null>(null);
   const [errorEvents, setErrorEvents] = useState<SystemErrorEvent[]>([]);
@@ -41,7 +43,7 @@ export function JppTelemetryPage() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('Sesi tamat tempoh. Sila log masuk semula.');
+      if (!session?.access_token) throw new Error(t('jpp:telemetry_session_expired', 'Sesi tamat tempoh. Sila log masuk semula.'));
 
       const baseUrl = import.meta.env.VITE_API_BASE_URL || API_BASE_URL || '';
       const headers = { Authorization: `Bearer ${session.access_token}` };
@@ -53,7 +55,7 @@ export function JppTelemetryPage() {
 
       if (!telemetryRes.ok) {
         const errJson = await telemetryRes.json().catch(() => ({}));
-        throw new Error(errJson.error || `HTTP ${telemetryRes.status}`);
+        throw new Error(errJson.error || t('jpp:telemetry_http_status', 'HTTP {{status}}', { status: telemetryRes.status }));
       }
 
       const telemetryJson: TelemetryData = await telemetryRes.json();
@@ -66,7 +68,7 @@ export function JppTelemetryPage() {
 
       setLastRefresh(new Date());
     } catch (e: any) {
-      setError(e.message || 'Gagal memuatkan data telemetri.');
+      setError(e.message || t('jpp:telemetry_fetch_error', 'Gagal memuatkan data telemetri.'));
     } finally {
       setLoading(false);
     }
@@ -119,10 +121,10 @@ export function JppTelemetryPage() {
           <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/10">
             {(
               [
-                { id: 'overview', label: 'Overview' },
-                { id: 'alerts', label: 'Key Alerts' },
-                { id: 'insights', label: 'Insights' },
-                { id: 'modules', label: 'Modul Kampus' },
+                { id: 'overview', label: t('jpp:telemetry_tab_overview', 'Overview') },
+                { id: 'alerts', label: t('jpp:telemetry_tab_alerts', 'Key Alerts') },
+                { id: 'insights', label: t('jpp:telemetry_tab_insights', 'Insights') },
+                { id: 'modules', label: t('jpp:telemetry_tab_modules', 'Modul Kampus') },
               ] as const
             ).map((tab) => (
               <button
@@ -144,14 +146,14 @@ export function JppTelemetryPage() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>Production — POLISAS</span>
+              <span>{t('jpp:telemetry_env_production', 'Production — POLISAS')}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </div>
 
             <button
               onClick={fetchAllTelemetry}
               disabled={loading}
-              title="Muat Semula Telemetri"
+              title={t('jpp:telemetry_reload_tooltip', 'Muat Semula Telemetri')}
               className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all disabled:opacity-40"
             >
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
@@ -223,8 +225,8 @@ export function JppTelemetryPage() {
               <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4 min-h-full">
                 <div className="h-5 w-32 bg-slate-200 dark:bg-white/10 rounded" />
                 <div className="space-y-3 pt-2">
-                  {[1, 2, 3, 4, 5].map((t) => (
-                    <div key={t} className="p-3 rounded-xl bg-slate-100/60 dark:bg-white/5 space-y-2">
+                  {[1, 2, 3, 4, 5].map((idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-slate-100/60 dark:bg-white/5 space-y-2">
                       <div className="h-3 w-20 bg-slate-200 dark:bg-white/10 rounded" />
                       <div className="h-3 w-full bg-slate-200/60 dark:bg-white/5 rounded" />
                     </div>
@@ -281,7 +283,7 @@ export function JppTelemetryPage() {
         {data && currentTab === 'alerts' && (
           <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-xs p-6 space-y-4">
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              Senarai Lengkap Amaran Aktif & Ralat Sistem
+              {t('jpp:telemetry_alerts_list_title', 'Senarai Lengkap Amaran Aktif & Ralat Sistem')}
             </h3>
             <div className="space-y-2">
               {unifiedTimeline.map((ev, i) => (
@@ -316,7 +318,7 @@ export function JppTelemetryPage() {
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="w-5 h-5 text-[#FF5B37]" />
                     <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      Perincian Insiden & Tolak-Mata
+                      {t('jpp:telemetry_incident_modal_title', 'Perincian Insiden & Tolak-Mata')}
                     </h3>
                   </div>
                   <button
@@ -329,14 +331,14 @@ export function JppTelemetryPage() {
 
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200/60 dark:border-white/10 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Skor Ketahanan:</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{t('jpp:telemetry_resilience_score', 'Skor Ketahanan:')}</span>
                     <span className="text-base font-black text-slate-900 dark:text-white">
                       {data?.resilience_score} / 100 ({data?.resilience_rating})
                     </span>
                   </div>
 
                   <span className="text-[11px] font-black uppercase text-slate-400 dark:text-white/40 block">
-                    Penalti Terperinci (Backend Rules):
+                    {t('jpp:telemetry_detailed_penalties', 'Penalti Terperinci (Backend Rules):')}
                   </span>
 
                   {data?.resilience_deductions && data.resilience_deductions.length > 0 ? (
@@ -353,7 +355,7 @@ export function JppTelemetryPage() {
                     </div>
                   ) : (
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                      Tiada sebarang penalti dikesan pada waktu ini.
+                      {t('jpp:telemetry_no_penalties', 'Tiada sebarang penalti dikesan pada waktu ini.')}
                     </p>
                   )}
                 </div>
@@ -363,7 +365,7 @@ export function JppTelemetryPage() {
                     onClick={() => setShowIncidentModal(false)}
                     className="px-4 py-2 rounded-xl text-xs font-black bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                   >
-                    Tutup
+                    {t('jpp:telemetry_close_btn', 'Tutup')}
                   </button>
                 </div>
               </motion.div>

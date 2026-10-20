@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Trophy, Users, ChevronRight, LogIn, Key, Loader } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -10,20 +11,21 @@ import { cn } from '@/lib/utils';
 
 // ─── Claim Invite Code Screen ─────────────────────────────────
 function ClaimInviteScreen() {
+  const { t } = useTranslation(['supsas']);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { refetch } = useSupsas();
 
   const handleClaim = async () => {
-    if (!code.trim()) { toast.error('Sila masukkan kod jemputan'); return; }
+    if (!code.trim()) { toast.error(t('supsas:enter_invite_code', 'Sila masukkan kod jemputan')); return; }
     setLoading(true);
     const { data, error } = await supabase.rpc('supsas_claim_invite_code', { p_invite_code: code.trim().toUpperCase() });
     setLoading(false);
     if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Kod tidak sah');
+      toast.error(data?.error ?? error?.message ?? t('supsas:invalid_code', 'Kod tidak sah'));
       return;
     }
-    toast.success(`Selamat datang, Ketua Kontinjen ${data.kontingen_name}!`);
+    toast.success(t('supsas:welcome_contingent_leader', 'Selamat datang, Ketua Kontinjen {{name}}!', { name: data.kontingen_name }));
     refetch();
   };
 
@@ -38,13 +40,13 @@ function ClaimInviteScreen() {
           <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
             <Key className="w-8 h-8 text-amber-400" />
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Portal Ketua Kontinjen</h1>
-          <p className="text-white/40 text-sm">Masukkan kod jemputan yang diberikan oleh Exco Sukan untuk meneruskan.</p>
+          <h1 className="text-2xl font-black text-white mb-2">{t('supsas:leader_portal_title', 'Portal Ketua Kontinjen')}</h1>
+          <p className="text-white/40 text-sm">{t('supsas:leader_portal_subtitle', 'Masukkan kod jemputan yang diberikan oleh Exco Sukan untuk meneruskan.')}</p>
         </div>
 
         <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Kod Jemputan</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:invite_code_label', 'Kod Jemputan')}</label>
             <input
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
@@ -60,10 +62,10 @@ function ClaimInviteScreen() {
             className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-            Aktifkan Kod
+            {t('supsas:activate_code_btn', 'Aktifkan Kod')}
           </button>
           <p className="text-center text-[10px] text-white/20 font-medium">
-            Hubungi Exco Sukan jika anda tidak menerima kod jemputan.
+            {t('supsas:contact_exco_hint', 'Hubungi Exco Sukan jika anda tidak menerima kod jemputan.')}
           </p>
         </div>
       </motion.div>
@@ -75,6 +77,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 // ─── Ketua Layout ─────────────────────────────────────────────
 export function KetuaLayout() {
+  const { t } = useTranslation(['supsas']);
   const { profile, isLoading: authLoading } = useAuth();
   const { kontingen, edition } = useSupsas();
   const navigate = useNavigate();
@@ -112,7 +115,7 @@ export function KetuaLayout() {
             {myKontingen.short_code.charAt(0)}
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 mb-0.5">Ketua Kontinjen</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 mb-0.5">{t('supsas:contingent_leader_badge', 'Ketua Kontinjen')}</p>
             <p className="font-black text-white text-lg leading-none">{myKontingen.name}</p>
             <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">{edition?.name}</p>
           </div>

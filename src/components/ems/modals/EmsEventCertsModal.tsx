@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Award, X, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchEventCertificates } from '@/lib/ems';
@@ -11,6 +12,7 @@ export interface EmsEventCertsModalProps {
 }
 
 export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) {
+  const { t } = useTranslation(['ems', 'common']);
   const navigate = useNavigate();
   const [certs, setCerts] = useState<Array<EmsCertificate & { participant?: any; jury?: any; event_title?: string }>>([]);
   const [loading, setLoading] = useState(false);
@@ -24,14 +26,14 @@ export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) 
         const data = await fetchEventCertificates(event.id);
         setCerts(data);
       } catch (err: any) {
-        toast.error('Gagal memuatkan senarai sijil acara.');
+        toast.error(t('ems:cert_load_failed', 'Gagal memuatkan senarai sijil acara.'));
       } finally {
         setLoading(false);
       }
     };
 
     loadCerts();
-  }, [event]);
+  }, [event, t]);
 
   if (!event) return null;
 
@@ -41,7 +43,7 @@ export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) 
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-          aria-label="Tutup Modal"
+          aria-label={t('ems:close_modal', 'Tutup Modal')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -50,25 +52,29 @@ export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) 
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-teal-600 dark:text-teal-400" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Senarai E-Sijil Acara
+              {t('ems:event_certs_title', 'Senarai E-Sijil Acara')}
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-            {event.title} ({certs.length} Sijil Dijana)
+            {event.title} ({t('ems:certs_generated_count', '{{count}} Sijil Dijana', { count: certs.length })})
           </p>
         </div>
 
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center space-y-2">
             <RefreshCw className="w-8 h-8 text-teal-600 dark:text-teal-400 animate-spin" />
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Memuatkan senarai sijil...</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {t('ems:loading_certs', 'Memuatkan senarai sijil...')}
+            </p>
           </div>
         ) : certs.length === 0 ? (
           <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
             <AlertCircle className="w-8 h-8 text-amber-500 dark:text-amber-400 mx-auto" />
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">Belum Ada E-Sijil Dijana</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              {t('ems:no_certs_generated', 'Belum Ada E-Sijil Dijana')}
+            </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pilih tindakan &quot;Jana Semula E-Sijil&quot; pada menu acara untuk menjana sijil rasmi.
+              {t('ems:no_certs_desc', 'Pilih tindakan "Jana Semula E-Sijil" pada menu acara untuk menjana sijil rasmi.')}
             </p>
           </div>
         ) : (
@@ -78,7 +84,7 @@ export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) 
                 cert.participant?.team_name ||
                 cert.participant?.leader_name ||
                 cert.jury?.jury_name ||
-                'Penerima Sijil';
+                t('ems:cert_recipient_fallback', 'Penerima Sijil');
               const subtext =
                 cert.participant?.matrix_no || cert.jury?.organization || cert.cert_type;
 
@@ -107,7 +113,7 @@ export function EmsEventCertsModal({ event, onClose }: EmsEventCertsModalProps) 
                     onClick={() => navigate(`/ems/cert/${cert.cert_serial}`)}
                     className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-teal-700 dark:text-teal-300 font-semibold text-xs transition border border-slate-200 dark:border-slate-700 shrink-0"
                   >
-                    Lihat Sijil
+                    {t('ems:btn_view_cert', 'Lihat Sijil')}
                   </button>
                 </div>
               );

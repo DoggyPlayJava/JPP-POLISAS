@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutGrid, Search, Trophy, BookOpen, Heart, Shield, ArrowRight,
@@ -22,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 
 // Category metadata helper dengan normalisasi case-insensitive
-function getCategoryMeta(rawCategory?: string | null) {
+function getCategoryMeta(rawCategory?: string | null, t?: (k: string, f: string) => string) {
   const cat = (rawCategory || '').toLowerCase().trim();
   if (cat.includes('akademik') || cat.includes('awam') || cat.includes('elektrik') || cat.includes('mekanikal') || cat.includes('perdagangan')) {
     return {
@@ -49,7 +50,7 @@ function getCategoryMeta(rawCategory?: string | null) {
     };
   }
   return {
-    label: rawCategory || 'Kelab Umum',
+    label: rawCategory || (t ? t('kpp:general_club', 'Kelab Umum') : 'General Club'),
     icon: Heart,
     color: 'text-rose-600 dark:text-rose-400',
     badgeBg: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
@@ -57,6 +58,7 @@ function getCategoryMeta(rawCategory?: string | null) {
 }
 
 export function KelabPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const navigate = useNavigate();
   const { profile, user } = useAuth();
 
@@ -125,13 +127,13 @@ export function KelabPage() {
 
     const targetIsGeosas = club.short_name?.toUpperCase() === 'GEOSAS';
     if (targetIsGeosas && profile?.department !== 'awam') {
-      toast.error('Kelab GEOSAS hanya terbuka kepada pelajar Jabatan Kejuruteraan Awam (JKA).');
+      toast.error(t('kpp:geosas_exclusive_toast', 'Kelab GEOSAS hanya terbuka kepada pelajar Jabatan Kejuruteraan Awam (JKA).'));
       return;
     }
 
     const checkLimit = (profile?.department === 'awam' && (hasGeosas || targetIsGeosas)) ? maxClubs + 1 : maxClubs;
     if (approvedCount >= checkLimit) {
-      toast.error(`Had keahlian dicapai (${checkLimit} kelab). Hubungi JPP untuk menaikkan had.`);
+      toast.error(t('kpp:membership_limit_reached', 'Had keahlian dicapai ({{limit}} kelab). Hubungi JPP untuk menaikkan had.', { limit: checkLimit }));
       return;
     }
     setConfirmClub(club);
@@ -155,8 +157,8 @@ export function KelabPage() {
         if (admins && admins.length > 0) {
           const notifs = admins.map(a => ({
             user_id: a.id,
-            title: 'Permohonan Kepimpinan Baharu',
-            message: `Terdapat permohonan kepimpinan sebagai Presiden untuk kelab ${confirmClub.name}. Sila semak tab Permohonan Baru di Pengurusan Ahli.`,
+            title: t('kpp:leadership_application_title', 'Permohonan Kepimpinan Baharu'),
+            message: t('kpp:president_application_notif_msg', 'Terdapat permohonan kepimpinan sebagai Presiden untuk kelab {{clubName}}. Sila semak tab Permohonan Baru di Pengurusan Ahli.', { clubName: confirmClub.name }),
             type: 'SYSTEM',
             is_read: false
           }));
@@ -166,10 +168,10 @@ export function KelabPage() {
         try {
           const { sendNotificationToKppExco } = await import('@/lib/notifications');
           await sendNotificationToKppExco({
-            title: 'Permohonan Kelab Baru',
-            message: `Terdapat permohonan keahlian baharu untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
+            title: t('kpp:new_club_application_title', 'Permohonan Kelab Baru'),
+            message: t('kpp:new_membership_notif_msg', 'Terdapat permohonan keahlian baharu untuk kelab {{clubName}}. Sila semak di panel Exco KPP.', { clubName: confirmClub.name }),
             type: 'KPP_MEMBERSHIP_REQUEST',
-            module: 'KPP',
+            module: 'EKPP',
             link: '/jpp'
           });
         } catch (e) {
@@ -177,12 +179,12 @@ export function KelabPage() {
         }
       }
 
-      toast.success(`Permohonan sebagai ${ROLE_LABELS[applyRole] || 'Ahli'} untuk ${confirmClub.name} dihantar! Sila tunggu kelulusan.`);
+      toast.success(t('kpp:application_submitted_wait', 'Permohonan sebagai {{role}} untuk {{club}} dihantar! Sila tunggu kelulusan.', { role: ROLE_LABELS[applyRole] || 'Ahli', club: confirmClub.name }));
       setConfirmClub(null);
       setApplyRole('CLUB_MEMBER');
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal menghantar permohonan.');
+      toast.error(e.message || t('kpp:application_submit_failed', 'Gagal menghantar permohonan.'));
     } finally {
       setApplying(null);
     }
@@ -195,16 +197,16 @@ export function KelabPage() {
       if (resignModal.isPrimary) {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: resignModal.clubId, p_is_primary: true });
         if (error) throw error;
-        toast.success('Permohonan keluar kelab Akademik dihantar untuk kelulusan Penasihat.');
+        toast.success(t('kpp:academic_leave_submitted', 'Permohonan keluar kelab Akademik dihantar untuk kelulusan Penasihat.'));
       } else {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: resignModal.clubId, p_is_primary: false });
         if (error) throw error;
-        toast.success('Berjaya menarik diri daripada kelab.');
+        toast.success(t('kpp:leave_club_success', 'Berjaya menarik diri daripada kelab.'));
       }
       setResignModal(null);
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal memproses penarikan diri.');
+      toast.error(e.message || t('kpp:leave_club_failed', 'Gagal memproses penarikan diri.'));
     } finally {
       setResigning(false);
     }
@@ -270,14 +272,14 @@ export function KelabPage() {
       >
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-tight">
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Direktori Rasmi Pelajar POLISAS</span>
+          <span>{t('kpp:official_student_directory', 'Direktori Rasmi Pelajar POLISAS')}</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-foreground text-balance">
-          Direktori Kelab & <span className="gradient-text">Persatuan</span>
+          {t('kpp:club_directory')}
         </h1>
         <p className="text-muted-foreground font-medium max-w-xl text-sm sm:text-base leading-relaxed text-balance">
-          Pilih dan sertai persatuan minat anda di POLISAS untuk membina kemahiran kepimpinan, jaringan sosial, dan memupuk merit kokurikulum.
+          {t('kpp:club_directory_desc', 'Pilih dan sertai persatuan minat anda di POLISAS untuk membina kemahiran kepimpinan, jaringan sosial, dan memupuk merit kokurikulum.')}
         </p>
 
         {/* Had Keahlian Indicator */}
@@ -295,7 +297,7 @@ export function KelabPage() {
           </div>
           <span className="text-xs font-semibold text-muted-foreground">
             <strong className="font-mono tabular-nums text-foreground">{approvedCount}</strong> daripada{' '}
-            <strong className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</strong> kelab disertai
+            <strong className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</strong> {t('kpp:clubs_joined_count', 'kelab disertai')}
           </span>
         </div>
 
@@ -304,7 +306,7 @@ export function KelabPage() {
           <div className="relative flex items-center bg-card border border-border/80 shadow-sm rounded-2xl overflow-hidden p-1.5 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
             <Search className="w-5 h-5 text-muted-foreground ml-3 shrink-0" />
             <Input
-              placeholder="Cari nama kelab (contoh: Elektron, Ketema)..."
+              placeholder={t('kpp:search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border-none shadow-none text-sm sm:text-base h-11 focus-visible:ring-0 placeholder:text-muted-foreground/60 font-medium px-3"
@@ -329,7 +331,7 @@ export function KelabPage() {
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Star className="w-4 h-4 fill-amber-500" />
             <h3 className="text-xs font-bold uppercase tracking-wider">
-              Kelab Saya ({myApprovedClubs.length})
+              {t('kpp:my_clubs')} ({myApprovedClubs.length})
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -369,7 +371,7 @@ export function KelabPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Clock className="w-4 h-4" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">Menunggu Kelulusan</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider">{t('kpp:pending_approval_heading', 'Menunggu Kelulusan')}</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {myPendingClubs.map(club => (
@@ -390,6 +392,17 @@ export function KelabPage() {
       <div className="flex items-center gap-1.5 p-1.5 bg-muted/40 rounded-2xl border border-border/60 max-w-full overflow-x-auto no-scrollbar mx-auto">
         {categories.map((cat) => {
           const isSelected = activeTab === cat;
+          const getCategoryLabel = (c: string) => {
+            switch (c) {
+              case 'Semua': return t('common:all');
+              case 'Akademik': return t('kpp:club_category_academic');
+              case 'Sukan': return t('kpp:club_category_sports');
+              case 'Umum': return t('kpp:club_category_spiritual');
+              case 'Badan Beruniform': return t('kpp:club_category_uniformed');
+              default: return c;
+            }
+          };
+
           return (
             <button
               key={cat}
@@ -406,7 +419,7 @@ export function KelabPage() {
               {cat === 'Sukan' ? <Trophy className="w-3.5 h-3.5" /> : null}
               {cat === 'Umum' ? <Heart className="w-3.5 h-3.5" /> : null}
               {cat === 'Badan Beruniform' ? <Shield className="w-3.5 h-3.5" /> : null}
-              <span>{cat}</span>
+              <span>{getCategoryLabel(cat)}</span>
             </button>
           );
         })}
@@ -421,7 +434,7 @@ export function KelabPage() {
             {filteredClubs.map((club, index) => {
               const status = getMembershipStatus(club.id);
               const joinable = isJoinable(club);
-              const meta = getCategoryMeta(club.category);
+              const meta = getCategoryMeta(club.category, t);
               const CategoryIcon = meta.icon;
               const isAutoAssign = AUTO_ASSIGN_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase()) && club.short_name?.toUpperCase() !== 'GEOSAS';
               const isRestricted = RESTRICTED_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase());
@@ -451,12 +464,12 @@ export function KelabPage() {
                       <div className="absolute top-5 right-5 flex flex-col gap-1.5 items-end z-10">
                         {status === 'APPROVED' && (
                           <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Ahli
+                            <CheckCircle2 className="w-3.5 h-3.5" /> {t('kpp:club_status_active')}
                           </div>
                         )}
                         {status === 'PENDING' && (
                           <div className="flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
-                            <Clock className="w-3.5 h-3.5" /> Menunggu
+                            <Clock className="w-3.5 h-3.5" /> {t('kpp:report_status_submitted')}
                           </div>
                         )}
                       </div>
@@ -498,7 +511,7 @@ export function KelabPage() {
                           </p>
                         ) : (
                           <p className="text-xs text-muted-foreground/60 italic">
-                            Tiada penerangan rasmi kelab.
+                            {t('kpp:no_official_club_desc', 'Tiada penerangan rasmi kelab.')}
                           </p>
                         )}
                       </div>
@@ -525,7 +538,7 @@ export function KelabPage() {
                                 }}
                                 className="flex-1 h-9 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/20"
                               >
-                                Mohon Pindah
+                                {t('kpp:request_transfer', 'Mohon Pindah')}
                               </Button>
                             );
                           }
@@ -539,7 +552,7 @@ export function KelabPage() {
                               }}
                               className="flex-1 h-9 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/20"
                             >
-                              Tarik Diri
+                              {t('kpp:leave_club', 'Tarik Diri daripada Kelab')}
                             </Button>
                           );
                         })()}
@@ -551,7 +564,7 @@ export function KelabPage() {
                             disabled={applying === club.id}
                             className="flex-1 h-9 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
                           >
-                            {applying === club.id ? 'Menghantar...' : 'Mohon Sertai'}
+                            {applying === club.id ? t('common:loading') : t('kpp:join_club')}
                           </Button>
                         )}
 
@@ -587,12 +600,12 @@ export function KelabPage() {
       {filteredClubs.length === 0 && !loading && (
         <div className="py-16 text-center space-y-3 bg-card rounded-3xl border border-dashed border-border/80 p-8 max-w-md mx-auto">
           <Search className="w-10 h-10 mx-auto text-muted-foreground/60" />
-          <h3 className="font-bold text-lg tracking-tight text-foreground">Tiada Kelab Ditemui</h3>
+          <h3 className="font-bold text-lg tracking-tight text-foreground">{t('kpp:no_clubs_found', 'Tiada Kelab Ditemui')}</h3>
           <p className="font-normal text-xs text-muted-foreground leading-relaxed">
-            Tiada kelab yang sepadan dengan carian "{searchQuery}". Sila semak ejaan nama atau pilih tab kategori lain.
+            {t('kpp:no_clubs_match_query', 'Tiada kelab yang sepadan dengan carian "{{query}}". Sila semak ejaan nama atau pilih tab kategori lain.', { query: searchQuery })}
           </p>
           <Button variant="outline" size="sm" onClick={() => { setSearchQuery(''); setActiveTab('Semua'); }} className="rounded-xl mt-2 text-xs font-semibold">
-            Kosongkan Carian
+            {t('kpp:clear_search', 'Kosongkan Carian')}
           </Button>
         </div>
       )}
@@ -601,9 +614,9 @@ export function KelabPage() {
       <Dialog open={!!confirmClub} onOpenChange={(open) => { if (!open) { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); } }}>
         <DialogContent className="rounded-3xl max-w-md border-border/80 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-bold text-xl tracking-tight">Mohon Sertai Kelab</DialogTitle>
+            <DialogTitle className="font-bold text-xl tracking-tight">{t('kpp:apply_join_club', 'Mohon Sertai Kelab')}</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Hantar permohonan pendaftaran keahlian kepada pihak pengurusan kelab.
+              {t('kpp:apply_join_desc', 'Hantar permohonan pendaftaran keahlian kepada pihak pengurusan kelab.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -627,17 +640,17 @@ export function KelabPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground">Jenis Permohonan Peranan</Label>
+                <Label className="text-xs font-semibold text-foreground">{t('kpp:application_role_type', 'Jenis Permohonan Peranan')}</Label>
                 <Select value={applyRole} onValueChange={(r: UserRole) => setApplyRole(r)}>
                   <SelectTrigger className="h-11 rounded-xl bg-card border-border/80 font-medium w-full text-xs">
-                    <SelectValue placeholder="Pilih peranan..." />
+                    <SelectValue placeholder={t('kpp:select_role_placeholder', 'Pilih peranan...')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-border/80 shadow-xl">
                     <SelectItem value="CLUB_MEMBER" className="font-semibold text-xs py-2">
-                      Ahli Biasa (Keahlian Standard)
+                      {t('kpp:role_member_standard', 'Ahli Biasa (Keahlian Standard)')}
                     </SelectItem>
                     <SelectItem value="CLUB_PRESIDENT" className="font-semibold text-xs py-2">
-                      Presiden / Kepimpinan (Tertakluk Temuduga & Kelulusan JPP)
+                      {t('kpp:role_president_leadership', 'Presiden / Kepimpinan (Tertakluk Temuduga & Kelulusan JPP)')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -646,12 +659,12 @@ export function KelabPage() {
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-2.5">
                 <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Permohonan keahlian biasa akan disemak oleh Majlis Tertinggi kelab. Permohonan kepimpinan akan disaring oleh pihak Exco KPP JPP POLISAS.
+                  {t('kpp:membership_review_note', 'Permohonan keahlian biasa akan disemak oleh Majlis Tertinggi kelab. Permohonan kepimpinan akan disaring oleh pihak Exco KPP JPP POLISAS.')}
                 </p>
               </div>
 
               <p className="text-xs text-muted-foreground font-medium">
-                Status kuota: <span className="font-mono tabular-nums text-foreground">{approvedCount}</span> / <span className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</span> kelab aktif digunakan.
+                {t('kpp:quota_status_label', 'Status kuota:')} <span className="font-mono tabular-nums text-foreground">{approvedCount}</span> / <span className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</span> {t('kpp:active_clubs_used', 'kelab aktif digunakan.')}
               </p>
             </div>
           )}
@@ -662,14 +675,14 @@ export function KelabPage() {
               onClick={() => { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); }}
               className="rounded-xl font-bold text-xs"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={confirmApply}
               disabled={!!applying}
               className="rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {applying ? 'Menghantar...' : 'Hantar Permohonan'}
+              {applying ? (t('common:loading') || 'Menghantar...') : t('kpp:submit_application', 'Hantar Permohonan')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -681,12 +694,12 @@ export function KelabPage() {
           <DialogHeader>
             <DialogTitle className="font-bold text-xl tracking-tight text-rose-600 dark:text-rose-400 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              {resignModal?.isPrimary ? 'Mohon Pindah Kelab Akademik' : 'Tarik Diri daripada Kelab'}
+              {resignModal?.isPrimary ? t('kpp:request_transfer', 'Mohon Pindah Kelab Akademik') : t('kpp:leave_club', 'Tarik Diri daripada Kelab')}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               {resignModal?.isPrimary
-                ? 'Kelab akademik adalah wajib mengikut jabatan pengajian anda. Permohonan pindah memerlukan kelulusan rasmi daripada Penasihat Kelab.'
-                : `Adakah anda pasti ingin menarik diri serta-merta daripada "${resignModal?.clubName}"? Rekod merit aktiviti berkaitan kelab ini akan terkesan.`}
+                ? t('kpp:academic_club_transfer_warning', 'Kelab akademik adalah wajib mengikut jabatan pengajian anda. Permohonan pindah memerlukan kelulusan rasmi daripada Penasihat Kelab.')
+                : t('kpp:confirm_resign_club_warning', 'Adakah anda pasti ingin menarik diri serta-merta daripada "{{clubName}}"? Rekod merit aktiviti berkaitan kelab ini akan terkesan.', { clubName: resignModal?.clubName })}
             </DialogDescription>
           </DialogHeader>
 
@@ -696,14 +709,14 @@ export function KelabPage() {
               onClick={() => setResignModal(null)}
               className="rounded-xl font-bold text-xs"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={handleResign}
               disabled={resigning}
               className="rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white"
             >
-              {resigning ? 'Memproses...' : (resignModal?.isPrimary ? 'Hantar Permohonan Pindah' : 'Sahkan Tarik Diri')}
+              {resigning ? t('common:loading', 'Memproses...') : (resignModal?.isPrimary ? t('kpp:submit_transfer_request', 'Hantar Permohonan Pindah') : t('kpp:confirm_leave_club', 'Sahkan Tarik Diri'))}
             </Button>
           </DialogFooter>
         </DialogContent>

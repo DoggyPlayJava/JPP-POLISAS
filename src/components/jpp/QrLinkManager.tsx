@@ -1,25 +1,26 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { Link2, Download, Copy, Check, QrCode, ChevronDown } from 'lucide-react';
+import { Link2, Download, Copy, Check, QrCode, ChevronDown, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import type { QrUnitLink } from './QrCodeFab';
 
 // ── Senarai halaman umum (Exco semua unit boleh guna) ──
-const GENERAL_LINKS: QrUnitLink[] = [
-  { label: 'Portal Utama', path: '/portal' },
-  { label: 'PolyMart Marketplace', path: '/polymart' },
-  { label: 'Daftar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
-  { label: 'Senarai Program / Aktiviti', path: '/aktiviti' },
-  { label: 'Leaderboard Merit', path: '/leaderboard' },
-  { label: 'Karnival JPP', path: '/karnival' },
-  { label: 'SUPSAS', path: '/supsas' },
-  { label: 'e-Akademik', path: '/akademik' },
-  { label: 'e-KLK (Kediaman Luar Kampus)', path: '/klk' },
+const getGeneralLinks = (t: any): QrUnitLink[] => [
+  { label: t('jpp:qr_link_portal', 'Portal Utama'), path: '/portal' },
+  { label: t('jpp:qr_link_polymart', 'PolyMart Marketplace'), path: '/polymart' },
+  { label: t('jpp:qr_link_kebajikan', 'Daftar Aduan Kebajikan'), path: '/kebajikan/buat-aduan' },
+  { label: t('jpp:qr_link_aktiviti', 'Senarai Program / Aktiviti'), path: '/aktiviti' },
+  { label: t('jpp:qr_link_merit', 'Leaderboard Merit'), path: '/leaderboard' },
+  { label: t('jpp:qr_link_karnival', 'Karnival JPP'), path: '/karnival' },
+  { label: t('jpp:qr_link_supsas', 'SUPSAS'), path: '/supsas' },
+  { label: t('jpp:qr_link_akademik', 'e-Akademik'), path: '/akademik' },
+  { label: t('jpp:qr_link_klk', 'e-KLK (Kediaman Luar Kampus)'), path: '/klk' },
 ];
 
 interface QrLinkManagerProps {
@@ -30,15 +31,18 @@ interface QrLinkManagerProps {
 }
 
 export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const [customPath, setCustomPath] = useState('');
   const [selectedQuick, setSelectedQuick] = useState('');
   const [showQuickList, setShowQuickList] = useState(false);
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
 
+  const generalLinks = useMemo(() => getGeneralLinks(t), [t]);
+
   // Gabungkan: unit links dahulu, kemudian general (tanpa duplikat)
   const unitPaths = new Set((unitLinks || []).map(l => l.path));
-  const filteredGeneral = GENERAL_LINKS.filter(l => !unitPaths.has(l.path));
+  const filteredGeneral = generalLinks.filter(l => !unitPaths.has(l.path));
   const hasUnitLinks = (unitLinks?.length ?? 0) > 0;
 
   // Resolve URL penuh dari path
@@ -51,9 +55,9 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
     if (!fullUrl) return;
     await navigator.clipboard.writeText(fullUrl);
     setCopied(true);
-    toast.success('URL disalin!');
+    toast.success(t('jpp:qr_url_copied', 'URL disalin!'));
     setTimeout(() => setCopied(false), 2000);
-  }, [fullUrl]);
+  }, [fullUrl, t]);
 
   // Download QR sebagai PNG menggunakan canvas (convert SVG → canvas → PNG)
   const handleDownload = useCallback(() => {
@@ -91,7 +95,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
         link.href = pngUrl;
         link.download = `jpp-qr-${Date.now()}.png`;
         link.click();
-        toast.success('QR Code berjaya dimuat turun!');
+        toast.success(t('jpp:qr_downloaded_success', 'QR Code berjaya dimuat turun!'));
       };
       logoImg.onerror = () => {
         // Fallback without logo
@@ -100,12 +104,12 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
         link.href = pngUrl;
         link.download = `jpp-qr-${Date.now()}.png`;
         link.click();
-        toast.success('QR Code berjaya dimuat turun (tanpa logo)!');
+        toast.success(t('jpp:qr_downloaded_no_logo_success', 'QR Code berjaya dimuat turun (tanpa logo)!'));
       };
       logoImg.src = '/jpp-logo.png';
     };
     img.src = svgUrl;
-  }, [fullUrl]);
+  }, [fullUrl, t]);
 
   const selectQuick = (path: string) => {
     setSelectedQuick(path);
@@ -126,9 +130,9 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
             <QrCode className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-black text-sm uppercase tracking-widest">Penjana QR Code</h3>
+            <h3 className="font-black text-sm uppercase tracking-widest">{t('jpp:qr_generator_title', 'Penjana QR Code')}</h3>
             <p className="text-[11px] text-muted-foreground font-medium">
-              Jana QR dengan logo JPP untuk dikongsi kepada pelajar.
+              {t('jpp:qr_generator_subtitle', 'Jana QR dengan logo JPP untuk dikongsi kepada pelajar.')}
             </p>
           </div>
         </div>
@@ -137,7 +141,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
       {/* Quick Links Dropdown */}
       <div className="space-y-1.5">
         <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
-          Pilih Halaman (Cepat)
+          {t('jpp:qr_select_page_fast', 'Pilih Halaman (Cepat)')}
         </Label>
         <div className="relative">
           <button
@@ -149,7 +153,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
             )}
           >
             <span className={cn('truncate', !currentLabel && 'text-muted-foreground/50')}>
-              {currentLabel || 'Pilih halaman...'}
+              {currentLabel || t('jpp:qr_select_page_placeholder', 'Pilih halaman...')}
             </span>
             <ChevronDown className={cn('w-4 h-4 text-muted-foreground shrink-0 transition-transform', showQuickList && 'rotate-180')} />
           </button>
@@ -166,7 +170,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
                 {hasUnitLinks && (
                   <>
                     <div className="px-4 pt-3 pb-1">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-primary/60">Modul Ini</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-primary/60">{t('jpp:qr_section_this_module', 'Modul Ini')}</p>
                     </div>
                     {(unitLinks || []).map(q => (
                       <button
@@ -184,7 +188,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
                     ))}
                     <div className="mx-4 my-2 border-t border-border/40" />
                     <div className="px-4 pb-1">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Umum</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">{t('jpp:qr_section_general', 'Umum')}</p>
                     </div>
                   </>
                 )}
@@ -212,7 +216,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
       {/* Custom Path */}
       <div className="space-y-1.5">
         <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
-          Atau Masukkan Path Sendiri
+          {t('jpp:qr_or_enter_custom_path', 'Atau Masukkan Path Sendiri')}
         </Label>
         <div className="relative group">
           <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
@@ -273,7 +277,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
                 onClick={handleCopy}
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'Disalin!' : 'Salin URL'}
+                {copied ? t('jpp:qr_copied_btn', 'Disalin!') : t('jpp:qr_copy_url_btn', 'Salin URL')}
               </Button>
               <Button
                 type="button"
@@ -281,12 +285,13 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
                 onClick={handleDownload}
               >
                 <Download className="w-3.5 h-3.5" />
-                Muat Turun
+                {t('jpp:qr_download_btn', 'Muat Turun')}
               </Button>
             </div>
 
-            <p className="text-[10px] text-muted-foreground/40 text-center leading-relaxed max-w-[280px]">
-              💡 QR Code ini akan membawa pengguna terus ke halaman yang dipilih selepas log masuk.
+            <p className="text-[10px] text-muted-foreground/40 text-center leading-relaxed max-w-[280px] flex items-center justify-center gap-1.5">
+              <Info className="w-3 h-3 shrink-0" />
+              <span>{t('jpp:qr_login_redirect_hint', 'QR Code ini akan membawa pengguna terus ke halaman yang dipilih selepas log masuk.')}</span>
             </p>
           </motion.div>
         ) : (
@@ -299,7 +304,7 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
           >
             <QrCode className="w-12 h-12 text-muted-foreground" />
             <p className="text-[11px] text-muted-foreground font-medium text-center">
-              Pilih halaman atau masukkan path untuk jana QR
+              {t('jpp:qr_select_page_empty_prompt', 'Pilih halaman atau masukkan path untuk jana QR')}
             </p>
           </motion.div>
         )}

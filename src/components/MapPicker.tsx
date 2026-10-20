@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -71,6 +72,7 @@ function LocationMarker({
 }
 
 export function MapPicker({ position, onPositionChange, onNameChange, label }: MapPickerProps) {
+  const { t } = useTranslation();
   const defaultCenter: [number, number] = [3.8625, 103.3153]; // POLISAS
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [resolvedName, setResolvedName] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export function MapPicker({ position, onPositionChange, onNameChange, label }: M
         {/* Instruction badge */}
         <div className="absolute bottom-3 left-0 right-0 z-[10] flex justify-center pointer-events-none">
           <div className="bg-slate-900/80  text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full">
-            Ketik pada peta untuk pin lokasi
+            {t('gig:tap_map_to_pin', 'Ketik pada peta untuk pin lokasi')}
           </div>
         </div>
       </div>
@@ -126,7 +128,7 @@ export function MapPicker({ position, onPositionChange, onNameChange, label }: M
                   {label || 'Lokasi'} Dipilih
                 </p>
                 <p className="text-xs font-semibold text-slate-500 dark:text-white/50 italic">
-                  Mengesan nama lokasi...
+                  {t('gig:detecting_location_name', 'Mengesan nama lokasi...')}
                 </p>
               </div>
             </>

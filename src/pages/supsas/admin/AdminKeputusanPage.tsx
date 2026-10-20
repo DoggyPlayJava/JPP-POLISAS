@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Medal, Plus, Save, X, Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Medal, Save } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-const MEDAL_OPTIONS = [
-  { value: 'gold',   label: '🥇 Emas',   cls: 'bg-amber-500/20 border-amber-500/40 text-amber-400' },
-  { value: 'silver', label: '🥈 Perak',  cls: 'bg-slate-500/20 border-slate-500/30 text-slate-300' },
-  { value: 'bronze', label: '🥉 Gangsa', cls: 'bg-orange-700/20 border-orange-700/30 text-orange-400' },
-  { value: null,     label: '— Tiada',   cls: 'bg-white/5 border-white/10 text-white/30' },
-];
-
 export function AdminKeputusanPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { edition, sports, kontingen, refetch } = useSupsas();
   const activeKontingen = kontingen.filter(k => k.is_active); // K-1: admin page only assigns medals to active kontingen
   const [selectedSport, setSelectedSport] = useState<string>('');
@@ -22,21 +17,28 @@ export function AdminKeputusanPage() {
 
   const sport = sports.find(s => s.id === selectedSport);
 
+  const medalOptions = [
+    { value: 'gold',   label: `🥇 ${t('supsas:gold_medals_label', 'Emas')}`,   cls: 'bg-amber-500/20 border-amber-500/40 text-amber-400' },
+    { value: 'silver', label: `🥈 ${t('supsas:silver_medals_label', 'Perak')}`,  cls: 'bg-slate-500/20 border-slate-500/30 text-slate-300' },
+    { value: 'bronze', label: `🥉 ${t('supsas:bronze_medals_label', 'Gangsa')}`, cls: 'bg-orange-700/20 border-orange-700/30 text-orange-400' },
+    { value: null,     label: t('supsas:no_medal_dash', '— Tiada'),   cls: 'bg-white/5 border-white/10 text-white/30' },
+  ];
+
   const handleMedalChange = (kontingenId: string, medal: string | null) => {
     setResults(prev => ({ ...prev, [kontingenId]: { ...prev[kontingenId] || { position: '', notes: '' }, medal } }));
   };
 
   const handleSave = async () => {
-    if (!edition || !selectedSport) { toast.error('Sila pilih sukan'); return; }
-    const entries = Object.entries(results).filter(([, v]) => v.medal !== undefined);
-    if (entries.length === 0) { toast.error('Tiada keputusan untuk disimpan'); return; }
+    if (!edition || !selectedSport) { toast.error(t('supsas:select_sport_required', 'Sila pilih sukan')); return; }
+    const entries = (Object.entries(results) as [string, { medal: string | null; position: string; notes: string }][]).filter(([, v]) => v.medal !== undefined);
+    if (entries.length === 0) { toast.error(t('supsas:no_results_to_save', 'Tiada keputusan untuk disimpan')); return; }
 
     // S-1: Validate medal uniqueness — only 1 of each medal type per sport
     const medalCounts: Record<string, number> = { gold: 0, silver: 0, bronze: 0 };
     entries.forEach(([, v]) => { if (v.medal && v.medal in medalCounts) medalCounts[v.medal]++; });
-    if (medalCounts.gold > 1) { toast.error('Hanya satu pemenang 🥇 Emas dibenarkan'); return; }
-    if (medalCounts.silver > 1) { toast.error('Hanya satu pemenang 🥈 Perak dibenarkan'); return; }
-    if (medalCounts.bronze > 1) { toast.error('Hanya satu pemenang 🥉 Gangsa dibenarkan'); return; }
+    if (medalCounts.gold > 1) { toast.error(t('supsas:only_one_gold_allowed', 'Hanya satu pemenang 🥇 Emas dibenarkan')); return; }
+    if (medalCounts.silver > 1) { toast.error(t('supsas:only_one_silver_allowed', 'Hanya satu pemenang 🥈 Perak dibenarkan')); return; }
+    if (medalCounts.bronze > 1) { toast.error(t('supsas:only_one_bronze_allowed', 'Hanya satu pemenang 🥉 Gangsa dibenarkan')); return; }
 
     const upsertData = entries.map(([kontingenId, vals]) => ({
       edition_id: edition.id,
@@ -53,21 +55,21 @@ export function AdminKeputusanPage() {
       .upsert(upsertData, { onConflict: 'sport_id,kontingen_id' });
 
     setSaving(false);
-    if (error) { toast.error('Gagal simpan: ' + error.message); return; }
-    toast.success('Keputusan disimpan! Papan markah dikemas kini.');
+    if (error) { toast.error(t('supsas:save_results_failed_with_msg', 'Gagal simpan: {{msg}}', { msg: error.message })); return; }
+    toast.success(t('supsas:results_saved_success', 'Keputusan disimpan! Papan markah dikemas kini.'));
     refetch();
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white">Input Keputusan</h1>
-        <p className="text-white/30 text-sm mt-1">Rekod pengagihan medal untuk setiap sukan</p>
+        <h1 className="text-2xl font-black text-white">{t('supsas:input_results_title', 'Input Keputusan')}</h1>
+        <p className="text-white/30 text-sm mt-1">{t('supsas:input_results_subtitle', 'Rekod pengagihan medal untuk setiap sukan')}</p>
       </div>
 
       {/* Sport selector */}
       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Pilih Sukan</label>
+        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:select_sport', 'Pilih Sukan')}</label>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {sports.map(s => (
             <button
@@ -96,7 +98,7 @@ export function AdminKeputusanPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-black text-white">{sport?.name}</h2>
-              <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-0.5">Pilih medal untuk setiap kontinjen</p>
+              <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-0.5">{t('supsas:choose_medal_desc', 'Pilih medal untuk setiap kontinjen')}</p>
             </div>
             <button
               onClick={handleSave}
@@ -104,13 +106,13 @@ export function AdminKeputusanPage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all disabled:opacity-50"
             >
               {saving ? <span className="animate-spin text-base">⟳</span> : <Save className="w-4 h-4" />}
-              Simpan
+              {t('common:save', 'Simpan')}
             </button>
           </div>
 
           {/* Info */}
           <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/15 text-xs text-blue-300/60 font-medium">
-            💡 Hanya satu kontinjen boleh menang setiap jenis medal. Boleh ada beberapa kontinjen dalam kedudukan "Tiada".
+            {t('supsas:medal_uniqueness_hint', '💡 Hanya satu kontinjen boleh menang setiap jenis medal. Boleh ada beberapa kontinjen dalam kedudukan "Tiada".')}
           </div>
 
           <div className="space-y-3">
@@ -136,7 +138,7 @@ export function AdminKeputusanPage() {
 
                 {/* Medal buttons */}
                 <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                  {MEDAL_OPTIONS.map(opt => (
+                  {medalOptions.map(opt => (
                     <button
                       key={String(opt.value)}
                       onClick={() => handleMedalChange(k.id, opt.value)}
@@ -160,7 +162,7 @@ export function AdminKeputusanPage() {
       {!selectedSport && (
         <div className="text-center py-16 text-white/20 text-sm font-black uppercase tracking-widest">
           <Medal className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          Pilih sukan di atas untuk mula input keputusan
+          {t('supsas:select_sport_prompt', 'Pilih sukan di atas untuk mula input keputusan')}
         </div>
       )}
     </div>

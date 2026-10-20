@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Heart, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { REACTION_EMOJIS, ReactionSummary } from '@/lib/polySuaraHelpers';
@@ -26,6 +27,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
   isOpen: isOpenProp,
   onOpenChange,
 }) => {
+  const { t } = useTranslation(['services', 'common']);
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = isOpenProp !== undefined;
   const isPopoverOpen = isControlled ? isOpenProp : internalOpen;
@@ -150,7 +152,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
   const hasDiverseReactions = activeReactions.length > 1 || (activeReactions.length === 1 && activeReactions[0].type !== 'heart');
   const breakdownTooltipText = activeReactions.length > 0
     ? activeReactions.map((r) => `${r.emoji} ${r.count}`).join(' · ')
-    : 'Belum ada reaksi';
+    : t('services:no_reactions_yet', 'Belum ada reaksi');
 
   // Handler for clicking the main reaction button
   const handleMainButtonClick = (e: React.MouseEvent) => {
@@ -180,7 +182,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
           <motion.div
             data-testid="reaction-popover"
             role="dialog"
-            aria-label="Pilih Reaksi"
+            aria-label={t('services:select_reaction', 'Pilih Reaksi')}
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 6 }}
@@ -262,7 +264,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
             )}
           >
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1.5 pb-1.5 border-b border-slate-100 dark:border-white/5">
-              <span>Reaksi Komuniti</span>
+              <span>{t('services:community_reactions', 'Reaksi Komuniti')}</span>
               <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{displayLikes}</span>
             </div>
 
@@ -283,7 +285,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
                       ? "bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold"
                       : "text-slate-700 dark:text-slate-300"
                   )}
-                  title={r.userReacted ? `Klik untuk batal ${r.label || r.type}` : `Klik untuk beri ${r.label || r.type}`}
+                  title={r.userReacted ? t('services:click_to_cancel_reaction', 'Klik untuk batal {{label}}', { label: r.label || r.type }) : t('services:click_to_give_reaction', 'Klik untuk beri {{label}}', { label: r.label || r.type })}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-base leading-none">{r.emoji}</span>
@@ -293,7 +295,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
                     <span className="tabular-nums font-bold">{r.count}</span>
                     {r.userReacted && (
                       <span className="text-[10px] font-sans font-bold text-rose-500 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded-full">
-                        Anda
+                        {t('common:you', 'Anda')}
                       </span>
                     )}
                   </div>
@@ -325,8 +327,14 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
         <button
           data-testid="reaction-heart-btn"
           type="button"
-          title={isUserReacted ? (userReaction?.label ? `Batal reaksi ${userReaction.label}` : 'Batal reaksi') : 'Suka luahan ini'}
-          aria-label={`Suka (${displayLikes})`}
+          title={
+            isUserReacted
+              ? (userReaction?.label
+                  ? t('services:cancel_reaction_with_name', 'Batal reaksi {{label}}', { label: userReaction.label })
+                  : t('services:cancel_reaction', 'Batal reaksi'))
+              : t('services:like_this_confession', 'Suka luahan ini')
+          }
+          aria-label={t('services:like_count_aria', 'Suka ({{count}})', { count: displayLikes })}
           onClick={handleMainButtonClick}
           className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all select-none cursor-pointer flex-nowrap shrink-0 min-h-[32px] sm:min-h-0',
@@ -389,8 +397,8 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
         <button
           data-testid="reaction-menu-trigger"
           type="button"
-          title="Pilih reaksi lain"
-          aria-label="Pilih reaksi lain"
+          title={t('services:choose_another_reaction', 'Pilih reaksi lain')}
+          aria-label={t('services:choose_another_reaction', 'Pilih reaksi lain')}
           aria-expanded={isPopoverOpen}
           onClick={(e) => {
             e.stopPropagation();

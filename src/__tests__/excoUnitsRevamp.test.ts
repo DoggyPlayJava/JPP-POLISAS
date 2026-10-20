@@ -73,8 +73,8 @@ describe('JPP EXCO Units Revamp — Kontrak Sistem & Integriti Dashboard', () =>
   it('MultimediaUnitDashboard bersambung secara live dengan system_announcements dan menyediakan Brandkit DAM', () => {
     const content = readFileSync(join(UNITS_DIR, 'MultimediaUnitDashboard.tsx'), 'utf8');
     expect(content).toContain('system_announcements');
-    expect(content).toContain('BRANDKIT_LOGOS');
-    expect(content).toContain('BRANDKIT_COLORS');
+    expect(content).toContain('brandkitLogos');
+    expect(content).toContain('brandkitColors');
     expect(content).toContain('copyWhatsApp');
   });
 

@@ -1,6 +1,21 @@
 // import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Default browser language to Bahasa Melayu (ms-MY) so pre-i18n tests that
+// assert Malay strings keep working. i18n tests that need English call
+// changeLanguage('en') explicitly.
+if (typeof globalThis.navigator === 'undefined') {
+  (globalThis as any).navigator = {};
+}
+Object.defineProperty(globalThis.navigator, 'language', {
+  value: 'ms-MY',
+  configurable: true,
+});
+Object.defineProperty(globalThis.navigator, 'languages', {
+  value: ['ms-MY', 'ms'],
+  configurable: true,
+});
+
 // Mock Supabase
 vi.mock('@/lib/supabase', () => ({
   supabase: {

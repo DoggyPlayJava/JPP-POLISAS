@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Inbox, AlertTriangle, CheckCircle2, TrendingUp,
   ArrowUpRight, ChevronRight, Bell, HelpCircle
@@ -7,7 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationStore } from '@/store/useNotificationStore';
@@ -24,6 +25,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
 export function KebajikanDashboard() {
+  const { t, i18n } = useTranslation(['kebajikan', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { user, profile } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -69,11 +72,21 @@ export function KebajikanDashboard() {
   }, [fetchAll]);
 
   const statCards = [
-    { label: 'Tiket Baru', value: stats?.total_active ?? 0,    icon: Inbox,         color: '#6366F1', href: '/kebajikan/tiket?status=NEW' },
-    { label: 'Diescalate', value: stats?.total_escalated ?? 0,        icon: AlertTriangle, color: '#EF4444', href: '/kebajikan/tiket?status=ESCALATED' },
-    { label: 'Kes Selesai', value: stats?.total_resolved ?? 0, icon: CheckCircle2,  color: '#10B981', href: '/kebajikan/tiket?status=RESOLVED' },
-    { label: 'Rating Pelajar', value: stats?.avg_rating ? `${stats.avg_rating}⭐` : 'N/A', icon: TrendingUp, color: '#F59E0B', href: '/kebajikan/laporan' },
+    { label: t('kebajikan:dash_stat_new_tickets', 'Tiket Baru'), value: stats?.total_active ?? 0,    icon: Inbox,         color: '#6366F1', href: '/kebajikan/tiket?status=NEW' },
+    { label: t('kebajikan:dash_stat_escalated', 'Diescalate'), value: stats?.total_escalated ?? 0,        icon: AlertTriangle, color: '#EF4444', href: '/kebajikan/tiket?status=ESCALATED' },
+    { label: t('kebajikan:dash_stat_resolved', 'Kes Selesai'), value: stats?.total_resolved ?? 0, icon: CheckCircle2,  color: '#10B981', href: '/kebajikan/tiket?status=RESOLVED' },
+    { label: t('kebajikan:dash_stat_student_rating', 'Rating Pelajar'), value: stats?.avg_rating ? `${stats.avg_rating}⭐` : 'N/A', icon: TrendingUp, color: '#F59E0B', href: '/kebajikan/laporan' },
   ];
+
+  const greetingKey = getGreetingKey();
+  const greetingWord =
+    greetingKey === 'morning'
+      ? t('kebajikan:dash_greeting_morning', 'pagi')
+      : greetingKey === 'afternoon'
+      ? t('kebajikan:dash_greeting_afternoon', 'tengah hari')
+      : greetingKey === 'evening'
+      ? t('kebajikan:dash_greeting_evening', 'petang')
+      : t('kebajikan:dash_greeting_night', 'malam');
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen relative transition-colors">
@@ -81,9 +94,11 @@ export function KebajikanDashboard() {
       <div className="mb-8 md:mb-10 relative z-10 flex justify-between items-start">
         <div>
           <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
-            Selamat {getGreeting()},{name}! 👋
+            {t('kebajikan:dash_greeting_banner', 'Selamat {{greeting}}, {{name}}! 👋', { greeting: greetingWord, name })}
           </motion.h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Berikut adalah ringkasan sistem aduan pelajar hari ini.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+            {t('kebajikan:dash_subtitle', 'Berikut adalah ringkasan sistem aduan pelajar hari ini.')}
+          </p>
         </div>
         <button
           onClick={startTour}
@@ -121,11 +136,11 @@ export function KebajikanDashboard() {
         <div className="lg:col-span-2 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between mb-8 relative z-10">
             <div>
-              <h2 className="font-black text-lg text-slate-900 dark:text-white">Trend Aduan Bulanan</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Diterima vs Diselesaikan — 6 bulan</p>
+              <h2 className="font-black text-lg text-slate-900 dark:text-white">{t('kebajikan:dash_trend_title', 'Trend Aduan Bulanan')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:dash_trend_subtitle', 'Diterima vs Diselesaikan — 6 bulan')}</p>
             </div>
             <Link to="/kebajikan/laporan" className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-opacity hover:opacity-70 text-teal-600 dark:text-teal-400">
-              Laporan Penuh <ChevronRight className="w-3 h-3" />
+              {t('kebajikan:dash_full_report', 'Laporan Penuh')} <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
           {monthly.length > 0 ? (
@@ -135,12 +150,12 @@ export function KebajikanDashboard() {
                 <XAxis dataKey="month_label" tick={{ fontSize: 9, fill: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: isDark ? 'rgba(255,255,255,0.4)' : '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: isDark ? '#0f172a' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', borderRadius: 12, fontSize: 11, color: isDark ? '#ffffff' : '#0f172a', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} labelStyle={{ color: isDark ? 'white' : '#0f172a', fontWeight: 700 }} />
-                <Bar dataKey="received" name="Diterima" fill="rgba(99,102,241,0.7)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="resolved" name="Diselesaikan" fill={TEAL} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="received" name={t('kebajikan:dash_bar_received', 'Diterima')} fill="rgba(99,102,241,0.7)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resolved" name={t('kebajikan:dash_bar_resolved', 'Diselesaikan')} fill={TEAL} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-xs text-slate-400 dark:text-white/20">Belum ada data</div>
+            <div className="h-[200px] flex items-center justify-center text-xs text-slate-400 dark:text-white/20">{t('kebajikan:dash_no_data', 'Belum ada data')}</div>
           )}
         </div>
 
@@ -149,19 +164,19 @@ export function KebajikanDashboard() {
           <div className="flex items-center justify-between mb-6 relative z-10">
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              <h2 className="font-black text-lg text-slate-900 dark:text-white">Notifikasi</h2>
+              <h2 className="font-black text-lg text-slate-900 dark:text-white">{t('kebajikan:dash_notif_title', 'Notifikasi')}</h2>
               {unreadCount > 0 && <span className="text-[9px] font-black bg-red-500 text-white rounded-full px-1.5 py-0.5">{unreadCount}</span>}
             </div>
             {unreadCount > 0 && (
               <button onClick={() => notifs.filter(n => !n.is_read).forEach(n => markRead(n.id))} className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 transition-colors">
-                Baca Semua
+                {t('kebajikan:dash_mark_all_read', 'Baca Semua')}
               </button>
             )}
           </div>
           {notifs.length === 0 ? (
             <div className="py-10 text-center">
               <Bell className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-white/10" />
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tiada notifikasi baharu</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:dash_no_notifs', 'Tiada notifikasi baharu')}</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-hide relative z-10">
@@ -189,26 +204,26 @@ export function KebajikanDashboard() {
         <div className="mt-8 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm relative z-10">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="font-black text-lg text-slate-900 dark:text-white mb-1">Tiket Memerlukan Tindakan</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Baru, Diescalate & Dibuka Semula</p>
+              <h2 className="font-black text-lg text-slate-900 dark:text-white mb-1">{t('kebajikan:dash_recent_title', 'Tiket Memerlukan Tindakan')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:dash_recent_subtitle', 'Baru, Diescalate & Dibuka Semula')}</p>
             </div>
             <Link to="/kebajikan/tiket" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-colors bg-teal-50 dark:bg-teal-500/10 px-4 py-2 rounded-xl border border-teal-200/60 dark:border-teal-500/20">
-              Semua Tiket <ChevronRight className="w-3.5 h-3.5" />
+              {t('kebajikan:dash_all_tickets', 'Semua Tiket')} <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="space-y-3">
-            {recent.slice(0, 5).map(t => (
-              <Link key={t.id} to={`/kebajikan/tiket/${t.id}`} className="flex items-center gap-4 sm:gap-5 px-5 sm:px-6 py-4 rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/70 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:shadow-sm transition-all group overflow-hidden">
+            {recent.slice(0, 5).map(ticketItem => (
+              <Link key={ticketItem.id} to={`/kebajikan/tiket/${ticketItem.id}`} className="flex items-center gap-4 sm:gap-5 px-5 sm:px-6 py-4 rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/70 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] hover:shadow-sm transition-all group overflow-hidden">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 dark:text-slate-200 truncate mb-1">{t.title}</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-slate-200 truncate mb-1">{ticketItem.title}</p>
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.ticket_no}</span>
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{ticketItem.ticket_no}</span>
                     <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600">·</span>
-                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: ms })}</span>
+                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(ticketItem.created_at), { addSuffix: true, locale: dateLocale })}</span>
                   </div>
                 </div>
-                <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide flex-shrink-0', KEBAJIKAN_STATUS_COLORS[t.status])}>
-                  {KEBAJIKAN_STATUS_LABELS[t.status]}
+                <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide flex-shrink-0', KEBAJIKAN_STATUS_COLORS[ticketItem.status])}>
+                  {t(`kebajikan:status_${ticketItem.status.toLowerCase()}`, KEBAJIKAN_STATUS_LABELS[ticketItem.status])}
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-white/20 group-hover:text-slate-700 dark:group-hover:text-white/50 transition-colors" />
               </Link>
@@ -222,12 +237,12 @@ export function KebajikanDashboard() {
   );
 }
 
-function getGreeting() {
+function getGreetingKey() {
   const h = new Date().getHours();
-  if (h < 12) return 'pagi';
-  if (h < 15) return 'tengah hari';
-  if (h < 19) return 'petang';
-  return 'malam';
+  if (h < 12) return 'morning';
+  if (h < 15) return 'afternoon';
+  if (h < 19) return 'evening';
+  return 'night';
 }
 
 function hexToRgbStr(hex: string) {

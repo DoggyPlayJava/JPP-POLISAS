@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, RefreshCw, ShieldAlert, Users, Activity, Wallet, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,15 +18,18 @@ interface AiAnalysisModalProps {
 
 type Stage = 'ready' | 'loading' | 'result' | 'error';
 
-const ANALYSIS_POINTS = [
-  { icon: Users, label: 'Jumlah ahli berdaftar' },
-  { icon: Activity, label: 'Aktiviti dirancang & diselesaikan' },
-  { icon: Wallet, label: 'Penggunaan bajet kelab' },
-  { icon: CheckSquare, label: 'Tugasan dan produktiviti' },
-];
+
 
 export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysisModalProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const [isError, setIsError] = React.useState(false);
+
+  const analysisPoints = [
+    { icon: Users, label: t('portal:ai_metric_registered_members', 'Jumlah ahli berdaftar') },
+    { icon: Activity, label: t('portal:ai_metric_activities_completed', 'Aktiviti dirancang & diselesaikan') },
+    { icon: Wallet, label: t('portal:ai_metric_budget_usage', 'Penggunaan bajet kelab') },
+    { icon: CheckSquare, label: t('portal:ai_metric_tasks_productivity', 'Tugasan dan produktiviti') },
+  ];
   const { callAi, isLoading, result, setResult } = useAiAssistant();
 
   const stage: Stage = isLoading ? 'loading' : isError ? 'error' : result ? 'result' : 'ready';
@@ -51,7 +55,7 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
             <Bot size={32} /> JPP <span className="text-violet-200">Nexus</span>
           </DialogTitle>
           <p className="text-violet-100 font-medium italic relative z-10">
-            Sistem Kecerdasan Buatan JPP POLISAS — Analisis Prestasi Kelab
+            {t('portal:ai_analysis_subtitle', 'Sistem Kecerdasan Buatan JPP POLISAS — Analisis Prestasi Kelab')}
           </p>
         </DialogHeader>
 
@@ -72,14 +76,14 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-black text-foreground mb-1">Sedia Jana Analisis</h3>
+                  <h3 className="text-xl font-black text-foreground mb-1">{t('portal:ready_generate_analysis', 'Sedia Jana Analisis')}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm">
-                    AI akan menganalisa data kelab anda secara automatik berdasarkan metrik berikut:
+                    {t('portal:ai_analysis_description', 'AI akan menganalisa data kelab anda secara automatik berdasarkan metrik berikut:')}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-                  {ANALYSIS_POINTS.map(({ icon: Icon, label }) => (
+                  {analysisPoints.map(({ icon: Icon, label }) => (
                     <div key={label} className="flex items-center gap-2.5 bg-card border border-border/60 rounded-2xl px-3 py-2.5 text-left">
                       <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
                         <Icon size={15} className="text-indigo-600" />
@@ -94,10 +98,10 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                   disabled={!clubId}
                   className="h-13 px-8 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-sm shadow-xl shadow-indigo-500/25 disabled:opacity-50"
                 >
-                  <Sparkles className="mr-2 w-4 h-4" /> Jana Analisis Sekarang
+                  <Sparkles className="mr-2 w-4 h-4" /> {t('portal:generate_analysis_now', 'Jana Analisis Sekarang')}
                 </Button>
                 {!clubId && (
-                  <p className="text-xs text-rose-500 font-medium -mt-3">Profil anda tidak mempunyai kelab yang dipautkan.</p>
+                  <p className="text-xs text-rose-500 font-medium -mt-3">{t('portal:profile_no_club_linked', 'Profil anda tidak mempunyai kelab yang dipautkan.')}</p>
                 )}
               </motion.div>
             )}
@@ -114,8 +118,8 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                   <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-500 w-6 h-6 animate-pulse" />
                 </div>
                 <div className="text-center">
-                  <p className="font-black text-indigo-600 uppercase tracking-[0.2em] text-sm animate-pulse mb-1">Menjana Analisis Pintar</p>
-                  <p className="text-xs text-muted-foreground font-medium">Sila tunggu sebentar...</p>
+                  <p className="font-black text-indigo-600 uppercase tracking-[0.2em] text-sm animate-pulse mb-1">{t('portal:generating_smart_analysis', 'Menjana Analisis Pintar')}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{t('portal:please_wait_moment', 'Sila tunggu sebentar...')}</p>
                 </div>
               </motion.div>
             )}
@@ -153,13 +157,13 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                   <ShieldAlert size={40} />
                 </div>
                 <div className="text-center space-y-2">
-                  <h3 className="text-lg font-black text-rose-600 uppercase tracking-tight">Sistem sedang sibuk</h3>
+                  <h3 className="text-lg font-black text-rose-600 uppercase tracking-tight">{t('common:system_busy', 'Sistem sedang sibuk')}</h3>
                   <p className="text-sm text-muted-foreground font-medium max-w-xs mx-auto">
-                    Maaf, bot kami mengalami sedikit gangguan teknikal. Sila cuba lagi sebentar!
+                    {t('portal:ai_technical_error_desc', 'Maaf, bot kami mengalami sedikit gangguan teknikal. Sila cuba lagi sebentar!')}
                   </p>
                 </div>
                 <Button onClick={handleRunAnalysis} className="rounded-full bg-rose-600 hover:bg-rose-700 text-white px-8 h-12 font-black uppercase text-[11px] tracking-widest shadow-lg shadow-rose-600/20">
-                  Cuba Jana Semula
+                  {t('portal:retry_generate', 'Cuba Jana Semula')}
                 </Button>
               </motion.div>
             )}
@@ -171,10 +175,10 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
         {stage === 'result' && (
           <div className="p-6 bg-card border-t flex justify-end gap-3">
             <Button variant="outline" onClick={() => { setResult(null); setIsError(false); }} disabled={isLoading} className="rounded-xl font-black text-xs uppercase h-12 bg-muted/50 border-none">
-              <RefreshCw className="mr-2 w-4 h-4" /> Jana Semula
+              <RefreshCw className="mr-2 w-4 h-4" /> {t('portal:regenerate', 'Jana Semula')}
             </Button>
             <Button onClick={onClose} className="rounded-xl font-black text-xs uppercase h-12 px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20">
-              Tutup
+              {t('common:close', 'Tutup')}
             </Button>
           </div>
         )}

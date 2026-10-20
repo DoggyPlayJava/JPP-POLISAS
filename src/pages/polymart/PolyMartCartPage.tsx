@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake, ChevronRight, Package } from 'lucide-react';
 import { isProductOnSale, getProductEffectivePrice } from '@/lib/superAppHelpers';
 
@@ -40,12 +41,13 @@ interface CartItem {
 }
 
 export function PolyMartCartPage() {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { refetchCounts } = usePolymart();
 
   const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null); // business_id
   const [pickupTime, setPickupTime] = useState<Record<string, string>>({});
   const [paymentMethods, setPaymentMethods] = useState<Record<string, 'COD' | 'QR_ONLINE'>>({});
@@ -88,14 +90,14 @@ export function PolyMartCartPage() {
     setItems(prev => prev.filter(i => i.id !== id));
     await supabase.from('polymart_cart_items').delete().eq('id', id);
     refetchCounts();
-    toast.success('Dibuang dari troli');
+    toast.success(t('commerce:cart_removed_toast', 'Dibuang dari troli'));
   };
 
   const handleCheckout = async (businessId: string) => {
     if (!user) return;
     const time = pickupTime[businessId]?.trim();
     if (!time) {
-      toast.error('Sila isi masa pesanan siap / ambil');
+      toast.error(t('commerce:cart_fill_pickup_time', 'Sila isi masa pesanan siap / ambil'));
       return;
     }
     const businessItems = items.filter(i => i.product.business_id === businessId);
@@ -111,7 +113,7 @@ export function PolyMartCartPage() {
 
       // 0. Semak kedai masih buka
       if (business && !business.is_active) {
-        throw new Error('Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.');
+        throw new Error(t('commerce:err_store_closed', 'Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.'));
       }
       
       // 1. Tempah stok dahulu untuk setiap barang dengan parameter variasi terpilih
@@ -121,7 +123,7 @@ export function PolyMartCartPage() {
           p_quantity: item.quantity,
           p_variation: item.selected_variation || null
         });
-        if (reserveError) throw new Error(`Stok tidak cukup untuk ${item.product.name} (Variasi: ${item.selected_variation || 'Tiada'})`);
+        if (reserveError) throw new Error(t('commerce:stock_insufficient_for_item', 'Stok tidak cukup untuk {{name}} (Variasi: {{variation}})', { name: item.product.name, variation: item.selected_variation || t('commerce:none', 'Tiada') }));
       }
 
       // 2. Cipta pesanan
@@ -179,8 +181,11 @@ export function PolyMartCartPage() {
       // 4. Notify vendor (sekali sahaja per vendor)
       try {
         await sendNotificationToBusinessVendor(businessId, {
-          title: 'Pesanan Pukal Baharu',
-          message: `${profile?.full_name ?? 'Pelajar'} menempah ${businessItems.length} jenis barang.`,
+          title: t('commerce:new_bulk_order_title', 'Pesanan Pukal Baharu'),
+          message: t('commerce:new_bulk_order_msg', '{{name}} menempah {{count}} jenis barang.', {
+            name: profile?.full_name ?? t('commerce:student_fallback', 'Pelajar'),
+            count: businessItems.length
+          }),
           type: 'polymart_order_new',
           module: 'POLYMART',
           link: `/polymart/vendor`,
@@ -188,7 +193,7 @@ export function PolyMartCartPage() {
         });
       } catch (e) {}
 
-      toast.success('Pesanan berjaya dihantar');
+      toast.success(t('commerce:toast_order_sent_success', 'Pesanan berjaya dihantar'));
       
       // Update UI
       setItems(prev => prev.filter(i => i.product.business_id !== businessId));
@@ -201,7 +206,7 @@ export function PolyMartCartPage() {
         navigate('/polymart/pesanan-saya');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Ralat semasa checkout');
+      toast.error(err.message || t('commerce:checkout_error', 'Ralat semasa checkout'));
     } finally {
       setCheckingOut(null);
     }
@@ -211,8 +216,9 @@ export function PolyMartCartPage() {
     return (
       <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-6 h-6 rounded-lg bg-amber-500/20" />
-          <div className="h-6 w-32 bg-muted/60 rounded-md" />
+          <ShoppingCart className="w-6 h-6" style={{ color: PM_ACCENT }} />
+          <h1 className="text-xl font-black text-foreground">{t('cart', { defaultValue: 'Troli Pesanan' })}</h1>
+          <span className="sr-only">{t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })}</span>
         </div>
         {[1, 2].map(i => (
           <div key={i} className="bg-card border border-border/50 rounded-3xl p-4 space-y-4">
@@ -245,18 +251,19 @@ export function PolyMartCartPage() {
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="flex items-center gap-2 mb-6">
         <ShoppingCart className="w-6 h-6" style={{ color: PM_ACCENT }} />
-        <h1 className="text-xl font-black text-foreground">Troli Saya</h1>
+        <h1 className="text-xl font-black text-foreground">{t('cart', { defaultValue: 'Troli Pesanan' })}</h1>
       </div>
 
       {items.length === 0 ? (
         <div className="text-center py-20 bg-muted/20 border border-border/40 rounded-3xl">
           <ShoppingCart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-bold text-foreground">Troli kosong</p>
-          <p className="text-xs text-muted-foreground mt-1">Jom beli sesuatu di PolyMart!</p>
+          <p className="text-sm font-bold text-foreground">{t('cart', { defaultValue: 'Troli kosong' })}</p>
+          <span className="sr-only">{t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })}</span>
+          <p className="text-xs text-muted-foreground mt-1">{t('commerce:empty_cart_cta', 'Jom beli sesuatu di PolyMart!')}</p>
           <button onClick={() => navigate('/polymart')}
-            className="mt-4 px-5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110 shadow-md"
+            className="mt-4 px-5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110 shadow-md cursor-pointer"
             style={{ background: PM_GRADIENT }}>
-            Kembali ke Kedai
+            {t('commerce:back_to_store', 'Kembali ke Kedai')}
           </button>
         </div>
       ) : (
@@ -374,7 +381,7 @@ export function PolyMartCartPage() {
                 {/* Payment Selector */}
                 {qrEnabled && codEnabled && (
                   <div className="px-4 py-3 border-t border-border/30 bg-muted/5 space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Kaedah Pembayaran</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t('commerce:payment_method_label', 'Kaedah Pembayaran')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       <button type="button" onClick={() => setPaymentMethods(prev => ({ ...prev, [bizId]: 'QR_ONLINE' }))}
                         className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${currentMethod === 'QR_ONLINE' ? 'border-blue-500 bg-blue-500/5 text-blue-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
@@ -393,7 +400,7 @@ export function PolyMartCartPage() {
                 {/* Checkout Footer */}
                 <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground">Jumlah</span>
+                    <span className="text-xs font-bold text-muted-foreground">{t('commerce:total_label', 'Jumlah')}</span>
                     <span className="text-lg font-black font-mono tabular-nums" style={{ color: PM_ACCENT }}>
                       RM {subtotal.toFixed(2)}
                     </span>
@@ -402,14 +409,14 @@ export function PolyMartCartPage() {
                   {/* Cadangan Waktu Ambil */}
                   <div className="space-y-1 mb-2.5">
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
-                      Cadangan Waktu Ambil <span className="text-rose-400">*</span>
+                      {t('commerce:pickup_time_suggestion_title', 'Cadangan Waktu Ambil')} <span className="text-rose-400">*</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {[
-                        { label: 'Segera', value: 'Segera (Bila-bila Siap)' },
-                        { label: 'Rehat Pagi (10 AM)', value: 'Rehat Pagi (~10.00 AM)' },
-                        { label: 'Tengah Hari (1 PM)', value: 'Tengah Hari (~1.00 PM)' },
-                        { label: 'Petang (Lepas 4 PM)', value: 'Petang (Selepas 4.00 PM)' }
+                        { label: t('commerce:pickup_sug_immediate_label', 'Segera'), value: t('commerce:pickup_value_immediate', 'Segera (Bila-bila Siap)') },
+                        { label: t('commerce:pickup_sug_morning_label', 'Rehat Pagi (10 AM)'), value: t('commerce:pickup_value_morning_break', 'Rehat Pagi (~10.00 AM)') },
+                        { label: t('commerce:pickup_sug_noon_label', 'Tengah Hari (1 PM)'), value: t('commerce:pickup_value_lunch', 'Tengah Hari (~1.00 PM)') },
+                        { label: t('commerce:pickup_sug_evening_label', 'Petang (Lepas 4 PM)'), value: t('commerce:pickup_value_evening', 'Petang (Selepas 4.00 PM)') }
                       ].map(sug => {
                         const active = pickupTime[bizId] === sug.value;
                         return (
@@ -434,7 +441,7 @@ export function PolyMartCartPage() {
                     <input 
                       value={pickupTime[bizId] || ''} 
                       onChange={e => setPickupTime(prev => ({ ...prev, [bizId]: e.target.value }))}
-                      placeholder="Atau taip waktu kustom sendiri..."
+                      placeholder={t('commerce:custom_pickup_placeholder', 'Atau taip waktu kustom sendiri...')}
                       className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
                     />
                     <button 
@@ -442,7 +449,7 @@ export function PolyMartCartPage() {
                       disabled={checkingOut === bizId}
                       className="h-10 px-4 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition-all hover:brightness-110 disabled:opacity-60 cursor-pointer"
                       style={{ background: PM_GRADIENT }}>
-                      {checkingOut === bizId ? 'Memproses...' : 'Checkout'} <ArrowRight className="w-3 h-3" />
+                      {checkingOut === bizId ? t('commerce:processing', 'Memproses...') : t('checkout', { defaultValue: 'Teruskan ke Pembayaran' })} <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>

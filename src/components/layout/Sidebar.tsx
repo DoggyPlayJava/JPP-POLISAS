@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -47,7 +48,8 @@ import { ChevronDown } from 'lucide-react';
 // ─────────────────────────────────────────────────────────────────────────────
 type NavItem = {
   icon: React.ElementType;
-  label: string;
+  label?: string;
+  labelKey?: string;
   href: string;
 };
 
@@ -83,39 +85,50 @@ function detectActiveExco(pathname: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 // Konfigurasi nav per exco — TAMBAH di sini bila modul baru dibina
 // ─────────────────────────────────────────────────────────────────────────────
-const EKPP_NAV: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
-  { icon: Flag,            label: 'Kelab & Persatuan', href: '/kelab' },
-  { icon: CalendarDays,    label: 'Aktiviti', href: '/aktiviti' },
-  { icon: Users,           label: 'Ahli Jawatankuasa', href: '/ahli' },
-  { icon: FileText,        label: 'Laporan Kelab', href: '/laporan' },
-  { icon: Settings,        label: 'Tetapan', href: '/tetapan' },
-];
+function getEkppNav(t: any): NavItem[] {
+  return [
+    { icon: LayoutDashboard, label: t('nav:dashboard', 'Papan Pemuka'), href: '/dashboard' },
+    { icon: Flag,            label: t('nav:clubs', 'Kelab & Persatuan'), href: '/kelab' },
+    { icon: CalendarDays,    label: t('nav:activities', 'Aktiviti'), href: '/aktiviti' },
+    { icon: Users,           label: t('nav:committee', 'Ahli Jawatankuasa'), href: '/ahli' },
+    { icon: FileText,        label: t('nav:reports', 'Laporan Kelab'), href: '/laporan' },
+    { icon: Settings,        label: t('nav:settings', 'Tetapan'), href: '/tetapan' },
+  ];
+}
 
-const EKPP_PRESIDENT_NAV: NavItem[] = [
-  { icon: Settings2, label: 'Urus Profil Kelab', href: '/urus-kelab' },
-];
+function getEkppPresidentNav(t: any): NavItem[] {
+  return [
+    { icon: Settings2, label: t('nav:manage_club_profile', 'Urus Profil Kelab'), href: '/urus-kelab' },
+  ];
+}
 
-const EKPP_ADMIN_NAV: NavItem[] = [
-  { icon: ClipboardCheck, label: 'Semakan Laporan', href: '/semakan-laporan' },
-  // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
-];
+function getEkppAdminNav(t: any): NavItem[] {
+  return [
+    { icon: ClipboardCheck, label: t('nav:report_review', 'Semakan Laporan'), href: '/semakan-laporan' },
+    // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
+  ];
+}
 
 // EMS Navigation items
-const EMS_NAV: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Hub Acara EMS', href: '/ems/dashboard' },
-  { icon: PlusCircle,      label: 'Cipta Acara Baharu', href: '/ems/event/new' },
-  { icon: QrCode,          label: 'Crew Check-In Scanner', href: '/ems/checkin' },
-  { icon: Gavel,           label: 'Portal Juri Luar', href: '/ems/juri' },
-  { icon: Trophy,          label: 'Live Leaderboard', href: '/ems/leaderboard' },
-  { icon: FileCheck,       label: 'Semakan E-Sijil', href: '/ems/cert/verify' },
-  { icon: ShieldCheck,     label: 'Semakan HQ', href: '/ems/approvals' },
-];
+function getEmsNav(t: any): NavItem[] {
+  return [
+    { icon: LayoutDashboard, label: t('ems:hub_acara', 'Hub Acara EMS'), href: '/ems/dashboard' },
+    { icon: PlusCircle,      label: t('ems:cipta_acara', 'Cipta Acara Baharu'), href: '/ems/event/new' },
+    { icon: QrCode,          label: t('ems:crew_checkin', 'Crew Check-In Scanner'), href: '/ems/checkin' },
+    { icon: Gavel,           label: t('ems:portal_juri', 'Portal Juri Luar'), href: '/ems/juri' },
+    { icon: Trophy,          label: t('ems:live_leaderboard', 'Live Leaderboard'), href: '/ems/leaderboard' },
+    { icon: FileCheck,       label: t('ems:semakan_esijil', 'Semakan E-Sijil'), href: '/ems/cert/verify' },
+    { icon: ShieldCheck,     label: t('ems:semakan_hq', 'Semakan HQ'), href: '/ems/approvals' },
+  ];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
 function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string; key?: React.Key }) {
+  const { t } = useTranslation(['nav', 'ems', 'common']);
+  const displayLabel = item.labelKey ? t(item.labelKey, item.label || '') : item.label;
+
   const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
@@ -159,6 +172,8 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
   return (
     <NavLink
       to={item.href}
+      title={displayLabel}
+      aria-label={displayLabel}
       className={({ isActive }) => cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl group',
         'transition-all duration-200',
@@ -174,7 +189,7 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
           )}>
             <item.icon className={cn('w-3.5 h-3.5', isActive ? (c.iconText ?? `text-${accentColor}-400`) : '')} />
           </div>
-          <span className="text-xs font-bold tracking-tight">{item.label}</span>
+          <span className="text-xs font-bold tracking-tight">{displayLabel}</span>
           {isActive && <div className={cn('ml-auto w-1 h-4 rounded-full', c.dot)} />}
         </>
       )}
@@ -186,17 +201,21 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
 // SubKomponen: e-KPP Sidebar Content
 // ─────────────────────────────────────────────────────────────────────────────
 function EkppSidebarContent() {
+  const { t } = useTranslation(['nav', 'common']);
   const { isSuperAdmin, isPresident, effectiveRole, isJppMember, hasKppAccess } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const karnivalStatus = useKarnivalStatus();
   const showKarnival = !!karnivalStatus?.isActive;
   const isMemberOnly = !isSuperAdmin && !isPresident;
+  const ekppNav = getEkppNav(t);
+  const ekppPresidentNav = getEkppPresidentNav(t);
+  const ekppAdminNav = getEkppAdminNav(t);
 
   return (
     <nav className="tour-kelab-sidebar flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
       {/* Menu Utama */}
-      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
-      {EKPP_NAV.map(item => (
+      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">{t('nav:main_menu', 'Menu Utama')}</p>
+      {ekppNav.map(item => (
         <SidebarNavItem key={item.href} item={item} accentColor="amber" />
       ))}
 
@@ -204,7 +223,7 @@ function EkppSidebarContent() {
       {allowAiBudget && (
         <>
           <div className="pt-4 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400/50">Kepintaran Buatan</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400/50">{t('nav:ai_intelligence', 'Kepintaran Buatan')}</p>
           </div>
           <NavLink
             to="/nexus"
@@ -235,7 +254,7 @@ function EkppSidebarContent() {
       {isMemberOnly && (
         <>
           <div className="pt-4 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400/50">Keanggotaan</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400/50">{t('nav:membership', 'Keanggotaan')}</p>
           </div>
           <NavLink
             to="/sertai-kelab"
@@ -254,7 +273,7 @@ function EkppSidebarContent() {
                 )}>
                   <UserPlus className={cn('w-3.5 h-3.5', isActive ? 'text-emerald-400' : 'text-emerald-400/60')} />
                 </div>
-                <span className="text-xs font-bold tracking-tight">Sertai Kelab</span>
+                <span className="text-xs font-bold tracking-tight">{t('nav:join_club', 'Sertai Kelab')}</span>
                 {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.4)]" />}
               </>
             )}
@@ -266,9 +285,9 @@ function EkppSidebarContent() {
       {isPresident && (
         <>
           <div className="pt-6 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/50">Pentadbiran Kelab</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/50">{t('nav:club_admin', 'Pentadbiran Kelab')}</p>
           </div>
-          {EKPP_PRESIDENT_NAV.map(item => (
+          {ekppPresidentNav.map(item => (
             <SidebarNavItem key={item.href} item={item} accentColor="amber" />
           ))}
         </>
@@ -278,9 +297,9 @@ function EkppSidebarContent() {
       {(isSuperAdmin || isJppMember) && (
         <>
           <div className="pt-6 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">Admin JPP</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">{t('nav:jpp_admin', 'Admin JPP')}</p>
           </div>
-          {EKPP_ADMIN_NAV.filter(item => {
+          {ekppAdminNav.filter(item => {
             if (item.href === '/semakan-laporan') return hasKppAccess;
             return true; // JPP Admin Dashboard logic is handled internally
           }).map(item => (
@@ -303,8 +322,8 @@ function EkppSidebarContent() {
             )}>
               <Crown className="w-3.5 h-3.5 text-rose-400" />
             </div>
-            <span className="text-xs font-bold tracking-tight">JPP HQ Portal</span>
-            <Badge className="ml-auto text-[8px] bg-rose-500/20 text-rose-400 px-1.5 py-0 border-none">KHAS</Badge>
+            <span className="text-xs font-bold tracking-tight">{t('nav:jpp_portal', 'JPP HQ Portal')}</span>
+            <Badge className="ml-auto text-[8px] bg-rose-500/20 text-rose-400 px-1.5 py-0 border-none">{t('common:special', 'KHAS')}</Badge>
           </NavLink>
         </>
       )}
@@ -313,7 +332,7 @@ function EkppSidebarContent() {
       {showKarnival && (
         <>
           <div className="pt-6 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">🎪 Karnival JPP</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">{t('nav:carnival_jpp', '🎪 Karnival JPP')}</p>
           </div>
           <NavLink
             to="/karnival"
@@ -327,7 +346,7 @@ function EkppSidebarContent() {
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Ticket className="w-4 h-4 text-amber-500" />
             </div>
-            <span className="text-xs font-bold tracking-tight">Pengundian Karnival</span>
+            <span className="text-xs font-bold tracking-tight">{t('nav:carnival_voting', 'Pengundian Karnival')}</span>
             <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">LIVE</span>
           </NavLink>
         </>
@@ -340,6 +359,7 @@ function EkppSidebarContent() {
 // SubKomponen: EMS (Event Management System) Sidebar Content
 // ─────────────────────────────────────────────────────────────────────────────
 function EmsSidebarContent() {
+  const { t } = useTranslation(['ems', 'nav', 'common']);
   const { profile, effectiveRole, isSuperAdmin, isJppMember, isPresident, isMT, isAdvisor } = useAuth();
 
   const isClubMt = isMT || effectiveRole === 'CLUB_MT';
@@ -348,23 +368,24 @@ function EmsSidebarContent() {
 
   const canManageEvents = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff;
 
-  const mainItem = EMS_NAV.find(i => i.href === '/ems/dashboard')!;
-  const createItem = EMS_NAV.find(i => i.href === '/ems/event/new')!;
-  const opsItems = EMS_NAV.filter(i => ['/ems/checkin', '/ems/juri', '/ems/leaderboard'].includes(i.href));
-  const certVerifyItem = EMS_NAV.find(i => i.href === '/ems/cert/verify')!;
-  const approvalsItem = EMS_NAV.find(i => i.href === '/ems/approvals')!;
+  const emsNav = getEmsNav(t);
+  const mainItem = emsNav.find(i => i.href === '/ems/dashboard')!;
+  const createItem = emsNav.find(i => i.href === '/ems/event/new')!;
+  const opsItems = emsNav.filter(i => ['/ems/checkin', '/ems/juri', '/ems/leaderboard'].includes(i.href));
+  const certVerifyItem = emsNav.find(i => i.href === '/ems/cert/verify')!;
+  const approvalsItem = emsNav.find(i => i.href === '/ems/approvals')!;
 
   return (
     <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
       {/* Menu Utama */}
-      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
+      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">{t('nav:main_menu', 'Menu Utama')}</p>
       {mainItem && <SidebarNavItem item={mainItem} accentColor="pink" />}
 
       {/* Pengurusan Acara (Only for authorized roles) */}
       {canManageEvents && createItem && (
         <>
           <div className="pt-4 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Pengurusan Acara</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">{t('ems:nav_event_mgmt', 'Pengurusan Acara')}</p>
           </div>
           <SidebarNavItem item={createItem} accentColor="pink" />
         </>
@@ -372,7 +393,7 @@ function EmsSidebarContent() {
 
       {/* Operasi & Penjurian */}
       <div className="pt-4 pb-2">
-        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Operasi & Penjurian</p>
+        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">{t('ems:nav_ops_judging', 'Operasi & Penjurian')}</p>
       </div>
       {opsItems.map(item => (
         <SidebarNavItem key={item.href} item={item} accentColor="pink" />
@@ -380,7 +401,7 @@ function EmsSidebarContent() {
 
       {/* Pentadbiran */}
       <div className="pt-4 pb-2">
-        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Pentadbiran</p>
+        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">{t('ems:nav_admin', 'Pentadbiran')}</p>
       </div>
       {certVerifyItem && <SidebarNavItem item={certVerifyItem} accentColor="pink" />}
       {isSuperAdmin && approvalsItem && <SidebarNavItem item={approvalsItem} accentColor="pink" />}
@@ -393,6 +414,7 @@ function EmsSidebarContent() {
 // Bila e-Kebajikan siap, buat KebajikanSidebarContent() dsb.
 // ─────────────────────────────────────────────────────────────────────────────
 function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
+  const { t } = useTranslation(['common']);
   const mod = getExcoModule(excoId);
   return (
     <nav className="flex-1 py-6 px-3 overflow-y-auto scrollbar-hide">
@@ -401,7 +423,7 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
           <ExcoIcon iconName={mod?.icon ?? '🔧'} className="w-8 h-8" />
         </div>
         <p className="text-xs font-black text-white/30 uppercase tracking-widest">{mod?.name ?? excoId}</p>
-        <p className="text-[10px] text-white/20 leading-relaxed px-4">Modul ini sedang dalam pembangunan.</p>
+        <p className="text-[10px] text-white/20 leading-relaxed px-4">{t('common:module_under_development', 'Modul ini sedang dalam pembangunan.')}</p>
       </div>
     </nav>
   );
@@ -412,6 +434,7 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
 // Mengelakkan masalah native OS select & isu klik Shadcn
 // ─────────────────────────────────────────────────────────────────────────────
 function CustomClubSelect({ value, onChange, clubs }: { value: string | null, onChange: (val: string | null) => void, clubs: typeof ALL_CLUBS }) {
+  const { t } = useTranslation(['nav', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -440,7 +463,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
               <span className="truncate">{selectedClub.shortName}</span>
             </>
           ) : (
-             <span className="truncate">— PILIH KELAB —</span>
+             <span className="truncate">{t('nav:select_club', '— PILIH KELAB —')}</span>
           )}
         </div>
         <ChevronDown className={cn("w-3.5 h-3.5 text-white/40", "transition-transform duration-200", isOpen && "rotate-180")} />
@@ -453,7 +476,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors text-left"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
-            <span className="truncate">Semua Kelab</span>
+            <span className="truncate">{t('nav:all_clubs', 'Semua Kelab')}</span>
           </button>
           <div className="my-1.5 border-t border-white/5" />
           {clubs.map(c => (
@@ -484,6 +507,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
 // Komponen Sidebar utama
 // ─────────────────────────────────────────────────────────────────────────────
 export function Sidebar() {
+  const { t } = useTranslation(['nav', 'common']);
   const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId, setSelectedClubId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -510,7 +534,7 @@ export function Sidebar() {
     const found = ALL_CLUBS.find(c => c.id === activeClubId);
     if (found?.name) return found.name;
     if (/^[0-9a-fA-F-]{30,}$/.test(activeClubId)) {
-      return isSuperAdmin ? 'Pentadbiran JPP' : 'Kelab Siswa';
+      return isSuperAdmin ? t('nav:jpp_administration', 'Pentadbiran JPP') : t('nav:student_club', 'Kelab Siswa');
     }
     return activeClubId.replace('club_', '').toUpperCase();
   })();
@@ -546,7 +570,7 @@ export function Sidebar() {
           className="flex items-center gap-2 px-5 pt-4 pb-2 text-white/30 hover:text-white/70 transition-colors group"
         >
           <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
           <LayoutGrid className="w-3 h-3 ml-0.5" />
         </button>
 
@@ -567,7 +591,7 @@ export function Sidebar() {
           </div>
           <div className="leading-tight">
             <p className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
-              {excoModule?.name ?? 'JPP Portal'}
+              {excoModule?.name ?? t('nav:jpp_portal', 'JPP Portal')}
               {excoModule && <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: excoModule.defaultColor }} />}
             </p>
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/80">
@@ -585,7 +609,7 @@ export function Sidebar() {
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 border border-white/10">
             <div className={cn('w-2 h-2 rounded-full flex-shrink-0', clubColorClass)} />
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{t('common:status', 'Status')}</p>
               <p className="text-xs font-black text-white truncate">{clubName}</p>
             </div>
             {(isSuperAdmin || isPresident) && effectiveRole !== 'CLUB_MEMBER' && effectiveRole !== 'AHLI' && (
@@ -637,7 +661,7 @@ export function Sidebar() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-black text-white truncate leading-tight">{displayName}</p>
             <p className="text-[10px] text-white/40 font-black uppercase tracking-widest truncate">
-              {effectiveRole ? ROLE_LABELS[effectiveRole] || effectiveRole : 'Pengguna'}
+              {effectiveRole ? ROLE_LABELS[effectiveRole] || effectiveRole : t('common:user', 'Pengguna')}
             </p>
           </div>
         </div>
@@ -647,7 +671,7 @@ export function Sidebar() {
           className="w-full justify-start gap-3 h-9 px-3 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Log Keluar</span>
+          <span>{t('common:logout', 'Log Keluar')}</span>
         </Button>
       </div>
     </aside>

@@ -17,12 +17,14 @@ import { cn, hexToRgba } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { JPP_MT_POSITIONS } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 // ─── PROPS ───────────────────────────────────────────────────────────────────
 interface Props {
   excoUnit:   string;  // e.g. 'KEBAJIKAN'
   themeColor: string;
   excoLabel:  string;  // e.g. 'Kebajikan & Pengaduan Awam'
+  initialLoading?: boolean;
 }
 
 // ─── STAT CARD ───────────────────────────────────────────────────────────────
@@ -53,7 +55,8 @@ function StatCard({ label, value, icon: Icon, color, delay = 0, onClick }: any) 
 }
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
-export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props) {
+export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialLoading = typeof window === 'undefined' ? false : true }: Props) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -76,7 +79,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
   });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [recentReports, setRecentReports]       = useState<any[]>([]);
-  const [loading, setLoading]                   = useState(true);
+  const [loading, setLoading]                   = useState(initialLoading);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,13 +124,13 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
 
   // ── Status color lookup ───────────────────────────────────────────────────
   const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-    perancangan: { label: 'Perancangan', color: '#60a5fa', bg: '#60a5fa15' },
-    aktif:       { label: 'Aktif',       color: '#34d399', bg: '#34d39915' },
-    selesai:     { label: 'Selesai',     color: '#94a3b8', bg: '#94a3b815' },
-    ditangguh:   { label: 'Ditangguh',   color: '#f97316', bg: '#f9731615' },
-    Menunggu:    { label: 'Menunggu',    color: '#f59e0b', bg: '#f59e0b15' },
-    Diluluskan:  { label: 'Diluluskan',  color: '#10b981', bg: '#10b98115' },
-    Ditolak:     { label: 'Ditolak',     color: '#ef4444', bg: '#ef444415' },
+    perancangan: { label: t('jpp:generic_status_planning', 'Perancangan'), color: '#60a5fa', bg: '#60a5fa15' },
+    aktif:       { label: t('jpp:generic_status_active', 'Aktif'),       color: '#34d399', bg: '#34d39915' },
+    selesai:     { label: t('jpp:generic_status_completed', 'Selesai'),     color: '#94a3b8', bg: '#94a3b815' },
+    ditangguh:   { label: t('jpp:generic_status_postponed', 'Ditangguh'),   color: '#f97316', bg: '#f9731615' },
+    Menunggu:    { label: t('jpp:generic_status_pending', 'Menunggu'),    color: '#f59e0b', bg: '#f59e0b15' },
+    Diluluskan:  { label: t('jpp:generic_status_approved', 'Diluluskan'),  color: '#10b981', bg: '#10b98115' },
+    Ditolak:     { label: t('jpp:generic_status_rejected', 'Ditolak'),     color: '#ef4444', bg: '#ef444415' },
   };
 
   const formatDate = (d: string) => {
@@ -155,7 +158,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
       {/* ── Stat cards ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
-          label="Jumlah Aktiviti"
+          label={t('jpp:generic_total_activities', 'Jumlah Aktiviti')}
           value={stats.totalAktiviti}
           icon={Zap}
           color={themeColor}
@@ -163,7 +166,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
           onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
         />
         <StatCard
-          label="Aktif Sekarang"
+          label={t('jpp:generic_active_now', 'Aktif Sekarang')}
           value={stats.aktif}
           icon={TrendingUp}
           color="#34d399"
@@ -171,14 +174,14 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
           onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
         />
         <StatCard
-          label="Selesai"
+          label={t('jpp:generic_completed', 'Selesai')}
           value={stats.selesai}
           icon={CheckCircle2}
           color="#94a3b8"
           delay={0.12}
         />
         <StatCard
-          label="Laporan Menunggu"
+          label={t('jpp:generic_pending_reports', 'Laporan Menunggu')}
           value={stats.laporanMenunggu}
           icon={Clock}
           color={stats.laporanMenunggu > 0 ? '#f59e0b' : '#94a3b8'}
@@ -197,17 +200,17 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
           <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
-              {stats.laporanDitolak} laporan ditolak
+              {t('jpp:generic_reports_rejected', '{{count}} laporan ditolak', { count: stats.laporanDitolak })}
             </p>
             <p className="text-[11px] text-rose-700/70 dark:text-rose-300/60 font-medium mt-0.5">
-              Sila semak nota penolakan dan kemukakan semula laporan.
+              {t('jpp:generic_check_rejection_note', 'Sila semak nota penolakan dan kemukakan semula laporan.')}
             </p>
           </div>
           <button
             onClick={() => navigate(`/exco/${unitLower}/laporan`)}
             className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shrink-0"
           >
-            Semak →
+            {t('jpp:generic_review_arrow', 'Semak →')}
           </button>
         </motion.div>
       )}
@@ -218,25 +221,25 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
         {/* Aktiviti terkini */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Aktiviti Terkini</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_activities', 'Aktiviti Terkini')}</h3>
             <button
               onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
               className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
               style={{ color: themeColor }}
             >
-              Semua <ArrowRight className="w-3 h-3" />
+              {t('jpp:generic_all', 'Semua')} <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
           {recentActivities.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada aktiviti lagi</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_activities_yet', 'Tiada aktiviti lagi')}</p>
               {(isExco || isSuperAdmin) && (
                 <button
                   onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
                   className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 underline underline-offset-2 mt-2 transition-all"
                 >
-                  Tambah Aktiviti
+                  {t('jpp:generic_add_activity', 'Tambah Aktiviti')}
                 </button>
               )}
             </div>
@@ -286,19 +289,19 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
         {/* Laporan terkini */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Laporan Terkini</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_reports', 'Laporan Terkini')}</h3>
             <button
               onClick={() => navigate(isMT ? `/jpp/semak-laporan-exco/${unitLower}` : `/exco/${unitLower}/laporan`)}
               className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
               style={{ color: themeColor }}
             >
-              Semua <ArrowRight className="w-3 h-3" />
+              {t('jpp:generic_all', 'Semua')} <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
           {recentReports.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada laporan lagi</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_reports_yet', 'Tiada laporan lagi')}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -335,21 +338,21 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
 
       {/* ── Quick actions ─── */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">Tindakan Pantas</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:generic_quick_actions', 'Tindakan Pantas')}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {/* Exco: Tambah Aktiviti + Jana Laporan */}
           {(isExco || isSuperAdmin) && (
             <>
               <QuickAction
-                label="Rekod Aktiviti Baharu"
-                description="Tambah aktiviti yang dirancang atau sedang berjalan"
+                label={t('jpp:generic_record_new_activity', 'Rekod Aktiviti Baharu')}
+                description={t('jpp:generic_record_activity_desc', 'Tambah aktiviti yang dirancang atau sedang berjalan')}
                 icon={Zap}
                 color={themeColor}
                 onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
               />
               <QuickAction
-                label="Jana / Hantar Laporan"
-                description="Jana laporan bulanan PDF secara auto atau muat naik manual"
+                label={t('jpp:generic_generate_report', 'Jana / Hantar Laporan')}
+                description={t('jpp:generic_generate_report_desc', 'Jana laporan bulanan PDF secara auto atau muat naik manual')}
                 icon={FileText}
                 color={themeColor}
                 onClick={() => navigate(`/exco/${unitLower}/laporan`)}
@@ -359,8 +362,8 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
           {/* MT: Semak Laporan */}
           {(isMT || isSuperAdmin) && (
             <QuickAction
-              label="Semak Laporan Exco"
-              description={`Semak dan lulus/tolak laporan ${excoLabel}`}
+              label={t('jpp:generic_review_exco_report', 'Semak Laporan Exco')}
+              description={t('jpp:generic_review_report_desc', 'Semak dan lulus/tolak laporan {{label}}', { label: excoLabel })}
               icon={ClipboardCheck}
               color={themeColor}
               onClick={() => navigate(`/jpp/semak-laporan-exco/${unitLower}`)}
@@ -371,12 +374,12 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
 
       {/* ── Status bar ─── */}
       <div className="rounded-2xl px-5 py-4 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] shadow-sm flex flex-wrap gap-6 items-center">
-        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/25 shrink-0">Status</div>
+        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/25 shrink-0">{t('jpp:generic_status_label', 'Status')}</div>
         {[
-          { label: 'Perancangan', value: stats.perancangan, color: '#60a5fa' },
-          { label: 'Aktif',       value: stats.aktif,       color: '#34d399' },
-          { label: 'Selesai',     value: stats.selesai,     color: '#94a3b8' },
-          { label: 'Dilulus',     value: stats.laporanDilulus, color: '#10b981' },
+          { label: t('jpp:generic_status_planning', 'Perancangan'), value: stats.perancangan, color: '#60a5fa' },
+          { label: t('jpp:generic_status_active', 'Aktif'),       value: stats.aktif,       color: '#34d399' },
+          { label: t('jpp:generic_status_completed', 'Selesai'),     value: stats.selesai,     color: '#94a3b8' },
+          { label: t('jpp:generic_status_approved', 'Dilulus'),     value: stats.laporanDilulus, color: '#10b981' },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
@@ -388,7 +391,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel }: Props)
           onClick={load}
           className="ml-auto text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-700 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
         >
-          <RefreshCw className="w-3 h-3" /> Segarkan
+          <RefreshCw className="w-3 h-3" /> {t('jpp:generic_refresh', 'Segarkan')}
         </button>
       </div>
     </div>

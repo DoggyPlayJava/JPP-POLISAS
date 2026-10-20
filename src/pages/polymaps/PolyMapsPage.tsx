@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendNotificationToJppAndSuperAdmin } from '@/lib/notifications';
@@ -160,35 +162,37 @@ export interface PolyMartHubItem {
   pickup_instructions: string;
 }
 
-export const POLYMART_HUBS: PolyMartHubItem[] = [
+export const getPolyMartHubs = (t: any = (k: string, fb: string) => i18n.t(k, { defaultValue: fb })): PolyMartHubItem[] => [
   {
     id: 'hub-koperasi',
-    name: 'Koperasi Siswa POLISAS',
-    description: 'Pusat serahan & pengambilan rasmi pesanan PolyMart bagi barangan keperluan siswa & alat tulis.',
-    operating_hours: '8:30 PG - 4:30 PTG (Isnin - Jumaat)',
+    name: t('services:hub_koperasi_name', 'Koperasi Siswa POLISAS'),
+    description: t('services:hub_koperasi_desc', 'Pusat serahan & pengambilan rasmi pesanan PolyMart bagi barangan keperluan siswa & alat tulis.'),
+    operating_hours: t('services:hub_koperasi_hours', '8:30 PG - 4:30 PTG (Isnin - Jumaat)'),
     lat: 3.8628,
     lng: 103.3148,
-    pickup_instructions: 'Tunjukkan nombor pesanan PolyMart anda di kaunter utama Koperasi.'
+    pickup_instructions: t('services:hub_koperasi_pickup', 'Tunjukkan nombor pesanan PolyMart anda di kaunter utama Koperasi.')
   },
   {
     id: 'hub-kafeteria',
-    name: 'Kafeteria Pusat POLISAS',
-    description: 'Hub serahan dan pengambilan pesanan makanan dan minuman PolyMart siswa.',
-    operating_hours: '7:30 PG - 6:00 PTG (Setiap Hari)',
+    name: t('services:hub_kafeteria_name', 'Kafeteria Pusat POLISAS'),
+    description: t('services:hub_kafeteria_desc', 'Hub serahan dan pengambilan pesanan makanan dan minuman PolyMart siswa.'),
+    operating_hours: t('services:hub_kafeteria_hours', '7:30 PG - 6:00 PTG (Setiap Hari)'),
     lat: 3.8621,
     lng: 103.3160,
-    pickup_instructions: 'Ambil pesanan di Kaunter Pengambilan Pantas Kafeteria.'
+    pickup_instructions: t('services:hub_kafeteria_pickup', 'Ambil pesanan di Kaunter Pengambilan Pantas Kafeteria.')
   },
   {
     id: 'hub-jpp',
-    name: 'Kaunter JPP Siswa',
-    description: 'Hub serahan barangan rasmi program kampus & barangan merchandise PolyMart.',
-    operating_hours: '9:00 PG - 5:00 PTG (Hari Bekerja)',
+    name: t('services:hub_jpp_name', 'Kaunter JPP Siswa'),
+    description: t('services:hub_jpp_desc', 'Hub serahan barangan rasmi program kampus & barangan merchandise PolyMart.'),
+    operating_hours: t('services:hub_jpp_hours', '9:00 PG - 5:00 PTG (Hari Bekerja)'),
     lat: 3.8617,
     lng: 103.3152,
-    pickup_instructions: 'Hadir ke kaunter khidmat pelanggan JPP di Aras 1 Pentadbiran.'
+    pickup_instructions: t('services:hub_jpp_pickup', 'Hadir ke kaunter khidmat pelanggan JPP di Aras 1 Pentadbiran.')
   }
 ];
+
+export const POLYMART_HUBS: PolyMartHubItem[] = getPolyMartHubs((k: string, fb: string) => i18n.t(k, { defaultValue: fb }));
 
 function mapEventLocationToCoords(locationStr: string | null | undefined, buildings: Building[]): [number, number] {
   if (!locationStr) {
@@ -540,6 +544,7 @@ import { resolveRoomLocation } from '@/lib/polyMapsResolver';
 export { resolveRoomLocation } from '@/lib/polyMapsResolver';
 
 export function PolyMapsPage() {
+  const { t } = useTranslation(['services', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -557,6 +562,7 @@ export function PolyMapsPage() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedEmsEvent, setSelectedEmsEvent] = useState<EmsEventItem | null>(null);
   const [selectedPolyMartHub, setSelectedPolyMartHub] = useState<PolyMartHubItem | null>(null);
+  const polymartHubs = useMemo(() => getPolyMartHubs(t), [t]);
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -690,7 +696,7 @@ export function PolyMapsPage() {
         }
       }
     }
-    return "Laluan Kampus";
+    return t('services:campus_route_default', 'Laluan Kampus');
   };
 
   const navigationSteps = useMemo(() => {
@@ -737,20 +743,21 @@ export function PolyMapsPage() {
       const isCoveredChange = isSegmentCovered !== isCurrentCovered;
 
       if (isTurn || isWalkwayChange || isCoveredChange) {
-        let turnText = "Ikuti";
+        let turnText = t('services:follow', 'Ikuti');
         if (steps.length > 0 && isTurn) {
           if (bearingDiff >= 25 && bearingDiff < 110) {
-            turnText = "Belok kanan ke";
+            turnText = t('services:turn_right_onto', 'Belok kanan ke');
           } else if (bearingDiff >= 110) {
-            turnText = "Belok tajam ke kanan ke";
+            turnText = t('services:turn_sharp_right_onto', 'Belok tajam ke kanan ke');
           } else if (bearingDiff <= -25 && bearingDiff > -110) {
-            turnText = "Belok kiri ke";
+            turnText = t('services:turn_left_onto', 'Belok kiri ke');
           } else {
-            turnText = "Belok tajam ke kiri ke";
+            turnText = t('services:turn_sharp_left_onto', 'Belok tajam ke kiri ke');
           }
         }
+        const coveredTag = isCurrentCovered ? ` (${t('services:covered_badge', 'Berbumbung')})` : '';
         steps.push({
-          instruction: `${turnText} ${currentWalkwayName}${isCurrentCovered ? ' (Berbumbung)' : ''}`,
+          instruction: `${turnText} ${currentWalkwayName}${coveredTag}`,
           distance: Math.round(accumulatedDistance),
           isCovered: isCurrentCovered
         });
@@ -765,13 +772,15 @@ export function PolyMapsPage() {
     }
 
     steps.push({
-      instruction: `Teruskan ke destinasi melalui ${currentWalkwayName}${isCurrentCovered ? ' (Berbumbung)' : ''}`,
+      instruction: isCurrentCovered
+        ? t('services:continue_via_covered', 'Teruskan ke destinasi melalui {{name}} (Berbumbung)', { name: currentWalkwayName })
+        : t('services:continue_via', 'Teruskan ke destinasi melalui {{name}}', { name: currentWalkwayName }),
       distance: Math.round(accumulatedDistance),
       isCovered: isCurrentCovered
     });
 
     steps.push({
-      instruction: `Anda telah sampai ke destinasi: ${activeBuilding?.name || 'Destinasi'}`,
+      instruction: t('services:arrived_at_destination', 'Anda telah sampai ke destinasi: {{name}}', { name: activeBuilding?.name || t('services:destination', 'Destinasi') }),
       distance: 0,
       isCovered: false
     });
@@ -808,7 +817,7 @@ export function PolyMapsPage() {
         if (permissionState === 'granted') {
           console.log('Compass permission granted');
         } else {
-          toast.error('Kebenaran kompas ditolak. Navigasi tetap berfungsi tanpa penunjuk arah.');
+          toast.error(t('services:compass_permission_denied', 'Kebenaran kompas ditolak. Navigasi tetap berfungsi tanpa penunjuk arah.'));
         }
       } catch (error) {
         console.error('Error requesting compass permission:', error);
@@ -830,11 +839,11 @@ export function PolyMapsPage() {
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error('Sila log masuk untuk membuat aduan.');
+      toast.error(t('services:login_to_report', 'Sila log masuk untuk membuat aduan.'));
       return;
     }
     if (!reportForm.room_code.trim()) {
-      toast.error('Sila isi nama tempat.');
+      toast.error(t('services:fill_place_name', 'Sila isi nama tempat.'));
       return;
     }
 
@@ -853,20 +862,20 @@ export function PolyMapsPage() {
       if (error) throw error;
 
       // Hantar notifikasi kepada JPP
-      const studentName = profile?.full_name || 'Pelajar';
+      const studentName = profile?.full_name || t('services:th_student', 'Pelajar');
       await sendNotificationToJppAndSuperAdmin({
-        title: 'Laporan Tempat Hilang Baru',
-        message: `${studentName} melaporkan tempat hilang: "${reportForm.room_code}"`,
+        title: t('services:missing_place_report_title', 'Laporan Tempat Hilang Baru'),
+        message: t('services:missing_place_report_msg', '{{name}} melaporkan tempat hilang: "{{code}}"', { name: studentName, code: reportForm.room_code }),
         type: 'MAPS_MISSING_REPORT',
         module: 'JPP',
         link: '/jpp/polymaps?tab=reports'
       });
 
-      toast.success('Aduan berjaya dihantar! Terima kasih atas bantuan anda.');
+      toast.success(t('services:report_sent_success', 'Aduan berjaya dihantar! Terima kasih atas bantuan anda.'));
       setIsReportModalOpen(false);
     } catch (err: any) {
       console.error('Error submitting report:', err);
-      toast.error('Gagal menghantar aduan.');
+      toast.error(t('services:report_send_failed', 'Gagal menghantar aduan.'));
     } finally {
       setIsSubmittingReport(false);
     }
@@ -907,7 +916,7 @@ export function PolyMapsPage() {
       signal: weatherCtrl.signal,
     })
       .then(res => {
-        if (!res.ok) throw new Error(`weather HTTP ${res.status}`);
+        if (!res.ok) throw new Error('weather HTTP ' + res.status);
         return res.json();
       })
       .then(data => {
@@ -930,7 +939,7 @@ export function PolyMapsPage() {
   useEffect(() => {
     if (weather?.isRaining) {
       setPreferCovered(true);
-      toast.success('Hari hujan! Mod laluan berbumbung diaktifkan secara automatik.', { id: 'rain-toggle-toast' });
+      toast.success(t('services:rain_covered_mode_active', 'Hari hujan! Mod laluan berbumbung diaktifkan secara automatik.'), { id: 'rain-toggle-toast' });
     }
   }, [weather?.isRaining]);
 
@@ -1057,8 +1066,10 @@ export function PolyMapsPage() {
         activeBuildingZone: activeBuilding?.zone_name ?? null,
         facilityStatus: activeBuilding?.is_facility
           ? (checkIsOpen(activeBuilding.op_start, activeBuilding.op_end)
-            ? `BUKA${activeBuilding.op_start ? ` (${activeBuilding.op_start}-${activeBuilding.op_end})` : ''}`
-            : 'TUTUP')
+            ? (activeBuilding.op_start
+              ? t('services:facility_open_hours', 'BUKA ({{start}}-{{end}})', { start: activeBuilding.op_start, end: activeBuilding.op_end })
+              : t('services:facility_open', 'BUKA'))
+            : t('services:facility_closed', 'TUTUP'))
           : null,
         isNavigating,
         targetRoomCode: selectedLocation?.room_code ?? null,
@@ -1167,12 +1178,12 @@ export function PolyMapsPage() {
       setEmsEvents([
         {
           id: 'ems-showcase-1',
-          title: 'Karnival Inovasi & TVET POLISAS 2026',
-          description: 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.',
+          title: t('services:ems_fallback_event_title', 'Karnival Inovasi & TVET POLISAS 2026'),
+          description: t('services:ems_fallback_event_desc', 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.'),
           category: 'INOVASI',
           event_type: 'EXHIBITION',
           event_date: new Date(Date.now() + 86400000 * 2).toISOString(),
-          location: 'Dewan Jubli Perak',
+          location: t('services:dewan_jubli_perak', 'Dewan Jubli Perak'),
           status: 'ACTIVE',
           lat: 3.8620,
           lng: 103.3150
@@ -1231,7 +1242,7 @@ export function PolyMapsPage() {
       setSearchResults([...buildingResults, ...formattedData]);
     } catch (error) {
       console.error('Error fetching locations:', error);
-      toast.error('Gagal membuat carian.');
+      toast.error(t('services:search_failed', 'Gagal membuat carian.'));
     } finally {
       setIsSearching(false);
     }
@@ -1422,7 +1433,7 @@ export function PolyMapsPage() {
   const locateUser = () => {
     setIsLocating(true);
     if (!navigator.geolocation) {
-      toast.error('GPS tidak disokong oleh peranti anda.');
+      toast.error(t('services:gps_not_supported', 'GPS tidak disokong oleh peranti anda.'));
       setIsLocating(false);
       return;
     }
@@ -1431,11 +1442,11 @@ export function PolyMapsPage() {
       (position) => {
         setUserLocation([position.coords.latitude, position.coords.longitude]);
         setIsLocating(false);
-        toast.success('Lokasi berjaya dikesan!');
+        toast.success(t('services:location_detected_success', 'Lokasi berjaya dikesan!'));
       },
       (error) => {
         console.error('GPS error:', error);
-        toast.error('Sila benarkan akses GPS untuk fungsi laluan.');
+        toast.error(t('services:allow_gps_for_routes', 'Sila benarkan akses GPS untuk fungsi laluan.'));
         setIsLocating(false);
       },
       { enableHighAccuracy: true }
@@ -1546,12 +1557,12 @@ export function PolyMapsPage() {
   const handleShare = () => {
     if (selectedLocation) {
       const url = `${window.location.origin}${window.location.pathname}?room=${selectedLocation.id}`;
-      navigator.clipboard.writeText(`Lihat lokasi bilik/kelas ${selectedLocation.room_code} di PolyMaps POLISAS:\n${url}`);
-      toast.success('Pautan kelas disalin!');
+      navigator.clipboard.writeText(t('services:share_room_text', 'Lihat lokasi bilik/kelas {{code}} di PolyMaps POLISAS:\n{{url}}', { code: selectedLocation.room_code, url }));
+      toast.success(t('services:room_link_copied', 'Pautan kelas disalin!'));
     } else if (activeBuilding) {
       const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
-      navigator.clipboard.writeText(`Lihat lokasi ${activeBuilding.name} di PolyMaps POLISAS:\n${url}`);
-      toast.success('Pautan bangunan disalin!');
+      navigator.clipboard.writeText(t('services:share_building_text', 'Lihat lokasi {{name}} di PolyMaps POLISAS:\n{{url}}', { name: activeBuilding.name, url }));
+      toast.success(t('services:building_link_copied', 'Pautan bangunan disalin!'));
     }
   };
 
@@ -1571,6 +1582,13 @@ export function PolyMapsPage() {
       
       {/* ── HEADER & SEARCH BAR ── */}
       <div className="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top pointer-events-none">
+        <h1 className="sr-only">{t('polymaps_title', { defaultValue: 'PolyMaps — GPS Kampus Interaktif & Direktori' })}</h1>
+        <div className="sr-only">
+          <span>{t('route_directions', { defaultValue: 'Dapatkan Panduan Laluan Berjalan' })}</span>
+          <span>{t('select_starting_point', { defaultValue: 'Pilih Titik Permulaan' })}</span>
+          <span>{t('select_destination', { defaultValue: 'Pilih Destinasi' })}</span>
+          <span>{t('campus_zones', { defaultValue: 'Zon Kampus POLISAS' })}</span>
+        </div>
         <div className="max-w-md mx-auto space-y-3 pointer-events-auto">
           {/* Top Bar */}
           <div className="flex items-center gap-3">
@@ -1584,7 +1602,7 @@ export function PolyMapsPage() {
               <Search className="w-5 h-5 text-[#6B7F5B]" />
               <input
                 type="text"
-                placeholder="Cari kelas (Cth: A301, JKM)..."
+                placeholder={t('search_locations', { defaultValue: 'Cari bilik kuliah, dewan kuliah, jabatan, atau makmal...' })}
                 className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE] placeholder:text-[#556453]/60 dark:placeholder:text-[#A3B39F]/60"
                 value={searchQuery}
                 onChange={(e) => {
@@ -1614,7 +1632,7 @@ export function PolyMapsPage() {
                   : "bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]"
               )}
             >
-              Semua
+              {t('services:filter_all', 'Semua')}
             </button>
             <button 
               onClick={() => handleFilterClick('cafe')} 
@@ -1625,7 +1643,7 @@ export function PolyMapsPage() {
                   : "bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]"
               )}
             >
-              <Coffee className="w-3.5 h-3.5" /> Kafe
+              <Coffee className="w-3.5 h-3.5" /> {t('services:cafeterias', 'Kafeteria & Tempat Makan')}
             </button>
             <button 
               onClick={() => handleFilterClick('surau')} 
@@ -1636,7 +1654,7 @@ export function PolyMapsPage() {
                   : "bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]"
               )}
             >
-              <Moon className="w-3.5 h-3.5" /> Surau
+              <Moon className="w-3.5 h-3.5" /> {t('services:filter_surau', 'Surau')}
             </button>
             <button 
               onClick={() => handleFilterClick('toilet')} 
@@ -1647,7 +1665,7 @@ export function PolyMapsPage() {
                   : "bg-white/90 dark:bg-[#1E271F]/90 text-[#556453] dark:text-[#A3B39F] border-[#D9C9B2]/80 dark:border-[#3A4A3B]"
               )}
             >
-              <Droplets className="w-3.5 h-3.5" /> Tandas
+              <Droplets className="w-3.5 h-3.5" /> {t('services:filter_toilet', 'Tandas')}
             </button>
           </div>
 
@@ -1674,12 +1692,12 @@ export function PolyMapsPage() {
                         {loc.room_code}
                         {loc.building?.zone_name && (
                           <span className="text-[10px] bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
-                            Zon {loc.building.zone_name}
+                            {t('services:zone_prefix', 'Zon {{name}}', { name: loc.building.zone_name })}
                           </span>
                         )}
                         {(isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building))) && (
                           <span className="inline-flex items-center gap-1 text-[9px] bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
-                            <Compass className="w-2.5 h-2.5" /> 360 AKTIF
+                            <Compass className="w-2.5 h-2.5" /> {t('services:panorama_360_active', '360 AKTIF')}
                           </span>
                         )}
                         {loc.op_start && loc.op_end && (
@@ -1687,12 +1705,12 @@ export function PolyMapsPage() {
                             "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
                             checkIsOpen(loc.op_start, loc.op_end) ? "bg-[#6B7F5B]/20 text-[#6B7F5B] dark:text-[#A3B39F]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                           )}>
-                            {checkIsOpen(loc.op_start, loc.op_end) ? "BUKA" : "TUTUP"}
+                            {checkIsOpen(loc.op_start, loc.op_end) ? t('services:facility_open', 'BUKA') : t('services:facility_closed', 'TUTUP')}
                           </span>
                         )}
                       </div>
                       <p className="text-xs font-bold text-[#556453] dark:text-[#A3B39F] flex items-center gap-2 mt-0.5">
-                        {loc.id.startsWith('b-') ? 'Bangunan' : loc.building?.name}
+                        {loc.id.startsWith('b-') ? t('services:building_label', 'Bangunan') : loc.building?.name}
                         {activeFilter && loc.floor_level > 0 && (
                           <span className="text-[#6B7F5B] flex items-center gap-1 bg-[#6B7F5B]/10 px-1.5 py-0.5 rounded">
                             <Clock className="w-3 h-3" /> {loc.floor_level} min
@@ -1713,13 +1731,13 @@ export function PolyMapsPage() {
                 className="bg-[#F8F6EE]/95 dark:bg-[#151D16]/95 rounded-2xl shadow-xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] p-4 text-center space-y-3"
               >
                 <p className="text-[#556453] dark:text-[#A3B39F] text-xs font-bold leading-normal">
-                  Tidak jumpa tempat yang anda cari?
+                  {t('services:cant_find_place', 'Tidak jumpa tempat yang anda cari?')}
                 </p>
                 <button
                   onClick={handleOpenReportModal}
                   className="w-full bg-[#C96F4F] hover:bg-[#B35F41] text-white font-bold py-2 px-4 rounded-xl text-[10px] uppercase tracking-wider transition-colors shadow-md active:scale-95"
                 >
-                  Maklumkan kepada JPP
+                  {t('services:notify_jpp', 'Maklumkan kepada JPP')}
                 </button>
               </motion.div>
             )}
@@ -1804,7 +1822,7 @@ export function PolyMapsPage() {
 
           {userLocation && (
             <Marker position={userLocation} icon={getUserIcon(heading)}>
-              <Popup>Lokasi Anda</Popup>
+              <Popup>{t('services:your_location', 'Lokasi Anda')}</Popup>
             </Marker>
           )}
 
@@ -1883,7 +1901,7 @@ export function PolyMapsPage() {
             );
           })}
 
-          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'POLYMART') && POLYMART_HUBS.map(hub => {
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'POLYMART') && polymartHubs.map(hub => {
             const isSelected = selectedPolyMartHub?.id === hub.id;
             return (
               <Marker
@@ -1934,8 +1952,8 @@ export function PolyMapsPage() {
             >
               <div className="p-5 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B] flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Direktori</h2>
-                  <p className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">Terokai Bangunan & Kelas</p>
+                  <h2 className="text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('services:maps_directory', 'Direktori')}</h2>
+                  <p className="text-xs font-bold text-[#556453] dark:text-[#A3B39F]">{t('services:maps_explore_buildings', 'Terokai Bangunan & Kelas')}</p>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full hover:bg-[#D9C9B2]/30 dark:hover:bg-[#1E271F] transition-colors">
                   <X className="w-5 h-5 text-[#556453] dark:text-[#A3B39F]" />
@@ -1943,8 +1961,8 @@ export function PolyMapsPage() {
               </div>
               <div className="p-2 border-b border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
                 <div className="flex bg-[#D9C9B2]/20 dark:bg-[#1E271F] rounded-xl p-1">
-                  <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>Zon / Jabatan</button>
-                  <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>Fasiliti Utama</button>
+                  <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>{t('campus_zones', { defaultValue: 'Zon Kampus POLISAS' })}</button>
+                  <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-[#2E3A2F] shadow text-[#2E3A2F] dark:text-[#F8F6EE]" : "text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F]")}>{t('services:maps_main_facilities', 'Fasiliti Utama')}</button>
                 </div>
               </div>
 
@@ -1963,7 +1981,7 @@ export function PolyMapsPage() {
                               <div className="w-8 h-8 rounded-lg bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] flex items-center justify-center">
                                 <Building2 className="w-4 h-4" />
                               </div>
-                              <p className="font-bold text-sm text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">Zon {z.zone_name}</p>
+                              <p className="font-bold text-sm text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('services:zone_prefix', 'Zon {{name}}', { name: z.zone_name })}</p>
                             </div>
                             {isZoneExpanded ? <ChevronDown className="w-4 h-4 text-[#556453] dark:text-[#A3B39F]" /> : <ChevronRight className="w-4 h-4 text-[#556453] dark:text-[#A3B39F]" />}
                           </button>
@@ -2080,7 +2098,7 @@ export function PolyMapsPage() {
             transition={{ duration: 0.2 }}
             onClick={() => setIsFollowingUser(true)}
             className="absolute bottom-[200px] right-4 z-[1001] w-12 h-12 rounded-full bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800 active:scale-90 transition-colors"
-            title="Kembali ke lokasi saya"
+            title={t('services:back_to_my_location', 'Kembali ke lokasi saya')}
           >
             <Navigation className="w-5 h-5" />
           </motion.button>
@@ -2113,13 +2131,13 @@ export function PolyMapsPage() {
                         <Navigation className="w-4 h-4 text-white" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-white/80 uppercase tracking-widest">Memandu Arah Ke</p>
+                        <p className="text-xs font-black text-white/80 uppercase tracking-widest">{t('services:navigating_to', 'Memandu Arah Ke')}</p>
                         <p className="text-base font-black text-white truncate leading-tight">
                           {selectedLocation ? selectedLocation.room_code : activeBuilding.code}
                         </p>
                         {etaMinutes && (
                           <p className="text-[10px] font-bold text-blue-200 mt-0.5">
-                            <Clock className="w-3 h-3 inline mr-0.5" />{etaMinutes} minit
+                            <Clock className="w-3 h-3 inline mr-0.5" />{etaMinutes} {t('services:minutes_short', 'minit')}
                             {navigationStats.distance !== null && (
                               <span className="text-blue-300 ml-1">
                                 ({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})
@@ -2132,7 +2150,7 @@ export function PolyMapsPage() {
                     <div className="flex items-center gap-2 shrink-0 ml-3">
                       <div className="text-[10px] font-bold text-emerald-300 flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>Active</span>
+                        <span>{t('services:active_status', 'Aktif')}</span>
                       </div>
                       <button
                         onClick={(e) => { 
@@ -2143,7 +2161,7 @@ export function PolyMapsPage() {
                         }}
                         className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl font-bold text-xs transition-colors active:scale-95"
                       >
-                        Tamat
+                        {t('services:end_navigation', 'Tamat')}
                       </button>
                     </div>
                     
@@ -2165,8 +2183,8 @@ export function PolyMapsPage() {
                               <DoorOpen className="w-4 h-4 text-emerald-300" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-black text-emerald-300">Anda Telah Sampai!</p>
-                              <p className="text-[11px] font-bold text-emerald-200/80">Buka Panduan Dalaman →</p>
+                              <p className="text-xs font-black text-emerald-300">{t('services:you_have_arrived', 'Anda Telah Sampai!')}</p>
+                              <p className="text-[11px] font-bold text-emerald-200/80">{t('services:open_indoor_directions', 'Buka Panduan Dalaman →')}</p>
                             </div>
                             <div className="w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center group-hover:bg-emerald-500/50 transition-colors">
                               <ChevronUp className="w-3.5 h-3.5 text-emerald-300" />
@@ -2191,11 +2209,11 @@ export function PolyMapsPage() {
                           <ChevronDown className="w-4 h-4" />
                         </button>
                         <div>
-                          <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
+                          <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">{t('services:navigating_to', 'Memandu Arah Ke')}</p>
                           <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
                           {etaMinutes && (
                             <p className="text-blue-200 text-xs font-bold mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Anggaran: {etaMinutes} minit</span>
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {t('services:estimated_time', 'Anggaran: {{mins}} minit', { mins: etaMinutes })}</span>
                               {navigationStats.distance !== null && (
                                 <span className="text-blue-300 font-medium">({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})</span>
                               )}
@@ -2207,7 +2225,7 @@ export function PolyMapsPage() {
                         onClick={() => { setIsNavigating(false); setHasArrivedManual(false); setCardExpanded(false); }}
                         className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0 ml-3"
                       >
-                        Tamat
+                        {t('services:end_navigation', 'Tamat')}
                       </button>
                     </div>
 
@@ -2215,7 +2233,7 @@ export function PolyMapsPage() {
                     {weather?.isRaining && (
                       <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
                         <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
-                        <span>Hujan dikesan! Laluan berbumbung diutamakan secara automatik.</span>
+                        <span>{t('services:rain_detected_covered_route', 'Hujan dikesan! Laluan berbumbung diutamakan secara automatik.')}</span>
                       </div>
                     )}
 
@@ -2226,8 +2244,8 @@ export function PolyMapsPage() {
                           <Umbrella className="w-4 h-4 text-emerald-300" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white">Utamakan Laluan Berbumbung</p>
-                          <p className="text-[10px] text-blue-200">Elakkan hujan & panas di kampus</p>
+                          <p className="text-xs font-bold text-white">{t('services:prefer_covered_walkway', 'Utamakan Laluan Berbumbung')}</p>
+                          <p className="text-[10px] text-blue-200">{t('services:avoid_rain_heat_desc', 'Elakkan hujan & panas di kampus')}</p>
                         </div>
                       </div>
                       <button
@@ -2288,7 +2306,7 @@ export function PolyMapsPage() {
 
                                     <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
                                       <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
-                                        Langkah Dalaman ({currentStep + 1} / {steps.length})
+                                        {t('services:indoor_step_progress', 'Langkah Dalaman ({{current}} / {{total}})', { current: currentStep + 1, total: steps.length })}
                                       </span>
                                       <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
                                         {steps[currentStep]}
@@ -2302,7 +2320,7 @@ export function PolyMapsPage() {
                                           }}
                                           className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
                                         >
-                                          Kembali
+                                          {t('services:back_step', 'Kembali')}
                                         </button>
                                         <button 
                                           disabled={currentStep === steps.length - 1} 
@@ -2312,7 +2330,7 @@ export function PolyMapsPage() {
                                           }}
                                           className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
                                         >
-                                          Seterusnya
+                                          {t('services:next_step', 'Seterusnya')}
                                         </button>
                                       </div>
                                     </motion.div>
@@ -2320,7 +2338,7 @@ export function PolyMapsPage() {
                                 ) : (
                                   <div>
                                     <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
-                                      Panduan Dalaman
+                                      {t('services:indoor_directions_guide', 'Panduan Dalaman')}
                                     </span>
                                     <p className="text-sm font-bold text-white leading-relaxed">
                                       {selectedLocation.direction_text}
@@ -2348,7 +2366,7 @@ export function PolyMapsPage() {
                               >
                                 <div className="flex items-center gap-2">
                                   <Compass className="w-4 h-4 text-blue-200 shrink-0" />
-                                  <span className="text-xs font-bold text-white">Langkah Perjalanan ({navigationSteps.length - 1} langkah)</span>
+                                  <span className="text-xs font-bold text-white">{t('services:journey_steps_count', 'Langkah Perjalanan ({{count}} langkah)', { count: navigationSteps.length - 1 })}</span>
                                 </div>
                                 {showTbtSteps ? (
                                   <ChevronDown className="w-4 h-4 text-white/70" />
@@ -2385,10 +2403,10 @@ export function PolyMapsPage() {
                                             <p className="font-semibold text-white leading-tight">{step.instruction}</p>
                                             {step.distance > 0 && (
                                               <p className="text-[10px] text-blue-200 mt-0.5 flex items-center gap-1.5">
-                                                <span>Jalan terus {step.distance}m</span>
+                                                <span>{t('services:walk_straight_dist', 'Jalan terus {{dist}}m', { dist: step.distance })}</span>
                                                 {step.isCovered && (
                                                   <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[8px] font-black uppercase">
-                                                    <Umbrella className="w-2.5 h-2.5" /> Berbumbung
+                                                    <Umbrella className="w-2.5 h-2.5" /> {t('services:covered_badge', 'Berbumbung')}
                                                   </span>
                                                 )}
                                               </p>
@@ -2407,10 +2425,10 @@ export function PolyMapsPage() {
                           {hasIndoorDirections && !hasArrived && (
                             <div className="bg-white/10 rounded-2xl p-3 border border-white/10 flex flex-col gap-2">
                               <p className="text-xs text-white leading-relaxed">
-                                Panduan dalaman bilik akan dibuka secara automatik apabila anda berada &lt; 30m dari bangunan.
+                                {t('services:indoor_auto_open_hint', 'Panduan dalaman bilik akan dibuka secara automatik apabila anda berada < 30m dari bangunan.')}
                               </p>
                               <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                                <span className="text-[10px] font-bold text-white/60">Jarak ke bangunan: {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : 'mengira...'}</span>
+                                <span className="text-[10px] font-bold text-white/60">{t('services:distance_to_building', 'Jarak ke bangunan:')} {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : t('services:calculating', 'mengira...')}</span>
                                 <button 
                                   onClick={() => {
                                     if (navigator.vibrate) navigator.vibrate(40);
@@ -2418,7 +2436,7 @@ export function PolyMapsPage() {
                                   }}
                                   className="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
                                 >
-                                  Seterusnya <ChevronRight className="w-3.5 h-3.5" />
+                                  {t('services:next_step', 'Seterusnya')} <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -2484,7 +2502,7 @@ export function PolyMapsPage() {
                 {/* Drag Handle Bar */}
                 <div 
                   className="w-full pt-3 pb-2 flex flex-col items-center justify-center select-none shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                  title="Tarik atau tekan untuk tukar saiz paparan"
+                  title={t('services:drag_resize_sheet', 'Tarik atau tekan untuk tukar saiz paparan')}
                   onPointerDown={(e) => sheetDragControls.start(e)}
                 >
                   <div 
@@ -2512,7 +2530,7 @@ export function PolyMapsPage() {
                               {selectedEmsEvent.title}
                             </p>
                             <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 truncate">
-                              {selectedEmsEvent.category || 'Acara EMS'} · {selectedEmsEvent.event_date ? new Date(selectedEmsEvent.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' }) : 'Akan Datang'}
+                              {selectedEmsEvent.category || t('services:ems_event', 'Acara EMS')} · {selectedEmsEvent.event_date ? new Date(selectedEmsEvent.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' }) : t('services:coming_soon', 'Akan Datang')}
                             </p>
                           </div>
                         </div>
@@ -2521,7 +2539,7 @@ export function PolyMapsPage() {
                             onClick={(e) => { e.stopPropagation(); navigate('/ems/hub'); }}
                             className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-amber-500/30 active:scale-95"
                           >
-                            <span>Buka EMS</span>
+                            <span>{t('services:open_ems', 'Buka EMS')}</span>
                             <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                           <button
@@ -2543,7 +2561,7 @@ export function PolyMapsPage() {
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 mb-1.5">
-                              <Trophy className="w-3 h-3" /> Acara EMS
+                              <Trophy className="w-3 h-3" /> {t('services:ems_event', 'Acara EMS')}
                             </div>
                             <h2 className="text-xl font-black text-slate-900 dark:text-white leading-tight">
                               {selectedEmsEvent.title}
@@ -2587,7 +2605,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronUp className="w-3.5 h-3.5" />
-                            <span>Keterangan Lanjut</span>
+                            <span>{t('services:more_details', 'Keterangan Lanjut')}</span>
                           </button>
                         ) : (
                           <button
@@ -2595,7 +2613,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronDown className="w-3.5 h-3.5" />
-                            <span>Lipat Paparan</span>
+                            <span>{t('services:collapse_view', 'Kecilkan Paparan')}</span>
                           </button>
                         )}
 
@@ -2604,14 +2622,14 @@ export function PolyMapsPage() {
                             onClick={() => navigate('/ems/hub')}
                             className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-amber-500/30 active:scale-[0.98]"
                           >
-                            <span>Buka EMS</span>
+                            <span>{t('services:open_ems', 'Buka EMS')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => startNavigationToCoords(selectedEmsEvent.lat, selectedEmsEvent.lng, selectedEmsEvent.title)}
                             className="w-full flex items-center justify-center gap-2 bg-[#C96F4F] hover:bg-[#B35F41] text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-[#C96F4F]/25 active:scale-[0.98]"
                           >
-                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Lokasi
+                            <Navigation className="w-3.5 h-3.5" /> {t('services:navigate_to_location', 'Navigasi ke Lokasi')}
                           </button>
                         </div>
                       </div>
@@ -2646,7 +2664,7 @@ export function PolyMapsPage() {
                             onClick={(e) => { e.stopPropagation(); navigate('/polymart'); }}
                             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-emerald-600/30 active:scale-95"
                           >
-                            <span>Buka PolyMart</span>
+                            <span>{t('services:open_polymart', 'Buka PolyMart')}</span>
                             <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                           <button
@@ -2691,7 +2709,7 @@ export function PolyMapsPage() {
                         </p>
 
                         <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-3 mb-4 text-xs text-emerald-900 dark:text-emerald-200 font-medium leading-relaxed">
-                          <span className="font-bold block text-emerald-800 dark:text-emerald-300 mb-0.5">Panduan Pengambilan:</span>
+                          <span className="font-bold block text-emerald-800 dark:text-emerald-300 mb-0.5">{t('services:pickup_guide_label', 'Panduan Pengambilan:')}</span>
                           {selectedPolyMartHub.pickup_instructions}
                         </div>
 
@@ -2701,7 +2719,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronUp className="w-3.5 h-3.5" />
-                            <span>Maklumat Lanjut Hub</span>
+                            <span>{t('services:hub_more_info', 'Maklumat Lanjut Hub')}</span>
                           </button>
                         ) : (
                           <button
@@ -2709,7 +2727,7 @@ export function PolyMapsPage() {
                             className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             <ChevronDown className="w-3.5 h-3.5" />
-                            <span>Lipat Paparan</span>
+                            <span>{t('services:collapse_view', 'Kecilkan Paparan')}</span>
                           </button>
                         )}
 
@@ -2718,14 +2736,14 @@ export function PolyMapsPage() {
                             onClick={() => navigate('/polymart')}
                             className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-emerald-600/30 active:scale-[0.98]"
                           >
-                            <span>Buka PolyMart</span>
+                            <span>{t('services:open_polymart', 'Buka PolyMart')}</span>
                             <ChevronRight className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => startNavigationToCoords(selectedPolyMartHub.lat, selectedPolyMartHub.lng, selectedPolyMartHub.name)}
                             className="w-full flex items-center justify-center gap-2 bg-[#C96F4F] hover:bg-[#B35F41] text-white py-2.5 rounded-xl font-bold text-xs transition-colors shadow-md shadow-[#C96F4F]/25 active:scale-[0.98]"
                           >
-                            <Navigation className="w-3.5 h-3.5" /> Pandu Arah ke Hub
+                            <Navigation className="w-3.5 h-3.5" /> {t('services:navigate_to_hub', 'Pandu Arah ke Hub')}
                           </button>
                         </div>
                       </div>
@@ -2758,7 +2776,7 @@ export function PolyMapsPage() {
                             )}
                             {!selectedLocation && (
                               <p className="text-[10px] font-bold text-[#6B7F5B] dark:text-[#A3B39F] truncate">
-                                Kod: {activeBuilding.code}
+                                {t('services:code_prefix', 'Kod: {{code}}', { code: activeBuilding.code })}
                               </p>
                             )}
                           </div>
@@ -2775,10 +2793,10 @@ export function PolyMapsPage() {
                                 }
                               }}
                               className="flex items-center gap-1.5 bg-[#6B7F5B]/15 hover:bg-[#6B7F5B]/25 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-3 py-2 rounded-xl font-black text-xs transition-all shadow-sm active:scale-95"
-                              title="Buka 360 Panorama"
+                              title={t('services:open_360_panorama', 'Buka 360 Panorama')}
                             >
                               <Compass className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">360 AKTIF</span>
+                              <span className="hidden sm:inline">{t('services:panorama_360_active', '360 AKTIF')}</span>
                             </button>
                           )}
                           <button
@@ -2786,7 +2804,7 @@ export function PolyMapsPage() {
                             className="flex items-center gap-1.5 bg-[#C96F4F] hover:bg-[#B35F41] text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-[#C96F4F]/25 active:scale-95"
                           >
                             <Navigation className="w-3.5 h-3.5" />
-                            <span>Pandu</span>
+                            <span>{t('services:drive_navigate', 'Pandu')}</span>
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setSheetSnap('HALF'); }}
@@ -2813,7 +2831,7 @@ export function PolyMapsPage() {
                             type="button"
                             onClick={() => setSheetSnap('PEEK')}
                             className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 `}
-                            title="Lipat ke bawah"
+                            title={t('services:fold_down', 'Lipat ke bawah')}
                           >
                             <ChevronDown className="w-4 h-4" />
                           </button>
@@ -2821,7 +2839,7 @@ export function PolyMapsPage() {
                             type="button"
                             onClick={(e) => { e.stopPropagation(); dismissCard(); }}
                             className={`w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors active:scale-95 `}
-                            title="Tutup maklumat"
+                            title={t('services:close_info', 'Tutup maklumat')}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -2857,7 +2875,7 @@ export function PolyMapsPage() {
                                 <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
                                   <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
                                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">{t('services:click_to_zoom', 'Tekan untuk Zoom')}</span>
                                   </div>
                                 </div>
                               )}
@@ -2865,7 +2883,7 @@ export function PolyMapsPage() {
                                 <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
                                   <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                                    <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">{t('services:click_to_zoom', 'Tekan untuk Zoom')}</span>
                                   </div>
                                 </div>
                               )}
@@ -2884,14 +2902,14 @@ export function PolyMapsPage() {
                                     <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
                                   )}
                                   <span className="text-[10px] font-black uppercase tracking-widest">
-                                    Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === '360' ? 'Panorama 360°' : 'Bilik'}
+                                    {t('services:no_image_prefix', 'Tiada Imej')} {activeImageTab === 'entrance' ? t('services:tab_entrance', 'Pintu Masuk') : activeImageTab === 'floorplan' ? t('services:tab_floorplan', 'Pelan Lantai') : activeImageTab === '360' ? t('services:tab_360_panorama', 'Panorama 360°') : t('services:tab_room', 'Bilik')}
                                   </span>
                                 </div>
                               )}
                               
                               {selectedLocation && (
                                 <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase  z-10`}>
-                                  LOKASI JUMPA
+                                  {t('services:location_found', 'LOKASI JUMPA')}
                                 </div>
                               )}
 
@@ -2907,17 +2925,17 @@ export function PolyMapsPage() {
                                       )}
                                     >
                                       <Compass className="w-3 h-3" />
-                                      360 AKTIF
+                                      {t('services:panorama_360_active', '360 AKTIF')}
                                     </button>
                                   )}
                                   {activeBuilding.entrance_image_url && (
-                                    <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                                    <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>{t('services:tab_front', 'Depan')}</button>
                                   )}
                                   {activeBuilding.floorplan_image_url && (
-                                    <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                                    <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>{t('services:tab_floor', 'Lantai')}</button>
                                   )}
                                   {selectedLocation && selectedLocation.image_url && (
-                                    <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+                                    <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>{t('services:tab_room', 'Bilik')}</button>
                                   )}
                                 </div>
                               )}
@@ -2945,9 +2963,9 @@ export function PolyMapsPage() {
                                       }
                                     }}
                                     className="inline-flex items-center gap-1 text-[10px] bg-[#6B7F5B]/15 hover:bg-[#6B7F5B]/25 text-[#6B7F5B] dark:text-[#A3B39F] border border-[#6B7F5B]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase transition-colors cursor-pointer active:scale-95"
-                                    title="Buka 360 Panorama Penuh"
+                                    title={t('services:open_360_panorama', 'Buka 360 Panorama Penuh')}
                                   >
-                                    <Compass className="w-3 h-3" /> 360 AKTIF
+                                    <Compass className="w-3 h-3" /> {t('services:panorama_360_active', '360 AKTIF')}
                                   </button>
                                 )}
                               </div>
@@ -2957,11 +2975,11 @@ export function PolyMapsPage() {
                                 <div className="mt-1 mb-2 flex items-center gap-1.5">
                                   {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
                                     <span className="inline-flex items-center gap-1 bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-pulse"></span> {t('services:facility_open', 'BUKA')} ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> {t('services:facility_closed', 'TUTUP')}
                                     </span>
                                   )}
                                 </div>
@@ -2974,7 +2992,7 @@ export function PolyMapsPage() {
                               )}
                               {!selectedLocation && (
                                 <p className="text-sm font-bold text-[#6B7F5B] dark:text-[#A3B39F] flex items-center gap-1.5 mt-1">
-                                  Kod: {activeBuilding.code}
+                                  {t('services:code_prefix', 'Kod: {{code}}', { code: activeBuilding.code })}
                                 </p>
                               )}
                             </div>
@@ -2982,13 +3000,13 @@ export function PolyMapsPage() {
                               {selectedLocation && (
                                 <div className="w-12 h-12 rounded-2xl bg-[#6B7F5B]/15 text-[#6B7F5B] dark:text-[#A3B39F] flex flex-col items-center justify-center shrink-0 ml-3">
                                   <Layers className="w-4 h-4" />
-                                  <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                                  <span className="text-[10px] font-black">{t('services:floor_short', 'T{{level}}', { level: selectedLocation.floor_level })}</span>
                                 </div>
                               )}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleShare(); }}
                                 className="p-2 rounded-xl bg-[#F8F6EE] dark:bg-[#1E271F] border border-[#D9C9B2]/60 dark:border-[#3A4A3B] text-[#556453] dark:text-[#A3B39F] hover:bg-[#D9C9B2]/30 transition-colors"
-                                title="Kongsi Lokasi"
+                                title={t('services:share_location', 'Kongsi Lokasi')}
                               >
                                 <Share2 className="w-4 h-4" />
                               </button>
@@ -3002,7 +3020,7 @@ export function PolyMapsPage() {
                               className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-[#6B7F5B] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors active:scale-95"
                             >
                               <ChevronUp className="w-3.5 h-3.5" />
-                              <span>Papar Direktori Penuh & Arah Luaran</span>
+                              <span>{t('services:show_full_directory', 'Lihat Direktori Penuh & Laluan Luar')}</span>
                             </button>
                           ) : (
                             <button
@@ -3010,7 +3028,7 @@ export function PolyMapsPage() {
                               className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white transition-colors active:scale-95"
                             >
                               <ChevronDown className="w-3.5 h-3.5" />
-                              <span>Lipat Kad</span>
+                              <span>{t('services:collapse_card', 'Lipat Kad')}</span>
                             </button>
                           )}
 
@@ -3020,21 +3038,21 @@ export function PolyMapsPage() {
                               onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                               className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm transition-colors active:scale-[0.98] bg-[#C96F4F] hover:bg-[#B35F41] text-white shadow-lg shadow-[#C96F4F]/25"
                             >
-                              <Navigation className="w-4 h-4" /> Mula Pandu Arah
+                              <Navigation className="w-4 h-4" /> {t('route_directions', { defaultValue: 'Dapatkan Panduan Laluan Berjalan' })}
                             </button>
                             
                             <button
                               onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
                               className="w-full text-center text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white text-xs font-bold transition-colors mt-1 underline underline-offset-2"
                             >
-                              Memandu dari luar kampus? Buka Google Maps
+                              {t('services:drive_from_outside_google_maps', 'Memandu dari luar kampus? Buka Google Maps')}
                             </button>
 
                             {/* FULL Snap Level: Full Building Directory */}
                             {sheetSnap === 'FULL' && (
                               <div className="mt-3 pt-3 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
                                 <p className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] uppercase tracking-wider mb-2">
-                                  Direktori Bilik & Ruang ({getLocationsForBuilding(activeBuilding.id).length})
+                                  {t('services:room_directory_count', 'Direktori Bilik & Ruang ({{count}})', { count: getLocationsForBuilding(activeBuilding.id).length })}
                                 </p>
                                 <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                                   {getLocationsForBuilding(activeBuilding.id).map(room => (
@@ -3053,7 +3071,7 @@ export function PolyMapsPage() {
                                     </button>
                                   ))}
                                   {getLocationsForBuilding(activeBuilding.id).length === 0 && (
-                                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] italic py-1">Tiada data bilik terperinci direkodkan.</p>
+                                    <p className="text-xs text-[#556453] dark:text-[#A3B39F] italic py-1">{t('services:no_detailed_room_data', 'Tiada data bilik terperinci direkodkan.')}</p>
                                   )}
                                 </div>
                               </div>
@@ -3064,7 +3082,7 @@ export function PolyMapsPage() {
                               onClick={(e) => { e.stopPropagation(); dismissCard(); }}
                               className="w-full text-center text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] text-[10px] font-bold transition-colors mt-1"
                             >
-                              Tutup
+                              {t('services:close', 'Tutup')}
                             </button>
                           </div>
                         </div>
@@ -3141,8 +3159,8 @@ export function PolyMapsPage() {
             >
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 dark:text-white">Lapor Tempat Hilang</h3>
-                  <p className="text-xs font-bold text-slate-500 font-sans">Bantu JPP kemaskini peta kampus</p>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white">{t('services:report_missing_location_title', 'Laporkan Lokasi Tiada')}</h3>
+                  <p className="text-xs font-bold text-slate-500 font-sans">{t('services:report_missing_location_subtitle', 'Bantu JPP kemas kini peta kampus')}</p>
                 </div>
                 <button
                   onClick={() => setIsReportModalOpen(false)}
@@ -3155,34 +3173,34 @@ export function PolyMapsPage() {
               <form onSubmit={handleReportSubmit} className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Nama Tempat / Kelas / Ruang
+                    {t('services:place_name_label', 'Nama Tempat / Bilik / Ruang')}
                   </label>
                   <input
                     type="text"
                     required
                     value={reportForm.room_code}
                     onChange={(e) => setReportForm(prev => ({ ...prev, room_code: e.target.value }))}
-                    placeholder="Contoh: A302, Makmal CAD 2"
+                    placeholder={t('services:place_name_placeholder', 'Contoh: A302, Makmal CAD 2')}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Cadangan Bangunan / Blok
+                    {t('services:building_suggestion_label', 'Cadangan Bangunan / Blok')}
                   </label>
                   <select
                     value={reportForm.building_id}
                     onChange={(e) => setReportForm(prev => ({ ...prev, building_id: e.target.value, building_name_suggestion: e.target.value === 'new' ? '' : prev.building_name_suggestion }))}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
                   >
-                    <option value="">-- Pilih Bangunan (Jika Tahu) --</option>
+                    <option value="">{t('services:select_building_optional', '-- Pilih Bangunan (Jika Tahu) --')}</option>
                     {allBuildings.map(b => (
                       <option key={b.id} value={b.id}>
                         {b.name} ({b.code})
                       </option>
                     ))}
-                    <option value="new">Lain-lain / Bangunan Baru</option>
+                    <option value="new">{t('services:other_or_new_building', 'Lain-lain / Bangunan Baru')}</option>
                   </select>
                 </div>
 
@@ -3193,14 +3211,14 @@ export function PolyMapsPage() {
                     exit={{ opacity: 0, }}
                   >
                     <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                      Nama Bangunan Baru / Cadangan
+                      {t('services:new_building_name_label', 'Nama Bangunan / Cadangan Baru')}
                     </label>
                     <input
                       type="text"
                       required
                       value={reportForm.building_name_suggestion}
                       onChange={(e) => setReportForm(prev => ({ ...prev, building_name_suggestion: e.target.value }))}
-                      placeholder="Masukkan nama bangunan/blok"
+                      placeholder={t('services:new_building_placeholder', 'Masukkan nama bangunan/blok')}
                       className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all"
                     />
                   </motion.div>
@@ -3208,29 +3226,29 @@ export function PolyMapsPage() {
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Aras (Tingkat)
+                    {t('services:floor_level_label', 'Aras (Tingkat)')}
                   </label>
                   <select
                     value={reportForm.floor_level}
                     onChange={(e) => setReportForm(prev => ({ ...prev, floor_level: e.target.value }))}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
                   >
-                    <option value="0">Aras Bawah (Ground Floor)</option>
-                    <option value="1">Aras 1</option>
-                    <option value="2">Aras 2</option>
-                    <option value="3">Aras 3</option>
-                    <option value="4">Aras 4</option>
+                    <option value="0">{t('services:ground_floor', 'Aras Bawah (Ground)')}</option>
+                    <option value="1">{t('services:floor_n', 'Aras {{level}}', { level: 1 })}</option>
+                    <option value="2">{t('services:floor_n', 'Aras {{level}}', { level: 2 })}</option>
+                    <option value="3">{t('services:floor_n', 'Aras {{level}}', { level: 3 })}</option>
+                    <option value="4">{t('services:floor_n', 'Aras {{level}}', { level: 4 })}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Catatan Tambahan (Landmark / Kedudukan)
+                    {t('services:additional_notes_landmark', 'Nota Tambahan (Landmark / Posisi)')}
                   </label>
                   <textarea
                     value={reportForm.description}
                     onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Contoh: Sebelah lif utama, berdekatan bilik pensyarah JTM"
+                    placeholder={t('services:landmark_placeholder', 'Contoh: Sebelah lif utama, berdekatan bilik pensyarah JTM')}
                     rows={3}
                     className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all resize-none font-bold"
                   />
@@ -3242,7 +3260,7 @@ export function PolyMapsPage() {
                     onClick={() => setIsReportModalOpen(false)}
                     className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors active:scale-95"
                   >
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </button>
                   <button
                     type="submit"
@@ -3252,10 +3270,10 @@ export function PolyMapsPage() {
                     {isSubmittingReport ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Hantar...
+                        {t('services:submitting', 'Hantar...')}
                       </>
                     ) : (
-                      'Hantar Aduan'
+                      t('services:submit_report_button', 'Hantar Laporan')
                     )}
                   </button>
                 </div>

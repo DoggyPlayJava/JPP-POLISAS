@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOutletContext } from 'react-router-dom';
@@ -22,6 +23,7 @@ function TeamCard({
   onRenameTeam: (team: SupsasTeam, newName: string) => void;
   onDeleteTeam: (team: SupsasTeam) => void;
 }) {
+  const { t } = useTranslation(['supsas', 'common']);
   const [expanded, setExpanded] = useState(true);
   const [renaming, setRenaming] = useState(false);
   const [nameInput, setNameInput] = useState(team.name);
@@ -97,7 +99,7 @@ function TeamCard({
           >
             <div className="px-4 py-3 space-y-2">
               {participants.length === 0 && (
-                <p className="text-xs text-white/20 text-center py-2">Tiada pemain lagi</p>
+                <p className="text-xs text-white/20 text-center py-2">{t('supsas:no_players_yet', 'Tiada pemain lagi')}</p>
               )}
               {participants.map((part, i) => (
                 <div key={part.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.015]">
@@ -108,7 +110,7 @@ function TeamCard({
                   </div>
                   {part.is_confirmed
                     ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    : <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black">Menunggu</span>
+                    : <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black">{t('supsas:status_pending', 'Menunggu')}</span>
                   }
                   <button onClick={() => onRemovePlayer(part)} className="w-6 h-6 flex items-center justify-center rounded-lg text-white/15 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0">
                     <X className="w-3 h-3" />
@@ -123,7 +125,7 @@ function TeamCard({
                   className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-white/10 text-white/30 hover:text-amber-400 hover:border-amber-500/30 text-xs font-black transition-all"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Tambah Pemain
+                  {t('supsas:btn_add_player', 'Tambah Pemain')}
                 </button>
               )}
             </div>
@@ -148,24 +150,25 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const { t } = useTranslation(['supsas', 'common']);
 
   useEffect(() => {
     if (searchTerm.length < 2) { setSearchResults([]); return; }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setSearching(true);
       const { data } = await supabase.from('profiles').select('id, full_name, matric_no, avatar_url')
         .or(`full_name.ilike.%${searchTerm}%,matric_no.ilike.%${searchTerm}%`).limit(10);
       setSearching(false);
       setSearchResults(data as Profile[] ?? []);
     }, 350);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const handleAdd = async (person: Profile) => {
     // Check if already registered for this sport anywhere (any team/kumpulan)
     const alreadyInSport = allParticipants.find(p => p.profile_id === person.id && p.sport_id === sport.id);
     if (alreadyInSport) {
-      toast.error(`${person.full_name} sudah didaftarkan dalam sukan ini (kumpulan lain).`);
+      toast.error(t('supsas:err_player_already_in_sport_group', '{{name}} sudah didaftarkan dalam sukan ini (kumpulan lain).', { name: person.full_name }));
       return;
     }
 
@@ -173,7 +176,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
     const { data: crossKont } = await supabase.from('supsas_participants')
       .select('id, kontingen_id').eq('edition_id', editionId).eq('sport_id', sport.id).eq('profile_id', person.id).maybeSingle();
     if (crossKont && crossKont.kontingen_id !== kontingenId) {
-      toast.error(`${person.full_name} sudah dalam kontingen lain untuk sukan ini.`);
+      toast.error(t('supsas:err_player_in_other_contingent', '{{name}} sudah dalam kontingen lain untuk sukan ini.', { name: person.full_name }));
       return;
     }
 
@@ -186,8 +189,8 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
       profile_id: person.id,
     });
     setAdding(null);
-    if (error) { toast.error('Gagal daftar: ' + error.message); return; }
-    toast.success(`${person.full_name} ditambah ke ${team.name}!`);
+    if (error) { toast.error(t('supsas:err_register_failed_with_msg', 'Gagal daftar: {{msg}}', { msg: error.message })); return; }
+    toast.success(t('supsas:player_added_to_team', '{{person}} ditambah ke {{team}}!', { person: person.full_name, team: team.name }));
     onAdded();
     setSearchTerm('');
     setSearchResults([]);
@@ -204,7 +207,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
         <div className="p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-black text-white">Tambah Pemain</h2>
+              <h2 className="text-base font-black text-white">{t('supsas:add_player_title', 'Tambah Pemain')}</h2>
               <p className="text-[11px] text-white/30 mt-0.5">{team.name} — {sport.name}</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
@@ -215,7 +218,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
             {searching && <Loader className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400 animate-spin" />}
-            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Cari nama atau no. matrik..."
+            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('supsas:search_player_placeholder', 'Cari nama atau no. matrik...')}
               className="w-full pl-11 pr-11 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all" />
           </div>
 
@@ -241,7 +244,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
             )}
           </AnimatePresence>
           {searchTerm.length >= 2 && !searching && searchResults.length === 0 && (
-            <p className="text-center text-white/20 text-xs py-3">Tiada pelajar dijumpai</p>
+            <p className="text-center text-white/20 text-xs py-3">{t('supsas:no_students_found', 'Tiada pelajar dijumpai')}</p>
           )}
         </div>
       </motion.div>
@@ -251,6 +254,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
 
 // ─── Main Component ───────────────────────────────────────────
 export function KetuaDashboard() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { myKontingen } = useOutletContext<{ myKontingen: SupsasKontingen }>();
   const { sports, teams: allTeams, edition, refetch } = useSupsas();
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -260,7 +264,7 @@ export function KetuaDashboard() {
   const [creatingTeam, setCreatingTeam] = useState(false);
 
   // Filter teams for this kontingen
-  const myTeams = allTeams.filter(t => t.kontingen_id === myKontingen.id);
+  const myTeams = allTeams.filter(tm => tm.kontingen_id === myKontingen.id);
 
   const fetchParticipants = async () => {
     setLoadingPart(true);
@@ -279,7 +283,7 @@ export function KetuaDashboard() {
   }, [sports]);
 
   const selectedSport = sports.find(s => s.id === selectedSportId);
-  const teamsForSport = myTeams.filter(t => t.sport_id === selectedSportId);
+  const teamsForSport = myTeams.filter(tm => tm.sport_id === selectedSportId);
   const maxGroups = selectedSport?.max_groups_per_kontingen ?? 1;
   const maxPlayersPerGroup = selectedSport?.max_players_per_group ?? 11;
   const canAddTeam = teamsForSport.length < maxGroups;
@@ -298,8 +302,8 @@ export function KetuaDashboard() {
       group_number: nextNum,
     });
     setCreatingTeam(false);
-    if (error) { toast.error('Gagal cipta kumpulan: ' + error.message); return; }
-    toast.success(`Kumpulan ${nextNum} berjaya dicipta!`);
+    if (error) { toast.error(t('supsas:err_create_group_with_msg', 'Gagal cipta kumpulan: {{msg}}', { msg: error.message })); return; }
+    toast.success(t('supsas:group_created_success', 'Kumpulan {{num}} berjaya dicipta!', { num: nextNum }));
     refetch();
   };
 
@@ -318,7 +322,7 @@ export function KetuaDashboard() {
         group_number: 1,
       }).select().maybeSingle();
       setCreatingTeam(false);
-      if (error || !data) { toast.error('Gagal sedia pasukan: ' + (error?.message ?? '')); return; }
+      if (error || !data) { toast.error(t('supsas:err_prepare_team_with_msg', 'Gagal sedia pasukan: {{msg}}', { msg: error?.message ?? '' })); return; }
       team = data as any;
       await refetch();
     }
@@ -327,40 +331,40 @@ export function KetuaDashboard() {
 
   const handleRenameTeam = async (team: SupsasTeam, newName: string) => {
     const { error } = await supabase.from('supsas_teams').update({ name: newName }).eq('id', team.id);
-    if (error) { toast.error('Gagal ubah nama'); return; }
-    toast.success('Nama kumpulan dikemas kini');
+    if (error) { toast.error(t('supsas:err_rename_failed', 'Gagal ubah nama')); return; }
+    toast.success(t('supsas:group_name_updated', 'Nama kumpulan dikemas kini'));
     refetch();
   };
 
   const handleDeleteTeam = async (team: SupsasTeam) => {
     const hasPlayers = participants.some(p => p.team_id === team.id);
-    if (hasPlayers) { toast.error('Keluarkan semua pemain dahulu sebelum padam kumpulan.'); return; }
+    if (hasPlayers) { toast.error(t('supsas:err_remove_players_before_delete', 'Keluarkan semua pemain dahulu sebelum padam kumpulan.')); return; }
     const { error } = await supabase.from('supsas_teams').delete().eq('id', team.id);
-    if (error) { toast.error('Gagal padam kumpulan'); return; }
-    toast.success('Kumpulan dipadam');
+    if (error) { toast.error(t('supsas:err_delete_group_failed', 'Gagal padam kumpulan')); return; }
+    toast.success(t('supsas:group_deleted', 'Kumpulan dipadam'));
     refetch();
   };
 
   const handleRemovePlayer = async (part: Participant) => {
     const { error } = await supabase.from('supsas_participants').delete().eq('id', part.id);
-    if (error) { toast.error('Gagal padam pemain'); return; }
-    toast.success('Pemain dikeluarkan');
+    if (error) { toast.error(t('supsas:err_delete_player_failed', 'Gagal padam pemain')); return; }
+    toast.success(t('supsas:player_removed', 'Pemain dikeluarkan'));
     fetchParticipants();
   };
 
   // Stats
   const totalPlayers = participants.length;
   const totalTeams = myTeams.length;
-  const totalSports = [...new Set(myTeams.map(t => t.sport_id))].length;
+  const totalSports = [...new Set(myTeams.map(tm => tm.sport_id))].length;
 
   return (
     <div className="space-y-8">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Sukan Disertai', value: totalSports, icon: '🏅' },
-          { label: 'Jumlah Kumpulan', value: totalTeams, icon: '🏸' },
-          { label: 'Jumlah Pemain', value: totalPlayers, icon: '👥' },
+          { label: t('supsas:stat_participating_sports', 'Sukan Disertai'), value: totalSports, icon: '🏅' },
+          { label: t('supsas:stat_total_teams', 'Jumlah Kumpulan'), value: totalTeams, icon: '🏸' },
+          { label: t('supsas:stat_total_athletes', 'Jumlah Pemain'), value: totalPlayers, icon: '👥' },
         ].map(({ label, value, icon }) => (
           <div key={label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
             <span className="text-2xl">{icon}</span>
@@ -372,10 +376,10 @@ export function KetuaDashboard() {
 
       {/* Sport Tabs */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-3">Pilih Sukan</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-3">{t('supsas:select_sport', 'Pilih Sukan')}</p>
         <div className="flex flex-wrap gap-2">
           {sports.map(s => {
-            const myTeamsForSport = myTeams.filter(t => t.sport_id === s.id);
+            const myTeamsForSport = myTeams.filter(tm => tm.sport_id === s.id);
             return (
               <button key={s.id} onClick={() => setSelectedSportId(s.id)}
                 className={cn(
@@ -402,8 +406,8 @@ export function KetuaDashboard() {
               <h2 className="text-base font-black text-white">{selectedSport.name}</h2>
               <p className="text-[10px] text-white/30 mt-0.5">
                 {isSingleGroup
-                  ? `Max ${maxPlayersPerGroup} pemain`
-                  : `Max ${maxGroups} kumpulan · ${maxPlayersPerGroup} pemain/kumpulan`}
+                  ? t('supsas:max_players', 'Max {{count}} pemain', { count: maxPlayersPerGroup })
+                  : t('supsas:max_groups_players', 'Max {{groups}} kumpulan · {{players}} pemain/kumpulan', { groups: maxGroups, players: maxPlayersPerGroup })}
               </p>
             </div>
             {/* Single-group: butang tambah pemain terus */}
@@ -414,7 +418,7 @@ export function KetuaDashboard() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 transition-all disabled:opacity-50"
               >
                 {creatingTeam ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                Tambah Pemain
+                {t('supsas:btn_add_player', 'Tambah Pemain')}
               </button>
             )}
             {/* Multi-group: butang tambah kumpulan */}
@@ -425,7 +429,7 @@ export function KetuaDashboard() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 transition-all disabled:opacity-50"
               >
                 {creatingTeam ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                Tambah Kumpulan
+                {t('supsas:btn_add_team', 'Tambah Kumpulan')}
               </button>
             )}
           </div>
@@ -438,8 +442,8 @@ export function KetuaDashboard() {
               {participants.filter(p => !teamsForSport[0] || p.team_id === teamsForSport[0].id).length === 0 ? (
                 <div className="text-center py-14 rounded-2xl border border-dashed border-white/8">
                   <Users className="w-9 h-9 mx-auto mb-3 text-white/15" />
-                  <p className="text-sm font-black text-white/20 uppercase tracking-widest">Belum ada pemain</p>
-                  <p className="text-xs text-white/15 mt-1">Klik "Tambah Pemain" untuk mula</p>
+                  <p className="text-sm font-black text-white/20 uppercase tracking-widest">{t('supsas:no_athletes_yet', 'Belum ada pemain')}</p>
+                  <p className="text-xs text-white/15 mt-1">{t('supsas:click_add_player_hint', 'Klik "Tambah Pemain" untuk mula')}</p>
                 </div>
               ) : (
                 (teamsForSport[0]
@@ -468,8 +472,8 @@ export function KetuaDashboard() {
             teamsForSport.length === 0 ? (
               <div className="text-center py-14 rounded-2xl border border-dashed border-white/8">
                 <Users className="w-9 h-9 mx-auto mb-3 text-white/15" />
-                <p className="text-sm font-black text-white/20 uppercase tracking-widest">Belum ada kumpulan</p>
-                <p className="text-xs text-white/15 mt-1">Klik "Tambah Kumpulan" untuk mula</p>
+                <p className="text-sm font-black text-white/20 uppercase tracking-widest">{t('supsas:no_teams_yet', 'Belum ada kumpulan')}</p>
+                <p className="text-xs text-white/15 mt-1">{t('supsas:click_add_team_hint', 'Klik "Tambah Kumpulan" untuk mula')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -479,7 +483,7 @@ export function KetuaDashboard() {
                     team={team}
                     maxPlayers={maxPlayersPerGroup}
                     participants={participants.filter(p => p.team_id === team.id)}
-                    onAddPlayer={t => setAddPlayerTarget(t)}
+                    onAddPlayer={tm => setAddPlayerTarget(tm)}
                     onRemovePlayer={handleRemovePlayer}
                     onRenameTeam={handleRenameTeam}
                     onDeleteTeam={handleDeleteTeam}
@@ -491,7 +495,7 @@ export function KetuaDashboard() {
 
           {!isSingleGroup && !canAddTeam && teamsForSport.length > 0 && (
             <p className="text-center text-[10px] text-white/25 font-black uppercase tracking-widest">
-              Had maksimum {maxGroups} kumpulan untuk sukan ini telah dicapai
+              {t('supsas:max_groups_reached', 'Had maksimum {{count}} kumpulan untuk sukan ini telah dicapai', { count: maxGroups })}
             </p>
           )}
         </div>

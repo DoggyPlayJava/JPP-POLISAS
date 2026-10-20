@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Shield,
   KeyRound,
@@ -64,15 +65,15 @@ import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrom
 import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
 import type { MakmpAwardDefinition } from '@/types';
 
-const CANNED_REJECTION_REASONS = [
-  'Fail laporan / sijil kabur atau tidak dapat dibaca.',
-  'Laporan tidak mengikut templat rasmi yang ditetapkan.',
-  'Sijil bukan atas nama pemohon atau nombor matrik tidak sepadan.',
-  'Tiada bukti sokongan (seperti penyata jualan, SSM, atau foto pelaksanaan).',
-  'Peringkat atau status pencapaian tidak sepadan dengan dokumen sokongan.',
-  'Program/aktiviti diadakan di luar tempoh pengajian POLISAS yang sah.',
-  'Dokumen telah dituntut sebelum ini atau mengandungi maklumat pendua.',
-  'Penyertaan tidak memenuhi syarat kelayakan kategori anugerah ini.',
+const getCannedRejectionReasons = (t: (key: string, fallback: string) => string) => [
+  t('makmp:rejection_reason_unreadable', 'Fail laporan / sijil kabur atau tidak dapat dibaca.'),
+  t('makmp:rejection_reason_wrong_template', 'Laporan tidak mengikut templat rasmi yang ditetapkan.'),
+  t('makmp:rejection_reason_matric_mismatch', 'Sijil bukan atas nama pemohon atau nombor matrik tidak sepadan.'),
+  t('makmp:rejection_reason_no_evidence', 'Tiada bukti sokongan (seperti penyata jualan, SSM, atau foto pelaksanaan).'),
+  t('makmp:rejection_reason_level_mismatch', 'Peringkat atau status pencapaian tidak sepadan dengan dokumen sokongan.'),
+  t('makmp:rejection_reason_outside_study_period', 'Program/aktiviti diadakan di luar tempoh pengajian POLISAS yang sah.'),
+  t('makmp:rejection_reason_duplicate_claim', 'Dokumen telah dituntut sebelum ini atau mengandungi maklumat pendua.'),
+  t('makmp:rejection_reason_not_eligible', 'Penyertaan tidak memenuhi syarat kelayakan kategori anugerah ini.'),
 ];
 
 function getEmbeddableCertUrl(url: string): { embedUrl: string; isImage: boolean } {
@@ -123,6 +124,26 @@ export const getItemFormulaMerit = (
   );
 };
 
+const getAwardStatusBadgeClass = (status: string) => {
+  if (status === 'DISAHKAN') {
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+  }
+  if (status === 'DITOLAK') {
+    return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
+  }
+  return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20';
+};
+
+const getDocBadgeClass = (type?: string) => {
+  if (type === 'LAPORAN') {
+    return 'bg-sky-100 text-sky-800 border border-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30';
+  }
+  if (type === 'BUKTI_SOKONGAN') {
+    return 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30';
+  }
+  return 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30';
+};
+
 // ─── View: Keputusan & Ranking ────────────────────────────────────────────────
 // Grup anugerah unik (definition) dari senarai aplikasi, render panel ranking.
 function RankingViewContent({
@@ -134,6 +155,7 @@ function RankingViewContent({
   pinCode?: string;
   edition?: MakmpEdition | null;
 }) {
+  const { t } = useTranslation(['makmp', 'common']);
   // Kumpul anugerah unik (definition id) yang ada dalam senarai
   const awardMap = new Map<string, MakmpAwardDefinition>();
   for (const a of awardApplications) {
@@ -146,7 +168,7 @@ function RankingViewContent({
   // Grup ikut category_group
   const groups = new Map<string, MakmpAwardDefinition[]>();
   for (const aw of uniqueAwards) {
-    const g = aw.category_group || 'ANUGERAH MAKMP';
+    const g = aw.category_group || t('makmp:makmp_awards_group', 'ANUGERAH MAKMP');
     if (!groups.has(g)) groups.set(g, []);
     groups.get(g)!.push(aw);
   }
@@ -154,7 +176,7 @@ function RankingViewContent({
   if (uniqueAwards.length === 0) {
     return (
       <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 dark:text-slate-400 text-sm">
-        Tiada anugerah untuk dipaparkan.
+        {t('makmp:no_awards_display', 'Tiada anugerah untuk dipaparkan.')}
       </div>
     );
   }
@@ -183,6 +205,7 @@ function RankingViewContent({
 }
 
 export default function MakmpJuryPortalPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlPin = searchParams.get('pin') || '';
 
@@ -230,6 +253,8 @@ export default function MakmpJuryPortalPage() {
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
 
+  const cannedReasons = getCannedRejectionReasons(t);
+
   // Semak PIN dari sessionStorage atau URL semasa mula
   useEffect(() => {
     const savedPin = sessionStorage.getItem('makmp_jury_pin') || urlPin;
@@ -249,7 +274,7 @@ export default function MakmpJuryPortalPage() {
     try {
       const res = await verifyJuryPin(clean);
       if (!res.isValid || !res.pinData || !res.edition) {
-        setPinError(res.message || 'Kod PIN tidak sah.');
+        setPinError(res.message || t('makmp:err_invalid_pin', 'Kod PIN tidak sah.'));
         sessionStorage.removeItem('makmp_jury_pin');
       } else {
         setJuryPin(res.pinData);
@@ -258,7 +283,7 @@ export default function MakmpJuryPortalPage() {
         loadApplications(res.edition.id, res.pinData.assigned_categories || [], res.pinData.pin_code);
       }
     } catch (err: any) {
-      setPinError('Ralat sambungan: ' + err.message);
+      setPinError(t('makmp:err_connection_prefix', 'Ralat sambungan: ') + err.message);
     } finally {
       setIsVerifyingPin(false);
     }
@@ -328,8 +353,6 @@ export default function MakmpJuryPortalPage() {
         // Default ticked (diterima) untuk award belum final — untick hanya bila
         // reject. Untuk award yang dah DISAHKAN/DITOLAK, hormati nilai sebenar
         // dari DB supaya refresh tak auto-accept semula dokumen yang di-untick.
-        // (Punca sebenar bug auto-accept dibaiki di RPC save_jury_award_review
-        //  — migration 98: is_verified per-item kini dihormati.)
         is_verified:
           awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
             ? item.is_verified === true
@@ -397,14 +420,14 @@ export default function MakmpJuryPortalPage() {
 
     // LOCK: elak re-edit award yang dah selesai disemak (DISAHKAN/DITOLAK).
     if (activeAward.status === 'DISAHKAN' || activeAward.status === 'DITOLAK') {
-      alert('Permohonan ini telah selesai disemak dan dikunci. Hubungi pentadbir untuk sebarang pembetulan.');
+      alert(t('makmp:err_submission_locked', 'Permohonan ini telah selesai disemak dan dikunci. Hubungi pentadbir untuk sebarang pembetulan.'));
       return;
     }
 
-    const finalReason = rejectionReason.trim() || reviewNotes.trim() || (status === 'DITOLAK' ? 'Penyertaan tidak memenuhi syarat kelayakan kategori anugerah ini.' : '');
+    const finalReason = rejectionReason.trim() || reviewNotes.trim() || (status === 'DITOLAK' ? t('makmp:rejection_reason_not_eligible', 'Penyertaan tidak memenuhi syarat kelayakan kategori anugerah ini.') : '');
 
     if (status === 'DITOLAK' && !finalReason) {
-      alert('Sila pilih atau tulis sebab penolakan permohonan.');
+      alert(t('makmp:alert_choose_rejection_reason', 'Sila pilih atau tulis sebab penolakan permohonan.'));
       return;
     }
 
@@ -429,7 +452,7 @@ export default function MakmpJuryPortalPage() {
       });
 
       if (!res.success) {
-        alert('Gagal menyimpan keputusan: ' + res.message);
+        alert(t('makmp:err_save_verdict_failed_prefix', 'Gagal menyimpan keputusan: ') + res.message);
         return;
       }
 
@@ -442,11 +465,11 @@ export default function MakmpJuryPortalPage() {
       const subUserId = activeAward.submission?.user_id;
       if (subUserId) {
         sendNotificationToUser(subUserId, {
-          title: status === 'DISAHKAN' ? 'Permohonan MAKMP Disahkan' : 'Permohonan MAKMP Ditolak',
+          title: status === 'DISAHKAN' ? t('makmp:notif_submission_approved', 'Permohonan MAKMP Disahkan') : t('makmp:notif_submission_rejected', 'Permohonan MAKMP Ditolak'),
           message:
             status === 'DISAHKAN'
-              ? `Tahniah! Permohonan "${awardName}" anda telah disahkan (+${currentTotalMerit} merit).`
-              : `Permohonan "${awardName}" anda tidak berjaya. Sila semak emel untuk maklumat lanjut.`,
+              ? t('makmp:notif_approved_message', 'Tahniah! Permohonan "{{awardName}}" anda telah disahkan (+{{merit}} merit).', { awardName, merit: currentTotalMerit })
+              : t('makmp:notif_rejected_message', 'Permohonan "{{awardName}}" anda tidak berjaya. Sila semak emel untuk maklumat lanjut.', { awardName }),
           type: 'MAKMP_STATUS',
           module: 'JPP',
           link: '/makmp',
@@ -473,9 +496,11 @@ export default function MakmpJuryPortalPage() {
       }
 
       setReviewToast(
-        `Permohonan "${activeAward.award?.name}" bagi ${activeAward.submission.full_name} telah ${
-          status === 'DISAHKAN' ? 'DILULUSKAN' : 'DITOLAK'
-        }.`
+        t('makmp:toast_review_completed', 'Permohonan "{{awardName}}" bagi {{studentName}} telah {{verdict}}.', {
+          awardName: activeAward.award?.name || '',
+          studentName: activeAward.submission?.full_name || '',
+          verdict: status === 'DISAHKAN' ? t('makmp:verdict_passed_upper', 'DILULUSKAN') : t('makmp:verdict_rejected_upper', 'DITOLAK'),
+        })
       );
       setTimeout(() => setReviewToast(null), 3000);
 
@@ -506,7 +531,7 @@ export default function MakmpJuryPortalPage() {
         setActiveAward(null);
       }
     } catch (err: any) {
-      alert('Ralat: ' + err.message);
+      alert(t('makmp:error_prefix', 'Ralat:') + ' ' + err.message);
     } finally {
       setIsSavingReview(false);
     }
@@ -516,7 +541,7 @@ export default function MakmpJuryPortalPage() {
   const handleUnlockReview = async () => {
     if (!activeAward) return;
     if (!unlockReason.trim()) {
-      alert('Sila nyatakan sebab membuka semula (untuk rekod log).');
+      alert(t('makmp:alert_reopen_reason_required', 'Sila nyatakan sebab membuka semula (untuk rekod log).'));
       return;
     }
 
@@ -524,13 +549,18 @@ export default function MakmpJuryPortalPage() {
     try {
       const res = await unlockAwardReview(juryPin?.pin_code || '', activeAward.id, unlockReason.trim());
       if (!res.success) {
-        alert('Gagal membuka semula: ' + res.message);
+        alert(t('makmp:err_reopen_failed_prefix', 'Gagal membuka semula: ') + res.message);
         return;
       }
 
       setShowUnlockDialog(false);
       setUnlockReason('');
-      setReviewToast(`Permohonan "${activeAward.award?.name}" telah dibuka semula untuk semakan (kali ke-${res.unlockCount ?? '?'}).`);
+      setReviewToast(
+        t('makmp:toast_review_reopened', 'Permohonan "{{awardName}}" telah dibuka semula untuk semakan (kali ke-{{count}}).', {
+          awardName: activeAward.award?.name || '',
+          count: res.unlockCount ?? 1,
+        })
+      );
       setTimeout(() => setReviewToast(null), 4000);
 
       // Muat semula senarai + log
@@ -541,7 +571,7 @@ export default function MakmpJuryPortalPage() {
       // Kemaskini status activeAward ke DALAM_SEMAKAN supaya form boleh edit semula
       setActiveAward((prev) => (prev ? { ...prev, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus } : prev));
     } catch (err: any) {
-      alert('Ralat: ' + err.message);
+      alert(t('makmp:error_prefix', 'Ralat:') + ' ' + err.message);
     } finally {
       setIsUnlocking(false);
     }
@@ -601,10 +631,25 @@ export default function MakmpJuryPortalPage() {
             <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400 mb-4 shadow-lg shadow-amber-500/10">
               <KeyRound className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Portal Pegawai Penilai MAKMP</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {t('panel_evaluation')}
+            </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Sila masukkan Kod PIN 6-Digit yang diperuntukkan bagi kategori anugerah anda untuk memulakan semakan.
+              {t('module_subtitle')}
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                <CheckCircle2 className="w-3 h-3" /> {t('verdict_qualified')}
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                <Clock className="w-3 h-3" /> {t('verdict_pending')}
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
+                <XCircle className="w-3 h-3" /> {t('verdict_ineligible')}
+              </span>
+            </div>
           </div>
 
           <form
@@ -616,7 +661,7 @@ export default function MakmpJuryPortalPage() {
           >
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Kod PIN Juri (6-Digit)
+                {t('makmp:jury_pin_label', 'Kod PIN Juri (6-Digit)')}
               </label>
               <input
                 type="password"
@@ -641,13 +686,13 @@ export default function MakmpJuryPortalPage() {
               className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isVerifyingPin ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-              <span>Sahkan PIN & Masuk</span>
+              <span>{t('makmp:verify_pin_and_login', 'Sahkan PIN & Masuk')}</span>
             </button>
           </form>
 
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
             <Link to="/makmp" className="text-xs text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 transition">
-              ← Kembali ke Borang Pelajar MAKMP
+              {t('makmp:back_to_student_form', '← Kembali ke Borang Pelajar MAKMP')}
             </Link>
           </div>
         </div>
@@ -661,13 +706,13 @@ export default function MakmpJuryPortalPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
-      <MakmpJppHeader subtitle="Portal Juri" />
+      <MakmpJppHeader subtitle={t('makmp:jury_portal_subtitle', 'Portal Juri')} />
       {/* Header Bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80  sticky top-0 z-30">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs shadow-inner">
-              JURI
+              {t('makmp:badge_jury', 'JURI')}
             </div>
             <div>
               <div className="font-bold text-xs md:text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -677,11 +722,11 @@ export default function MakmpJuryPortalPage() {
                 </span>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <span>{juryPin.organization || 'Panel Penilai Rasmi'}</span>
+                <span>{juryPin.organization || t('makmp:official_review_panel', 'Panel Penilai Rasmi')}</span>
                 <span>•</span>
                 <span className="text-amber-600 dark:text-amber-400 font-medium">
                   {juryPin.assigned_categories?.includes('ALL')
-                    ? 'Semua Kategori'
+                    ? t('makmp:all_categories_filter', 'Semua Kategori')
                     : juryPin.assigned_categories?.join(', ')}
                 </span>
               </div>
@@ -691,7 +736,7 @@ export default function MakmpJuryPortalPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => loadApplications(edition.id, juryPin.assigned_categories || [], juryPin.pin_code)}
-              title="Muat Semula Senarai"
+              title={t('makmp:reload_list_tooltip', 'Muat Semula Senarai')}
               className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
             >
               <RefreshCw className={`w-4 h-4 ${loadingAwards ? 'animate-spin' : ''}`} />
@@ -702,7 +747,7 @@ export default function MakmpJuryPortalPage() {
               className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/40 dark:border-rose-500/30 dark:text-rose-300 text-xs font-semibold dark:hover:bg-rose-900/60 transition flex items-center gap-1.5"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Keluar</span>
+              <span>{t('makmp:logout_btn', 'Keluar')}</span>
             </button>
           </div>
         </div>
@@ -728,7 +773,7 @@ export default function MakmpJuryPortalPage() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Semakan Penilaian
+            {t('panel_evaluation')}
           </button>
           <button
             onClick={() => setViewMode('RANKING')}
@@ -738,7 +783,7 @@ export default function MakmpJuryPortalPage() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Keputusan & Ranking
+            {t('makmp:results_and_ranking_tab', 'Keputusan & Ranking')}
           </button>
         </div>
 
@@ -756,12 +801,12 @@ export default function MakmpJuryPortalPage() {
           {/* Status Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {[
-              { value: 'BELUM_SELESAI', label: 'Belum Selesai' },
-              { value: 'ALL', label: 'Semua Status' },
-              { value: 'MENUNGGU', label: 'Menunggu' },
-              { value: 'DALAM_SEMAKAN', label: 'Dalam Semakan' },
-              { value: 'DISAHKAN', label: 'Disahkan' },
-              { value: 'DITOLAK', label: 'Ditolak' },
+              { value: 'BELUM_SELESAI', label: t('makmp:status_pending_completion', 'Belum Selesai') },
+              { value: 'ALL', label: t('makmp:all_status_filter', 'Semua Status') },
+              { value: 'MENUNGGU', label: t('verdict_pending') },
+              { value: 'DALAM_SEMAKAN', label: t('makmp:status_in_review', 'Dalam Semakan') },
+              { value: 'DISAHKAN', label: t('verdict_qualified') },
+              { value: 'DITOLAK', label: t('verdict_ineligible') },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -788,7 +833,7 @@ export default function MakmpJuryPortalPage() {
                 }}
                 className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
               >
-                <option value="ALL">Semua Kumpulan Kategori</option>
+                <option value="ALL">{t('makmp:all_category_groups_filter', 'Semua Kumpulan Kategori')}</option>
                 {uniqueCategoryGroups.map((grp) => (
                   <option key={grp} value={grp as string}>
                     {grp}
@@ -804,7 +849,7 @@ export default function MakmpJuryPortalPage() {
                 onChange={(e) => setFilterAwardId(e.target.value)}
                 className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
               >
-                <option value="ALL">Semua Anugerah</option>
+                <option value="ALL">{t('makmp:all_awards_filter', 'Semua Anugerah')}</option>
                 {uniqueAwards.map((aw) => (
                   <option key={aw.id} value={aw.id}>
                     {aw.name}
@@ -819,7 +864,7 @@ export default function MakmpJuryPortalPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari Calon / Matrik / Anugerah..."
+                placeholder={t('makmp:search_candidate_placeholder', 'Cari Calon / Matrik / Anugerah...')}
                 className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
@@ -830,18 +875,18 @@ export default function MakmpJuryPortalPage() {
         {loadingAwards ? (
           <div className="py-24 text-center">
             <Loader2 className="w-8 h-8 text-amber-500 dark:text-amber-400 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-slate-500 dark:text-slate-400">Memuat turun permohonan anugerah pelajar...</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('makmp:loading_awards_applications', 'Memuat turun permohonan anugerah pelajar...')}</p>
           </div>
         ) : filteredAwards.length === 0 ? (
           <div className="py-20 text-center rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 shadow-sm">
             <Award className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Tiada Permohonan Anugerah Dijumpai</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t('makmp:no_award_apps_found', 'Tiada Permohonan Anugerah Dijumpai')}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {filterStatus === 'BELUM_SELESAI'
-                ? 'Tiada permohonan yang belum selesai disemak. Semua kerja anda telah siap! 🎉'
+                ? t('makmp:all_reviews_completed', 'Tiada permohonan yang belum selesai disemak. Semua kerja anda telah siap!')
                 : filterStatus !== 'ALL'
-                ? `Tiada rekod dengan status "${filterStatus}".`
-                : 'Belum ada pelajar yang memohon bagi kategori anugerah yang diperuntukkan kepada anda.'}
+                ? t('makmp:no_records_with_status', 'Tiada rekod dengan status "{{status}}".', { status: filterStatus })
+                : t('makmp:no_students_applied_assigned_category', 'Belum ada pelajar yang memohon bagi kategori anugerah yang diperuntukkan kepada anda.')}
             </p>
           </div>
         ) : (
@@ -865,23 +910,19 @@ export default function MakmpJuryPortalPage() {
                     <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">
                       {sub?.tracking_code || 'MAKMP-2026'}
                     </span>
-                    <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        awApp.status === 'DISAHKAN'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
-                          : awApp.status === 'DITOLAK'
-                          ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
-                      }`}
-                    >
-                      {awApp.status}
+                    <span className={'text-[10px] font-bold px-2.5 py-0.5 rounded-full ' + getAwardStatusBadgeClass(awApp.status)}>
+                      {awApp.status === 'DISAHKAN'
+                        ? t('verdict_qualified')
+                        : awApp.status === 'DITOLAK'
+                        ? t('verdict_ineligible')
+                        : t('verdict_pending')}
                     </span>
                   </div>
 
                   {/* Award Name & Group */}
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {aw?.category_group || 'ANUGERAH MAKMP'}
+                      {aw?.category_group || t('makmp:makmp_awards_group', 'ANUGERAH MAKMP')}
                     </div>
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition line-clamp-1 mt-0.5">
                       {aw?.name}
@@ -912,21 +953,21 @@ export default function MakmpJuryPortalPage() {
                     <div className="flex items-center gap-1.5">
                       {isReportType ? (
                         <span className="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/20 font-medium">
-                          Laporan & Bukti
+                          {t('makmp:report_and_evidence_badge', 'Laporan & Bukti')}
                         </span>
                       ) : (
                         <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20 font-medium">
-                          Matriks Sijil
+                          {t('makmp:cert_matrix_badge', 'Matriks Sijil')}
                         </span>
                       )}
-                      <span>{docCount} Dokumen</span>
+                      <span>{docCount} {t('makmp:documents_suffix', 'Dokumen')}</span>
                     </div>
 
                     {awApp.status === 'DISAHKAN' ? (
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+{awApp.total_merit_granted} Merit</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+{awApp.total_merit_granted} {t('makmp:merit_label_short', 'Merit')}</span>
                     ) : (
                       <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-0.5 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                        Semak <ChevronRight className="w-3 h-3" />
+                        <span>{t('makmp:review_action_btn', 'Semak')}</span> <ChevronRight className="w-3 h-3" />
                       </span>
                     )}
                   </div>
@@ -943,7 +984,7 @@ export default function MakmpJuryPortalPage() {
       {/* MODAL / SPLIT-VIEW REVIEW WORKBENCH                                  */}
       {/* ==================================================================== */}
       {activeAward && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80  flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-7xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header Dialog */}
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/90 dark:bg-slate-900/90">
@@ -958,7 +999,7 @@ export default function MakmpJuryPortalPage() {
                   {activeAward.award?.target_type === 'ENTITY' && (
                     <span className="text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 border border-purple-200 dark:border-purple-500/20 flex items-center gap-1">
                       <Building className="w-3 h-3" />
-                      {activeAward.entity_name || 'Entiti / Projek'}
+                      <span>{activeAward.entity_name || t('makmp:entity_project_fallback', 'Entiti / Projek')}</span>
                     </span>
                   )}
                 </div>
@@ -1000,8 +1041,11 @@ export default function MakmpJuryPortalPage() {
                         )}
                         <span>
                           {doc.document_type === 'LAPORAN'
-                            ? `1. Laporan PDF`
-                            : `${idx + 1}. ${doc.document_type || 'Dokumen'}`}
+                            ? t('makmp:doc_tab_report_pdf', '1. Laporan PDF')
+                            : t('makmp:doc_tab_indexed', '{{index}}. {{docType}}', {
+                                index: idx + 1,
+                                docType: doc.document_type || t('makmp:document_label', 'Dokumen'),
+                              })}
                         </span>
                       </button>
                     ))}
@@ -1016,7 +1060,7 @@ export default function MakmpJuryPortalPage() {
                           className="text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-transparent transition flex items-center gap-1"
                         >
                           <Maximize2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                          <span className="hidden sm:inline">Skrin Penuh</span>
+                          <span className="hidden sm:inline">{t('makmp:fullscreen_btn', 'Skrin Penuh')}</span>
                         </button>
                         <a
                           href={selectedDocUrl}
@@ -1025,7 +1069,7 @@ export default function MakmpJuryPortalPage() {
                           className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Tab Asal</span>
+                          <span>{t('makmp:original_tab_btn', 'Tab Asal')}</span>
                         </a>
                       </>
                     )}
@@ -1036,7 +1080,7 @@ export default function MakmpJuryPortalPage() {
                 {activeAward.award?.template_url && (
                   <div className="mb-2 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/20 text-sky-800 dark:text-sky-200 text-xs flex items-center justify-between gap-2">
                     <span className="text-[11px] truncate">
-                      Templat Rasmi: {activeAward.award.template_name || 'Format Laporan Standard'}
+                      {t('makmp:official_template_label', 'Templat Rasmi:')} {activeAward.award.template_name || t('makmp:default_report_format', 'Format Laporan Standard')}
                     </span>
                     <a
                       href={activeAward.award.template_url}
@@ -1045,7 +1089,7 @@ export default function MakmpJuryPortalPage() {
                       className="px-2 py-0.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-800 dark:bg-sky-500/20 dark:hover:bg-sky-500/30 dark:text-sky-300 font-bold text-[10px] shrink-0 flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" />
-                      <span>Rujuk Templat</span>
+                      <span>{t('makmp:refer_template_btn', 'Rujuk Templat')}</span>
                     </a>
                   </div>
                 )}
@@ -1060,11 +1104,11 @@ export default function MakmpJuryPortalPage() {
                           <div
                             className="w-full h-full flex items-center justify-center p-2 overflow-auto bg-slate-100 dark:bg-slate-950 cursor-pointer"
                             onClick={() => setIsFullscreenPreview(true)}
-                            title="Klik untuk skrin penuh"
+                            title={t('makmp:click_for_fullscreen', 'Klik untuk skrin penuh')}
                           >
                             <img
                               src={selectedDocUrl}
-                              alt="Dokumen"
+                              alt={t('makmp:document_alt', 'Dokumen')}
                               className="max-w-full max-h-[480px] object-contain rounded shadow-lg hover:scale-[1.02] transition"
                             />
                           </div>
@@ -1073,7 +1117,7 @@ export default function MakmpJuryPortalPage() {
                       return (
                         <iframe
                           src={embedUrl}
-                          title="Pratonton Dokumen"
+                          title={t('makmp:doc_preview_title', 'Pratonton Dokumen')}
                           className="w-full h-full border-none"
                           allow="autoplay"
                         />
@@ -1081,7 +1125,7 @@ export default function MakmpJuryPortalPage() {
                     })()
                   ) : (
                     <div className="text-center text-slate-400 dark:text-slate-500 text-xs">
-                      Pilih dokumen dari senarai di atas untuk memulakan semakan.
+                      {t('makmp:select_doc_to_review_prompt', 'Pilih dokumen dari senarai di atas untuk memulakan semakan.')}
                     </div>
                   )}
                 </div>
@@ -1092,13 +1136,13 @@ export default function MakmpJuryPortalPage() {
                 {/* Header Maklumat Anugerah */}
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Syarat Anugerah:</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('makmp:award_criteria_label', 'Syarat Anugerah:')}</span>
                     <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                      Maksimum Merit: {activeAward.award?.max_merit || 50} Mata
+                      {t('makmp:max_merit_label', 'Maksimum Merit: {{max}} Mata', { max: activeAward.award?.max_merit || 50 })}
                     </span>
                   </div>
                   <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                    {activeAward.award?.doc_instructions || 'Sila semak dokumen sokongan yang dimuat naik.'}
+                    {activeAward.award?.doc_instructions || t('makmp:check_uploaded_docs_instruction', 'Sila semak dokumen sokongan yang dimuat naik.')}
                   </p>
                 </div>
 
@@ -1106,10 +1150,10 @@ export default function MakmpJuryPortalPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Item Dokumen / Sijil ({reviewItems.length})
+                      {t('makmp:doc_cert_items_count', 'Item Dokumen / Sijil ({{count}})', { count: reviewItems.length })}
                     </h4>
                     <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                      Jumlah Merit Dinilai: {currentTotalMerit} Mata
+                      {t('makmp:total_merit_evaluated', 'Jumlah Merit Dinilai: {{total}} Mata', { total: currentTotalMerit })}
                     </div>
                   </div>
 
@@ -1147,16 +1191,8 @@ export default function MakmpJuryPortalPage() {
                               </span>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                                      item.document_type === 'LAPORAN'
-                                        ? 'bg-sky-100 text-sky-800 border border-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30'
-                                        : item.document_type === 'BUKTI_SOKONGAN'
-                                        ? 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30'
-                                        : 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
-                                    }`}
-                                  >
-                                    {item.document_type || 'SIJIL'}
+                                  <span className={'px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ' + getDocBadgeClass(item.document_type)}>
+                                    {item.document_type || t('makmp:doc_type_cert_default', 'SIJIL')}
                                   </span>
                                   {item.source === 'E_AKADEMIK' && (
                                     <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 flex items-center gap-1">
@@ -1169,7 +1205,10 @@ export default function MakmpJuryPortalPage() {
                                   </span>
                                 </div>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                  Tuntutan Calon: {item.peringkat} • {item.pencapaian_type}
+                                  {t('makmp:candidate_claim_label', 'Tuntutan Calon: {{peringkat}} • {{pencapaian}}', {
+                                    peringkat: item.peringkat,
+                                    pencapaian: item.pencapaian_type,
+                                  })}
                                 </div>
                               </div>
                             </div>
@@ -1180,7 +1219,7 @@ export default function MakmpJuryPortalPage() {
                               className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-amber-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-amber-400 border border-slate-200 dark:border-transparent text-[11px] transition flex items-center gap-1 shrink-0"
                             >
                               <Eye className="w-3 h-3" />
-                              <span>Lihat</span>
+                              <span>{t('makmp:view_btn_label', 'Lihat')}</span>
                             </button>
                           </div>
 
@@ -1191,7 +1230,7 @@ export default function MakmpJuryPortalPage() {
                               <div className="flex items-center justify-between text-xs gap-2">
                                 <span className="text-sky-800 dark:text-sky-200 font-semibold flex items-center gap-1.5">
                                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
-                                  Markah Laporan (0-100):
+                                  <span>{t('makmp:report_score_label', 'Markah Laporan (0-100):')}</span>
                                 </span>
                                 <div className="flex items-center gap-2">
                                   <input
@@ -1213,18 +1252,19 @@ export default function MakmpJuryPortalPage() {
                               </div>
                               <div className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
                                 <div>
-                                  Merit auto-dikira: <span className="font-bold text-sky-800 dark:text-sky-300">+{formulaMerit} merit</span>{' '}
-                                  (markah ÷ 10, dibundarkan)
+                                  {t('makmp:auto_calculated_merit_prefix', 'Merit auto-dikira:')}{' '}
+                                  <span className="font-bold text-sky-800 dark:text-sky-300">+{formulaMerit} {t('makmp:merit_unit_lower', 'merit')}</span>{' '}
+                                  {t('makmp:score_div_10_rounded', '(markah ÷ 10, dibundarkan)')}
                                 </div>
                                 {isManualOverride && (
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
                                     className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 underline decoration-dotted transition"
-                                    title="Kembalikan merit ke nilai formula automatik"
+                                    title={t('makmp:reset_to_formula_merit', 'Kembalikan merit ke nilai formula automatik')}
                                   >
                                     <RotateCcw className="w-2.5 h-2.5" />
-                                    Guna Cadangan ({formulaMerit})
+                                    <span>{t('makmp:use_suggestion_btn', 'Guna Cadangan ({{merit}})', { merit: formulaMerit })}</span>
                                   </button>
                                 )}
                               </div>
@@ -1235,7 +1275,7 @@ export default function MakmpJuryPortalPage() {
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                                    Peringkat Sah
+                                    {t('makmp:verified_level_label', 'Peringkat Sah')}
                                   </label>
                                   <select
                                     value={rItem.peringkat}
@@ -1258,7 +1298,7 @@ export default function MakmpJuryPortalPage() {
 
                                 <div>
                                   <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                                    Peranan Kepimpinan
+                                    {t('makmp:leadership_role_label', 'Peranan Kepimpinan')}
                                   </label>
                                   <select
                                     value={rItem.pencapaian_type}
@@ -1273,7 +1313,7 @@ export default function MakmpJuryPortalPage() {
                                   >
                                     {KEPIMPINAN_JPP_OPTIONS.map((o) => (
                                       <option key={o.value} value={o.value}>
-                                        {o.label} ({o.merit} Merit)
+                                        {o.label} ({o.merit} {t('makmp:merit_label_short', 'Merit')})
                                       </option>
                                     ))}
                                   </select>
@@ -1281,18 +1321,19 @@ export default function MakmpJuryPortalPage() {
                               </div>
                               <div className="flex items-center justify-between text-[11px] text-amber-700 dark:text-amber-200/70 pt-1 border-t border-amber-200 dark:border-amber-500/20">
                                 <div>
-                                  Merit = Peringkat + Peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{formulaMerit} merit</span>{' '}
-                                  (maks 10)
+                                  {t('makmp:merit_level_plus_role', 'Merit = Peringkat + Peranan:')}{' '}
+                                  <span className="font-bold text-amber-800 dark:text-amber-300">+{formulaMerit} {t('makmp:merit_unit_lower', 'merit')}</span>{' '}
+                                  {t('makmp:max_10_suffix', '(maks 10)')}
                                 </div>
                                 {isManualOverride && (
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
                                     className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline decoration-dotted transition"
-                                    title="Kembalikan merit ke nilai formula automatik"
+                                    title={t('makmp:reset_to_formula_merit', 'Kembalikan merit ke nilai formula automatik')}
                                   >
                                     <RotateCcw className="w-2.5 h-2.5" />
-                                    Guna Cadangan ({formulaMerit})
+                                    <span>{t('makmp:use_suggestion_btn', 'Guna Cadangan ({{merit}})', { merit: formulaMerit })}</span>
                                   </button>
                                 )}
                               </div>
@@ -1303,7 +1344,7 @@ export default function MakmpJuryPortalPage() {
                             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                               <div>
                                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                                  Peringkat Sah
+                                  {t('makmp:verified_level_label', 'Peringkat Sah')}
                                 </label>
                                 <select
                                   value={rItem.peringkat}
@@ -1326,7 +1367,7 @@ export default function MakmpJuryPortalPage() {
 
                               <div>
                                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                                  Tahap Sah
+                                  {t('makmp:verified_stage_label', 'Tahap Sah')}
                                 </label>
                                 <select
                                   value={rItem.pencapaian_type}
@@ -1349,21 +1390,21 @@ export default function MakmpJuryPortalPage() {
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
                               <div>
-                                Merit = Peringkat + Tahap:{' '}
+                                {t('makmp:merit_level_plus_stage', 'Merit = Peringkat + Tahap:')}{' '}
                                 <span className="font-bold text-sky-800 dark:text-sky-300">
-                                  +{getPeringkatMerit(rItem.peringkat)} + {getTahapMerit(rItem.pencapaian_type)} = {formulaMerit} merit
+                                  +{getPeringkatMerit(rItem.peringkat)} + {getTahapMerit(rItem.pencapaian_type)} = {formulaMerit} {t('makmp:merit_unit_lower', 'merit')}
                                 </span>{' '}
-                                (maks 10)
+                                {t('makmp:max_10_suffix', '(maks 10)')}
                               </div>
                               {isManualOverride && (
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
                                   className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 underline decoration-dotted transition"
-                                  title="Kembalikan merit ke nilai formula automatik"
+                                  title={t('makmp:reset_to_formula_merit', 'Kembalikan merit ke nilai formula automatik')}
                                 >
                                   <RotateCcw className="w-2.5 h-2.5" />
-                                  Guna Cadangan ({formulaMerit})
+                                  <span>{t('makmp:use_suggestion_btn', 'Guna Cadangan ({{merit}})', { merit: formulaMerit })}</span>
                                 </button>
                               )}
                             </div>
@@ -1382,19 +1423,19 @@ export default function MakmpJuryPortalPage() {
                                 className="w-4 h-4 rounded text-amber-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                               />
                               <span className={rItem.is_verified ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}>
-                                {rItem.is_verified ? 'Dokumen Sah Diterima' : 'Dokumen Tidak Diterima'}
+                                {rItem.is_verified ? t('makmp:doc_valid_accepted', 'Dokumen Sah Diterima') : t('makmp:doc_not_accepted', 'Dokumen Tidak Diterima')}
                               </span>
                             </label>
 
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Merit</span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{t('makmp:merit_label_short', 'Merit')}</span>
                               {isManualOverride ? (
                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
-                                  Manual
+                                  {t('makmp:manual_mode_badge', 'Manual')}
                                 </span>
                               ) : (
                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">
-                                  Auto
+                                  {t('makmp:auto_mode_badge', 'Auto')}
                                 </span>
                               )}
                               <input
@@ -1415,7 +1456,7 @@ export default function MakmpJuryPortalPage() {
                                     ? 'border border-amber-400 dark:border-amber-500/50 text-amber-700 dark:text-amber-300 focus:ring-amber-400'
                                     : 'border border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300 focus:ring-emerald-400'
                                 }`}
-                                title={isManualOverride ? "Merit diubah suai secara manual (0-10 per sijil)" : "Merit dikira secara automatik mengikut formula"}
+                                title={isManualOverride ? t('makmp:manual_merit_tooltip', 'Merit diubah suai secara manual (0-10 per sijil)') : t('makmp:auto_merit_tooltip', 'Merit dikira secara automatik mengikut formula')}
                               />
                               <span className="text-[10px] text-slate-400 dark:text-slate-500">/ 10</span>
 
@@ -1424,10 +1465,10 @@ export default function MakmpJuryPortalPage() {
                                   type="button"
                                   onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
                                   className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[10px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:text-amber-300 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 transition shrink-0"
-                                  title={`Kembalikan ke merit automatik (${formulaMerit})`}
+                                  title={t('makmp:reset_to_auto_merit_tooltip', 'Kembalikan ke merit automatik ({{merit}})', { merit: formulaMerit })}
                                 >
                                   <RotateCcw className="w-3 h-3" />
-                                  <span>↺ Auto</span>
+                                  <span>↺ {t('makmp:auto_mode_badge', 'Auto')}</span>
                                 </button>
                               )}
                             </div>
@@ -1442,15 +1483,15 @@ export default function MakmpJuryPortalPage() {
                 <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Pilihan Cepat Sebab Tolak (jika menolak):
+                      {t('makmp:quick_rejection_reason', 'Pilihan Cepat Sebab Tolak (jika menolak):')}
                     </label>
                     <select
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
                     >
-                      <option value="">-- Pilih Sebab Penolakan Rasmi --</option>
-                      {CANNED_REJECTION_REASONS.map((r, i) => (
+                      <option value="">{t('makmp:select_rejection_reason', '-- Pilih Sebab Penolakan Rasmi --')}</option>
+                      {cannedReasons.map((r, i) => (
                         <option key={i} value={r}>
                           {r}
                         </option>
@@ -1460,13 +1501,13 @@ export default function MakmpJuryPortalPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Catatan Tambahan Penilai:
+                      {t('makmp:jury_review_notes', 'Catatan Tambahan Penilai:')}
                     </label>
                     <textarea
                       rows={2}
                       value={reviewNotes}
                       onChange={(e) => setReviewNotes(e.target.value)}
-                      placeholder="Catatan juri atau ulasan kepada calon..."
+                      placeholder={t('makmp:jury_review_notes_placeholder', 'Catatan juri atau ulasan kepada calon...')}
                       className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
@@ -1481,14 +1522,14 @@ export default function MakmpJuryPortalPage() {
                         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
                           <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                             <History className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                            <span>Sejarah Buka Semula ({reviewLog.length})</span>
+                            <span>{t('makmp:unlock_history', 'Sejarah Buka Semula')} ({reviewLog.length})</span>
                           </div>
                           {reviewLog.map((log, i) => (
                             <div key={log.id || i} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
                               <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
                               <span>
-                                {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
-                                {log.reason ? ` • "${log.reason}"` : ''}
+                                {log.jury_name || log.admin_name || t('makmp:admin_fallback', 'Pentadbir')} — {log.previous_status} → {t('makmp:status_in_review_upper', 'DALAM_SEMAKAN')}
+                                {log.reason ? ' • "' + log.reason + '"' : ''}
                                 <span className="block text-[10px] text-slate-400 dark:text-slate-500">
                                   {new Date(log.created_at).toLocaleString('ms-MY')}
                                 </span>
@@ -1501,7 +1542,13 @@ export default function MakmpJuryPortalPage() {
                       <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                         <Lock className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                         <span>
-                          Permohonan ini telah {activeAward.status === 'DISAHKAN' ? 'disahkan' : 'ditolak'}. Anda boleh buka semula jika perlu semakan semula.
+                          {t(
+                            'makmp:submission_already_adjudicated_msg',
+                            'Permohonan ini telah {{status}}. Anda boleh buka semula jika perlu semakan semula.',
+                            {
+                              status: activeAward.status === 'DISAHKAN' ? t('makmp:status_verified_lower', 'disahkan') : t('makmp:status_rejected_lower', 'ditolak'),
+                            }
+                          )}
                         </span>
                       </div>
 
@@ -1512,7 +1559,7 @@ export default function MakmpJuryPortalPage() {
                         className="w-full py-3 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:border-amber-500/40 dark:text-amber-300 font-bold text-xs dark:hover:bg-amber-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        <span>Buka Semula Semakan</span>
+                        <span>{t('makmp:reopen_review_btn', 'Buka Semula Semakan')}</span>
                       </button>
                     </div>
                   ) : (
@@ -1524,7 +1571,7 @@ export default function MakmpJuryPortalPage() {
                         className="flex-1 py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 dark:bg-rose-950/60 dark:border-rose-500/40 dark:text-rose-300 font-bold text-xs dark:hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <XCircle className="w-4 h-4" />
-                        <span>Tolak Anugerah Ini</span>
+                        <span>{t('verdict_ineligible')}</span>
                       </button>
 
                       <button
@@ -1538,7 +1585,7 @@ export default function MakmpJuryPortalPage() {
                         ) : (
                           <CheckCircle2 className="w-4 h-4" />
                         )}
-                        <span>1-Click Sahkan & Seterusnya (+{currentTotalMerit} Merit)</span>
+                        <span>{t('verdict_qualified')} & {t('makmp:and_next_btn', 'Seterusnya')} (+{currentTotalMerit} {t('makmp:merit_label_short', 'Merit')})</span>
                       </button>
                     </div>
                   )}
@@ -1553,18 +1600,18 @@ export default function MakmpJuryPortalPage() {
       {/* FULLSCREEN LIGHTBOX DOCUMENT VIEWER                                  */}
       {/* ==================================================================== */}
       {isFullscreenPreview && selectedDocUrl && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/95  flex flex-col p-3 sm:p-6 animate-fade-in">
+        <div className="fixed inset-0 z-[100] bg-slate-950/95 flex flex-col p-3 sm:p-6 animate-fade-in">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-white shrink-0">
             <div className="flex items-center gap-2">
               <Maximize2 className="w-4 h-4 text-amber-400" />
-              <span className="font-bold text-sm">Pemeriksaan Dokumen Skrin Penuh</span>
+              <span className="font-bold text-sm">{t('makmp:fullscreen_doc_check_title', 'Pemeriksaan Dokumen Skrin Penuh')}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.min(prev + 0.25, 3))}
                 className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono flex items-center gap-1"
-                title="Besarkan"
+                title={t('makmp:zoom_in_tooltip', 'Besarkan')}
               >
                 <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">Zoom In</span>
@@ -1573,7 +1620,7 @@ export default function MakmpJuryPortalPage() {
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.max(prev - 0.25, 0.5))}
                 className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono flex items-center gap-1"
-                title="Kecilkan"
+                title={t('makmp:zoom_out_tooltip', 'Kecilkan')}
               >
                 <ZoomOut className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">Zoom Out</span>
@@ -1583,7 +1630,7 @@ export default function MakmpJuryPortalPage() {
                 onClick={() => setZoomLevel(1)}
                 className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300"
               >
-                Reset
+                {t('makmp:reset_btn', 'Reset')}
               </button>
               <a
                 href={selectedDocUrl}
@@ -1592,7 +1639,7 @@ export default function MakmpJuryPortalPage() {
                 className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Tab Asal</span>
+                <span>{t('makmp:original_tab_btn', 'Tab Asal')}</span>
               </a>
               <button
                 type="button"
@@ -1610,14 +1657,14 @@ export default function MakmpJuryPortalPage() {
             {getEmbeddableCertUrl(selectedDocUrl).isImage ? (
               <img
                 src={selectedDocUrl}
-                alt="Dokumen Fullscreen"
+                alt={t('makmp:fullscreen_doc_alt', 'Dokumen Fullscreen')}
                 style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
                 className="max-w-full max-h-[85vh] object-contain transition-transform duration-150 rounded-lg shadow-2xl"
               />
             ) : (
               <iframe
                 src={getEmbeddableCertUrl(selectedDocUrl).embedUrl}
-                title="Fullscreen Dokumen"
+                title={t('makmp:fullscreen_doc_title', 'Fullscreen Dokumen')}
                 className="w-full h-full border-none rounded-xl bg-slate-900"
                 allow="autoplay"
               />
@@ -1630,13 +1677,13 @@ export default function MakmpJuryPortalPage() {
       {/* DIALOG BUKA SEMULA SEMAKAN (JURI)                                    */}
       {/* ==================================================================== */}
       {showUnlockDialog && activeAward && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/60 dark:bg-slate-950/80  flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/60 dark:bg-slate-950/80 flex items-center justify-center p-4">
           <div className="w-full max-w-md p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <RefreshCw className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  Buka Semula Semakan
+                  <span>{t('makmp:reopen_review_title', 'Buka Semula Semakan')}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {activeAward.award?.name} — {activeAward.submission?.full_name}
@@ -1652,19 +1699,20 @@ export default function MakmpJuryPortalPage() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Sebab Buka Semula (wajib — direkod dalam log):
+                {t('makmp:reopen_reason_label', 'Sebab Buka Semula (wajib — direkod dalam log):')}
               </label>
               <textarea
                 rows={3}
                 value={unlockReason}
                 onChange={(e) => setUnlockReason(e.target.value)}
-                placeholder="cth: Tersilap menandakan dokumen sah, perlu semak semula sijil #2..."
+                placeholder={t('makmp:reopen_reason_placeholder', 'cth: Tersilap menandakan dokumen sah, perlu semak semula sijil #2...')}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-200">
-              ⚠️ Buka semula akan menolak semula merit (jika telah disahkan) dan reset semua tanda dokumen. Tindakan ini akan direkod dalam log sejarah semakan.
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <span>{t('makmp:reopen_warning_text', 'Buka semula akan menolak semula merit (jika telah disahkan) dan reset semua tanda dokumen. Tindakan ini akan direkod dalam log sejarah semakan.')}</span>
             </div>
 
             <div className="flex gap-2">
@@ -1673,7 +1721,7 @@ export default function MakmpJuryPortalPage() {
                 onClick={() => { setShowUnlockDialog(false); setUnlockReason(''); }}
                 className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
               >
-                Batal
+                {t('makmp:cancel_btn', 'Batal')}
               </button>
               <button
                 type="button"
@@ -1682,7 +1730,7 @@ export default function MakmpJuryPortalPage() {
                 className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isUnlocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                <span>Buka Semula</span>
+                <span>{t('makmp:reopen_confirm_btn', 'Buka Semula')}</span>
               </button>
             </div>
           </div>

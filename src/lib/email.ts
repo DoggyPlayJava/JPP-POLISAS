@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 interface SendEmailParams {
   to: string | string[];
@@ -27,7 +30,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
     
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.error || "Gagal menghubungi pelayan emel");
+        throw new Error(data.error || t('common:failed_contact_email_server', "Gagal menghubungi pelayan emel"));
     }
 
     return { success: true, data };

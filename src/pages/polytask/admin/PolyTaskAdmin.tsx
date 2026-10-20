@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Loader2, Search, Briefcase, Users, AlertTriangle, Filter, MoreVertical, XCircle, Trash2 } from 'lucide-react';
@@ -11,6 +12,7 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
 
 export function PolyTaskAdmin() {
+  const { t } = useTranslation(['gig', 'common']);
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [jobs, setJobs] = useState<any[]>([]);
@@ -21,12 +23,12 @@ export function PolyTaskAdmin() {
   useEffect(() => {
     // Basic protection: only JPP or SUPER_ADMIN_JPP can access
     if (profile && profile.role !== 'JPP' && profile.role !== 'SUPER_ADMIN_JPP') {
-      toast.error('Akses Ditolak. Anda bukan ahli JPP.');
+      toast.error(t('gig:admin_access_denied', 'Akses Ditolak. Anda bukan ahli JPP.'));
       navigate('/');
       return;
     }
     fetchJobs();
-  }, [profile, navigate]);
+  }, [profile, navigate, t]);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -46,18 +48,18 @@ export function PolyTaskAdmin() {
   };
 
   const handleCancelJob = async (id: string) => {
-    if (!confirm('Adakah anda pasti mahu membatalkan tugasan ini secara paksa? (Tindakan Admin)')) return;
+    if (!confirm(t('gig:confirm_admin_cancel_job', 'Adakah anda pasti mahu membatalkan tugasan ini secara paksa? (Tindakan Admin)'))) return;
     
-    const toastId = toast.loading('Sedang membatalkan...');
+    const toastId = toast.loading(t('gig:loading_cancelling', 'Sedang membatalkan...'));
     const { error } = await supabase
       .from('polytask_jobs')
       .update({ status: 'CANCELLED' })
       .eq('id', id);
 
     if (error) {
-      toast.error('Gagal membatalkan tugasan', { id: toastId });
+      toast.error(t('gig:error_cancel_job', 'Gagal membatalkan tugasan'), { id: toastId });
     } else {
-      toast.success('Tugasan berjaya dibatalkan', { id: toastId });
+      toast.success(t('gig:job_cancelled_admin_success', 'Tugasan berjaya dibatalkan'), { id: toastId });
       fetchJobs();
     }
   };
@@ -71,10 +73,10 @@ export function PolyTaskAdmin() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'OPEN': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">DIBUKA</span>;
-      case 'IN_PROGRESS': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">SEDANG JALAN</span>;
-      case 'COMPLETED': return <span className="px-3 py-1 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">SELESAI</span>;
-      case 'CANCELLED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">DIBATALKAN</span>;
+      case 'OPEN': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">{t('gig:status_open', 'DIBUKA')}</span>;
+      case 'IN_PROGRESS': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">{t('gig:status_in_progress_short', 'SEDANG JALAN')}</span>;
+      case 'COMPLETED': return <span className="px-3 py-1 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">{t('gig:status_completed_task', 'SELESAI')}</span>;
+      case 'CANCELLED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">{t('gig:status_cancelled_task', 'DIBATALKAN')}</span>;
       default: return null;
     }
   };
@@ -84,12 +86,12 @@ export function PolyTaskAdmin() {
     const counts = { OPEN: 0, IN_PROGRESS: 0, COMPLETED: 0, CANCELLED: 0 };
     jobs.forEach(j => { if (counts[j.status as keyof typeof counts] !== undefined) counts[j.status as keyof typeof counts]++; });
     return [
-      { name: 'DIBUKA', value: counts.OPEN, color: '#34d399' },
-      { name: 'SEDANG JALAN', value: counts.IN_PROGRESS, color: '#818cf8' },
-      { name: 'SELESAI', value: counts.COMPLETED, color: '#94a3b8' },
-      { name: 'BATAL', value: counts.CANCELLED, color: '#fb7185' },
+      { name: t('gig:status_open', 'DIBUKA'), value: counts.OPEN, color: '#34d399' },
+      { name: t('gig:status_in_progress_short', 'SEDANG JALAN'), value: counts.IN_PROGRESS, color: '#818cf8' },
+      { name: t('gig:status_completed_task', 'SELESAI'), value: counts.COMPLETED, color: '#94a3b8' },
+      { name: t('gig:status_cancelled_short', 'BATAL'), value: counts.CANCELLED, color: '#fb7185' },
     ].filter(item => item.value > 0);
-  }, [jobs]);
+  }, [jobs, t]);
 
   const categoryChartData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -128,8 +130,8 @@ export function PolyTaskAdmin() {
               <ArrowLeft className="w-5 h-5 text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white leading-tight">Admin PolyTask</h1>
-              <p className="text-xs text-indigo-400 font-bold tracking-wider uppercase">Kawalan Ekonomi Gig</p>
+              <h1 className="text-2xl font-bold text-white leading-tight">{t('gig:admin_polytask_title', 'Admin PolyTask')}</h1>
+              <p className="text-xs text-indigo-400 font-bold tracking-wider uppercase">{t('gig:gig_economy_control', 'Kawalan Ekonomi Gig')}</p>
             </div>
           </div>
 
@@ -138,7 +140,7 @@ export function PolyTaskAdmin() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input 
                 type="text"
-                placeholder="Cari ID, Tajuk..."
+                placeholder={t('gig:search_tasks_admin_ph', 'Cari ID, Tajuk...')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 outline-none w-full md:w-64"
@@ -149,11 +151,11 @@ export function PolyTaskAdmin() {
               onChange={e => setStatusFilter(e.target.value)}
               className="bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 outline-none appearance-none"
             >
-              <option value="ALL">Semua Status</option>
-              <option value="OPEN">DIBUKA</option>
-              <option value="IN_PROGRESS">SEDANG JALAN</option>
-              <option value="COMPLETED">SELESAI</option>
-              <option value="CANCELLED">DIBATALKAN</option>
+              <option value="ALL">{t('gig:all_statuses', 'Semua Status')}</option>
+              <option value="OPEN">{t('gig:status_open', 'DIBUKA')}</option>
+              <option value="IN_PROGRESS">{t('gig:status_in_progress_short', 'SEDANG JALAN')}</option>
+              <option value="COMPLETED">{t('gig:status_completed_task', 'SELESAI')}</option>
+              <option value="CANCELLED">{t('gig:status_cancelled_task', 'DIBATALKAN')}</option>
             </select>
           </div>
         </div>
@@ -165,18 +167,18 @@ export function PolyTaskAdmin() {
         <div className="mb-6 max-w-sm">
            <FeatureToggle 
              moduleId="polytask" 
-             label="Modul PolyTask" 
-             description="Buka atau tutup fungsi PolyTask kepada pelajar secara global." 
+             label={t('gig:module_polytask_label', 'Modul PolyTask')} 
+             description={t('gig:module_polytask_desc', 'Buka atau tutup fungsi PolyTask kepada pelajar secara global.')} 
            />
         </div>
 
         {/* Stats Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Jumlah Tugasan', value: jobs.length, icon: Briefcase, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-            { label: 'Sedang Aktif', value: jobs.filter(j => j.status === 'OPEN' || j.status === 'IN_PROGRESS').length, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-            { label: 'Pertikaian (Akan Datang)', value: 0, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-            { label: 'Batal', value: jobs.filter(j => j.status === 'CANCELLED').length, icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+            { label: t('gig:stat_total_tasks', 'Jumlah Tugasan'), value: jobs.length, icon: Briefcase, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+            { label: t('gig:stat_active_tasks', 'Sedang Aktif'), value: jobs.filter(j => j.status === 'OPEN' || j.status === 'IN_PROGRESS').length, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            { label: t('gig:stat_disputes', 'Pertikaian (Akan Datang)'), value: 0, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+            { label: t('gig:stat_cancelled_tasks', 'Batal'), value: jobs.filter(j => j.status === 'CANCELLED').length, icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
           ].map((stat, idx) => (
             <div key={idx} className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 md:p-6 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
@@ -195,7 +197,7 @@ export function PolyTaskAdmin() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 shadow-xl col-span-1">
               <h3 className="text-sm font-bold text-slate-300 mb-6 flex items-center gap-2">
-                Taburan Status Tugasan
+                {t('gig:chart_status_distribution', 'Taburan Status Tugasan')}
               </h3>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -233,7 +235,7 @@ export function PolyTaskAdmin() {
 
             <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 shadow-xl col-span-1 lg:col-span-2">
               <h3 className="text-sm font-bold text-slate-300 mb-6 flex items-center gap-2">
-                Kategori Popular
+                {t('gig:chart_popular_categories', 'Kategori Popular')}
               </h3>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -252,9 +254,9 @@ export function PolyTaskAdmin() {
 
             <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-6 shadow-xl col-span-1 lg:col-span-3 mt-4">
               <h3 className="text-sm font-bold text-slate-300 mb-6 flex items-center gap-2">
-                Analitik Waktu Puncak (Heatmap Harian)
+                {t('gig:chart_peak_hours', 'Analitik Waktu Puncak (Heatmap Harian)')}
               </h3>
-              <p className="text-xs text-slate-400 mb-6">Waktu yang paling banyak pelajar memuat naik / meminta tugasan dalam sistem.</p>
+              <p className="text-xs text-slate-400 mb-6">{t('gig:chart_peak_hours_desc', 'Waktu yang paling banyak pelajar memuat naik / meminta tugasan dalam sistem.')}</p>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={peakHoursChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -265,7 +267,7 @@ export function PolyTaskAdmin() {
                       contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                       itemStyle={{ color: '#818cf8', fontWeight: 'bold' }}
                     />
-                    <Line type="monotone" dataKey="jumlah" name="Tugasan Dicipta" stroke="#818cf8" strokeWidth={3} dot={{ r: 4, fill: '#818cf8', strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="jumlah" name={t('gig:chart_tasks_created', 'Tugasan Dicipta')} stroke="#818cf8" strokeWidth={3} dot={{ r: 4, fill: '#818cf8', strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -278,23 +280,23 @@ export function PolyTaskAdmin() {
           {loading ? (
             <div className="p-20 flex flex-col items-center justify-center">
               <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mb-4" />
-              <p className="text-slate-500 text-sm">Memuatkan data...</p>
+              <p className="text-slate-500 text-sm">{t('gig:loading_data', 'Memuatkan data...')}</p>
             </div>
           ) : filteredJobs.length === 0 ? (
             <div className="p-20 text-center text-slate-500">
-              Tiada rekod tugasan ditemui.
+              {t('gig:no_task_records', 'Tiada rekod tugasan ditemui.')}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-slate-800/50 text-slate-400 border-b border-white/5">
                   <tr>
-                    <th className="p-4 font-semibold">Tugasan</th>
-                    <th className="p-4 font-semibold">Status</th>
-                    <th className="p-4 font-semibold">Peminta</th>
-                    <th className="p-4 font-semibold">Tasker</th>
-                    <th className="p-4 font-semibold">Upah (RM)</th>
-                    <th className="p-4 font-semibold text-right">Tindakan</th>
+                    <th className="p-4 font-semibold">{t('gig:th_task', 'Tugasan')}</th>
+                    <th className="p-4 font-semibold">{t('gig:th_status', 'Status')}</th>
+                    <th className="p-4 font-semibold">{t('gig:th_requester', 'Peminta')}</th>
+                    <th className="p-4 font-semibold">{t('gig:th_tasker', 'Tasker')}</th>
+                    <th className="p-4 font-semibold">{t('gig:th_reward', 'Upah (RM)')}</th>
+                    <th className="p-4 font-semibold text-right">{t('gig:th_action', 'Tindakan')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -319,7 +321,7 @@ export function PolyTaskAdmin() {
                               <p className="text-xs text-slate-500">{acceptedBid.tasker?.phone || '-'}</p>
                             </div>
                           ) : (
-                            <span className="text-slate-600 italic text-xs">Belum ada</span>
+                            <span className="text-slate-600 italic text-xs">{t('gig:none_yet', 'Belum ada')}</span>
                           )}
                         </td>
                         <td className="p-4 font-bold text-emerald-400">
@@ -330,7 +332,7 @@ export function PolyTaskAdmin() {
                             <button 
                               onClick={() => navigate(`/polytask/job/${job.id}`)}
                               className="p-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors"
-                              title="Lihat Butiran"
+                              title={t('gig:action_view_details', 'Lihat Butiran')}
                             >
                               <Search className="w-4 h-4" />
                             </button>
@@ -338,7 +340,7 @@ export function PolyTaskAdmin() {
                               <button 
                                 onClick={() => handleCancelJob(job.id)}
                                 className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors"
-                                title="Batal Paksa"
+                                title={t('gig:action_force_cancel', 'Batal Paksa')}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>

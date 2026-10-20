@@ -18,17 +18,19 @@ import type {
   AkademikImportCertItem,
 } from '@/types';
 
+const t = (key: string, fallback: string, _options?: Record<string, unknown>): string => fallback;
+
 // ============================================================================
 // 18 ANUGERAH RASMI MAKMP 2026 (Lampiran IV)
 // ============================================================================
 export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'edition_id' | 'created_at'>[] = [
   // 1. ANUGERAH KOLEJ KEDIAMAN
   {
-    category_group: 'ANUGERAH KOLEJ KEDIAMAN',
-    name: 'Tokoh Kolej Kediaman Terbaik',
+    category_group: t('makmp:cat_residential', 'ANUGERAH KOLEJ KEDIAMAN'),
+    name: t('makmp:award_tokoh_kolej', 'Tokoh Kolej Kediaman Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil pencapaian, aktiviti asrama & bukti penglibatan kolej kediaman',
+    doc_instructions: t('makmp:doc_inst_kolej', 'Sijil pencapaian, aktiviti asrama & bukti penglibatan kolej kediaman'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 10,
@@ -36,50 +38,50 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 2. ANUGERAH KEUSAHAWANAN
   {
-    category_group: 'ANUGERAH KEUSAHAWANAN',
-    name: 'Tokoh Keusahawanan Terbaik',
+    category_group: t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN'),
+    name: t('makmp:award_tokoh_keusahawanan', 'Tokoh Keusahawanan Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil pencapaian keusahawanan, anugerah pitching, atau bukti pengiktirafan rasmi/jualan',
+    doc_instructions: t('makmp:doc_inst_keusahawanan', 'Sijil pencapaian keusahawanan, anugerah pitching, atau bukti pengiktirafan rasmi/jualan'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 20,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH KEUSAHAWANAN',
-    name: 'Inkubator Terbaik',
+    category_group: t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN'),
+    name: t('makmp:award_inkubator', 'Inkubator Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'REPORT_AND_EVIDENCE',
-    template_name: 'Templat Laporan Inkubator Keusahawanan',
+    template_name: t('makmp:template_inkubator', 'Templat Laporan Inkubator Keusahawanan'),
     template_url: 'https://docs.google.com/document/d/1_makmp_inkubator_template/edit',
-    doc_instructions: 'Wajib muat naik Laporan Inkubator mengikut templat rasmi (PDF) berserta bukti aktiviti/jualan',
+    doc_instructions: t('makmp:doc_inst_inkubator', 'Wajib muat naik Laporan Inkubator mengikut templat rasmi (PDF) berserta bukti aktiviti/jualan'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 21,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH KEUSAHAWANAN',
-    name: 'Program Keusahawanan Terbaik',
+    category_group: t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN'),
+    name: t('makmp:award_program_keusahawanan', 'Program Keusahawanan Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'REPORT_AND_EVIDENCE',
-    template_name: 'Templat Laporan Program Keusahawanan',
+    template_name: t('makmp:template_program_keusahawanan', 'Templat Laporan Program Keusahawanan'),
     template_url: 'https://docs.google.com/document/d/1_makmp_program_keusahawanan_template/edit',
-    doc_instructions: 'Wajib muat naik Laporan Program Keusahawanan (PDF) berserta bukti kehadiran & penglibatan peserta',
+    doc_instructions: t('makmp:doc_inst_program_keusahawanan', 'Wajib muat naik Laporan Program Keusahawanan (PDF) berserta bukti kehadiran & penglibatan peserta'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 22,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH KEUSAHAWANAN',
-    name: 'Perusahaan Terbaik',
+    category_group: t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN'),
+    name: t('makmp:award_perusahaan', 'Perusahaan Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'REPORT_AND_EVIDENCE',
-    template_name: 'Templat Laporan Perusahaan Pelajar',
+    template_name: t('makmp:template_perusahaan', 'Templat Laporan Perusahaan Pelajar'),
     template_url: 'https://docs.google.com/document/d/1_makmp_perusahaan_template/edit',
-    doc_instructions: 'Wajib muat naik Laporan Perusahaan (PDF) berserta salinan pendaftaran SSM, rekod jualan, dan foto produk/premis',
+    doc_instructions: t('makmp:doc_inst_perusahaan', 'Wajib muat naik Laporan Perusahaan (PDF) berserta salinan pendaftaran SSM, rekod jualan, dan foto produk/premis'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 23,
@@ -87,44 +89,44 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 3. ANUGERAH SUKAN
   {
-    category_group: 'ANUGERAH SUKAN',
-    name: 'Olahragawan POLISAS',
+    category_group: t('makmp:cat_sports', 'ANUGERAH SUKAN'),
+    name: t('makmp:award_olahragawan', 'Olahragawan POLISAS'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil penyertaan & kejayaan kejohanan sukan rasmi (Politeknik, SUKIPT, Kebangsaan, Antarabangsa)',
+    doc_instructions: t('makmp:doc_inst_sukan', 'Sijil penyertaan & kejayaan kejohanan sukan rasmi (Politeknik, SUKIPT, Kebangsaan, Antarabangsa)'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 30,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH SUKAN',
-    name: 'Olahragawati POLISAS',
+    category_group: t('makmp:cat_sports', 'ANUGERAH SUKAN'),
+    name: t('makmp:award_olahragawati', 'Olahragawati POLISAS'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil penyertaan & kejayaan kejohanan sukan rasmi (Politeknik, SUKIPT, Kebangsaan, Antarabangsa)',
+    doc_instructions: t('makmp:doc_inst_sukan', 'Sijil penyertaan & kejayaan kejohanan sukan rasmi (Politeknik, SUKIPT, Kebangsaan, Antarabangsa)'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 31,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH SUKAN',
-    name: 'Pasukan Terbaik',
+    category_group: t('makmp:cat_sports', 'ANUGERAH SUKAN'),
+    name: t('makmp:award_pasukan_sukan', 'Pasukan Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil kejayaan berpasukan dalam kejohanan sukan rasmi',
+    doc_instructions: t('makmp:doc_inst_pasukan_sukan', 'Sijil kejayaan berpasukan dalam kejohanan sukan rasmi'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 32,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH SUKAN',
-    name: 'Anugerah Atlet Para Terbaik',
+    category_group: t('makmp:cat_sports', 'ANUGERAH SUKAN'),
+    name: t('makmp:award_atlet_para', 'Anugerah Atlet Para Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil kejayaan pertandingan sukan para atlet rasmi',
+    doc_instructions: t('makmp:doc_inst_atlet_para', 'Sijil kejayaan pertandingan sukan para atlet rasmi'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 33,
@@ -132,22 +134,22 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 4. ANUGERAH AKADEMIK
   {
-    category_group: 'ANUGERAH AKADEMIK',
-    name: 'Pelajar Terbaik Siswa',
+    category_group: t('makmp:cat_academic', 'ANUGERAH AKADEMIK'),
+    name: t('makmp:award_pelajar_terbaik_siswa', 'Pelajar Terbaik Siswa'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil Anugerah Dekan, transkrip peperiksaan & sijil akademik berkaitan',
+    doc_instructions: t('makmp:doc_inst_akademik', 'Sijil Anugerah Dekan, transkrip peperiksaan & sijil akademik berkaitan'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 40,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH AKADEMIK',
-    name: 'Pelajar Terbaik Siswi',
+    category_group: t('makmp:cat_academic', 'ANUGERAH AKADEMIK'),
+    name: t('makmp:award_pelajar_terbaik_siswi', 'Pelajar Terbaik Siswi'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil Anugerah Dekan, transkrip peperiksaan & sijil akademik berkaitan',
+    doc_instructions: t('makmp:doc_inst_akademik', 'Sijil Anugerah Dekan, transkrip peperiksaan & sijil akademik berkaitan'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 41,
@@ -155,13 +157,13 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 5. ANUGERAH KELAB DAN PERSATUAN
   {
-    category_group: 'ANUGERAH KELAB DAN PERSATUAN',
-    name: 'Kelab Terbaik',
+    category_group: t('makmp:cat_club', 'ANUGERAH KELAB DAN PERSATUAN'),
+    name: t('makmp:award_kelab_terbaik', 'Kelab Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'REPORT_AND_EVIDENCE',
-    template_name: 'Templat Laporan Tahunan Kelab',
+    template_name: t('makmp:template_kelab', 'Templat Laporan Tahunan Kelab'),
     template_url: 'https://docs.google.com/document/d/1_makmp_kelab_template/edit',
-    doc_instructions: 'Laporan tahunan aktiviti kelab (PDF) berserta senarai pencapaian & penglibatan ahli',
+    doc_instructions: t('makmp:doc_inst_kelab', 'Laporan tahunan aktiviti kelab (PDF) berserta senarai pencapaian & penglibatan ahli'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 50,
@@ -169,22 +171,22 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 6. ANUGERAH JPP
   {
-    category_group: 'ANUGERAH JPP',
-    name: 'Anugerah Kepimpinan JPP Terbaik',
+    category_group: t('makmp:cat_jpp', 'ANUGERAH JPP'),
+    name: t('makmp:award_kepimpinan_jpp', 'Anugerah Kepimpinan JPP Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil watikah pelantikan & portfolio sumbangan kepimpinan JPP',
+    doc_instructions: t('makmp:doc_inst_kepimpinan_jpp', 'Sijil watikah pelantikan & portfolio sumbangan kepimpinan JPP'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 60,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH JPP',
-    name: 'Anugerah EXCO JPP Terbaik',
+    category_group: t('makmp:cat_jpp', 'ANUGERAH JPP'),
+    name: t('makmp:award_exco_jpp', 'Anugerah EXCO JPP Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil penghargaan & rekod keberhasilan pelaksanaan unit EXCO',
+    doc_instructions: t('makmp:doc_inst_exco_jpp', 'Sijil penghargaan & rekod keberhasilan pelaksanaan unit EXCO'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 61,
@@ -192,13 +194,13 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 7. ANUGERAH PROGRAM
   {
-    category_group: 'ANUGERAH PROGRAM',
-    name: 'Anugerah Program Terbaik',
+    category_group: t('makmp:cat_program', 'ANUGERAH PROGRAM'),
+    name: t('makmp:award_program_terbaik', 'Anugerah Program Terbaik'),
     target_type: 'ENTITY',
     doc_requirement_type: 'REPORT_AND_EVIDENCE',
-    template_name: 'Templat Laporan Program POLISAS',
+    template_name: t('makmp:template_program', 'Templat Laporan Program POLISAS'),
     template_url: 'https://docs.google.com/document/d/1_makmp_program_template/edit',
-    doc_instructions: 'Laporan penuh program / kertas kerja & penilaian impak program',
+    doc_instructions: t('makmp:doc_inst_program', 'Laporan penuh program / kertas kerja & penilaian impak program'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 70,
@@ -206,22 +208,22 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 8. ANUGERAH KHAS
   {
-    category_group: 'ANUGERAH KHAS',
-    name: 'Anugerah Khas Pengantarabangsaan',
+    category_group: t('makmp:cat_khas', 'ANUGERAH KHAS'),
+    name: t('makmp:award_pengantarabangsaan', 'Anugerah Khas Pengantarabangsaan'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil penyertaan / pengiktirafan persidangan, pertandingan atau mobiliti antarabangsa',
+    doc_instructions: t('makmp:doc_inst_pengantarabangsaan', 'Sijil penyertaan / pengiktirafan persidangan, pertandingan atau mobiliti antarabangsa'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 80,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH KHAS',
-    name: 'Anugerah Khas Pencapaian Gemilang',
+    category_group: t('makmp:cat_khas', 'ANUGERAH KHAS'),
+    name: t('makmp:award_pencapaian_gemilang', 'Anugerah Khas Pencapaian Gemilang'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Sijil atau bukti pencapaian gemilang yang mengharumkan nama POLISAS di peringkat tinggi',
+    doc_instructions: t('makmp:doc_inst_pencapaian_gemilang', 'Sijil atau bukti pencapaian gemilang yang mengharumkan nama POLISAS di peringkat tinggi'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 81,
@@ -229,22 +231,22 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
   // 9. ANUGERAH UTAMA
   {
-    category_group: 'ANUGERAH UTAMA',
-    name: 'Anugerah Tokoh Siswa Terbaik',
+    category_group: t('makmp:cat_utama', 'ANUGERAH UTAMA'),
+    name: t('makmp:award_tokoh_siswa', 'Anugerah Tokoh Siswa Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Portfolio kepimpinan, kokurikulum, sahsiah, akademik & sijil-sijil pencapaian tertinggi',
+    doc_instructions: t('makmp:doc_inst_tokoh_siswa', 'Portfolio kepimpinan, kokurikulum, sahsiah, akademik & sijil-sijil pencapaian tertinggi'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 90,
     is_active: true,
   },
   {
-    category_group: 'ANUGERAH UTAMA',
-    name: 'Anugerah Tokoh Siswi Terbaik',
+    category_group: t('makmp:cat_utama', 'ANUGERAH UTAMA'),
+    name: t('makmp:award_tokoh_siswi', 'Anugerah Tokoh Siswi Terbaik'),
     target_type: 'INDIVIDUAL',
     doc_requirement_type: 'CERTIFICATES',
-    doc_instructions: 'Portfolio kepimpinan, kokurikulum, sahsiah, akademik & sijil-sijil pencapaian tertinggi',
+    doc_instructions: t('makmp:doc_inst_tokoh_siswa', 'Portfolio kepimpinan, kokurikulum, sahsiah, akademik & sijil-sijil pencapaian tertinggi'),
     max_certificates: 5,
     max_merit: 50,
     sort_order: 91,
@@ -252,16 +254,28 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
 ];
 
+export const PRESET_CATEGORY_GROUPS: string[] = [
+  t('makmp:cat_utama', 'ANUGERAH UTAMA'),
+  t('makmp:cat_academic', 'ANUGERAH AKADEMIK'),
+  t('makmp:cat_sports', 'ANUGERAH SUKAN'),
+  t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN'),
+  t('makmp:cat_club', 'ANUGERAH KELAB DAN PERSATUAN'),
+  t('makmp:cat_jpp', 'ANUGERAH JPP'),
+  t('makmp:cat_program', 'ANUGERAH PROGRAM'),
+  t('makmp:cat_residential', 'ANUGERAH KOLEJ KEDIAMAN'),
+  t('makmp:cat_khas', 'ANUGERAH KHAS'),
+];
+
 export const MAKMP_CATEGORY_GROUP_META: Record<string, { label: string; icon: string; color: string }> = {
-  'ANUGERAH KOLEJ KEDIAMAN': { label: 'Kolej Kediaman', icon: 'Home', color: 'from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-400' },
-  'ANUGERAH KEUSAHAWANAN': { label: 'Keusahawanan', icon: 'Briefcase', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-400' },
-  'ANUGERAH SUKAN': { label: 'Sukan & Rekreasi', icon: 'Trophy', color: 'from-blue-500/20 to-cyan-500/20 border-blue-500/40 text-blue-400' },
-  'ANUGERAH AKADEMIK': { label: 'Akademik', icon: 'GraduationCap', color: 'from-purple-500/20 to-indigo-500/20 border-purple-500/40 text-purple-400' },
-  'ANUGERAH KELAB DAN PERSATUAN': { label: 'Kelab & Persatuan', icon: 'Users', color: 'from-pink-500/20 to-rose-500/20 border-pink-500/40 text-pink-400' },
-  'ANUGERAH JPP': { label: 'Kepimpinan JPP', icon: 'Award', color: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/40 text-yellow-400' },
-  'ANUGERAH PROGRAM': { label: 'Program & Acara', icon: 'Calendar', color: 'from-indigo-500/20 to-violet-500/20 border-indigo-500/40 text-indigo-400' },
-  'ANUGERAH KHAS': { label: 'Anugerah Khas', icon: 'Star', color: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/40 text-cyan-400' },
-  'ANUGERAH UTAMA': { label: 'Anugerah Utama', icon: 'Crown', color: 'from-yellow-400/25 to-amber-600/25 border-yellow-400/50 text-yellow-300' },
+  [t('makmp:cat_residential', 'ANUGERAH KOLEJ KEDIAMAN')]: { label: t('makmp:group_label_residential', 'Kolej Kediaman'), icon: 'Home', color: 'from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-400' },
+  [t('makmp:cat_entrepreneurship', 'ANUGERAH KEUSAHAWANAN')]: { label: t('makmp:group_label_entrepreneurship', 'Keusahawanan'), icon: 'Briefcase', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-400' },
+  [t('makmp:cat_sports', 'ANUGERAH SUKAN')]: { label: t('makmp:group_label_sports', 'Sukan & Rekreasi'), icon: 'Trophy', color: 'from-blue-500/20 to-cyan-500/20 border-blue-500/40 text-blue-400' },
+  [t('makmp:cat_academic', 'ANUGERAH AKADEMIK')]: { label: t('makmp:group_label_academic', 'Akademik'), icon: 'GraduationCap', color: 'from-purple-500/20 to-indigo-500/20 border-purple-500/40 text-purple-400' },
+  [t('makmp:cat_club', 'ANUGERAH KELAB DAN PERSATUAN')]: { label: t('makmp:group_label_club', 'Kelab & Persatuan'), icon: 'Users', color: 'from-pink-500/20 to-rose-500/20 border-pink-500/40 text-pink-400' },
+  [t('makmp:cat_jpp', 'ANUGERAH JPP')]: { label: t('makmp:group_label_jpp', 'Kepimpinan JPP'), icon: 'Award', color: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/40 text-yellow-400' },
+  [t('makmp:cat_program', 'ANUGERAH PROGRAM')]: { label: t('makmp:group_label_program', 'Program & Acara'), icon: 'Calendar', color: 'from-indigo-500/20 to-violet-500/20 border-indigo-500/40 text-indigo-400' },
+  [t('makmp:cat_khas', 'ANUGERAH KHAS')]: { label: t('makmp:group_label_khas', 'Anugerah Khas'), icon: 'Star', color: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/40 text-cyan-400' },
+  [t('makmp:cat_utama', 'ANUGERAH UTAMA')]: { label: t('makmp:group_label_utama', 'Anugerah Utama'), icon: 'Crown', color: 'from-yellow-400/25 to-amber-600/25 border-yellow-400/50 text-yellow-300' },
 };
 
 export function groupAwardsByCategory(awards: MakmpAwardDefinition[]): Record<string, MakmpAwardDefinition[]> {
@@ -374,14 +388,14 @@ export const PERINGKAT_OPTIONS: { value: MakmpPeringkat; label: string }[] = [
 ];
 
 export const PENCAPAIAN_TYPE_OPTIONS: { value: MakmpPencapaianType; label: string }[] = [
-  { value: 'JOHAN', label: 'Johan / Tempat Pertama' },
-  { value: 'NAIB_JOHAN', label: 'Naib Johan / Tempat Ke-2' },
-  { value: 'KETIGA', label: 'Tempat Ke-3' },
-  { value: 'EMAS', label: 'Pingat Emas / Anugerah Khas' },
-  { value: 'PERAK', label: 'Pingat Perak' },
-  { value: 'GANGSA', label: 'Pingat Gangsa' },
-  { value: 'PESERTA', label: 'Penyertaan Sahaja' },
-  { value: 'LAIN', label: 'Lain-lain Pencapaian' },
+  { value: 'JOHAN', label: t('makmp:pencapaian_johan', 'Johan / Tempat Pertama') },
+  { value: 'NAIB_JOHAN', label: t('makmp:pencapaian_naib_johan', 'Naib Johan / Tempat Ke-2') },
+  { value: 'KETIGA', label: t('makmp:pencapaian_ketiga', 'Tempat Ke-3') },
+  { value: 'EMAS', label: t('makmp:pencapaian_emas', 'Pingat Emas / Anugerah Khas') },
+  { value: 'PERAK', label: t('makmp:pencapaian_perak', 'Pingat Perak') },
+  { value: 'GANGSA', label: t('makmp:pencapaian_gangsa', 'Pingat Gangsa') },
+  { value: 'PESERTA', label: t('makmp:pencapaian_peserta', 'Penyertaan Sahaja') },
+  { value: 'LAIN', label: t('makmp:pencapaian_lain', 'Lain-lain Pencapaian') },
 ];
 
 // ============================================================================
@@ -389,11 +403,11 @@ export const PENCAPAIAN_TYPE_OPTIONS: { value: MakmpPencapaianType; label: strin
 // Merit per sijil = Peringkat Sah + Peranan Kepimpinan (max 5 + 5 = 10).
 // ============================================================================
 export const KEPIMPINAN_JPP_OPTIONS: { value: MakmpKepimpinanRole; label: string; merit: number }[] = [
-  { value: 'PENGARAH', label: 'Pengarah / Pengerusi atau setaraf', merit: 5 },
-  { value: 'TIMBALAN', label: 'Timbalan Pengarah / Pengerusi', merit: 4 },
-  { value: 'SETIAUSAHA', label: 'Setiausaha / Bendahari', merit: 3 },
-  { value: 'AJK', label: 'Ahli Jawatankuasa (AJK)', merit: 2 },
-  { value: 'PENYERTAAN', label: 'Penyertaan', merit: 1 },
+  { value: 'PENGARAH', label: t('makmp:role_pengarah', 'Pengarah / Pengerusi atau setaraf'), merit: 5 },
+  { value: 'TIMBALAN', label: t('makmp:role_timbalan', 'Timbalan Pengarah / Pengerusi'), merit: 4 },
+  { value: 'SETIAUSAHA', label: t('makmp:role_setiausaha', 'Setiausaha / Bendahari'), merit: 3 },
+  { value: 'AJK', label: t('makmp:role_ajk', 'Ahli Jawatankuasa (AJK)'), merit: 2 },
+  { value: 'PENYERTAAN', label: t('makmp:role_penyertaan', 'Penyertaan'), merit: 1 },
 ];
 
 // Nilai Peringkat Sah (merit berasingan) untuk pengiraan Kepimpinan JPP.
@@ -419,7 +433,7 @@ export function getKepimpinanJppMerit(peringkat: MakmpPeringkat | string, role: 
 
 // Nama anugerah yang menggunakan matriks peranan kepimpinan JPP (bukan Johan/Pingat).
 export const KEPIMPINAN_JPP_AWARD_NAMES = [
-  'Anugerah Kepimpinan JPP Terbaik',
+  t('makmp:award_kepimpinan_jpp', 'Anugerah Kepimpinan JPP Terbaik'),
 ];
 
 export function isKepimpinanJppAward(awardName?: string | null): boolean {
@@ -427,23 +441,23 @@ export function isKepimpinanJppAward(awardName?: string | null): boolean {
 }
 
 export const JABATAN_OPTIONS = [
-  { value: 'perdagangan', label: 'Jabatan Perdagangan (JP)' },
-  { value: 'mekanikal',   label: 'Jabatan Kejuruteraan Mekanikal (JKM)' },
-  { value: 'makanan',     label: 'Jabatan Teknologi Makanan (JTM)' },
-  { value: 'elektrik',    label: 'Jabatan Kejuruteraan Elektrik (JKE)' },
-  { value: 'awam',        label: 'Jabatan Kejuruteraan Awam (JKA)' },
-  { value: 'ftv',         label: 'Asasi Teknologi Kejuruteraan (FTV)' },
+  { value: 'perdagangan', label: t('makmp:dept_jp', 'Jabatan Perdagangan (JP)') },
+  { value: 'mekanikal',   label: t('makmp:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)') },
+  { value: 'makanan',     label: t('makmp:dept_jtm', 'Jabatan Teknologi Makanan (JTM)') },
+  { value: 'elektrik',    label: t('makmp:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)') },
+  { value: 'awam',        label: t('makmp:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)') },
+  { value: 'ftv',         label: t('makmp:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)') },
 ];
 
 export function getJabatanLabel(deptVal?: string | null): string {
   if (!deptVal) return '—';
   const v = deptVal.toLowerCase();
-  if (v === 'awam' || v === 'jka') return 'Jabatan Kejuruteraan Awam (JKA)';
-  if (v === 'elektrik' || v === 'jke') return 'Jabatan Kejuruteraan Elektrik (JKE)';
-  if (v === 'mekanikal' || v === 'jkm') return 'Jabatan Kejuruteraan Mekanikal (JKM)';
-  if (v === 'perdagangan' || v === 'jp') return 'Jabatan Perdagangan (JP)';
-  if (v === 'makanan' || v === 'jtm') return 'Jabatan Teknologi Makanan (JTM)';
-  if (v === 'ftv') return 'Asasi Teknologi Kejuruteraan (FTV)';
+  if (v === 'awam' || v === 'jka') return t('makmp:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)');
+  if (v === 'elektrik' || v === 'jke') return t('makmp:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)');
+  if (v === 'mekanikal' || v === 'jkm') return t('makmp:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)');
+  if (v === 'perdagangan' || v === 'jp') return t('makmp:dept_jp', 'Jabatan Perdagangan (JP)');
+  if (v === 'makanan' || v === 'jtm') return t('makmp:dept_jtm', 'Jabatan Teknologi Makanan (JTM)');
+  if (v === 'ftv') return t('makmp:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)');
   return deptVal;
 }
 
@@ -473,7 +487,7 @@ export async function uploadMakmpCertificate(
   index: number
 ): Promise<{ url: string; fileId?: string }> {
   const cleanMatric = (matricNo || 'PELAJAR').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  const customName = `MAKMP_${cleanMatric}_SIJIL_${index + 1}_${Date.now()}`;
+  const customName = 'MAKMP_' + cleanMatric + '_CERT_' + (index + 1) + '_' + Date.now();
 
   // 0. Compress IMAGES client-side (browser) dulu supaya upload jadi kecil &
   //    jimat bandwidth. PDF dibiarkan — server akan compress PDF guna ghostscript.
@@ -523,14 +537,14 @@ export async function uploadMakmpCertificate(
 
   // 2. Fallback: Supabase Storage bucket 'reports' (guna file yang dah compressed)
   const ext = fileToUpload.name.split('.').pop() || 'pdf';
-  const path = `makmp_sijil/${customName}.${ext}`;
+  const path = 'makmp_sijil/' + customName + '.' + ext;
   const { error: uploadErr } = await supabase.storage.from('reports').upload(path, fileToUpload, {
     cacheControl: '3600',
     upsert: false,
   });
 
   if (uploadErr) {
-    throw new Error(`Gagal memuat naik fail: ${uploadErr.message}`);
+    throw new Error(t('makmp:err_upload_file_fail', 'Gagal memuat naik fail: {{error}}', { error: uploadErr.message }));
   }
 
   const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(path);
@@ -545,22 +559,23 @@ export function getMakmpWhatsAppUrl(
   categoryName?: string
 ): string {
   const origin = window.location.origin;
-  const statusLink = `${origin}/makmp/status?code=${encodeURIComponent(submission.tracking_code || '')}`;
+  const statusLink = origin + '/makmp/status?code=' + encodeURIComponent(submission.tracking_code || '');
 
-  const message = `*RESIT PENYERAHAN MAKMP POLISAS*\n` +
-    `---------------------------------------\n` +
-    `📌 *Kod Rujukan:* ${submission.tracking_code}\n` +
-    `👤 *Nama:* ${submission.full_name}\n` +
-    `🎓 *No. Matrik:* ${submission.matric_no}\n` +
-    `🏆 *Kategori:* ${categoryName || 'Anugerah Kecemerlangan'}\n` +
-    `🏛️ *Jabatan:* ${submission.department}\n` +
-    `📅 *Tarikh Hantar:* ${new Date().toLocaleDateString('ms-MY')}\n` +
-    `---------------------------------------\n` +
-    `Semak status permohonan anda pada bila-bila masa di pautan ini:\n` +
-    `${statusLink}\n\n` +
-    `_Simpan mesej ini untuk rujukan anda._`;
+  const message =
+    t('makmp:receipt_title', '*RESIT PENYERAHAN MAKMP POLISAS*') + '\n' +
+    '---------------------------------------\n' +
+    t('makmp:receipt_ref_code', '📌 *Kod Rujukan:* {{code}}', { code: submission.tracking_code }) + '\n' +
+    t('makmp:receipt_name', '👤 *Nama:* {{name}}', { name: submission.full_name }) + '\n' +
+    t('makmp:receipt_matric', '🎓 *No. Matrik:* {{matric}}', { matric: submission.matric_no }) + '\n' +
+    t('makmp:receipt_category', '🏆 *Kategori:* {{category}}', { category: categoryName || t('makmp:default_award_title', 'Anugerah Kecemerlangan') }) + '\n' +
+    t('makmp:receipt_dept', '🏛️ *Jabatan:* {{dept}}', { dept: submission.department }) + '\n' +
+    t('makmp:receipt_date', '📅 *Tarikh Hantar:* {{date}}', { date: new Date().toLocaleDateString('ms-MY') }) + '\n' +
+    '---------------------------------------\n' +
+    t('makmp:receipt_check_status_msg', 'Semak status permohonan anda pada bila-bila masa di pautan ini:') + '\n' +
+    statusLink + '\n\n' +
+    t('makmp:receipt_save_msg', '_Simpan mesej ini untuk rujukan anda._');
 
-  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  return 'https://wa.me/?text=' + encodeURIComponent(message);
 }
 
 // ============================================================================
@@ -718,7 +733,7 @@ export async function submitMakmpMultiAwardApplication(params: {
   ]);
 
   if (subErr) {
-    throw new Error(`Gagal menyimpan permohonan utama: ${subErr?.message || 'Ralat pangkalan data'}`);
+    throw new Error(t('makmp:err_save_sub_main', 'Gagal menyimpan permohonan utama: {{error}}', { error: subErr?.message || t('makmp:err_db', 'Ralat pangkalan data') }));
   }
 
   const createdAwards: MakmpSubmissionAward[] = [];
@@ -797,7 +812,7 @@ export async function submitMakmpMultiAwardApplication(params: {
       if (itErr) {
         console.error('[MAKMP Multi-Award Items Error]', itErr);
         // GAGAL menyimpan dokumen = permohonan tak lengkap.
-        throw new Error('Gagal menyimpan dokumen/sijil: ' + itErr.message);
+        throw new Error(t('makmp:err_save_sub_docs', 'Gagal menyimpan dokumen/sijil: {{error}}', { error: itErr.message }));
       }
 
       createdItems.push(
@@ -810,11 +825,13 @@ export async function submitMakmpMultiAwardApplication(params: {
   }
 
   logMakmpAudit({
-    action: 'HANTAR',
+    action: t('makmp:audit_action_submit', 'HANTAR'),
     entityId: submissionId,
-    description:
-      'Pelajar "' + params.submission.full_name + '" menghantar permohonan MAKMP (' +
-      params.submission.tracking_code + ') — ' + createdAwards.length + ' anugerah',
+    description: t('makmp:audit_desc_submit_multi', 'Pelajar "{{name}}" menghantar permohonan MAKMP ({{code}}) — {{count}} anugerah', {
+      name: params.submission.full_name,
+      code: params.submission.tracking_code,
+      count: createdAwards.length,
+    }),
     metadata: {
       submission_id: submissionId,
       student: params.submission.full_name,
@@ -856,7 +873,22 @@ export async function submitMakmpMultiAwardApplication(params: {
 
 /** Hantar borang permohonan MAKMP klasik (Legacy Single-Category Fallback) */
 export async function submitMakmpApplication(params: {
-  submission: Omit<MakmpSubmission, 'id' | 'status' | 'total_merit_awarded' | 'created_at' | 'updated_at'>;
+  submission: Pick<MakmpSubmission,
+    | 'tracking_code'
+    | 'edition_id'
+    | 'category_id'
+    | 'user_id'
+    | 'has_portal_account'
+    | 'full_name'
+    | 'matric_no'
+    | 'email'
+    | 'phone'
+    | 'department'
+    | 'programme_code'
+    | 'semester'
+    | 'intake_year'
+    | 'intake_period'
+  >;
   items: Omit<MakmpSubmissionItem, 'id' | 'submission_id' | 'is_verified' | 'created_at'>[];
 }): Promise<{ submission: MakmpSubmission; items: MakmpSubmissionItem[] }> {
   const { data: subData, error: subErr } = await supabase
@@ -885,15 +917,16 @@ export async function submitMakmpApplication(params: {
     .single();
 
   if (subErr || !subData) {
-    throw new Error(`Gagal menyimpan permohonan: ${subErr?.message || 'Ralat tidak diketahui'}`);
+    throw new Error(t('makmp:err_save_sub', 'Gagal menyimpan permohonan: {{error}}', { error: subErr?.message || t('makmp:unknown_error', 'Ralat tidak diketahui') }));
   }
 
   logMakmpAudit({
-    action: 'HANTAR',
+    action: t('makmp:audit_action_submit', 'HANTAR'),
     entityId: subData.id,
-    description:
-      'Pelajar "' + (subData.full_name || '-') + '" menghantar permohonan MAKMP (' +
-      (subData.tracking_code || '-') + ')',
+    description: t('makmp:audit_desc_submit_single', 'Pelajar "{{name}}" menghantar permohonan MAKMP ({{code}})', {
+      name: subData.full_name || '-',
+      code: subData.tracking_code || '-',
+    }),
     metadata: {
       submission_id: subData.id,
       student: subData.full_name,
@@ -982,7 +1015,7 @@ export async function claimMakmpSubmission(
   if (error) {
     return { success: false, message: error.message };
   }
-  return (data as MakmpClaimResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+  return (data as MakmpClaimResult) || { success: false, message: t('makmp:no_server_response', 'Tiada maklum balas daripada pelayan.') };
 }
 
 /** Fetch submission MAKMP milik pengguna semasa yang masih MENUNGGU (untuk edit).
@@ -1054,7 +1087,7 @@ export async function saveMakmpSubmissionEdit(
   if (error) {
     return { success: false, message: error.message };
   }
-  return (data as MakmpSaveEditResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+  return (data as MakmpSaveEditResult) || { success: false, message: t('makmp:no_server_response', 'Tiada maklum balas daripada pelayan.') };
 }
 
 /** Sahkan Kod PIN Juri MAKMP */
@@ -1076,7 +1109,7 @@ export async function verifyJuryPin(pinCode: string): Promise<{
       isValid: false,
       pinData: null,
       edition: null,
-      message: data?.message || error?.message || 'Kod PIN tidak sah atau telah dinyahaktifkan.',
+      message: data?.message || error?.message || t('makmp:err_invalid_pin', 'Kod PIN tidak sah atau telah dinyahaktifkan.'),
     };
   }
 
@@ -1188,7 +1221,7 @@ export async function unlockJuryAwardReview(awardApplicationId: string): Promise
   }
 
   if (data && data.success === false) {
-    return { success: false, message: data.message || 'Gagal membuka semula semakan.' };
+    return { success: false, message: data.message || t('makmp:err_reopen_review', 'Gagal membuka semula semakan.') };
   }
 
   return { success: true };
@@ -1211,7 +1244,7 @@ export async function unlockAwardReview(
   }
 
   if (data && data.success === false) {
-    return { success: false, message: data.message || 'Gagal membuka semula semakan.' };
+    return { success: false, message: data.message || t('makmp:err_reopen_review', 'Gagal membuka semula semakan.') };
   }
 
   return { success: true, unlockCount: data?.unlock_count };
@@ -1259,7 +1292,7 @@ export async function saveJuryAwardReview(params: {
   }
 
   if (data && data.success === false) {
-    return { success: false, message: data.message || 'Gagal menyimpan keputusan.' };
+    return { success: false, message: data.message || t('makmp:err_save_verdict', 'Gagal menyimpan keputusan.') };
   }
 
   return { success: true };
@@ -1439,7 +1472,7 @@ export async function saveMakmpAwardRanking(
   if (error) {
     return { success: false, message: error.message };
   }
-  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+  return (data as any) || { success: false, message: t('makmp:no_server_response', 'Tiada maklum balas daripada pelayan.') };
 }
 
 /** Sahkan & kunci keputusan anugerah. Pegawai (role) ATAU juri (PIN). */
@@ -1464,7 +1497,7 @@ export async function finalizeMakmpAward(
   if (error) {
     return { success: false, message: error.message };
   }
-  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+  return (data as any) || { success: false, message: t('makmp:no_server_response', 'Tiada maklum balas daripada pelayan.') };
 }
 
 /** Pelajar (pemenang) submit no IC. Semak deadline + status DIJEMPUT di DB. */
@@ -1479,7 +1512,7 @@ export async function submitMakmpWinnerInfo(
   if (error) {
     return { success: false, message: error.message };
   }
-  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+  return (data as any) || { success: false, message: t('makmp:no_server_response', 'Tiada maklum balas daripada pelayan.') };
 }
 
 

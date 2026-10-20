@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PartyPopper,
@@ -67,6 +68,7 @@ export function CampusCampaignCarousel({
   onOpenAppealModal,
   className,
 }: CampusCampaignCarouselProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -170,7 +172,7 @@ export function CampusCampaignCarousel({
         <div
           className="flex items-center justify-center gap-1.5 mt-2.5"
           role="tablist"
-          aria-label="Navigasi Kempen"
+          aria-label={t('portal:campaign_nav_aria', 'Navigasi Kempen')}
         >
           {slides.map((slide, idx) => (
             <button

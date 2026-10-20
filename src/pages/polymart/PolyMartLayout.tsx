@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -21,14 +22,14 @@ export const PM_GLOW     = 'rgba(245,158,11,0.3)';
 export const PM_GRADIENT = 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)';
 
 export const CATEGORY_LIST = [
-  { key: 'all',          label: 'Semua',        icon: LayoutGrid },
-  { key: 'Makanan',      label: 'Makanan',      icon: Utensils },
-  { key: 'Minuman',      label: 'Minuman',      icon: Coffee },
-  { key: 'Aksesori',     label: 'Aksesori',     icon: Sparkles },
-  { key: 'Perkhidmatan', label: 'Servis',       icon: Wrench },
-  { key: 'Pakaian',      label: 'Pakaian',      icon: Shirt },
-  { key: 'Elektronik',   label: 'Gadget',       icon: Smartphone },
-  { key: 'Umum',         label: 'Umum',         icon: Package },
+  { key: 'all',          label: 'Semua',        labelKey: 'cat_all', icon: LayoutGrid },
+  { key: 'Makanan',      label: 'Makanan',      labelKey: 'cat_food', icon: Utensils },
+  { key: 'Minuman',      label: 'Minuman',      labelKey: 'cat_beverage', icon: Coffee },
+  { key: 'Aksesori',     label: 'Aksesori',     labelKey: 'cat_accessories', icon: Sparkles },
+  { key: 'Perkhidmatan', label: 'Servis',       labelKey: 'cat_services', icon: Wrench },
+  { key: 'Pakaian',      label: 'Pakaian',      labelKey: 'cat_clothing', icon: Shirt },
+  { key: 'Elektronik',   label: 'Gadget',       labelKey: 'cat_gadgets', icon: Smartphone },
+  { key: 'Umum',         label: 'Umum',         labelKey: 'cat_general', icon: Package },
 ];
 
 export const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -67,6 +68,7 @@ export const usePolymart = () => useContext(PolymartContext);
 
 // ── Layout ─────────────────────────────────────────────────────────────────────
 export function PolyMartLayout() {
+  const { t } = useTranslation(['commerce', 'nav', 'common']);
   const { user, hasKeusahawananAccess, isSuperAdmin } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -95,8 +97,8 @@ export function PolyMartLayout() {
       try {
         if (localStorage.getItem('use_mock_auth') === 'true') {
           setSearchResults([
-            { id: 'mock-prod-1', name: 'Nasi Lemak Ayam Goreng', price: 5.5, image_url: null, category: 'Makanan', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } },
-            { id: 'mock-prod-2', name: 'Kopi Ais Kaw', price: 3.0, image_url: null, category: 'Minuman', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } }
+            { id: 'mock-prod-1', name: 'Nasi Lemak Ayam Goreng', price: 5.5, image_url: null, category: 'Makanan', keusahawanan_businesses: { name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah') } },
+            { id: 'mock-prod-2', name: 'Kopi Ais Kaw', price: 3.0, image_url: null, category: 'Minuman', keusahawanan_businesses: { name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah') } }
           ]);
           setIsSearching(false);
           return;
@@ -218,7 +220,7 @@ export function PolyMartLayout() {
               <button
                 onClick={() => isHome ? navigate(user ? '/portal' : '/') : navigate(-1)}
                 className="w-9 h-9 rounded-full bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 flex items-center justify-center shrink-0 active:scale-95 transition-all cursor-pointer group"
-                aria-label="Kembali"
+                aria-label={t('commerce:back_btn', 'Kembali')}
               >
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
@@ -250,7 +252,7 @@ export function PolyMartLayout() {
                 className="flex sm:hidden flex-1 min-w-0 items-center gap-2.5 h-10 px-3 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 shadow-xs text-muted-foreground/60 cursor-pointer"
               >
                 <Search className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="text-xs text-left truncate flex-1">Cari makanan, servis, pakaian...</span>
+                <span className="text-xs text-left truncate flex-1">{t('commerce:search_placeholder_short', 'Cari makanan, servis, pakaian...')}</span>
               </button>
 
               <div className="hidden sm:flex flex-1 items-center gap-2.5 h-10 px-4 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/25 shadow-xs transition-all">
@@ -258,7 +260,7 @@ export function PolyMartLayout() {
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Cari makanan, minuman, servis, pakaian..."
+                  placeholder={t('commerce:search_placeholder', 'Cari makanan, minuman, servis, pakaian...')}
                   className="flex-1 text-xs bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60"
                 />
                 {searchQuery && (
@@ -273,7 +275,7 @@ export function PolyMartLayout() {
                 <button
                   onClick={startTour}
                   className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-amber-500/80 hover:text-amber-500 transition-all active:scale-95 cursor-pointer"
-                  aria-label="Panduan PolyMart"
+                  aria-label={t('commerce:polymart_tour_guide', 'Panduan PolyMart')}
                 >
                   <HelpCircle className="w-4 h-4" />
                 </button>
@@ -284,7 +286,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/troli')}
                       className="tour-polymart-cart relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
-                      aria-label="Troli Beli-belah"
+                      aria-label={t('commerce:shopping_cart', 'Troli Beli-belah')}
                     >
                       <ShoppingCart className="w-4 h-4" />
                       {cartCount > 0 && (
@@ -298,7 +300,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/pesanan-saya')}
                       className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
-                      aria-label="Pesanan Saya"
+                      aria-label={t('commerce:my_orders_title', 'Pesanan Saya')}
                     >
                       <Package className="w-4 h-4" />
                       {myActiveOrdersCount > 0 && (
@@ -312,7 +314,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/wishlist')}
                       className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-rose-400/40 text-muted-foreground hover:text-rose-500 transition-all active:scale-95 cursor-pointer"
-                      aria-label="Senarai Hajat"
+                      aria-label={t('commerce:wishlist', 'Senarai Hajat')}
                     >
                       <Heart className="w-4 h-4" />
                     </button>
@@ -331,10 +333,10 @@ export function PolyMartLayout() {
                       <button
                         onClick={() => navigate('/polymart/vendor')}
                         className="tour-polymart-vendor relative w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
-                        title="Kedai Saya"
+                        title={t('commerce:my_store_title', 'Kedai Saya')}
                       >
                         <Store className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">Kedai</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">{t('commerce:store_nav_label', 'Kedai')}</span>
                         {pendingVendorCount > 0 && (
                           <span className="absolute -top-1 -right-1 sm:static min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                             {pendingVendorCount}
@@ -371,7 +373,7 @@ export function PolyMartLayout() {
                     className="flex items-center gap-1.5 h-9 px-3.5 rounded-full text-xs font-black text-white transition-all hover:brightness-110 active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer"
                     style={{ background: PM_GRADIENT }}>
                     <LogIn className="w-3.5 h-3.5" />
-                    <span>Log Masuk</span>
+                    <span>{t('common:login', 'Log Masuk')}</span>
                   </button>
                 )}
               </div>
@@ -396,7 +398,7 @@ export function PolyMartLayout() {
                       )}
                     >
                       <Icon className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-slate-950' : 'text-muted-foreground')} />
-                      <span>{cat.label}</span>
+                      <span>{cat.labelKey ? t(`commerce:${cat.labelKey}`, cat.label) : cat.label}</span>
                     </motion.button>
                   );
                 })}
@@ -431,7 +433,7 @@ export function PolyMartLayout() {
                     autoFocus
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Cari produk..."
+                    placeholder={t('commerce:search_products_placeholder', 'Cari produk...')}
                     className="flex-1 text-[13px] font-medium bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
                   />
                   {searchQuery && (
@@ -446,7 +448,7 @@ export function PolyMartLayout() {
               <div className="flex-1 overflow-y-auto p-5">
                 {!searchQuery.trim() ? (
                   <>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Penapis Kategori</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">{t('commerce:category_filter', 'Penapis Kategori')}</p>
                     <div className="flex flex-col gap-2">
                       {CATEGORY_LIST.map(cat => {
                         const Icon = cat.icon;
@@ -474,7 +476,7 @@ export function PolyMartLayout() {
                             )}>
                               <Icon className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-semibold flex-1">{cat.label}</span>
+                            <span className="text-sm font-semibold flex-1">{cat.labelKey ? t(`commerce:${cat.labelKey}`, cat.label) : cat.label}</span>
                             {isActive && (
                               <div className="w-2 h-2 rounded-full bg-amber-500 shadow-xs" />
                             )}
@@ -486,8 +488,8 @@ export function PolyMartLayout() {
                 ) : (
                   <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-between">
-                      <span>Hasil Carian Padanan</span>
-                      {isSearching && <span className="text-[9px] lowercase font-medium text-amber-500 animate-pulse">mencari...</span>}
+                      <span>{t('commerce:matching_search_results', 'Hasil Carian Padanan')}</span>
+                      {isSearching && <span className="text-[9px] lowercase font-medium text-amber-500 animate-pulse">{t('commerce:searching_dots', 'mencari...')}</span>}
                     </p>
 
                     {isSearching && searchResults.length === 0 ? (
@@ -495,7 +497,7 @@ export function PolyMartLayout() {
                         <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
                           <Search className="w-4 h-4" />
                         </div>
-                        <p className="text-xs text-muted-foreground/60 font-medium">Sedang mencari produk...</p>
+                        <p className="text-xs text-muted-foreground/60 font-medium">{t('commerce:searching_products', 'Sedang mencari produk...')}</p>
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="space-y-2.5">
@@ -519,7 +521,7 @@ export function PolyMartLayout() {
                               <h4 className="text-xs font-bold text-foreground truncate leading-snug">{prod.name}</h4>
                               <p className="text-[9px] text-muted-foreground/60 font-semibold mt-0.5 truncate flex items-center gap-1">
                                 <Store className="w-2.5 h-2.5" />
-                                {prod.keusahawanan_businesses?.name || 'Perniagaan Pelajar'}
+                                {prod.keusahawanan_businesses?.name || t('commerce:student_business_default', 'Perniagaan Pelajar')}
                               </p>
                             </div>
                             <div className="text-right shrink-0">
@@ -536,15 +538,15 @@ export function PolyMartLayout() {
                           }}
                           className="w-full py-3 mt-2 rounded-2xl border border-dashed border-amber-500/30 text-[11px] font-black uppercase tracking-wider text-amber-500 hover:bg-amber-500/5 transition-all flex items-center justify-center gap-1.5"
                         >
-                          <Search className="w-3.5 h-3.5" /> Lihat Semua Hasil Carian
+                          <Search className="w-3.5 h-3.5" /> {t('commerce:view_all_results', 'Lihat Semua Hasil Carian')}
                         </button>
                       </div>
                     ) : (
                       !isSearching && (
                         <div className="text-center py-10 rounded-2xl border border-dashed border-border p-4">
                           <ShoppingBag className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
-                          <p className="text-xs font-bold text-muted-foreground">Tiada hasil carian ditemui</p>
-                          <p className="text-[10px] text-muted-foreground/50 mt-1 leading-normal">Cuba ejaan atau produk lain seperti "baju", "air" atau "sambal".</p>
+                          <p className="text-xs font-bold text-muted-foreground">{t('commerce:no_results_found', 'Tiada hasil carian ditemui')}</p>
+                          <p className="text-[10px] text-muted-foreground/50 mt-1 leading-normal">{t('commerce:search_suggestion_tip', 'Cuba ejaan atau produk lain seperti "baju", "air" atau "sambal".')}</p>
                         </div>
                       )
                     )}
@@ -565,12 +567,12 @@ export function PolyMartLayout() {
             <BottomNav 
               customLinks={{
                 left: [
-                  { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: false },
-                  { icon: Heart, label: 'Kegemaran', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/wishlist')}`) : navigate('/polymart/wishlist'), isActive: location.pathname.includes('/polymart/wishlist') }
+                  { icon: Home, label: t('nav:primary_nav', 'Utama'), onClick: () => navigate('/portal'), isActive: false },
+                  { icon: Heart, label: t('commerce:nav_favorites', 'Kegemaran'), onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/wishlist')}`) : navigate('/polymart/wishlist'), isActive: location.pathname.includes('/polymart/wishlist') }
                 ],
                 right: [
-                  { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
-                  { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
+                  { icon: ShoppingCart, label: t('commerce:nav_cart', 'Troli'), onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
+                  { icon: Package, label: t('commerce:nav_orders', 'Pesanan'), onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
                 ]
               }}
             />

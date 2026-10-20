@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ interface MeritAssignerProps {
 }
 
 export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssignerProps) {
+  const { t } = useTranslation(['common', 'kpp']);
   const { user, profile } = useAuth();
   const [points, setPoints] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,11 +27,11 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSelf) {
-      toast.error('Anda tidak boleh memberikan merit kepada diri sendiri tanpa kelulusan JPP.');
+      toast.error(t('common:merit_self_assign_error', 'Anda tidak boleh memberikan merit kepada diri sendiri tanpa kelulusan JPP.'));
       return;
     }
     if (points <= 0) {
-      toast.error('Sila masukkan jumlah merit yang sah (>0).');
+      toast.error(t('common:merit_invalid_amount', 'Sila masukkan jumlah merit yang sah (>0).'));
       return;
     }
 
@@ -40,8 +42,8 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
         .from('club_tasks')
         .insert({
           club_id: member.club_id,
-          title: `[MERIT] Penambahan Kepada ${member.full_name}`,
-          description: `Pemberian skor merit manual oleh Presiden. Sila sahkan kelulusan ini.`,
+          title: t('common:merit_addition_to', '[MERIT] Penambahan Kepada {{name}}', { name: member.full_name }),
+          description: t('common:merit_admin_approval_note', 'Pemberian skor merit manual oleh Presiden. Sila sahkan kelulusan ini.'),
           merit_points: points,
           assigned_to: member.id,
           created_by: user?.id,
@@ -52,12 +54,12 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
 
       if (insertError) throw insertError;
 
-      toast.success(`Permohonan ${points} merit untuk ${member.full_name} dihantar kepada Penasihat untuk kelulusan!`);
+      toast.success(t('common:merit_request_sent_advisor', 'Permohonan {{points}} merit untuk {{name}} dihantar kepada Penasihat untuk kelulusan!', { points, name: member.full_name }));
       setPoints(0);
       onRefresh();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Gagal mengemaskini merit.');
+      toast.error(error.message || t('common:merit_update_failed', 'Gagal mengemaskini merit.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -72,11 +74,11 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
               <Medal size={28} />
               <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-background animate-pulse" />
             </div>
-            <DialogTitle className="text-3xl font-black tracking-tighter">Penganugerahan Merit</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tighter">{t('common:merit_award_title', 'Penganugerahan Merit')}</DialogTitle>
           </DialogHeader>
           <div className="mt-4 p-4 rounded-2xl bg-card border border-border shadow-sm">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">
-              Penerima
+              {t('common:recipient', 'Penerima')}
             </p>
             <p className="font-bold text-sm text-foreground truncate">{member.full_name}</p>
             <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">{member.role}</p>
@@ -86,7 +88,7 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-              Jumlah Merit Ditambah
+              {t('common:merit_points_added', 'Jumlah Merit Ditambah')}
             </label>
             <div className="relative">
               <Input
@@ -109,7 +111,7 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
           <div className="space-y-2">
              {isSelf && (
                 <p className="text-[10px] font-bold text-rose-500 uppercase flex items-center gap-1 bg-rose-50 p-2 rounded-xl">
-                    ⚠️ Pengecualian Sistem: Ahli Majlis tidak boleh menganugerahkan merit bersendirian.
+                    {t('common:merit_exception_council_note', '⚠️ Pengecualian Sistem: Ahli Majlis tidak boleh menganugerahkan merit bersendirian.')}
                 </p>
              )}
             <Button
@@ -118,7 +120,7 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
               className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-white bg-primary"
             >
               {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : (
-                  <>Sahkan Merit <ArrowUpRight className="ml-2 w-4 h-4" /></>
+                  <>{t('common:merit_confirm_btn', 'Sahkan Merit')} <ArrowUpRight className="ml-2 w-4 h-4" /></>
               )}
             </Button>
           </div>

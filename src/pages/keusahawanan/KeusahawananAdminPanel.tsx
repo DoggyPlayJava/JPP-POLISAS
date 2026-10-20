@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,38 +39,41 @@ interface Business {
 }
 
 // ─── Status Meta ──────────────────────────────────────────────────────────────
-const STATUS_META: Record<BusinessStatus, { label: string; dotColor: string; badgeCls: string }> = {
+const getStatusMeta = (t: any): Record<BusinessStatus, { label: string; dotColor: string; badgeCls: string }> => ({
   PENDING_INTERVIEW: {
-    label: 'Menunggu Temuduga',
+    label: t('keusahawanan:admin_status_pending', 'Menunggu Temuduga'),
     dotColor: '#f59e0b',
     badgeCls: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   },
   ACTIVE: {
-    label: 'Aktif',
+    label: t('keusahawanan:admin_status_active', 'Aktif'),
     dotColor: '#22c55e',
     badgeCls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   },
   REJECTED: {
-    label: 'Ditolak',
+    label: t('keusahawanan:admin_status_rejected', 'Ditolak'),
     dotColor: '#ef4444',
     badgeCls: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
   },
-};
+});
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function BusinessDetailModal({
+
   business,
   onClose,
   onApprove,
   onReject,
 }: {
+  key?: React.Key;
   business: Business;
   onClose: () => void;
   onApprove: (b: Business) => Promise<void>;
   onReject: (b: Business) => Promise<void>;
 }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const [acting, setActing] = useState(false);
-  const sm = STATUS_META[business.status];
+  const sm = getStatusMeta(t)[business.status];
 
   const act = async (fn: () => Promise<void>) => {
     setActing(true);
@@ -94,7 +98,7 @@ function BusinessDetailModal({
         <div className="relative h-28 bg-gradient-to-br from-emerald-500/80 to-teal-700 p-6 flex items-end gap-3">
           <div className="absolute top-4 right-4">
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${sm.badgeCls}`}>
-              {sm.label}
+              {t('keusahawanan:admin_status_' + business.status.toLowerCase(), sm.label)}
             </span>
           </div>
           {business.logo_url ? (
@@ -105,7 +109,7 @@ function BusinessDetailModal({
             </div>
           )}
           <div className="text-white">
-            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Perniagaan Pelajar</p>
+            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('keusahawanan:admin_student_business', 'Perniagaan Pelajar')}</p>
             <h2 className="text-lg font-black leading-tight text-white">{business.name}</h2>
           </div>
         </div>
@@ -114,19 +118,19 @@ function BusinessDetailModal({
         <div className="p-6 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Pemilik</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_owner', 'Pemilik')}</p>
               <p className="text-sm font-black text-white truncate">{business.owner_name ?? '—'}</p>
               <p className="text-[10px] text-white/50">{business.owner_matric ?? ''}</p>
             </div>
             <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Email</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_email', 'Email')}</p>
               <p className="text-[11px] font-bold text-white break-all">{business.owner_email ?? '—'}</p>
             </div>
           </div>
 
           {business.description && (
             <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Penerangan</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_description', 'Penerangan')}</p>
               <p className="text-sm text-white/70 leading-relaxed">{business.description}</p>
             </div>
           )}
@@ -135,20 +139,20 @@ function BusinessDetailModal({
             <div className="bg-white/[0.03] rounded-2xl p-3 flex items-center gap-2 border border-white/[0.04]">
               <Users className="w-4 h-4 text-white/30" />
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Bilangan Staf</p>
-                <p className="text-sm font-black text-white">{business.staff_count} orang</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">{t('keusahawanan:admin_staff_count', 'Bilangan Staf')}</p>
+                <p className="text-sm font-black text-white">{t('keusahawanan:admin_staff_count_val', '{{count}} orang', { count: business.staff_count })}</p>
               </div>
             </div>
 
             <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Pendaftaran</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_registration', 'Pendaftaran')}</p>
               <p className="text-sm font-black text-white">
                 {business.registration_type === 'SSM' ? 'SSM' : business.registration_type === 'EMS' ? 'EMS' : 'PUSKEP'} 
                 {business.ssm_registration_number ? ` - ${business.ssm_registration_number}` : ''}
               </p>
               {business.registration_history && business.registration_history.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-white/10">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Rekod Lampau</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_past_records', 'Rekod Lampau')}</p>
                   {business.registration_history.map((hist: any, i: number) => (
                     <p key={i} className="text-[10px] text-white/60">
                       {hist.type} - {hist.number}
@@ -160,7 +164,7 @@ function BusinessDetailModal({
 
             {business.interview_date && (
               <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Tarikh Temuduga</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_interview_date', 'Tarikh Temuduga')}</p>
                 <p className="text-sm font-black text-white">
                   {new Date(business.interview_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
@@ -170,7 +174,7 @@ function BusinessDetailModal({
 
           {business.mentors && business.mentors.length > 0 && (
             <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.04] mb-6">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 border-b border-white/10 pb-2">Senarai Mentor Penasihat</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 border-b border-white/10 pb-2">{t('keusahawanan:admin_advisory_mentors', 'Senarai Mentor Penasihat')}</p>
               <div className="space-y-3">
                 {business.mentors.map((m, i) => (
                   <div key={i} className="flex flex-col">
@@ -183,7 +187,7 @@ function BusinessDetailModal({
           )}
 
           <p className="text-[10px] text-white/30 text-right">
-            Didaftar: {new Date(business.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {t('keusahawanan:admin_registered_date', 'Didaftar: {{date}}', { date: new Date(business.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }) })}
           </p>
         </div>
 
@@ -194,12 +198,12 @@ function BusinessDetailModal({
               <Button disabled={acting} variant="outline"
                 className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
                 onClick={() => act(() => onReject(business))}>
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Tolak
+                <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reject', 'Tolak')}
               </Button>
               <Button disabled={acting}
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
                 onClick={() => act(() => onApprove(business))}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Luluskan
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_approve', 'Luluskan')}
               </Button>
             </>
           )}
@@ -208,9 +212,9 @@ function BusinessDetailModal({
               <Button disabled={acting} variant="outline"
                 className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
                 onClick={() => act(() => onReject(business))}>
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Tolak / Buang Aktif
+                <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_deactivate', 'Tolak / Buang Aktif')}
               </Button>
-              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">Tutup</Button>
+              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('common:close', 'Tutup')}</Button>
             </>
           )}
           {business.status === 'REJECTED' && (
@@ -218,9 +222,9 @@ function BusinessDetailModal({
               <Button disabled={acting}
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
                 onClick={() => act(() => onApprove(business))}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Aktifkan Semula
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reactivate', 'Aktifkan Semula')}
               </Button>
-              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">Tutup</Button>
+              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('keusahawanan:close', 'Tutup')}</Button>
             </>
           )}
         </div>
@@ -232,6 +236,7 @@ function BusinessDetailModal({
 
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 export function KeusahawananAdminPanel() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const { color } = useExcoTheme();
   
@@ -308,7 +313,7 @@ export function KeusahawananAdminPanel() {
 
       setBusinesses(mapped);
     } catch (e: any) {
-      toast.error('Gagal memuatkan data perniagaan: ' + (e.message ?? e));
+      toast.error(t('keusahawanan:admin_toast_fetch_failed', 'Gagal memuatkan data perniagaan') + ': ' + (e.message ?? e));
     } finally {
       setLoading(false);
     }
@@ -345,22 +350,22 @@ export function KeusahawananAdminPanel() {
     const { error } = await supabase
       .from('keusahawanan_unit_admins')
       .insert({ user_id: userId, assigned_by: profile?.id, notes: 'Ditugaskan melalui panel Admin' });
-    if (error) { toast.error('Gagal: ' + error.message); return; }
-    toast.success(`${userName} ditambah sebagai Unit Keusahawanan!`);
+    if (error) { toast.error(t('keusahawanan:admin_toast_action_failed', 'Gagal: {{error}}', { error: error.message })); return; }
+    toast.success(t('keusahawanan:admin_toast_officer_added', '{{name}} ditambah sebagai Unit Keusahawanan!', { name: userName }));
     setSearchUser(''); setSearchResults([]);
     fetchUnitAdmins();
   };
 
   const handleRemoveUnitAdmin = async (adminId: string, userName: string) => {
-    if (!window.confirm(`Buang ${userName} dari Unit Keusahawanan?`)) return;
+    if (!window.confirm(t('keusahawanan:admin_confirm_remove_unit_admin', 'Buang {{name}} dari Unit Keusahawanan?', { name: userName }))) return;
     await supabase.from('keusahawanan_unit_admins').delete().eq('id', adminId);
-    toast.success(`${userName} dibuang.`);
+    toast.success(t('keusahawanan:admin_toast_officer_removed', '{{name}} dibuang.', { name: userName }));
     fetchUnitAdmins();
   };
 
   // ── Actions ─────────────────────────────────────────────────────────────────
   const handleApprove = async (b: Business) => {
-    const toastId = toast.loading('Meluluskan perniagaan...');
+    const toastId = toast.loading(t('keusahawanan:admin_toast_approving', 'Meluluskan perniagaan...'));
     try {
       const { error } = await supabase
         .from('keusahawanan_businesses')
@@ -379,8 +384,8 @@ export function KeusahawananAdminPanel() {
       // Notify owner (In-App + Push)
       try {
         await sendNotificationToUser(b.owner_id, {
-          title: '🎉 Perniagaan Anda Diluluskan!',
-          message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
+          title: t('keusahawanan:admin_notif_approved_title', '🎉 Perniagaan Anda Diluluskan!'),
+          message: t('keusahawanan:admin_notif_approved_msg', 'Tahniah! Perniagaan "{{name}}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.', { name: b.name }),
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard',
@@ -390,21 +395,21 @@ export function KeusahawananAdminPanel() {
       // Audit log
       await supabase.from('keusahawanan_logs').insert({
         action_type: 'BUSINESS_APPROVED',
-        description: `Perniagaan "${b.name}" telah diluluskan.`,
+        description: t('keusahawanan:admin_log_biz_approved', 'Perniagaan "{{name}}" telah diluluskan.', { name: b.name }),
         business_id: b.id,
         actor_id: profile?.id ?? null,
       });
 
-      toast.success('Perniagaan berjaya diluluskan!', { id: toastId });
+      toast.success(t('keusahawanan:admin_toast_approved', 'Perniagaan berjaya diluluskan!'), { id: toastId });
       await fetchBusinesses();
     } catch (e: any) {
-      toast.error(e.message ?? 'Terdapat ralat.', { id: toastId });
+      toast.error(e.message ?? t('common:error', 'Terdapat ralat.'), { id: toastId });
     }
   };
 
   const handleReject = async (b: Business) => {
-    const reason = window.prompt('Nyatakan sebab penolakan (pilihan):') ?? '';
-    const toastId = toast.loading('Memproses...');
+    const reason = window.prompt(t('keusahawanan:admin_prompt_reject_reason', 'Nyatakan sebab penolakan (pilihan):')) ?? '';
+    const toastId = toast.loading(t('keusahawanan:admin_toast_processing', 'Memproses...'));
     try {
       const { error } = await supabase
         .from('keusahawanan_businesses')
@@ -412,10 +417,16 @@ export function KeusahawananAdminPanel() {
         .eq('id', b.id);
       if (error) throw error;
 
+      const reasonSuffix = reason
+        ? t('keusahawanan:admin_notif_rejected_reason_suffix', '. Sebab: {{reason}}', { reason })
+        : t('keusahawanan:admin_notif_rejected_contact_jpp', '. Sila hubungi JPP untuk maklumat lanjut.');
       try {
         await sendNotificationToUser(b.owner_id, {
-          title: '❌ Permohonan Perniagaan Ditolak',
-          message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
+          title: t('keusahawanan:admin_notif_rejected_title', '❌ Permohonan Perniagaan Ditolak'),
+          message: t('keusahawanan:admin_notif_rejected_msg', 'Perniagaan "{{name}}" telah ditolak{{reason}}', {
+            name: b.name,
+            reason: reasonSuffix,
+          }),
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard',
@@ -424,15 +435,15 @@ export function KeusahawananAdminPanel() {
 
       await supabase.from('keusahawanan_logs').insert({
         action_type: 'BUSINESS_REJECTED',
-        description: `Perniagaan "${b.name}" ditolak${reason ? `. Sebab: ${reason}` : ''}.`,
+        description: t('keusahawanan:admin_log_biz_rejected', 'Perniagaan "{{name}}" ditolak{{reason}}.', { name: b.name, reason: reason ? t('keusahawanan:admin_notif_rejected_reason_suffix', '. Sebab: {{reason}}', { reason }) : '' }),
         business_id: b.id,
         actor_id: profile?.id ?? null,
       });
 
-      toast.success('Permohonan ditolak.', { id: toastId });
+      toast.success(t('keusahawanan:admin_toast_rejected', 'Permohonan ditolak.'), { id: toastId });
       await fetchBusinesses();
     } catch (e: any) {
-      toast.error(e.message ?? 'Terdapat ralat.', { id: toastId });
+      toast.error(e.message ?? t('common:error', 'Terdapat ralat.'), { id: toastId });
     }
   };
 
@@ -452,10 +463,10 @@ export function KeusahawananAdminPanel() {
   });
 
   const STATUS_FILTERS: { id: BusinessStatus | 'ALL'; label: string }[] = [
-    { id: 'ALL',               label: 'Semua'       },
-    { id: 'PENDING_INTERVIEW', label: 'Menunggu'    },
-    { id: 'ACTIVE',            label: 'Aktif'       },
-    { id: 'REJECTED',          label: 'Ditolak'     },
+    { id: 'ALL',               label: t('keusahawanan:admin_filter_all', 'Semua')       },
+    { id: 'PENDING_INTERVIEW', label: t('keusahawanan:admin_filter_pending', 'Menunggu')    },
+    { id: 'ACTIVE',            label: t('keusahawanan:admin_status_active', 'Aktif')       },
+    { id: 'REJECTED',          label: t('keusahawanan:admin_status_rejected', 'Ditolak')     },
   ];
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -468,12 +479,12 @@ export function KeusahawananAdminPanel() {
           <button onClick={() => setActiveTab('perniagaan')}
             className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
             style={activeTab === 'perniagaan' ? { background: color, color: '#fff' } : { color: 'rgba(255,255,255,0.4)' }}>
-            <LayoutGrid className="w-3.5 h-3.5" /> Senarai Perniagaan
+            <LayoutGrid className="w-3.5 h-3.5" /> {t('keusahawanan:admin_tab_businesses', 'Senarai Perniagaan')}
           </button>
           <button onClick={() => setActiveTab('unit')}
             className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
             style={activeTab === 'unit' ? { background: color, color: '#fff' } : { color: 'rgba(255,255,255,0.4)' }}>
-            <ShieldCheck className="w-3.5 h-3.5" /> Unit Keusahawanan
+            <ShieldCheck className="w-3.5 h-3.5" /> {t('keusahawanan:admin_tab_unit', 'Unit Keusahawanan')}
           </button>
         </div>
       )}
@@ -495,8 +506,8 @@ export function KeusahawananAdminPanel() {
         {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Building2,   label: 'Jumlah Perniagaan', value: businesses.length, color: '#6366f1' },
-          { icon: Clock,       label: 'Menunggu Kelulusan', value: pending,           color: '#f59e0b' },
+          { icon: Building2,   label: t('keusahawanan:admin_kpi_total_biz', 'Jumlah Perniagaan'), value: businesses.length, color: '#6366f1' },
+          { icon: Clock,       label: t('keusahawanan:admin_kpi_pending_approval', 'Menunggu Kelulusan'), value: pending,           color: '#f59e0b' },
           { icon: TrendingUp,  label: 'Aktif',              value: active,            color: '#22c55e' },
           { icon: XCircle,     label: 'Ditolak',            value: rejected,          color: '#ef4444' },
         ].map((s, i) => (
@@ -520,13 +531,13 @@ export function KeusahawananAdminPanel() {
           className="flex items-center gap-3 bg-amber-500/[0.03] border border-amber-500/15 rounded-2xl px-4 py-3">
           <Clock className="w-4 h-4 text-amber-500 shrink-0" />
           <p className="text-sm font-black text-amber-600 dark:text-amber-400 flex-1">
-            {pending} permohonan perniagaan menunggu kelulusan.
+            {t('keusahawanan:admin_pending_alert', '{{count}} permohonan perniagaan menunggu kelulusan.', { count: pending })}
           </p>
           <button
             onClick={() => setFilter('PENDING_INTERVIEW')}
             className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors whitespace-nowrap"
           >
-            Semak →
+            {t('keusahawanan:admin_check_action', 'Semak →')}
           </button>
         </motion.div>
       )}
@@ -536,7 +547,7 @@ export function KeusahawananAdminPanel() {
         <div className="relative flex-1">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
           <Input
-            placeholder="Cari nama perniagaan, pemilik, no. matric..."
+            placeholder={t('keusahawanan:admin_search_placeholder', 'Cari nama perniagaan, pemilik, no. matric...')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9 h-11 rounded-2xl bg-white/[0.03] border-white/10 text-white placeholder:text-white/40 focus:border-white/20 text-sm"
@@ -559,7 +570,7 @@ export function KeusahawananAdminPanel() {
           onClick={fetchBusinesses}
           className="h-11 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors flex items-center gap-2 text-xs font-black text-white/60 shrink-0 border border-white/[0.05]"
         >
-          <RefreshCw className="w-3.5 h-3.5" /> Muat Semula
+          <RefreshCw className="w-3.5 h-3.5" /> {t('keusahawanan:admin_refresh_btn', 'Muat Semula')}
         </button>
       </div>
 
@@ -572,13 +583,13 @@ export function KeusahawananAdminPanel() {
         <div className="text-center py-16">
           <Store className="w-12 h-12 text-white/20 mx-auto mb-4" />
           <p className="text-white/40 font-black text-sm">
-            {search || filter !== 'ALL' ? 'Tiada padanan ditemui.' : 'Belum ada perniagaan didaftarkan.'}
+            {search || filter !== 'ALL' ? t('keusahawanan:admin_empty_match', 'Tiada padanan ditemui.') : t('keusahawanan:admin_empty_biz', 'Belum ada perniagaan didaftarkan.')}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((b, i) => {
-            const sm = STATUS_META[b.status];
+            const sm = getStatusMeta(t)[b.status];
             return (
               <motion.div
                 key={b.id}
@@ -606,13 +617,13 @@ export function KeusahawananAdminPanel() {
                     )}
                   </div>
                   <p className="text-[10px] text-white/40 truncate">
-                    {b.owner_name ?? '—'} · {b.owner_matric ?? 'Tiada matric'} · {b.staff_count} staf
+                    {b.owner_name ?? '—'} · {b.owner_matric ?? t('keusahawanan:admin_no_matric', 'Tiada matric')} · {b.staff_count} staf
                   </p>
                 </div>
 
                 {/* Status badge */}
                 <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shrink-0 ${sm.badgeCls}`}>
-                  {sm.label}
+                  {t('keusahawanan:admin_status_' + b.status.toLowerCase(), sm.label)}
                 </span>
 
                 {/* Arrow indicator */}
@@ -631,25 +642,23 @@ export function KeusahawananAdminPanel() {
           <div className="rounded-[2rem] p-5 border border-amber-500/20 bg-amber-500/[0.03] space-y-2">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-500" />
-              <p className="text-xs font-black text-amber-500 uppercase tracking-widest">Unit Keusahawanan — Akses Penuh</p>
+              <p className="text-xs font-black text-amber-500 uppercase tracking-widest">{t('keusahawanan:admin_unit_header_title', 'Unit Keusahawanan — Akses Penuh')}</p>
             </div>
             <p className="text-xs text-amber-500/70">
-              Pengguna yang disenaraikan di sini mendapat akses penuh ke **semua perniagaan** dalam ekosistem e-Keusahawanan 
-              tanpa perlu ditetapkan sebagai staf untuk setiap satu perniagaan. 
-              Kuasa mereka setaraf dengan Exco Keusahawanan. Sesuai untuk Pegawai / Pemantau Unit Keusahawanan.
+              {t('keusahawanan:admin_unit_header_desc', 'Pengguna yang disenaraikan di sini mendapat akses penuh ke semua perniagaan dalam ekosistem e-Keusahawanan tanpa perlu ditetapkan sebagai staf untuk setiap satu perniagaan.')}
             </p>
           </div>
 
           {/* Search + add */}
           <div className="rounded-[2rem] bg-white/[0.02] border border-white/10 p-6 space-y-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
-              <UserPlus className="w-3.5 h-3.5" /> Tambah Pegawai Unit Keusahawanan
+              <UserPlus className="w-3.5 h-3.5" /> {t('keusahawanan:admin_unit_add_officer', 'Tambah Pegawai Unit Keusahawanan')}
             </p>
             <div className="relative">
               <input
                 value={searchUser}
                 onChange={e => handleSearchUser(e.target.value)}
-                placeholder="Cari nama pengguna..."
+                placeholder={t('keusahawanan:admin_unit_search_placeholder', 'Cari nama pengguna...')}
                 className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-white/30 transition-all"
               />
               {searchResults.length > 0 && (
@@ -663,11 +672,11 @@ export function KeusahawananAdminPanel() {
                       </div>
                       <div>
                         <p className="text-xs font-black text-white">{u.full_name}</p>
-                        <p className="text-[10px] text-white/50">{u.matric_no || 'Tiada No. Matrik'}</p>
+                        <p className="text-[10px] text-white/50">{u.matric_no || t('keusahawanan:admin_no_matric_long', 'Tiada No. Matrik')}</p>
                       </div>
                       <span className="ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-full"
                         style={{ background: hexToRgba(color, 0.1), color }}>
-                        + Tambah
+                        {t('keusahawanan:admin_unit_add_btn', '+ Tambah')}
                       </span>
                     </button>
                   ))}
@@ -678,7 +687,7 @@ export function KeusahawananAdminPanel() {
             {/* Current unit admins */}
             <div className="space-y-2 pt-2">
               {unitAdmins.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-6">Tiada pegawai unit keusahawanan ditetapkan.</p>
+                <p className="text-sm text-white/30 text-center py-6">{t('keusahawanan:admin_unit_no_officers', 'Tiada pegawai unit keusahawanan ditetapkan.')}</p>
               ) : unitAdmins.map((a, i) => (
                 <motion.div key={a.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}
                   className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
@@ -689,7 +698,7 @@ export function KeusahawananAdminPanel() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-white">{a.user?.full_name}</p>
                     <p className="text-[10px] text-white/50 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3 h-3 text-amber-500" /> Unit Keusahawanan · Akses Penuh
+                      <ShieldCheck className="w-3 h-3 text-amber-500" /> {t('keusahawanan:admin_unit_full_access_label', 'Unit Keusahawanan · Akses Penuh')}
                     </p>
                   </div>
                   <button onClick={() => handleRemoveUnitAdmin(a.id, a.user?.full_name)}

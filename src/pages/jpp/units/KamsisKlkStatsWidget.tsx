@@ -5,12 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { cn, hexToRgba } from '@/lib/utils';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
+import { useTranslation } from 'react-i18next';
 
 interface KamsisKlkStatsWidgetProps {
   themeColor: string;
+  initialLoading?: boolean;
 }
 
-export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) {
+export function KamsisKlkStatsWidget({ themeColor, initialLoading = typeof window === 'undefined' ? false : true }: KamsisKlkStatsWidgetProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { activeSession, semesterString } = useAcademicSession();
   const [stats, setStats] = useState({
     kamsisPemohon: 0,
@@ -20,7 +23,7 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
     klkLuar: 0,
     klkDalam: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialLoading);
 
   useEffect(() => {
     async function fetchData() {
@@ -84,16 +87,20 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
             <Building2 className="w-5 h-5" style={{ color: themeColor }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Status i-KAMSIS</h3>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">Permohonan Sesi Semasa</p>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+              {t('jpp:kamsis_widget_title', 'Status i-KAMSIS')}
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
+              {t('jpp:kamsis_widget_subtitle', 'Permohonan Sesi Semasa')}
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          <StatMini label="Menunggu" val={stats.kamsisPemohon} color="#F59E0B" icon={FileText} />
-          <StatMini label="Lulus" val={stats.kamsisLulus} color="#10B981" icon={CheckCircle} />
-          <StatMini label="Tolak" val={stats.kamsisTolak} color="#EF4444" icon={XCircle} />
-          <StatMini label="Rayuan" val={stats.kamsisRayuan} color="#8B5CF6" icon={AlertCircle} />
+          <StatMini label={t('jpp:kamsis_pending', 'Menunggu')} val={stats.kamsisPemohon} color="#F59E0B" icon={FileText} />
+          <StatMini label={t('jpp:kamsis_approved', 'Lulus')} val={stats.kamsisLulus} color="#10B981" icon={CheckCircle} />
+          <StatMini label={t('jpp:kamsis_rejected', 'Tolak')} val={stats.kamsisTolak} color="#EF4444" icon={XCircle} />
+          <StatMini label={t('jpp:kamsis_appealing', 'Rayuan')} val={stats.kamsisRayuan} color="#8B5CF6" icon={AlertCircle} />
         </div>
       </motion.div>
 
@@ -106,14 +113,18 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
             <Home className="w-5 h-5" style={{ color: '#60A5FA' }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Taburan Kediaman</h3>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">Luar Kampus (KLK) vs Asrama</p>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+              {t('jpp:klk_widget_title', 'Taburan Kediaman')}
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
+              {t('jpp:klk_widget_subtitle', 'Luar Kampus (KLK) vs Asrama')}
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <StatMini label="Luar Kampus" val={stats.klkLuar} color="#60A5FA" icon={Home} />
-          <StatMini label="Dalam Kamsis" val={stats.klkDalam} color="#22C55E" icon={Building2} />
+          <StatMini label={t('jpp:klk_outside', 'Luar Kampus')} val={stats.klkLuar} color="#60A5FA" icon={Home} />
+          <StatMini label={t('jpp:klk_inside_kamsis', 'Dalam Kamsis')} val={stats.klkDalam} color="#22C55E" icon={Building2} />
         </div>
       </motion.div>
     </div>

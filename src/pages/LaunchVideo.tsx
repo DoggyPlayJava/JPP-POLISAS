@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useAnimation, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-qr-code';
 import { 
   Crown, Activity, Lock, KeyRound, Fingerprint, Menu, Search, Coffee, Moon, Droplet, 
@@ -15,8 +16,18 @@ const SE = [0.16, 1, 0.3, 1] as const; // Keynote-grade custom cubic bezier ease
 const INTER = { fontFamily: "'Inter','SF Pro Display',system-ui,-apple-system,sans-serif" };
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
+interface ModuleItem {
+  name: string;
+  tagline: string;
+  features: string[];
+  nc: string;
+  gc: string;
+  dc: string;
+  bg: string;
+}
+
 interface SceneProps {
-  mod: typeof MODULES[0];
+  mod: ModuleItem;
 }
 
 // ─── Cinematic Camera Rig & Parallax ─────────────────────────────────────────
@@ -327,28 +338,31 @@ function SlotMachineNumber({ target, active, gc, size='35vw' }: { target:string;
 }
 
 // ─── Module Data ────────────────────────────────────────────────────────────
-const MODULES = [
-  { name: 'PolyMaps',        tagline: 'Navigasi kampus dalam poket anda.',          features: ['Carian bilik & kelas masa nyata','Sistem navigasi GPS berjalan kaki','Status cuaca & laluan berciri'],     nc:'text-sky-400',     gc:'#0ea5e9', dc:'bg-sky-400',     bg:'bg-sky-600' },
-  { name: 'PolySuara',       tagline: 'Luahkan pendapat, undi bersama.',            features: ['Confession tanpa nama (anonymous)','Sistem undian (poll) interaktif','Eksport perkongsian IG Story'],    nc:'text-fuchsia-400', gc:'#d946ef', dc:'bg-fuchsia-400', bg:'bg-fuchsia-600' },
-  { name: 'PolyRent',        tagline: 'Penginapan pelajar, mudah & selamat.',       features: ['Cari rumah & bilik sewa disahkan','Kira bil & sewa berkongsi','Hubungi pemilik terus via WhatsApp'],   nc:'text-cyan-400',    gc:'#06b6d4', dc:'bg-cyan-400',    bg:'bg-cyan-600' },
-  { name: 'E-Kebajikan',     tagline: 'Suara anda, keutamaan kami.',               features: ['Aduan diselesaikan dalam 24 jam','Tracking status masa nyata','Sokongan kecemasan pelajar'],   nc:'text-teal-400',   gc:'#14b8a6', dc:'bg-teal-400',   bg:'bg-teal-600' },
-  { name: 'E-Keusahawanan',  tagline: 'Niaga dengan lebih bijak.',                 features: ['Sistem POS yang canggih','Laporan jualan masa nyata','Integrasi PolyMart'],                      nc:'text-green-400',  gc:'#22c55e', dc:'bg-green-400',  bg:'bg-green-600' },
-  { name: 'E-Akademik',      tagline: 'Ilmu teratur, masa depan cerah.',           features: ['Pemantauan CGPA & pencapaian','Sistem mata merit digital','Folder dokumen peribadi'],            nc:'text-emerald-400', gc:'#10b981', dc:'bg-emerald-400', bg:'bg-emerald-600' },
-  { name: 'PolyMart',        tagline: 'Kedai pelajar, dalam genggaman.',           features: ['Jual & beli antara pelajar','Pengesahan produk oleh JPP','Pengurusan pesanan digital'],           nc:'text-orange-400',  gc:'#f97316', dc:'bg-orange-400',  bg:'bg-orange-600' },
-  { name: 'Sistem Kelab',    tagline: 'Kelab bersatu, kenangan abadi.',             features: ['Pengurusan ahli & kelab','Rekod aktiviti & laporan','Papan pemuka Exco digital'],               nc:'text-red-400',     gc:'#ef4444', dc:'bg-red-400',     bg:'bg-red-600' },
-  { name: 'Karnival JPP',    tagline: 'Kemeriahan kampus, kini digital.',           features: ['E-Tiket & tempahan tapak','Peta karnival interaktif','Live update aktiviti'],                   nc:'text-pink-400',    gc:'#ec4899', dc:'bg-pink-400',    bg:'bg-pink-600' },
-  { name: 'JPP HQ Portal',   tagline: 'Dashboard eksklusif anda.',                  features: ['Analisis data berpusat','AI Assistant untuk laporan','Tetapan sistem global'],                  nc:'text-purple-400',  gc:'#a855f7', dc:'bg-purple-400',  bg:'bg-purple-600' },
+const getModules = (t: any): ModuleItem[] => [
+  { name: 'PolyMaps',        tagline: t('portal:launch_polymaps_tagline', 'Navigasi kampus dalam poket anda.'),          features: [t('portal:launch_feat_room_search', 'Carian bilik & kelas masa nyata'), t('portal:launch_feat_gps_walk', 'Sistem navigasi GPS berjalan kaki'), t('portal:launch_feat_weather_route', 'Status cuaca & laluan berciri')],     nc:'text-sky-400',     gc:'#0ea5e9', dc:'bg-sky-400',     bg:'bg-sky-600' },
+  { name: 'PolySuara',       tagline: t('portal:launch_polysuara_tagline', 'Luahkan pendapat, undi bersama.'),            features: [t('portal:launch_feat_confession_anon', 'Confession tanpa nama (anonymous)'), t('portal:launch_feat_poll_system', 'Sistem undian (poll) interaktif'), t('portal:launch_feat_ig_story', 'Eksport perkongsian IG Story')],    nc:'text-fuchsia-400', gc:'#d946ef', dc:'bg-fuchsia-400', bg:'bg-fuchsia-600' },
+  { name: 'PolyRent',        tagline: t('portal:launch_polyrent_tagline', 'Penginapan pelajar, mudah & selamat.'),       features: [t('portal:launch_feat_verified_rentals', 'Cari rumah & bilik sewa disahkan'), t('portal:launch_feat_split_bills', 'Kira bil & sewa berkongsi'), t('portal:launch_feat_whatsapp_owner', 'Hubungi pemilik terus via WhatsApp')],   nc:'text-cyan-400',    gc:'#06b6d4', dc:'bg-cyan-400',    bg:'bg-cyan-600' },
+  { name: 'E-Kebajikan',     tagline: t('portal:launch_kebajikan_tagline', 'Suara anda, keutamaan kami.'),               features: [t('portal:launch_feat_24h_complaints', 'Aduan diselesaikan dalam 24 jam'), t('portal:launch_feat_realtime_tracking', 'Tracking status masa nyata'), t('portal:launch_feat_emergency_support', 'Sokongan kecemasan pelajar')],   nc:'text-teal-400',   gc:'#14b8a6', dc:'bg-teal-400',   bg:'bg-teal-600' },
+  { name: 'E-Keusahawanan',  tagline: t('portal:launch_keusahawanan_tagline', 'Niaga dengan lebih bijak.'),                 features: [t('portal:launch_feat_advanced_pos', 'Sistem POS yang canggih'), t('portal:launch_feat_realtime_sales_report', 'Laporan jualan masa nyata'), t('portal:launch_feat_polymart_integration', 'Integrasi PolyMart')],                      nc:'text-green-400',  gc:'#22c55e', dc:'bg-green-400',  bg:'bg-green-600' },
+  { name: 'E-Akademik',      tagline: t('portal:launch_akademik_tagline', 'Ilmu teratur, masa depan cerah.'),           features: [t('portal:launch_feat_cgpa_monitoring', 'Pemantauan CGPA & pencapaian'), t('portal:launch_feat_digital_merit', 'Sistem mata merit digital'), t('portal:launch_feat_personal_vault', 'Folder dokumen peribadi')],            nc:'text-emerald-400', gc:'#10b981', dc:'bg-emerald-400', bg:'bg-emerald-600' },
+  { name: 'PolyMart',        tagline: t('portal:launch_polymart_tagline', 'Kedai pelajar, dalam genggaman.'),           features: [t('portal:launch_feat_student_marketplace', 'Jual & beli antara pelajar'), t('portal:launch_feat_jpp_verification', 'Pengesahan produk oleh JPP'), t('portal:launch_feat_digital_orders', 'Pengurusan pesanan digital')],           nc:'text-orange-400',  gc:'#f97316', dc:'bg-orange-400',  bg:'bg-orange-600' },
+  { name: t('portal:module_club_system', 'Sistem Kelab'),    tagline: t('portal:launch_kelab_tagline', 'Kelab bersatu, kenangan abadi.'),             features: [t('portal:launch_feat_club_members', 'Pengurusan ahli & kelab'), t('portal:launch_feat_activities_reports', 'Rekod aktiviti & laporan'), t('portal:launch_feat_exco_dashboard', 'Papan pemuka Exco digital')],               nc:'text-red-400',     gc:'#ef4444', dc:'bg-red-400',     bg:'bg-red-600' },
+  { name: 'Karnival JPP',    tagline: t('portal:launch_karnival_tagline', 'Kemeriahan kampus, kini digital.'),           features: [t('portal:launch_feat_eticket_booth', 'E-Tiket & tempahan tapak'), t('portal:launch_feat_interactive_map', 'Peta karnival interaktif'), t('portal:launch_feat_live_update', 'Live update aktiviti')],                   nc:'text-pink-400',    gc:'#ec4899', dc:'bg-pink-400',    bg:'bg-pink-600' },
+  { name: 'JPP HQ Portal',   tagline: t('portal:launch_hq_tagline', 'Dashboard eksklusif anda.'),                  features: [t('portal:launch_feat_central_analytics', 'Analisis data berpusat'), t('portal:launch_feat_ai_assistant', 'AI Assistant untuk laporan'), t('portal:launch_feat_global_settings', 'Tetapan sistem global')],                  nc:'text-purple-400',  gc:'#a855f7', dc:'bg-purple-400',  bg:'bg-purple-600' },
 ];
 
-const LABELS = [
+const getLabels = (t: any) => [
   'Intro', 'Nebula Reveal', 
   'PolyMaps', 'PolySuara', 'PolyRent',
-  'E-Kebajikan', 'E-Keusahawanan', 'E-Akademik', 'PolyMart', 'Sistem Kelab', 'Karnival JPP', 'JPP HQ Portal',
+  'E-Kebajikan', 'E-Keusahawanan', 'E-Akademik', 'PolyMart', t('portal:module_club_system', 'Sistem Kelab'), 'Karnival JPP', 'JPP HQ Portal',
   'Product Reveal', 'Modul Text', 'Fly Away', 'The Numbers', 'Final Logo', 'Outro'
 ];
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export function LaunchVideo() {
+  const { t } = useTranslation('portal');
+  const MODULES = getModules(t);
+  const LABELS = getLabels(t);
   const navigate = useNavigate();
   const [phase, setPhase] = useState(0);
   const [showHUD, setShowHUD] = useState(false);
@@ -513,7 +527,7 @@ export function LaunchVideo() {
               className="flex flex-col items-center mt-[-8vw] z-20"
             >
               <h1 className="text-[7vw] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-300 drop-shadow-[0_0_40px_rgba(99,102,241,1)]">JPP POLISAS</h1>
-              <p className="text-[1.2vw] font-light tracking-[0.8em] text-indigo-400 uppercase mt-[0.5vw]">Revolusi Ekosistem Digital</p>
+              <p className="text-[1.2vw] font-light tracking-[0.8em] text-indigo-400 uppercase mt-[0.5vw]">{t('portal:digital_ecosystem_revolution', 'Revolusi Ekosistem Digital')}</p>
             </motion.div>
 
             <motion.div initial={{scale:0.5, opacity:0, rotateX:60}} animate={{scale:1, opacity:1, rotateX:0}} transition={{delay:1, duration:1.5, type:'spring'}} className="mt-[4vw] flex flex-col items-center z-20 relative">
@@ -535,7 +549,7 @@ export function LaunchVideo() {
                 </motion.div>
               </div>
 
-              <motion.p animate={{y:[0, -5, 0]}} transition={{duration:4, repeat:Infinity, ease:'easeInOut'}} className="text-[1.5vw] font-black tracking-widest mt-[5vw] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300">Sedia Untuk Diakses.</motion.p>
+              <motion.p animate={{y:[0, -5, 0]}} transition={{duration:4, repeat:Infinity, ease:'easeInOut'}} className="text-[1.5vw] font-black tracking-widest mt-[5vw] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-300">{t('portal:ready_to_access', 'Sedia Untuk Diakses.')}</motion.p>
               <p className="text-[1.2vw] font-light tracking-[0.4em] text-white/60 mt-[0.5vw]">jpp.cipher-node.org</p>
             </motion.div>
 
@@ -546,12 +560,12 @@ export function LaunchVideo() {
                 <button onClick={()=>navigate('/login')} className="relative overflow-hidden px-[5vw] py-[1.2vw] rounded-full text-white font-black text-[1.2vw] hover:scale-105 transition-all tracking-[0.2em] uppercase cursor-pointer border border-white/20 bg-black/40 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.3)]">
                   <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
                   <motion.div className="absolute inset-0 pointer-events-none mix-blend-overlay" animate={{x:['-100%', '200%']}} transition={{duration:3, repeat:Infinity, repeatDelay:2, ease:'easeInOut'}} style={{background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', width:'50%', transform:'skewX(-20deg)'}} />
-                  MASUK KE PORTAL
+                  {t('portal:enter_portal', 'MASUK KE PORTAL')}
                 </button>
               </div>
 
               <p className="text-[0.65vw] tracking-[0.3em] text-white/30 uppercase font-light drop-shadow-md">
-                Dibangunkan oleh Jawatankuasa Perwakilan Pelajar POLISAS &copy; 2026.
+                {t('portal:developed_by_jpp', 'Dibangunkan oleh Jawatankuasa Perwakilan Pelajar POLISAS © 2026.')}
               </p>
             </motion.div>
 
@@ -626,7 +640,7 @@ export function LaunchVideo() {
             initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:20}}
             transition={{duration:0.6, ease:SE}}
             className="fixed bottom-[4.5%] right-[3%] z-[97] text-right pointer-events-none">
-            <p className="text-[0.5vw] font-mono tracking-[0.3em] uppercase" style={{color: MODULES[moduleIdx].gc + '90'}}>Modul</p>
+            <p className="text-[0.5vw] font-mono tracking-[0.3em] uppercase" style={{color: MODULES[moduleIdx].gc + '90'}}>{t('portal:module', 'Modul')}</p>
             <p className="text-[1.4vw] font-black leading-none" style={{color: MODULES[moduleIdx].gc}}>
               {String(moduleIdx+1).padStart(2,'0')} <span className="text-white/20 font-light">/ 10</span>
             </p>
@@ -649,6 +663,7 @@ export function LaunchVideo() {
 // ─── Subcomponents ──────────────────────────────────────────────────────────
 // ─── PhoneMockupIntro ────────────────────────────────────────────────────────
 function PhoneMockupIntro() {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [clickLocation, setClickLocation] = useState({ x: 0, y: 0 });
   const [scanProgress, setScanProgress] = useState(0);
@@ -825,8 +840,8 @@ function PhoneMockupIntro() {
             <div className="flex items-center gap-[0.5vw] border-b border-cyan-500/20 pb-[0.6vw]">
               <Activity className="w-[1vw] h-[1vw] text-cyan-400" />
               <div>
-                <p className="text-[0.65vw] font-black text-white leading-none uppercase">TELEMETRI EKOSISTEM</p>
-                <p className="text-[0.45vw] text-cyan-400 font-bold uppercase mt-[0.1vw]">SYS_STATUS: CONNECTED</p>
+                <p className="text-[0.65vw] font-black text-white leading-none uppercase">{t('portal:launch_telemetry_ecosystem', 'TELEMETRI EKOSISTEM')}</p>
+                <p className="text-[0.45vw] text-cyan-400 font-bold uppercase mt-[0.1vw]">{t('portal:launch_sys_status_connected', 'SYS_STATUS: CONNECTED')}</p>
               </div>
             </div>
 
@@ -875,14 +890,14 @@ function PhoneMockupIntro() {
             <div className="flex items-center gap-[0.5vw] border-b border-indigo-500/20 pb-[0.6vw]">
               <Lock className="w-[1vw] h-[1vw] text-indigo-400" />
               <div>
-                <p className="text-[0.65vw] font-black text-white leading-none uppercase">LOG NYAHKOD PORTAL</p>
+                <p className="text-[0.65vw] font-black text-white leading-none uppercase">{t('portal:launch_log_nyahkod_portal', 'LOG NYAHKOD PORTAL')}</p>
                 <p className="text-[0.45vw] text-indigo-400 font-bold uppercase mt-[0.1vw]">DECRYPTION: ACTIVE</p>
               </div>
             </div>
 
             {/* Decryption status */}
             <div className="flex justify-between items-center bg-indigo-950/20 border border-indigo-500/30 p-[0.4vw] rounded-[0.4vw]">
-              <span className="text-[0.55vw] text-indigo-300 font-bold uppercase">Proses Imbasan:</span>
+              <span className="text-[0.55vw] text-indigo-300 font-bold uppercase">{t('portal:launch_scan_process', 'Proses Imbasan:')}</span>
               <span className="text-[0.8vw] text-white font-black">{scanProgress}%</span>
             </div>
 
@@ -972,13 +987,13 @@ function PhoneMockupIntro() {
             {/* Body Content */}
             <div className="flex flex-col items-center text-center mt-[5vw] px-[2vw] flex-1">
               <span className="px-[1vw] py-[0.35vw] rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[0.5vw] text-indigo-300 font-black tracking-widest mb-[1.4vw] uppercase shadow-inner">
-                PORTAL RASMI PELAJAR
+                {t('portal:official_student_portal', 'PORTAL RASMI PELAJAR')}
               </span>
               <h1 className="text-[2.1vw] font-black leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/60 mb-[1vw] uppercase">
-                Suara Pelajar,<br/>Pemangkin<br/>Politeknik.
+                {t('portal:launch_tagline_voice', 'Suara Pelajar')},<br/>{t('portal:launch_tagline_catalyst', 'Pemangkin')}<br/>{t('portal:launch_tagline_polytechnic', 'Politeknik.')}
               </h1>
               <p className="text-[0.75vw] leading-relaxed text-white/40 mb-[2vw] font-light max-w-[90%]">
-                Platform digital pintar berprestasi tinggi untuk menyatukan ekosistem JPP POLISAS.
+                {t('portal:launch_platform_desc', 'Platform digital pintar berprestasi tinggi untuk menyatukan ekosistem JPP POLISAS.')}
               </p>
 
               {/* CYBER CAP JARI SCANNER HUD */}
@@ -1039,7 +1054,7 @@ function PhoneMockupIntro() {
                   transition={{ duration: 0.2 }}
                   className="relative w-full py-[1vw] rounded-full flex items-center justify-center font-black text-[0.7vw] shadow-[0_15px_30px_rgba(0,0,0,0.5),_0_0_20px_rgba(255,255,255,0.15)] overflow-hidden cursor-pointer"
                 >
-                  {act >= 1 ? 'PENGESAHAN BERJAYA...' : 'LOG MASUK PORTAL'}
+                  {act >= 1 ? t('portal:auth_success', 'PENGESAHAN BERJAYA...') : t('portal:login_portal', 'LOG MASUK PORTAL')}
                   
                   {/* Finger touch sparks explosion */}
                   <AnimatePresence>
@@ -1271,7 +1286,7 @@ function JppPortalSupernova() {
 }
 
 // ─── ModuleSlide ─────────────────────────────────────────────────────────────
-function ModuleSlide({ mod, idx, onActionTrigger }: { mod: typeof MODULES[0]; idx: number; onActionTrigger: () => void; key?: React.Key }) {
+function ModuleSlide({ mod, idx, onActionTrigger }: { mod: ModuleItem; idx: number; onActionTrigger: () => void; key?: React.Key }) {
   const [slam, setSlam] = useState(true);
   const Scenes = [
     PolyMapsScene,
@@ -1861,6 +1876,7 @@ function LiveDroneFeed({ color }: { color: string }) {
 
 // ─── Scene: PolyMaps ──────────────────────────────────────────────────────────
 function PolyMapsScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [typedText, setTypedText] = useState("");
   const [slamShake, setSlamShake] = useState(false);
@@ -1906,15 +1922,15 @@ function PolyMapsScene({ mod }: SceneProps) {
   const gc = mod.gc;
 
   const markers = [
-    { name: "KAFE JKE", x: "47%", y: "30%", active: false, w: "2.5vw", h: "2.5vw", type: 'kafe' as const },
-    { name: "DEWAN MAKMUR", x: "50%", y: "38%", active: false, w: "4vw", h: "2.8vw", type: 'hall' as const },
-    { name: "JKE BLOK C", x: "57%", y: "39%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
-    { name: "JKE BLOK B", x: "56%", y: "34%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
-    { name: "JKE BLOK A", x: "55%", y: "29%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
+    { name: t('portal:marker_kafe_jke', 'KAFE JKE'), x: "47%", y: "30%", active: false, w: "2.5vw", h: "2.5vw", type: 'kafe' as const },
+    { name: t('portal:marker_dewan_makmur', 'DEWAN MAKMUR'), x: "50%", y: "38%", active: false, w: "4vw", h: "2.8vw", type: 'hall' as const },
+    { name: t('portal:marker_jke_blok_c', 'JKE BLOK C'), x: "57%", y: "39%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
+    { name: t('portal:marker_jke_blok_b', 'JKE BLOK B'), x: "56%", y: "34%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
+    { name: t('portal:marker_jke_blok_a', 'JKE BLOK A'), x: "55%", y: "29%", active: false, w: "2vw", h: "2vw", type: 'tower' as const },
     { name: "ADMIN", x: "77%", y: "52%", active: false, w: "3vw", h: "2.2vw", type: 'default' as const },
     { name: "LIBRARY", x: "71%", y: "42%", active: false, w: "2.8vw", h: "2.8vw", type: 'default' as const },
     { name: "Student Center", x: "50%", y: "26%", active: true, code: "SC", w: "2.5vw", h: "2.5vw", type: 'tower' as const },
-    { name: "MASJID SABAR", x: "11%", y: "63%", active: false, w: "3.5vw", h: "3.5vw", type: 'mosque' as const },
+    { name: t('portal:marker_masjid_sabar', 'MASJID SABAR'), x: "11%", y: "63%", active: false, w: "3.5vw", h: "3.5vw", type: 'mosque' as const },
     { name: "KOOP", x: "22%", y: "39%", active: false, w: "2.2vw", h: "1.8vw", type: 'default' as const },
     { name: "GUARD IS", x: "72%", y: "11%", active: false, w: "1.2vw", h: "1.2vw", type: 'default' as const },
     { name: "HEP", x: "82%", y: "23%", active: false, w: "2.5vw", h: "2.2vw", type: 'default' as const },
@@ -2143,7 +2159,7 @@ function PolyMapsScene({ mod }: SceneProps) {
                     {act === 2 && typedText.length < 14 && (
                       <span className="w-[1.5px] h-[1vw] bg-sky-400 ml-[1px] inline-block animate-pulse" />
                     )}
-                    {act < 2 && <span className="text-slate-400 font-sans font-normal">Cari kelas (Cth: A301, JKM)...</span>}
+                    {act < 2 && <span className="text-slate-400 font-sans font-normal">{t('portal:launch_search_class_placeholder', 'Cari kelas (Cth: A301, JKM)...')}</span>}
                   </span>
                 </div>
               </div>
@@ -2241,12 +2257,13 @@ function PolyMapsScene({ mod }: SceneProps) {
       </AnimatePresence>
 
       <ModuleOverlay show={act>=5} num="Modul 01" name="PolyMaps" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Pemetaan satelit kampus sebenar berhubung secara langsung bagi pencarian kelas yang tepat." />
+      <FloatAiChip show={act>=5} message={t('portal:launch_chip_polymaps', 'Pemetaan satelit kampus sebenar berhubung secara langsung bagi pencarian kelas yang tepat.')} />
     </CinematicEnvelope>
   );
 }
 
 function PolySuaraScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [likes, setLikes] = useState([42, 18, 9]);
   const [censorTrigger, setCensorTrigger] = useState(false);
@@ -2279,29 +2296,29 @@ function PolySuaraScene({ mod }: SceneProps) {
     { 
       name: "Panda Berani", 
       own: true, 
-      time: "2 HARI YANG LALU", 
+      time: t('portal:time_2_days_ago', '2 HARI YANG LALU'), 
       cat: "PARKIR", 
-      text: "Korang tahu tak dewan lama tepi JKE tu sebenarnya boleh buat parkir tambahan? Jauh gila kena menapak pagi-pagi dari padang 😭", 
+      text: t('portal:launch_feed_comment_1', 'Korang tahu tak dewan lama tepi JKE tu sebenarnya boleh buat parkir tambahan? Jauh gila kena menapak pagi-pagi dari padang'), 
       l: likes[0],
       lColor: "text-rose-500",
     },
     { 
       name: "Kuda Lincah", 
       own: false, 
-      time: "3 HARI YANG LALU", 
+      time: t('portal:time_3_days_ago', '3 HARI YANG LALU'), 
       cat: "UMUM", 
       text: censorTrigger 
-        ? "Dah kalau tak suka tu, habis semua benda lah nak dikritik ***... 😑 #polisas" 
-        : "Dah kalau tak suka tu, habis semua benda lah nak dikritik sial... 😑 #polisas", 
+        ? t('portal:launch_feed_comment_2_clean', 'Dah kalau tak suka tu, habis semua benda lah nak dikritik ***... #polisas') 
+        : t('portal:launch_feed_comment_2_raw', 'Dah kalau tak suka tu, habis semua benda lah nak dikritik sial... #polisas'), 
       l: likes[1],
       lColor: "text-white/40",
     },
     { 
       name: "Kelinci Berdikari", 
       own: false, 
-      time: "4 HARI YANG LALU", 
+      time: t('portal:time_4_days_ago', '4 HARI YANG LALU'), 
       cat: "MAKANAN", 
-      text: "Ada sesiapa tahu kat mana nak cari makanan best waktu malam area Semambu ni? Lapar yakmat dooo", 
+      text: t('portal:launch_feed_comment_3', 'Ada sesiapa tahu kat mana nak cari makanan best waktu malam area Semambu ni? Lapar yakmat dooo'), 
       l: likes[2], 
       lColor: "text-white/40",
     },
@@ -2456,7 +2473,7 @@ function PolySuaraScene({ mod }: SceneProps) {
                             <span className="text-[0.75vw] font-black text-white">{post.name}</span>
                             {post.own && (
                               <span className="px-[0.5vw] py-[0.1vw] rounded-full bg-fuchsia-500 text-white text-[0.45vw] font-black tracking-wide scale-90">
-                                MILIK ANDA
+                                {t('portal:launch_belongs_to_you', 'MILIK ANDA')}
                               </span>
                             )}
                             <span className="px-[0.5vw] py-[0.1vw] rounded-full bg-white/5 text-white/50 text-[0.45vw] font-mono tracking-wide scale-90 border border-white/10">
@@ -2476,7 +2493,7 @@ function PolySuaraScene({ mod }: SceneProps) {
                       <p className="text-[0.8vw] text-white/90 leading-relaxed font-medium">
                         {isSwearCard && censorTrigger ? (
                           <>
-                            Dah kalau tak suka tu, habis semua benda lah nak dikritik{" "}
+                            {t('portal:launch_censor_prefix', 'Dah kalau tak suka tu, habis semua benda lah nak dikritik')}{" "}
                             <motion.span 
                               initial={{ scale: 0.8, filter: "blur(4px)" }}
                               animate={{ 
@@ -2487,9 +2504,9 @@ function PolySuaraScene({ mod }: SceneProps) {
                               transition={{ duration: 0.5, times: [0, 0.2, 0.4, 0.7, 1] }}
                               className="px-[0.4vw] py-[0.1vw] rounded bg-rose-950/40 border border-rose-500/40 text-rose-400 font-extrabold tracking-wider inline-block shadow-[0_0_10px_rgba(244,63,94,0.6)] font-mono"
                             >
-                              [DITAPIS]
+                              [{t('portal:filtered_label', 'DITAPIS')}]
                             </motion.span>{" "}
-                            ... 😑 #polisas
+                            ... #polisas
                             {/* Text particle disintegration sparks */}
                             <div className="absolute inset-0 pointer-events-none z-30 overflow-visible flex items-center justify-center">
                               {[...Array(8)].map((_, pi) => (
@@ -2563,13 +2580,14 @@ function PolySuaraScene({ mod }: SceneProps) {
       </AnimatePresence>
 
       <ModuleOverlay show={act>=5} num="Modul 02" name="PolySuara" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Aliran confession selamat dengan automasi penapis AI bagi menjamin keharmonian komuniti kampus." />
+      <FloatAiChip show={act>=5} message={t('portal:launch_chip_polysuara', 'Aliran confession selamat dengan automasi penapis AI bagi menjamin keharmonian komuniti kampus.')} />
     </CinematicEnvelope>
   );
 }
 
 // ─── Scene: PolyRent ─────────────────────────────────────────────────────────
 function PolyRentScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [typedText, setTypedText] = useState("");
   const [wishlistActive, setWishlistActive] = useState(false);
@@ -2626,24 +2644,24 @@ function PolyRentScene({ mod }: SceneProps) {
   const listings = [
     {
       id: "rent-1",
-      title: "Bilik Master Dekat Polisas",
+      title: t('portal:launch_rent_title_1', 'Bilik Master Dekat Polisas'),
       sewa_bulanan: 180,
       lokasi: "Kawasan Semambu, Beserah",
       jantina_prefer: "LELAKI",
       kekosongan: 2,
       total_kekosongan: 3,
-      tags: ["Pilihan Berbaloi", "Disahkan JPP"],
+      tags: [t('portal:launch_rent_tag_worth', 'Pilihan Berbaloi'), t('portal:verified_by_jpp', 'Disahkan JPP')],
       img: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=600&auto=format&fit=crop"
     },
     {
       id: "rent-2",
-      title: "Rumah Teres Semi-D Pelajar",
+      title: t('portal:launch_rent_title_2', 'Rumah Teres Semi-D Pelajar'),
       sewa_bulanan: 150,
       lokasi: "Taman Datuk Rashid",
       jantina_prefer: "PEREMPUAN",
       kekosongan: 1,
       total_kekosongan: 4,
-      tags: ["Bilik Single", "Dekat Kedai"],
+      tags: [t('portal:launch_rent_tag_single', 'Bilik Single'), t('portal:launch_rent_tag_near_shop', 'Dekat Kedai')],
       img: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=600&auto=format&fit=crop"
     }
   ];
@@ -2819,7 +2837,7 @@ function PolyRentScene({ mod }: SceneProps) {
               <Home className="w-[1.5vw] h-[1.5vw] text-cyan-400" />
               <div>
                 <h2 className="text-[1.4vw] font-black text-white leading-none font-sans">PolyRent</h2>
-                <p className="text-[0.7vw] text-cyan-400 font-mono tracking-widest uppercase mt-[0.2vw]">Cari Kawan Sewa. Lebih Jimat.</p>
+                <p className="text-[0.7vw] text-cyan-400 font-mono tracking-widest uppercase mt-[0.2vw]">{t('portal:launch_rent_sub_slogan', 'Cari Kawan Sewa. Lebih Jimat.')}</p>
               </div>
             </div>
             <div className="flex items-center gap-[1vw]">
@@ -2842,8 +2860,8 @@ function PolyRentScene({ mod }: SceneProps) {
                {/* Mini 3D Volumetric Bar Chart overlaying map */}
                <div className="bg-white/5 border border-white/10 rounded-[1.2vw] p-[1vw] flex items-center justify-between gap-[1vw]">
                  <div className="flex flex-col gap-[0.2vw]">
-                   <span className="text-[0.55vw] text-cyan-400 font-mono font-bold uppercase tracking-wider">Unjuran Sewaan 2026</span>
-                   <h4 className="text-[0.8vw] font-bold text-white">Kos Sewa Purata Kampus</h4>
+                   <span className="text-[0.55vw] text-cyan-400 font-mono font-bold uppercase tracking-wider">{t('portal:launch_rent_projection', 'Unjuran Sewaan 2026')}</span>
+                   <h4 className="text-[0.8vw] font-bold text-white">{t('portal:launch_rent_avg_cost', 'Kos Sewa Purata Kampus')}</h4>
                  </div>
                  <div className="flex gap-[1vw] items-end">
                    <Volumetric3DBar height={3.5} color="#06b6d4" label="Semambu" />
@@ -2933,7 +2951,7 @@ function PolyRentScene({ mod }: SceneProps) {
                       {/* Items */}
                       <div className="flex flex-col gap-[0.5vw]">
                         {[
-                          { name: 'Sewa Bulanan (Rumah)', total: 540, val: billValues[0], c: '#06b6d4' },
+                          { name: t('portal:launch_rent_monthly', 'Sewa Bulanan (Rumah)'), total: 540, val: billValues[0], c: '#06b6d4' },
                           { name: 'Internet (500Mbps)', total: 60, val: billValues[1], c: '#3b82f6' },
                           { name: 'Utiliti (Elektrik & Air)', total: 45, val: billValues[2], c: '#10b981' }
                         ].map((bill, i) => (
@@ -2951,7 +2969,7 @@ function PolyRentScene({ mod }: SceneProps) {
                               >
                                 RM {bill.val}
                               </motion.p>
-                              <p className="text-[0.5vw] text-white/30 font-mono">Kongsi 3 Pelajar</p>
+                              <p className="text-[0.5vw] text-white/30 font-mono">{t('portal:launch_rent_share_3', 'Kongsi 3 Pelajar')}</p>
                             </div>
                           </div>
                         ))}
@@ -2967,7 +2985,7 @@ function PolyRentScene({ mod }: SceneProps) {
                       </div>
 
                       <button className="w-full py-[0.5vw] rounded bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black text-[0.6vw] tracking-wider uppercase mt-[0.2vw] flex items-center justify-center gap-[0.3vw] shadow-lg border border-cyan-400/20">
-                        <MessageSquare className="w-[0.8vw] h-[0.8vw]" /> Hubungi Pemilik Sebutharga
+                        <MessageSquare className="w-[0.8vw] h-[0.8vw]" /> {t('portal:launch_contact_owner_quote', 'Hubungi Pemilik Sebutharga')}
                       </button>
                     </motion.div>
                   )}
@@ -2992,13 +3010,14 @@ function PolyRentScene({ mod }: SceneProps) {
       </AnimatePresence>
 
       <ModuleOverlay show={act>=5} num="Modul 03" name="PolyRent" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Fungsi pembahagian bil dan pengesahan kualiti sewaan mengurangkan kos dan risiko penipuan kediaman." />
+      <FloatAiChip show={act>=5} message={t('portal:launch_chip_polyrent', 'Fungsi pembahagian bil dan pengesahan kualiti sewaan mengurangkan kos dan risiko penipuan kediaman.')} />
     </CinematicEnvelope>
   );
 }
 
 // ─── Scene 04: E-Kebajikan ───────────────────────────────────────────────────
 function KebajikanScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   
   useEffect(() => {
@@ -3057,11 +3076,11 @@ function KebajikanScene({ mod }: SceneProps) {
                  {/* Stats */}
                  <div className="flex flex-col gap-[1vw] w-[15vw]">
                     <div className="bg-white/5 border border-white/5 rounded-[1vw] p-[1.5vw]">
-                      <p className="text-[0.8vw] text-white/50 uppercase tracking-wider mb-[0.2vw]">Aduan Aktif</p>
+                      <p className="text-[0.8vw] text-white/50 uppercase tracking-wider mb-[0.2vw]">{t('portal:active_complaints', 'Aduan Aktif')}</p>
                       <p className="text-[3vw] font-black text-white leading-none">12</p>
                     </div>
                     <div className="bg-teal-500/10 border border-teal-500/10 rounded-[1vw] p-[1.5vw]">
-                      <p className="text-[0.8vw] text-teal-300/70 uppercase tracking-wider mb-[0.2vw]">Selesai Harini</p>
+                      <p className="text-[0.8vw] text-teal-300/70 uppercase tracking-wider mb-[0.2vw]">{t('portal:resolved_today', 'Selesai Harini')}</p>
                       <p className="text-[3vw] font-black text-teal-400 leading-none drop-shadow-[0_0_10px_rgba(45,212,191,0.4)]">45</p>
                     </div>
                     <div className="flex-1 bg-white/5 border border-white/5 rounded-[1vw] p-[1.5vw] flex flex-col items-center justify-center">
@@ -3107,10 +3126,10 @@ function KebajikanScene({ mod }: SceneProps) {
                           }}
                         >
                            <div className="absolute top-[3vw] left-[14vw] w-[6vw] h-[8vw] border border-white/10 bg-white/5 flex items-center justify-center rounded-[0.5vw]">
-                             <span className="text-[0.6vw] text-white/50 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK A</span>
+                             <span className="text-[0.6vw] text-white/50 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>{t('portal:block_a', 'BLOK A')}</span>
                            </div>
                            <div className="absolute top-[15vw] left-[4vw] w-[8vw] h-[6vw] border border-white/10 bg-white/5 flex items-center justify-center rounded-[0.5vw]">
-                             <span className="text-[0.6vw] text-white/50 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK B</span>
+                             <span className="text-[0.6vw] text-white/50 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>{t('portal:block_b', 'BLOK B')}</span>
                            </div>
                            
                            {/* Target Pin */}
@@ -3133,13 +3152,13 @@ function KebajikanScene({ mod }: SceneProps) {
                                     style={{ transform: 'translateZ(2vw) rotateX(-90deg) rotateY(-22deg)', transformOrigin: 'bottom center' }}
                                   >
                                     <div className="bg-red-950/80 text-red-300 font-bold px-[1vw] py-[0.4vw] rounded-[0.5vw] border border-red-500/50 shadow-[0_15px_30px_rgba(239,68,68,0.5)] backdrop-blur-md whitespace-nowrap text-[0.8vw] flex items-center gap-[0.4vw]">
-                                      <AlertTriangle className="w-[0.9vw] h-[0.9vw] text-red-500 animate-pulse" /> ADUAN BARU
+                                      <AlertTriangle className="w-[0.9vw] h-[0.9vw] text-red-500 animate-pulse" /> {t('portal:new_complaint', 'ADUAN BARU')}
                                     </div>
                                     <div className="w-[1.5px] h-[4vw] bg-gradient-to-b from-red-500 to-transparent" />
                                   </motion.div>
                                 </>
                               )}
-                              {act < 4 && <span className="text-[0.6vw] text-white/40 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK C</span>}
+                              {act < 4 && <span className="text-[0.6vw] text-white/40 font-mono font-bold" style={{ transform: 'rotateZ(-45deg)' }}>{t('portal:block_c', 'BLOK C')}</span>}
                            </div>
                         </motion.div>
                       )}
@@ -3158,9 +3177,9 @@ function KebajikanScene({ mod }: SceneProps) {
                        {act >= 4 && (
                          <motion.div initial={{ opacity:0, x: 20 }} animate={{ opacity:1, x: 0 }} transition={spS(0)} className="bg-white/5 border border-white/10 rounded-[0.8vw] p-[1vw]">
                            <div className="flex items-center gap-[0.5vw] mb-[0.4vw]">
-                             <span className="text-[0.6vw] font-bold text-red-400 uppercase tracking-wider">Pelajar (Blok C)</span>
+                             <span className="text-[0.6vw] font-bold text-red-400 uppercase tracking-wider">{t('portal:student_block_c', 'Pelajar (Blok C)')}</span>
                            </div>
-                           <p className="text-[0.75vw] text-white/80">Bumbung bocor teruk di Bilik 204! Air menitis laju ke atas katil. Mohon bantuan segera! 😭</p>
+                           <p className="text-[0.75vw] text-white/80">{t('portal:launch_complaint_desc', 'Bumbung bocor teruk di Bilik 204! Air menitis laju ke atas katil. Mohon bantuan segera!')}</p>
                          </motion.div>
                        )}
                      </AnimatePresence>
@@ -3169,9 +3188,9 @@ function KebajikanScene({ mod }: SceneProps) {
                        {act >= 5 && (
                          <motion.div initial={{ opacity:0, x: -20 }} animate={{ opacity:1, x: 0 }} transition={spS(0)} className="bg-teal-500/10 border border-teal-500/20 rounded-[0.8vw] p-[1vw] self-end w-[90%]">
                            <div className="flex items-center justify-end gap-[0.5vw] mb-[0.4vw]">
-                             <span className="text-[0.6vw] font-bold text-teal-400 uppercase tracking-wider">Resolusi Exco</span>
+                             <span className="text-[0.6vw] font-bold text-teal-400 uppercase tracking-wider">{t('portal:exco_resolution', 'Resolusi Exco')}</span>
                            </div>
-                           <p className="text-[0.75vw] text-teal-100 text-right flex items-center justify-end gap-[0.2vw]">Makluman diterima. Penyelenggaraan dlm perjalanan ke lokasi. <Wrench className="w-[0.7vw] h-[0.7vw] text-teal-300 ml-[0.2vw]" /> <Zap className="w-[0.7vw] h-[0.7vw] text-yellow-300" /></p>
+                           <p className="text-[0.75vw] text-teal-100 text-right flex items-center justify-end gap-[0.2vw]">{t('portal:launch_exco_reply', 'Makluman diterima. Penyelenggaraan dlm perjalanan ke lokasi.')} <Wrench className="w-[0.7vw] h-[0.7vw] text-teal-300 ml-[0.2vw]" /> <Zap className="w-[0.7vw] h-[0.7vw] text-yellow-300" /></p>
                          </motion.div>
                        )}
                      </AnimatePresence>
@@ -3179,7 +3198,7 @@ function KebajikanScene({ mod }: SceneProps) {
                      <AnimatePresence>
                        {act >= 6 && (
                          <motion.div initial={{ opacity:0, x: 20 }} animate={{ opacity:1, x: 0 }} transition={spS(0)} className="bg-emerald-500/10 border border-emerald-500/20 rounded-[0.8vw] p-[1vw]">
-                           <p className="text-[0.75vw] text-emerald-100 font-medium flex items-center gap-[0.2vw]">Terima kasih atas respon aduan pantas JPP! Terbaik! <Flame className="w-[0.7vw] h-[0.7vw] text-amber-500" /></p>
+                           <p className="text-[0.75vw] text-emerald-100 font-medium flex items-center gap-[0.2vw]">{t('portal:launch_student_thanks', 'Terima kasih atas respon aduan pantas JPP! Terbaik!')} <Flame className="w-[0.7vw] h-[0.7vw] text-amber-500" /></p>
                          </motion.div>
                        )}
                      </AnimatePresence>
@@ -3193,7 +3212,7 @@ function KebajikanScene({ mod }: SceneProps) {
       </AnimatePresence>
 
       <ModuleOverlay show={act>=7} num="Modul 04" name="E-Kebajikan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=6} message="Sistem Pemetaan Resolusi Aduan mempercepatkan tindakan penyelesaian fasiliti." />
+      <FloatAiChip show={act>=6} message={t('portal:launch_chip_kebajikan', 'Sistem Pemetaan Resolusi Aduan mempercepatkan tindakan penyelesaian fasiliti.')} />
     </CinematicEnvelope>
   );
 }
@@ -3237,6 +3256,7 @@ function CoinTorrent({ active }: { active: boolean; key?: React.Key }) {
 
 // ─── Scene 02: E-Keusahawanan ────────────────────────────────────────────────
 function KeusahawananScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [rev, setRev] = useState(0);
 
@@ -3296,7 +3316,7 @@ function KeusahawananScene({ mod }: SceneProps) {
                        className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-[1.5vw] p-[1.5vw] shadow-[0_20px_40px_rgba(34,197,94,0.1)] relative"
                      >
                        <SpecularGlare />
-                       <p className="text-[0.7vw] text-green-400/80 tracking-widest uppercase mb-[1vw] font-bold">Produk Terlaris Hari Ini</p>
+                       <p className="text-[0.7vw] text-green-400/80 tracking-widest uppercase mb-[1vw] font-bold">{t('portal:top_products_today', 'Produk Terlaris Hari Ini')}</p>
                        <div className="flex gap-[1vw] items-center">
                          <div className="w-[4.5vw] h-[4.5vw] bg-white/5 border border-white/10 rounded-[0.8vw] flex items-center justify-center">
                            <Shirt className="w-[2vw] h-[2vw] text-green-400" />
@@ -3324,9 +3344,9 @@ function KeusahawananScene({ mod }: SceneProps) {
                        <p className="text-[0.7vw] text-green-400/80 tracking-widest uppercase mb-[1vw] font-bold">Feed Aliran Tunai</p>
                        <div className="flex flex-col gap-[0.6vw]">
                          {[
-                           { k: 'Kiosk Siswa A', v: '+RM 12.50' },
-                           { k: 'Kiosk Siswa C', v: '+RM 4.00' },
-                           { k: 'Kiosk Siswa B', v: '+RM 25.00' }
+                           { k: t('portal:launch_kiosk_siswa_a', 'Kiosk Siswa A'), v: '+RM 12.50' },
+                           { k: t('portal:launch_kiosk_siswa_c', 'Kiosk Siswa C'), v: '+RM 4.00' },
+                           { k: t('portal:launch_kiosk_siswa_b', 'Kiosk Siswa B'), v: '+RM 25.00' }
                          ].map((item, i)=>(
                            <motion.div key={i} initial={{opacity:0, x:-20}} animate={{opacity:1, x:0}} transition={{delay: i * 0.15}} className="flex justify-between items-center bg-white/5 p-[0.6vw] rounded-[0.5vw] border border-white/5">
                              <span className="text-[0.8vw] text-white/70">{item.k}</span><span className="text-[0.9vw] font-bold text-green-400">{item.v}</span>
@@ -3353,7 +3373,7 @@ function KeusahawananScene({ mod }: SceneProps) {
                 <div className="flex justify-between items-start mb-[1.5vw]">
                   <div>
                     <h2 className="text-[2vw] font-black text-white tracking-widest uppercase leading-tight drop-shadow-[0_0_10px_rgba(34,197,94,0.2)]">E-Keusahawanan</h2>
-                    <p className="text-[0.8vw] text-green-400 tracking-[0.3em] uppercase mt-[0.3vw]">Hab Data Jualan & Unjuran</p>
+                    <p className="text-[0.8vw] text-green-400 tracking-[0.3em] uppercase mt-[0.3vw]">{t('portal:sales_data_hub', 'Hab Data Jualan & Unjuran')}</p>
                   </div>
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 12, repeat: Infinity, ease: "linear" }} className="w-[3.5vw] h-[3.5vw] rounded-full border border-green-500/30 flex items-center justify-center bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.25)]">
                     <TrendingUp className="w-[1.4vw] h-[1.4vw] text-green-400" />
@@ -3362,11 +3382,11 @@ function KeusahawananScene({ mod }: SceneProps) {
                 
                 <div className="flex gap-[2vw] mb-[1.5vw]">
                   <div className="bg-white/5 p-[1.2vw] rounded-[1vw] border border-white/5 flex-1">
-                    <p className="text-[0.8vw] text-green-400/60 uppercase tracking-wider mb-[0.3vw]">Kutipan Kasar</p>
+                    <p className="text-[0.8vw] text-green-400/60 uppercase tracking-wider mb-[0.3vw]">{t('portal:gross_collection', 'Kutipan Kasar')}</p>
                     <p className="text-[2.6vw] font-black text-white leading-none font-mono">RM {rev.toLocaleString()}</p>
                   </div>
                   <div className="bg-white/5 p-[1.2vw] rounded-[1vw] border border-white/5 flex-1">
-                    <p className="text-[0.8vw] text-green-400/60 uppercase tracking-wider mb-[0.3vw]">Transaksi Aktif</p>
+                    <p className="text-[0.8vw] text-green-400/60 uppercase tracking-wider mb-[0.3vw]">{t('portal:active_transactions', 'Transaksi Aktif')}</p>
                     <p className="text-[2.6vw] font-black text-white leading-none font-mono">1,204</p>
                   </div>
                 </div>
@@ -3494,13 +3514,14 @@ function KeusahawananScene({ mod }: SceneProps) {
       </AnimatePresence>
 
       <ModuleOverlay show={act>=7} num="Modul 05" name="E-Keusahawanan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=6} message="Sistem POS Digital merekod setiap transaksi masa nyata untuk analisis JPP." />
+      <FloatAiChip show={act>=6} message={t('portal:launch_chip_keusahawanan', 'Sistem POS Digital merekod setiap transaksi masa nyata untuk analisis JPP.')} />
     </CinematicEnvelope>
   );
 }
 
 // ─── Scene 03: E-Akademik ────────────────────────────────────────────────────
 function AkademikScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [merit, setMerit] = useState(40);
   const [cgpa, setCgpa] = useState(0);
@@ -3644,7 +3665,7 @@ function AkademikScene({ mod }: SceneProps) {
                     </p>
                   </div>
                   <p className="text-[0.7vw] font-bold text-white mt-[1vw]">PolyScan AR</p>
-                  <p className="text-[0.55vw] text-white/40 text-center mt-[0.2vw]">Halakan kamera ke QR kod merit</p>
+                  <p className="text-[0.55vw] text-white/40 text-center mt-[0.2vw]">{t('portal:launch_aim_qr_merit', 'Halakan kamera ke QR kod merit')}</p>
                 </div>
               </motion.div>
             )}
@@ -3663,11 +3684,11 @@ function AkademikScene({ mod }: SceneProps) {
                 <motion.div animate={{ scale: [1, 1.2, 1] }} className="mb-[0.5vw] text-yellow-400">
                   <CreditCard className="w-[3.5vw] h-[3.5vw]" />
                 </motion.div>
-                <p className="text-[0.75vw] text-yellow-300 uppercase tracking-widest font-bold">Merit Terkumpul</p>
+                <p className="text-[0.75vw] text-yellow-300 uppercase tracking-widest font-bold">{t('portal:merit_accumulated', 'Merit Terkumpul')}</p>
                 <motion.p key={merit} initial={{ scale: 1.3, color: '#f59e0b' }} animate={{ scale: 1, color: '#fff' }} className="text-[3.5vw] font-black leading-none font-mono mt-[0.5vw]">
                   {merit}
                 </motion.p>
-                <p className="text-[0.55vw] text-white/50 mt-[0.5vw] uppercase tracking-wider">Mata Merit Digital</p>
+                <p className="text-[0.55vw] text-white/50 mt-[0.5vw] uppercase tracking-wider">{t('portal:digital_merit_points', 'Mata Merit Digital')}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -3753,7 +3774,7 @@ function AkademikScene({ mod }: SceneProps) {
                     </div>
                   </div>
                   <div className="flex flex-col gap-[0.6vw]">
-                    {['Slip Peperiksaan S4', 'Transkrip S3', 'Surat Tawaran'].map((doc, i) => (
+                    {[t('portal:exam_slip_s4', 'Slip Peperiksaan S4'), t('portal:transcript_s3', 'Transkrip S3'), t('portal:offer_letter', 'Surat Tawaran')].map((doc, i) => (
                       <div key={i} className="flex items-center gap-[0.8vw] p-[0.6vw] bg-white/5 rounded-[0.5vw] border border-white/5">
                         <div className="w-[1.5vw] h-[1.5vw] bg-indigo-500/20 border border-indigo-500/30 rounded-sm flex items-center justify-center text-white"><FileText className="w-[0.9vw] h-[0.9vw]" /></div>
                         <p className="text-[0.75vw] text-white/80 font-mono">{doc}</p>
@@ -3772,9 +3793,9 @@ function AkademikScene({ mod }: SceneProps) {
                   <p className="text-[0.8vw] text-white/50 uppercase tracking-widest font-bold mb-[0.8vw]">Log Sistem</p>
                   <div className="flex flex-col gap-[0.6vw]">
                     {[
-                      { t: '10:42 AM', m: 'Merit ditambah (+5)', c: 'text-yellow-400' },
-                      { t: '09:15 AM', m: 'Kehadiran K-KEM 101 Direkod', c: 'text-green-400' },
-                      { t: 'Semalam', m: 'Transkrip S3 dimuat turun', c: 'text-blue-400' },
+                      { t: '10:42 AM', m: t('portal:launch_merit_added_5', 'Merit ditambah (+5)'), c: 'text-yellow-400' },
+                      { t: '09:15 AM', m: t('portal:launch_attendance_recorded', 'Kehadiran K-KEM 101 Direkod'), c: 'text-green-400' },
+                      { t: 'Semalam', m: t('portal:launch_transcript_downloaded', 'Transkrip S3 dimuat turun'), c: 'text-blue-400' },
                     ].map((log, i) => (
                       <div key={i} className="flex items-center gap-[0.8vw] border-b border-white/5 pb-[0.4vw] last:border-0">
                         <p className="text-[0.7vw] text-white/30 font-mono">{log.t}</p>
@@ -3792,13 +3813,14 @@ function AkademikScene({ mod }: SceneProps) {
       </div>
 
       <ModuleOverlay show={act>=8} num="Modul 06" name="E-Akademik" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=8} message="Sistem E-Akademik menawarkan integrasi rekod holistik dan bilik kebal peribadi pelajar." />
+      <FloatAiChip show={act>=8} message={t('portal:launch_chip_akademik', 'Sistem E-Akademik menawarkan integrasi rekod holistik dan bilik kebal peribadi pelajar.')} />
     </CinematicEnvelope>
   );
 }
 
 // ─── Scene 04: PolyMart ──────────────────────────────────────────────────────
 function PolyMartScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const [cart, setCart] = useState(0);
 
@@ -3866,7 +3888,7 @@ function PolyMartScene({ mod }: SceneProps) {
 
           <div className="flex-1 h-[2.2vw] rounded-[0.5vw] flex items-center px-[1vw] gap-[0.5vw] bg-[#141414] border border-white/5">
             <span className="text-[0.8vw] text-white/30">🔍</span>
-            <span className="text-[0.75vw] text-white/30">Cari barangan kampus...</span>
+            <span className="text-[0.75vw] text-white/30">{t('portal:search_campus_items_placeholder', 'Cari barangan kampus...')}</span>
           </div>
 
           <div className="flex items-center gap-[1vw] text-white/40 text-[1.1vw]">
@@ -3919,11 +3941,11 @@ function PolyMartScene({ mod }: SceneProps) {
               </div>
               <h1 className="text-[3vw] font-black text-white leading-[0.95] tracking-tighter uppercase">Jelajah</h1>
               <h1 className="text-[3vw] font-black text-amber-500 leading-[0.95] tracking-tighter uppercase mb-[0.6vw]" style={{ textShadow: `0 0 30px ${gc}30` }}>Kampus</h1>
-              <p className="text-[0.8vw] text-white/70 mb-[1.5vw] border-l-2 border-amber-500 pl-[0.8vw]">Tempah produk eksklusif dari peniaga berdaftar JPP. Siapa cepat dia dapat.</p>
+              <p className="text-[0.8vw] text-white/70 mb-[1.5vw] border-l-2 border-amber-500 pl-[0.8vw]">{t('portal:launch_book_exclusive', 'Tempah produk eksklusif dari peniaga berdaftar JPP. Siapa cepat dia dapat.')}</p>
 
               <div className="flex gap-[0.8vw]">
-                <div className="px-[1.2vw] py-[0.6vw] bg-white text-black font-black text-[0.8vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-amber-500 transition-colors">Beli Sekarang</div>
-                <div className="px-[1.2vw] py-[0.6vw] border border-white text-white font-black text-[0.8vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-white hover:text-black transition-colors">Koleksi</div>
+                <div className="px-[1.2vw] py-[0.6vw] bg-white text-black font-black text-[0.8vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-amber-500 transition-colors">{t('portal:buy_now', 'Beli Sekarang')}</div>
+                <div className="px-[1.2vw] py-[0.6vw] border border-white text-white font-black text-[0.8vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-white hover:text-black transition-colors">{t('portal:collection', 'Koleksi')}</div>
               </div>
             </div>
 
@@ -3953,7 +3975,7 @@ function PolyMartScene({ mod }: SceneProps) {
 
           {/* Vendors */}
           <div className="mt-[2vw]">
-            <h2 className="text-[1.2vw] font-black text-white uppercase tracking-tighter mb-[1vw]">Peniaga Pilihan <Flame className="w-[1.2vw] h-[1.2vw] text-amber-500 inline ml-[0.3vw]" /></h2>
+            <h2 className="text-[1.2vw] font-black text-white uppercase tracking-tighter mb-[1vw]">{t('portal:featured_sellers', 'Peniaga Pilihan')} <Flame className="w-[1.2vw] h-[1.2vw] text-amber-500 inline ml-[0.3vw]" /></h2>
             <div className="flex gap-[1.5vw]">
               {['SUPREME BITE', 'AGROSEA HYPE'].map((name, i) => (
                 <motion.div 
@@ -4037,13 +4059,14 @@ function PolyMartScene({ mod }: SceneProps) {
       </motion.div>
 
       <ModuleOverlay show={act>=6} num="Modul 07" name="PolyMart" tagline={mod.tagline} gc={gc} pos="bottom-[8%] right-[4%]" />
-      <FloatAiChip show={act>=5} message="Sistem pasaran kampus berprestasi tinggi. Terus beli tanpa tunggu!" pos="top-[10%] right-[4%]" />
+      <FloatAiChip show={act>=5} message={t('portal:launch_chip_polymart', 'Sistem pasaran kampus berprestasi tinggi. Terus beli tanpa tunggu!')} pos="top-[10%] right-[4%]" />
     </CinematicEnvelope>
   );
 }
 
 // ─── Scene 05: Sistem Kelab ──────────────────────────────────────────────────
 function KelabScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const fire = '#dc2626';
 
@@ -4059,7 +4082,7 @@ function KelabScene({ mod }: SceneProps) {
   }, []);
 
   const nodes = [
-    { x: '9vw', y: '4vw', z: '6vw', label: 'Kelab Kembara', stat: 'A+' },
+    { x: '9vw', y: '4vw', z: '6vw', label: t('portal:club_kembara', 'Kelab Kembara'), stat: 'A+' },
     { x: '-7vw', y: '-9vw', z: '4vw', label: 'E-Sports', stat: 'Elit' },
     { x: '10vw', y: '-10vw', z: '-8vw', label: 'Seni Silat', stat: 'Aktif' },
     { x: '-13vw', y: '6vw', z: '-4vw', label: 'Inovasi', stat: 'Pro' },
@@ -4126,7 +4149,7 @@ function KelabScene({ mod }: SceneProps) {
                   <div className="w-[0.6vw] h-[0.6vw] bg-white rounded-full z-10 relative" />
                   <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: '1.2vw' }} transition={{ delay: i * 0.2 + 0.4 }} className="absolute whitespace-nowrap bg-black/60 border border-white/10 px-[0.8vw] py-[0.4vw] rounded-[0.6vw] backdrop-blur-md z-20">
                     <p className="text-[0.6vw] font-bold text-yellow-400 tracking-widest uppercase">{n.label}</p>
-                    <p className="text-[0.5vw] text-white/50 font-mono mt-[0.1vw]">Status: <span className="text-white font-bold">{n.stat}</span></p>
+                    <p className="text-[0.5vw] text-white/50 font-mono mt-[0.1vw]">{t('portal:status_label', 'Status:')} <span className="text-white font-bold">{n.stat}</span></p>
                   </motion.div>
                 </motion.div>
               ))}
@@ -4156,7 +4179,7 @@ function KelabScene({ mod }: SceneProps) {
               >
                 <div className="p-[1.2vw] bg-black/35 border border-white/10 rounded-[1vw] backdrop-blur-xl shadow-[0_0_50px_rgba(220,38,38,0.15)] relative">
                   <SpecularGlare />
-                  <h3 className="text-[0.75vw] text-red-500 font-bold uppercase tracking-widest mb-[0.8vw] flex items-center gap-[0.4vw]"><div className="w-[0.4vw] h-[0.4vw] bg-red-500 rounded-full animate-pulse" /> Rangkaian Kelab</h3>
+                  <h3 className="text-[0.75vw] text-red-500 font-bold uppercase tracking-widest mb-[0.8vw] flex items-center gap-[0.4vw]"><div className="w-[0.4vw] h-[0.4vw] bg-red-500 rounded-full animate-pulse" /> {t('portal:club_network', 'Rangkaian Kelab')}</h3>
                   <div className="flex flex-col gap-[0.7vw]">
                     {[1,2,3,4].map(i => (
                       <div key={i} className="w-full h-[0.25vw] bg-white/10 rounded-full overflow-hidden">
@@ -4168,13 +4191,13 @@ function KelabScene({ mod }: SceneProps) {
                 
                 <div className="flex-1 bg-black/35 border border-white/10 rounded-[1vw] backdrop-blur-xl p-[1.2vw] overflow-hidden flex flex-col relative">
                   <SpecularGlare />
-                  <h3 className="text-[0.6vw] text-white/50 font-bold uppercase tracking-widest mb-[0.8vw]">Log Aktiviti Langsung</h3>
+                  <h3 className="text-[0.6vw] text-white/50 font-bold uppercase tracking-widest mb-[0.8vw]">{t('portal:live_activity_log', 'Log Aktiviti Langsung')}</h3>
                   <div className="absolute inset-x-0 top-[2.8vw] bottom-[1vw] overflow-hidden px-[1.2vw]">
                     <motion.div animate={{ y: [0, -120] }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="flex flex-col gap-[0.6vw]">
                       {[...Array(10)].map((_, i) => (
                         <div key={i} className="flex items-center gap-[0.4vw]">
                           <div className="w-[0.3vw] h-[0.3vw] rounded-full bg-green-400" />
-                          <p className="text-[0.6vw] text-white/60 font-mono">SYS: Ahli #{1020 + i} disahkan.</p>
+                          <p className="text-[0.6vw] text-white/60 font-mono">{t('portal:launch_sys_member_verified', 'SYS: Ahli #{{num}} disahkan.', { num: 1020 + i })}</p>
                         </div>
                       ))}
                     </motion.div>
@@ -4190,7 +4213,7 @@ function KelabScene({ mod }: SceneProps) {
               >
                 <SpecularGlare />
                 <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8, type: 'spring' }} className="text-[6.5vw] font-black leading-none text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-[0_0_15px_rgba(255,255,255,0.45)] font-mono">27</motion.p>
-                <p className="text-[0.75vw] font-bold text-yellow-400 tracking-[0.4em] uppercase mt-[0.5vw]">Sistem Aktif</p>
+                <p className="text-[0.75vw] font-bold text-yellow-400 tracking-[0.4em] uppercase mt-[0.5vw]">{t('portal:system_active', 'Sistem Aktif')}</p>
               </motion.div>
             </>
           )}
@@ -4205,7 +4228,7 @@ function KelabScene({ mod }: SceneProps) {
           )}
         </AnimatePresence>
 
-        <ModuleOverlay show={act >= 5} num="Modul 08" name="Sistem Kelab" tagline={mod.tagline} gc="#fbbf24" pos="bottom-[8%] left-[4%]" />
+        <ModuleOverlay show={act >= 5} num="Modul 08" name={t('portal:module_club_system', 'Sistem Kelab')} tagline={mod.tagline} gc="#fbbf24" pos="bottom-[8%] left-[4%]" />
       </motion.div>
     </CinematicEnvelope>
   );
@@ -4213,6 +4236,7 @@ function KelabScene({ mod }: SceneProps) {
 
 // ─── Scene 06: Karnival & SUPSAS (Merged Ultimate Scene) ───────────────────────
 function KarnivalScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   const gc = mod.gc;
 
@@ -4230,7 +4254,7 @@ function KarnivalScene({ mod }: SceneProps) {
 
   const foodZones = [
     { name: 'Food Truck', x: '12%', y: '15%', w: '26%', h: '38%', c: '#f59e0b' },
-    { name: 'Pentas Utama', x: '52%', y: '10%', w: '38%', h: '32%', c: gc },
+    { name: t('portal:main_stage', 'Pentas Utama'), x: '52%', y: '10%', w: '38%', h: '32%', c: gc },
     { name: 'Zon Permainan', x: '15%', y: '62%', w: '70%', h: '26%', c: '#3b82f6' }
   ];
 
@@ -4271,7 +4295,7 @@ function KarnivalScene({ mod }: SceneProps) {
                 <div className="flex-1 p-[1.5vw] flex flex-col justify-center relative">
                   <SpecularGlare />
                   <p className="text-[1.8vw] font-black leading-none text-white">Malam Gala JPP</p>
-                  <p className="text-[0.75vw] text-white/50 mt-[0.4vw]">Dewan Jubli Perak · 8:00 PM</p>
+                  <p className="text-[0.75vw] text-white/50 mt-[0.4vw]">{t('portal:dewan_jubli_perak_time', 'Dewan Jubli Perak · 8:00 PM')}</p>
                   <motion.div initial={{width:0}} animate={{width:'100%'}} transition={{duration:1, ease:'easeOut', delay:0.3}} className="h-[0.3vw] mt-[1.2vw] rounded-full" style={{background:gc}} />
                 </div>
               </div>
@@ -4298,7 +4322,7 @@ function KarnivalScene({ mod }: SceneProps) {
                   <div className="w-[1.8vw] h-[1.8vw] rounded-md flex items-center justify-center bg-pink-500/10 border border-pink-500/30"><PartyPopper className="w-[1vw] h-[1vw] text-pink-400" /></div>
                   <div><p className="text-[0.75vw] font-bold text-pink-400">Karnival JPP</p><p className="text-[0.5vw] text-white/40 font-mono">Event Console</p></div>
                 </div>
-                {['Dashboard','Tiket & Pass','Peta Tapak','Vendor Makanan','Persembahan'].map((item,i)=>(
+                {[t('portal:dashboard', 'Dashboard'), t('portal:ticket_and_pass', 'Tiket & Pass'), t('portal:site_map', 'Peta Tapak'), t('portal:food_vendor', 'Vendor Makanan'), t('portal:performance', 'Persembahan')].map((item,i)=>(
                   <div key={item} className={`text-[0.7vw] px-[0.6vw] py-[0.45vw] rounded-md ${i===0?'font-bold bg-pink-500/10 text-pink-400 border border-pink-500/20':'text-white/40'}`}>{item}</div>
                 ))}
               </div>
@@ -4308,7 +4332,7 @@ function KarnivalScene({ mod }: SceneProps) {
                 <div className="flex justify-between items-end">
                   <div>
                     <h3 className="text-[1.5vw] font-black text-white">Peta Karnival Live</h3>
-                    <p className="text-[0.7vw] text-white/50 mt-[0.1vw]">Kemas kini masa nyata kehadiran pengunjung</p>
+                    <p className="text-[0.7vw] text-white/50 mt-[0.1vw]">{t('portal:launch_realtime_visitor_update', 'Kemas kini masa nyata kehadiran pengunjung')}</p>
                   </div>
                   <div className="px-[0.8vw] py-[0.3vw] rounded-full text-[0.6vw] font-bold border flex items-center gap-[0.4vw]" style={{borderColor:gc, color:gc, background:gc+'10'}}>
                     <div className="w-[0.4vw] h-[0.4vw] rounded-full bg-current animate-pulse" /> LIVE
@@ -4335,9 +4359,9 @@ function KarnivalScene({ mod }: SceneProps) {
                   {/* Stats */}
                   <div className="flex-1 flex flex-col gap-[0.5vw]">
                     {[
-                      {label:'Kehadiran Terkini', val:'1,482', sub:'+120 jam lepas', icon:<Users className="w-[1vw] h-[1vw] text-white" />},
-                      {label:'Kapasiti Dewan', val:'85%', sub:'Kepadatan tinggi', icon:<BarChart className="w-[1vw] h-[1vw] text-white" />},
-                      {label:'Jualan Tiket', val:'RM 12,500', sub:'Telah disahkan', icon:<Ticket className="w-[1vw] h-[1vw] text-white" />}
+                      {label: t('portal:latest_attendance', 'Kehadiran Terkini'), val:'1,482', sub: t('portal:launch_sub_past_120h', '+120 jam lepas'), icon:<Users className="w-[1vw] h-[1vw] text-white" />},
+                      {label: t('portal:hall_capacity', 'Kapasiti Dewan'), val:'85%', sub: t('portal:high_density', 'Kepadatan tinggi'), icon:<BarChart className="w-[1vw] h-[1vw] text-white" />},
+                      {label: t('portal:ticket_sales', 'Jualan Tiket'), val:'RM 12,500', sub: t('portal:verified_status', 'Telah disahkan'), icon:<Ticket className="w-[1vw] h-[1vw] text-white" />}
                     ].map((s,i)=>(
                       <motion.div key={s.label} initial={{x:25, opacity:0}} animate={act>=4?{x:0, opacity:1}:{}} transition={{delay:0.3+i*0.1}} className="p-[0.8vw] rounded-[0.8vw] border bg-[#0d0309] flex flex-col" style={{borderColor:gc+'15'}}>
                         <p className="text-[0.6vw] text-white/40 uppercase tracking-wider mb-[0.3vw] flex items-center gap-[0.3vw]">{s.icon} {s.label}</p>
@@ -4364,6 +4388,7 @@ function KarnivalScene({ mod }: SceneProps) {
 
 // ─── Scene 07: JPP HQ Portal ─────────────────────────────────────────────────
 function JppHqScene({ mod }: SceneProps) {
+  const { t } = useTranslation('portal');
   const [act, setAct] = useState(0);
   useEffect(() => {
     const ts = [
@@ -4436,7 +4461,7 @@ function JppHqScene({ mod }: SceneProps) {
                 <div><p className="text-[0.95vw] font-black text-white leading-none">JPP HQ PORTAL</p><p className="text-[0.55vw] tracking-[0.2em] uppercase mt-[0.2vw]" style={{color:gc}}>Eksekutif Dashboard</p></div>
               </div>
               <div className="text-right">
-                <p className="text-[0.5vw] text-white/40">Status Sistem Global</p>
+                <p className="text-[0.5vw] text-white/40">{t('portal:global_system_status', 'Status Sistem Global')}</p>
                 <p className="text-[0.75vw] font-bold text-green-400 font-mono">Normal — 99.9% Uptime</p>
               </div>
             </div>
@@ -4458,7 +4483,7 @@ function JppHqScene({ mod }: SceneProps) {
                 <motion.div initial={{x:-20, opacity:0}} animate={{x:0, opacity:1}} transition={sp(0.2)} className="p-[1vw] rounded-[1vw] border flex-1 bg-[#0d0413]/70 flex flex-col" style={{borderColor:gc+'15'}}>
                    <p className="text-[0.7vw] text-white/50 mb-[0.5vw] font-bold uppercase tracking-wider">Notifikasi Sistem</p>
                    <div className="flex-1 flex flex-col justify-between text-[0.65vw] text-white/70">
-                     {['Pangkalan data disandarkan (2:00 AM)','Kemas kini modul E-Kebajikan v1.2','Laporan kewangan JPP dijana'].map((n,i)=>(
+                     {[t('portal:launch_log_db_backed_up', 'Pangkalan data disandarkan (2:00 AM)'), t('portal:launch_log_kebajikan_v12', 'Kemas kini modul E-Kebajikan v1.2'), t('portal:launch_log_financial_report', 'Laporan kewangan JPP dijana')].map((n,i)=>(
                        <div key={i} className="py-[0.35vw] border-b border-white/5 last:border-0 font-mono">{n}</div>
                      ))}
                    </div>
@@ -4485,11 +4510,11 @@ function JppHqScene({ mod }: SceneProps) {
                     <motion.div initial={{y:25, opacity:0}} animate={{y:0, opacity:1}} transition={spB(0.1)} className="p-[1vw] rounded-[1vw] border flex-1 flex items-center gap-[1vw]" style={{borderColor:gc+'44', background:gc+'10'}}>
                       <motion.div animate={{rotate:360}} transition={{duration:8, repeat:Infinity, ease:'linear'}} className="text-purple-400"><Sparkles className="w-[2vw] h-[2vw]" /></motion.div>
                       <div className="flex-1">
-                        <p className="text-[0.8vw] font-bold text-white mb-[0.15vw]">JPP AI — Laporan Mingguan Siap!</p>
-                        <p className="text-[0.65vw] text-white/70">Sistem mengesan aduan fasiliti meningkat 12% minggu ini. Sediakan draf aduan automasi?</p>
+                        <p className="text-[0.8vw] font-bold text-white mb-[0.15vw]">{t('portal:launch_ai_report_ready', 'JPP AI — Laporan Mingguan Siap!')}</p>
+                        <p className="text-[0.65vw] text-white/70">{t('portal:launch_ai_complaint_spike', 'Sistem mengesan aduan fasiliti meningkat 12% minggu ini. Sediakan draf aduan automasi?')}</p>
                         <div className="flex gap-[0.5vw] mt-[0.4vw]">
-                          <div className="px-[0.6vw] py-[0.2vw] text-[0.55vw] rounded bg-white text-black font-bold cursor-pointer">Jana Draf</div>
-                          <div className="px-[0.6vw] py-[0.2vw] text-[0.55vw] rounded border border-white/20 text-white/70 cursor-pointer">Tutup</div>
+                          <div className="px-[0.6vw] py-[0.2vw] text-[0.55vw] rounded bg-white text-black font-bold cursor-pointer">{t('portal:launch_generate_draft', 'Jana Draf')}</div>
+                          <div className="px-[0.6vw] py-[0.2vw] text-[0.55vw] rounded border border-white/20 text-white/70 cursor-pointer">{t('portal:close', 'Tutup')}</div>
                         </div>
                       </div>
                     </motion.div>
@@ -4608,6 +4633,7 @@ function Mask({ text, show, delay, cls }: { text:string; show:boolean; delay:num
 
 // ─── MajesticShield ──────────────────────────────────────────────────────────
 function MajesticShield({ active }: { active:boolean }) {
+  const { t } = useTranslation('portal');
   if (!active) return null;
   const gold = '#fbbf24';
   const sports = [Trophy, Target, Sparkles, Zap, Award, Activity, Shield];
@@ -4691,7 +4717,7 @@ function MajesticShield({ active }: { active:boolean }) {
 
         <div className="flex flex-col items-center mt-[0.5vw] z-20">
           <motion.span initial={{letterSpacing:'0em', opacity:0}} animate={{letterSpacing:'0.3em', opacity:1}} transition={{duration:1.5, delay:0.5}} className="text-[1vw] font-bold text-white/90 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] uppercase">
-            Sukan Tahunan Polisas
+            {t('portal:launch_polisas_annual_sports', 'Sukan Tahunan Polisas')}
           </motion.span>
           <motion.span 
             initial={{scale:2.5, opacity:0}} animate={{scale:1, opacity:1}} transition={{duration:0.5, delay:1, type:'spring'}} 
@@ -4759,14 +4785,15 @@ function FireworksEffect({ active }: { active:boolean }) {
 
 // ─── InfiniteMarquee ──────────────────────────────────────────────────────────
 function InfiniteMarquee() {
+  const { t } = useTranslation('portal');
   return (
     <div className="absolute top-[25%] left-0 right-0 w-full overflow-hidden pointer-events-none z-0 opacity-10 flex">
       <motion.div animate={{x: ['0%', '-50%']}} transition={{duration: 20, repeat: Infinity, ease: 'linear'}} className="flex whitespace-nowrap">
         <h1 className="text-[12vw] font-black italic tracking-tighter text-white leading-none px-[2vw]">
-          SUPSAS TAHUNAN DAN FESTIVAL KAMPUS
+          {t('portal:launch_supsas_marquee', 'SUPSAS TAHUNAN DAN FESTIVAL KAMPUS')}
         </h1>
         <h1 className="text-[12vw] font-black italic tracking-tighter text-white leading-none px-[2vw]">
-          SUPSAS TAHUNAN DAN FESTIVAL KAMPUS
+          {t('portal:launch_supsas_marquee', 'SUPSAS TAHUNAN DAN FESTIVAL KAMPUS')}
         </h1>
       </motion.div>
     </div>

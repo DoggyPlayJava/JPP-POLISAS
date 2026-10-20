@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage, SupportedLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { insertNotifications } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,14 +49,17 @@ interface MatricParseResult {
   errorMessage?: string;
 }
 
-function parseAndValidateMatric(rawMatric: string): MatricParseResult {
+function parseAndValidateMatric(
+  rawMatric: string,
+  t: (key: any, def?: any, opts?: any) => any = (_k, fb) => fb
+): MatricParseResult {
   const clean = rawMatric.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
 
   if (!clean.startsWith('02')) {
     return {
       isValidFormat: false,
       cleanMatric: clean,
-      errorMessage: 'No. Matrik pelajar mestilah bermula dengan "02".',
+      errorMessage: t('auth:matric_starts_with_02', 'No. Matrik pelajar mestilah bermula dengan "02".'),
     };
   }
 
@@ -64,7 +69,7 @@ function parseAndValidateMatric(rawMatric: string): MatricParseResult {
     return {
       isValidFormat: false,
       cleanMatric: clean,
-      errorMessage: 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037',
+      errorMessage: t('auth:invalid_matric_format', 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037'),
     };
   }
 
@@ -86,7 +91,11 @@ function parseAndValidateMatric(rawMatric: string): MatricParseResult {
       year2Digit,
       fullYear,
       isYearValid: false,
-      errorMessage: `Tahun kemasukan pada no. matrik (${fullYear}) tidak sah (julat sah: ${minYear} - ${maxYear}).`,
+      errorMessage: t(
+        'auth:invalid_matric_year',
+        'Tahun kemasukan pada no. matrik ({{fullYear}}) tidak sah (julat sah: {{minYear}} - {{maxYear}}).',
+        { fullYear, minYear, maxYear }
+      ),
     };
   }
 
@@ -114,7 +123,8 @@ function parseAndValidateMatric(rawMatric: string): MatricParseResult {
 /** Compute estimated semester string from intake values + system_settings */
 function computeSemDisplay(
   intakeYear: number, intakePeriod: 1 | 2, isFtv: boolean,
-  sm1: number, sm2: number
+  sm1: number, sm2: number,
+  t: (key: any, def?: any, opts?: any) => any = (_k, fb) => fb
 ): { sem: number; label: string } {
   const now       = new Date();
   const startMon  = intakePeriod === 1 ? sm1 : sm2;
@@ -122,12 +132,14 @@ function computeSemDisplay(
   const maxSem    = isFtv ? 2 : 6;
   const sem       = Math.min(Math.max(1, Math.floor(months / 6) + 1), maxSem);
   const level     = isFtv ? 'Asasi' : sem <= 3 ? 'Junior' : 'Senior';
-  return { sem, label: `${level} • Semester ${sem}` };
+  return { sem, label: t('auth:sem_level_label', '{{level}} • Semester {{sem}}', { level, sem }) };
 }
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
 
 export function CompleteProfileModal() {
+  const { t, i18n } = useTranslation(['auth', 'common']);
+  const currentLang = (i18n.language?.startsWith('ms') ? 'ms' : 'en') as SupportedLanguage;
   const { profile, user, refetchProfile } = useAuth();
 
   // ── Form state ──────────────────────────────────────────────────────────
@@ -154,7 +166,7 @@ export function CompleteProfileModal() {
   const [showWarning,      setShowWarning]      = useState(false);
 
   // Semakan matric parsing & live mismatch
-  const matricParsed = registerMode !== 'staff' && matricNo.trim() ? parseAndValidateMatric(matricNo.trim()) : null;
+  const matricParsed = registerMode !== 'staff' && matricNo.trim() ? parseAndValidateMatric(matricNo.trim(), t) : null;
   const yearMismatch = !!(
     matricParsed?.isValidFormat &&
     matricParsed.fullYear &&
@@ -172,7 +184,7 @@ export function CompleteProfileModal() {
     setMatricNo(clean);
 
     // Smart Auto-fill: auto-fill NOT auto-lock
-    const res = parseAndValidateMatric(clean);
+    const res = parseAndValidateMatric(clean, t);
     if (res.isValidFormat) {
       if (res.knownProgramme) {
         setJabatan(res.knownProgramme.jabatan);
@@ -200,7 +212,7 @@ export function CompleteProfileModal() {
   const handleLogout = async () => {
     if (!profile?.matric_no?.trim()) {
       const confirmDelete = window.confirm(
-        "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem."
+        t('auth:confirm_cancel_registration', "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem.")
       );
       if (!confirmDelete) return;
 
@@ -210,10 +222,10 @@ export function CompleteProfileModal() {
         if (rpcError) throw rpcError;
         
         await supabase.auth.signOut();
-        toast.success("Pendaftaran dibatalkan dan akaun berjaya dipadamkan.");
+        toast.success(t('auth:registration_cancelled_success', "Pendaftaran dibatalkan dan akaun berjaya dipadamkan."));
         window.location.href = '/login';
       } catch (err: any) {
-        toast.error("Ralat memadam akaun: " + (err.message || "Sila cuba lagi."));
+        toast.error(t('common:delete_failed', 'Gagal memadam akaun.') + ' ' + (err.message || ''));
         setLoading(false);
       }
     } else {
@@ -275,27 +287,27 @@ export function CompleteProfileModal() {
   const isFtv           = jabatan === 'ftv';
   const programmes      = jabatan ? JABATAN_PROGRAMMES[jabatan as JabatanValue] ?? [] : [];
   const computedSem     = intakeYear && intakePeriod
-    ? computeSemDisplay(intakeYear as number, intakePeriod as 1 | 2, isFtv, sm1, sm2)
+    ? computeSemDisplay(intakeYear as number, intakePeriod as 1 | 2, isFtv, sm1, sm2, t)
     : null;
 
   // ── Heading text ─────────────────────────────────────────────────────────
   const heading = isOnlyMissingPhone
-    ? 'Kemaskini No. Telefon'
+    ? t('auth:update_phone_title', 'Kemaskini No. Telefon')
     : isOnlyMissingCohort || isMissingPhoneAndCohort
-    ? 'Kemaskini Maklumat Pengajian'
+    ? t('auth:update_academic_title', 'Kemaskini Maklumat Pengajian')
     : isMissingCoreFields
-    ? 'Lengkapkan Profil'
-    : 'Lengkapkan Profil';
+    ? t('auth:complete_profile_title', 'Lengkapkan Profil')
+    : t('auth:complete_profile_title', 'Lengkapkan Profil');
 
   const subheading = isOnlyMissingPhone
-    ? 'Sila masukkan nombor telefon untuk tujuan notifikasi penting.'
+    ? t('auth:update_phone_subtitle', 'Sila masukkan nombor telefon untuk tujuan notifikasi penting.')
     : isOnlyMissingCohort
-    ? 'Sistem kohort baharu memerlukan maklumat program pengajian anda. Sila lengkapkan.'
+    ? t('auth:update_cohort_subtitle', 'Sistem kohort baharu memerlukan maklumat program pengajian anda. Sila lengkapkan.')
     : isMissingPhoneAndCohort
-    ? 'Sila lengkapkan nombor telefon dan maklumat program pengajian anda.'
+    ? t('auth:update_phone_cohort_subtitle', 'Sila lengkapkan nombor telefon dan maklumat program pengajian anda.')
     : isMissingCoreFields
-    ? 'Sila lengkapkan maklumat asas untuk pendaftaran anda.'
-    : 'Akaun anda telah disambungkan. Sila lengkapkan semua maklumat di bawah.';
+    ? t('auth:complete_basic_info_subtitle', 'Sila lengkapkan maklumat asas untuk pendaftaran anda.')
+    : t('auth:complete_connected_account_subtitle', 'Akaun anda telah disambungkan. Sila lengkapkan semua maklumat di bawah.');
 
   // ── Submit handler ───────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -303,24 +315,27 @@ export function CompleteProfileModal() {
 
     // ── A: Only missing phone ─────────────────────────────────────────────
     if (isOnlyMissingPhone) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
       setLoading(true);
       try {
-        const { error } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user?.id);
+        const { error } = await supabase.from('profiles').update({
+          phone: phone.trim(),
+          preferred_language: currentLang,
+        }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Nombor telefon berjaya disimpan!');
+        toast.success(t('auth:phone_saved_success', 'Nombor telefon berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan nombor telefon.');
+        toast.error(err.message || t('auth:error_saving_phone', 'Ralat menyimpan nombor telefon.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── B: Only missing cohort ────────────────────────────────────────────
     if (isOnlyMissingCohort) {
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -329,22 +344,23 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Maklumat pengajian berjaya disimpan!');
+        toast.success(t('auth:academic_info_saved_success', 'Maklumat pengajian berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan maklumat.');
+        toast.error(err.message || t('auth:error_saving_academic_info', 'Ralat menyimpan maklumat.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── C: Missing phone + cohort ─────────────────────────────────────────
     if (isMissingPhoneAndCohort) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -354,22 +370,23 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Profil berjaya dikemaskini!');
+        toast.success(t('auth:profile_updated_success', 'Profil berjaya dikemaskini!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan profil.');
+        toast.error(err.message || t('auth:error_saving_profile', 'Ralat menyimpan profil.'));
       } finally { setLoading(false); }
       return;
     }
 
     // ── C2: Missing core fields (matric exists but no dept/phone/cohort) ──
     if (isMissingCoreFields) {
-      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
-      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!phone.trim()) { toast.error(t('auth:error_phone_required', 'Sila masukkan nombor telefon.')); return; }
+      if (!jabatan) { toast.error(t('auth:error_department_required', 'Sila pilih jabatan.')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       setLoading(true);
       try {
         const { error } = await supabase.from('profiles').update({
@@ -379,12 +396,13 @@ export function CompleteProfileModal() {
           intake_year:      intakeYear,
           intake_period:    intakePeriod,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+          preferred_language: currentLang,
         }).eq('id', user?.id);
         if (error) throw error;
         await refetchProfile();
-        toast.success('Profil berjaya disimpan!');
+        toast.success(t('auth:profile_updated_success', 'Profil berjaya disimpan!'));
       } catch (err: any) {
-        toast.error(err.message || 'Ralat menyimpan profil.');
+        toast.error(err.message || t('auth:error_saving_profile', 'Ralat menyimpan profil.'));
       } finally { setLoading(false); }
       return;
     }
@@ -392,23 +410,23 @@ export function CompleteProfileModal() {
     // ── D: Full registration ──────────────────────────────────────────────
     if (registerMode !== 'staff') {
       if (!fullName.trim()) {
-        toast.error('Sila masukkan nama penuh seperti dalam IC.');
+        toast.error(t('auth:error_fullname_ic_required', 'Sila masukkan nama penuh seperti dalam IC.'));
         return;
       }
       if (fullName.trim().length < 3) {
-        toast.error('Nama penuh terlalu pendek. Sila masukkan nama penuh seperti dalam IC.');
+        toast.error(t('auth:error_fullname_too_short', 'Nama penuh terlalu pendek. Sila masukkan nama penuh seperti dalam IC.'));
         return;
       }
     }
 
     if (!matricNo.trim() || !phone.trim()) {
-      toast.error('Sila lengkapkan No Matrik dan No Telefon.'); return;
+      toast.error(t('auth:fill_required_fields', 'Sila lengkapkan No Matrik dan No Telefon.')); return;
     }
 
     if (registerMode !== 'staff') {
-      const matricValidation = parseAndValidateMatric(matricNo.trim());
+      const matricValidation = parseAndValidateMatric(matricNo.trim(), t);
       if (!matricValidation.isValidFormat) {
-        toast.error(matricValidation.errorMessage || 'Format No. Matrik tidak sah. Contoh: 02DTK25F1037');
+        toast.error(matricValidation.errorMessage || t('auth:invalid_matric_format'));
         return;
       }
     }
@@ -419,17 +437,20 @@ export function CompleteProfileModal() {
       console.log('[CompleteProfile] matric check:', { matricCheck, matricErr });
       
       if (matricErr) {
-        toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+        toast.error(t('auth:error_matric_verify', 'Tidak dapat mengesahkan no matrik. Sila cuba lagi.'));
         return;
       }
       
       if (matricCheck?.exists) {
         const hint = matricCheck.email_hint || '***';
         const count = matricCheck.account_count || 1;
+        const accountCount = count > 1 ? t('auth:matric_accounts_count', ' ({{count}} akaun!)', { count }) : '';
         toast.error(
-          `No matrik ${matricNo.trim()} sudah didaftarkan${count > 1 ? ` (${count} akaun!)` : ''}. ` +
-          `Sila log masuk dengan emel asal anda (${hint}), atau tekan "Teruskan dengan Google". ` +
-          `Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.`,
+          t(
+            'auth:matric_already_registered_detailed',
+            'No matrik {{matric}} sudah didaftarkan{{accountCount}}. Sila log masuk dengan emel asal anda ({{hint}}), atau tekan "Teruskan dengan Google". Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.',
+            { matric: matricNo.trim(), accountCount, hint }
+          ),
           { duration: 10000 }
         );
         return;
@@ -438,42 +459,42 @@ export function CompleteProfileModal() {
 
     if (registerMode === 'staff') {
       const { data: isValid } = await supabase.rpc('verify_staff_code', { p_code: passcode });
-      if (!isValid) { toast.error('Kod pengesahan staf tidak sah.'); return; }
+      if (!isValid) { toast.error(t('auth:invalid_staff_code')); return; }
       if (staffRole === 'CLUB_ADVISOR' && !leaderClubId) {
-        toast.error('Sila pilih kelab yang dinasihati.'); return;
+        toast.error(t('auth:select_club')); return;
       }
     } else {
-      if (!jabatan) { toast.error('Sila pilih jabatan akademik.'); return; }
-      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
-      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      if (!jabatan) { toast.error(t('auth:select_department')); return; }
+      if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
+      if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
       if (registerMode === 'leader' && !leaderClubId) {
-        toast.error('Sila pilih kelab.'); return;
+        toast.error(t('auth:select_club')); return;
       }
     }
 
     // Semakan kata laluan untuk pendaftaran baharu (Google SSO dual-auth)
     if (!password) {
-      toast.error('Sila cipta kata laluan akaun anda.');
+      toast.error(t('auth:create_account_password', 'Sila cipta kata laluan akaun anda.'));
       return;
     }
     if (password.length < 6) {
-      toast.error('Kata laluan mesti sekurang-kurangnya 6 aksara.');
+      toast.error(t('auth:password_min_length'));
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Kata laluan dan sahkan kata laluan tidak sepadan.');
+      toast.error(t('auth:passwords_do_not_match'));
       return;
     }
 
     setLoading(true);
     try {
-      if (!user?.id) { toast.error('Sesi anda telah tamat. Sila log masuk semula.'); setLoading(false); return; }
+      if (!user?.id) { toast.error(t('common:session_expired')); setLoading(false); return; }
 
       // 0. Tetapkan kata laluan dalam Supabase Auth supaya pelajar boleh log masuk manual guna No. Matrik
       const { error: pwdErr } = await supabase.auth.updateUser({ password: password.trim() });
       if (pwdErr) {
         console.error('[CompleteProfile] Gagal kemaskini kata laluan:', pwdErr);
-        throw new Error('Gagal menetapkan kata laluan akaun: ' + pwdErr.message);
+        throw new Error(t('auth:error_setting_password', 'Gagal menetapkan kata laluan akaun: {{msg}}', { msg: pwdErr.message }));
       }
 
       const isLeader  = registerMode === 'leader';
@@ -496,6 +517,7 @@ export function CompleteProfileModal() {
         role:             roleToAssign,
         department:       isStaff ? null : jabatan,
         account_status:   initialStatus,
+        preferred_language: currentLang,
         ...(isStaff ? {} : {
           programme_code:   isFtv ? 'FTV' : programmeCode,
           intake_year:      intakeYear || null,
@@ -543,8 +565,8 @@ export function CompleteProfileModal() {
           await insertNotifications(
             admins.map(a => ({
               user_id: a.id,
-              title:   'Pendaftaran Pimpinan Baharu (Google OAuth)',
-              message: 'Terdapat satu permohonan pendaftaran baru melalui akaun Google. Sila semak tab "Permohonan Baru".',
+              title:   t('auth:new_leader_registration_title', 'Pendaftaran Pimpinan Baharu (Google OAuth)'),
+              message: t('auth:new_leader_registration_msg', 'Terdapat satu permohonan pendaftaran baru melalui akaun Google. Sila semak tab "Permohonan Baru".'),
               type:    'SYSTEM',
               is_read: false,
             }))
@@ -559,13 +581,13 @@ export function CompleteProfileModal() {
       } catch (refetchErr) {
         console.warn('[CompleteProfile] refetchProfile failed (akan reload):', refetchErr);
       }
-      toast.success(isStaff ? 'Profil Staf Berjaya Disimpan!' : 'Profil Pelajar Berjaya Disimpan!');
+      toast.success(isStaff ? t('auth:staff_profile_saved_success', 'Profil Staf Berjaya Disimpan!') : t('auth:student_profile_saved_success', 'Profil Pelajar Berjaya Disimpan!'));
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
       console.error('[CompleteProfile] Submit error:', err);
       toast.error(
-        (err.message || 'Ralat menyimpan profil.') +
-        '\n\nJika masalah berterusan, sila hubungi Helpline JPP melalui WhatsApp.',
+        (err.message || t('auth:error_saving_profile', 'Ralat menyimpan profil.')) +
+        '\n\n' + t('auth:helpline_contact_prompt', 'Jika masalah berterusan, sila hubungi Helpline JPP melalui WhatsApp.'),
         { duration: 8000 }
       );
     } finally {
@@ -585,10 +607,18 @@ export function CompleteProfileModal() {
         >
           <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
             <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-            <span>Pengesahan Program Automatik</span>
+            <span>{t('auth:auto_program_verification', 'Pengesahan Program Automatik')}</span>
           </div>
           <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-            {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
+            {t(
+              'auth:program_session_summary',
+              '{{dept}} · Program {{progCode}} · Sesi Kemasukan {{year}}',
+              {
+                dept: matricParsed.knownProgramme.jabatan.toUpperCase(),
+                progCode: matricParsed.progCode,
+                year: matricParsed.fullYear,
+              }
+            )}
           </p>
         </motion.div>
       )}
@@ -596,7 +626,7 @@ export function CompleteProfileModal() {
       {/* Jabatan */}
       <div className="space-y-1.5">
         <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-          Jabatan
+          {t('auth:department', 'Jabatan')}
         </Label>
         <Select
           value={jabatan}
@@ -607,7 +637,7 @@ export function CompleteProfileModal() {
           required={required}
         >
           <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium">
-            <SelectValue placeholder="Pilih jabatan..." />
+            <SelectValue placeholder={t('auth:select_department_placeholder', 'Pilih jabatan...')} />
           </SelectTrigger>
           <SelectContent className="z-[10000] rounded-2xl">
             {JABATAN_LIST.map(j => (
@@ -621,11 +651,11 @@ export function CompleteProfileModal() {
       {jabatan && !isFtv && programmes.length > 0 && (
         <div className="space-y-1.5">
           <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Program Pengajian
+            {t('auth:study_programme', 'Program Pengajian')}
           </Label>
           <Select value={programmeCode} onValueChange={setProgrammeCode} required={required}>
             <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium">
-              <SelectValue placeholder="Pilih program..." />
+              <SelectValue placeholder={t('auth:select_programme_placeholder', 'Pilih program...')} />
             </SelectTrigger>
             <SelectContent className="z-[10000] rounded-2xl">
               {programmes.map(p => (
@@ -637,7 +667,7 @@ export function CompleteProfileModal() {
       )}
       {jabatan && isFtv && (
         <div className="p-3 rounded-xl bg-violet-500/8 border border-violet-500/20 text-[11px] text-violet-700 dark:text-violet-400 font-medium">
-          🎓 Asasi Teknologi Kejuruteraan — program pengajian akan ditetapkan secara automatik.
+          {t('auth:ftv_auto_notice', '🎓 Asasi Teknologi Kejuruteraan — program pengajian akan ditetapkan secara automatik.')}
         </div>
       )}
 
@@ -645,7 +675,7 @@ export function CompleteProfileModal() {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Tahun Pengambilan
+            {t('auth:intake_year_label', 'Tahun Pengambilan')}
           </Label>
           <Select
             value={intakeYear ? String(intakeYear) : ''}
@@ -653,7 +683,7 @@ export function CompleteProfileModal() {
             required={required}
           >
             <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium">
-              <SelectValue placeholder="Tahun..." />
+              <SelectValue placeholder={t('auth:year_placeholder', 'Tahun...')} />
             </SelectTrigger>
             <SelectContent className="z-[10000] rounded-2xl">
               {INTAKE_YEARS().map(y => (
@@ -665,7 +695,7 @@ export function CompleteProfileModal() {
 
         <div className="space-y-1.5">
           <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Sesi Pengambilan
+            {t('auth:intake_session', 'Sesi Pengambilan')}
           </Label>
           <div className="p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl grid grid-cols-2 gap-1 h-12 border border-slate-200/60 dark:border-white/5">
             <button
@@ -679,7 +709,7 @@ export function CompleteProfileModal() {
               )}
             >
               <span>Intake 1</span>
-              <span className="text-[8px] font-medium opacity-70">Pertengahan Tahun</span>
+              <span className="text-[8px] font-medium opacity-70">{t('auth:mid_year', 'Pertengahan Tahun')}</span>
             </button>
             <button
               type="button"
@@ -692,7 +722,7 @@ export function CompleteProfileModal() {
               )}
             >
               <span>Intake 2</span>
-              <span className="text-[8px] font-medium opacity-70">Awal Tahun</span>
+              <span className="text-[8px] font-medium opacity-70">{t('auth:early_year', 'Awal Tahun')}</span>
             </button>
           </div>
         </div>
@@ -701,7 +731,12 @@ export function CompleteProfileModal() {
       {yearMismatch && (
         <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-          <span>Tahun intake ({intakeYear}) berbeza daripada tahun pada No. Matrik ({matricParsed?.fullYear}).</span>
+          <span>
+            {t('auth:intake_year_mismatch', 'Tahun intake ({{intakeYear}}) berbeza daripada tahun pada No. Matrik ({{matricYear}}).', {
+              intakeYear,
+              matricYear: matricParsed?.fullYear,
+            })}
+          </span>
         </div>
       )}
 
@@ -709,7 +744,7 @@ export function CompleteProfileModal() {
       {computedSem && (
         <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 space-y-2">
           <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-            📅 Anggaran: <span className="text-primary font-black">{computedSem.label}</span>
+            📅 {t('auth:estimate', 'Anggaran')}: <span className="text-primary font-black">{computedSem.label}</span>
           </p>
           <button
             type="button"
@@ -717,7 +752,7 @@ export function CompleteProfileModal() {
             className="text-[10px] text-slate-400 hover:text-primary underline underline-offset-2 transition-colors font-bold flex items-center gap-1"
           >
             <ChevronDown className={cn('w-3 h-3 transition-transform', showSemOverride && 'rotate-180')} />
-            Tidak tepat? Betulkan semester sebenar
+            {t('auth:fix_actual_semester', 'Tidak tepat? Betulkan semester sebenar')}
           </button>
           {showSemOverride && (
             <Select
@@ -725,11 +760,13 @@ export function CompleteProfileModal() {
               onValueChange={v => setSemOverride(Number(v))}
             >
               <SelectTrigger className="h-10 rounded-lg bg-white dark:bg-slate-900 text-sm font-bold border-primary/30">
-                <SelectValue placeholder="Pilih semester sebenar..." />
+                <SelectValue placeholder={t('auth:select_actual_semester_placeholder', 'Pilih semester sebenar...')} />
               </SelectTrigger>
               <SelectContent className="z-[10000] rounded-xl">
                 {(isFtv ? [1, 2] : [1, 2, 3, 4, 5, 6]).map(s => (
-                  <SelectItem key={s} value={String(s)} className="font-medium">Semester {s}</SelectItem>
+                  <SelectItem key={s} value={String(s)} className="font-medium">
+                    {t('auth:semester', 'Semester')} {s}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -754,8 +791,8 @@ export function CompleteProfileModal() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/10 overflow-hidden max-h-[90dvh] overflow-y-auto custom-scrollbar"
         >
-          {/* Refined Institutional Header */}
-          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center px-6 gap-3.5 shrink-0">
+          {/* Refined Institutional Header with Language Toggle */}
+          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center justify-between px-6 shrink-0">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)] pointer-events-none" />
             <div className="flex items-center gap-3.5 z-10">
               <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-2 shadow-sm backdrop-blur-md shrink-0">
@@ -764,10 +801,40 @@ export function CompleteProfileModal() {
               <div className="space-y-0.5">
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Portal Rasmi POLISAS
+                  {t('auth:official_portal_polisas', 'Portal Rasmi POLISAS')}
                 </span>
                 <h2 className="text-base sm:text-lg font-black text-white tracking-tight">{heading}</h2>
               </div>
+            </div>
+
+            {/* Language Segmented Switch in Header */}
+            <div className="z-10 flex items-center p-1 bg-white/10 border border-white/15 rounded-xl backdrop-blur-md shrink-0">
+              <button
+                type="button"
+                onClick={() => changeLanguage('ms')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1",
+                  currentLang === 'ms'
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-white/70 hover:text-white"
+                )}
+              >
+                <span>🇲🇾</span>
+                <span>BM</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('en')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1",
+                  currentLang === 'en'
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-white/70 hover:text-white"
+                )}
+              >
+                <span>🇬🇧</span>
+                <span>EN</span>
+              </button>
             </div>
           </div>
 
@@ -780,7 +847,7 @@ export function CompleteProfileModal() {
               {isOnlyMissingPhone && (
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                    No Telefon Bimbit
+                    {t('auth:phone', 'No Telefon Bimbit')}
                   </Label>
                   <div className="relative group">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -801,7 +868,7 @@ export function CompleteProfileModal() {
                 <>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                      No Telefon Bimbit
+                      {t('auth:phone', 'No Telefon Bimbit')}
                     </Label>
                     <div className="relative group">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -821,7 +888,7 @@ export function CompleteProfileModal() {
                 <>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                      No Telefon Bimbit
+                      {t('auth:phone', 'No Telefon Bimbit')}
                     </Label>
                     <div className="relative group">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -844,12 +911,12 @@ export function CompleteProfileModal() {
                     <button type="button" onClick={() => setRegisterMode(registerMode === 'leader' ? 'leader' : 'student')}
                       className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
                         (registerMode === 'student' || registerMode === 'leader') ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> Pelajar
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> {t('auth:student_role_tab', 'Pelajar')}
                     </button>
                     <button type="button" onClick={() => setRegisterMode('staff')}
                       className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
                         registerMode === 'staff' ? 'bg-white dark:bg-slate-900 shadow-sm text-emerald-600 dark:text-emerald-400 border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400')}>
-                      <Building2 className="w-3.5 h-3.5" /> Staf
+                      <Building2 className="w-3.5 h-3.5" /> {t('auth:staff_role_tab', 'Staf')}
                     </button>
                   </div>
 
@@ -857,19 +924,19 @@ export function CompleteProfileModal() {
                   {registerMode !== 'staff' && (
                     <div className="space-y-1.5">
                       <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <AlertTriangle className="w-3 h-3 text-amber-500" /> Nama Penuh (Seperti dalam IC)
+                        <AlertTriangle className="w-3 h-3 text-amber-500" /> {t('auth:full_name_ic', 'Nama Penuh (Seperti dalam IC)')}
                       </Label>
                       <div className="relative group">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <Input
-                          placeholder="CONTOH: AHMAD FAIZ BIN ABDULLAH"
+                          placeholder={t('auth:full_name_placeholder_sample', 'CONTOH: AHMAD FAIZ BIN ABDULLAH')}
                           required value={fullName}
                           onChange={e => setFullName(e.target.value.toUpperCase())}
                           className="h-12 pl-11 rounded-xl bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-700/30 uppercase font-bold tracking-wide focus-visible:ring-amber-400/40"
                         />
                       </div>
                       <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium px-1">
-                        Sila pastikan nama anda tepat seperti dalam Kad Pengenalan untuk rekod rasmi.
+                        {t('auth:ic_name_accuracy_notice', 'Sila pastikan nama anda tepat seperti dalam Kad Pengenalan untuk rekod rasmi.')}
                       </p>
                     </div>
                   )}
@@ -878,11 +945,11 @@ export function CompleteProfileModal() {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                        {registerMode === 'staff' ? 'No Pekerja / Staf ID' : 'No Matrik'}
+                        {registerMode === 'staff' ? t('auth:staff_id_label', 'No Pekerja / Staf ID') : t('auth:matric_no_label', 'No Matrik')}
                       </Label>
                       {registerMode !== 'staff' && matricParsed?.isValidFormat && (
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                          ✓ Format Sah
+                          {t('auth:valid_format_badge', '✓ Format Sah')}
                         </span>
                       )}
                     </div>
@@ -897,7 +964,7 @@ export function CompleteProfileModal() {
                     {registerMode !== 'staff' && (
                       <div className="space-y-1 px-1">
                         <p className="text-[10px] text-slate-400 font-medium">
-                          Tidak tahu no matrik anda? Rujuk SPMP anda!
+                          {t('auth:check_spmp_prompt', 'Tidak tahu no matrik anda? Rujuk SPMP anda!')}
                         </p>
                         {matricParsed && !matricParsed.isValidFormat && matricNo.length >= 4 && (
                           <p className="text-[10px] text-rose-500 font-medium">
@@ -906,7 +973,7 @@ export function CompleteProfileModal() {
                         )}
                         {matricParsed?.isValidFormat && !matricParsed.knownProgramme && (
                           <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            ℹ️ Kod program &quot;{matricParsed.progCode}&quot; tidak dalam senarai semasa. Sila pilih Jabatan dan Program secara manual di bawah.
+                            {t('auth:prog_not_listed_notice', 'ℹ️ Kod program "{{code}}" tidak dalam senarai semasa. Sila pilih Jabatan dan Program secara manual di bawah.', { code: matricParsed.progCode })}
                           </p>
                         )}
                         {matricParsed?.isValidFormat && matricParsed.knownProgramme && (
@@ -918,17 +985,28 @@ export function CompleteProfileModal() {
                           >
                             <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                               <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                              <span>Pengesahan Program Automatik</span>
+                              <span>{t('auth:auto_program_verification', 'Pengesahan Program Automatik')}</span>
                             </div>
                             <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-                              {matricParsed.knownProgramme.jabatan.toUpperCase()} · Program {matricParsed.progCode} · Sesi Kemasukan {matricParsed.fullYear}
+                              {t(
+                                'auth:program_session_summary',
+                                '{{dept}} · Program {{progCode}} · Sesi Kemasukan {{year}}',
+                                {
+                                  dept: matricParsed.knownProgramme.jabatan.toUpperCase(),
+                                  progCode: matricParsed.progCode,
+                                  year: matricParsed.fullYear,
+                                }
+                              )}
                             </p>
                           </motion.div>
                         )}
                         {yearMismatch && (
                           <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
                             <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            Tahun pengambilan yang dipilih ({intakeYear}) berbeza daripada tahun pada No. Matrik ({matricParsed?.fullYear}).
+                            {t('auth:intake_year_mismatch_warning', 'Tahun pengambilan yang dipilih ({{intakeYear}}) berbeza daripada tahun pada No. Matrik ({{matricYear}}).', {
+                              intakeYear,
+                              matricYear: matricParsed?.fullYear,
+                            })}
                           </p>
                         )}
                       </div>
@@ -955,22 +1033,22 @@ export function CompleteProfileModal() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Cipta Kata Laluan Akaun</span>
+                        <span>{t('auth:create_account_password_title', 'Cipta Kata Laluan Akaun')}</span>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Cipta kata laluan untuk membolehkan anda log masuk secara manual menggunakan No. Matrik pada masa hadapan (walaupun mendaftar dengan Google).
+                        {t('auth:create_password_desc', 'Cipta kata laluan untuk membolehkan anda log masuk secara manual menggunakan No. Matrik pada masa hadapan (walaupun mendaftar dengan Google).')}
                       </p>
                     </div>
 
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Kata Laluan Baharu (Min. 6 Aksara)
+                        {t('auth:new_password_label', 'Kata Laluan Baharu (Min. 6 Aksara)')}
                       </Label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <Input
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Masukkan kata laluan"
+                          placeholder={t('auth:enter_password_placeholder', 'Masukkan kata laluan')}
                           required
                           value={password}
                           onChange={e => setPassword(e.target.value)}
@@ -980,7 +1058,7 @@ export function CompleteProfileModal() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-                          aria-label={showPassword ? 'Sembunyi kata laluan' : 'Tunjuk kata laluan'}
+                          aria-label={showPassword ? t('auth:hide_password', 'Sembunyi kata laluan') : t('auth:show_password', 'Tunjuk kata laluan')}
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -989,13 +1067,13 @@ export function CompleteProfileModal() {
 
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Sahkan Kata Laluan
+                        {t('auth:confirm_password', 'Sahkan Kata Laluan')}
                       </Label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <Input
                           type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="Ulang kata laluan"
+                          placeholder={t('auth:repeat_password_placeholder', 'Ulang kata laluan')}
                           required
                           value={confirmPassword}
                           onChange={e => setConfirmPassword(e.target.value)}
@@ -1005,13 +1083,13 @@ export function CompleteProfileModal() {
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-                          aria-label={showConfirmPassword ? 'Sembunyi kata laluan' : 'Tunjuk kata laluan'}
+                          aria-label={showConfirmPassword ? t('auth:hide_password', 'Sembunyi kata laluan') : t('auth:show_password', 'Tunjuk kata laluan')}
                         >
                           {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                       {confirmPassword && password !== confirmPassword && (
-                        <p className="text-[10px] text-rose-500 font-medium">Kata laluan tidak sepadan.</p>
+                        <p className="text-[10px] text-rose-500 font-medium">{t('auth:passwords_do_not_match', 'Kata laluan tidak sepadan.')}</p>
                       )}
                     </div>
                   </div>
@@ -1024,12 +1102,12 @@ export function CompleteProfileModal() {
                         <button type="button" onClick={() => setRegisterMode('student')}
                           className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
                             registerMode === 'student' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
-                          <GraduationCap className="w-3.5 h-3.5" /> Pelajar Biasa
+                          <GraduationCap className="w-3.5 h-3.5" /> {t('auth:student_normal', 'Pelajar Biasa')}
                         </button>
                         <button type="button" onClick={() => setRegisterMode('leader')}
                           className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
                             registerMode === 'leader' ? 'bg-white dark:bg-slate-900 shadow-sm text-amber-600 dark:text-amber-400 border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-amber-600 dark:hover:text-amber-400')}>
-                          <Crown className="w-3.5 h-3.5 text-amber-500" /> Pimpinan Kelab
+                          <Crown className="w-3.5 h-3.5 text-amber-500" /> {t('auth:club_leadership', 'Pimpinan Kelab')}
                         </button>
                       </div>
 
@@ -1040,10 +1118,10 @@ export function CompleteProfileModal() {
                       {registerMode === 'leader' && (
                         <>
                           <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-700 font-medium leading-relaxed">
-                            👑 Permohonan jawatan kepimpinan tertakluk pada kelulusan Penasihat kelab.
+                            {t('auth:leadership_approval_note', '👑 Permohonan jawatan kepimpinan tertakluk pada kelulusan Penasihat kelab.')}
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Peranan</Label>
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">{t('common:role', 'Peranan')}</Label>
                             <Select value={leaderRole} onValueChange={v => setLeaderRole(v as UserRole)}>
                               <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium"><SelectValue /></SelectTrigger>
                               <SelectContent className="z-[10000] rounded-2xl">
@@ -1054,9 +1132,9 @@ export function CompleteProfileModal() {
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Kelab (Mohon Kepimpinan)</Label>
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">{t('auth:club_apply_leadership', 'Kelab (Mohon Kepimpinan)')}</Label>
                             <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
-                              <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium"><SelectValue placeholder="Pilih kelab..." /></SelectTrigger>
+                              <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium"><SelectValue placeholder={t('auth:select_club_placeholder', 'Pilih kelab...')} /></SelectTrigger>
                               <SelectContent className="z-[10000] rounded-2xl max-h-60">
                                 {ALL_CLUBS.filter(c => c.category !== 'Badan Beruniform').map(c => (
                                   <SelectItem key={c.id} value={c.id} className="py-3 font-medium">{c.name}</SelectItem>
@@ -1073,10 +1151,10 @@ export function CompleteProfileModal() {
                   {registerMode === 'staff' && (
                     <>
                       <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 text-[11px] text-emerald-700 font-medium leading-relaxed">
-                        🏢 Mod Pendaftaran Staf membolehkan anda menggunakan perkhidmatan warga institusi.
+                        {t('auth:staff_mode_notice', '🏢 Mod Pendaftaran Staf membolehkan anda menggunakan perkhidmatan warga institusi.')}
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[11px] font-black uppercase tracking-widest">Tujuan</Label>
+                        <Label className="text-[11px] font-black uppercase tracking-widest">{t('auth:purpose_role_label', 'Tujuan')}</Label>
                         <Select value={staffRole} onValueChange={v => setStaffRole(v as UserRole)}>
                           <SelectTrigger className="h-12 rounded-xl border-emerald-500/30 text-emerald-700"><SelectValue /></SelectTrigger>
                           <SelectContent className="z-[10000] rounded-2xl">
@@ -1088,9 +1166,9 @@ export function CompleteProfileModal() {
                       </div>
                       {staffRole === 'CLUB_ADVISOR' && (
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] font-black uppercase tracking-widest text-indigo-500">Kelab Dinasihati</Label>
+                          <Label className="text-[11px] font-black uppercase tracking-widest text-indigo-500">{t('auth:advised_club_label', 'Kelab Dinasihati')}</Label>
                           <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
-                            <SelectTrigger className="h-12 rounded-xl border-indigo-500/30"><SelectValue placeholder="Pilih kelab..." /></SelectTrigger>
+                            <SelectTrigger className="h-12 rounded-xl border-indigo-500/30"><SelectValue placeholder={t('auth:select_club_placeholder', 'Pilih kelab...')} /></SelectTrigger>
                             <SelectContent className="z-[10000] rounded-2xl max-h-60">
                               {ALL_CLUBS.map(c => (
                                 <SelectItem key={c.id} value={c.id} className="py-3 font-medium">{c.name}</SelectItem>
@@ -1100,8 +1178,8 @@ export function CompleteProfileModal() {
                         </div>
                       )}
                       <div className="space-y-1.5 pt-2">
-                        <Label className="text-[11px] font-black uppercase tracking-widest text-rose-500">KOD PENGESAHAN STAF</Label>
-                        <Input type="password" placeholder="Dapatkan dari Admin" required
+                        <Label className="text-[11px] font-black uppercase tracking-widest text-rose-500">{t('auth:staff_passcode_label', 'KOD PENGESAHAN STAF')}</Label>
+                        <Input type="password" placeholder={t('auth:get_from_admin', 'Dapatkan dari Admin')} required
                           value={passcode} onChange={e => setPasscode(e.target.value)}
                           className="h-12 rounded-xl bg-rose-500/5 border-rose-500/20 focus-visible:ring-rose-500/40 font-bold tracking-[0.2em] text-rose-700 text-center"
                         />
@@ -1120,9 +1198,9 @@ export function CompleteProfileModal() {
                   >
                     <div className="flex items-center gap-1.5 font-bold">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      <span>Pernah Isi?</span>
+                      <span>{t('auth:already_filled_prompt', 'Pernah Isi?')}</span>
                     </div>
-                    <span>Internet anda mungkin mengalami gangguan. Sila <strong>refresh/reopen</strong> website.</span>
+                    <span>{t('auth:refresh_reopen_website', 'Internet anda mungkin mengalami gangguan. Sila refresh/reopen website.')}</span>
                   </motion.div>
                 )}
 
@@ -1131,7 +1209,7 @@ export function CompleteProfileModal() {
                   disabled={loading}
                   className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-950/20 active:scale-[0.99] transition-all"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simpan'}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('common:save', 'Simpan')}
                 </Button>
 
                 <Button
@@ -1142,14 +1220,14 @@ export function CompleteProfileModal() {
                   className="w-full h-14 rounded-2xl border-2 border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30 font-bold text-sm transition-all flex items-center justify-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  {!profile?.matric_no?.trim() ? 'Batal & Log Keluar' : 'Log Keluar'}
+                  {!profile?.matric_no?.trim() ? t('auth:cancel_and_logout', 'Batal & Log Keluar') : t('common:logout', 'Log Keluar')}
                 </Button>
               </div>
 
               {/* Helpline */}
               <div className="text-center pt-1">
                 <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                  Ada masalah atau soalan?{' '}
+                  {t('auth:questions_or_issues', 'Ada masalah atau soalan?')}{' '}
                   <a
                     href="https://wa.me/601139413699"
                     target="_blank"
@@ -1157,7 +1235,7 @@ export function CompleteProfileModal() {
                     className="text-emerald-600 dark:text-emerald-400 font-black hover:underline underline-offset-2 inline-flex items-center gap-1"
                   >
                     <Phone className="w-3 h-3" />
-                    Hubungi Helpline JPP
+                    {t('auth:contact_jpp_helpline', 'Hubungi Helpline JPP')}
                   </a>
                 </p>
               </div>

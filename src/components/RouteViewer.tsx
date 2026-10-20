@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -67,6 +68,7 @@ function FitBounds({ pickup, dropoff, stops }: { pickup: [number, number]; dropo
 }
 
 export function RouteViewer({ pickup, dropoff, pickupName, dropoffName, stops, className = "h-[150px]" }: RouteViewerProps) {
+  const { t } = useTranslation();
   const validPickup = isValidCoord(pickup);
   const validDropoff = isValidCoord(dropoff);
 
@@ -77,7 +79,7 @@ export function RouteViewer({ pickup, dropoff, pickupName, dropoffName, stops, c
         <MapPin className="w-5 h-5 text-slate-300 dark:text-white/20" />
         <div className="text-center">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
-            Tiada Koordinat Peta
+            {t('gig:no_map_coordinates', 'Tiada Koordinat Peta')}
           </p>
           {(pickupName || dropoffName) && (
             <p className="text-xs font-bold text-slate-500 dark:text-white/40 mt-1 max-w-[200px] truncate">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertOctagon, FileText, Send, Info, Phone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -11,6 +12,7 @@ interface PolyRiderSuspendedProps {
 }
 
 export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) {
+  const { t, i18n } = useTranslation(['gig', 'common']);
   const { user } = useAuth();
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [reason, setReason] = useState('');
@@ -22,7 +24,7 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
   React.useEffect(() => {
     const checkExistingAppeal = async () => {
       if (!user) return;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('polyrider_appeals')
         .select('id')
         .eq('user_id', user.id)
@@ -47,14 +49,15 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
     fetchPhone();
   }, [user]);
 
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'ms-MY';
   const suspensionDate = new Date(suspendedUntil);
-  const formattedDate = suspensionDate.toLocaleDateString('ms-MY', {
+  const formattedDate = suspensionDate.toLocaleDateString(dateLocale, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
-  const formattedTime = suspensionDate.toLocaleTimeString('ms-MY', {
+  const formattedTime = suspensionDate.toLocaleTimeString(dateLocale, {
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -72,9 +75,9 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
     setIsSubmitting(false);
 
     if (error) {
-      toast.error('Gagal menghantar rayuan: ' + error.message);
+      toast.error(t('gig:appeal_submit_failed', 'Gagal menghantar rayuan: {{error}}', { error: error.message }));
     } else {
-      toast.success('Rayuan berjaya dihantar!');
+      toast.success(t('gig:appeal_submit_success', 'Rayuan berjaya dihantar!'));
       setAppealSubmitted(true);
       setShowAppealModal(false);
     }
@@ -89,21 +92,25 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
           className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-red-100 dark:border-red-900/30 overflow-hidden relative"
         >
           {/* Danger background effect */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full  pointer-events-none"></div>
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full  pointer-events-none"></div>
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full pointer-events-none"></div>
 
           <div className="w-24 h-24 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 relative z-10">
             <AlertOctagon className="w-12 h-12 text-red-600 dark:text-red-500" />
           </div>
 
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2 relative z-10">Akaun Digantung</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2 relative z-10">
+            {t('gig:account_suspended', 'Akaun Digantung')}
+          </h1>
           
           <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 relative z-10 leading-relaxed font-medium">
-            Akaun PolyRider anda telah digantung kerana melanggar terma & syarat perkhidmatan (cth: Terlalu kerap membatalkan pesanan atau khianat SOS).
+            {t('gig:polyrider_suspended_notice', 'Akaun PolyRider anda telah digantung kerana melanggar terma & syarat perkhidmatan (cth: Terlalu kerap membatalkan pesanan atau khianat SOS).')}
           </p>
 
           <div className="bg-red-50 dark:bg-red-950/50 rounded-2xl p-4 mb-6 relative z-10">
-            <p className="text-xs font-bold uppercase tracking-widest text-red-500 mb-1">Penggantungan Tamat Pada</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-red-500 mb-1">
+              {t('gig:suspension_ends_on', 'Penggantungan Tamat Pada')}
+            </p>
             <p className="text-lg font-black text-red-700 dark:text-red-400">{formattedDate}</p>
             <p className="text-md font-bold text-red-600 dark:text-red-300">{formattedTime}</p>
           </div>
@@ -111,19 +118,19 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
           {checkingExisting ? (
             <div className="py-4 text-slate-400 dark:text-white/40 text-sm font-bold flex items-center justify-center gap-2 relative z-10">
               <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-              Menyemak status rayuan...
+              {t('gig:checking_appeal_status', 'Menyemak status rayuan...')}
             </div>
           ) : !appealSubmitted ? (
             <button
               onClick={() => setShowAppealModal(true)}
               className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors relative z-10 shadow-lg shadow-slate-900/20 dark:shadow-white/10"
             >
-              <FileText className="w-5 h-5" /> Buat Rayuan
+              <FileText className="w-5 h-5" /> {t('gig:make_appeal_btn', 'Buat Rayuan')}
             </button>
           ) : (
             <div className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-sm font-bold p-4 rounded-xl flex flex-col items-center gap-2 relative z-10">
               <Info className="w-6 h-6" />
-              Rayuan telah dihantar dan sedang diproses oleh Exco KLK.
+              {t('gig:appeal_submitted_notice', 'Rayuan telah dihantar dan sedang diproses oleh Exco KLK.')}
             </div>
           )}
 
@@ -139,7 +146,7 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
                 rel="noopener noreferrer"
                 className="mt-4 w-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors relative z-10"
               >
-                <Phone className="w-5 h-5" /> Hubungi Exco KLK (WhatsApp)
+                <Phone className="w-5 h-5" /> {t('gig:contact_klk_whatsapp', 'Hubungi Exco KLK (WhatsApp)')}
               </a>
             );
           })()}
@@ -158,7 +165,7 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60  z-40"
+              className="fixed inset-0 bg-black/60 z-40"
               onClick={() => setShowAppealModal(false)}
             />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -169,17 +176,17 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
                 className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-200 dark:border-zinc-800"
               >
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-500" /> Borang Rayuan
+                  <FileText className="w-5 h-5 text-blue-500" /> {t('gig:appeal_form_title', 'Borang Rayuan')}
                 </h2>
                 <form onSubmit={handleSubmitAppeal}>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                    Sila nyatakan sebab mengapa akaun anda harus diaktifkan semula. Berikan penjelasan yang kukuh untuk pertimbangan pihak pentadbir.
+                    {t('gig:appeal_form_desc', 'Sila nyatakan sebab mengapa akaun anda harus diaktifkan semula. Berikan penjelasan yang kukuh untuk pertimbangan pihak pentadbir.')}
                   </p>
                   <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     className="w-full h-32 px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4 resize-none"
-                    placeholder="Saya ingin merayu kerana..."
+                    placeholder={t('gig:appeal_reason_placeholder', 'Saya ingin merayu kerana...')}
                     required
                   />
                   <div className="flex gap-3">
@@ -188,14 +195,14 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
                       onClick={() => setShowAppealModal(false)}
                       className="flex-1 py-3 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl"
                     >
-                      Batal
+                      {t('common:cancel', 'Batal')}
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting || !reason.trim()}
                       className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Menghantar...' : <><Send className="w-4 h-4" /> Hantar</>}
+                      {isSubmitting ? t('common:submitting', 'Menghantar...') : <><Send className="w-4 h-4" /> {t('common:submit', 'Hantar')}</>}
                     </button>
                   </div>
                 </form>

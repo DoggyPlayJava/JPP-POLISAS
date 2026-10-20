@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +9,7 @@ import { Edit3, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export function EditAnnouncementModal({ currentContent, onUpdate, clubId }: any) {
+    const { t } = useTranslation('common');
     const [isOpen, setIsOpen] = useState(false);
     const [content, setContent] = useState(currentContent);
     const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ export function EditAnnouncementModal({ currentContent, onUpdate, clubId }: any)
             setIsOpen(false);
             onUpdate(); // Refresh dashboard
         } catch (err) {
-            toast.error("Gagal mengemaskini pesanan");
+            toast.error(t('common:failed_update_message', 'Gagal mengemaskini pesanan'));
         } finally {
             setLoading(false);
         }
@@ -39,17 +41,19 @@ export function EditAnnouncementModal({ currentContent, onUpdate, clubId }: any)
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] rounded-[2rem] glass p-8">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-black tracking-tighter">Kemaskini Pesanan</DialogTitle>
+                    <DialogTitle className="text-2xl font-black tracking-tighter">
+                        {t('common:update_message_title', 'Kemaskini Pesanan')}
+                    </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                     <Textarea
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        placeholder="Tulis pesanan baru anda di sini..."
+                        placeholder={t('common:write_new_message_placeholder', 'Tulis pesanan baru anda di sini...')}
                         className="min-h-[150px] rounded-2xl border-primary/20"
                     />
                     <Button onClick={handleUpdate} disabled={loading} className="w-full h-12 rounded-xl font-black uppercase tracking-widest">
-                        {loading ? <Loader2 className="animate-spin" /> : 'Simpan Pesanan Baru'}
+                        {loading ? <Loader2 className="animate-spin" /> : t('common:save_new_message', 'Simpan Pesanan Baru')}
                     </Button>
                 </div>
             </DialogContent>

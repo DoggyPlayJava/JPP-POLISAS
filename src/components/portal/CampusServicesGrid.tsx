@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   Megaphone,
@@ -80,11 +81,12 @@ export function CampusServicesGrid({
   kbStats,
   className,
 }: CampusServicesGridProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const services = getCampusServicesConfig({
     kamsisStatus,
     kbOpenCount: kbStats?.open,
-  });
+  }, t);
 
   const checkEnabled = (serviceId: string): boolean => {
     if (isSuperAdmin) return true;
@@ -109,7 +111,7 @@ export function CampusServicesGrid({
   const handleAction = (service: CampusServiceItem) => {
     const isEnabled = checkEnabled(service.id);
     if (!isEnabled && !isSuperAdmin) {
-      toast(`${service.label} sedang dikemas kini!`);
+      toast(t('portal:service_updating_toast', '{{service}} sedang dikemas kini!', { service: service.label }));
       return;
     }
 
@@ -124,7 +126,7 @@ export function CampusServicesGrid({
 
   return (
     <section
-      aria-label="Perkhidmatan Kampus"
+      aria-label={t('portal:campus_services_aria', 'Perkhidmatan Kampus')}
       className={cn('w-full max-w-4xl mx-auto px-2 sm:px-4', className)}
     >
       <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
@@ -97,23 +98,23 @@ const scrollToSection = (id: string, offset = 80) => {
 };
 
 // ── Modul Teras Kampus (Bento Grid 5 Ekosistem) ───────────────
-const MODULES = [
+const getModules = (t: any) => [
   {
     id: 'ekpp',
-    title: 'e-Aktiviti',
-    subtitle: 'Nadi Organisasi',
-    desc: 'Sistem tadbir urus rasmi untuk 21 kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.',
+    title: t('portal:module_eaktiviti_title', 'e-Aktiviti'),
+    subtitle: t('portal:module_eaktiviti_subtitle', 'Nadi Organisasi'),
+    desc: t('portal:module_eaktiviti_desc', 'Sistem tadbir urus rasmi untuk 21 kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.'),
     icon: Shield,
     color: '#2E3A2F',
     accentColor: '#6B7F5B',
     path: '/portal',
-    stats: ['21 Kelab Berdaftar', '41 Aktiviti Rasmi'],
+    stats: [t('portal:stat_registered_clubs', '21 Kelab Berdaftar'), t('portal:stat_official_activities', '41 Aktiviti Rasmi')],
     preview: (
       <div className="flex flex-col gap-2.5 p-4 md:p-6 h-full justify-center">
         {[
-          { name: 'PePKa (Awam)', status: 'Diluluskan HEP', dot: '#6B7F5B' },
-          { name: 'Robosas (Robotik)', status: 'Dalam Semakan', dot: '#C96F4F' },
-          { name: 'ICS (Kerohanian)', status: 'Bajet Disahkan', dot: '#6B7F5B' }
+          { name: 'PePKa (Awam)', status: t('portal:status_approved_hep', 'Diluluskan HEP'), dot: '#6B7F5B' },
+          { name: 'Robosas (Robotik)', status: t('portal:status_in_review', 'Dalam Semakan'), dot: '#C96F4F' },
+          { name: 'ICS (Kerohanian)', status: t('portal:status_budget_verified', 'Bajet Disahkan'), dot: '#6B7F5B' }
         ].map((item, i) => (
           <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#D9C9B2]/80 shadow-2xs">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.dot }} />
@@ -126,14 +127,14 @@ const MODULES = [
   },
   {
     id: 'keusahawanan',
-    title: 'e-Keusahawanan',
-    subtitle: 'Ekonomi Pintar',
-    desc: 'Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.',
+    title: t('portal:module_keusahawanan_title', 'e-Keusahawanan'),
+    subtitle: t('portal:module_keusahawanan_subtitle', 'Ekonomi Pintar'),
+    desc: t('portal:module_keusahawanan_desc', 'Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.'),
     icon: BarChart3,
     color: '#6B7F5B',
     accentColor: '#C96F4F',
     path: '/keusahawanan',
-    stats: ['270+ Produk Siswa', '340+ Pesanan Kampus'],
+    stats: [t('portal:stat_student_products', '270+ Produk Siswa'), t('portal:stat_campus_orders', '340+ Pesanan Kampus')],
     preview: (
       <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
         <div className="flex items-end justify-between w-full h-full pb-4">
@@ -152,14 +153,14 @@ const MODULES = [
   },
   {
     id: 'akademik',
-    title: 'e-Akademik',
-    subtitle: 'Kecemerlangan Holistik',
-    desc: 'Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.',
+    title: t('portal:module_akademik_title', 'e-Akademik'),
+    subtitle: t('portal:module_akademik_subtitle', 'Kecemerlangan Holistik'),
+    desc: t('portal:module_akademik_desc', 'Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.'),
     icon: GraduationCap,
     color: '#2E3A2F',
     accentColor: '#6B7F5B',
     path: '/akademik',
-    stats: ['1,080+ Rekod Siswa', '5 Jabatan POLISAS'],
+    stats: [t('portal:stat_student_records', '1,080+ Rekod Siswa'), t('portal:stat_polisas_departments', '5 Jabatan POLISAS')],
     preview: (
       <div className="flex items-center justify-center h-full relative">
         <div className="w-24 h-24 rounded-full border border-[#6B7F5B]/30 flex items-center justify-center bg-[#6B7F5B]/5 shadow-xs">
@@ -178,14 +179,14 @@ const MODULES = [
   },
   {
     id: 'polymart',
-    title: 'PolyMart',
-    subtitle: 'Pasaran Mahasiswa',
-    desc: 'Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan pesan makanan, minuman, serta cenderamata rasmi siswa dalam satu hab.',
+    title: t('portal:module_polymart_title', 'PolyMart'),
+    subtitle: t('portal:module_polymart_subtitle', 'Pasaran Mahasiswa'),
+    desc: t('portal:module_polymart_desc', 'Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan pesan makanan, minuman, serta cenderamata rasmi siswa dalam satu hab.'),
     icon: ShoppingCart,
     color: '#C96F4F',
     accentColor: '#2E3A2F',
     path: '/polymart',
-    stats: ['270+ Pilihan Menu & Barang', 'JPP Pay & QR Terus'],
+    stats: [t('portal:stat_menu_items', '270+ Pilihan Menu & Barang'), t('portal:stat_direct_payment', 'JPP Pay & QR Terus')],
     colSpan: 'lg:col-span-2',
     preview: (
       <div className="flex w-full h-full p-4 md:p-6 items-center justify-between overflow-hidden relative">
@@ -235,14 +236,14 @@ const MODULES = [
   },
   {
     id: 'kebajikan',
-    title: 'e-Kebajikan',
-    subtitle: 'Prihatin & Responsif',
-    desc: 'Sistem pelaporan aduan telus, bantuan Food Bank siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.',
+    title: t('portal:module_kebajikan_title', 'e-Kebajikan'),
+    subtitle: t('portal:module_kebajikan_subtitle', 'Prihatin & Responsif'),
+    desc: t('portal:module_kebajikan_desc', 'Sistem pelaporan aduan telus, bantuan Food Bank siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.'),
     icon: HeartHandshake,
     color: '#6B7F5B',
     accentColor: '#2E3A2F',
     path: '/kebajikan',
-    stats: ['1,080+ Rekod Kediaman', 'Tindakan Pantas'],
+    stats: [t('portal:stat_residence_records', '1,080+ Rekod Kediaman'), t('portal:stat_quick_action', 'Tindakan Pantas')],
     preview: (
       <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
         {/* Gelombang Radar */}
@@ -325,6 +326,7 @@ function SpotlightCard({ children, className, onClick }: any) {
 
 // ── 1. Floating Pill Navbar (<Navbar />) ──────────────────────
 export const Navbar: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -345,10 +347,10 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { label: 'Ekosistem', href: '#ekosistem' },
-    { label: 'Modul Utama', href: '#modul' },
-    { label: 'Nexus AI', href: '#nexus' },
-    { label: 'Statistik', href: '#statistik' }
+    { label: t('portal:nav_ecosystem', 'Ekosistem'), href: '#ekosistem' },
+    { label: t('portal:nav_main_modules', 'Modul Utama'), href: '#modul' },
+    { label: t('portal:nav_nexus_ai', 'Nexus AI'), href: '#nexus' },
+    { label: t('portal:nav_statistics', 'Statistik'), href: '#statistik' }
   ];
 
   return (
@@ -382,7 +384,7 @@ export const Navbar: React.FC = () => {
                 JPP POLISAS
               </span>
               <span className="text-[8px] md:text-[9px] font-bold text-[#6B7F5B] uppercase tracking-widest leading-none mt-1">
-                Sistem Pintar Sesi Baharu
+                {t('portal:smart_system_new_session', 'Sistem Pintar Sesi Baharu')}
               </span>
             </div>
           </div>
@@ -406,7 +408,7 @@ export const Navbar: React.FC = () => {
               onClick={() => navigate('/portal')}
               className="px-5 py-2.5 rounded-full bg-[#C96F4F] hover:bg-[#B85F40] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <span>Masuk Portal</span>
+              <span>{t('portal:explore_portal')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
@@ -449,7 +451,7 @@ export const Navbar: React.FC = () => {
               }}
               className="mt-4 w-full py-3.5 rounded-xl bg-[#C96F4F] text-white text-xs font-black uppercase tracking-widest text-center shadow-xs"
             >
-              Masuk Portal Siswa
+              {t('portal:explore_portal')}
             </button>
           </motion.div>
         )}
@@ -460,6 +462,7 @@ export const Navbar: React.FC = () => {
 
 // ── 2. Ticker Tape Berputar (<TickerTape />) ──────────────────
 export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
 
@@ -474,42 +477,42 @@ export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats
           <React.Fragment key={i}>
             <div className="flex items-center gap-2 md:gap-3">
               <Zap className="w-3.5 h-3.5 text-[#C96F4F]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">Nexus AI: Semakan Dokumen & Kertas Kerja Pintar</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_nexus_ai', 'Nexus AI: Semakan Dokumen & Kertas Kerja Pintar')}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <BarChart3 className="w-3.5 h-3.5 text-[#6B7F5B]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Keusahawanan: {stats.productsCount}+ Produk & {stats.ordersCount}+ Pesanan PolyMart</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_keusahawanan', 'e-Keusahawanan: {{products}}+ Produk & {{orders}}+ Pesanan PolyMart', { products: stats.productsCount, orders: stats.ordersCount })}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <GraduationCap className="w-3.5 h-3.5 text-[#2E3A2F]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Akademik: {stats.studentsCount.toLocaleString()}+ Rekod Siswa Sesi 2026/2027</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_akademik', 'e-Akademik: {{students}}+ Rekod Siswa Sesi 2026/2027', { students: stats.studentsCount.toLocaleString() })}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <Shield className="w-3.5 h-3.5 text-[#2E3A2F]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Aktiviti: {stats.clubsCount} Kelab Berdaftar & {stats.activitiesCount} Aktiviti Rasmi</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_eaktiviti', 'e-Aktiviti: {{clubs}} Kelab Berdaftar & {{activities}} Aktiviti Rasmi', { clubs: stats.clubsCount, activities: stats.activitiesCount })}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <ShoppingCart className="w-3.5 h-3.5 text-[#C96F4F]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">PolyMart: Pasaran Siswa POLISAS • JPP Pay Selamat</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_polymart', 'PolyMart: Pasaran Siswa POLISAS • JPP Pay Selamat')}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <HeartHandshake className="w-3.5 h-3.5 text-[#6B7F5B]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">e-Kebajikan: Pemantauan Kediaman Luar & Kamsis Bersepadu</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#2E3A2F]">{t('portal:ticker_kebajikan', 'e-Kebajikan: Pemantauan Kediaman Luar & Kamsis Bersepadu')}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B]" />
@@ -523,6 +526,7 @@ export const TickerTape: React.FC<{ stats?: CampusStats }> = ({ stats: propStats
 
 // ── 3. Centered Bold Hero (<Hero />) ──────────────────────────
 export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
@@ -542,7 +546,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
         >
           <div className="w-2 h-2 rounded-full bg-[#C96F4F] shadow-xs" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#2E3A2F]">
-            Sistem Operasi Institusi Sesi 2026/2027
+            {t('portal:portal_welcome')}
           </span>
         </motion.div>
 
@@ -553,10 +557,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
           transition={{ delay: 0.2 }}
           className="text-4xl sm:text-6xl md:text-8xl xl:text-[7.5rem] font-black tracking-tight text-[#2E3A2F] mb-6 md:mb-8 pb-2 leading-[0.98]"
         >
-          Perpaduan Progresif <br />
-          <span className="text-[#C96F4F] drop-shadow-xs">
-            Demi Mahasiswa.
-          </span>
+          {t('portal:hero_title')}
         </motion.h1>
 
         <motion.p
@@ -565,7 +566,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
           transition={{ delay: 0.3 }}
           className="text-sm md:text-lg text-[#556453] max-w-2xl mx-auto font-medium leading-relaxed mb-10 md:mb-12 px-2"
         >
-          Platform digital rasmi memacu kepimpinan mahasiswa, automasi tadbir urus kelab, dan ekosistem kampus lestari Politeknik Sultan Haji Ahmad Shah.
+          {t('portal:hero_subtitle')}
         </motion.p>
 
         {/* Butang Tindakan */}
@@ -579,7 +580,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
             onClick={() => navigate('/portal')}
             className="w-full sm:w-auto px-8 md:px-10 py-4 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-3 shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
           >
-            <span>Masuk Portal Pelajar</span>
+            <span>{t('portal:explore_portal')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -587,7 +588,7 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
             onClick={() => scrollToSection('#modul')}
             className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white border border-[#D9C9B2] text-[#2E3A2F] hover:bg-[#F2EDE4] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
           >
-            <span>Jelajah Ekosistem</span>
+            <span>{t('portal:explore_ecosystem', 'Jelajah Ekosistem')}</span>
           </button>
         </motion.div>
       </div>
@@ -609,14 +610,14 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
                 <div className="w-3 h-3 rounded-full bg-[#D9C9B2]" />
               </div>
               <span className="text-[10px] font-bold text-[#556453] uppercase tracking-wider block">
-                Pusat Operasi Eksekutif
+                {t('portal:executive_ops_center', 'Pusat Operasi Eksekutif')}
               </span>
               <div className="space-y-2">
                 {[
-                  { label: `${stats.clubsCount} Kelab Berdaftar`, active: true },
-                  { label: `${stats.activitiesCount} Aktiviti & Kertas Kerja`, active: false },
-                  { label: `${stats.studentsCount.toLocaleString()}+ Pelajar Sesi Semasa`, active: false },
-                  { label: `${stats.productsCount}+ Produk PolyMart`, active: false }
+                  { label: t('portal:registered_clubs_count', '{{count}} Kelab Berdaftar', { count: stats.clubsCount }), active: true },
+                  { label: t('portal:activities_papers_count', '{{count}} Aktiviti & Kertas Kerja', { count: stats.activitiesCount }), active: false },
+                  { label: t('portal:current_session_students_count', '{{count}}+ Pelajar Sesi Semasa', { count: stats.studentsCount.toLocaleString() }), active: false },
+                  { label: t('portal:polymart_products_count', '{{count}}+ Produk PolyMart', { count: stats.productsCount }), active: false }
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -642,21 +643,21 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
             <div className="flex justify-between items-center pb-2">
               <div>
                 <h2 className="text-base md:text-lg font-black text-[#2E3A2F] tracking-tight">
-                  Status Ekosistem Kampus POLISAS
+                  {t('portal:campus_ecosystem_status', 'Status Ekosistem Kampus POLISAS')}
                 </h2>
-                <p className="text-xs text-[#556453]">Data masa nyata kelab, aktiviti, dan keusahawanan mahasiswa.</p>
+                <p className="text-xs text-[#556453]">{t('portal:campus_ecosystem_subtitle', 'Data masa nyata kelab, aktiviti, dan keusahawanan mahasiswa.')}</p>
               </div>
               <span className="px-3 py-1 rounded-full bg-[#6B7F5B]/15 text-[#2E3A2F] text-[10px] font-bold border border-[#6B7F5B]/30">
-                Aktif
+                {t('portal:active_status', 'Aktif')}
               </span>
             </div>
 
             {/* Kad Metrik Pantas Berdasarkan Data Sebenar */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {[
-                { label: 'Kelab Berdaftar', val: `${stats.clubsCount} Kelab`, sub: '100% Beroperasi', icon: <Shield className="w-4 h-4 text-[#2E3A2F]" /> },
-                { label: 'Aktiviti & Kertas Kerja', val: `${stats.activitiesCount}`, sub: '36 Selesai • 5 Aktif', icon: <Activity className="w-4 h-4 text-[#6B7F5B]" /> },
-                { label: 'Pelajar Berdaftar', val: `${stats.studentsCount.toLocaleString()}+`, sub: '5 Jabatan POLISAS', icon: <Users className="w-4 h-4 text-[#C96F4F]" /> }
+                { label: t('portal:metric_registered_clubs', 'Kelab Berdaftar'), val: t('portal:clubs_count_simple', '{{count}} Kelab', { count: stats.clubsCount }), sub: t('portal:sub_operational', '100% Beroperasi'), icon: <Shield className="w-4 h-4 text-[#2E3A2F]" /> },
+                { label: t('portal:metric_activities_proposals', 'Aktiviti & Kertas Kerja'), val: `${stats.activitiesCount}`, sub: t('portal:sub_completed_active', '36 Selesai • 5 Aktif'), icon: <Activity className="w-4 h-4 text-[#6B7F5B]" /> },
+                { label: t('portal:metric_registered_students', 'Pelajar Berdaftar'), val: `${stats.studentsCount.toLocaleString()}+`, sub: t('portal:sub_departments', '5 Jabatan POLISAS'), icon: <Users className="w-4 h-4 text-[#C96F4F]" /> }
               ].map((item, i) => (
                 <div key={i} className="p-4 rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 flex flex-col justify-between">
                   <div className="w-8 h-8 rounded-xl bg-white border border-[#D9C9B2]/60 flex items-center justify-center mb-2 shadow-2xs">
@@ -674,8 +675,8 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
             {/* Carta Bar Interaktif Menunjukkan Agihan Aktiviti Mengikut Minggu */}
             <div className="p-4 md:p-6 rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/80 flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-xs font-bold text-[#2E3A2F]">Aktiviti & Kertas Kerja Mengikut Minggu</span>
-                <span className="text-[10px] font-semibold text-[#556453]">Semasa</span>
+                <span className="text-xs font-bold text-[#2E3A2F]">{t('portal:weekly_activities_papers', 'Aktiviti & Kertas Kerja Mengikut Minggu')}</span>
+                <span className="text-[10px] font-semibold text-[#556453]">{t('portal:current_period', 'Semasa')}</span>
               </div>
               <div className="h-28 md:h-36 flex items-end justify-between gap-1.5 md:gap-3 px-1 md:px-4">
                 {[35, 50, 45, 80, 55, 95, 65, 40, 85, 60, 75].map((h, i) => (
@@ -697,9 +698,11 @@ export const Hero: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) =>
 
 // ── 5. Bento Section 5 Modul Estetik & Kemas (<BentoSection />) ──
 export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
+  const modules = getModules(t);
 
   return (
     <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
@@ -709,22 +712,21 @@ export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full bg-[#C96F4F]" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#556453]">
-              EKOSISTEM TERAS
+              {t('portal:portal_select_module')}
             </span>
           </div>
           <h2 className="text-4xl sm:text-6xl md:text-[5rem] font-black tracking-tight text-[#2E3A2F] leading-[0.94]">
-            Satu Ekosistem. <br />
-            <span className="text-[#6B7F5B] font-semibold italic">Kawal Sepenuhnya.</span>
+            {t('portal:features_heading')}
           </h2>
         </div>
         <p className="max-w-md text-sm md:text-base text-[#556453] font-medium leading-relaxed pb-2">
-          Struktur modular yang direka khas untuk logik tadbir urus. Organisasikan keperluan kampus dalam kepantasan milisaat.
+          {t('portal:features_desc')}
         </p>
       </div>
 
       {/* Grid Kad Bento */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {MODULES.map((m: any) => (
+        {modules.map((m: any) => (
           <SpotlightCard
             key={m.id}
             onClick={() => navigate(m.path)}
@@ -779,6 +781,7 @@ export const BentoSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
 
 // ── 6. Enjin AI Pintar Nexus (<NexusAISection />) ─────────────
 export const NexusAISection: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   return (
     <section id="nexus" className="py-24 md:py-36 px-4 md:px-6 bg-white border-y border-[#D9C9B2] relative z-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
@@ -837,20 +840,20 @@ export const NexusAISection: React.FC = () => {
           </div>
 
           <h2 className="text-4xl sm:text-6xl md:text-[4.5rem] font-black tracking-tight text-[#2E3A2F] leading-[0.95]">
-            Kepintaran Nexus <br />
-            <span className="text-[#C96F4F]">Memperkasa Operasi.</span>
+            {t('portal:nexus_intelligence', 'Kepintaran Nexus')} <br />
+            <span className="text-[#C96F4F]">{t('portal:empowering_operations', 'Memperkasa Operasi.')}</span>
           </h2>
 
           <p className="text-sm md:text-base text-[#556453] font-medium leading-relaxed max-w-lg">
-            Sistem dipacu LLM untuk menyemak kualiti kertas kerja aktiviti dan merumuskan sentimen mahasiswa secara pintar. Serahkan tugasan analitik kepada kepintaran sistem JPP.
+            {t('portal:nexus_ai_description', 'Sistem dipacu LLM untuk menyemak kualiti kertas kerja aktiviti dan merumuskan sentimen mahasiswa secara pintar. Serahkan tugasan analitik kepada kepintaran sistem JPP.')}
           </p>
 
           <div className="grid grid-cols-2 gap-6 md:gap-8 pt-4 border-t border-[#D9C9B2]/60 mt-6">
             {[
-              { label: 'Analisis Minit', desc: 'Sintaks Kewangan', icon: Activity },
-              { label: 'Penjanaan', desc: 'Teks Automatik', icon: BookOpen },
-              { label: 'Audit Semak', desc: 'Ralat Format', icon: Shield },
-              { label: 'Pakar JPP', desc: 'Resolusi Isu 24/7', icon: Zap }
+              { label: t('portal:nexus_feature_minutes_analysis', 'Analisis Minit'), desc: t('portal:nexus_feature_financial_syntax', 'Sintaks Kewangan'), icon: Activity },
+              { label: t('portal:nexus_feature_generation', 'Penjanaan'), desc: t('portal:nexus_feature_auto_text', 'Teks Automatik'), icon: BookOpen },
+              { label: t('portal:nexus_feature_audit_check', 'Audit Semak'), desc: t('portal:nexus_feature_format_errors', 'Ralat Format'), icon: Shield },
+              { label: t('portal:nexus_feature_jpp_expert', 'Pakar JPP'), desc: t('portal:nexus_feature_issue_resolution', 'Resolusi Isu 24/7'), icon: Zap }
             ].map((f, i) => (
               <div key={i} className="flex flex-col gap-2">
                 <div className="w-10 h-10 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]/80 flex items-center justify-center text-[#2E3A2F]">
@@ -871,6 +874,7 @@ export const NexusAISection: React.FC = () => {
 
 // ── 7. Statistik & Impak Kampus (<StatsSection />) ────────────
 export const StatsSection: React.FC<{ stats?: CampusStats }> = ({ stats: propStats }) => {
+  const { t } = useTranslation(['portal', 'common']);
   const internalStats = useCampusStats();
   const stats = propStats || internalStats;
 
@@ -878,10 +882,10 @@ export const StatsSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
     <section id="statistik" className="py-24 md:py-32 bg-[#2E3A2F] text-white relative z-20">
       <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 md:divide-x divide-white/10">
         {[
-          { label: 'Kelab Pemimpin Berdaftar', val: `${stats.clubsCount}` },
-          { label: 'Mahasiswa Berdaftar Semasa', val: `${stats.studentsCount.toLocaleString()}+` },
-          { label: 'Aktiviti & Kertas Kerja Dipantau', val: `${stats.activitiesCount}` },
-          { label: 'Produk Siswa di PolyMart', val: `${stats.productsCount}+` }
+          { label: t('portal:stats_registered_leader_clubs', 'Kelab Pemimpin Berdaftar'), val: `${stats.clubsCount}` },
+          { label: t('portal:stats_current_registered_students', 'Mahasiswa Berdaftar Semasa'), val: `${stats.studentsCount.toLocaleString()}+` },
+          { label: t('portal:stats_monitored_activities', 'Aktiviti & Kertas Kerja Dipantau'), val: `${stats.activitiesCount}` },
+          { label: t('portal:stats_polymart_student_products', 'Produk Siswa di PolyMart'), val: `${stats.productsCount}+` }
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -902,6 +906,7 @@ export const StatsSection: React.FC<{ stats?: CampusStats }> = ({ stats: propSta
 
 // ── 8. Banner Gerakan Tindakan (<CtaSection />) ───────────────
 export const CtaSection: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
 
   return (
@@ -914,11 +919,11 @@ export const CtaSection: React.FC = () => {
       >
 
         <h2 className="text-3xl md:text-6xl font-black tracking-tight text-[#2E3A2F] leading-[1.02] relative z-10">
-          Gerakan Mahasiswa Bermula Di Sini.
+          {t('portal:hero_title')}
         </h2>
 
         <p className="text-sm md:text-lg text-[#556453] max-w-xl mx-auto font-medium leading-relaxed relative z-10">
-          Sertai portal pengurusan kampus bersepadu. Urus kelab, mohon kelulusan kertas kerja, dan pantau kebajikan anda.
+          {t('portal:hero_subtitle')}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-4">
@@ -926,7 +931,7 @@ export const CtaSection: React.FC = () => {
             onClick={() => navigate('/portal')}
             className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
           >
-            <span>Daftar / Log Masuk Sekarang</span>
+            <span>{t('portal:student_login')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -936,37 +941,41 @@ export const CtaSection: React.FC = () => {
 };
 
 // ── 9. Pengaki Halaman Rasmi (<Footer />) ──────────────────────
-export const Footer: React.FC = () => (
-  <footer className="w-full bg-[#F2EDE4] border-t border-[#D9C9B2] py-16 px-4 md:px-6 relative z-20">
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
-      <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-white border border-[#D9C9B2] p-1.5 flex items-center justify-center shadow-2xs">
-          <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
+export const Footer: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
+  return (
+    <footer className="w-full bg-[#F2EDE4] border-t border-[#D9C9B2] py-16 px-4 md:px-6 relative z-20">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#D9C9B2] p-1.5 flex items-center justify-center shadow-2xs">
+            <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="font-black text-sm tracking-tight text-[#2E3A2F]">JPP POLISAS</span>
+            <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider">
+              {t('portal:mpp_new_session', 'Majlis Perwakilan Pelajar Sesi Baharu')}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col text-left">
-          <span className="font-black text-sm tracking-tight text-[#2E3A2F]">JPP POLISAS</span>
-          <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider">
-            Majlis Perwakilan Pelajar Sesi Baharu
-          </span>
+
+        <div className="flex items-center gap-6 text-xs font-semibold text-[#556453]">
+          <a href="#ekosistem" onClick={(e) => { e.preventDefault(); scrollToSection('#ekosistem'); }} className="hover:text-[#2E3A2F] transition-colors">{t('portal:nav_ecosystem', 'Ekosistem')}</a>
+          <a href="#modul" onClick={(e) => { e.preventDefault(); scrollToSection('#modul'); }} className="hover:text-[#2E3A2F] transition-colors">{t('portal:nav_modules', 'Modul')}</a>
+          <a href="#nexus" onClick={(e) => { e.preventDefault(); scrollToSection('#nexus'); }} className="hover:text-[#2E3A2F] transition-colors">{t('portal:nav_nexus_ai', 'Nexus AI')}</a>
+          <a href="#statistik" onClick={(e) => { e.preventDefault(); scrollToSection('#statistik'); }} className="hover:text-[#2E3A2F] transition-colors">{t('portal:nav_statistics', 'Statistik')}</a>
         </div>
-      </div>
 
-      <div className="flex items-center gap-6 text-xs font-semibold text-[#556453]">
-        <a href="#ekosistem" onClick={(e) => { e.preventDefault(); scrollToSection('#ekosistem'); }} className="hover:text-[#2E3A2F] transition-colors">Ekosistem</a>
-        <a href="#modul" onClick={(e) => { e.preventDefault(); scrollToSection('#modul'); }} className="hover:text-[#2E3A2F] transition-colors">Modul</a>
-        <a href="#nexus" onClick={(e) => { e.preventDefault(); scrollToSection('#nexus'); }} className="hover:text-[#2E3A2F] transition-colors">Nexus AI</a>
-        <a href="#statistik" onClick={(e) => { e.preventDefault(); scrollToSection('#statistik'); }} className="hover:text-[#2E3A2F] transition-colors">Statistik</a>
+        <p className="text-[10px] font-medium text-[#556453]">
+          {t('portal:footer_copyright', '© 2026 JPP Digital Portal POLISAS. Hak Cipta Terpelihara.')}
+        </p>
       </div>
-
-      <p className="text-[10px] font-medium text-[#556453]">
-        © 2026 JPP Digital Portal POLISAS. Hak Cipta Terpelihara.
-      </p>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 // ── Komponen Utama Halaman Pendaratan (<LandingPage />) ────────
 export const LandingPage: React.FC = () => {
+  const { t } = useTranslation(['portal', 'common']);
   const stats = useCampusStats();
 
   return (

@@ -30,6 +30,7 @@ dist-ssr
 !tsconfig.json
 !tsconfig.node.json
 !components.json
+!src/locales/**/*.json
 src/lib/*.json
 *service_account*.json
 *credentials*.json

@@ -3,6 +3,7 @@ import { AlertTriangle, RefreshCcw, Home, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+import i18n from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -13,7 +14,7 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends React.Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
@@ -59,6 +60,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      const t = (key: string, fallback: string) => i18n.t(key, fallback);
+
       return (
         <div className="min-h-screen w-full flex items-center justify-center bg-background p-6">
           <motion.div 
@@ -76,15 +79,15 @@ export class ErrorBoundary extends Component<Props, State> {
                 <div className="space-y-4">
                   <h1 className="text-3xl font-black tracking-tighter leading-tight">
                     {navigator.onLine ? (
-                      <>Ops! Berlaku <span className="text-rose-500">Ralat.</span></>
+                      <>{t('common:ops_error_prefix', 'Ops! Berlaku')} <span className="text-rose-500">{t('common:ops_error_highlight', 'Ralat.')}</span></>
                     ) : (
-                      <>Tiada <span className="text-rose-500">Internet.</span></>
+                      <>{t('common:no_internet_prefix', 'Tiada')} <span className="text-rose-500">{t('common:no_internet_highlight', 'Internet.')}</span></>
                     )}
                   </h1>
                   <p className="text-sm text-muted-foreground font-medium px-4">
                     {navigator.onLine 
-                      ? "Sesuatu yang tidak dijangka telah berlaku. Jangan risau, kami telah merekodkan kejadian ini."
-                      : "Aplikasi gagal dimuatkan kerana anda sedang berada di luar talian (offline). Sila sambung ke internet untuk mengakses bahagian ini."}
+                      ? t('common:error_boundary_desc', 'Sesuatu yang tidak dijangka telah berlaku. Jangan risau, kami telah merekodkan kejadian ini.')
+                      : t('common:error_boundary_offline', 'Aplikasi gagal dimuatkan kerana anda sedang berada di luar talian (offline). Sila sambung ke internet semula.')}
                   </p>
                 </div>
 
@@ -99,21 +102,21 @@ export class ErrorBoundary extends Component<Props, State> {
                     onClick={this.handleReset}
                     className="h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex items-center gap-2"
                   >
-                    <RefreshCcw size={14} /> Cuba Segarkan Halaman
+                    <RefreshCcw size={14} /> {t('common:try_refresh_page', 'Cuba Segarkan Halaman')}
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={this.handleGoHome}
                     className="h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border hover:bg-muted"
                   >
-                    <Home size={14} className="mr-2" /> Kembali ke Laman Utama
+                    <Home size={14} className="mr-2" /> {t('common:back_to_home', 'Kembali ke Laman Utama')}
                   </Button>
                 </div>
 
                 {/* Helpline JPP — supaya pengguna boleh hubungi bila hadapi masalah */}
                 <div className="w-full p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1.5">
                   <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-                    Masalah berulang? Hubungi kami untuk bantuan:
+                    {t('common:recurring_issue_contact', 'Masalah berulang? Hubungi kami untuk bantuan:')}
                   </p>
                   <a
                     href="https://wa.me/601139413699?text=Salam%20JPP%2C%20saya%20mengalami%20ralat%20pada%20sistem%20(Error%20Boundary).%20Mohon%20bantuan."
@@ -122,7 +125,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:shadow-lg"
                   >
                     <Phone size={14} />
-                    Hubungi Helpline JPP
+                    {t('common:contact_jpp_helpline', 'Hubungi Helpline JPP')}
                   </a>
                 </div>
 

@@ -8,6 +8,7 @@
  *   - Shorter spin animation (300ms instead of 900ms)
  */
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,7 @@ const GROUP_COLORS: Record<string, string> = {
 };
 
 function GroupSlotCard({ slot, instantReveal }: { slot: GroupDrawSlot; instantReveal: boolean }) {
+  const { t } = useTranslation(['supsas']);
   const [spinning, setSpinning] = useState(false);
   const [displayName, setDisplayName] = useState('???');
 
@@ -70,7 +72,7 @@ function GroupSlotCard({ slot, instantReveal }: { slot: GroupDrawSlot; instantRe
       } : {}}
     >
       <span className="text-[7px] font-black uppercase tracking-[0.3em] text-white/30">
-        Slot {slot.slot}
+        {t('supsas:slot_number', 'Slot {{num}}', { num: slot.slot })}
       </span>
 
       <div className={cn(
@@ -114,13 +116,14 @@ function GroupColumn({ label, color, slots, instantReveal }: {
   slots: GroupDrawSlot[];
   instantReveal: boolean;
 }) {
+  const { t } = useTranslation(['supsas']);
   return (
     <div className="flex-1 space-y-2 min-w-0">
       <div
         className="text-center py-1.5 rounded-xl font-black text-xs uppercase tracking-[0.15em]"
         style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}30` }}
       >
-        KUMPULAN {label}
+        {t('supsas:group_upper', 'KUMPULAN {{label}}', { label })}
       </div>
       <div className="flex flex-col gap-1.5">
         {slots.map(slot => (
@@ -141,6 +144,7 @@ interface LiveDrawOverlayProps {
 }
 
 export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
+  const { t } = useTranslation(['supsas']);
   const { drawState } = useLiveDraw(editionId, false);
   const { sports } = useSupsas();
   const navigate = useNavigate();
@@ -181,16 +185,16 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-red-400">
-                  {drawState.status === 'complete' || instantReveal ? 'Undian Selesai' : 'Undian Langsung'}
+                  {drawState.status === 'complete' || instantReveal ? t('supsas:draw_complete', 'Undian Selesai') : t('supsas:draw_live', 'Undian Langsung')}
                 </span>
               </motion.div>
 
-              <h2 className="text-2xl font-black text-white mb-1">🎰 UNDIAN KUMPULAN</h2>
+              <h2 className="text-2xl font-black text-white mb-1">{t('supsas:draw_groups_title', '🎰 UNDIAN KUMPULAN')}</h2>
               <p className="text-amber-400 font-black uppercase tracking-widest text-sm">
                 {drawState.sportName ?? '—'}
               </p>
               <p className="text-white/30 text-xs mt-1">
-                {drawState.totalTeams} Pasukan → {numGroups || 2} Kumpulan
+                {t('supsas:teams_to_groups', '{{total}} Pasukan → {{groups}} Kumpulan', { total: drawState.totalTeams, groups: numGroups || 2 })}
               </p>
             </div>
 
@@ -204,7 +208,7 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
                   key={label}
                   label={label}
                   color={GROUP_COLORS[label] ?? '#F59E0B'}
-                  slots={slots}
+                  slots={slots as GroupDrawSlot[]}
                   instantReveal={instantReveal}
                 />
               ))}
@@ -220,8 +224,8 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
             {/* Format reminder */}
             <div className="text-center mb-5">
               <p className="text-white/20 text-[10px] font-medium leading-relaxed">
-                Setiap pasukan dalam kumpulan akan berlawan sesama sendiri<br />
-                Dua terbaik dari setiap kumpulan maju ke fasa seterusnya
+                {t('supsas:round_robin_rule_1', 'Setiap pasukan dalam kumpulan akan berlawan sesama sendiri')}<br />
+                {t('supsas:round_robin_rule_2', 'Dua terbaik dari setiap kumpulan maju ke fasa seterusnya')}
               </p>
             </div>
 
@@ -241,7 +245,7 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
                   </div>
 
                   <p className="text-center text-white/40 text-xs font-medium">
-                    Pembahagian kumpulan telah ditetapkan! Lihat bracket penuh.
+                    {t('supsas:groups_finalized_note', 'Pembahagian kumpulan telah ditetapkan! Lihat bracket penuh.')}
                   </p>
 
                   {sport && (
@@ -250,7 +254,7 @@ export function LiveDrawOverlay({ editionId }: LiveDrawOverlayProps) {
                       className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Lihat Bracket {drawState.sportName}
+                      {t('supsas:view_bracket_for_sport', 'Lihat Bracket {{sport}}', { sport: drawState.sportName })}
                     </button>
                   )}
                 </motion.div>

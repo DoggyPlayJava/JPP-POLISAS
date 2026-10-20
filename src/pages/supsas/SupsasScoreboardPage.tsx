@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, Trophy, Maximize2, Minimize2, RefreshCw } from 'lucide-react';
 import { useSupsas, SupsasMedalTally } from '@/contexts/SupsasContext';
 import { cn } from '@/lib/utils';
 
 // ─── Confetti (CSS-only burst on update) ─────────────────────
-function ConfettiParticle({ delay, color }: { delay: number; color: string }) {
+function ConfettiParticle({ delay, color }: { delay: number; color: string; key?: React.Key }) {
   return (
     <motion.div
       className="absolute w-2 h-2 rounded-sm pointer-events-none"
@@ -91,7 +92,8 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 // ─── Tally Row ────────────────────────────────────────────────
-function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number; isTV: boolean }) {
+function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number; isTV: boolean; key?: React.Key }) {
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const isTop3 = rank <= 3;
 
   return (
@@ -132,6 +134,11 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
         )}>
           {entry.short_code}
         </p>
+        {rank === 1 && (
+          <span className="text-[8px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block mt-0.5">
+            {t('supsas:championship_champion', 'Jabatan Juara Keseluruhan')}
+          </span>
+        )}
       </div>
 
       {/* Medals */}
@@ -142,12 +149,12 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
       </div>
 
       {/* Total Medals & Points */}
-      <div className="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex-shrink-0">
+      <div className="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex-shrink-0" title={t('supsas:total_points', 'Jumlah Mata Kejohanan')}>
         <span className={cn('font-black text-amber-400 font-mono', isTV ? 'text-2xl' : 'text-base sm:text-lg')}>
           {entry.total_points ?? (entry.gold * 5 + entry.silver * 3 + entry.bronze * 1)} pts
         </span>
         <span className="text-[8px] font-black uppercase tracking-widest text-amber-400/60">
-          {entry.total_medals} Pingat
+          {entry.total_medals} {t('supsas:medal_tally', 'Pingat')}
         </span>
       </div>
     </motion.div>
@@ -156,6 +163,7 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
 
 // ─── Main Scoreboard ──────────────────────────────────────────
 export function SupsasScoreboardPage() {
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const { edition, medalTally, sports, isLive, refetch } = useSupsas();
   const [isTV, setIsTV] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -216,10 +224,10 @@ export function SupsasScoreboardPage() {
                   </div>
                   <div>
                     <h1 className={cn('font-black text-white leading-none', isTV ? 'text-4xl' : 'text-2xl sm:text-3xl')}>
-                      Papan Markah Medal
+                      {t('supsas:medal_tally', 'Papan Markah Medal')}
                     </h1>
                     <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">
-                      {edition?.name} · Dikemas kini setiap 30 saat
+                      {edition?.name} · {t('supsas:updated_every_30s', 'Dikemas kini setiap 30 saat')}
                     </p>
                   </div>
                 </div>
@@ -240,7 +248,7 @@ export function SupsasScoreboardPage() {
                     <span className="w-2 h-2 rounded-full bg-white/20" />
                   )}
                   <span className={cn('text-[9px] font-black uppercase tracking-widest', isLive ? 'text-red-400' : 'text-white/30')}>
-                    {isLive ? 'Live' : 'Tidak Aktif'}
+                    {isLive ? t('supsas:status_live', 'Live') : t('supsas:status_inactive', 'Tidak Aktif')}
                   </span>
                 </div>
 
@@ -261,7 +269,7 @@ export function SupsasScoreboardPage() {
                       ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
                       : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10'
                   )}
-                  title={isTV ? 'Keluar TV Mode' : 'TV Mode'}
+                  title={isTV ? t('supsas:exit_tv_mode', 'Keluar TV Mode') : t('supsas:enter_tv_mode', 'TV Mode')}
                 >
                   {isTV ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </button>
@@ -270,7 +278,7 @@ export function SupsasScoreboardPage() {
 
             {/* Last update */}
             <p className="text-[9px] font-bold text-white/20 mt-3">
-              Terakhir dikemas kini: {lastUpdate.toLocaleTimeString('ms-MY')}
+              {t('supsas:last_updated_at', 'Terakhir dikemas kini: {{time}}', { time: lastUpdate.toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'ms-MY') })}
             </p>
           </div>
         </div>
@@ -283,17 +291,21 @@ export function SupsasScoreboardPage() {
               <div className="w-9" /> {/* rank */}
               <div className="w-1 hidden sm:block" /> {/* color bar */}
               <div className="flex-1">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Kontinjen</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">{t('supsas:contingent_label', 'Kontinjen')}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                {['🥇 Emas', '🥈 Perak', '🥉 Gangsa'].map((label) => (
-                  <div key={label} className="w-16 sm:w-20 text-center">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/20">{label}</span>
-                  </div>
-                ))}
+                <div className="w-16 sm:w-20 text-center">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/20">🥇 {t('supsas:gold_medals', 'Emas')}</span>
+                </div>
+                <div className="w-16 sm:w-20 text-center">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/20">🥈 {t('supsas:silver_medals', 'Perak')}</span>
+                </div>
+                <div className="w-16 sm:w-20 text-center">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/20">🥉 {t('supsas:bronze_medals', 'Gangsa')}</span>
+                </div>
               </div>
               <div className="hidden sm:block w-14 text-center">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/20">Jumlah</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/20">{t('supsas:total_points', 'Jumlah')}</span>
               </div>
             </div>
 
@@ -302,9 +314,9 @@ export function SupsasScoreboardPage() {
               <div className="text-center py-24">
                 <Trophy className="w-12 h-12 text-white/10 mx-auto mb-4" />
                 <p className="text-white/30 font-black uppercase tracking-widest text-sm">
-                  Belum ada keputusan direkod
+                  {t('supsas:no_results_recorded_yet', 'Belum ada keputusan direkod')}
                 </p>
-                <p className="text-white/20 text-xs mt-2">Papan markah akan dikemas kini sebaik keputusan dimasukkan</p>
+                <p className="text-white/20 text-xs mt-2">{t('supsas:scoreboard_update_hint', 'Papan markah akan dikemas kini sebaik keputusan dimasukkan')}</p>
               </div>
             ) : (
               <AnimatePresence mode="popLayout">
@@ -320,7 +332,7 @@ export function SupsasScoreboardPage() {
             {!isTV && (
               <div className="mt-8 flex flex-wrap items-center justify-center gap-6 opacity-40">
                 <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/60">
-                  Ranking dikira berdasarkan: Emas → Perak → Gangsa
+                  {t('supsas:championship_champion', 'Jabatan Juara Keseluruhan')} — Ranking: {t('supsas:gold_medals', 'Emas')} → {t('supsas:silver_medals', 'Perak')} → {t('supsas:bronze_medals', 'Gangsa')}
                 </p>
               </div>
             )}

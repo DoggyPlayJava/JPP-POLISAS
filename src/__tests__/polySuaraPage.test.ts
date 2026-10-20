@@ -1,5 +1,10 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import i18n from '@/lib/i18n';
+
+beforeAll(async () => {
+  await i18n.changeLanguage('ms');
+});
 import { renderToString } from 'react-dom/server';
 import fs from 'fs';
 import path from 'path';
@@ -313,7 +318,7 @@ describe('PolySuaraPage Suite', () => {
     });
 
     it('renders verified anonymous identity badge (✓) and author name', () => {
-      expect(pageContent).toContain('title="Identiti Anon Sah Disahkan"');
+      expect(pageContent).toMatch(/title="Identiti Anon Sah Disahkan"|title=\{t\(['"]services:anon_verified_tooltip['"],\s*['"]Identiti Anon Sah Disahkan['"]\)\}/);
       expect(pageContent).toContain('✓');
       expect(pageContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
     });

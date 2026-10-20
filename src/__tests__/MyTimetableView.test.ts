@@ -38,7 +38,7 @@ describe('MyTimetableView & AkademikTakwimPage Unified Tabs', () => {
     expect(content).toContain("jpp_student_timetable_view");
     expect(content).toContain("TimetableMatrixGrid");
     expect(content).toContain("setSelectedDay(0)");
-    expect(content).toContain('>Semua</span>');
+    expect(content).toContain('timetable_all_days');
   });
 
   it('verifies hero CTA button and empty state use uppercase "MUAT NAIK JADUAL"', () => {

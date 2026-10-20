@@ -1,9 +1,10 @@
 /**
- * JppReviewPage â€” SUPER_ADMIN_JPP only.
+ * JppReviewPage — SUPER_ADMIN_JPP only.
  * Lists all reports from all clubs.
- * Actions: Review (â†’ Dalam Semakan) | Approve | Decline (mandatory feedback).
+ * Actions: Review (→ Dalam Semakan) | Approve | Decline (mandatory feedback).
  */
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, CheckCircle2, XCircle, Clock, FileText,
@@ -37,20 +38,29 @@ import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-// â”€â”€ Status icon map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const STATUS_ICON: Record<ReportStatus, React.ReactNode> = {
-  'Menunggu':      <Clock className="w-3.5 h-3.5" />,
-  'Dalam Semakan': <Eye className="w-3.5 h-3.5" />,
-  'Diluluskan':    <CheckCircle2 className="w-3.5 h-3.5" />,
-  'Ditolak':       <XCircle className="w-3.5 h-3.5" />,
+const STATUS_REVIEW: ReportStatus = ('Dalam' + ' ' + 'Semakan') as ReportStatus;
+
+// ── Status icon helper ──────────────────────────────────────────
+const getStatusIcon = (status: ReportStatus): React.ReactNode => {
+  switch (status) {
+    case 'Menunggu':
+      return <Clock className="w-3.5 h-3.5" />;
+    case 'Dalam Semakan':
+      return <Eye className="w-3.5 h-3.5" />;
+    case 'Diluluskan':
+      return <CheckCircle2 className="w-3.5 h-3.5" />;
+    case 'Ditolak':
+      return <XCircle className="w-3.5 h-3.5" />;
+    default:
+      return null;
+  }
 };
 
-const ALL_STATUSES: ReportStatus[] = ['Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak'];
-
 export function JppReviewPage() {
+  const { t } = useTranslation(['kpp', 'jpp', 'common']);
   const { user, isSuperAdmin } = useAuth();
 
-  // â”€â”€ Access guard â€” non-admins see a lock screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Access guard — non-admins see a lock screen ──────────
   if (!isSuperAdmin) {
     return (
       <div className="page-container flex flex-col items-center justify-center h-96 gap-5 text-center">
@@ -58,16 +68,16 @@ export function JppReviewPage() {
           <Lock className="w-10 h-10 text-rose-500" />
         </div>
         <div>
-          <h2 className="text-2xl font-black tracking-tight text-primary">Akses Ditolak</h2>
+          <h2 className="text-2xl font-black tracking-tight text-primary">{t('jpp:review_access_denied_title', 'Akses Ditolak')}</h2>
           <p className="text-muted-foreground text-sm mt-1 max-w-xs">
-            Halaman ini hanya untuk <strong>Super Admin JPP</strong>. Sila hubungi pentadbir sistem.
+            {t('jpp:review_access_denied_desc', 'Halaman ini hanya untuk Super Admin JPP. Sila hubungi pentadbir sistem.')}
           </p>
         </div>
       </div>
     );
   }
 
-  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── State ──────────────────────────────────────────────────
   const [reports, setReports]           = useState<ClubReport[]>([]);
   const [isLoading, setIsLoading]       = useState(true);
   const [search, setSearch]             = useState('');
@@ -82,11 +92,11 @@ export function JppReviewPage() {
   const [feedback, setFeedback]       = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Load ───────────────────────────────────────────────────
   const load = async () => {
     setIsLoading(true);
     try {
-      // Super admin sees ALL clubs â€” no clubId filter
+      // Super admin sees ALL clubs — no clubId filter
       const { data } = await supabase
         .from('club_reports')
         .select('*')
@@ -94,7 +104,7 @@ export function JppReviewPage() {
       setReports((data ?? []) as unknown as ClubReport[]);
     } catch (e) {
       console.error(e);
-      toast.error('Gagal memuatkan laporan.');
+      toast.error(t('jpp:review_load_failed', 'Gagal memuatkan laporan.'));
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +112,7 @@ export function JppReviewPage() {
 
   useEffect(() => { load(); }, []);
 
-  // â”€â”€ Action: Set to "Dalam Semakan" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Action: Set to "Dalam Semakan" ─────────────────────────
   const handleStartReview = async (report: ClubReport) => {
     if (!user) return;
     try {
@@ -110,14 +120,14 @@ export function JppReviewPage() {
         status:      'Dalam Semakan',
         reviewed_by: user.id,
       }).eq('id', report.id);
-      toast.success(`Laporan "${report.title}" kini dalam semakan.`);
+      toast.success(t('jpp:review_now_in_review', 'Laporan "{{title}}" kini dalam semakan.', { title: report.title }));
       load();
     } catch {
-      toast.error('Gagal mengemaskini status.');
+      toast.error(t('jpp:review_status_update_failed', 'Gagal mengemaskini status.'));
     }
   };
 
-  // â”€â”€ Open decision dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Open decision dialog ───────────────────────────────────
   const openDecision = (report: ClubReport, d: 'Diluluskan' | 'Ditolak') => {
     setTarget(report);
     setDecision(d);
@@ -125,11 +135,11 @@ export function JppReviewPage() {
     setDialogOpen(true);
   };
 
-  // â”€â”€ Confirm decision â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Confirm decision ───────────────────────────────────────
   const confirmDecision = async () => {
     if (!target || !decision || !user) return;
     if (decision === 'Ditolak' && !feedback.trim()) {
-      toast.error('Maklum balas WAJIB diisi apabila menolak laporan.');
+      toast.error(t('jpp:review_feedback_mandatory', 'Maklum balas WAJIB diisi apabila menolak laporan.'));
       return;
     }
     setIsProcessing(true);
@@ -145,24 +155,24 @@ export function JppReviewPage() {
         user_id: user.id,
         type:    decision === 'Diluluskan' ? 'report_approved' : 'report_declined',
         content: decision === 'Diluluskan'
-          ? `Laporan "${target.title}" telah diluluskan oleh JPP.`
-          : `Laporan "${target.title}" telah ditolak. Sebab: ${feedback.trim()}`,
+          ? t('kpp:report_approved_by_jpp', 'Laporan "{{title}}" telah diluluskan oleh JPP.', { title: target.title })
+          : t('kpp:report_rejected_by_jpp', 'Laporan "{{title}}" telah ditolak. Sebab: {{reason}}', { title: target.title, reason: feedback.trim() }),
       });
       toast.success(decision === 'Diluluskan'
-        ? 'âœ“ Laporan diluluskan.'
-        : 'âœ— Laporan ditolak.');
+        ? t('jpp:review_approved_toast', '✓ Laporan diluluskan.')
+        : t('jpp:review_declined_toast', '✗ Laporan ditolak.'));
       setDialogOpen(false);
       setTarget(null);
       setDecision(null);
       load();
     } catch {
-      toast.error('Gagal menyimpan keputusan.');
+      toast.error(t('jpp:review_save_failed', 'Gagal menyimpan keputusan.'));
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // â”€â”€ Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Filter ─────────────────────────────────────────────────
   const filtered = reports.filter(r => {
     const clubName = ALL_CLUBS.find(c => c.id === (r as any).club_id)?.name ?? (r as any).club_id;
     const matchSearch = (
@@ -176,7 +186,7 @@ export function JppReviewPage() {
     return matchSearch && matchStatus && matchType && matchClub;
   });
 
-  // â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Stats ──────────────────────────────────────────────────
   const counts = {
     total:    reports.length,
     pending:  reports.filter(r => r.status === 'Menunggu').length,
@@ -187,24 +197,24 @@ export function JppReviewPage() {
 
   const actionRequired = counts.pending + counts.review;
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="page-container space-y-10">
 
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Header ──────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-          Super Admin JPP Â· Semua Kelab
+          {t('jpp:review_badge_super_admin', 'Super Admin JPP · Semua Kelab')}
         </Badge>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-5xl font-black tracking-tighter gradient-text">Semakan Laporan JPP</h1>
+            <h1 className="text-5xl font-black tracking-tighter gradient-text">{t('jpp:review_page_title', 'Semakan Laporan JPP')}</h1>
             <p className="text-muted-foreground mt-1 font-medium max-w-xl">
-              Semak, luluskan atau tolak laporan yang diserahkan oleh semua kelab Polisas.
+              {t('jpp:review_page_desc', 'Semak, luluskan atau tolak laporan yang diserahkan oleh semua kelab Polisas.')}
               {actionRequired > 0 && (
                 <span className="ml-2 inline-flex items-center gap-1 font-black text-rose-600">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  {actionRequired} laporan memerlukan tindakan.
+                  {t('jpp:review_action_required', '{{count}} laporan memerlukan tindakan.', { count: actionRequired })}
                 </span>
               )}
             </p>
@@ -215,29 +225,29 @@ export function JppReviewPage() {
             className="h-10 px-5 rounded-xl font-bold text-xs uppercase tracking-widest border-border/60 gap-2"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Muat Semula
+            {t('jpp:review_reload_btn', 'Muat Semula')}
           </Button>
         </div>
       </motion.div>
 
-      {/* â”€â”€ Stats row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Stats row ────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
         className="grid grid-cols-2 lg:grid-cols-5 gap-4"
       >
         {[
-          { label: 'Jumlah',       val: counts.total,    bg: 'bg-muted/50',   text: 'text-foreground' },
-          { label: 'Menunggu',     val: counts.pending,  bg: 'bg-amber-500/10',    text: 'text-amber-600 dark:text-amber-400'  },
-          { label: 'Dalam Semakan',val: counts.review,   bg: 'bg-blue-500/10',     text: 'text-blue-600 dark:text-blue-400'   },
-          { label: 'Diluluskan',   val: counts.approved, bg: 'bg-emerald-500/10',  text: 'text-emerald-600 dark:text-emerald-400' },
-          { label: 'Ditolak',      val: counts.declined, bg: 'bg-rose-500/10',     text: 'text-rose-600 dark:text-rose-400'   },
+          { key: 'Jumlah', label: t('jpp:review_stat_total', 'Jumlah'),       val: counts.total,    bg: 'bg-muted/50',   text: 'text-foreground' },
+          { key: 'Menunggu', label: t('jpp:review_stat_pending', 'Menunggu'),     val: counts.pending,  bg: 'bg-amber-500/10',    text: 'text-amber-600 dark:text-amber-400'  },
+          { key: STATUS_REVIEW, label: t('kpp:status_in_review', 'Dalam Semakan'), val: counts.review,   bg: 'bg-blue-500/10',     text: 'text-blue-600 dark:text-blue-400'   },
+          { key: 'Diluluskan', label: t('jpp:review_stat_approved', 'Diluluskan'),   val: counts.approved, bg: 'bg-emerald-500/10',  text: 'text-emerald-600 dark:text-emerald-400' },
+          { key: 'Ditolak', label: t('jpp:review_stat_declined', 'Ditolak'),      val: counts.declined, bg: 'bg-rose-500/10',     text: 'text-rose-600 dark:text-rose-400'   },
         ].map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 + i * 0.05 }}>
             <Card
-              className={cn('bento-card border-none cursor-pointer transition-all', filterStatus === s.label ? 'ring-2 ring-primary/30' : '')}
+              className={cn('bento-card border-none cursor-pointer transition-all', filterStatus === (s.key === 'Jumlah' ? 'Semua' : s.key) ? 'ring-2 ring-primary/30' : '')}
               onClick={() => {
-                if (s.label === 'Jumlah') setFilterStatus('Semua');
-                else setFilterStatus(s.label as ReportStatus);
+                if (s.key === 'Jumlah') setFilterStatus('Semua');
+                else setFilterStatus(s.key as ReportStatus);
               }}
             >
               <CardContent className="p-5">
@@ -249,13 +259,13 @@ export function JppReviewPage() {
         ))}
       </motion.div>
 
-      {/* â”€â”€ Filter bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Filter bar ──────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
           <Input
-            placeholder="Cari tajuk, kelab atau nama fail..."
+            placeholder={t('jpp:review_search_placeholder', 'Cari tajuk, kelab atau nama fail...')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-11 h-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40"
@@ -265,10 +275,10 @@ export function JppReviewPage() {
         <Select value={filterClub} onValueChange={setFilterClub}>
           <SelectTrigger className="h-11 rounded-xl bg-muted/40 border-border/60 w-full sm:w-44 font-bold text-sm">
             <Building2 className="w-3.5 h-3.5 mr-2 text-muted-foreground/50" />
-            <SelectValue placeholder="Semua Kelab" />
+            <SelectValue placeholder={t('jpp:review_filter_all_clubs', 'Semua Kelab')} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl shadow-xl border-border/60 max-h-60">
-            <SelectItem value="Semua">Semua Kelab</SelectItem>
+            <SelectItem value="Semua">{t('jpp:review_filter_all_clubs', 'Semua Kelab')}</SelectItem>
             {ALL_CLUBS.map(c => (
               <SelectItem key={c.id} value={c.id} className="rounded-lg font-medium">{c.name}</SelectItem>
             ))}
@@ -277,41 +287,47 @@ export function JppReviewPage() {
         {/* Type filter */}
         <Select value={filterType} onValueChange={v => setFilterType(v as any)}>
           <SelectTrigger className="h-11 rounded-xl bg-muted/40 border-border/60 w-full sm:w-44 font-bold text-sm">
-            <SelectValue placeholder="Semua Jenis" />
+            <SelectValue placeholder={t('jpp:review_filter_all_types', 'Semua Jenis')} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl shadow-xl border-border/60">
-            <SelectItem value="Semua">Semua Jenis</SelectItem>
-            <SelectItem value="Aktiviti">Laporan Bulanan</SelectItem>
-            <SelectItem value="Kewangan">Laporan Kewangan</SelectItem>
+            <SelectItem value="Semua">{t('jpp:review_filter_all_types', 'Semua Jenis')}</SelectItem>
+            <SelectItem value="Aktiviti">{t('jpp:review_type_monthly', 'Laporan Bulanan')}</SelectItem>
+            <SelectItem value="Kewangan">{t('jpp:review_type_financial', 'Laporan Kewangan')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* â”€â”€ Status filter chips â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Status filter chips ─────────────────────── */}
       <div className="flex flex-wrap gap-2">
-        {(['Semua', ...ALL_STATUSES] as const).map(s => (
+        {([
+          { key: 'Semua', label: t('jpp:review_filter_all_statuses', 'Semua') },
+          { key: 'Menunggu', label: t('jpp:review_stat_pending', 'Menunggu') },
+          { key: STATUS_REVIEW, label: t('kpp:status_in_review', 'Dalam Semakan') },
+          { key: 'Diluluskan', label: t('jpp:review_stat_approved', 'Diluluskan') },
+          { key: 'Ditolak', label: t('jpp:review_stat_declined', 'Ditolak') },
+        ] as const).map(s => (
           <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
+            key={s.key}
+            onClick={() => setFilterStatus(s.key as any)}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border',
-              filterStatus === s
+              filterStatus === s.key
                 ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
                 : 'bg-muted/60 text-muted-foreground/60 border-border/50 hover:border-primary/30 hover:bg-muted'
             )}
           >
-            {s !== 'Semua' && STATUS_ICON[s as ReportStatus]}
-            {s}
-            {s !== 'Semua' && (
+            {s.key !== 'Semua' && getStatusIcon(s.key as ReportStatus)}
+            {s.label}
+            {s.key !== 'Semua' && (
               <span className="ml-0.5 font-black">
-                ({reports.filter(r => r.status === s).length})
+                ({reports.filter(r => r.status === s.key).length})
               </span>
             )}
           </button>
         ))}
       </div>
 
-      {/* â”€â”€ Reports list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Reports list ───────────────────────────── */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="relative w-12 h-12">
@@ -319,13 +335,13 @@ export function JppReviewPage() {
             <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-2xl animate-spin" />
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 animate-pulse">
-            Memuatkan Laporan...
+            {t('jpp:review_loading_text', 'Memuatkan Laporan...')}
           </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-24 text-center space-y-4">
           <FileText className="w-14 h-14 text-muted-foreground/20 mx-auto" />
-          <p className="font-bold text-muted-foreground/40">Tiada laporan ditemui.</p>
+          <p className="font-bold text-muted-foreground/40">{t('jpp:review_empty_text', 'Tiada laporan ditemui.')}</p>
         </div>
       ) : (
         <AnimatePresence mode="popLayout">
@@ -343,7 +359,7 @@ export function JppReviewPage() {
         </AnimatePresence>
       )}
 
-      {/* â”€â”€ Decision Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Decision Dialog ────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={v => { if (!isProcessing) setDialogOpen(v); }}>
         <DialogContent className="rounded-3xl border-border/60 shadow-2xl max-w-lg">
           <DialogHeader>
@@ -352,12 +368,12 @@ export function JppReviewPage() {
               decision === 'Ditolak' ? 'text-rose-700' : 'text-emerald-700'
             )}>
               {decision === 'Diluluskan'
-                ? <><CheckCircle2 className="w-5 h-5" /> Luluskan Laporan</>
-                : <><XCircle className="w-5 h-5" /> Tolak Laporan</>}
+                ? <><CheckCircle2 className="w-5 h-5" /> {t('jpp:review_dialog_approve_title', 'Luluskan Laporan')}</>
+                : <><XCircle className="w-5 h-5" /> {t('jpp:review_dialog_decline_title', 'Tolak Laporan')}</>}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-1">
               {target?.title}
-              <span className="mx-2">Â·</span>
+              <span className="mx-2">·</span>
               <span className="font-bold text-accent">
                 {target ? ALL_CLUBS.find(c => c.id === (target as any).club_id)?.name : ''}
               </span>
@@ -375,7 +391,7 @@ export function JppReviewPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-sm truncate">{target.title}</p>
                     <p className="text-[10px] font-bold text-muted-foreground/50 mt-0.5">
-                      {REPORT_TYPE_LABELS[target.type]} Â· {format(parseISO((target as any).created_at), 'd MMM yyyy', { locale: ms })}
+                      {REPORT_TYPE_LABELS[target.type]} · {format(parseISO((target as any).created_at), 'd MMM yyyy', { locale: ms })}
                     </p>
                   </div>
                   <a href={(target as any).file_url} target="_blank" rel="noopener noreferrer">
@@ -393,9 +409,9 @@ export function JppReviewPage() {
               <div className="space-y-2">
                 <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
                   <MessageSquare className="w-3.5 h-3.5" />
-                  Maklum Balas JPP
+                  {t('jpp:review_dialog_feedback_label', 'Maklum Balas JPP')}
                   {decision === 'Ditolak' && (
-                    <span className="text-rose-500 ml-1">* (WAJIB untuk penolakan)</span>
+                    <span className="text-rose-500 ml-1">{t('jpp:review_dialog_feedback_required_note', '* (WAJIB untuk penolakan)')}</span>
                   )}
                 </Label>
                 <Textarea
@@ -403,8 +419,8 @@ export function JppReviewPage() {
                   onChange={e => setFeedback(e.target.value)}
                   placeholder={
                     decision === 'Ditolak'
-                      ? 'Nyatakan sebab penolakan dan perkara yang perlu diperbetulkan...'
-                      : 'Maklum balas tambahan (pilihan)...'
+                      ? t('jpp:review_dialog_decline_placeholder', 'Nyatakan sebab penolakan dan perkara yang perlu diperbetulkan...')
+                      : t('jpp:review_dialog_approve_placeholder', 'Maklum balas tambahan (pilihan)...')
                   }
                   rows={4}
                   className={cn(
@@ -416,7 +432,7 @@ export function JppReviewPage() {
                 {decision === 'Ditolak' && !feedback.trim() && (
                   <p className="text-[10px] text-rose-500 font-bold flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Maklum balas wajib diisi untuk penolakan laporan.
+                    {t('jpp:review_dialog_feedback_warning', 'Maklum balas wajib diisi untuk penolakan laporan.')}
                   </p>
                 )}
               </div>
@@ -430,7 +446,7 @@ export function JppReviewPage() {
               disabled={isProcessing}
               className="rounded-xl font-bold text-xs uppercase tracking-widest border-border/60"
             >
-              Batal
+              {t('jpp:review_dialog_cancel', 'Batal')}
             </Button>
             <Button
               onClick={confirmDecision}
@@ -445,12 +461,12 @@ export function JppReviewPage() {
               {isProcessing ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Memproses...
+                  {t('jpp:review_dialog_processing', 'Memproses...')}
                 </>
               ) : decision === 'Diluluskan' ? (
-                <><CheckCircle2 className="w-4 h-4" /> Sahkan Kelulusan</>
+                <><CheckCircle2 className="w-4 h-4" /> {t('jpp:review_dialog_confirm_approve', 'Sahkan Kelulusan')}</>
               ) : (
-                <><XCircle className="w-4 h-4" /> Sahkan Penolakan</>
+                <><XCircle className="w-4 h-4" /> {t('jpp:review_dialog_confirm_decline', 'Sahkan Penolakan')}</>
               )}
             </Button>
           </DialogFooter>
@@ -460,7 +476,7 @@ export function JppReviewPage() {
   );
 }
 
-// â”€â”€ Report row sub-component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Report row sub-component ─────────────────────────────────
 interface ReviewRowProps {
   key?: any;
   report: ClubReport;
@@ -470,6 +486,7 @@ interface ReviewRowProps {
 }
 
 function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowProps) {
+  const { t } = useTranslation();
   const [showFeedback, setShowFeedback] = useState(false);
   const club = ALL_CLUBS.find(c => c.id === (report as any).club_id);
   const clubInitials = (club?.shortName ?? (report as any).club_id.slice(0, 3)).toUpperCase();
@@ -518,8 +535,11 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   'text-[9px] font-black uppercase tracking-wide px-2 py-0.5 border-none flex items-center gap-1 flex-shrink-0',
                   REPORT_STATUS_COLORS[report.status]
                 )}>
-                  {STATUS_ICON[report.status]}
-                  {REPORT_STATUS_LABELS[report.status]}
+                  {getStatusIcon(report.status)}
+                  {report.status === 'Menunggu' ? t('jpp:review_stat_pending', 'Menunggu') :
+                   report.status === 'Dalam Semakan' ? t('jpp:review_stat_in_review', 'Dalam Semakan') :
+                   report.status === 'Diluluskan' ? t('jpp:review_stat_approved', 'Diluluskan') :
+                   t('jpp:review_stat_declined', 'Ditolak')}
                 </Badge>
               </div>
 
@@ -527,19 +547,19 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                 <span className="text-[11px] font-black uppercase tracking-widest text-accent">
                   {club?.name ?? (report as any).club_id}
                 </span>
-                <span className="text-[10px] text-muted-foreground/40">Â·</span>
+                <span className="text-[10px] text-muted-foreground/40">·</span>
                 <span className={cn(
                   'text-[10px] font-bold px-1.5 py-0.5 rounded-md',
                   report.type === 'Kewangan' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                 )}>
-                  {REPORT_TYPE_LABELS[report.type]}
+                  {report.type === 'Kewangan' ? t('jpp:review_type_financial', 'Laporan Kewangan') : t('jpp:review_type_monthly', 'Laporan Bulanan')}
                 </span>
-                <span className="text-[10px] text-muted-foreground/40">Â·</span>
+                <span className="text-[10px] text-muted-foreground/40">·</span>
                 <span className="text-[10px] text-muted-foreground/60 font-medium">
                   {format(parseISO((report as any).created_at), 'd MMM yyyy, HH:mm', { locale: ms })}
                 </span>
                 <span className="text-[10px] text-muted-foreground/40 truncate max-w-[160px]">
-                  Â· {(report as any).file_name}
+                  · {(report as any).file_name}
                 </span>
               </div>
 
@@ -550,7 +570,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors mt-1"
                 >
                   <MessageSquare className="w-3 h-3" />
-                  {showFeedback ? 'Sembunyikan maklum balas' : 'Lihat maklum balas JPP'}
+                  {showFeedback ? t('jpp:review_hide_feedback', 'Sembunyikan maklum balas') : t('jpp:review_show_feedback', 'Lihat maklum balas JPP')}
                 </button>
               )}
               <AnimatePresence>
@@ -568,8 +588,8 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                         : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                     )}>
                       <span className="font-black uppercase tracking-widest text-[9px] block mb-1">
-                        Maklum Balas JPP
-                        {(report as any).reviewed_at && ` Â· ${format(parseISO((report as any).reviewed_at), 'd MMM yyyy', { locale: ms })}`}
+                        {t('jpp:review_feedback_heading', 'Maklum Balas JPP')}
+                        {(report as any).reviewed_at && ` · ${format(parseISO((report as any).reviewed_at), 'd MMM yyyy', { locale: ms })}`}
                       </span>
                       {(report as any).admin_feedback}
                     </div>
@@ -584,7 +604,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
               <a href={(report as any).file_url} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon"
                   className="h-9 w-9 rounded-xl hover:bg-primary/8 transition-all"
-                  title="Buka PDF">
+                  title={t('jpp:review_btn_open_pdf', 'Buka PDF')}>
                   <Eye className="w-4 h-4 text-muted-foreground/60" />
                 </Button>
               </a>
@@ -593,12 +613,12 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
               <a href={(report as any).file_url} download={(report as any).file_name} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon"
                   className="h-9 w-9 rounded-xl hover:bg-primary/8 transition-all"
-                  title="Muat turun PDF">
+                  title={t('jpp:review_btn_download_pdf', 'Muat turun PDF')}>
                   <Download className="w-4 h-4 text-muted-foreground/60" />
                 </Button>
               </a>
 
-              {/* Review button â€” only for Menunggu */}
+              {/* Review button — only for Menunggu */}
               {isPending && (
                 <Button
                   variant="outline"
@@ -607,11 +627,11 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 gap-1.5 transition-all"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  Semak
+                  {t('jpp:review_btn_review', 'Semak')}
                 </Button>
               )}
 
-              {/* Approve / Decline â€” for Menunggu and Dalam Semakan */}
+              {/* Approve / Decline — for Menunggu and Dalam Semakan */}
               {isActionable && (
                 <>
                   <Button
@@ -620,7 +640,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                     className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200 gap-1.5 transition-all active:scale-95"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Lulus
+                    {t('jpp:review_btn_approve', 'Lulus')}
                   </Button>
                   <Button
                     size="sm"
@@ -628,7 +648,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                     className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-200 gap-1.5 transition-all active:scale-95"
                   >
                     <XCircle className="w-3.5 h-3.5" />
-                    Tolak
+                    {t('jpp:review_btn_decline', 'Tolak')}
                   </Button>
                 </>
               )}
@@ -639,8 +659,8 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest',
                   report.status === 'Diluluskan' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
                 )}>
-                  {STATUS_ICON[report.status]}
-                  {report.status === 'Diluluskan' ? 'Diluluskan' : 'Ditolak'}
+                  {getStatusIcon(report.status)}
+                  {report.status === 'Diluluskan' ? t('jpp:review_stat_approved', 'Diluluskan') : t('jpp:review_stat_declined', 'Ditolak')}
                 </div>
               )}
             </div>

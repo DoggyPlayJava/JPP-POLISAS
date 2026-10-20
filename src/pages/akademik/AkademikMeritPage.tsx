@@ -1,28 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba } from '@/lib/utils';
 import {
-  Star, TrendingUp, QrCode, GraduationCap, Award,
-  Calendar, ChevronRight, BookOpen, Zap, AlertTriangle, ShieldAlert, CheckCircle, Clock, XCircle, FileText
+  Star, QrCode, GraduationCap, Award,
+  Calendar, Zap, ShieldAlert, CheckCircle, Clock, XCircle, FileText
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 
 const THEME = '#818CF8';
 
-const SOURCE_CFG: Record<string, { label: string; color: string; icon: any }> = {
-  KELAB:    { label: 'Kegiatan Kelab',   color: '#F87171', icon: GraduationCap },
-  AKADEMIK: { label: 'Pencapaian',        color: THEME,     icon: Award },
-  QR_SCAN:  { label: 'Aktiviti QR',       color: '#34D399', icon: QrCode },
-  MAKMP:    { label: 'MAKMP',             color: '#F59E0B', icon: Star },
-  DEMERIT:  { label: 'Demerit',           color: '#ef4444', icon: ShieldAlert },
-  MANUAL:   { label: 'Manual',            color: '#94A3B8', icon: Zap },
-};
-
 export function AkademikMeritPage() {
+  const { t, i18n } = useTranslation(['akademik', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { profile } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [cohorts, setCohorts] = useState<any[]>([]);
@@ -38,6 +32,15 @@ export function AkademikMeritPage() {
   const [breakdown, setBreakdown] = useState({
     KELAB: 0, AKADEMIK: 0, QR_SCAN: 0, MAKMP: 0, DEMERIT: 0, MANUAL: 0,
   });
+
+  const sourceConfig = useMemo<Record<string, { label: string; color: string; icon: any }>>(() => ({
+    KELAB:    { label: t('akademik:source_club_activities', 'Kegiatan Kelab'),   color: '#F87171', icon: GraduationCap },
+    AKADEMIK: { label: t('akademik:tab_achievements', 'Pencapaian'),             color: THEME,     icon: Award },
+    QR_SCAN:  { label: t('akademik:source_qr_activity', 'Aktiviti QR'),          color: '#34D399', icon: QrCode },
+    MAKMP:    { label: 'MAKMP',                                                  color: '#F59E0B', icon: Star },
+    DEMERIT:  { label: t('akademik:source_demerit', 'Demerit'),                  color: '#ef4444', icon: ShieldAlert },
+    MANUAL:   { label: t('akademik:source_manual', 'Manual'),                    color: '#94A3B8', icon: Zap },
+  }), [t]);
 
   const load = useCallback(async () => {
     if (!profile?.id) return;
@@ -69,12 +72,12 @@ export function AkademikMeritPage() {
     setAppeals(appealsRes.data || []);
 
     const bk: any = { KELAB: 0, AKADEMIK: 0, QR_SCAN: 0, MAKMP: 0, DEMERIT: 0, MANUAL: 0 };
-    tx.forEach((t: any) => {
-      const pts = t.points || 0;
+    tx.forEach((tRow: any) => {
+      const pts = tRow.points || 0;
       if (pts < 0) {
         bk['DEMERIT'] = (bk['DEMERIT'] || 0) + Math.abs(pts);
       } else {
-        const src = t.source || 'KELAB';
+        const src = tRow.source || 'KELAB';
         bk[src] = (bk[src] || 0) + pts;
       }
     });
@@ -86,7 +89,7 @@ export function AkademikMeritPage() {
 
   const submitAppeal = async () => {
     if (!appealReason.trim()) {
-      toast.error('Sila berikan alasan rayuan.');
+      toast.error(t('akademik:appeal_reason_required_toast', 'Sila berikan alasan rayuan.'));
       return;
     }
     setSubmitting(true);
@@ -99,13 +102,13 @@ export function AkademikMeritPage() {
         status: 'PENDING'
       });
       if (error) throw error;
-      toast.success('Rayuan demerit telah dihantar.');
+      toast.success(t('akademik:appeal_submitted_toast', 'Rayuan demerit telah dihantar.'));
       setShowAppealModal(false);
       setAppealReason('');
       setAppealProof('');
       load();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menghantar rayuan.');
+      toast.error(err.message || t('akademik:appeal_failed_toast', 'Gagal menghantar rayuan.'));
     } finally {
       setSubmitting(false);
     }
@@ -117,10 +120,14 @@ export function AkademikMeritPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Rekod</p>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Merit & Demerit</h1>
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">
+          {t('akademik:records_badge', 'Rekod')}
+        </p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          {t('akademik:merit_demerit_title', 'Merit & Demerit')}
+        </h1>
         <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
-          Pusat sehenti untuk pencapaian kelab, akademik dan rayuan demerit.
+          {t('akademik:merit_demerit_subtitle', 'Pusat sehenti untuk pencapaian kelab, akademik dan rayuan demerit.')}
         </p>
       </div>
 
@@ -140,7 +147,9 @@ export function AkademikMeritPage() {
             <Star className="w-7 h-7 fill-current" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-0.5">Jumlah Merit (Semasa)</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-0.5">
+              {t('akademik:total_merit_current', 'Jumlah Merit (Semasa)')}
+            </p>
             <p className="text-4xl font-black text-slate-900 dark:text-white">{total}</p>
           </div>
         </div>
@@ -148,7 +157,7 @@ export function AkademikMeritPage() {
 
       {/* Breakdown Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {Object.entries(SOURCE_CFG).map(([key, cfg], i) => {
+        {Object.entries(sourceConfig).map(([key, cfg], i) => {
           const val = (breakdown as any)[key] || 0;
           if (val === 0) return null;
           return (
@@ -174,7 +183,7 @@ export function AkademikMeritPage() {
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-4 shadow-sm">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5" />
-            Sejarah Merit Sesi Lepas
+            {t('akademik:past_session_merit_history', 'Sejarah Merit Sesi Lepas')}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {cohorts.map((ch) => (
@@ -183,10 +192,15 @@ export function AkademikMeritPage() {
                   <div>
                     <p className="text-sm font-black text-slate-900 dark:text-white">{ch.cohort_id}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[10px] text-slate-500 dark:text-white/40">Disesarkan: {format(parseISO(ch.created_at), 'd MMM yyyy')}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40">
+                        {t('akademik:cohort_archived_date', {
+                          date: format(parseISO(ch.created_at), 'd MMM yyyy', { locale: dateLocale }),
+                          defaultValue: `Disesarkan: ${format(parseISO(ch.created_at), 'd MMM yyyy', { locale: dateLocale })}`
+                        })}
+                      </p>
                       {ch.source && ch.source !== 'ALL' && (
                         <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full bg-slate-200/60 dark:bg-white/[0.06] text-slate-600 dark:text-white/50">
-                          {ch.source === 'KELAB' ? 'Kelab' : ch.source === 'AKADEMIK' ? 'Akademik' : ch.source === 'QR_SCAN' ? 'Asrama' : ch.source}
+                          {ch.source === 'KELAB' ? t('akademik:merit_kelab_badge', 'Kelab') : ch.source === 'AKADEMIK' ? t('akademik:merit_akademik_badge', 'Akademik') : ch.source === 'QR_SCAN' ? t('akademik:merit_asrama_badge', 'Asrama') : ch.source}
                         </span>
                       )}
                     </div>
@@ -198,9 +212,9 @@ export function AkademikMeritPage() {
                 </div>
                 {(ch.merit_kelab > 0 || ch.merit_akademik > 0 || ch.merit_asrama > 0) && (
                   <div className="flex gap-2 mt-1 flex-wrap">
-                    {ch.merit_kelab > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400">Kelab: {ch.merit_kelab}</span>}
-                    {ch.merit_akademik > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">Akademik: {ch.merit_akademik}</span>}
-                    {ch.merit_asrama > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Asrama: {ch.merit_asrama}</span>}
+                    {ch.merit_kelab > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400">{t('akademik:merit_kelab_badge', 'Kelab')}: {ch.merit_kelab}</span>}
+                    {ch.merit_akademik > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">{t('akademik:merit_akademik_badge', 'Akademik')}: {ch.merit_akademik}</span>}
+                    {ch.merit_asrama > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{t('akademik:merit_asrama_badge', 'Asrama')}: {ch.merit_asrama}</span>}
                   </div>
                 )}
               </div>
@@ -212,7 +226,7 @@ export function AkademikMeritPage() {
       {/* Timeline */}
       <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-4 shadow-sm">
         <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-          Transaksi Sesi Semasa
+          {t('akademik:current_session_transactions', 'Transaksi Sesi Semasa')}
         </h3>
 
         {loading ? (
@@ -224,21 +238,23 @@ export function AkademikMeritPage() {
         ) : transactions.length === 0 ? (
           <div className="py-12 text-center">
             <Star className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10 mb-3" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada transaksi merit lagi</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
+              {t('akademik:no_merit_transactions', 'Tiada transaksi merit lagi')}
+            </p>
           </div>
         ) : (
           <div className="relative">
             {/* vertical line */}
             <div className="absolute left-[18px] top-2 bottom-2 w-px bg-slate-200 dark:bg-white/[0.05]" />
             <div className="space-y-3 pl-10">
-              {transactions.map((tx, i) => {
+              {transactions.map((tx) => {
                 const pts = tx.points || 0;
                 const isDemerit = pts < 0;
                 const src = isDemerit ? 'DEMERIT' : (tx.source || 'KELAB');
-                const cfg = SOURCE_CFG[src] || SOURCE_CFG.KELAB;
+                const cfg = sourceConfig[src] || sourceConfig.KELAB;
                 const TxIcon = cfg.icon;
                 const date = tx.created_at
-                  ? format(parseISO(tx.created_at), 'd MMM yyyy, h:mm a', { locale: ms })
+                  ? format(parseISO(tx.created_at), 'd MMM yyyy, h:mm a', { locale: dateLocale })
                   : '';
                 
                 const existingAppeal = appeals.find(a => a.transaction_id === tx.id);
@@ -255,7 +271,7 @@ export function AkademikMeritPage() {
                     <div className="flex-1 min-w-0 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all shadow-sm">
                       <div className="flex items-center justify-between gap-2">
                         <p className={`text-xs font-black line-clamp-2 ${isDemerit ? 'text-rose-600 dark:text-rose-300' : 'text-slate-900 dark:text-white'}`}>
-                          {tx.reason || 'Merit diterima'}
+                          {tx.reason || t('akademik:merit_received_fallback', 'Merit diterima')}
                         </p>
                         <span
                           className="text-sm font-black shrink-0"
@@ -270,7 +286,7 @@ export function AkademikMeritPage() {
                         </span>
                         {tx.actor_name && (
                            <span className="text-[9px] text-slate-500 dark:text-white/30 font-bold border border-slate-200 dark:border-white/10 px-1.5 py-0.5 rounded bg-white dark:bg-transparent">
-                             Oleh: {tx.actor_name}
+                             {t('akademik:by_actor', { name: tx.actor_name, defaultValue: `Oleh: ${tx.actor_name}` })}
                            </span>
                         )}
                         <span className="text-[9px] text-slate-400 dark:text-white/25 font-medium">{date}</span>
@@ -288,14 +304,14 @@ export function AkademikMeritPage() {
                               {existingAppeal.status === 'APPROVED' ? <CheckCircle className="w-3.5 h-3.5" /> :
                                existingAppeal.status === 'REJECTED' ? <XCircle className="w-3.5 h-3.5" /> :
                                <Clock className="w-3.5 h-3.5" />}
-                              Rayuan: {existingAppeal.status === 'PENDING' ? 'DIPROSES' : existingAppeal.status === 'APPROVED' ? 'DILULUSKAN' : 'DITOLAK'}
+                              {t('akademik:appeal_prefix', 'Rayuan:')} {existingAppeal.status === 'PENDING' ? t('akademik:appeal_status_processing', 'DIPROSES') : existingAppeal.status === 'APPROVED' ? t('akademik:appeal_status_approved', 'DILULUSKAN') : t('akademik:appeal_status_rejected', 'DITOLAK')}
                             </div>
                           ) : (
                             <button
                               onClick={() => { setSelectedTx(tx); setShowAppealModal(true); }}
                               className="text-[10px] font-black uppercase tracking-widest bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 px-4 py-2 rounded-xl hover:bg-rose-500/25 transition-all shadow-sm"
                             >
-                              Buat Rayuan / Bantahan
+                              {t('akademik:appeal_demerit_btn', 'Buat Rayuan / Bantahan')}
                             </button>
                           )}
                         </div>
@@ -315,7 +331,7 @@ export function AkademikMeritPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 "
+              className="absolute inset-0 bg-black/60"
               onClick={() => setShowAppealModal(false)}
             />
             <motion.div
@@ -328,36 +344,46 @@ export function AkademikMeritPage() {
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Rayuan Demerit</h3>
-                  <p className="text-[10px] text-slate-500 dark:text-white/40">Sila nyatakan alasan munasabah</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    {t('akademik:demerit_appeal_modal_title', 'Rayuan Demerit')}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-white/40">
+                    {t('akademik:demerit_appeal_modal_subtitle', 'Sila nyatakan alasan munasabah')}
+                  </p>
                 </div>
               </div>
 
               <div className="mb-4 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                <p className="text-[10px] uppercase font-black text-slate-400 dark:text-white/30 mb-1">Kesalahan:</p>
+                <p className="text-[10px] uppercase font-black text-slate-400 dark:text-white/30 mb-1">
+                  {t('akademik:offense_label', 'Kesalahan:')}
+                </p>
                 <p className="text-xs font-bold text-rose-600 dark:text-rose-300">{selectedTx.reason}</p>
-                <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-1">Potongan: {selectedTx.points} Merit</p>
+                <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-1">
+                  {t('akademik:demerit_deduction_label', { points: selectedTx.points, defaultValue: `Potongan: ${selectedTx.points} Merit` })}
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Alasan Rayuan</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">
+                    {t('akademik:appeal_reason_label', 'Alasan Rayuan')}
+                  </label>
                   <textarea
                     value={appealReason}
                     onChange={(e) => setAppealReason(e.target.value)}
-                    placeholder="Kenapa demerit ini tidak wajar?"
+                    placeholder={t('akademik:appeal_reason_placeholder', 'Kenapa demerit ini tidak wajar?')}
                     rows={4}
                     className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-rose-500/50 resize-none"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5" /> Pautan Bukti (Jika Ada)
+                    <FileText className="w-3.5 h-3.5" /> {t('akademik:proof_link_label', 'Pautan Bukti (Jika Ada)')}
                   </label>
                   <input
                     value={appealProof}
                     onChange={(e) => setAppealProof(e.target.value)}
-                    placeholder="Link Google Drive / Imej"
+                    placeholder={t('akademik:proof_link_placeholder', 'Link Google Drive / Imej')}
                     className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-rose-500/50"
                   />
                 </div>
@@ -368,14 +394,14 @@ export function AkademikMeritPage() {
                   onClick={() => setShowAppealModal(false)}
                   className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-slate-600 dark:text-white/40 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
                 <button
                   onClick={submitAppeal}
                   disabled={submitting}
                   className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 transition-all shadow-sm"
                 >
-                  {submitting ? 'Menghantar...' : 'Hantar Rayuan'}
+                  {submitting ? t('common:submitting', 'Menghantar...') : t('akademik:submit_appeal_btn', 'Hantar Rayuan')}
                 </button>
               </div>
             </motion.div>

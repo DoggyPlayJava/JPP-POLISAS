@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   Building2,
@@ -61,6 +62,7 @@ export function EmsJuryAuditMatrix({
   scores,
   onRefresh,
 }: EmsJuryAuditMatrixProps) {
+  const { t } = useTranslation(['ems', 'common']);
   // State for WhatsApp copy button feedback
   const [copiedJuryId, setCopiedJuryId] = useState<string | null>(null);
 
@@ -118,9 +120,9 @@ export function EmsJuryAuditMatrix({
     const nextState = { ...ignoredFlags, [participantId]: !isCurrentlyIgnored };
     updateIgnoredFlags(nextState);
     if (!isCurrentlyIgnored) {
-      toast.success('Amaran ketidakseimbangan juri diabaikan.');
+      toast.success(t('ems:warning_ignored_toast', 'Amaran ketidakseimbangan juri diabaikan.'));
     } else {
-      toast.success('Amaran ketidakseimbangan juri dinyahabaikan.');
+      toast.success(t('ems:warning_unignored_toast', 'Amaran ketidakseimbangan juri dinyahabaikan.'));
     }
   };
 
@@ -187,13 +189,13 @@ export function EmsJuryAuditMatrix({
       }
     });
     updateIgnoredFlags(next);
-    toast.success(`${flaggedCount} amaran anomali berjaya diabaikan.`);
+    toast.success(t('ems:toast_anomalies_ignored', '{{count}} amaran anomali berjaya diabaikan.', { count: flaggedCount }));
   };
 
   // Bulk Anomaly Action: Reset all ignored flags
   const handleResetAllAnomalies = () => {
     updateIgnoredFlags({});
-    toast.success('Semua amaran anomali berjaya diset semula.');
+    toast.success(t('ems:toast_all_anomalies_reset', 'Semua amaran anomali berjaya diset semula.'));
   };
 
   // Extract unique categories for filtering
@@ -278,7 +280,7 @@ export function EmsJuryAuditMatrix({
     if (!editingCell) return;
 
     if (!auditComment.trim()) {
-      toast.error('Sila masukkan Catatan Audit Pengarah sebelum menyimpan pindaan markah.');
+      toast.error(t('ems:enter_audit_comment_error', 'Sila masukkan Catatan Audit Pengarah sebelum menyimpan pindaan markah.'));
       return;
     }
 
@@ -297,12 +299,15 @@ export function EmsJuryAuditMatrix({
 
       await overrideJuryScore(payload);
       toast.success(
-        `Markah bagi ${editingCell.participant.team_name || editingCell.participant.leader_name} (${editingCell.jury.code}) berjaya dipinda!`
+        t('ems:toast_score_overridden_success', 'Markah bagi {{name}} ({{juryCode}}) berjaya dipinda!', {
+          name: editingCell.participant.team_name || editingCell.participant.leader_name,
+          juryCode: editingCell.jury.code,
+        })
       );
       setEditingCell(null);
       onRefresh();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal meminda markah juri.');
+      toast.error(err.message || t('ems:toast_err_override_score', 'Gagal meminda markah juri.'));
     } finally {
       setIsSubmittingOverride(false);
     }
@@ -314,11 +319,21 @@ export function EmsJuryAuditMatrix({
     const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
     const org = j.organization ? ` (${j.organization})` : '';
 
-    const waMsg = `*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara ini.\n\nMaklumat Akses Penjurian Anda:\n*Nama Juri:* ${j.jury_name || '-'}\n*Organisasi:* ${j.organization || '-'}\n*Kod Jemputan Juri:* \`${j.code}\`\n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+    const waMsg = t('ems:wa_jury_invitation_template',
+      '*JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *{{juryName}}*{{org}},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara ini.\n\nMaklumat Akses Penjurian Anda:\n*Nama Juri:* {{name}}\n*Organisasi:* {{orgName}}\n*Kod Jemputan Juri:* `{{code}}`\n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n{{url}}\n\nTerima kasih atas sumbangan & sokongan anda!\n- *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*',
+      {
+        juryName,
+        org,
+        name: j.jury_name || '-',
+        orgName: j.organization || '-',
+        code: j.code,
+        url: portalUrl,
+      }
+    );
 
     navigator.clipboard.writeText(waMsg);
     setCopiedJuryId(j.id);
-    toast.success(`Mesej Jemputan WhatsApp Kod ${j.code} disalin!`);
+    toast.success(t('ems:toast_wa_invite_copied', 'Mesej Jemputan WhatsApp Kod {{code}} disalin!', { code: j.code }));
     setTimeout(() => setCopiedJuryId(null), 2500);
   };
 
@@ -350,22 +365,22 @@ export function EmsJuryAuditMatrix({
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Users className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-              Kad Prestasi Juri
+              {t('ems:jury_performance_cards', 'Kad Prestasi Juri')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Status kemajuan dan bilangan booth yang dinilai oleh setiap juri rasmi
+              {t('ems:jury_performance_desc', 'Status kemajuan dan bilangan booth yang dinilai oleh setiap juri rasmi')}
             </p>
           </div>
           <span className="self-start sm:self-auto px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-full">
-            {activeJuries.length} Juri Aktif
+            {t('ems:active_juries_count', { count: activeJuries.length, defaultValue: `${activeJuries.length} Juri Aktif` })}
           </span>
         </div>
 
         {activeJuries.length === 0 ? (
           <div className="p-8 text-center bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <AlertCircle className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
-            <p className="text-sm text-slate-700 dark:text-slate-400 font-medium">Tiada Kod Juri Aktif Ditemui</p>
-            <p className="text-xs text-slate-500 mt-1">Sila tambah dan aktifkan kod juri pada tetapan acara.</p>
+            <p className="text-sm text-slate-700 dark:text-slate-400 font-medium">{t('ems:no_active_juries', 'Tiada Kod Juri Aktif Ditemui')}</p>
+            <p className="text-xs text-slate-500 mt-1">{t('ems:no_active_juries_hint', 'Sila tambah dan aktifkan kod juri pada tetapan acara.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -388,7 +403,7 @@ export function EmsJuryAuditMatrix({
               let statusBadge = (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                   <Clock className="w-3 h-3" />
-                  Belum Mula
+                  {t('ems:status_not_started', 'Belum Mula')}
                 </span>
               );
 
@@ -396,14 +411,14 @@ export function EmsJuryAuditMatrix({
                 statusBadge = (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                     <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                    Selesai Semua
+                    {t('ems:status_all_completed', 'Selesai Semua')}
                   </span>
                 );
               } else if (completedCount > 0) {
                 statusBadge = (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                     <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                    Sedang Menilai
+                    {t('ems:status_in_progress', 'Sedang Menilai')}
                   </span>
                 );
               }
@@ -418,11 +433,11 @@ export function EmsJuryAuditMatrix({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5">
-                          {j.jury_name || 'Juri Tanpa Nama'}
+                          {j.jury_name || t('ems:unnamed_jury', 'Juri Tanpa Nama')}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
                           <Building2 className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
-                          {j.organization || 'Tiada Organisasi'}
+                          {j.organization || t('ems:no_organization', 'Tiada Organisasi')}
                         </p>
                       </div>
                       <span className="px-2 py-0.5 rounded font-mono text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shrink-0">
@@ -433,9 +448,9 @@ export function EmsJuryAuditMatrix({
                     {/* Progress Bar & Counter */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Prestasi Penjurian</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">{t('ems:jury_perf_label', 'Prestasi Penjurian')}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {completedCount}/{assignedCount} Booth Dinilai
+                          {t('ems:booths_evaluated_count', '{{completed}}/{{total}} Booth Dinilai', { completed: completedCount, total: assignedCount })}
                         </span>
                       </div>
                       <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700/50">
@@ -464,17 +479,17 @@ export function EmsJuryAuditMatrix({
                     <button
                       onClick={() => handleCopyWhatsApp(j)}
                       className="w-full py-2 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 dark:hover:text-emerald-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-500/30 transition-all shadow-sm cursor-pointer"
-                      title="Salin Pautan & Mesej WhatsApp Jemputan"
+                      title={t('ems:copy_wa_invite_tooltip', 'Salin Pautan & Mesej WhatsApp Jemputan')}
                     >
                       {copiedJuryId === j.id ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>Mesej Disalin!</span>
+                          <span>{t('ems:message_copied', 'Mesej Disalin!')}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          <span>Salin WhatsApp Jemputan</span>
+                          <span>{t('ems:copy_wa_invite_btn', 'Salin WhatsApp Jemputan')}</span>
                         </>
                       )}
                     </button>
@@ -492,17 +507,17 @@ export function EmsJuryAuditMatrix({
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Award className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-              Matriks Status Penjurian Audit
+              {t('ems:audit_matrix_title', 'Matriks Status Penjurian Audit')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Grid perbandingan markah booth x juri. Klik mana-mana sel untuk pindaan Pengarah Program.
+              {t('ems:audit_matrix_desc', 'Grid perbandingan markah booth x juri. Klik mana-mana sel untuk pindaan Pengarah Program.')}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5">
               <Scale className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-              Purata Sasaran: {avgJuriesCount} Juri / Booth
+              {t('ems:target_avg_juries', { count: avgJuriesCount, defaultValue: `Purata Sasaran: ${avgJuriesCount} Juri / Booth` })}
             </span>
           </div>
         </div>
@@ -517,10 +532,10 @@ export function EmsJuryAuditMatrix({
                 ? 'bg-slate-100 dark:bg-slate-800 border-slate-900 dark:border-amber-400 ring-2 ring-slate-900/10'
                 : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
-            title="Klik untuk tapis booth yang belum dinilai"
+            title={t('ems:filter_unscored_tooltip', 'Klik untuk tapis booth yang belum dinilai')}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Liputan Penjurian Booth</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t('ems:booth_coverage_title', 'Liputan Penjurian Booth')}</span>
               <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
@@ -541,14 +556,14 @@ export function EmsJuryAuditMatrix({
               />
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-              {auditSummary.unscoredBooths} booth belum dinilai sama sekali
+              {t('ems:unscored_booths_desc', '{{count}} booth belum dinilai sama sekali', { count: auditSummary.unscoredBooths })}
             </p>
           </div>
 
           {/* Card 2: Status Kemajuan Juri */}
           <div className="p-4 rounded-2xl border bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Status Kemajuan Juri</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t('ems:jury_progress_title', 'Status Kemajuan Juri')}</span>
               <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                 <Users className="w-4 h-4" />
               </div>
@@ -558,22 +573,22 @@ export function EmsJuryAuditMatrix({
                 {juryProgressSummary.completed}
               </span>
               <span className="text-xs font-semibold text-slate-500">
-                / {juryProgressSummary.total} Juri Selesai
+                {t('ems:juries_completed_count', '/ {{total}} Juri Selesai', { total: juryProgressSummary.total })}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-3">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-                {juryProgressSummary.completed} Selesai
+                {t('ems:completed_tag', '{{count}} Selesai', { count: juryProgressSummary.completed })}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                {juryProgressSummary.inProgress} Menilai
+                {t('ems:in_progress_tag', '{{count}} Menilai', { count: juryProgressSummary.inProgress })}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                {juryProgressSummary.notStarted} Belum
+                {t('ems:not_started_tag', '{{count}} Belum', { count: juryProgressSummary.notStarted })}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-              Prestasi kesemua juri rasmi yang aktif
+              {t('ems:active_juries_perf_desc', 'Prestasi kesemua juri rasmi yang aktif')}
             </p>
           </div>
 
@@ -585,10 +600,10 @@ export function EmsJuryAuditMatrix({
                 ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 ring-2 ring-amber-500/30'
                 : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-500/40'
             }`}
-            title="Klik untuk tapis booth terkurang juri"
+            title={t('ems:filter_deficit_tooltip', 'Klik untuk tapis booth terkurang juri')}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Anomali Terkurang Juri</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t('ems:anomaly_deficit', 'Anomali Terkurang Juri')}</span>
               <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="w-4 h-4" />
               </div>
@@ -598,16 +613,16 @@ export function EmsJuryAuditMatrix({
                 {auditSummary.deficitCount}
               </span>
               <span className="text-xs font-semibold text-slate-500">
-                Booth Defisit
+                {t('ems:deficit_booths_label', 'Booth Defisit')}
               </span>
             </div>
             <div className="mt-3">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                Kurang drpd purata ({avgJuriesCount} juri)
+                {t('ems:below_avg_juries_label', 'Kurang drpd purata ({{count}} juri)', { count: avgJuriesCount })}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-              {anomalyFilter === 'DEFICIT' ? 'Menapis aktif • Klik untuk set semula' : 'Klik untuk tapis booth defisit'}
+              {anomalyFilter === 'DEFICIT' ? t('ems:filter_active_reset_hint', 'Menapis aktif • Klik untuk set semula') : t('ems:filter_deficit_hint', 'Klik untuk tapis booth defisit')}
             </p>
           </div>
 
@@ -619,10 +634,10 @@ export function EmsJuryAuditMatrix({
                 ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-500 ring-2 ring-rose-500/30'
                 : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-500/40'
             }`}
-            title="Klik untuk tapis booth terlebih juri"
+            title={t('ems:filter_surplus_tooltip', 'Klik untuk tapis booth terlebih juri')}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Anomali Terlebih Juri</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t('ems:anomaly_surplus', 'Anomali Terlebih Juri')}</span>
               <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
                 <ShieldAlert className="w-4 h-4" />
               </div>
@@ -632,16 +647,16 @@ export function EmsJuryAuditMatrix({
                 {auditSummary.surplusCount}
               </span>
               <span className="text-xs font-semibold text-slate-500">
-                Booth Lebihan
+                {t('ems:surplus_booths_label', 'Booth Lebihan')}
               </span>
             </div>
             <div className="mt-3">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30">
-                Lebih drpd purata ({avgJuriesCount} juri)
+                {t('ems:above_avg_juries_label', 'Lebih drpd purata ({{count}} juri)', { count: avgJuriesCount })}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-              {anomalyFilter === 'SURPLUS' ? 'Menapis aktif • Klik untuk set semula' : 'Klik untuk tapis booth lebihan'}
+              {anomalyFilter === 'SURPLUS' ? t('ems:filter_active_reset_hint', 'Menapis aktif • Klik untuk set semula') : t('ems:filter_surplus_hint', 'Klik untuk tapis booth lebihan')}
             </p>
           </div>
         </div>
@@ -654,45 +669,45 @@ export function EmsJuryAuditMatrix({
               type="button"
               onClick={handleIgnoreAllAnomalies}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
-              title="Abaikan semua amaran ketidakseimbangan juri"
+              title={t('ems:ignore_all_tooltip', 'Abaikan semua amaran ketidakseimbangan juri')}
             >
               <EyeOff className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-              <span>Abaikan Semua Amaran</span>
+              <span>{t('ems:ignore_all_warnings', 'Abaikan Semua Amaran')}</span>
             </button>
 
             <button
               type="button"
               onClick={handleResetAllAnomalies}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
-              title="Set semula semua status amaran yang diabaikan"
+              title={t('ems:reset_all_tooltip', 'Set semula semua status amaran yang diabaikan')}
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-              <span>Set Semula Semua Amaran</span>
+              <span>{t('ems:reset_all_warnings', 'Set Semula Semua Amaran')}</span>
             </button>
 
             {ignoredCount > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                 <EyeOff className="w-3.5 h-3.5 text-slate-500" />
-                {ignoredCount} Amaran Diabaikan
+                {t('ems:ignored_warnings_count', { count: ignoredCount, defaultValue: `${ignoredCount} Amaran Diabaikan` })}
               </span>
             )}
 
             {anomalyFilter !== 'ALL' && (
               <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-medium">
                 <span>
-                  Tapisan Aktif:{' '}
+                  {t('ems:active_filter_prefix', 'Tapisan Aktif:')}{' '}
                   <strong>
                     {anomalyFilter === 'DEFICIT'
-                      ? 'Booth Terkurang Juri'
+                      ? t('ems:filter_deficit_booths', 'Booth Terkurang Juri')
                       : anomalyFilter === 'SURPLUS'
-                      ? 'Booth Terlebih Juri'
-                      : 'Booth Belum Dinilai'}
+                      ? t('ems:filter_surplus_booths', 'Booth Terlebih Juri')
+                      : t('ems:filter_unscored_booths', 'Booth Belum Dinilai')}
                   </strong>
                 </span>
                 <button
                   onClick={() => setAnomalyFilter('ALL')}
                   className="p-0.5 hover:bg-amber-200 dark:hover:bg-amber-500/30 rounded cursor-pointer"
-                  title="Kosongkan tapisan"
+                  title={t('ems:clear_filter_tooltip', 'Kosongkan tapisan')}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -706,7 +721,7 @@ export function EmsJuryAuditMatrix({
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Cari Booth / Peserta..."
+                placeholder={t('ems:search_booth_participant_placeholder', 'Cari Booth / Peserta...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 w-44 sm:w-56"
@@ -721,7 +736,7 @@ export function EmsJuryAuditMatrix({
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                 >
-                  <option value="ALL">Semua Kategori</option>
+                  <option value="ALL">{t('ems:all_categories', 'Semua Kategori')}</option>
                   {availableCategories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
@@ -740,9 +755,9 @@ export function EmsJuryAuditMatrix({
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
                   <th className="p-3.5 sticky left-0 bg-slate-50 dark:bg-slate-950/95 z-20 border-r border-slate-200 dark:border-slate-800 min-w-[190px]">
-                    No. Booth & Peserta
+                    {t('ems:booth_and_participant_header', 'No. Booth & Peserta')}
                   </th>
-                  <th className="p-3.5 border-r border-slate-200 dark:border-slate-800 min-w-[130px]">Kategori</th>
+                  <th className="p-3.5 border-r border-slate-200 dark:border-slate-800 min-w-[130px]">{t('ems:category_selector_label', 'Kategori')}</th>
 
                   {activeJuries.map((j) => (
                     <th
@@ -754,13 +769,13 @@ export function EmsJuryAuditMatrix({
                           {j.code}
                         </span>
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate max-w-[110px] mt-1">
-                          {j.jury_name || 'Juri'}
+                          {j.jury_name || t('ems:default_jury_label', 'Juri')}
                         </span>
                       </div>
                     </th>
                   ))}
 
-                  <th className="p-3.5 text-center min-w-[160px]">Jumlah Juri Menilai</th>
+                  <th className="p-3.5 text-center min-w-[160px]">{t('ems:total_scoring_juries', 'Jumlah Juri Menilai')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-xs">
@@ -770,7 +785,7 @@ export function EmsJuryAuditMatrix({
                       colSpan={activeJuries.length + 3}
                       className="p-8 text-center text-slate-500 dark:text-slate-400 font-medium"
                     >
-                      Tiada peserta atau booth yang sepadan dengan carian atau tapisan.
+                      {t('ems:no_matching_participants_or_booths', 'Tiada peserta atau booth yang sepadan dengan carian atau tapisan.')}
                     </td>
                   </tr>
                 ) : (
@@ -809,7 +824,7 @@ export function EmsJuryAuditMatrix({
                         {/* Category Column */}
                         <td className="p-3.5 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-800">
                           <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 rounded-md text-[11px]">
-                            {getParticipantCategory(p) || 'Umum'}
+                            {getParticipantCategory(p) || t('ems:category_general', 'Umum')}
                           </span>
                         </td>
 
@@ -827,7 +842,7 @@ export function EmsJuryAuditMatrix({
                                 <button
                                   onClick={() => handleOpenOverrideModal(p, j)}
                                   className="w-full py-1.5 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 cursor-pointer font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1 group/btn"
-                                  title="Selesai Dinilai - Klik untuk pinda markah"
+                                  title={t('ems:scored_click_to_override_tooltip', 'Selesai Dinilai - Klik untuk pinda markah')}
                                 >
                                   <span>{info.percentage}%</span>
                                   <Edit3 className="w-3 h-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
@@ -836,25 +851,25 @@ export function EmsJuryAuditMatrix({
                                 <button
                                   onClick={() => handleOpenOverrideModal(p, j)}
                                   className="w-full py-1.5 px-2 rounded-xl bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/30 cursor-pointer font-semibold text-xs transition-all flex items-center justify-center gap-1 group/btn"
-                                  title={`Separuh (${info.submittedCount}/${info.totalRequired}) - Klik untuk pinda`}
+                                  title={t('ems:partial_click_to_override_tooltip', 'Separuh ({{current}}/{{total}}) - Klik untuk pinda', { current: info.submittedCount, total: info.totalRequired })}
                                 >
-                                  <span>Separuh {info.submittedCount}/{info.totalRequired}</span>
+                                  <span>{t('ems:partial_display', 'Separuh {{current}}/{{total}}', { current: info.submittedCount, total: info.totalRequired })}</span>
                                   <Edit3 className="w-3 h-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                                 </button>
                               ) : isAssigned ? (
                                 <button
                                   onClick={() => handleOpenOverrideModal(p, j)}
                                   className="w-full py-1.5 px-2 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/30 cursor-pointer text-xs font-semibold transition-all flex items-center justify-center gap-1 group/btn"
-                                  title="Belum mula dinilai - Klik untuk masuk markah"
+                                  title={t('ems:unscored_click_to_score_tooltip', 'Belum mula dinilai - Klik untuk masuk markah')}
                                 >
-                                  <span>Belum</span>
+                                  <span>{t('ems:unscored_label', 'Belum')}</span>
                                   <Edit3 className="w-3 h-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handleOpenOverrideModal(p, j)}
                                   className="w-full py-1.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/40 hover:bg-slate-200 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer text-xs transition-all flex items-center justify-center"
-                                  title="Tidak Ditugaskan - Klik untuk masuk markah secara manual"
+                                  title={t('ems:unassigned_click_to_score_tooltip', 'Tidak Ditugaskan - Klik untuk masuk markah secara manual')}
                                 >
                                   <span>-</span>
                                 </button>
@@ -867,27 +882,27 @@ export function EmsJuryAuditMatrix({
                         <td className="p-3.5 text-center align-middle">
                           <div className="flex flex-col items-center justify-center gap-1.5">
                             <span className="font-bold text-slate-900 dark:text-slate-100">
-                              {scoredJuriesCount} Juri Menilai
+                              {t('ems:juries_scored_summary', '{{count}} Juri Menilai', { count: scoredJuriesCount })}
                             </span>
                             {isIgnored ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                 <EyeOff className="w-3 h-3 text-slate-500" />
-                                Amaran Diabaikan
+                                {t('ems:warning_ignored_badge', 'Amaran Diabaikan')}
                               </span>
                             ) : scoredJuriesCount < avgJuriesCount ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40">
                                 <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-                                Terkurang Juri ({scoredJuriesCount} vs Purata {avgJuriesCount})
+                                {t('ems:deficit_jury_badge', 'Terkurang Juri ({{scored}} vs Purata {{target}})', { scored: scoredJuriesCount, target: avgJuriesCount })}
                               </span>
                             ) : scoredJuriesCount > avgJuriesCount ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40">
                                 <ShieldAlert className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" />
-                                Terlebih Juri ({scoredJuriesCount} vs Purata {avgJuriesCount})
+                                {t('ems:surplus_jury_badge', 'Terlebih Juri ({{scored}} vs Purata {{target}})', { scored: scoredJuriesCount, target: avgJuriesCount })}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40">
                                 <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                Seimbang ({scoredJuriesCount} Juri)
+                                {t('ems:balanced_jury_badge', 'Seimbang ({{count}} Juri)', { count: scoredJuriesCount })}
                               </span>
                             )}
 
@@ -898,7 +913,7 @@ export function EmsJuryAuditMatrix({
                                 className="mt-1 text-[11px] font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                               >
                                 <EyeOff className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-                                Abaikan Amaran
+                                {t('ems:ignore_warning_btn', 'Abaikan Amaran')}
                               </button>
                             )}
                             {isIgnored && (
@@ -908,7 +923,7 @@ export function EmsJuryAuditMatrix({
                                 className="mt-1 text-[11px] font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                               >
                                 <Eye className="w-3 h-3 text-slate-600 dark:text-slate-400" />
-                                Nyahabaikan
+                                {t('ems:unignore_warning_btn', 'Nyahabaikan')}
                               </button>
                             )}
                           </div>
@@ -932,10 +947,10 @@ export function EmsJuryAuditMatrix({
               <div>
                 <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-amber-400" />
-                  Pindaan Markah Juri (Pengarah Program)
+                  {t('ems:jury_override_modal_title', 'Pindaan Markah Juri (Pengarah Program)')}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Pinda atau selaraskan markah secara rasmi dengan catatan audit pengarah.
+                  {t('ems:jury_override_modal_desc', 'Pinda atau selaraskan markah secara rasmi dengan catatan audit pengarah.')}
                 </p>
               </div>
               <button
@@ -949,25 +964,25 @@ export function EmsJuryAuditMatrix({
             {/* Target Information Card */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-950/70 border border-slate-800/80 rounded-2xl text-xs">
               <div>
-                <span className="text-slate-400 block text-[10px]">No. Booth</span>
+                <span className="text-slate-400 block text-[10px]">{t('ems:booth_no_label', 'No. Booth')}</span>
                 <span className="font-bold text-amber-400 font-mono text-base">
                   {editingCell.participant.booth_no || '-'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Nama Peserta / Pasukan</span>
+                <span className="text-slate-400 block text-[10px]">{t('ems:participant_team_name_label', 'Nama Peserta / Pasukan')}</span>
                 <span className="font-semibold text-slate-200 truncate block">
                   {editingCell.participant.team_name || editingCell.participant.leader_name}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Kategori</span>
+                <span className="text-slate-400 block text-[10px]">{t('ems:category_selector_label', 'Kategori')}</span>
                 <span className="font-medium text-slate-300 truncate block">
-                  {getParticipantCategory(editingCell.participant) || 'Umum'}
+                  {getParticipantCategory(editingCell.participant) || t('ems:category_general', 'Umum')}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Juri Penilai</span>
+                <span className="text-slate-400 block text-[10px]">{t('ems:evaluating_jury_label', 'Juri Penilai')}</span>
                 <span className="font-semibold text-slate-200 truncate block">
                   {editingCell.jury.jury_name || editingCell.jury.code} ({editingCell.jury.code})
                 </span>
@@ -988,7 +1003,7 @@ export function EmsJuryAuditMatrix({
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                          Kriteria {index + 1} {r.section_name ? `• ${r.section_name}` : ''}
+                          {t('ems:criteria_index_label', 'Kriteria {{index}}', { index: index + 1 })} {r.section_name ? `• ${r.section_name}` : ''}
                         </span>
                         <h4 className="text-sm font-semibold text-slate-100 mt-0.5">
                           {r.criteria_name}
@@ -996,10 +1011,10 @@ export function EmsJuryAuditMatrix({
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="px-2 py-0.5 bg-slate-800 text-slate-300 text-[11px] rounded-lg font-medium">
-                          Wajaran: {r.weight}%
+                          {t('ems:criteria_weight_label', { weight: r.weight, defaultValue: `Wajaran: ${r.weight}%` })}
                         </span>
                         <span className="px-2 py-0.5 bg-slate-800 text-slate-200 text-[11px] rounded-lg font-bold border border-slate-700">
-                          Maks: {maxScore}
+                          {t('ems:max_score_label', 'Maks: {{max}}', { max: maxScore })}
                         </span>
                       </div>
                     </div>
@@ -1045,7 +1060,7 @@ export function EmsJuryAuditMatrix({
             <div className="flex items-center justify-between p-4 bg-slate-950/70 border border-slate-800 rounded-2xl">
               <span className="text-xs font-semibold text-slate-300 flex items-center gap-2">
                 <Percent className="w-4 h-4 text-emerald-400" />
-                Anggaran Jumlah Markah Wajaran:
+                {t('ems:estimated_weighted_score', 'Anggaran Jumlah Markah Wajaran:')}
               </span>
               <span className="text-lg font-black text-emerald-400 font-mono">
                 {modalLivePercentage}%
@@ -1056,11 +1071,11 @@ export function EmsJuryAuditMatrix({
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-slate-400" />
-                Catatan Audit Pengarah <span className="text-rose-400 font-bold">*</span>
+                {t('ems:audit_comment_label', 'Catatan Audit Pengarah')} <span className="text-rose-400 font-bold">*</span>
               </label>
               <textarea
                 rows={2}
-                placeholder="Cth: Pelarasan markah kriteria teknikal selepas semakan rayuan panel juri..."
+                placeholder={t('ems:audit_comment_placeholder', 'Cth: Pelarasan markah kriteria teknikal selepas semakan rayuan panel juri...')}
                 value={auditComment}
                 onChange={(e) => setAuditComment(e.target.value)}
                 className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-500"
@@ -1074,7 +1089,7 @@ export function EmsJuryAuditMatrix({
                 onClick={() => setEditingCell(null)}
                 className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                Batal
+                {t('ems:cancel', 'Batal')}
               </button>
               <button
                 type="button"
@@ -1085,12 +1100,12 @@ export function EmsJuryAuditMatrix({
                 {isSubmittingOverride ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Menyimpan...</span>
+                    <span>{t('ems:saving', 'Menyimpan...')}</span>
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    <span>Simpan Pindaan Markah</span>
+                    <span>{t('ems:save_score_override', 'Simpan Pindaan Markah')}</span>
                   </>
                 )}
               </button>

@@ -30,11 +30,23 @@ import {
 } from 'lucide-react';
 import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, submitMakmpWinnerInfo, MakmpClaimResult } from '@/lib/makmp';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
+const getDocBadgeClass = (type?: string) => {
+  if (type === 'LAPORAN') {
+    return 'bg-sky-100 text-sky-800 border border-sky-300 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30';
+  }
+  if (type === 'BUKTI_SOKONGAN') {
+    return 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30';
+  }
+  return 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30';
+};
+
 export default function MakmpStatusTrackingPage() {
+  const { t } = useTranslation(['makmp', 'common']);
   const { user, profile, refetchProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -79,13 +91,21 @@ export default function MakmpStatusTrackingPage() {
       const data = await fetchSubmissionByTrackingCode(clean);
       if (!data) {
         setSubmission(null);
-        setErrorMsg(`Tiada rekod permohonan ditemui bagi kod "${clean}". Sila pastikan kod rujukan anda betul.`);
+        setErrorMsg(
+          t(
+            'makmp:err_no_submission_found',
+            'Tiada rekod permohonan ditemui bagi kod "{{code}}". Sila pastikan kod rujukan anda betul.',
+            { code: clean }
+          )
+        );
       } else {
         setSubmission(data);
         setSearchParams({ code: clean });
       }
     } catch (err: any) {
-      setErrorMsg('Ralat semasa mencari rekod: ' + err.message);
+      setErrorMsg(
+        t('makmp:err_search_record_prefix', 'Ralat semasa mencari rekod: ') + err.message
+      );
       setSubmission(null);
     } finally {
       setLoading(false);
@@ -106,7 +126,10 @@ export default function MakmpStatusTrackingPage() {
 
     // 1. Sahkan no IC
     if (!/^\d{12}$/.test(icNo.trim())) {
-      setWinnerMsg({ type: 'error', text: 'Nombor IC mesti 12 digit (angka sahaja).' });
+      setWinnerMsg({
+        type: 'error',
+        text: t('makmp:err_ic_12_digits', 'Nombor IC mesti 12 digit (angka sahaja).'),
+      });
       return;
     }
 
@@ -115,7 +138,10 @@ export default function MakmpStatusTrackingPage() {
       // 2. Simpan no IC via RPC (semak deadline + status DIJEMPUT)
       const res = await submitMakmpWinnerInfo(submission.id, icNo.trim());
       if (!res.success) {
-        setWinnerMsg({ type: 'error', text: res.message || 'Gagal menyimpan maklumat.' });
+        setWinnerMsg({
+          type: 'error',
+          text: res.message || t('makmp:err_save_info_failed', 'Gagal menyimpan maklumat.'),
+        });
         setUploadingWinnerInfo(false);
         return;
       }
@@ -131,7 +157,12 @@ export default function MakmpStatusTrackingPage() {
           .upload(path, passportFile, { cacheControl: '3600', upsert: false });
 
         if (uploadErr) {
-          setWinnerMsg({ type: 'error', text: 'Gagal memuat naik gambar: ' + uploadErr.message });
+          setWinnerMsg({
+            type: 'error',
+            text:
+              t('makmp:err_upload_photo_failed_prefix', 'Gagal memuat naik gambar: ') +
+              uploadErr.message,
+          });
           setUploadingWinnerInfo(false);
           return;
         }
@@ -146,11 +177,17 @@ export default function MakmpStatusTrackingPage() {
         }
       }
 
-      setWinnerMsg({ type: 'success', text: 'Maklumat anda berjaya disimpan. Terima kasih!' });
+      setWinnerMsg({
+        type: 'success',
+        text: t('makmp:msg_winner_info_saved', 'Maklumat anda berjaya disimpan. Terima kasih!'),
+      });
       // refresh submission data
       await handleSearchCode(submission.tracking_code);
     } catch (err: any) {
-      setWinnerMsg({ type: 'error', text: 'Ralat: ' + err.message });
+      setWinnerMsg({
+        type: 'error',
+        text: t('makmp:error_prefix', 'Ralat:') + ' ' + err.message,
+      });
     } finally {
       setUploadingWinnerInfo(false);
     }
@@ -174,7 +211,10 @@ export default function MakmpStatusTrackingPage() {
       if (error) throw error;
     } catch (err: any) {
       console.error('[MAKMP claim Google error]', err);
-      setClaimMsg({ type: 'error', text: err.message || 'Gagal menyambung ke Google.' });
+      setClaimMsg({
+        type: 'error',
+        text: err.message || t('makmp:err_google_connect_failed', 'Gagal menyambung ke Google.'),
+      });
       setIsGoogleLinking(false);
     }
   };
@@ -218,7 +258,6 @@ export default function MakmpStatusTrackingPage() {
       if (error) {
         console.warn('Gagal lengkapkan profil dari submission:', error.message);
       } else {
-        console.log('✅ Profil dilengkapkan dari submission MAKMP (matric dikekalkan)');
         await refetchProfile?.();
       }
     } catch (e) {
@@ -235,7 +274,7 @@ export default function MakmpStatusTrackingPage() {
       if (res.success && res.claimed) {
         setClaimMsg({
           type: 'success',
-          text: res.message || 'Permohonan berjaya dipautkan ke akaun anda.',
+          text: res.message || t('makmp:msg_claim_success', 'Permohonan berjaya dipautkan ke akaun anda.'),
         });
         setPendingClaim(null);
         await completeProfileFromSubmission();
@@ -246,13 +285,19 @@ export default function MakmpStatusTrackingPage() {
         setPendingClaim(res);
         setClaimMsg({
           type: 'confirm',
-          text: 'Maklumat akaun tidak sepadan. Sahkan ini permohonan anda?',
+          text: t('makmp:msg_claim_mismatch_confirm', 'Maklumat akaun tidak sepadan. Sahkan ini permohonan anda?'),
         });
       } else {
-        setClaimMsg({ type: 'error', text: res.message || 'Gagal memautkan permohonan.' });
+        setClaimMsg({
+          type: 'error',
+          text: res.message || t('makmp:err_claim_failed', 'Gagal memautkan permohonan.'),
+        });
       }
     } catch (err: any) {
-      setClaimMsg({ type: 'error', text: err.message || 'Gagal memautkan permohonan.' });
+      setClaimMsg({
+        type: 'error',
+        text: err.message || t('makmp:err_claim_failed', 'Gagal memautkan permohonan.'),
+      });
     } finally {
       setClaiming(false);
     }
@@ -279,42 +324,42 @@ export default function MakmpStatusTrackingPage() {
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>DISAHKAN & LULUS</span>
+            <span>{t('verdict_qualified')}</span>
           </span>
         );
       case 'DIJEMPUT':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>DIJEMPUT KE MAKMP</span>
+            <span>{t('verdict_qualified')}</span>
           </span>
         );
       case 'DITOLAK':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20">
             <XCircle className="w-3.5 h-3.5" />
-            <span>PERMOHONAN DITOLAK</span>
+            <span>{t('verdict_ineligible')}</span>
           </span>
         );
       case 'DALAM_SEMAKAN':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>DALAM SEMAKAN JURI</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
       case 'KIV':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>DALAM SIMPANAN (KIV)</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
             <Clock className="w-3.5 h-3.5" />
-            <span>MENUNGGU SEMAKAN</span>
+            <span>{t('verdict_pending')}</span>
           </span>
         );
     }
@@ -323,17 +368,17 @@ export default function MakmpStatusTrackingPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
-      <MakmpJppHeader subtitle="Semakan Status Permohonan" />
+      <MakmpJppHeader subtitle={t('verification_status')} />
       {/* Header Bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60  sticky top-0 z-30 transition-colors">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 sticky top-0 z-30 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link to="/makmp" className="flex items-center gap-2 group text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
             <ArrowLeft className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span>Borang Pencalonan</span>
+            <span>{t('nomination_portal', 'Borang Pencalonan')}</span>
           </Link>
 
           <div className="font-bold text-sm tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-            Semakan Status <span className="text-amber-600 dark:text-amber-400">MAKMP</span>
+            {t('verification_status', 'Semakan Status')} <span className="text-amber-600 dark:text-amber-400">MAKMP</span>
           </div>
 
           <Link
@@ -351,10 +396,13 @@ export default function MakmpStatusTrackingPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Search className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-              Semak Status Penyerahan Sijil
+              {t('track_title', 'Semakan Status Pencalonan MAKMP')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Masukkan kod rujukan rasmi (contoh: <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">MAKMP-2026-XXXXX</span>) yang diberikan semasa anda menghantar borang.
+              {t(
+                'makmp:track_search_instructions',
+                'Masukkan kod rujukan rasmi (contoh: MAKMP-2026-XXXXX) yang diberikan semasa anda menghantar borang.'
+              )}
             </p>
           </div>
 
@@ -378,9 +426,24 @@ export default function MakmpStatusTrackingPage() {
               className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center gap-2 disabled:opacity-50 shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              <span>Cari</span>
+              <span>{t('track_search_btn', 'Semak Status')}</span>
             </button>
           </form>
+
+          {/* Verdict Legend Chip Guide */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5" /> {t('verdict_qualified')}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+              <Clock className="w-3.5 h-3.5" /> {t('verdict_pending')}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold">
+              <XCircle className="w-3.5 h-3.5" /> {t('verdict_ineligible')}
+            </span>
+          </div>
         </div>
 
         {/* Error Notification */}
@@ -403,10 +466,10 @@ export default function MakmpStatusTrackingPage() {
                   </div>
                   <div>
                     <div className="text-lg font-extrabold text-emerald-950 dark:text-emerald-300">
-                      Anda Dijemput ke MAKMP 2026! 🎉
+                      {t('makmp:winner_invited_title', 'Anda Dijemput ke MAKMP 2026!')}
                     </div>
                     <p className="text-xs text-emerald-800 dark:text-emerald-200/80 mt-0.5">
-                      Tahniah! Anda terpilih sebagai pemenang. Sila lengkapkan maklumat di bawah.
+                      {t('makmp:winner_invited_desc', 'Tahniah! Anda terpilih sebagai pemenang. Sila lengkapkan maklumat di bawah.')}
                     </p>
                   </div>
                 </div>
@@ -416,7 +479,7 @@ export default function MakmpStatusTrackingPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <IdCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      Nombor Kad Pengenalan (12 digit)
+                      {t('makmp:ic_number_label', 'Nombor Kad Pengenalan (12 digit)')}
                     </label>
                     <input
                       type="text"
@@ -424,7 +487,7 @@ export default function MakmpStatusTrackingPage() {
                       maxLength={12}
                       value={icNo}
                       onChange={(e) => setIcNo(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="Contoh: 020101141234"
+                      placeholder={t('makmp:ic_placeholder', 'Contoh: 020101141234')}
                       className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition"
                     />
                   </div>
@@ -432,7 +495,7 @@ export default function MakmpStatusTrackingPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <Camera className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      Gambar Passport (akan dijadikan gambar profil)
+                      {t('makmp:passport_photo_label', 'Gambar Passport (akan dijadikan gambar profil)')}
                     </label>
                     <input
                       type="file"
@@ -453,13 +516,13 @@ export default function MakmpStatusTrackingPage() {
                     className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
                   >
                     <Upload className="w-4 h-4" />
-                    {uploadingWinnerInfo ? 'Menghantar...' : 'Hantar Maklumat'}
+                    {uploadingWinnerInfo ? t('makmp:submitting_info', 'Menghantar...') : t('makmp:submit_info_btn', 'Hantar Maklumat')}
                   </button>
 
                   {winnerMsg && (
                     <div
                       className={`text-xs flex items-center gap-1.5 ${
-                        winnerMsg.type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
+                        winnerMsg.type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-400'
                       }`}
                     >
                       {winnerMsg.type === 'success' ? (
@@ -481,9 +544,9 @@ export default function MakmpStatusTrackingPage() {
                     <XCircle className="w-7 h-7" />
                   </div>
                   <div>
-                    <div className="text-lg font-extrabold text-rose-900 dark:text-rose-300">Maaf, Anda Tidak Terpilih</div>
+                    <div className="text-lg font-extrabold text-rose-900 dark:text-rose-300">{t('makmp:not_selected_title', 'Maaf, Anda Tidak Terpilih')}</div>
                     <p className="text-xs text-rose-700 dark:text-rose-200/80 mt-0.5">
-                      Terima kasih atas penyertaan anda. Kami harap anda mencuba lagi pada masa hadapan.
+                      {t('makmp:not_selected_desc', 'Terima kasih atas penyertaan anda. Kami harap anda mencuba lagi pada masa hadapan.')}
                     </p>
                   </div>
                 </div>
@@ -495,7 +558,7 @@ export default function MakmpStatusTrackingPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                    Kod Rujukan Rasmi
+                    {t('makmp:official_ref_code', 'Kod Rujukan Rasmi')}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-2xl font-mono font-extrabold text-amber-600 dark:text-amber-400">
@@ -503,20 +566,20 @@ export default function MakmpStatusTrackingPage() {
                     </span>
                     <button
                       onClick={handleCopy}
-                      title="Salin Kod"
+                      title={t('makmp:copy_code_tooltip', 'Salin Kod')}
                       className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 dark:hover:text-white transition"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Dihantar pada: {new Date(submission.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {t('makmp:submitted_on', 'Dihantar pada:')} {new Date(submission.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:items-end gap-1.5">
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                    Status Keseluruhan
+                    {t('verification_status')}
                   </div>
                   {getStatusBadge(submission.status)}
                 </div>
@@ -528,7 +591,7 @@ export default function MakmpStatusTrackingPage() {
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-md shadow-amber-500/20"
                   >
                     <Pencil className="w-4 h-4" />
-                    <span>Kemaskini Permohonan</span>
+                    <span>{t('makmp:update_nomination_btn', 'Kemaskini Permohonan')}</span>
                   </button>
                 )}
               </div>
@@ -536,17 +599,17 @@ export default function MakmpStatusTrackingPage() {
               {/* Biodata Pelajar Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Nama Pelajar</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_applicant_name', 'Nama Pelajar')}</span>
                   <div className="font-semibold text-slate-900 dark:text-white truncate" title={submission.full_name}>{submission.full_name}</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">No. Matrik</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_matric_no', 'No. Matrik')}</span>
                   <div className="font-mono font-bold text-amber-600 dark:text-amber-400">{submission.matric_no}</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Jabatan & Semester</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">{t('nom_department', 'Jabatan & Semester')}</span>
                   <div className="font-semibold text-slate-900 dark:text-white">
                     {submission.department} (Sem {submission.semester || 1})
                   </div>
@@ -562,10 +625,10 @@ export default function MakmpStatusTrackingPage() {
                     </div>
                     <div>
                       <div className="font-bold text-sm text-slate-900 dark:text-white">
-                        Permohonan ini belum dipautkan ke akaun JPP Portal
+                        {t('track_claim_title', 'Permohonan ini belum dipautkan ke akaun JPP Portal')}
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                        Pautkan akaun anda supaya sijil & merit yang diluluskan nanti auto-simpan ke dokumen peribadi e-akademik anda.
+                        {t('track_claim_desc', 'Pautkan akaun anda supaya sijil & merit yang diluluskan nanti auto-simpan ke dokumen peribadi e-akademik anda.')}
                       </p>
                     </div>
                   </div>
@@ -581,7 +644,7 @@ export default function MakmpStatusTrackingPage() {
                       {isGoogleLinking ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Menyambung ke Google...</span>
+                          <span>{t('makmp:connecting_google', 'Menyambung ke Google...')}</span>
                         </>
                       ) : (
                         <>
@@ -591,7 +654,7 @@ export default function MakmpStatusTrackingPage() {
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                           </svg>
-                          <span>Log Masuk dengan Google untuk Pautkan</span>
+                          <span>{t('makmp:login_google_to_link', 'Log Masuk dengan Google untuk Pautkan')}</span>
                         </>
                       )}
                     </button>
@@ -603,7 +666,10 @@ export default function MakmpStatusTrackingPage() {
                       {claimMsg?.type === 'confirm' && pendingClaim ? (
                         <div className="p-3 rounded-lg bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-500/40 space-y-2">
                           <p className="text-xs text-amber-950 dark:text-amber-200">
-                            Akaun anda (<span className="font-mono font-semibold">{pendingClaim.profile_matric || pendingClaim.profile_email || 'tiada matric'}</span>) tidak sepadan dengan permohonan (<span className="font-mono font-semibold">{pendingClaim.submission_matric}</span>). Adakah ini permohonan anda?
+                            {t('makmp:claim_mismatch_warning', 'Akaun anda ({{accountMatric}}) tidak sepadan dengan permohonan ({{subMatric}}). Adakah ini permohonan anda?', {
+                              accountMatric: pendingClaim.profile_matric || pendingClaim.profile_email || t('makmp:no_matric', 'tiada matric'),
+                              subMatric: pendingClaim.submission_matric,
+                            })}
                           </p>
                           <div className="flex gap-2">
                             <button
@@ -613,14 +679,14 @@ export default function MakmpStatusTrackingPage() {
                               className="flex-1 px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-sm"
                             >
                               {claiming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                              Ya, Pautkan
+                              {t('makmp:yes_link_account', 'Ya, Pautkan')}
                             </button>
                             <button
                               type="button"
                               onClick={() => { setClaimMsg(null); setPendingClaim(null); }}
                               className="px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 font-semibold text-xs transition"
                             >
-                              Batal
+                              {t('makmp:cancel_btn', 'Batal')}
                             </button>
                           </div>
                         </div>
@@ -632,16 +698,17 @@ export default function MakmpStatusTrackingPage() {
                           className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                         >
                           {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
-                          <span>Pautkan ke Akaun Saya</span>
+                          <span>{t('track_claim_btn', 'Pautkan ke Akaun Saya')}</span>
                         </button>
                       )}
                     </>
                   )}
 
                   {claimMsg && claimMsg.type !== 'confirm' && (
-                    <p className={`text-xs ${claimMsg.type === 'success' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
-                      {claimMsg.type === 'success' ? '✅ ' : '⚠️ '}{claimMsg.text}
-                    </p>
+                    <div className={`text-xs flex items-center gap-1.5 ${claimMsg.type === 'success' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                      {claimMsg.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+                      <span>{claimMsg.text}</span>
+                    </div>
                   )}
                 </div>
               )}
@@ -654,9 +721,9 @@ export default function MakmpStatusTrackingPage() {
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-slate-900 dark:text-white">Tahniah! Permohonan Diluluskan Juri</div>
+                      <div className="font-bold text-sm text-slate-900 dark:text-white">{t('makmp:congrats_approved', 'Tahniah! Permohonan Diluluskan Juri')}</div>
                       <div className="text-xs text-emerald-800 dark:text-emerald-300/90 mt-0.5">
-                        Markah merit dan rekod pencapaian telah dikemas kini ke dalam profil e-akademik anda.
+                        {t('makmp:approved_merit_desc', 'Markah merit dan rekod pencapaian telah dikemas kini ke dalam profil e-akademik anda.')}
                       </div>
                     </div>
                   </div>
@@ -671,9 +738,9 @@ export default function MakmpStatusTrackingPage() {
                       <FolderOpen className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-slate-900 dark:text-white">Sijil Telah Disimpan ke Dokumen Peribadi</div>
+                      <div className="font-bold text-sm text-slate-900 dark:text-white">{t('makmp:cert_saved_folder', 'Sijil Telah Disimpan ke Dokumen Peribadi')}</div>
                       <div className="text-xs text-indigo-900 dark:text-indigo-200/80 mt-0.5">
-                        Sijil anda telah disusun secara automatik ke dalam folder "Sijil Penghargaan" di e-akademik.
+                        {t('makmp:cert_saved_desc', 'Sijil anda telah disusun secara automatik ke dalam folder "Sijil Penghargaan" di e-akademik.')}
                       </div>
                     </div>
                   </div>
@@ -683,14 +750,14 @@ export default function MakmpStatusTrackingPage() {
                       className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-400/30 dark:hover:bg-indigo-500/30"
                     >
                       <FolderOpen className="w-4 h-4" />
-                      Lihat dalam Dokumen Peribadi
+                      <span>{t('makmp:view_in_personal_docs', 'Lihat dalam Dokumen Peribadi')}</span>
                     </Link>
                   ) : (
                     <Link
                       to="/login"
                       className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-400/30 dark:hover:bg-indigo-500/30"
                     >
-                      Log Masuk untuk Lihat Dokumen
+                      {t('makmp:login_to_view_docs', 'Log Masuk untuk Lihat Dokumen')}
                     </Link>
                   )}
                 </div>
@@ -701,10 +768,10 @@ export default function MakmpStatusTrackingPage() {
                 <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs space-y-1">
                   <div className="font-bold flex items-center gap-1.5 text-rose-700 dark:text-rose-400">
                     <AlertCircle className="w-4 h-4" />
-                    <span>Catatan Keputusan:</span>
+                    <span>{t('makmp:verdict_notes_label', 'Catatan Keputusan:')}</span>
                   </div>
                   <p className="pl-5 text-slate-700 dark:text-slate-300">
-                    {submission.rejection_reason || 'Permohonan tidak memenuhi syarat kelayakan bagi edisi ini.'}
+                    {submission.rejection_reason || t('makmp:rejection_default_reason', 'Permohonan tidak memenuhi syarat kelayakan bagi edisi ini.')}
                   </p>
                 </div>
               )}
@@ -715,10 +782,10 @@ export default function MakmpStatusTrackingPage() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                      Anugerah Yang Dipohon ({submission.awards.length})
+                      <span>{t('makmp:applied_awards_title', 'Anugerah Yang Dipohon ({{count}})', { count: submission.awards.length })}</span>
                     </h2>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Setiap anugerah dinilai secara berasingan oleh panel juri berkenaan
+                      {t('makmp:awards_evaluated_separately_note', 'Setiap anugerah dinilai secara berasingan oleh panel juri berkenaan')}
                     </span>
                   </div>
 
@@ -739,28 +806,28 @@ export default function MakmpStatusTrackingPage() {
                             <div className="space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
-                                  {awApp.award?.category_group || 'ANUGERAH KHAS'}
+                                  {awApp.award?.category_group || t('makmp:special_award_default', 'ANUGERAH KHAS')}
                                 </span>
                                 {awApp.award?.target_type === 'ENTITY' && (
                                   <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20 flex items-center gap-1">
                                     <Building className="w-3 h-3" />
-                                    Entiti / Kelab
+                                    <span>{t('makmp:entity_club_badge', 'Entiti / Kelab')}</span>
                                   </span>
                                 )}
                               </div>
                               <div className="text-base font-bold text-slate-900 dark:text-white">
-                                {awApp.award?.name || `Anugerah #${idx + 1}`}
+                                {awApp.award?.name || t('makmp:award_indexed_fallback', 'Anugerah #{{index}}', { index: idx + 1 })}
                               </div>
 
                               {/* Entity Info if applicable */}
                               {awApp.entity_name && (
                                 <div className="text-xs text-slate-700 dark:text-slate-300 flex flex-wrap items-center gap-3 pt-0.5">
                                   <span>
-                                    <strong className="text-slate-500 dark:text-slate-400">Entiti / Projek:</strong> {awApp.entity_name}
+                                    <strong className="text-slate-500 dark:text-slate-400">{t('makmp:entity_project_colon', 'Entiti / Projek:')}</strong> {awApp.entity_name}
                                   </span>
                                   {awApp.applicant_role && (
                                     <span>
-                                      <strong className="text-slate-500 dark:text-slate-400">Jawatan / Peranan:</strong> {awApp.applicant_role}
+                                      <strong className="text-slate-500 dark:text-slate-400">{t('makmp:role_position_colon', 'Jawatan / Peranan:')}</strong> {awApp.applicant_role}
                                     </span>
                                   )}
                                 </div>
@@ -775,27 +842,27 @@ export default function MakmpStatusTrackingPage() {
                           {/* Award Status Notes */}
                           {awApp.status === 'DITOLAK' && awApp.rejection_reason && (
                             <div className="mx-4 mt-3 p-3 rounded-xl bg-rose-50 dark:bg-red-950/40 border border-rose-200 dark:border-red-500/30 text-rose-800 dark:text-red-200 text-xs">
-                              <span className="font-bold text-rose-700 dark:text-rose-400">Sebab Penolakan Anugerah: </span>
-                              {awApp.rejection_reason}
+                              <span className="font-bold text-rose-700 dark:text-rose-400">{t('makmp:rejection_reason_award_colon', 'Sebab Penolakan Anugerah:')} </span>
+                              <span>{awApp.rejection_reason}</span>
                             </div>
                           )}
 
                           {awApp.review_notes && (
                             <div className="mx-4 mt-3 p-3 rounded-xl bg-amber-50/80 dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 text-xs">
-                              <span className="font-bold text-amber-700 dark:text-amber-400">Catatan Juri: </span>
-                              {awApp.review_notes}
+                              <span className="font-bold text-amber-700 dark:text-amber-400">{t('makmp:jury_notes_colon', 'Catatan Juri:')} </span>
+                              <span>{awApp.review_notes}</span>
                             </div>
                           )}
 
                           {/* Award Documents List */}
                           <div className="p-4 space-y-2.5">
                             <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                              Dokumen / Sijil Disertakan ({awardItems.length})
+                              {t('makmp:docs_certs_attached_count', 'Dokumen / Sijil Disertakan ({{count}})', { count: awardItems.length })}
                             </div>
 
                             {awardItems.length === 0 ? (
                               <p className="text-xs text-slate-500 dark:text-slate-400 italic py-2">
-                                Tiada dokumen khusus dilampirkan bagi anugerah ini.
+                                {t('makmp:no_specific_docs_for_award', 'Tiada dokumen khusus dilampirkan bagi anugerah ini.')}
                               </p>
                             ) : (
                               <div className="space-y-2">
@@ -806,14 +873,8 @@ export default function MakmpStatusTrackingPage() {
                                   >
                                     <div className="space-y-1 flex-1 min-w-0">
                                       <div className="flex items-center gap-2">
-                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                                          doc.document_type === 'LAPORAN'
-                                            ? 'bg-sky-100 text-sky-800 border border-sky-300 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30'
-                                            : doc.document_type === 'BUKTI_SOKONGAN'
-                                            ? 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30'
-                                            : 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
-                                        }`}>
-                                          {doc.document_type || 'SIJIL'}
+                                        <span className={'px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ' + getDocBadgeClass(doc.document_type)}>
+                                          {doc.document_type || t('makmp:doc_type_cert_default', 'SIJIL')}
                                         </span>
                                         <span className="font-semibold text-slate-900 dark:text-white truncate">
                                           {doc.nama_pencapaian}
@@ -821,15 +882,15 @@ export default function MakmpStatusTrackingPage() {
                                       </div>
 
                                       <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-                                        <span>Peringkat: {doc.peringkat}</span>
+                                        <span>{t('makmp:level_colon', 'Peringkat:')} {doc.peringkat}</span>
                                         <span>•</span>
-                                        <span>Pencapaian: {doc.pencapaian_type}</span>
+                                        <span>{t('makmp:achievement_colon', 'Pencapaian:')} {doc.pencapaian_type}</span>
                                         {doc.tarikh && (
                                           <>
                                             <span>•</span>
                                             <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                                               <Calendar className="w-3 h-3" />
-                                              {doc.tarikh}
+                                              <span>{doc.tarikh}</span>
                                             </span>
                                           </>
                                         )}
@@ -842,10 +903,10 @@ export default function MakmpStatusTrackingPage() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="p-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:hover:text-white transition flex items-center gap-1.5 text-xs font-medium"
-                                        title="Buka Dokumen di Google Drive"
+                                        title={t('makmp:open_doc_in_drive_tooltip', 'Buka Dokumen di Google Drive')}
                                       >
                                         <ExternalLink className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Buka Dokumen</span>
+                                        <span>{t('makmp:open_doc_btn_label', 'Buka Dokumen')}</span>
                                       </a>
                                     </div>
                                   </div>
@@ -863,7 +924,7 @@ export default function MakmpStatusTrackingPage() {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    Senarai Sijil & Pencapaian ({submission.items?.length || 0})
+                    <span>{t('makmp:cert_and_achievement_list', 'Senarai Sijil & Pencapaian ({{count}})', { count: submission.items?.length || 0 })}</span>
                   </h3>
 
                   <div className="space-y-3">
@@ -878,15 +939,15 @@ export default function MakmpStatusTrackingPage() {
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-slate-500 dark:text-slate-400">
                             <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                              Peringkat: {item.peringkat}
+                              {t('makmp:level_colon', 'Peringkat:')} {item.peringkat}
                             </span>
                             <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                              Pencapaian: {item.pencapaian_type}
+                              {t('makmp:achievement_colon', 'Pencapaian:')} {item.pencapaian_type}
                             </span>
                             {item.tarikh && (
                               <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                                 <Calendar className="w-3 h-3" />
-                                {item.tarikh}
+                                <span>{item.tarikh}</span>
                               </span>
                             )}
                           </div>
@@ -898,10 +959,10 @@ export default function MakmpStatusTrackingPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white transition flex items-center gap-1"
-                            title="Lihat Sijil"
+                            title={t('makmp:view_cert_tooltip', 'Lihat Sijil')}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Lihat</span>
+                            <span>{t('makmp:view_btn_label', 'Lihat')}</span>
                           </a>
                         </div>
                       </div>
@@ -916,7 +977,7 @@ export default function MakmpStatusTrackingPage() {
                   href={getMakmpWhatsAppUrl(
                     submission,
                     submission.awards && submission.awards.length > 0
-                      ? submission.awards.map((a) => a.award?.name || 'Anugerah').join(', ')
+                      ? submission.awards.map((a) => a.award?.name || t('makmp:award_fallback', 'Anugerah')).join(', ')
                       : submission.category?.name
                   )}
                   target="_blank"
@@ -924,7 +985,7 @@ export default function MakmpStatusTrackingPage() {
                   className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span>Simpan / Kongsi Resit Ini ke WhatsApp</span>
+                  <span>{t('makmp:save_share_receipt_whatsapp', 'Simpan / Kongsi Resit Ini ke WhatsApp')}</span>
                 </a>
               </div>
             </div>

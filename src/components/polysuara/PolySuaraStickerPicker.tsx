@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
   defaultCategory = 'SEMUA',
   className,
 }) => {
+  const { t } = useTranslation(['services', 'common']);
   const [activeCategory, setActiveCategory] = useState<StickerCategory>(defaultCategory);
 
   if (!isOpen) {
@@ -60,7 +62,7 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
           data-testid="sticker-picker-dialog"
           role="dialog"
           aria-modal="true"
-          aria-label="Pilih Pelekat Kampus POLISAS"
+          aria-label={t('services:select_polisas_sticker', 'Pilih Pelekat Kampus POLISAS')}
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -80,10 +82,10 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
               </span>
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">
-                  Pelekat Kampus POLISAS
+                  {t('services:polisas_campus_stickers_title', 'Pelekat Kampus POLISAS')}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Vibe kehidupan kampus & politeknik
+                  {t('services:polisas_campus_stickers_subtitle', 'Vibe kehidupan kampus & politeknik')}
                 </p>
               </div>
             </div>
@@ -92,8 +94,8 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
               data-testid="sticker-picker-close-btn"
               type="button"
               onClick={onClose}
-              aria-label="Tutup"
-              title="Tutup"
+              aria-label={t('common:close', 'Tutup')}
+              title={t('common:close', 'Tutup')}
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -122,7 +124,7 @@ export const PolySuaraStickerPicker: React.FC<PolySuaraStickerPickerProps> = ({
                       : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
                   )}
                 >
-                  {cat.label}
+                  {cat.key === 'SEMUA' ? t('common:all', 'Semua') : cat.label}
                 </button>
               );
             })}

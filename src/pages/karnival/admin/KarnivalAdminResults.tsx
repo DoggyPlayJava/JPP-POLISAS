@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
@@ -16,6 +17,7 @@ interface BoothResult {
 const RANK_MEDALS = ['🥇', '🥈', '🥉'];
 
 export function KarnivalAdminResults() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, categories, lastUpdated } = useKarnival();
   const [activeCat,  setActiveCat]  = useState<string | null>(null);
   const [results,    setResults]    = useState<BoothResult[]>([]);
@@ -41,14 +43,17 @@ export function KarnivalAdminResults() {
   // ── Export XLSX ──────────────────────────────────────────────
   const exportCsv = async () => {
     const columns = [
-      { header: 'Kedudukan', width: 12 },
-      { header: 'Booth', width: 28 },
-      { header: 'No. Booth', width: 14, asText: true },
-      { header: 'Jumlah Undi', width: 14 },
+      { header: t('karnival:header_rank', 'Kedudukan'), width: 12 },
+      { header: t('karnival:header_booth', 'Booth'), width: 28 },
+      { header: t('karnival:header_booth_no', 'No. Booth'), width: 14, asText: true },
+      { header: t('karnival:header_total_votes', 'Jumlah Undi'), width: 14 },
     ];
     const rows = results.map((b, i) => [i + 1, b.booth_name, b.booth_number ?? '', b.total_votes]);
-    await exportXlsx(`Keputusan-${selectedCat?.name ?? 'Karnival'}-${edition?.edition_year ?? ''}.xlsx`, [
-      { name: 'Keputusan', columns, rows },
+    const filePrefix = t('karnival:export_filename_results', 'Keputusan');
+    const catName = selectedCat?.name ?? t('karnival:default_carnival_title', 'Karnival');
+    const year = edition?.edition_year ?? '';
+    await exportXlsx(`${filePrefix}-${catName}-${year}.xlsx`, [
+      { name: t('karnival:sheet_results_name', 'Keputusan'), columns, rows },
     ]);
   };
 
@@ -56,7 +61,7 @@ export function KarnivalAdminResults() {
     return (
       <div className="text-center py-16 text-white/55">
         <Trophy className="w-12 h-12 mx-auto mb-3 opacity-20" />
-        <p className="font-bold">Tiada edisi Karnival</p>
+        <p className="font-bold">{t('karnival:no_carnival_edition', 'Tiada edisi Karnival')}</p>
       </div>
     );
   }
@@ -87,9 +92,9 @@ export function KarnivalAdminResults() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-base font-black text-white">
-            {selectedCat ? `${selectedCat.icon_emoji} ${selectedCat.name}` : 'Keputusan'}
+            {selectedCat ? `${selectedCat.icon_emoji} ${selectedCat.name}` : t('karnival:results_title', 'Keputusan')}
           </h2>
-          <p className="text-xs text-white/60 mt-0.5">{results.length} booth bertanding</p>
+          <p className="text-xs text-white/60 mt-0.5">{t('karnival:booths_competing_count', { count: results.length, defaultValue: `${results.length} booth bertanding` })}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -97,7 +102,7 @@ export function KarnivalAdminResults() {
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-white/40 hover:text-white/70 hover:bg-white/[0.06] border border-white/[0.14] transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('karnival:refresh', 'Refresh')}
           </button>
           {results.length > 0 && (
             <button
@@ -105,7 +110,7 @@ export function KarnivalAdminResults() {
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-xs font-bold text-emerald-400 border border-emerald-500/20 transition-all"
             >
               <Download className="w-3.5 h-3.5" />
-              Export XLSX
+              {t('karnival:export_xlsx_btn', 'Export XLSX')}
             </button>
           )}
         </div>
@@ -119,7 +124,7 @@ export function KarnivalAdminResults() {
       ) : results.length === 0 ? (
         <div className="text-center py-16">
           <Trophy className="w-16 h-16 text-white/10 mx-auto mb-3" />
-          <p className="text-white/55 font-bold">Belum ada undi lagi</p>
+          <p className="text-white/55 font-bold">{t('karnival:no_results_yet', 'Belum ada undi lagi')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -167,7 +172,7 @@ export function KarnivalAdminResults() {
                     </div>
                     <span className="text-base font-black text-violet-300 flex-shrink-0">
                       {booth.total_votes.toLocaleString()}
-                      <span className="text-xs text-white/55 font-medium ml-1">undi</span>
+                      <span className="text-xs text-white/55 font-medium ml-1">{t('karnival:unit_votes', 'undi')}</span>
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">

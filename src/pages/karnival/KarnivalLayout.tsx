@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +9,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function KarnivalLayout() {
+  const { t } = useTranslation(['karnival', 'common']);
   const { edition, isActive, lastUpdated, refetch, isLoading } = useKarnival();
   const { isKppExco, isSuperAdmin } = useAuth();
   const location = useLocation();
@@ -24,8 +26,8 @@ export function KarnivalLayout() {
   };
 
   const navLinks = [
-    { to: '/karnival', label: 'Utama', icon: Home },
-    { to: '/karnival/scoreboard', label: 'Papan Mata', icon: BarChart3 },
+    { to: '/karnival', label: t('karnival:nav_home', 'Utama'), icon: Home },
+    { to: '/karnival/scoreboard', label: t('karnival:nav_scoreboard', 'Papan Mata'), icon: BarChart3 },
   ];
 
   return (
@@ -38,7 +40,7 @@ export function KarnivalLayout() {
           <button
             onClick={() => navigate('/portal')}
             className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-all"
-            title="Balik ke Portal"
+            title={t('karnival:back_to_portal', 'Balik ke Portal')}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -49,7 +51,7 @@ export function KarnivalLayout() {
             </div>
             <div className="leading-none">
               <p className="text-xs font-black text-white tracking-tight">
-                {edition?.name ?? 'Karnival JPP'}
+                {edition?.name ?? t('karnival:default_carnival_title', 'Karnival JPP')}
               </p>
               {edition?.tagline && (
                 <p className="text-[9px] text-white/40 font-medium mt-0.5">{edition.tagline}</p>
@@ -81,7 +83,7 @@ export function KarnivalLayout() {
             {isActive && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/20 border border-violet-500/30">
                 <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                <span className="text-[10px] font-black text-violet-300 uppercase tracking-widest">Live</span>
+                <span className="text-[10px] font-black text-violet-300 uppercase tracking-widest">{t('karnival:live_badge', 'Live')}</span>
               </div>
             )}
 
@@ -96,7 +98,7 @@ export function KarnivalLayout() {
                 onClick={handleRefresh}
                 disabled={isLoading || refreshing}
                 className="p-1.5 rounded-lg text-white/60 hover:text-white/70 hover:bg-white/[0.06] transition-all"
-                title="Muat semula"
+                title={t('karnival:refresh', 'Muat semula')}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
@@ -109,7 +111,7 @@ export function KarnivalLayout() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-violet-300 bg-violet-600/15 hover:bg-violet-600/25 border border-violet-500/20 transition-all"
               >
                 <Shield className="w-3 h-3" />
-                <span className="hidden sm:inline">Admin</span>
+                <span className="hidden sm:inline">{t('karnival:admin_badge', 'Admin')}</span>
               </Link>
             )}
 
@@ -138,7 +140,7 @@ export function KarnivalLayout() {
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Balik ke Portal
+                  {t('karnival:back_to_portal', 'Balik ke Portal')}
                 </button>
                 {navLinks.map(({ to, label, icon: Icon }) => (
                   <Link
@@ -162,7 +164,7 @@ export function KarnivalLayout() {
                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-violet-300 bg-violet-600/15 border border-violet-500/20"
                   >
                     <Shield className="w-4 h-4" />
-                    Panel Admin KPP
+                    {t('karnival:admin_kpp_panel', 'Panel Admin KPP')}
                   </Link>
                 )}
               </div>

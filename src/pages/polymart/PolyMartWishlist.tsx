@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_ICON_MAP } from './PolyMartLayout';
@@ -30,11 +31,18 @@ interface WishlistItem {
   } | null;
 }
 
-export function PolyMartWishlist() {
+export function PolyMartWishlist({
+  initialLoading = false,
+  initialItems = [],
+}: {
+  initialLoading?: boolean;
+  initialItems?: WishlistItem[];
+} = {}) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<WishlistItem[]>(initialItems);
+  const [loading, setLoading] = useState(initialLoading);
 
   const loadWishlist = useCallback(async () => {
     if (!user) return;
@@ -60,7 +68,7 @@ export function PolyMartWishlist() {
     setItems(prev => prev.filter(i => i.id !== wishlistId));
     const { error } = await supabase.from('polymart_wishlist').delete().eq('id', wishlistId);
     if (error) {
-      toast.error('Gagal mengalih keluar');
+      toast.error(t('commerce:wishlist_remove_failed', 'Gagal mengalih keluar'));
       loadWishlist(); // revert
     }
   };
@@ -94,14 +102,17 @@ export function PolyMartWishlist() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors cursor-pointer">
+          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors cursor-pointer"
+          aria-label={t('common:back', 'Kembali')}>
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <div>
           <h1 className="text-lg font-black text-foreground flex items-center gap-2">
-            <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> Wishlist Saya
+            <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> {t('commerce:wishlist_my_title', 'Wishlist Saya')}
           </h1>
-          <p className="text-[11px] text-muted-foreground/60">{items.length} produk disimpan</p>
+          <p className="text-[11px] text-muted-foreground/60">
+            {t('commerce:wishlist_saved_count', '{{count}} produk disimpan', { count: items.length })}
+          </p>
         </div>
       </div>
 
@@ -111,13 +122,17 @@ export function PolyMartWishlist() {
           <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shadow-xs">
             <Heart className="w-8 h-8" />
           </div>
-          <p className="text-sm font-bold text-muted-foreground/80">Wishlist anda kosong</p>
-          <p className="text-xs text-muted-foreground/50">Tekan ikon hati pada produk untuk menyimpan</p>
+          <p className="text-sm font-bold text-muted-foreground/80">
+            {t('commerce:wishlist_empty_title', 'Wishlist anda kosong')}
+          </p>
+          <p className="text-xs text-muted-foreground/50">
+            {t('commerce:wishlist_empty_desc', 'Tekan ikon hati pada produk untuk menyimpan')}
+          </p>
           <button onClick={() => navigate('/polymart')}
             className="mt-3 px-4 h-9 rounded-xl text-[11px] font-black text-white flex items-center gap-1.5 transition-all hover:brightness-110 cursor-pointer shadow-md shadow-amber-500/20"
             style={{ background: PM_GRADIENT }}>
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Terokai PolyMart</span>
+            <span>{t('commerce:wishlist_explore_polymart', 'Terokai PolyMart')}</span>
           </button>
         </div>
       ) : (
@@ -156,7 +171,7 @@ export function PolyMartWishlist() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-[9px] text-muted-foreground/50 font-bold flex items-center gap-1">
-                        <Store className="w-2.5 h-2.5" /> {p.keusahawanan_businesses?.name ?? 'Kedai'}
+                        <Store className="w-2.5 h-2.5" /> {p.keusahawanan_businesses?.name ?? t('commerce:wishlist_store_fallback', 'Kedai')}
                       </p>
                       <p className="text-sm font-black text-foreground truncate cursor-pointer hover:underline [text-wrap:balance]"
                         onClick={() => navigate(`/polymart/produk/${p.id}`)}>
@@ -174,7 +189,7 @@ export function PolyMartWishlist() {
                       </div>
                       {isOut && (
                         <span className="inline-block mt-1 text-[9px] font-black text-rose-500 uppercase tracking-wider">
-                          Stok Habis
+                          {t('commerce:wishlist_out_of_stock', 'Stok Habis')}
                         </span>
                       )}
                     </div>

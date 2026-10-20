@@ -36,7 +36,9 @@ import {
 } from 'lucide-react';
 import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import type { EmsParticipant, EmsVisitor } from '@/types';
 
 // Web Audio API beep sound generator for scan feedback
@@ -91,6 +93,7 @@ function playWarningChime() {
 }
 
 export function EmsCheckinPage() {
+  const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
 
@@ -132,7 +135,7 @@ export function EmsCheckinPage() {
     try {
       const detail = await fetchEmsEventById(eventId);
       if (!detail) {
-        toast.error('Acara tidak dijumpai');
+        toast.error(t('ems:reg_event_not_found', 'Acara tidak dijumpai'));
         navigate('/ems/dashboard');
         return;
       }
@@ -147,7 +150,7 @@ export function EmsCheckinPage() {
         .order('scanned_at', { ascending: false });
       setVisitors(vData || []);
     } catch (err: any) {
-      toast.error(`Gagal memuatkan acara: ${err?.message || 'Ralat'}`);
+      toast.error(t('ems:checkin_failed_badge', 'Gagal memuatkan acara') + ': ' + (err?.message || t('ems:error_label', 'Ralat')));
     } finally {
       setLoading(false);
     }
@@ -195,7 +198,7 @@ export function EmsCheckinPage() {
           const newVisitor = payload.new as EmsVisitor;
           setVisitors((prev) => [newVisitor, ...prev]);
           if (newVisitor.is_milestone_winner) {
-            toast.success(`Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
+            toast.success(t('ems:checkin_visitor_milestone_toast', 'Pengunjung Pemenang Milestone Ke-{{number}}: {{name}}!', { number: newVisitor.milestone_number, name: newVisitor.name }), {
               duration: 6000,
             });
           }
@@ -265,7 +268,7 @@ export function EmsCheckinPage() {
     );
 
     const formatTimeStr = (isoStr?: string | null) => {
-      if (!isoStr) return 'Masa tidak dinyatakan';
+      if (!isoStr) return t('ems:checkin_time_unspecified', 'Masa tidak dinyatakan');
       return new Date(isoStr).toLocaleTimeString('ms-MY', {
         hour: '2-digit',
         minute: '2-digit',
@@ -280,10 +283,10 @@ export function EmsCheckinPage() {
       setScanResult({
         status: 'DUPLICATE',
         participant: existing,
-        message: `Telah Disahkan Kehadiran pada ${timeBadge}`,
+        message: t('ems:checkin_participant_already_checked_in_msg', 'Telah Disahkan Kehadiran pada {{time}}', { time: timeBadge, name: existing.leader_name }),
         timestamp: timeBadge,
       });
-      toast.error(`Peserta "${existing.leader_name}" telah pun mendaftar masuk pada ${timeBadge}`);
+      toast.error(t('ems:checkin_participant_already_checked_in_msg', 'Peserta "{{name}}" telah pun mendaftar masuk pada {{time}}', { name: existing.leader_name, time: timeBadge }));
 
       setTimeout(() => {
         isProcessingRef.current = false;
@@ -306,17 +309,17 @@ export function EmsCheckinPage() {
       setScanResult({
         status: 'SUCCESS',
         participant: updatedParticipant,
-        message: 'Pengesahan Kehadiran Berjaya!',
+        message: t('ems:checkin_confirmed_badge', 'Pengesahan Kehadiran Berjaya!'),
         timestamp: timeBadge,
       });
 
-      toast.success(`Berjaya! Kehadiran disahkan: ${updatedParticipant.leader_name}`);
+      toast.success(t('ems:checkin_confirmed_badge', 'Berjaya! Kehadiran disahkan:') + ' ' + updatedParticipant.leader_name);
     } catch (err: any) {
       setScanResult({
         status: 'ERROR',
-        message: err?.message || 'Peserta tidak dijumpai atau ralat sistem.',
+        message: err?.message || t('ems:checkin_status_not_found', 'Peserta tidak dijumpai atau ralat sistem.'),
       });
-      toast.error(err?.message || 'Ralat pengesahan');
+      toast.error(err?.message || t('ems:checkin_failed_badge', 'Ralat pengesahan'));
     } finally {
       setTimeout(() => {
         isProcessingRef.current = false;
@@ -372,7 +375,7 @@ export function EmsCheckinPage() {
     } catch (err: any) {
       console.error('Camera start error:', err);
       setCameraError(
-        'Tidak dapat mengaktifkan kamera. Sila pastikan kebenaran kamera diberikan atau gunakan carian manual.'
+        t('ems:checkin_camera_perm_error', 'Tidak dapat mengaktifkan kamera. Sila pastikan kebenaran kamera diberikan atau gunakan carian manual.')
       );
       setIsCameraActive(false);
     }
@@ -428,7 +431,7 @@ export function EmsCheckinPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white transition-colors">
         <RefreshCw className="w-10 h-10 text-slate-400 dark:text-slate-500 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-300 font-medium animate-pulse">Memuatkan Portal Pengesahan Kehadiran EMS...</p>
+        <p className="text-slate-600 dark:text-slate-300 font-medium animate-pulse">{t('audience_scanner')} • {t('qr_scan_prompt')}</p>
       </div>
     );
   }
@@ -437,13 +440,13 @@ export function EmsCheckinPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white text-center transition-colors">
         <AlertTriangle className="w-12 h-12 text-rose-500 mb-3" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Acara tidak dijumpai</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">Pautan tidak sah atau acara telah dipadamkan.</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('audience_scanner')}</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-6">{t('qr_scan_prompt')}</p>
         <Link
           to="/ems/dashboard"
           className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold transition-all shadow-sm"
         >
-          Kembali ke Dashboard EMS
+          {t('ems:btn_back_to_ems_dashboard', 'Kembali ke Dashboard EMS')}
         </Link>
       </div>
     );
@@ -457,7 +460,7 @@ export function EmsCheckinPage() {
           <button
             onClick={() => navigate('/ems/dashboard')}
             className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm"
-            title="Kembali ke Dashboard EMS"
+            title={t('ems:checkin_back_dashboard', 'Kembali ke Dashboard EMS')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -465,10 +468,10 @@ export function EmsCheckinPage() {
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                PORTAL URUS SETIA / CREW
+                {t('audience_scanner')}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                {eventDetail.entity_mode === 'TEAM' || eventDetail.entity_mode === 'EXHIBITION' ? 'PORTAL PASUKAN' : 'PORTAL INDIVIDU'}
+                {eventDetail.entity_mode === 'TEAM' || eventDetail.entity_mode === 'EXHIBITION' ? t('ems:checkin_portal_team', 'PORTAL PASUKAN') : t('ems:checkin_portal_individual', 'PORTAL INDIVIDU')}
               </span>
             </div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
@@ -477,17 +480,18 @@ export function EmsCheckinPage() {
             <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                {eventDetail.venue || 'Lokasi tidak ditetapkan'}
+                {eventDetail.venue || t('ems:checkin_unspecified_location', 'Lokasi tidak ditetapkan')}
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : 'Tarikh -'}
+                {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY') : t('ems:checkin_date_placeholder', 'Tarikh -')}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-end md:self-auto">
+          <LanguageToggle />
           <ThemeToggle />
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -496,19 +500,19 @@ export function EmsCheckinPage() {
                 ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400'
                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'
             }`}
-            title="Bunyi Imbasan"
+            title={t('ems:checkin_sound_title', 'Bunyi Imbasan')}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            <span className="hidden sm:inline">{soundEnabled ? 'Bunyi Aktif' : 'Bunyi Senyap'}</span>
+            <span className="hidden sm:inline">{soundEnabled ? t('ems:checkin_sound_on', 'Bunyi Aktif') : t('ems:checkin_sound_off', 'Bunyi Senyap')}</span>
           </button>
 
           <button
             onClick={loadEventData}
             className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all flex items-center gap-2 text-xs font-medium shadow-sm"
-            title="Muat Semula Data"
+            title={t('ems:checkin_refresh', 'Muat Semula Data')}
           >
             <RefreshCw className="w-4 h-4" />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{t('ems:checkin_refresh', 'Refresh')}</span>
           </button>
         </div>
       </div>
@@ -524,7 +528,7 @@ export function EmsCheckinPage() {
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Peserta Pertandingan ({participants.length})</span>
+          <span>{t('ems:checkin_tab_participants_count', 'Peserta Pertandingan ({{count}})', { count: participants.length })}</span>
         </button>
 
         <button
@@ -536,7 +540,7 @@ export function EmsCheckinPage() {
           }`}
         >
           <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>Kehadiran Pengunjung ({visitors.length})</span>
+          <span>{t('ems:checkin_tab_visitors_count', 'Kehadiran Pengunjung ({{count}})', { count: visitors.length })}</span>
         </button>
       </div>
 
@@ -545,19 +549,19 @@ export function EmsCheckinPage() {
           {/* Visitor Stats Header */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jumlah Pengunjung Free-Flow</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('ems:checkin_visitors_total', 'Jumlah Pengunjung Free-Flow')}</span>
               <p className="text-3xl font-black text-slate-900 dark:text-white tabular-nums font-mono">{visitors.length}</p>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/30 shadow-sm space-y-1">
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="w-4 h-4" /> Pemenang Milestone
+                <Sparkles className="w-4 h-4" /> {t('ems:checkin_milestone_winners', 'Pemenang Milestone')}
               </span>
               <p className="text-3xl font-black text-amber-600 dark:text-amber-400 tabular-nums font-mono">
                 {visitors.filter((v) => v.is_milestone_winner).length}
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Imbasan Terakhir</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('ems:checkin_last_scan', 'Imbasan Terakhir')}</span>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-200 tabular-nums font-mono">
                 {visitors[0] ? new Date(visitors[0].scanned_at).toLocaleTimeString('ms-MY') : '-'}
               </p>
@@ -568,14 +572,14 @@ export function EmsCheckinPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" /> Senarai Kehadiran Pengunjung Awam
+                <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" /> {t('ems:checkin_visitors_list_title', 'Senarai Kehadiran Pengunjung Awam')}
               </h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Kemaskini Masa Nyata (Realtime)</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{t('ems:checkin_realtime_badge', 'Kemaskini Masa Nyata (Realtime)')}</span>
             </div>
 
             {visitors.length === 0 ? (
               <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-500 dark:text-slate-400 text-xs">
-                Belum ada pengunjung imbas QR Kehadiran. Minta pengunjung mengimbas QR Pengunjung di pintu masuk!
+                {t('ems:checkin_no_visitors', 'Belum ada pengunjung imbas QR Kehadiran. Minta pengunjung mengimbas QR Pengunjung di pintu masuk!')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -590,11 +594,11 @@ export function EmsCheckinPage() {
                           {v.name}
                           {v.is_milestone_winner && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                              Pemenang Ke-{v.milestone_number}
+                              {t('ems:checkin_milestone_winner_badge', 'Pemenang Ke-{{number}}', { number: v.milestone_number })}
                             </span>
                           )}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{v.matrix_no || v.email || v.phone || 'Pengunjung Awam'}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{v.matrix_no || v.email || v.phone || t('ems:checkin_public_visitor', 'Pengunjung Awam')}</p>
                       </div>
                     </div>
                     <span className="text-xs font-mono text-slate-400 dark:text-slate-500 tabular-nums">
@@ -615,7 +619,7 @@ export function EmsCheckinPage() {
         {/* Total Registered */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendaftaran</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('checkin_stats_total', 'Pendaftaran')}</span>
             <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Users className="w-5 h-5" />
             </div>
@@ -629,7 +633,7 @@ export function EmsCheckinPage() {
         {/* Checked-In Count */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Disahkan Hadir</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('checkin_stats_checked', 'Disahkan Hadir')}</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <UserCheck className="w-5 h-5" />
             </div>
@@ -643,7 +647,7 @@ export function EmsCheckinPage() {
         {/* Attendance Percentage */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Peratus Kehadiran</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('checkin_stats_rate', 'Peratus Kehadiran')}</span>
             <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Flame className="w-5 h-5" />
             </div>
@@ -662,7 +666,7 @@ export function EmsCheckinPage() {
         {/* Pending Count */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Belum Hadir</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('checkin_stats_pending', 'Belum Hadir')}</span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Clock className="w-5 h-5" />
             </div>
@@ -687,7 +691,7 @@ export function EmsCheckinPage() {
               }`}
             >
               <Camera className="w-4 h-4" />
-              <span>Mode 1: Pengimbas QR Kamera</span>
+              <span>{t('ems:checkin_mode_camera', 'Mode 1: Pengimbas QR Kamera')}</span>
             </button>
 
             <button
@@ -699,13 +703,13 @@ export function EmsCheckinPage() {
               }`}
             >
               <Search className="w-4 h-4" />
-              <span>Mode 2: Carian Manual</span>
+              <span>{t('ems:checkin_mode_manual', 'Mode 2: Carian Manual')}</span>
             </button>
           </div>
 
           <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-            <span>Kamera &amp; Pangkalan Data Terhubung</span>
+            <span>{t('ems:checkin_connected_badge', 'Kamera & Pangkalan Data Terhubung')}</span>
           </div>
         </div>
 
@@ -718,9 +722,9 @@ export function EmsCheckinPage() {
                 <div className="w-full flex items-center justify-between mb-3 text-xs text-slate-500 dark:text-slate-400 px-1">
                   <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Kamera Pengimbas QR Active
+                    {t('audience_scanner')}
                   </span>
-                  <span>Sudut Imbasan Optimum</span>
+                  <span>{t('qr_scan_prompt')}</span>
                 </div>
 
                 {/* HTML5 QR Code Render Target */}
@@ -735,7 +739,7 @@ export function EmsCheckinPage() {
                         onClick={startCamera}
                         className="mt-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg text-xs font-semibold transition-all border border-slate-200 dark:border-slate-700"
                       >
-                        Cuba Aktifkan Semula Kamera
+                        {t('ems:retry_activate_camera', 'Cuba Aktifkan Semula Kamera')}
                       </button>
                     </div>
                   )}
@@ -749,24 +753,24 @@ export function EmsCheckinPage() {
                     {isCameraActive ? (
                       <>
                         <CameraOff className="w-4 h-4 text-amber-500" />
-                        <span>Hentikan Kamera</span>
+                        <span>{t('checkin_stop_camera', 'Hentikan Kamera')}</span>
                       </>
                     ) : (
                       <>
                         <Camera className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                        <span>Buka Kamera</span>
+                        <span>{t('checkin_start_camera', 'Buka Kamera')}</span>
                       </>
                     )}
                   </button>
 
-                  <span className="text-slate-400 dark:text-slate-500">Acuan Kod QR Peserta EMS</span>
+                  <span className="text-slate-400 dark:text-slate-500">{t('qr_scan_prompt')}</span>
                 </div>
               </div>
 
               {/* Quick Input Fallback below camera */}
               <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                  Kod QR / No. Matrik / ID Peserta (Imbasan Barcode Gun / Manual)
+                  {t('ems:checkin_manual_barcode_label', 'Kod QR / No. Matrik / ID Peserta (Imbasan Barcode Gun / Manual)')}
                 </label>
                 <form
                   onSubmit={(e) => {
@@ -782,7 +786,7 @@ export function EmsCheckinPage() {
                     type="text"
                     value={manualCodeInput}
                     onChange={(e) => setManualCodeInput(e.target.value)}
-                    placeholder="Imbas barcode atau taip ID / Matrix No..."
+                    placeholder={t('checkin_manual_placeholder', 'Imbas barcode atau taip ID / Matrix No...')}
                     className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                   />
                   <button
@@ -790,7 +794,7 @@ export function EmsCheckinPage() {
                     className="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Sahkan</span>
+                    <span>{t('checkin_manual_btn', 'Sahkan')}</span>
                   </button>
                 </form>
               </div>
@@ -800,15 +804,15 @@ export function EmsCheckinPage() {
             <div className="lg:col-span-6 space-y-4">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                Status Keputusan Imbasan Terbaru
+                {t('ems:checkin_scan_results_title', 'Status Keputusan Imbasan Terbaru')}
               </h3>
 
               {!scanResult ? (
                 <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 border-dashed rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
                   <QrCode className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-3 animate-pulse" />
-                  <p className="text-slate-800 dark:text-slate-300 font-semibold text-base">Sedia Untuk Imbasan</p>
+                  <p className="text-slate-800 dark:text-slate-300 font-semibold text-base">{t('ems:checkin_ready_prompt', 'Sedia Untuk Imbasan')}</p>
                   <p className="text-slate-500 text-xs mt-1 max-w-xs">
-                    Halakan kamera ke Kod QR peserta pada pas fizikal atau telefon pintar.
+                    {t('ems:checkin_ready_desc', 'Halakan kamera ke Kod QR peserta pada pas fizikal atau telefon pintar.')}
                   </p>
                 </div>
               ) : scanResult.status === 'SUCCESS' && scanResult.participant ? (
@@ -817,7 +821,7 @@ export function EmsCheckinPage() {
                   <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-base">
                       <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                      <span>DISAHKAN KEHADIRAN</span>
+                      <span>{t('ems:checkin_confirmed_badge', 'DISAHKAN KEHADIRAN')}</span>
                     </div>
                     <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-mono font-bold">
                       {scanResult.timestamp}
@@ -826,34 +830,34 @@ export function EmsCheckinPage() {
 
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">Nama Ketua / Peserta</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">{t('ems:checkin_leader_name_label', 'Nama Ketua / Peserta')}</span>
                       <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{scanResult.participant.leader_name}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       {scanResult.participant.team_name && (
                         <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Nama Pasukan / Projek</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">{t('ems:checkin_team_project_label', 'Nama Pasukan / Projek')}</span>
                           <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300 mt-0.5">{scanResult.participant.team_name}</p>
                         </div>
                       )}
 
                       {scanResult.participant.booth_no && (
                         <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">No. Booth / Gerai</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">{t('ems:checkin_booth_no_label', 'No. Booth / Gerai')}</span>
                           <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-0.5">{scanResult.participant.booth_no}</p>
                         </div>
                       )}
 
                       {scanResult.participant.category_name && (
                         <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Kategori Pertandingan</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">{t('ems:checkin_category_name_label', 'Kategori Pertandingan')}</span>
                           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{scanResult.participant.category_name}</p>
                         </div>
                       )}
 
                       <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">No. Matrik / ID</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">{t('ems:checkin_matrix_id_label', 'No. Matrik / ID')}</span>
                         <p className="text-sm font-mono text-slate-700 dark:text-slate-300 mt-0.5">{scanResult.participant.matrix_no || scanResult.participant.id.slice(0, 8)}</p>
                       </div>
                     </div>
@@ -864,7 +868,7 @@ export function EmsCheckinPage() {
                     className="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    <span>Imbas Peserta Seterusnya</span>
+                    <span>{t('ems:checkin_scan_next_btn', 'Imbas Peserta Seterusnya')}</span>
                   </button>
                 </div>
               ) : scanResult.status === 'DUPLICATE' && scanResult.participant ? (
@@ -873,7 +877,7 @@ export function EmsCheckinPage() {
                   <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-base">
                       <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 animate-bounce" />
-                      <span>TELAH DISAHKAN KEHADIRAN</span>
+                      <span>{t('ems:checkin_duplicate_badge', 'TELAH DISAHKAN KEHADIRAN')}</span>
                     </div>
                     <span className="px-3 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full text-xs font-mono font-bold">
                       {scanResult.timestamp}
@@ -882,12 +886,12 @@ export function EmsCheckinPage() {
 
                   <div className="bg-amber-100/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5">
                     <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.</span>
+                    <span>{t('ems:checkin_duplicate_warning', 'Amaran: Peserta ini telah pun mengesahkan kehadiran. Rekod asal kekal selamat.')}</span>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">Nama Ketua / Peserta</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">{t('ems:leader_or_participant_name', 'Nama Ketua / Peserta')}</span>
                       <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{scanResult.participant.leader_name}</p>
                     </div>
 
@@ -911,7 +915,7 @@ export function EmsCheckinPage() {
                     onClick={() => setScanResult(null)}
                     className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-semibold text-xs transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2"
                   >
-                    <span>Faham &amp; Imbas Semula</span>
+                    <span>{t('ems:checkin_dismiss_rescan', 'Faham & Imbas Semula')}</span>
                   </button>
                 </div>
               ) : (
@@ -919,14 +923,14 @@ export function EmsCheckinPage() {
                 <div className="bg-gradient-to-br from-rose-50 via-white to-rose-50/50 dark:from-rose-950/80 dark:to-slate-900 border border-rose-500/50 rounded-2xl p-6 shadow-xl space-y-4">
                   <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-base">
                     <X className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-                    <span>Gagal Mengesahkan Kehadiran</span>
+                    <span>{t('ems:checkin_failed_badge', 'Gagal Mengesahkan Kehadiran')}</span>
                   </div>
                   <p className="text-xs text-rose-700 dark:text-rose-200">{scanResult.message}</p>
                   <button
                     onClick={() => setScanResult(null)}
                     className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700"
                   >
-                    Cuba Lagi
+                    {t('ems:btn_try_again', 'Cuba Lagi')}
                   </button>
                 </div>
               )}
@@ -945,7 +949,7 @@ export function EmsCheckinPage() {
                   type="text"
                   value={manualSearchQuery}
                   onChange={(e) => setManualSearchQuery(e.target.value)}
-                  placeholder="Cari No. Matrik, Pas Serial, Nama, Booth, atau Emel..."
+                  placeholder={t('ems:checkin_search_placeholder', 'Cari No. Matrik, Pas Serial, Nama, Booth, atau Emel...')}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 />
                 {manualSearchQuery && (
@@ -965,9 +969,9 @@ export function EmsCheckinPage() {
                   onChange={(e) => setStatusFilter(e.target.value as any)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 >
-                  <option value="ALL">Semua Status Kehadiran</option>
-                  <option value="PENDING">Belum Hadir (Pending)</option>
-                  <option value="CHECKED_IN">Disahkan Hadir</option>
+                  <option value="ALL">{t('ems:checkin_status_filter_all', 'Semua Status Kehadiran')}</option>
+                  <option value="PENDING">{t('ems:checkin_status_filter_pending', 'Belum Hadir (Pending)')}</option>
+                  <option value="CHECKED_IN">{t('ems:checkin_status_filter_checked', 'Disahkan Hadir')}</option>
                 </select>
               </div>
 
@@ -978,7 +982,7 @@ export function EmsCheckinPage() {
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 shadow-sm"
                 >
-                  <option value="ALL">Semua Kategori</option>
+                  <option value="ALL">{t('ems:checkin_cat_filter_all', 'Semua Kategori')}</option>
                   {availableCategories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
@@ -989,8 +993,8 @@ export function EmsCheckinPage() {
             </div>
 
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
-              <span>Menunjukkan {filteredParticipants.length} daripada {participants.length} peserta</span>
-              {manualSearchQuery && <span>Penapis carian aktif: "{manualSearchQuery}"</span>}
+              <span>{t('ems:checkin_showing_count', 'Menunjukkan {{filtered}} daripada {{total}} peserta', { filtered: filteredParticipants.length, total: participants.length })}</span>
+              {manualSearchQuery && <span>{t('ems:checkin_active_filter', 'Penapis carian aktif: "{{query}}"', { query: manualSearchQuery })}</span>}
             </div>
           </div>
         )}
@@ -1000,10 +1004,10 @@ export function EmsCheckinPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-              Senarai Kehadiran Peserta Live
+              {t('ems:live_attendance_list_title', 'Senarai Kehadiran Peserta Live')}
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              Kemaskini Masa-Nyata (Supabase Realtime)
+              {t('ems:realtime_update_badge', 'Kemaskini Masa-Nyata (Supabase Realtime)')}
             </span>
           </div>
 
@@ -1011,20 +1015,20 @@ export function EmsCheckinPage() {
             <table className="w-full text-left text-xs md:text-sm">
               <thead className="bg-slate-50 dark:bg-slate-900/90 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5">Peserta / Ketua</th>
-                  <th className="p-3.5">Pasukan / Booth</th>
-                  <th className="p-3.5">No. Matrik / Email</th>
-                  <th className="p-3.5">Kategori</th>
-                  <th className="p-3.5">Masa Hadir</th>
-                  <th className="p-3.5 text-right">Tindakan</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_status', 'Status')}</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_participant', 'Peserta / Ketua')}</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_team', 'Pasukan / Booth')}</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_matrix', 'No. Matrik / Email')}</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_cat', 'Kategori')}</th>
+                  <th className="p-3.5">{t('ems:checkin_table_th_time', 'Masa Hadir')}</th>
+                  <th className="p-3.5 text-right">{t('ems:checkin_table_th_action', 'Tindakan')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
                 {filteredParticipants.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="p-8 text-center text-slate-400 dark:text-slate-500">
-                      Tiada peserta dijumpai mengikut penapis semasa.
+                      {t('ems:checkin_table_no_records', 'Tiada peserta dijumpai mengikut penapis semasa.')}
                     </td>
                   </tr>
                 ) : (
@@ -1040,12 +1044,12 @@ export function EmsCheckinPage() {
                         {p.is_checked_in ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            Disahkan
+                            {t('ems:status_confirmed', 'Disahkan')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
                             <Clock className="w-3.5 h-3.5" />
-                            Belum Hadir
+                            {t('ems:status_not_present', 'Belum Hadir')}
                           </span>
                         )}
                       </td>
@@ -1097,7 +1101,7 @@ export function EmsCheckinPage() {
                       {/* Action Button */}
                       <td className="p-3.5 text-right">
                         {p.is_checked_in ? (
-                          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Telah Hadir</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{t('ems:checkin_badge_attended', 'Telah Hadir')}</span>
                         ) : (
                           <button
                             onClick={() => handleManualCheckin(p)}
@@ -1109,7 +1113,7 @@ export function EmsCheckinPage() {
                             ) : (
                               <UserCheck className="w-3.5 h-3.5" />
                             )}
-                            <span>Sahkan Kehadiran</span>
+                            <span>{t('ems:checkin_btn_confirm', 'Sahkan Kehadiran')}</span>
                           </button>
                         )}
                       </td>

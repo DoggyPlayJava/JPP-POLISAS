@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { BarChart, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface PollOption {
@@ -62,6 +63,7 @@ export function calculateNextPollVoteState(
 }
 
 export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
+  const { t } = useTranslation('portal');
   const [loading, setLoading] = useState(false);
 
   // Optimistic UI state
@@ -91,7 +93,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
       if (error) throw error;
     } catch (err) {
       console.error(err);
-      toast.error('Ralat ketika mengundi');
+      toast.error(t('portal:vote_error', 'Ralat ketika mengundi'));
       // Revert to original state on error
       setOptions(poll?.polysuara_poll_options || []);
     } finally {
@@ -103,7 +105,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
     <div className="mt-4 bg-slate-50/90 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
       <div className="flex items-center gap-2 mb-3 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
         <BarChart className="w-4 h-4" />
-        Undian {poll?.is_multiple_choice && '(Pelbagai Pilihan)'}
+        {t('portal:poll_title', 'Undian')} {poll?.is_multiple_choice && t('portal:poll_multiple_choice', '(Pelbagai Pilihan)')}
       </div>
       <div className="space-y-2.5">
         {options.map((opt) => {
@@ -152,7 +154,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
         })}
       </div>
       <div className="mt-3 text-right text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-        JUMLAH UNDIAN: {totalVotes}
+        {t('portal:total_votes_label', `JUMLAH UNDIAN: ${totalVotes}`, { count: totalVotes })}
       </div>
     </div>
   );

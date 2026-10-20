@@ -14,7 +14,7 @@ describe('JppSidebar Ergonomics & Canvas Texture', () => {
 
   it('uses institutional GraduationCap icon for student database instead of Briefcase', () => {
     expect(sidebarCode).toContain('GraduationCap');
-    expect(sidebarCode).toMatch(/icon:\s*GraduationCap,\s*label:\s*'Pelajar'/);
+    expect(sidebarCode).toMatch(/icon:\s*GraduationCap,\s*label:\s*(t\([^)]*'Pelajar'[^)]*\)|'Pelajar')/);
   });
 
   it('adds active:scale-[0.98] tactile feedback to navigation links', () => {

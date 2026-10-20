@@ -13,6 +13,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PDFViewer } from '@react-pdf/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Send, AlertTriangle, Loader2 } from 'lucide-react';
@@ -64,6 +65,7 @@ export function LaporanPreviewModal({
   onClose,
   onSubmit,
 }: LaporanPreviewModalProps) {
+  const { t } = useTranslation(['kpp', 'common', 'portal']);
   const [submitting, setSubmitting]           = useState(false);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [showDocxWarning, setShowDocxWarning] = useState(false);
@@ -97,11 +99,11 @@ export function LaporanPreviewModal({
         reviewerRole,
         reviewerUnit,
         clubLogoUrl,
-        fileName: fileName || `Laporan_${clubName}_${monthYear}`,
+        fileName: fileName || t('kpp:report_filename_format', `Laporan_${clubName}_${monthYear}`, { clubName, monthYear }),
       });
-      toast.success('DOCX berjaya dimuat turun!');
+      toast.success(t('kpp:docx_download_success', 'DOCX berjaya dimuat turun!'));
     } catch (err: any) {
-      toast.error('Gagal jana DOCX: ' + (err?.message || 'Ralat tidak diketahui'));
+      toast.error(t('kpp:failed_to_generate_docx', 'Gagal jana DOCX:') + ' ' + (err?.message || t('common:unknown_error', 'Ralat tidak diketahui')));
     } finally {
       setDownloadingDocx(false);
     }
@@ -130,7 +132,7 @@ export function LaporanPreviewModal({
             {/* Title */}
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                Pratonton Laporan
+                {t('kpp:report_preview', 'Pratonton Laporan')}
               </p>
               <p className="text-sm font-black text-foreground truncate">
                 {clubName} — {monthYear}
@@ -166,10 +168,12 @@ export function LaporanPreviewModal({
                       <div className="flex gap-2 mb-3">
                         <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          DOCX ini <strong className="text-foreground">tiada watermark</strong> dan{' '}
-                          <strong className="text-foreground">tidak disimpan dalam sistem</strong>.
-                          Selepas selesai edit, sila hantar melalui{' '}
-                          <strong className="text-foreground">Muat Naik Manual</strong>.
+                          {t('kpp:docx_warning_p1', 'DOCX ini')}{' '}
+                          <strong className="text-foreground">{t('kpp:no_watermark', 'tiada watermark')}</strong>{' '}
+                          {t('common:and', 'dan')}{' '}
+                          <strong className="text-foreground">{t('kpp:not_saved_in_system', 'tidak disimpan dalam sistem')}</strong>
+                          {t('kpp:after_edit_submit_via', '. Selepas selesai edit, sila hantar melalui')}{' '}
+                          <strong className="text-foreground">{t('kpp:manual_upload', 'Muat Naik Manual')}</strong>.
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -177,13 +181,13 @@ export function LaporanPreviewModal({
                           onClick={() => setShowDocxWarning(false)}
                           className="flex-1 h-8 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground text-[10px] font-black uppercase tracking-wider transition-colors"
                         >
-                          Batal
+                          {t('common:cancel', 'Batal')}
                         </button>
                         <button
                           onClick={handleDocxDownload}
                           className="flex-1 h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-wider transition-colors"
                         >
-                          OK, Muat Turun
+                          {t('kpp:ok_download', 'OK, Muat Turun')}
                         </button>
                       </div>
                     </motion.div>
@@ -201,7 +205,7 @@ export function LaporanPreviewModal({
                 {submitting
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   : <Send className="w-3.5 h-3.5" />}
-                {submitting ? 'Menghantar...' : 'Hantar Laporan'}
+                {submitting ? t('common:submitting', 'Menghantar...') : t('kpp:submit_report', 'Hantar Laporan')}
               </button>
 
               {/* Close */}

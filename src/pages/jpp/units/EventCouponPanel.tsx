@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useTranslation } from 'react-i18next';
 
 interface EventCoupon {
   id: string;
@@ -35,6 +36,7 @@ interface BusinessClaim {
 }
 
 export function EventCouponPanel() {
+  const { t, i18n } = useTranslation(['jpp', 'common']);
   const [events, setEvents] = useState<EventInfo[]>([]);
   const [eventId, setEventId] = useState<string>('');
   const [coupons, setCoupons] = useState<EventCoupon[]>([]);
@@ -122,7 +124,7 @@ export function EventCouponPanel() {
   const save = async () => {
     if (!eventId) return;
     if (!form.code.trim() || !form.name.trim() || !form.discount_value) {
-      toast.error('Kod, nama dan nilai diskaun diperlukan.');
+      toast.error(t('jpp:coupon_req_fields', 'Kod, nama dan nilai diskaun diperlukan.'));
       return;
     }
     const payload: any = {
@@ -141,15 +143,15 @@ export function EventCouponPanel() {
     if (editing) {
       const { error } = await supabase.from('event_coupons').update(payload).eq('id', editing.id);
       err = error;
-      if (!err) toast.success(`Kupon ${payload.code} dikemaskini!`);
+      if (!err) toast.success(t('jpp:coupon_updated_toast', 'Kupon {{code}} dikemaskini!', { code: payload.code }));
     } else {
       const { error } = await supabase.from('event_coupons').insert({ ...payload, event_id: eventId });
       err = error;
-      if (!err) toast.success(`Kupon ${payload.code} dicipta!`);
+      if (!err) toast.success(t('jpp:coupon_created_toast', 'Kupon {{code}} dicipta!', { code: payload.code }));
     }
     if (err) {
-      if (err.code === '23505') toast.error('Kod kupon sudah wujud untuk acara ini.');
-      else toast.error('Gagal simpan: ' + err.message);
+      if (err.code === '23505') toast.error(t('jpp:coupon_code_exists', 'Kod kupon sudah wujud untuk acara ini.'));
+      else toast.error(t('jpp:coupon_save_failed', 'Gagal simpan: {{err}}', { err: err.message }));
       return;
     }
     setShowModal(false);
@@ -159,7 +161,8 @@ export function EventCouponPanel() {
   const toggleActive = async (c: EventCoupon) => {
     const { error } = await supabase.from('event_coupons').update({ is_active: !c.is_active }).eq('id', c.id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Kupon ${c.code} ${c.is_active ? 'dinyahaktifkan' : 'diaktifkan'}.`);
+    const statusText = c.is_active ? t('jpp:coupon_deactivated_word', 'dinyahaktifkan') : t('jpp:coupon_activated_word', 'diaktifkan');
+    toast.success(t('jpp:coupon_toggled_toast', 'Kupon {{code}} {{status}}.', { code: c.code, status: statusText }));
     loadCoupons(eventId);
   };
 
@@ -168,7 +171,7 @@ export function EventCouponPanel() {
     const c = deleteTargetCoupon;
     const { error } = await supabase.from('event_coupons').delete().eq('id', c.id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Kupon ${c.code} berjaya dipadam.`);
+    toast.success(t('jpp:coupon_deleted_toast', 'Kupon {{code}} berjaya dipadam.', { code: c.code }));
     setDeleteTargetCoupon(null);
     loadCoupons(eventId); loadClaims(eventId);
   };
@@ -185,7 +188,9 @@ export function EventCouponPanel() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Ticket className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">Kupon / Voucher Acara</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">
+            {t('jpp:coupon_title', 'Kupon / Voucher Acara')}
+          </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-3 h-10 shadow-sm">
@@ -199,7 +204,7 @@ export function EventCouponPanel() {
           </div>
           <button onClick={openCreate}
             className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all">
-            <Plus className="w-3.5 h-3.5" /> Cipta Kupon
+            <Plus className="w-3.5 h-3.5" /> {t('jpp:coupon_create_btn', 'Cipta Kupon')}
           </button>
           <button onClick={() => { loadCoupons(eventId); loadClaims(eventId); }}
             className="h-10 w-10 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.08] shadow-sm flex items-center justify-center transition-all">
@@ -211,19 +216,31 @@ export function EventCouponPanel() {
       {/* Statistik keseluruhan acara */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 dark:text-amber-400">Jumlah Claim</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 dark:text-amber-400">
+            {t('jpp:coupon_total_claims', 'Jumlah Claim')}
+          </p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{totalUses}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">daripada {totalCap || '∞'} had</p>
+          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+            {t('jpp:coupon_out_of_cap', 'daripada {{cap}} had', { cap: totalCap || t('jpp:coupon_unlimited', '∞') })}
+          </p>
         </div>
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Nilai Diskaun Diberi</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            {t('jpp:coupon_discount_given', 'Nilai Diskaun Diberi')}
+          </p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{fmtRM(claimedRM)}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">jumlah RM5.00 per claim</p>
+          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+            {t('jpp:coupon_per_claim_note', 'jumlah RM5.00 per claim')}
+          </p>
         </div>
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Perniagaan Terlibat</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t('jpp:coupon_businesses_involved', 'Perniagaan Terlibat')}
+          </p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{byBusiness.length}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">gerai dah guna kupon</p>
+          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+            {t('jpp:coupon_booths_used', 'gerai dah guna kupon')}
+          </p>
         </div>
       </div>
 
@@ -235,8 +252,12 @@ export function EventCouponPanel() {
       ) : coupons.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
           <Ticket className="w-10 h-10 text-slate-300 dark:text-white/20 mx-auto mb-3" />
-          <p className="text-sm font-black text-slate-700 dark:text-white/60">Tiada kupon untuk {selectedEvent?.title ?? 'acara ini'}</p>
-          <p className="text-[11px] text-slate-400 dark:text-white/30 mt-1">Klik "Cipta Kupon" untuk buat voucher baharu</p>
+          <p className="text-sm font-black text-slate-700 dark:text-white/60">
+            {t('jpp:coupon_empty_for_event', 'Tiada kupon untuk {{event}}', { event: selectedEvent?.title ?? t('jpp:coupon_this_event', 'acara ini') })}
+          </p>
+          <p className="text-[11px] text-slate-400 dark:text-white/30 mt-1">
+            {t('jpp:coupon_empty_cta', 'Klik "Cipta Kupon" untuk buat voucher baharu')}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -254,7 +275,9 @@ export function EventCouponPanel() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-black text-slate-900 dark:text-white tracking-wider">{c.code}</p>
                       {!c.is_active && (
-                        <span className="text-[8px] font-black uppercase bg-rose-500/15 text-rose-500 dark:text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded-full">Tidak Aktif</span>
+                        <span className="text-[8px] font-black uppercase bg-rose-500/15 text-rose-500 dark:text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded-full">
+                          {t('jpp:coupon_inactive_badge', 'Tidak Aktif')}
+                        </span>
                       )}
                     </div>
                     <p className="text-[10px] text-slate-500 dark:text-white/50 truncate">{c.name}{c.description ? ` — ${c.description}` : ''}</p>
@@ -264,7 +287,7 @@ export function EventCouponPanel() {
                       {c.discount_type === 'FIXED' ? `RM${Number(c.discount_value)}` : `${c.discount_value}%`}
                     </p>
                     <p className="text-[9px] text-slate-500 dark:text-white/40">
-                      {c.uses_count}/{c.max_uses ?? '∞'} claim
+                      {t('jpp:coupon_claims_count', '{{used}}/{{max}} claim', { used: c.uses_count, max: c.max_uses ?? '∞' })}
                     </p>
                   </div>
                   <div className="w-32 shrink-0 hidden sm:block">
@@ -272,22 +295,24 @@ export function EventCouponPanel() {
                       <div className="h-full rounded-full bg-amber-500 transition-all"
                         style={{ width: `${c.max_uses ? pct : 8}%` }} />
                     </div>
-                    <p className="text-[8px] text-slate-400 dark:text-white/30 mt-1 text-right">{remaining != null ? `${remaining} baki` : 'Tanpa had'}</p>
+                    <p className="text-[8px] text-slate-400 dark:text-white/30 mt-1 text-right">
+                      {remaining != null ? t('jpp:coupon_remaining', '{{rem}} baki', { rem: remaining }) : t('jpp:coupon_unlimited_uses', 'Tanpa had')}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => toggleActive(c)} title={c.is_active ? 'Nyahaktifkan' : 'Aktifkan'}
+                    <button onClick={() => toggleActive(c)} title={c.is_active ? t('jpp:coupon_deactivate_tooltip', 'Nyahaktifkan') : t('jpp:coupon_activate_tooltip', 'Aktifkan')}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${c.is_active ? 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20' : 'text-slate-400 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08]'}`}>
                       <Power className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => openEdit(c)} title="Edit"
+                    <button onClick={() => openEdit(c)} title={t('jpp:coupon_edit_tooltip', 'Edit')}
                       className="w-8 h-8 rounded-lg text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] flex items-center justify-center transition-all">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setDeleteTargetCoupon(c)} title="Padam"
+                    <button onClick={() => setDeleteTargetCoupon(c)} title={t('jpp:coupon_delete_tooltip', 'Padam')}
                       className="w-8 h-8 rounded-lg text-rose-500 dark:text-rose-400/70 bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center transition-all">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setExpandedCoupon(expanded ? null : c.id)} title="Lihat claim"
+                    <button onClick={() => setExpandedCoupon(expanded ? null : c.id)} title={t('jpp:coupon_view_claims_tooltip', 'Lihat claim')}
                       className="w-8 h-8 rounded-lg text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] flex items-center justify-center transition-all">
                       <Users className="w-3.5 h-3.5" />
                     </button>
@@ -296,10 +321,12 @@ export function EventCouponPanel() {
                 {expanded && (
                   <div className="border-t border-slate-100 dark:border-white/[0.05] bg-slate-50/50 dark:bg-white/[0.01] px-4 py-3 space-y-3">
                     <div className="flex items-center gap-2">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Breakdown Claim per Gerai</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                        {t('jpp:coupon_breakdown_per_store', 'Breakdown Claim per Gerai')}
+                      </p>
                     </div>
                     {byBusiness.length === 0 ? (
-                      <p className="text-[11px] text-slate-400 dark:text-white/30">Belum ada claim.</p>
+                      <p className="text-[11px] text-slate-400 dark:text-white/30">{t('jpp:coupon_no_claims_yet', 'Belum ada claim.')}</p>
                     ) : (
                       <div className="grid gap-2">
                         {byBusiness.map(b => (
@@ -314,13 +341,15 @@ export function EventCouponPanel() {
                     )}
                     {claims.length > 0 && (
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">Claim Terkini</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">
+                          {t('jpp:coupon_claims_recent', 'Claim Terkini')}
+                        </p>
                         <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                           {claims.slice(0, 30).map(cl => (
                             <div key={cl.id} className="flex items-center gap-2 text-[10px]">
                               <span className="text-slate-700 dark:text-white/60 truncate flex-1">{(cl as any).business?.name ?? '—'}</span>
                               <span className="text-slate-400 dark:text-white/30 shrink-0">
-                                {new Date(cl.claimed_at).toLocaleString('ms-MY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(cl.claimed_at).toLocaleString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                               <span className="text-amber-500 dark:text-amber-400 font-black shrink-0">-{fmtRM(Number(cl.discount_amount) || 0)}</span>
                             </div>
@@ -346,7 +375,7 @@ export function EventCouponPanel() {
               <div className="flex items-center gap-2">
                 <Ticket className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  {editing ? 'Edit Kupon' : 'Cipta Kupon Baharu'}
+                  {editing ? t('jpp:coupon_modal_edit_title', 'Edit Kupon') : t('jpp:coupon_modal_create_title', 'Cipta Kupon Baharu')}
                 </p>
                 <button onClick={() => setShowModal(false)} className="ml-auto p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5">
                   <X className="w-4 h-4 text-slate-400 dark:text-white/40" />
@@ -354,37 +383,47 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Kod</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_code', 'Kod')}
+                  </label>
                   <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
                     placeholder="MAHRAJAN" className={inputCls + ' mt-1'} />
                 </div>
                 <div className="col-span-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Nama</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_name', 'Nama')}
+                  </label>
                   <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Voucher MAHRAJAN" className={inputCls + ' mt-1'} />
                 </div>
               </div>
               <div>
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Penerangan</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  {t('jpp:coupon_field_desc', 'Penerangan')}
+                </label>
                 <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Diskaun RM5 untuk pembelian di gerai..." className={inputCls + ' mt-1'} />
+                  placeholder={t('jpp:coupon_placeholder_desc', 'Diskaun RM5 untuk pembelian di gerai...')} className={inputCls + ' mt-1'} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Jenis</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_type', 'Jenis')}
+                  </label>
                   <div className="flex gap-1.5 mt-1">
                     <button onClick={() => setForm({ ...form, discount_type: 'FIXED' })}
                       className={`flex-1 h-10 rounded-xl text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'FIXED' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
-                      <Banknote className="w-3 h-3" /> RM Tetap
+                      <Banknote className="w-3 h-3" /> {t('jpp:coupon_type_fixed', 'RM Tetap')}
                     </button>
                     <button onClick={() => setForm({ ...form, discount_type: 'PERCENT' })}
                       className={`flex-1 h-10 rounded-xl text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'PERCENT' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
-                      <Percent className="w-3 h-3" /> Peratus
+                      <Percent className="w-3 h-3" /> {t('jpp:coupon_type_percent', 'Peratus')}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Nilai</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_value', 'Nilai')}
+                  </label>
                   <input value={form.discount_value} onChange={e => setForm({ ...form, discount_value: e.target.value })}
                     placeholder={form.discount_type === 'FIXED' ? '5.00' : '10'} type="number" min="0" step="0.01"
                     className={inputCls + ' mt-1'} />
@@ -392,24 +431,32 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Minimum Belian (RM)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_min_purchase', 'Minimum Belian (RM)')}
+                  </label>
                   <input value={form.min_purchase} onChange={e => setForm({ ...form, min_purchase: e.target.value })}
                     type="number" min="0" step="0.01" className={inputCls + ' mt-1'} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Had Claim</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_max_uses', 'Had Claim')}
+                  </label>
                   <input value={form.max_uses} onChange={e => setForm({ ...form, max_uses: e.target.value })}
-                    placeholder="100 (kosong = tanpa had)" type="number" min="1" className={inputCls + ' mt-1'} />
+                    placeholder={t('jpp:coupon_placeholder_max_uses', '100 (kosong = tanpa had)')} type="number" min="1" className={inputCls + ' mt-1'} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Mula (tarikh)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_valid_from', 'Mula (tarikh)')}
+                  </label>
                   <input value={form.valid_from} onChange={e => setForm({ ...form, valid_from: e.target.value })}
                     type="date" className={inputCls + ' mt-1'} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tamat (tarikh)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    {t('jpp:coupon_field_valid_until', 'Tamat (tarikh)')}
+                  </label>
                   <input value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })}
                     type="date" className={inputCls + ' mt-1'} />
                 </div>
@@ -418,16 +465,18 @@ export function EventCouponPanel() {
                 <input type="checkbox" checked={form.is_active}
                   onChange={e => setForm({ ...form, is_active: e.target.checked })}
                   className="w-4 h-4 accent-amber-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/60">Aktif sekarang</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/60">
+                  {t('jpp:coupon_active_now', 'Aktif sekarang')}
+                </span>
               </label>
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setShowModal(false)}
                   className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all">
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
                 <button onClick={save}
                   className="flex-1 h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider transition-all">
-                  {editing ? 'Simpan' : 'Cipta Kupon'}
+                  {editing ? t('jpp:coupon_save_btn', 'Simpan') : t('jpp:coupon_create_action', 'Cipta Kupon')}
                 </button>
               </div>
             </motion.div>
@@ -438,10 +487,10 @@ export function EventCouponPanel() {
       <ConfirmDialog
         open={Boolean(deleteTargetCoupon)}
         onOpenChange={(open) => !open && setDeleteTargetCoupon(null)}
-        title="Padam Kupon Acara"
-        description={deleteTargetCoupon ? `Adakah anda pasti mahu memadam kupon ${deleteTargetCoupon.code}? Rekod penebusan juga akan dipadamkan.` : ''}
-        confirmLabel="Padam Kupon"
-        cancelLabel="Batal"
+        title={t('jpp:coupon_delete_dialog_title', 'Padam Kupon Acara')}
+        description={deleteTargetCoupon ? t('jpp:coupon_delete_dialog_desc', 'Adakah anda pasti mahu memadam kupon {{code}}? Rekod penebusan juga akan dipadamkan.', { code: deleteTargetCoupon.code }) : ''}
+        confirmLabel={t('jpp:coupon_delete_confirm', 'Padam Kupon')}
+        cancelLabel={t('common:cancel', 'Batal')}
         variant="destructive"
         onConfirm={executeRemove}
       />

@@ -5,8 +5,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    '[FATAL] VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY mesti dikonfigurasi dalam env vars. ' +
-    'Jangan hardcode credentials dalam source code.'
+    '[FATAL] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be configured in environment variables. ' +
+    'Do not hardcode credentials in source code.'
   );
 }
 
@@ -75,6 +75,8 @@ export interface Profile {
   semester_override?: number | null;
   // Food Bank: pelajar telah sahkan Nama & No. Matrik (popup first-time)
   fb_identity_confirmed?: boolean | null;
+  // Bahasa Pilihan Antaramuka Pengguna (en / ms)
+  preferred_language?: 'en' | 'ms' | null;
 }
 
 //LOGS SYSTEM

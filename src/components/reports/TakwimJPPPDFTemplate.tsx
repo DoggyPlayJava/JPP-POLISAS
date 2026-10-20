@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { ALL_CLUBS } from '@/types';
 import { getContrastColor, formatDateDMY, formatDateRange } from '@/lib/color-utils';
+import i18n from '@/lib/i18n';
 
 // ══════════════════════════════════════════════════════════════
 // COLUMN WIDTHS
@@ -118,6 +119,8 @@ interface TakwimJPPPDFTemplateProps {
 // ══════════════════════════════════════════════════════════════
 // COMPONENT
 // ══════════════════════════════════════════════════════════════
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
+
 export default function TakwimJPPPDFTemplate({
   data, themeColor, session,
   logoPolisas,
@@ -144,10 +147,10 @@ export default function TakwimJPPPDFTemplate({
         {/* ── TITLE — BLACK ── */}
         <View style={s.titleWrap}>
           <Text style={s.titleMain}>
-            TAKWIM PROGRAM KELAB SESI {session}
+            {t('kpp:takwim_jpp_title', `TAKWIM PROGRAM KELAB SESI ${session}`, { session })}
           </Text>
-          <Text style={s.titleSub}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
-          <Text style={s.titleSub}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
+          <Text style={s.titleSub}>{t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR')}</Text>
+          <Text style={s.titleSub}>{t('common:polisas_full', 'POLITEKNIK SULTAN HAJI AHMAD SHAH')}</Text>
         </View>
 
         {/* ── TABLE ── */}
@@ -155,13 +158,13 @@ export default function TakwimJPPPDFTemplate({
 
           {/* HEADER ROW */}
           <View style={[s.row, { backgroundColor: themeColor }]} fixed>
-            <HeaderCell w={COL.BIL} label="BIL" color={textColor} />
-            <HeaderCell w={COL.PROGRAM} label="PROGRAM" color={textColor} />
-            <HeaderCell w={COL.TARIKH_C} label={'TARIKH\nCADANGAN'} color={textColor} />
-            <HeaderCell w={COL.TARIKH_P} label={'TARIKH\nPELAKSANAAN'} color={textColor} />
-            <HeaderCell w={COL.PENGARAH} label="PENGARAH PROGRAM" color={textColor} />
-            <HeaderCell w={COL.KELAB} label="KELAB" color={textColor} />
-            <HeaderCell w={COL.KOS} label={'KOS\n(RM)'} color={textColor} isLast />
+            <HeaderCell w={COL.BIL} label={t('common:bil_short', 'BIL')} color={textColor} />
+            <HeaderCell w={COL.PROGRAM} label={t('kpp:program_caps', 'PROGRAM')} color={textColor} />
+            <HeaderCell w={COL.TARIKH_C} label={t('kpp:proposed_date_multiline', 'TARIKH\nCADANGAN')} color={textColor} />
+            <HeaderCell w={COL.TARIKH_P} label={t('kpp:execution_date_multiline', 'TARIKH\nPELAKSANAAN')} color={textColor} />
+            <HeaderCell w={COL.PENGARAH} label={t('kpp:program_director_caps', 'PENGARAH PROGRAM')} color={textColor} />
+            <HeaderCell w={COL.KELAB} label={t('kpp:club_caps', 'KELAB')} color={textColor} />
+            <HeaderCell w={COL.KOS} label={t('kpp:cost_rm_multiline', 'KOS\n(RM)')} color={textColor} isLast />
           </View>
 
           {/* DATA ROWS */}
@@ -169,7 +172,7 @@ export default function TakwimJPPPDFTemplate({
             const isHoliday = item.type === 'holiday';
 
             if (isHoliday) {
-              const label = `${formatDateDMY(item.tarikh_mula)}   ${(item.nama_cuti || item.nama_program || '').toUpperCase()}`;
+              const label = t('kpp:holiday_schedule_item', `${formatDateDMY(item.tarikh_mula)}   ${(item.nama_cuti || item.nama_program || '').toUpperCase()}`, { date: formatDateDMY(item.tarikh_mula), title: (item.nama_cuti || item.nama_program || '').toUpperCase() });
               return (
                 <View key={item.id} style={[s.row, { backgroundColor: themeColor }]} wrap={false}>
                   <View style={{
@@ -217,10 +220,10 @@ export default function TakwimJPPPDFTemplate({
         {/* ── SIGNATURE — single block only ── */}
         <View style={s.footer} wrap={false}>
           <View style={s.sigBlock}>
-            <Text style={s.sigLabel}>Disediakan oleh:</Text>
+            <Text style={s.sigLabel}>{t('kpp:prepared_by_colon', 'Disediakan oleh:')}</Text>
             <View style={s.sigLine} />
-            <Text style={s.sigRole}>Exco Kelab, Persatuan dan Perpaduan</Text>
-            <Text style={s.sigOrg}>Jawatankuasa Perwakilan Pelajar</Text>
+            <Text style={s.sigRole}>{t('kpp:exco_kpp_full', 'Exco Kelab, Persatuan dan Perpaduan')}</Text>
+            <Text style={s.sigOrg}>{t('common:jpp_full_mixed', 'Jawatankuasa Perwakilan Pelajar')}</Text>
             <Text style={s.sigOrg}>POLISAS</Text>
           </View>
         </View>

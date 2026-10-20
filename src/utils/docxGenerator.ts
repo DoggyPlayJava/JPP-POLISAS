@@ -2,6 +2,14 @@ import { AlignmentType, BorderStyle, Document, Packer, Paragraph, Table, TableCe
 import { KertasKerjaData } from '../components/ai/KertasKerjaRenderer';
 import { MinitMesyuaratData } from '../components/ai/MinitMesyuaratRenderer';
 import { Buffer } from 'buffer';
+import i18n from '@/lib/i18n';
+
+const t = (key: string, fallback: string, options?: Record<string, unknown>): string => {
+  if (i18n && typeof i18n.t === 'function' && i18n.isInitialized) {
+    return i18n.t(key, fallback, options);
+  }
+  return fallback;
+};
 
 const fRM = (v: number) => `RM ${v.toFixed(2)}`;
 const hitungSub = (items: any[]) => items.reduce((s, i) => s + i.harga_seunit * i.kuantiti, 0);
@@ -124,7 +132,7 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
     rows: [
       new TableRow({
         children: [
-          createSpacedCell(frontTableP("OBJEK", true), { bg: "4472C4" }),
+          createSpacedCell(frontTableP(t('portal:docx_objek', "OBJEK"), true), { bg: "4472C4" }),
           createSpacedCell(frontTableP("OS21", true), { bg: "4472C4" }),
           createSpacedCell(frontTableP("O24", true), { bg: "4472C4" }),
           createSpacedCell(frontTableP("OS26", true), { bg: "4472C4" }),
@@ -132,19 +140,19 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
           createSpacedCell(frontTableP("OS29", true), { bg: "4472C4" }),
           createSpacedCell(frontTableP("OS29\nIEEP", true), { bg: "4472C4" }),
           createSpacedCell(frontTableP("OS42", true), { bg: "4472C4" }),
-          createSpacedCell(frontTableP("Lain-Lain", true), { bg: "4472C4" }),
+          createSpacedCell(frontTableP(t('portal:docx_lain_lain', "Lain-Lain"), true), { bg: "4472C4" }),
         ]
       }),
-      new TableRow({ children: [createSpacedCell(frontTableP("Tick (√)", true), { bg: "FFFF00" }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] }),
-      new TableRow({ children: [createSpacedCell(frontTableP("No.\nWaran", true), { bg: "FFFF00" }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] }),
+      new TableRow({ children: [createSpacedCell(frontTableP(t('portal:docx_tick', "Tick (√)"), true), { bg: "FFFF00" }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] }),
+      new TableRow({ children: [createSpacedCell(frontTableP(t('portal:docx_no_waran', "No.\nWaran"), true), { bg: "FFFF00" }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] }),
       new TableRow({ children: [createSpacedCell(frontTableP("WP10.9", true), { bg: "FFFF00" }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] }),
       new TableRow({
         height: { value: 600, rule: HeightRule.ATLEAST }, // taller class for writing kelulusan
-        children: [createSpacedCell(frontTableP("Kelulusan", true), { bg: "FFFF00", vAlign: VerticalAlign.CENTER }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] 
+        children: [createSpacedCell(frontTableP(t('portal:docx_kelulusan', "Kelulusan"), true), { bg: "FFFF00", vAlign: VerticalAlign.CENTER }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] 
       }),
       new TableRow({ 
         height: { value: 600, rule: HeightRule.ATLEAST }, // taller class for cop/tandatangan
-        children: [createSpacedCell(frontTableP("T.Tangan\nPelulus", true), { bg: "FFFF00", vAlign: VerticalAlign.CENTER }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] 
+        children: [createSpacedCell(frontTableP(t('portal:docx_ttangan_pelulus', "T.Tangan\nPelulus"), true), { bg: "FFFF00", vAlign: VerticalAlign.CENTER }), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP("")), createSpacedCell(frontTableP(""))] 
       }),
     ]
   });
@@ -172,18 +180,18 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: SPACING_SINGLE,
-      children: [new TextRun({ text: "KERTAS KERJA", bold: true, font: "Arial", size: 28 })]
+      children: [new TextRun({ text: t('portal:docx_kertas_kerja', "KERTAS KERJA"), bold: true, font: "Arial", size: 28 })]
     }),
     frontP(hm.tajuk_program.toUpperCase()),
     
     emptyLine(28), emptyLine(28), emptyLine(28), // Large space
     
-    frontP(`${hm.tarikh} (${hm.hari.toUpperCase()})`),
+    frontP(t('portal:docx_date_day_upper', `${hm.tarikh} (${hm.hari.toUpperCase()})`, { tarikh: hm.tarikh, hari: hm.hari.toUpperCase() })),
     frontP(hm.tempat.toUpperCase()),
     
     emptyLine(28), emptyLine(28), emptyLine(28), // Large space
     
-    frontP("ANJURAN:"),
+    frontP(t('portal:docx_anjuran_colon', "ANJURAN:")),
     frontP(hm.penganjur.toUpperCase()),
     frontP("POLITEKNIK SULTAN HAJI AHMAD SHAH"),
     
@@ -226,78 +234,78 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
   const execSummaryTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     rows: [
-      new TableRow({ children: [createSpacedTextCell("IPTA", { bold: true, width: 35, size: 22 }), createSpacedTextCell("Politeknik Sultan Haji Ahmad Shah", { size: 22 })] }),
-      new TableRow({ children: [createSpacedTextCell("TAJUK PROGRAM", { bold: true, size: 22 }), createSpacedTextCell(hm.tajuk_program, { size: 22 })] }),
-      new TableRow({ children: [createSpacedTextCell("JENIS PROGRAM", { bold: true, size: 22 }), createSpacedTextCell(re.jenis_program, { size: 22 })] }),
-      new TableRow({ children: [createSpacedTextCell("MATLAMAT/ PENCAPAIAN PROGRAM", { bold: true, size: 22 }), createSpacedCell(reMatlamat)] }),
-      new TableRow({ children: [createSpacedTextCell("ANJURAN", { bold: true, size: 22 }), createSpacedTextCell(`${hm.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS serta kelab-kelab di POLISAS`, { size: 22 })] }),
-      new TableRow({ children: [createSpacedTextCell("TARIKH DAN TEMPAT", { bold: true, size: 22 }), createSpacedTextCell(`${hm.tarikh}, ${hm.tempat}`, { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_ipta', "IPTA"), { bold: true, width: 35, size: 22 }), createSpacedTextCell(t('portal:docx_polisas_full', "Politeknik Sultan Haji Ahmad Shah"), { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_tajuk_program', "TAJUK PROGRAM"), { bold: true, size: 22 }), createSpacedTextCell(hm.tajuk_program, { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_jenis_program', "JENIS PROGRAM"), { bold: true, size: 22 }), createSpacedTextCell(re.jenis_program, { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_matlamat_pencapaian_program', "MATLAMAT/ PENCAPAIAN PROGRAM"), { bold: true, size: 22 }), createSpacedCell(reMatlamat)] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_anjuran', "ANJURAN"), { bold: true, size: 22 }), createSpacedTextCell(t('portal:docx_penganjur_kerjasama_detail', `${hm.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS serta kelab-kelab di POLISAS`, { penganjur: hm.penganjur }), { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_tarikh_dan_tempat', "TARIKH DAN TEMPAT"), { bold: true, size: 22 }), createSpacedTextCell(t('portal:docx_tarikh_tempat_val', `${hm.tarikh}, ${hm.tempat}`, { tarikh: hm.tarikh, tempat: hm.tempat }), { size: 22 })] }),
       new TableRow({ children: [
-        createSpacedTextCell("BILANGAN PESERTA", { bold: true, size: 22 }), 
+        createSpacedTextCell(t('portal:docx_bilangan_peserta', "BILANGAN PESERTA"), { bold: true, size: 22 }), 
         createSpacedCell([
-          new Paragraph({ spacing: SPACING_SINGLE, children: [new TextRun({ text: `Peserta: ${re.bilangan_peserta} orang`, font: "Arial", size: 22 })] }), 
-          new Paragraph({ spacing: SPACING_SINGLE, children: [new TextRun({ text: `Pegawai: ${re.bilangan_pegawai} orang`, font: "Arial", size: 22 })] })
+          new Paragraph({ spacing: SPACING_SINGLE, children: [new TextRun({ text: t('portal:docx_peserta_count', `Peserta: ${re.bilangan_peserta} orang`, { count: re.bilangan_peserta }), font: "Arial", size: 22 })] }), 
+          new Paragraph({ spacing: SPACING_SINGLE, children: [new TextRun({ text: t('portal:docx_pegawai_count', `Pegawai: ${re.bilangan_pegawai} orang`, { count: re.bilangan_pegawai }), font: "Arial", size: 22 })] })
         ])
       ]}),
-      new TableRow({ children: [createSpacedTextCell("ANGGARAN KOS", { bold: true, size: 22 }), createSpacedTextCell(fRM(re.anggaran_kos), { size: 22 })] }),
+      new TableRow({ children: [createSpacedTextCell(t('portal:docx_anggaran_kos', "ANGGARAN KOS"), { bold: true, size: 22 }), createSpacedTextCell(fRM(re.anggaran_kos), { size: 22 })] }),
     ]
   });
 
   const ikElems: DocElement[] = [
-    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "RINGKASAN EKSEKUTIF", bold: true, font: "Arial", size: 22 })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: t('portal:docx_ringkasan_eksekutif', "RINGKASAN EKSEKUTIF"), bold: true, font: "Arial", size: 22 })] }),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [new TextRun({ text: hm.tajuk_program, bold: true, font: "Arial", size: 22 })] }),
     execSummaryTable,
     new Paragraph({ children: [new PageBreak()] }),
 
-    headerP("1.0", "PENDAHULUAN"),
+    headerP("1.0", t('portal:docx_pendahuluan', "PENDAHULUAN")),
     bodyP(ik.pendahuluan),
     
     emptyLine(22),
-    headerP("2.0", "NAMA PROGRAM"),
+    headerP("2.0", t('portal:docx_nama_program', "NAMA PROGRAM")),
     bodyP(ik.nama_program),
     
     emptyLine(22),
-    headerP("3.0", "TUJUAN"),
+    headerP("3.0", t('portal:docx_tujuan', "TUJUAN")),
     bodyP(ik.tujuan),
     
     emptyLine(22),
-    headerP("4.0", "MATLAMAT"),
+    headerP("4.0", t('portal:docx_matlamat', "MATLAMAT")),
     ...ik.matlamat.map((m, i) => listP(`${i+1}.`, m)),
     
     emptyLine(22),
-    headerP("5.0", "PENGANJUR"),
-    bodyP(`${hm.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS.`),
+    headerP("5.0", t('portal:docx_penganjur', "PENGANJUR")),
+    bodyP(t('portal:docx_penganjur_kerjasama_simple', `${hm.penganjur} dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS.`, { penganjur: hm.penganjur })),
     
     emptyLine(22),
-    headerP("6.0", "TARIKH, MASA DAN TEMPAT"),
+    headerP("6.0", t('portal:docx_tarikh_masa_tempat', "TARIKH, MASA DAN TEMPAT")),
     // Manually pushing tab to match body indent for these
-    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: `Tarikh : ${hm.tarikh}`, font: "Arial", size: 22 })] }),
-    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: `Masa   : 8:00 Pagi - 5:00 Petang`, font: "Arial", size: 22 })] }),
-    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: `Tempat : ${hm.tempat}`, font: "Arial", size: 22 })] }),
+    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: t('portal:docx_tarikh_label_val', `Tarikh : ${hm.tarikh}`, { tarikh: hm.tarikh }), font: "Arial", size: 22 })] }),
+    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: t('portal:docx_masa_default', `Masa   : 8:00 Pagi - 5:00 Petang`), font: "Arial", size: 22 })] }),
+    new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: SPACING_1_5, indent: { left: 720 }, children: [new TextRun({ text: t('portal:docx_tempat_label_val', `Tempat : ${hm.tempat}`, { tempat: hm.tempat }), font: "Arial", size: 22 })] }),
     
     emptyLine(22),
-    headerP("7.0", "PENYERTAAN / SASARAN"),
-    bodyP(`${re.bilangan_peserta} orang peserta.`),
+    headerP("7.0", t('portal:docx_penyertaan_sasaran', "PENYERTAAN / SASARAN")),
+    bodyP(t('portal:docx_peserta_total_desc', `${re.bilangan_peserta} orang peserta.`, { count: re.bilangan_peserta })),
     
     emptyLine(22),
-    headerP("8.0", "BENTUK PROGRAM"),
+    headerP("8.0", t('portal:docx_bentuk_program', "BENTUK PROGRAM")),
     bodyP(ik.bentuk_program),
     
     emptyLine(22),
-    headerP("9.0", "CARTA ORGANISASI"),
-    bodyP("Rujuk Lampiran I."),
+    headerP("9.0", t('portal:docx_carta_organisasi', "CARTA ORGANISASI")),
+    bodyP(t('portal:docx_rujuk_lampiran_1', "Rujuk Lampiran I.")),
     
     emptyLine(22),
-    headerP("10.0", "TENTATIF PROGRAM"),
-    bodyP("Rujuk Lampiran II."),
+    headerP("10.0", t('portal:docx_tentatif_program', "TENTATIF PROGRAM")),
+    bodyP(t('portal:docx_rujuk_lampiran_2', "Rujuk Lampiran II.")),
     
     emptyLine(22),
-    headerP("11.0", "ANGGARAN BELANJAWAN"),
-    bodyP("Rujuk Lampiran III."),
+    headerP("11.0", t('portal:docx_anggaran_belanjawan', "ANGGARAN BELANJAWAN")),
+    bodyP(t('portal:docx_rujuk_lampiran_3', "Rujuk Lampiran III.")),
     
     emptyLine(22),
-    headerP("12.0", "PENUTUP"),
-    bodyP(`Berdasarkan kertas kerja ini, maka dipohon agar pihak pengurusan POLISAS dapat memberi komitmen dan sokongan bagi menjayakan program ini. Semoga yang dirancang ini dapat berjalan dengan lancar dan memenuhi matlamat dan objektif program serta memberi manfaat kepada semua siswa/siswi Politeknik Sultan Haji Ahmad Shah.`),
+    headerP("12.0", t('portal:docx_penutup', "PENUTUP")),
+    bodyP(t('portal:docx_penutup_kertas_kerja_desc', `Berdasarkan kertas kerja ini, maka dipohon agar pihak pengurusan POLISAS dapat memberi komitmen dan sokongan bagi menjayakan program ini. Semoga yang dirancang ini dapat berjalan dengan lancar dan memenuhi matlamat dan objektif program serta memberi manfaat kepada semua siswa/siswi Politeknik Sultan Haji Ahmad Shah.`)),
     
     new Paragraph({ children: [new PageBreak()] }) // Isolated Signature Page
   ];
@@ -307,35 +315,35 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
   const sigTextP = (text: string, bold = false) => new Paragraph({ alignment: AlignmentType.LEFT, spacing: SPACING_SINGLE, children: [new TextRun({ text, bold, font: "Arial", size: 22})] });
 
   ikElems.push(
-    sigTextP("Disediakan oleh:"),
+    sigTextP(t('portal:docx_disediakan_oleh', "Disediakan oleh:")),
     signatureSpace(),
     sigTextP("_____________________"),
     sigTextP(ttd.pengarah_program.toUpperCase(), true),
-    sigTextP(`Pengarah Program\n${hm.tajuk_program}`),
+    sigTextP(t('portal:docx_pengarah_program_title', `Pengarah Program\n${hm.tajuk_program}`, { title: hm.tajuk_program })),
     
     emptyLine(22), emptyLine(22),
     
-    sigTextP("Disemak oleh:"),
+    sigTextP(t('portal:docx_disemak_oleh', "Disemak oleh:")),
     signatureSpace(),
     sigTextP("_____________________"),
     sigTextP(ttd.penasihat_jpp.toUpperCase(), true),
-    sigTextP("Penasihat\nJawatankuasa Perwakilan Pelajar\nPoliteknik Sultan Haji Ahmad Shah"),
+    sigTextP(t('portal:docx_penasihat_jpp_full', "Penasihat\nJawatankuasa Perwakilan Pelajar\nPoliteknik Sultan Haji Ahmad Shah")),
 
     emptyLine(22), emptyLine(22),
     
-    sigTextP("Disokong oleh:"),
+    sigTextP(t('portal:docx_disokong_oleh', "Disokong oleh:")),
     signatureSpace(),
     sigTextP("_____________________"),
     sigTextP(ttd.ketua_jabatan_hep.toUpperCase(), true),
-    sigTextP("Ketua Jabatan\nHal Ehwal Pelajar\nPoliteknik Sultan Haji Ahmad Shah"),
+    sigTextP(t('portal:docx_ketua_jabatan_hep_full', "Ketua Jabatan\nHal Ehwal Pelajar\nPoliteknik Sultan Haji Ahmad Shah")),
 
     emptyLine(22), emptyLine(22),
     
-    sigTextP("Diluluskan oleh:"),
+    sigTextP(t('portal:docx_diluluskan_oleh', "Diluluskan oleh:")),
     signatureSpace(),
     sigTextP("_____________________"),
     sigTextP(ttd.timbalan_pengarah.toUpperCase(), true),
-    sigTextP("Timbalan Pengarah (Sokongan Akademik)\nPoliteknik Sultan Haji Ahmad Shah"),
+    sigTextP(t('portal:docx_timbalan_pengarah_full', "Timbalan Pengarah (Sokongan Akademik)\nPoliteknik Sultan Haji Ahmad Shah")),
 
     new Paragraph({ children: [new PageBreak()] })
   );
@@ -351,46 +359,46 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
   const pIu = (text: string) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: SPACING_SINGLE, children: [new TextRun({text, bold:true, underline: { type: UnderlineType.SINGLE }, font:"Arial", size:22})] });
   
   const lampiranIElems: DocElement[] = [
-    lampiranHeaderP("LAMPIRAN I"),
-    pI("AHLI JAWATANKUASA PELAKSANA", true),
+    lampiranHeaderP(t('portal:docx_lampiran_1', "LAMPIRAN I")),
+    pI(t('portal:docx_ahli_jawatankuasa_pelaksana', "AHLI JAWATANKUASA PELAKSANA"), true),
     pI(hm.tajuk_program.toUpperCase(), true),
     emptyLine(),
-    pIu("JAWATANKUASA INDUK"),
+    pIu(t('portal:docx_jawatankuasa_induk', "JAWATANKUASA INDUK")),
     emptyLine(),
-    pI("PENAUNG", true), pI(co.jawatankuasa_induk.penaung.nama.toUpperCase(), true), pI(co.jawatankuasa_induk.penaung.jawatan), emptyLine(),
-    pI("PENASIHAT", true),
+    pI(t('portal:docx_penaung', "PENAUNG"), true), pI(co.jawatankuasa_induk.penaung.nama.toUpperCase(), true), pI(co.jawatankuasa_induk.penaung.jawatan), emptyLine(),
+    pI(t('portal:docx_penasihat', "PENASIHAT"), true),
     ...co.jawatankuasa_induk.penasihat.flatMap(p => [pI(p.nama.toUpperCase(), true), pI(p.jawatan), emptyLine()]),
-    pI("PENGERUSI", true), pI(co.jawatankuasa_induk.pengerusi.nama.toUpperCase(), true), pI(co.jawatankuasa_induk.pengerusi.jawatan), emptyLine(),
+    pI(t('portal:docx_pengerusi', "PENGERUSI"), true), pI(co.jawatankuasa_induk.pengerusi.nama.toUpperCase(), true), pI(co.jawatankuasa_induk.pengerusi.jawatan), emptyLine(),
     
     emptyLine(),
-    pIu("JAWATANKUASA MAJLIS TERTINGGI"),
+    pIu(t('portal:docx_jawatankuasa_majlis_tertinggi', "JAWATANKUASA MAJLIS TERTINGGI")),
     emptyLine(),
     ...co.jawatankuasa_majlis_tertinggi.flatMap(p => [pI(p.nama.toUpperCase(), true), pI(p.jawatan.toUpperCase(), true), emptyLine()]),
     
     new Paragraph({ children: [new PageBreak()] }),
-    lampiranHeaderP("LAMPIRAN I"),
-    pIu("JAWATANKUASA PELAKSANA UNIT"),
+    lampiranHeaderP(t('portal:docx_lampiran_1', "LAMPIRAN I")),
+    pIu(t('portal:docx_jawatankuasa_pelaksana_unit', "JAWATANKUASA PELAKSANA UNIT")),
     emptyLine(),
-    ...co.unit_pelaksana.flatMap(u => [pI(`JK ${u.nama_unit.toUpperCase()}`, true), ...u.ahli.map(a => pI(a.toUpperCase(), true)), emptyLine()]),
+    ...co.unit_pelaksana.flatMap(u => [pI(t('portal:docx_jk_unit_format', `JK ${u.nama_unit.toUpperCase()}`, { unit: u.nama_unit.toUpperCase() }), true), ...u.ahli.map(a => pI(a.toUpperCase(), true)), emptyLine()]),
     new Paragraph({ children: [new PageBreak()] })
   ];
 
   // Lampiran II (Tentatif)
   const lampiranIIElems: DocElement[] = [
-    lampiranHeaderP("LAMPIRAN II"),
-    pI("TENTATIF PROGRAM", true),
+    lampiranHeaderP(t('portal:docx_lampiran_2', "LAMPIRAN II")),
+    pI(t('portal:docx_tentatif_program', "TENTATIF PROGRAM"), true),
     pI(hm.tajuk_program.toUpperCase(), true),
     emptyLine()
   ];
   
-  data.tentatif.forEach(t => {
+  data.tentatif.forEach(tItem => {
     lampiranIIElems.push(new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
-        new TableRow({ children: [createCompactTextCell(`${t.tarikh} (${t.hari})`, { bg: "e8e8e8", bold: true, align: AlignmentType.CENTER, colSpan: 2, size: 22 })] }),
-        new TableRow({ children: [createCompactTextCell("MASA", { bold: true, align: AlignmentType.CENTER, width: 30, size: 22 }), createCompactTextCell("AKTIVITI", { bold: true, align: AlignmentType.CENTER, size: 22 })] }),
-        ...t.slot.map(s => 
-          new TableRow({ children: [createCompactTextCell(`${s.masa_mula} - ${s.masa_tamat}`, { align: AlignmentType.CENTER, size: 22 }), createCompactTextCell(s.aktiviti, { size: 22 })] })
+        new TableRow({ children: [createCompactTextCell(t('portal:docx_tentatif_tarikh_hari', `${tItem.tarikh} (${tItem.hari})`, { tarikh: tItem.tarikh, hari: tItem.hari }), { bg: "e8e8e8", bold: true, align: AlignmentType.CENTER, colSpan: 2, size: 22 })] }),
+        new TableRow({ children: [createCompactTextCell(t('portal:docx_masa_header', "MASA"), { bold: true, align: AlignmentType.CENTER, width: 30, size: 22 }), createCompactTextCell(t('portal:docx_aktiviti_header', "AKTIVITI"), { bold: true, align: AlignmentType.CENTER, size: 22 })] }),
+        ...tItem.slot.map(s => 
+          new TableRow({ children: [createCompactTextCell(t('portal:docx_slot_masa_range', `${s.masa_mula} - ${s.masa_tamat}`, { start: s.masa_mula, end: s.masa_tamat }), { align: AlignmentType.CENTER, size: 22 }), createCompactTextCell(s.aktiviti, { size: 22 })] })
         )
       ]
     }), emptyLine());
@@ -399,8 +407,8 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
 
   // Lampiran III (Belanjawan)
   const lampiranIIIElems: DocElement[] = [
-    lampiranHeaderP("LAMPIRAN III"),
-    pI("ANGGARAN PERBELANJAAN", true),
+    lampiranHeaderP(t('portal:docx_lampiran_3', "LAMPIRAN III")),
+    pI(t('portal:docx_anggaran_perbelanjaan', "ANGGARAN PERBELANJAAN"), true),
     pI(hm.tajuk_program.toUpperCase(), true),
     emptyLine()
   ];
@@ -408,11 +416,11 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
   const belanjawanRows: TableRow[] = [];
   belanjawanRows.push(new TableRow({
     children: [
-      createCompactTextCell("BIL", { bold: true, align: AlignmentType.CENTER, width: 5 }),
-      createCompactTextCell("PERKARA", { bold: true, align: AlignmentType.CENTER, width: 45 }),
-      createCompactTextCell("HARGA", { bold: true, align: AlignmentType.CENTER, width: 15 }),
-      createCompactTextCell("KUANTITI", { bold: true, align: AlignmentType.CENTER, width: 15 }),
-      createCompactTextCell("JUMLAH", { bold: true, align: AlignmentType.CENTER, width: 20 }),
+      createCompactTextCell(t('portal:docx_bil_no', "BIL"), { bold: true, align: AlignmentType.CENTER, width: 5 }),
+      createCompactTextCell(t('portal:docx_perkara', "PERKARA"), { bold: true, align: AlignmentType.CENTER, width: 45 }),
+      createCompactTextCell(t('portal:docx_harga', "HARGA"), { bold: true, align: AlignmentType.CENTER, width: 15 }),
+      createCompactTextCell(t('portal:docx_kuantiti', "KUANTITI"), { bold: true, align: AlignmentType.CENTER, width: 15 }),
+      createCompactTextCell(t('portal:docx_jumlah', "JUMLAH"), { bold: true, align: AlignmentType.CENTER, width: 20 }),
     ]
   }));
 
@@ -433,7 +441,7 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
         children: [
           createCompactTextCell(""),
           createCompactTextCell(item.perkara),
-          createCompactTextCell(`${fRM(item.harga_seunit)}`, { align: AlignmentType.CENTER }),
+          createCompactTextCell(fRM(item.harga_seunit), { align: AlignmentType.CENTER }),
           createCompactTextCell(`${item.kuantiti}`, { align: AlignmentType.CENTER }),
           createCompactTextCell(fRM(j), { align: AlignmentType.RIGHT }),
         ]
@@ -443,7 +451,7 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
     belanjawanRows.push(new TableRow({
       children: [
         createCompactTextCell("", { colSpan: 3 }),
-        createCompactTextCell("JUMLAH", { bold: true, align: AlignmentType.RIGHT }),
+        createCompactTextCell(t('portal:docx_jumlah', "JUMLAH"), { bold: true, align: AlignmentType.RIGHT }),
         createCompactTextCell(fRM(sub), { bold: true, align: AlignmentType.RIGHT }),
       ]
     }));
@@ -451,13 +459,13 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
 
   belanjawanRows.push(new TableRow({
     children: [
-      createCompactTextCell("JUMLAH KESELURUHAN:", { bold: true, align: AlignmentType.RIGHT, colSpan: 4 }),
+      createCompactTextCell(t('portal:docx_jumlah_keseluruhan_colon', "JUMLAH KESELURUHAN:"), { bold: true, align: AlignmentType.RIGHT, colSpan: 4 }),
       createCompactTextCell(fRM(jumlahKeseluruhan), { bold: true, align: AlignmentType.RIGHT })
     ]
   }));
 
   const belanjawanTable = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: belanjawanRows });
-  lampiranIIIElems.push(belanjawanTable, emptyLine(), new Paragraph({ children: [new TextRun({ text: "PENDAPATAN:", bold: true, font: "Arial", size: 22 })] }));
+  lampiranIIIElems.push(belanjawanTable, emptyLine(), new Paragraph({ children: [new TextRun({ text: t('portal:docx_pendapatan_colon', "PENDAPATAN:"), bold: true, font: "Arial", size: 22 })] }));
   
   bel.pendapatan.forEach((p, i) => {
     lampiranIIIElems.push(listP(`${i + 1}.`, `${p.sumber} = ${fRM(p.jumlah)}`));
@@ -523,16 +531,16 @@ export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Prom
   // ── SECTION 1: METADATA ──────────────────────────────────────────────────
 
   const headerElems: (Paragraph | Table)[] = [
-    minitP('MINIT MESYUARAT', true, AlignmentType.CENTER, 24),
+    minitP(t('portal:docx_minit_mesyuarat', 'MINIT MESYUARAT'), true, AlignmentType.CENTER, 24),
     minitP(data.tajuk_mesyuarat.toUpperCase(), true, AlignmentType.CENTER, 22),
     minitEmpty(),
-    minitP('BIL:', true),
+    minitP(t('portal:docx_bil_colon', 'BIL:'), true),
     minitEmpty(),
-    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'TARIKH', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.tarikh}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
-    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'MASA  ', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.masa}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
-    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'PLATFORM', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.platform}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: t('portal:docx_tarikh_label', 'TARIKH'), bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: t('portal:docx_tab_tarikh', `\t: ${data.tarikh}`, { tarikh: data.tarikh }), font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: t('portal:docx_masa_label', 'MASA  '), bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: t('portal:docx_tab_masa', `\t: ${data.masa}`, { masa: data.masa }), font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: t('portal:docx_platform_label', 'PLATFORM'), bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: t('portal:docx_tab_platform', `\t: ${data.platform}`, { platform: data.platform }), font: MINIT_FONT, size: MINIT_SIZE })] }),
     minitEmpty(),
-    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'KEHADIRAN : ', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `${data.kehadiran} Orang`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: t('portal:docx_kehadiran_colon', 'KEHADIRAN : '), bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: t('portal:docx_kehadiran_orang', `${data.kehadiran} Orang`, { count: data.kehadiran }), font: MINIT_FONT, size: MINIT_SIZE })] }),
     minitEmpty(),
   ];
 
@@ -541,8 +549,8 @@ export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Prom
   const hadirRows: TableRow[] = [
     new TableRow({
       children: [
-        minitCell(minitHeaderP('BIL'), { width: 12 }),
-        minitCell(minitHeaderP('NAMA')),
+        minitCell(minitHeaderP(t('portal:docx_bil_no', 'BIL')), { width: 12 }),
+        minitCell(minitHeaderP(t('portal:docx_nama_header', 'NAMA'))),
       ]
     }),
     ...data.ahli_hadir.map(a => new TableRow({
@@ -563,9 +571,9 @@ export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Prom
   const agendaRows: TableRow[] = [
     new TableRow({
       children: [
-        minitCell(minitHeaderP('BIL.'), { width: 8 }),
-        minitCell(minitHeaderP('AGENDA')),
-        minitCell(minitHeaderP('TINDAKAN'), { width: 16 }),
+        minitCell(minitHeaderP(t('portal:docx_bil_dot', 'BIL.')), { width: 8 }),
+        minitCell(minitHeaderP(t('portal:docx_agenda', 'AGENDA'))),
+        minitCell(minitHeaderP(t('portal:docx_tindakan', 'TINDAKAN')), { width: 16 }),
       ]
     }),
     ...data.agenda.map(item => {
@@ -642,8 +650,8 @@ export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Prom
     rows: [
       new TableRow({
         children: [
-          buildSigCell('Disediakan oleh:', data.tandatangan.disediakan_oleh),
-          buildSigCell('Disahkan oleh:', data.tandatangan.disahkan_oleh),
+          buildSigCell(t('portal:docx_disediakan_oleh', 'Disediakan oleh:'), data.tandatangan.disediakan_oleh),
+          buildSigCell(t('portal:docx_disahkan_oleh', 'Disahkan oleh:'), data.tandatangan.disahkan_oleh),
         ]
       })
     ],

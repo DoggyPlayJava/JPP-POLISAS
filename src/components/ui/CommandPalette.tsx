@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -35,6 +36,7 @@ import { triggerCommandPalette } from '@/lib/commandPalette';
 export { triggerCommandPalette };
 
 export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteProps) {
+  const { t } = useTranslation(['portal', 'nav', 'common']);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -130,18 +132,18 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
           setOpen(val);
         }
       }}
-      label="Carian Global JPP"
+      label={t('portal:global_search_title', 'Carian Global JPP')}
       overlayClassName="fixed inset-0 z-[200] bg-background/60  transition-opacity duration-200"
       contentClassName="fixed left-1/2 top-[12vh] z-[201] w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border/40 bg-card/95 shadow-2xl  p-0 outline-none"
     >
-      <DialogPrimitive.Title className="sr-only">Carian Global JPP</DialogPrimitive.Title>
+      <DialogPrimitive.Title className="sr-only">{t('portal:global_search_title', 'Carian Global JPP')}</DialogPrimitive.Title>
       <DialogPrimitive.Description className="sr-only">
-        Cari kelab, acara EMS, MAKMP, kebajikan, dan tindakan pantas.
+        {t('portal:global_search_desc', 'Cari kelab, acara EMS, MAKMP, kebajikan, dan tindakan pantas.')}
       </DialogPrimitive.Description>
       <div className="flex items-center border-b border-border/40 px-6 py-4">
         <Search className="mr-3 h-5 w-5 text-muted-foreground/50" />
         <Command.Input
-          placeholder="Cari kelab, acara EMS, MAKMP, kebajikan..."
+          placeholder={t('portal:global_search_placeholder', 'Cari kelab, acara EMS, MAKMP, kebajikan...')}
           className="flex h-10 w-full bg-transparent text-base font-medium outline-none placeholder:text-muted-foreground/30"
         />
         <div className="ml-auto hidden items-center gap-1 rounded-lg border border-border/40 bg-muted/20 px-2 py-1 md:flex">
@@ -156,38 +158,38 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
               <Search className="h-6 w-6 text-muted-foreground/20" />
             </div>
             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">
-              Tiada hasil ditemui
+              {t('portal:no_results_found', 'Tiada hasil ditemui')}
             </p>
           </div>
         </Command.Empty>
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Tindakan Pantas & Hub</span>}>
-          <Item icon={LayoutDashboard} label="Papan Pemuka Pelajar" onSelect={() => runCommand(() => navigate('/dashboard'))} />
-          <Item icon={Sparkles} label="Portal Pelajar POLISAS Hub" onSelect={() => runCommand(() => navigate('/portal'))} />
-          <Item icon={CalendarDays} label="Semua Aktiviti & Takwim" onSelect={() => runCommand(() => navigate('/aktiviti'))} />
-          <Item icon={Flag} label="Senarai Kelab & Persatuan" onSelect={() => runCommand(() => navigate('/kelab'))} />
-          <Item icon={Users} label="Jawatankuasa & Ahli" onSelect={() => runCommand(() => navigate('/ahli'))} />
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('portal:quick_actions_hub', 'Tindakan Pantas & Hub')}</span>}>
+          <Item icon={LayoutDashboard} label={t('nav:student_dashboard', 'Papan Pemuka Pelajar')} onSelect={() => runCommand(() => navigate('/dashboard'))} />
+          <Item icon={Sparkles} label={t('portal:polisas_student_hub', 'Portal Pelajar POLISAS Hub')} onSelect={() => runCommand(() => navigate('/portal'))} />
+          <Item icon={CalendarDays} label={t('portal:all_activities_calendar', 'Semua Aktiviti & Takwim')} onSelect={() => runCommand(() => navigate('/aktiviti'))} />
+          <Item icon={Flag} label={t('portal:clubs_societies_list', 'Senarai Kelab & Persatuan')} onSelect={() => runCommand(() => navigate('/kelab'))} />
+          <Item icon={Users} label={t('portal:committee_members', 'Jawatankuasa & Ahli')} onSelect={() => runCommand(() => navigate('/ahli'))} />
         </Command.Group>
 
         <Command.Separator className="my-4 h-px bg-border/40" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Pengurusan Acara EMS</span>}>
-          <Item icon={Trophy} label="Papan Pemuka EMS (Event Management)" onSelect={() => runCommand(() => navigate('/ems/dashboard'))} />
-          <Item icon={QrCode} label="Kaunter Imbasan QR Check-In" onSelect={() => runCommand(() => navigate('/ems/checkin'))} />
-          <Item icon={Award} label="Portal Juri Penilai Rasmi EMS" onSelect={() => runCommand(() => navigate('/ems/juri'))} />
-          <Item icon={ShieldCheck} label="Semakan Ketulenan Sijil Digital (E-Cert)" onSelect={() => runCommand(() => navigate('/ems/cert/verify'))} />
-          <Item icon={FileText} label="Kelulusan Acara EMS (Pegawai / Exco)" onSelect={() => runCommand(() => navigate('/ems/approvals'))} />
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">{t('portal:ems_event_management', 'Pengurusan Acara EMS')}</span>}>
+          <Item icon={Trophy} label={t('portal:ems_dashboard_item', 'Papan Pemuka EMS (Event Management)')} onSelect={() => runCommand(() => navigate('/ems/dashboard'))} />
+          <Item icon={QrCode} label={t('portal:qr_checkin_counter', 'Kaunter Imbasan QR Check-In')} onSelect={() => runCommand(() => navigate('/ems/checkin'))} />
+          <Item icon={Award} label={t('portal:ems_jury_portal', 'Portal Juri Penilai Rasmi EMS')} onSelect={() => runCommand(() => navigate('/ems/juri'))} />
+          <Item icon={ShieldCheck} label={t('portal:verify_ecert', 'Semakan Ketulenan Sijil Digital (E-Cert)')} onSelect={() => runCommand(() => navigate('/ems/cert/verify'))} />
+          <Item icon={FileText} label={t('portal:ems_approvals', 'Kelulusan Acara EMS (Pegawai / Exco)')} onSelect={() => runCommand(() => navigate('/ems/approvals'))} />
         </Command.Group>
 
         {emsEvents.length > 0 && (
           <>
             <Command.Separator className="my-4 h-px bg-border/40" />
-            <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Pentas & Acara EMS Terkini</span>}>
+            <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">{t('portal:ems_stages_events', 'Pentas & Acara EMS Terkini')}</span>}>
               {emsEvents.map((evt) => (
                 <Item
                   key={evt.id}
                   icon={Sparkles}
-                  label={`Pentas Pentadbiran / Live: ${evt.title}`}
+                  label={t('portal:admin_live_stage', 'Pentas Pentadbiran / Live: {{title}}', { title: evt.title })}
                   shortLabel={evt.category || 'EMS'}
                   onSelect={() => runCommand(() => navigate(`/ems/leaderboard/${evt.id}`))}
                 />
@@ -198,25 +200,25 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
 
         <Command.Separator className="my-4 h-px bg-border/40" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Anugerah & Kebajikan Flagship</span>}>
-          <Item icon={Award} label="Pencalonan Anugerah MAKMP 2026" onSelect={() => runCommand(() => navigate('/makmp'))} />
-          <Item icon={ClipboardCheck} label="Status Pencalonan MAKMP" onSelect={() => runCommand(() => navigate('/makmp/status'))} />
-          <Item icon={HeartHandshake} label="Food Bank Siswa POLISAS" onSelect={() => runCommand(() => navigate('/kebajikan/foodbank'))} />
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">{t('portal:flagship_awards_welfare', 'Anugerah & Kebajikan Flagship')}</span>}>
+          <Item icon={Award} label={t('portal:makmp_nomination', 'Pencalonan Anugerah MAKMP 2026')} onSelect={() => runCommand(() => navigate('/makmp'))} />
+          <Item icon={ClipboardCheck} label={t('portal:makmp_status', 'Status Pencalonan MAKMP')} onSelect={() => runCommand(() => navigate('/makmp/status'))} />
+          <Item icon={HeartHandshake} label={t('portal:foodbank_siswa', 'Food Bank Siswa POLISAS')} onSelect={() => runCommand(() => navigate('/kebajikan/foodbank'))} />
           <Item icon={ShoppingBag} label="PolyMart Campus Marketplace" onSelect={() => runCommand(() => navigate('/polymart'))} />
           <Item icon={Truck} label="PolyServices & PolyRider" onSelect={() => runCommand(() => navigate('/services'))} />
         </Command.Group>
 
         <Command.Separator className="my-4 h-px bg-border/40" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Pentadbiran</span>}>
-          <Item icon={ClipboardCheck} label="Semakan Laporan (JPP)" onSelect={() => runCommand(() => navigate('/semakan-laporan'))} />
-          <Item icon={ShieldCheck} label="Pusat Kawalan JPP / JPP HQ Portal" onSelect={() => runCommand(() => navigate('/jpp'))} />
-          <Item icon={Settings} label="Tetapan Sistem" onSelect={() => runCommand(() => navigate('/tetapan'))} />
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('nav:jpp_administration', 'Pentadbiran')}</span>}>
+          <Item icon={ClipboardCheck} label={t('portal:report_review_jpp', 'Semakan Laporan (JPP)')} onSelect={() => runCommand(() => navigate('/semakan-laporan'))} />
+          <Item icon={ShieldCheck} label={t('portal:jpp_control_center', 'Pusat Kawalan JPP / JPP HQ Portal')} onSelect={() => runCommand(() => navigate('/jpp'))} />
+          <Item icon={Settings} label={t('nav:system_settings', 'Tetapan Sistem')} onSelect={() => runCommand(() => navigate('/tetapan'))} />
         </Command.Group>
 
         <Command.Separator className="my-4 h-px bg-border/40" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Kelab & Persatuan</span>}>
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('portal:clubs_and_societies', 'Kelab & Persatuan')}</span>}>
           {ALL_CLUBS.map((club) => (
             <Item 
               key={club.id} 
@@ -234,14 +236,14 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <kbd className="flex h-5 w-5 items-center justify-center rounded border border-border/40 bg-background text-[10px] font-black shadow-xs">↵</kbd>
-            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">Pilih</span>
+            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">{t('common:select', 'Pilih')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="flex gap-0.5">
               <kbd className="flex h-5 w-5 items-center justify-center rounded border border-border/40 bg-background text-[10px] font-black shadow-xs">↑</kbd>
               <kbd className="flex h-5 w-5 items-center justify-center rounded border border-border/40 bg-background text-[10px] font-black shadow-xs">↓</kbd>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">Navigasi</span>
+            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">{t('common:navigation', 'Navigasi')}</span>
           </div>
         </div>
         

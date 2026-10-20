@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getMalaysianNickname } from '@/lib/utils';
@@ -16,7 +18,8 @@ export interface PortalNavbarProps {
 }
 
 export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile, setIsSidebarOpen }: PortalNavbarProps) {
-  const displayName = getMalaysianNickname(profile?.full_name, 'Pelajar');
+  const { t } = useTranslation(['portal', 'common']);
+  const displayName = getMalaysianNickname(profile?.full_name, t('portal:student', 'Pelajar'));
   // Determine merit tier for Dynamic Avatar Aura
   const meritPoints = profile?.merit_points || profile?.merit || 0;
   let auraClass = "";
@@ -93,6 +96,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <LanguageToggle />
         <ThemeToggle />
         <NotificationBell />
 

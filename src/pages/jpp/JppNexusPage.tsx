@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Sparkles, Brain, ShieldCheck, AlertTriangle, Lock, Shield, CheckCheck, Activity, Settings as SettingsIcon, Loader2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 
 export function JppNexusPage() {
+    const { t } = useTranslation();
     const { isSuperAdmin, profile } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
@@ -62,14 +64,14 @@ export function JppNexusPage() {
 
     const toggleSetting = async (key: string, currentValue: boolean) => {
         const newValue = !currentValue;
-        const toastId = toast.loading('Mengemaskini...');
+        const toastId = toast.loading(t('jpp:nexus_updating', 'Mengemaskini...'));
         try {
             // upsert handles both create and update — avoids silent fail if row missing
             const { error } = await supabase.from('system_settings')
                 .upsert({ key, value: String(newValue) }, { onConflict: 'key' });
             if (error) throw error;
             setSettings(s => ({ ...s, [key]: newValue }));
-            toast.success(`Berjaya dilaras.`, { id: toastId });
+            toast.success(t('jpp:nexus_adjusted_success', 'Berjaya dilaras.'), { id: toastId });
         } catch (e: any) {
             toast.error(e.message, { id: toastId });
         }
@@ -107,28 +109,28 @@ export function JppNexusPage() {
     const updateAiTokenLimit = () => {
         setPromptConfig({
             open: true,
-            title: 'Ketetapan Had Token Pemerhatian',
-            description: 'Masukkan kuota had token keseluruhan untuk pemantauan sistem kecerdasan buatan.',
-            inputLabel: 'Had Token (Angka)',
-            placeholder: 'cth: 1000000',
+            title: t('jpp:nexus_limit_prompt_title', 'Ketetapan Had Token Pemerhatian'),
+            description: t('jpp:nexus_limit_prompt_desc', 'Masukkan kuota had token keseluruhan untuk pemantauan sistem kecerdasan buatan.'),
+            inputLabel: t('jpp:nexus_limit_input_label', 'Had Token (Angka)'),
+            placeholder: t('jpp:nexus_limit_placeholder', 'cth: 1000000'),
             initialValue: settings.ai_token_limit?.toString() || '1000000',
             inputType: 'number',
             onConfirm: async (input) => {
                 const newLimit = parseInt(input);
                 if (isNaN(newLimit) || newLimit < 1000) {
-                    toast.error('Nilai had token mesti sekurang-kurangnya 1,000.');
+                    toast.error(t('jpp:nexus_limit_min_error', 'Nilai had token mesti sekurang-kurangnya 1,000.'));
                     return;
                 }
-                const toastId = toast.loading('Mengemaskini had token...');
+                const toastId = toast.loading(t('jpp:nexus_updating_limit', 'Mengemaskini had token...'));
                 try {
                     const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'ai_token_limit').select();
                     if (error) throw error;
                     if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_limit', value: newLimit });
                     setSettings(s => ({ ...s, ai_token_limit: newLimit }));
-                    toast.success(`Had token baharu: ${newLimit.toLocaleString()}`, { id: toastId });
+                    toast.success(t('jpp:nexus_new_limit_toast', 'Had token baharu: {{limit}}', { limit: newLimit.toLocaleString() }), { id: toastId });
                     setPromptConfig(prev => ({ ...prev, open: false }));
                 } catch (e: any) {
-                    toast.error(e.message || 'Gagal kemaskini', { id: toastId });
+                    toast.error(e.message || t('jpp:nexus_update_failed', 'Gagal kemaskini'), { id: toastId });
                 }
             }
         });
@@ -139,26 +141,26 @@ export function JppNexusPage() {
         const currentLimit = currentSettings[tier] || 0;
         setPromptConfig({
             open: true,
-            title: `Bekalan Token Bulanan: ${label}`,
-            description: `Tetapkan jumlah kuota token yang diperuntukkan setiap bulan untuk pengguna akaun ${label}.`,
-            inputLabel: 'Jumlah Token Sebulan',
-            placeholder: 'cth: 500',
+            title: t('jpp:nexus_allowance_prompt_title', 'Bekalan Token Bulanan: {{label}}', { label }),
+            description: t('jpp:nexus_allowance_prompt_desc', 'Tetapkan jumlah kuota token yang diperuntukkan setiap bulan untuk pengguna akaun {{label}}.', { label }),
+            inputLabel: t('jpp:nexus_allowance_input_label', 'Jumlah Token Sebulan'),
+            placeholder: t('jpp:nexus_allowance_placeholder', 'cth: 500'),
             initialValue: currentLimit.toString(),
             inputType: 'number',
             onConfirm: async (input) => {
                 const newLimit = parseInt(input);
                 if (isNaN(newLimit) || newLimit < 0) {
-                    toast.error('Sila masukkan nilai nombor yang sah.');
+                    toast.error(t('jpp:nexus_allowance_invalid', 'Sila masukkan nilai nombor yang sah.'));
                     return;
                 }
-                const toastId = toast.loading('Mengemaskini kuota token...');
+                const toastId = toast.loading(t('jpp:nexus_updating_allowance', 'Mengemaskini kuota token...'));
                 try {
                     const newSettings = { ...currentSettings, [tier]: newLimit };
                     const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
                     if (error) throw error;
                     if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
                     setSettings(s => ({ ...s, ai_token_settings: newSettings }));
-                    toast.success('Kuota token berjaya dikemaskini.', { id: toastId });
+                    toast.success(t('jpp:nexus_allowance_success', 'Kuota token berjaya dikemaskini.'), { id: toastId });
                     setPromptConfig(prev => ({ ...prev, open: false }));
                 } catch (e: any) {
                     toast.error(e.message, { id: toastId });
@@ -172,26 +174,26 @@ export function JppNexusPage() {
         const currentCost = currentSettings.costs?.[serviceKey] || 0;
         setPromptConfig({
             open: true,
-            title: `Harga Kos Servis: ${label}`,
-            description: 'Masukkan kos penggunaan token bagi servis ini. Tetapkan 0 untuk perkhidmatan percuma.',
-            inputLabel: 'Kos Token (Per Request)',
+            title: t('jpp:nexus_cost_prompt_title', 'Harga Kos Servis: {{label}}', { label }),
+            description: t('jpp:nexus_cost_prompt_desc', 'Masukkan kos penggunaan token bagi servis ini. Tetapkan 0 untuk perkhidmatan percuma.'),
+            inputLabel: t('jpp:nexus_cost_input_label', 'Kos Token (Per Request)'),
             placeholder: '0',
             initialValue: currentCost.toString(),
             inputType: 'number',
             onConfirm: async (input) => {
                 const newCost = parseInt(input);
                 if (isNaN(newCost) || newCost < 0) {
-                    toast.error('Sila masukkan nilai angka yang sah.');
+                    toast.error(t('jpp:nexus_cost_invalid', 'Sila masukkan nilai angka yang sah.'));
                     return;
                 }
-                const toastId = toast.loading('Mengemaskini kos servis...');
+                const toastId = toast.loading(t('jpp:nexus_updating_cost', 'Mengemaskini kos servis...'));
                 try {
                     const newSettings = { ...currentSettings, costs: { ...currentSettings.costs, [serviceKey]: newCost } };
                     const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
                     if (error) throw error;
                     if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
                     setSettings(s => ({ ...s, ai_token_settings: newSettings }));
-                    toast.success('Kos servis berjaya dikemaskini.', { id: toastId });
+                    toast.success(t('jpp:nexus_cost_success', 'Kos servis berjaya dikemaskini.'), { id: toastId });
                     setPromptConfig(prev => ({ ...prev, open: false }));
                 } catch (e: any) {
                     toast.error(e.message, { id: toastId });
@@ -202,29 +204,28 @@ export function JppNexusPage() {
 
     const updateSpamThreshold = (type: 'warning' | 'block') => {
         const currentRateLimit = settings.ai_rate_limit || { warning_threshold: 50, block_threshold: 65 };
-        const label = type === 'warning' ? 'Amaran (Bilangan mesej)' : 'Sekatan Automatik (Bilangan mesej)';
         const currentVal = type === 'warning' ? currentRateLimit.warning_threshold : currentRateLimit.block_threshold;
         setPromptConfig({
             open: true,
-            title: `Ketetapan Had Laju: ${type === 'warning' ? 'Amaran' : 'Sekatan'}`,
-            description: `Tetapkan had mesej seminit/sejam sebelum sistem mengeluarkan ${type === 'warning' ? 'amaran' : 'sekatan automatik'}.`,
-            inputLabel: 'Had Mesej',
+            title: t('jpp:nexus_rate_prompt_title', 'Ketetapan Had Laju: {{type}}', { type: type === 'warning' ? t('jpp:nexus_early_warning', 'Amaran') : t('jpp:nexus_api_block', 'Sekatan') }),
+            description: t('jpp:nexus_rate_prompt_desc', 'Tetapkan had mesej seminit/sejam sebelum sistem mengeluarkan {{type}}.', { type: type === 'warning' ? t('jpp:nexus_early_warning', 'amaran') : t('jpp:nexus_api_block', 'sekatan automatik') }),
+            inputLabel: t('jpp:nexus_rate_input_label', 'Had Mesej'),
             placeholder: '50',
             initialValue: currentVal?.toString() || '50',
             inputType: 'number',
             onConfirm: async (input) => {
                 const newLimitValue = parseInt(input);
                 if (isNaN(newLimitValue) || newLimitValue < 1) {
-                    toast.error('Nilai mestilah nombor melebihi 0.');
+                    toast.error(t('jpp:nexus_rate_invalid', 'Nilai mestilah nombor melebihi 0.'));
                     return;
                 }
-                const toastId = toast.loading('Mengemaskini keselamatan...');
+                const toastId = toast.loading(t('jpp:nexus_updating_rate', 'Mengemaskini keselamatan...'));
                 try {
                     const newRateLimit = { ...currentRateLimit, [type === 'warning' ? 'warning_threshold' : 'block_threshold']: newLimitValue };
                     const { error } = await supabase.from('system_settings').upsert({ key: 'ai_rate_limit', value: newRateLimit }, { onConflict: 'key' });
                     if (error) throw error;
                     setSettings(s => ({ ...s, ai_rate_limit: newRateLimit }));
-                    toast.success('Had keselamatan berjaya dikemaskini.', { id: toastId });
+                    toast.success(t('jpp:nexus_rate_success', 'Had keselamatan berjaya dikemaskini.'), { id: toastId });
                     setPromptConfig(prev => ({ ...prev, open: false }));
                 } catch (e: any) {
                     toast.error(e.message, { id: toastId });
@@ -237,23 +238,23 @@ export function JppNexusPage() {
         const { userId, action } = banConfirmState;
         if (!userId) return;
         setBanConfirmState(prev => ({ ...prev, loading: true }));
-        const toastId = toast.loading('Memproses status AI pengguna...');
+        const toastId = toast.loading(t('jpp:nexus_processing_ai_status', 'Memproses status AI pengguna...'));
         const newStatus = action === 'unban' ? 'active' : 'permanent_ban';
         const updates = action === 'unban' ? { ai_status: newStatus, ai_daily_usage: 0 } : { ai_status: newStatus };
         try {
             const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
             if (error) throw error;
-            toast.success('Status AI pengguna berjaya dikemaskini.', { id: toastId });
+            toast.success(t('jpp:nexus_user_status_updated', 'Status AI pengguna berjaya dikemaskini.'), { id: toastId });
             setBanConfirmState({ open: false, userId: '', action: 'unban', loading: false });
             fetchData();
         } catch (e: any) {
-            toast.error(e.message || 'Gagal memproses', { id: toastId });
+            toast.error(e.message || t('jpp:nexus_process_failed', 'Gagal memproses'), { id: toastId });
             setBanConfirmState(prev => ({ ...prev, loading: false }));
         }
     };
 
     if (loading) {
-        return <div className="py-16 flex items-center justify-center text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest font-mono"><Loader2 className="w-5 h-5 animate-spin mr-2" />Memuatkan Nexus Hub...</div>;
+        return <div className="py-16 flex items-center justify-center text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest font-mono"><Loader2 className="w-5 h-5 animate-spin mr-2" />{t('jpp:nexus_loading', 'Memuatkan Nexus Hub...')}</div>;
     }
 
     return (
@@ -272,8 +273,8 @@ export function JppNexusPage() {
                             <Brain className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Nexus Analytics & Master Switches</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/30">Kawalan utama penggunaan AI & Token</p>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{t('jpp:nexus_title', 'Nexus Analytics & Master Switches')}</h1>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/30">{t('jpp:nexus_subtitle', 'Kawalan utama penggunaan AI & Token')}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -289,11 +290,11 @@ export function JppNexusPage() {
                             <div className="relative z-10 space-y-8 flex flex-col justify-between h-full">
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <h3 className="font-black text-2xl tracking-tighter text-white">Metrik Nexus AI</h3>
-                                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-1">Guna Pakai Token Bulan ini</p>
+                                        <h3 className="font-black text-2xl tracking-tighter text-white">{t('jpp:nexus_metrics_title', 'Metrik Nexus AI')}</h3>
+                                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-1">{t('jpp:nexus_metrics_subtitle', 'Guna Pakai Token Bulan ini')}</p>
                                     </div>
                                     <div className="px-3 py-1.5 bg-white/5  rounded-xl border border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-indigo-200 tracking-widest">Sistem Pintar v2.0</p>
+                                        <p className="text-[9px] font-black uppercase text-indigo-200 tracking-widest">{t('jpp:nexus_smart_system', 'Sistem Pintar v2.0')}</p>
                                     </div>
                                 </div>
 
@@ -301,21 +302,21 @@ export function JppNexusPage() {
                                     <div className="space-y-6">
                                         <div>
                                             <p className="text-5xl font-black tracking-tighter text-white font-mono tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60 mt-1">Token Dijana</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60 mt-1">{t('jpp:nexus_tokens_generated', 'Token Dijana')}</p>
                                         </div>
                                         <div className="space-y-3">
                                             <div className="flex justify-between text-[10px] font-black text-indigo-200 uppercase tracking-tight">
-                                                <span>Had Token Global</span>
+                                                <span>{t('jpp:nexus_global_token_limit', 'Had Token Global')}</span>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-white font-mono tabular-nums">{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
                                                     <div className="w-[1px] h-3 bg-white/20 mx-1" />
-                                                    <button onClick={updateAiTokenLimit} className="hover:text-white underline underline-offset-4 decoration-white/30 transition-colors">Laras Had</button>
+                                                    <button onClick={updateAiTokenLimit} className="hover:text-white underline underline-offset-4 decoration-white/30 transition-colors">{t('jpp:nexus_adjust_limit', 'Laras Had')}</button>
                                                 </div>
                                             </div>
                                             <div className="h-3 rounded-full bg-black/40 border border-white/5 overflow-hidden">
                                                 <div className="h-full bg-emerald-500 relative transition-all duration-500 rounded-full" style={{ width: `${Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)}%` }}></div>
                                             </div>
-                                            <p className="text-[9px] font-medium text-indigo-300/50 uppercase tracking-widest font-mono tabular-nums">Kapasiti Server: {(settings.ai_token_limit || 1000000).toLocaleString()} Token</p>
+                                            <p className="text-[9px] font-medium text-indigo-300/50 uppercase tracking-widest font-mono tabular-nums">{t('jpp:nexus_server_capacity', 'Kapasiti Server: {{count}} Token', { count: (settings.ai_token_limit || 1000000).toLocaleString() })}</p>
                                         </div>
                                     </div>
                                     
@@ -327,14 +328,14 @@ export function JppNexusPage() {
                                                     ? Math.round(settings.ai_total_tokens / 480).toLocaleString()
                                                     : '—'}
                                             </p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Anggaran Panggilan</p>
+                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_est_calls', 'Anggaran Panggilan')}</p>
                                         </div>
                                         <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Activity className={`w-4 h-4 mb-2 ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`} />
                                             <p className={`text-xl font-black uppercase ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                {settings.allow_ai_chat ? 'Aktif' : 'Ditutup'}
+                                                {settings.allow_ai_chat ? t('jpp:nexus_status_active', 'Aktif') : t('jpp:nexus_status_disabled', 'Ditutup')}
                                             </p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Status AI Chat</p>
+                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_ai_status', 'Status AI Chat')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -347,11 +348,11 @@ export function JppNexusPage() {
                                 <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
                                     <Lock className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Master Controls</h4>
+                                <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_master_controls', 'Master Controls')}</h4>
                                 
                                 <div className="space-y-3 relative z-10 w-full sm:w-auto overflow-hidden">
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">AI Chat Hub</p>
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_ai_chat_hub', 'AI Chat Hub')}</p>
                                         <button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)}
                                             className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
                                                 settings.allow_ai_chat ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
@@ -359,7 +360,7 @@ export function JppNexusPage() {
                                         </button>
                                     </div>
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">Enjin Bajet AI</p>
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_ai_budget_engine', 'Enjin Bajet AI')}</p>
                                         <button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)}
                                             className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
                                                 settings.allow_ai_budget ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
@@ -370,7 +371,7 @@ export function JppNexusPage() {
                             </div>
                             <div className="pt-6 flex flex-col sm:flex-row sm:items-center gap-2 text-amber-600 dark:text-amber-500/60 w-full">
                                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                <span className="text-[9px] font-black uppercase tracking-wider leading-relaxed">Kekal Aktif Kecuali Kecemasan</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider leading-relaxed">{t('jpp:nexus_stay_active_warning', 'Kekal Aktif Kecuali Kecemasan')}</span>
                             </div>
                         </div>
                     </div>
@@ -381,22 +382,22 @@ export function JppNexusPage() {
                         <div className="md:col-span-2 p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                             <div className="flex items-center gap-2 mb-8">
                                 <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Ekonomi Token & Kos Perkhidmatan</h3>
+                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_token_economics_title', 'Ekonomi Token & Kos Perkhidmatan')}</h3>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.2em]">Pengagihan Pas Bulanan</h4>
+                                    <h4 className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.2em]">{t('jpp:nexus_monthly_pass_distribution', 'Pengagihan Pas Bulanan')}</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/5 hover:bg-indigo-100 dark:hover:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/10 transition-colors">
-                                            <span className="text-xs font-black text-slate-900 dark:text-white">PRO Tier</span>
+                                            <span className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_tier_pro', 'PRO Tier')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-indigo-600 dark:text-indigo-300 font-bold">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
                                                 <button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} className="text-slate-400 hover:text-indigo-600 dark:text-white/20 dark:hover:text-indigo-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 transition-colors">
-                                            <span className="text-xs font-black text-slate-700 dark:text-white/70">FREE Tier</span>
+                                            <span className="text-xs font-black text-slate-700 dark:text-white/70">{t('jpp:nexus_tier_free', 'FREE Tier')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-slate-600 dark:text-white/50 font-bold">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
                                                 <button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} className="text-slate-400 hover:text-slate-900 dark:text-white/20 dark:hover:text-white"><SettingsIcon className="w-3.5 h-3.5" /></button>
@@ -405,20 +406,20 @@ export function JppNexusPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em]">Kos Operasi AI</h4>
+                                    <h4 className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em]">{t('jpp:nexus_ai_operating_costs', 'Kos Operasi AI')}</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/5 hover:bg-amber-100 dark:hover:bg-amber-500/10 border border-amber-200 dark:border-amber-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">Kertas Kerja PRO</span>
+                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_pro_work_paper', 'Kertas Kerja PRO')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', t('jpp:nexus_feature_pro_paper', 'Janaan Kertas Kerja Pro'))} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/5 hover:bg-cyan-100 dark:hover:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">Kertas Kerja FLASH</span>
+                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_flash_work_paper', 'Kertas Kerja FLASH')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-cyan-600 dark:text-cyan-400 font-bold">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', t('jpp:nexus_feature_flash_paper', 'Janaan Kertas Kerja Flash'))} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                     </div>
@@ -426,17 +427,17 @@ export function JppNexusPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/5 hover:bg-rose-100 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">Analisis Laporan Kelab</span>
+                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_club_report', 'Analisis Laporan Kelab')}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
-                                        <button onClick={() => updateAiTokenCost('analisis', 'Analisis Laporan')} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => updateAiTokenCost('analisis', t('jpp:nexus_feature_report_analysis', 'Analisis Laporan'))} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">Semakan Tatabahasa</span>
+                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa')}</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'Percuma' : `${settings.ai_token_settings?.costs?.semak_ejaan} Tk`}</span>
-                                        <button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa')} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? t('jpp:nexus_cost_free', 'Percuma') : t('jpp:nexus_cost_tokens', '{{cost}} Tk', { cost: settings.ai_token_settings?.costs?.semak_ejaan })}</span>
+                                        <button onClick={() => updateAiTokenCost('semak_ejaan', t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa'))} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                             </div>
@@ -447,15 +448,15 @@ export function JppNexusPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="w-4 h-4 text-rose-500" />
-                                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Had Anti-Spam</h3>
+                                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_anti_spam_title', 'Had Anti-Spam')}</h3>
                                 </div>
                                 <div className="p-5 rounded-3xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
                                             <AlertTriangle className="w-3.5 h-3.5" />
-                                            <p className="text-[9px] font-black uppercase tracking-widest">Amaran Awal</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest">{t('jpp:nexus_early_warning', 'Amaran Awal')}</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[9px] font-black text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400">LARAS</button>
+                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[9px] font-black text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
                                     </div>
                                     <p className="text-3xl font-black text-amber-600 dark:text-amber-500 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50}</p>
                                 </div>
@@ -463,9 +464,9 @@ export function JppNexusPage() {
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-2 text-rose-600 dark:text-rose-500">
                                             <Lock className="w-3.5 h-3.5" />
-                                            <p className="text-[9px] font-black uppercase tracking-widest">Sekatan API</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest">{t('jpp:nexus_api_block', 'Sekatan API')}</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('block')} className="text-[9px] font-black text-rose-600 dark:text-rose-500 hover:text-rose-500 dark:hover:text-rose-400">LARAS</button>
+                                        <button onClick={() => updateSpamThreshold('block')} className="text-[9px] font-black text-rose-600 dark:text-rose-500 hover:text-rose-500 dark:hover:text-rose-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
                                     </div>
                                     <p className="text-3xl font-black text-rose-600 dark:text-rose-500 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65}</p>
                                 </div>
@@ -477,16 +478,16 @@ export function JppNexusPage() {
                     <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                         <div className="flex items-center gap-3 mb-6">
                             <Shield className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Pemantauan Akaun Suspicious</h3>
-                            <span className="px-2.5 py-1 text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-full">{suspiciousUsers.length} dikesan</span>
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_suspicious_title', 'Pemantauan Akaun Suspicious')}</h3>
+                            <span className="px-2.5 py-1 text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-full">{t('jpp:nexus_detected_count', '{{count}} dikesan', { count: suspiciousUsers.length })}</span>
                         </div>
                         {suspiciousUsers.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-500 flex items-center justify-center mx-auto mb-4">
                                     <CheckCheck className="w-8 h-8" />
                                 </div>
-                                <p className="text-sm font-black text-slate-900 dark:text-white">Sistem Di Bawah Kawalan</p>
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 mt-2">Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.</p>
+                                <p className="text-sm font-black text-slate-900 dark:text-white">{t('jpp:nexus_system_under_control', 'Sistem Di Bawah Kawalan')}</p>
+                                <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 mt-2">{t('jpp:nexus_no_suspicious', 'Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.')}</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -506,18 +507,18 @@ export function JppNexusPage() {
                                                         {u.ai_status.replace('_', ' ')}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 dark:text-white/40">Kekerapan Harian: <span className="text-slate-900 dark:text-white font-bold">{u.ai_daily_usage} ping</span></p>
+                                                <p className="text-[10px] text-slate-500 dark:text-white/40">{t('jpp:nexus_daily_frequency', 'Kekerapan Harian:')} <span className="text-slate-900 dark:text-white font-bold">{u.ai_daily_usage} {t('jpp:nexus_ping_unit', 'ping')}</span></p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
                                                 <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'unban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
-                                                    Pulihkan Akses
+                                                    {t('jpp:nexus_restore_access', 'Pulihkan Akses')}
                                                 </button>
                                             )}
                                             {u.ai_status !== 'permanent_ban' && (
                                                 <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'permanent_ban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
-                                                    Sekat Berterusan
+                                                    {t('jpp:nexus_permanent_ban', 'Sekat Berterusan')}
                                                 </button>
                                             )}
                                         </div>
@@ -538,8 +539,8 @@ export function JppNexusPage() {
                 placeholder={promptConfig.placeholder}
                 initialValue={promptConfig.initialValue}
                 inputType={promptConfig.inputType || 'number'}
-                confirmLabel="Simpan"
-                cancelLabel="Batal"
+                confirmLabel={t('common:save', 'Simpan')}
+                cancelLabel={t('common:cancel', 'Batal')}
                 onConfirm={promptConfig.onConfirm}
             />
 
@@ -547,14 +548,14 @@ export function JppNexusPage() {
             <ConfirmDialog
                 open={banConfirmState.open}
                 onOpenChange={(open) => !open && setBanConfirmState(p => ({ ...p, open: false }))}
-                title={banConfirmState.action === 'unban' ? 'Pulihkan Akses AI Pengguna' : 'Sekat Kekal Akses AI Pengguna'}
+                title={banConfirmState.action === 'unban' ? t('jpp:nexus_unban_title', 'Pulihkan Akses AI Pengguna') : t('jpp:nexus_ban_title', 'Sekat Kekal Akses AI Pengguna')}
                 description={
                     banConfirmState.action === 'unban'
-                        ? `Adakah anda pasti mahu memulihkan akses AI untuk ${banConfirmState.userName || 'pengguna ini'}? Kuota harian beliau akan ditetapkan semula ke 0.`
-                        : `Adakah anda pasti mahu menyekat pengguna ${banConfirmState.userName || 'ini'} secara kekal daripada menggunakan pembantu kecerdasan buatan?`
+                        ? t('jpp:nexus_unban_desc', 'Adakah anda pasti mahu memulihkan akses AI untuk {{name}}? Kuota harian beliau akan ditetapkan semula ke 0.', { name: banConfirmState.userName || t('jpp:nexus_user_this_user', 'pengguna ini') })
+                        : t('jpp:nexus_ban_desc', 'Adakah anda pasti mahu menyekat pengguna {{name}} secara kekal daripada menggunakan pembantu kecerdasan buatan?', { name: banConfirmState.userName || t('jpp:nexus_user_this_user', 'ini') })
                 }
-                confirmLabel={banConfirmState.action === 'unban' ? 'Pulihkan Akses' : 'Sekat Pengguna'}
-                cancelLabel="Batal"
+                confirmLabel={banConfirmState.action === 'unban' ? t('jpp:nexus_unban_confirm', 'Pulihkan Akses') : t('jpp:nexus_ban_confirm', 'Sekat Pengguna')}
+                cancelLabel={t('common:cancel', 'Batal')}
                 variant={banConfirmState.action === 'unban' ? 'default' : 'destructive'}
                 isLoading={banConfirmState.loading}
                 onConfirm={executeActionSpamUser}

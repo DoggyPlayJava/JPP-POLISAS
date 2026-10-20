@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, ArrowLeft, MapPin, Clock, DollarSign, User, CheckCircle, ShieldAlert, Check, Star, AlertTriangle, MessageCircle, Share2, Upload, FileImage, ExternalLink } from 'lucide-react';
@@ -16,6 +17,7 @@ import { PolyTaskJobDetailSkeleton } from './PolyTaskSkeleton';
 import { TaskerProfileModal } from './TaskerProfileModal';
 
 export function PolyTaskJobDetail() {
+  const { t } = useTranslation(['gig', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -66,7 +68,7 @@ export function PolyTaskJobDetail() {
     ]);
 
     if (jobRes.error || !jobRes.data) {
-      toast.error('Gagal memuatkan maklumat tugasan');
+      toast.error(t('gig:error_load_job', 'Gagal memuatkan maklumat tugasan'));
       navigate('/polytask');
       return;
     }
@@ -96,7 +98,7 @@ export function PolyTaskJobDetail() {
 
     const amount = parseFloat(bidAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('Sila masukkan nilai bidaan yang sah');
+      toast.error(t('gig:error_valid_bid_amount', 'Sila masukkan nilai bidaan yang sah'));
       return;
     }
 
@@ -111,17 +113,21 @@ export function PolyTaskJobDetail() {
     setSubmittingBid(false);
 
     if (error) {
-      toast.error('Gagal menghantar bidaan. Sila cuba lagi.');
+      toast.error(t('gig:error_submit_bid', 'Gagal menghantar bidaan. Sila cuba lagi.'));
       console.error(error);
     } else {
-      toast.success('Bidaan anda berjaya dihantar!');
+      toast.success(t('gig:bid_submitted_success', 'Bidaan anda berjaya dihantar!'));
       setBidAmount('');
       setBidMessage('');
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Bidaan Baharu Diterima!',
-          message: `${profile.full_name} telah membida RM ${amount.toFixed(2)} untuk tugasan "${job.title}".`,
+          title: t('gig:notif_new_bid_received_title', 'Bidaan Baharu Diterima!'),
+          message: t('gig:notif_new_bid_received_msg', '{{name}} telah membida RM {{amount}} untuk tugasan "{{title}}".', {
+            name: profile.full_name,
+            amount: amount.toFixed(2),
+            title: job.title,
+          }),
           type: 'INFO',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -132,22 +138,24 @@ export function PolyTaskJobDetail() {
   };
 
   const handleAcceptBid = async (bidId: string, taskerId: string) => {
-    if (!confirm('Adakah anda pasti mahu menerima Tasker ini? Bidaan lain akan ditolak secara automatik.')) return;
+    if (!confirm(t('gig:confirm_accept_tasker', 'Adakah anda pasti mahu menerima Tasker ini? Bidaan lain akan ditolak secara automatik.'))) return;
     
-    const toastId = toast.loading('Sedang mengesahkan...');
+    const toastId = toast.loading(t('gig:loading_confirming', 'Sedang mengesahkan...'));
     const { error } = await supabase
       .from('polytask_bids')
       .update({ status: 'ACCEPTED' })
       .eq('id', bidId);
 
     if (error) {
-      toast.error('Gagal menerima bidaan', { id: toastId });
+      toast.error(t('gig:error_accept_bid', 'Gagal menerima bidaan'), { id: toastId });
     } else {
-      toast.success('Tasker berjaya dilantik!', { id: toastId });
+      toast.success(t('gig:tasker_assigned_success', 'Tasker berjaya dilantik!'), { id: toastId });
       
       sendNotificationToUser(taskerId, {
-        title: 'Bidaan Anda Diterima!',
-        message: `Tahniah! Bidaan anda untuk tugasan "${job.title}" telah diterima oleh peminta. Sila semak butiran lanjut.`,
+        title: t('gig:notif_bid_accepted_title', 'Bidaan Anda Diterima!'),
+        message: t('gig:notif_bid_accepted_msg', 'Tahniah! Bidaan anda untuk tugasan "{{title}}" telah diterima oleh peminta. Sila semak butiran lanjut.', {
+          title: job.title,
+        }),
         type: 'SUCCESS',
         module: 'POLYTASK',
         link: `/polytask/job/${job.id}`,
@@ -158,18 +166,18 @@ export function PolyTaskJobDetail() {
   };
 
   const handleMarkCompleted = async () => {
-    if (!confirm('Adakah tugasan ini sudah selesai sepenuhnya?')) return;
+    if (!confirm(t('gig:confirm_task_completed_prompt', 'Adakah tugasan ini sudah selesai sepenuhnya?'))) return;
 
-    const toastId = toast.loading('Mengemas kini status...');
+    const toastId = toast.loading(t('gig:loading_updating_status', 'Mengemas kini status...'));
     const { error } = await supabase
       .from('polytask_jobs')
       .update({ status: 'COMPLETED' })
       .eq('id', job.id);
 
     if (error) {
-      toast.error('Gagal mengemas kini', { id: toastId });
+      toast.error(t('gig:error_updating', 'Gagal mengemas kini'), { id: toastId });
     } else {
-      toast.success('Tugasan ditandakan sebagai Selesai!', { id: toastId });
+      toast.success(t('gig:task_marked_completed', 'Tugasan ditandakan sebagai Selesai!'), { id: toastId });
       fetchJobDetails();
       // Prompt user to review immediately after completion
       setIsReviewModalOpen(true);
@@ -178,9 +186,9 @@ export function PolyTaskJobDetail() {
 
   const handleCancelJobTasker = async () => {
     if (!myBid) return;
-    if (!confirm('AMARAN: Membatalkan tugasan yang telah diterima akan menaikkan Cancellation Rate anda. Teruskan?')) return;
+    if (!confirm(t('gig:confirm_cancel_job_tasker', 'AMARAN: Membatalkan tugasan yang telah diterima akan menaikkan Cancellation Rate anda. Teruskan?'))) return;
 
-    const toastId = toast.loading('Sedang membatalkan...');
+    const toastId = toast.loading(t('gig:loading_cancelling', 'Sedang membatalkan...'));
 
     // 1. Update Bid to WITHDRAWN
     const { error: bidError } = await supabase
@@ -189,7 +197,7 @@ export function PolyTaskJobDetail() {
       .eq('id', myBid.id);
 
     if (bidError) {
-      toast.error('Gagal membatalkan bidaan', { id: toastId });
+      toast.error(t('gig:error_cancel_bid', 'Gagal membatalkan bidaan'), { id: toastId });
       return;
     }
 
@@ -200,14 +208,17 @@ export function PolyTaskJobDetail() {
       .eq('id', job.id);
 
     if (jobError) {
-      toast.error('Ralat mengemas kini tugasan', { id: toastId });
+      toast.error(t('gig:error_updating_job', 'Ralat mengemas kini tugasan'), { id: toastId });
     } else {
-      toast.success('Tugasan dibatalkan. Rekod pembatalan anda telah dikemas kini.', { id: toastId });
+      toast.success(t('gig:job_cancelled_success', 'Tugasan dibatalkan. Rekod pembatalan anda telah dikemas kini.'), { id: toastId });
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Tasker Menarik Diri!',
-          message: `${profile?.full_name} telah membatalkan tugasan "${job.title}". Tugasan kini berstatus DIBUKA semula.`,
+          title: t('gig:notif_tasker_withdrew_title', 'Tasker Menarik Diri!'),
+          message: t('gig:notif_tasker_withdrew_msg', '{{name}} telah membatalkan tugasan "{{title}}". Tugasan kini berstatus DIBUKA semula.', {
+            name: profile?.full_name,
+            title: job.title,
+          }),
           type: 'WARNING',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -223,7 +234,7 @@ export function PolyTaskJobDetail() {
     const originalFile = e.target.files[0];
     
     setUploadingProof(true);
-    const toastId = toast.loading('Memproses dan memuat naik bukti kerja...');
+    const toastId = toast.loading(t('gig:loading_upload_proof', 'Memproses dan memuat naik bukti kerja...'));
 
     try {
       // Image Optimization: Convert to WebP format to save bandwidth
@@ -251,12 +262,15 @@ export function PolyTaskJobDetail() {
 
       if (updateError) throw updateError;
 
-      toast.success('Bukti kerja (WebP) berjaya dimuat naik!', { id: toastId });
+      toast.success(t('gig:proof_upload_success', 'Bukti kerja (WebP) berjaya dimuat naik!'), { id: toastId });
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Bukti Kerja Telah Dihantar',
-          message: `${profile?.full_name} telah memuat naik bukti kerja untuk tugasan "${job.title}". Sila semak dan sahkan.`,
+          title: t('gig:notif_proof_submitted_title', 'Bukti Kerja Telah Dihantar'),
+          message: t('gig:notif_proof_submitted_msg', '{{name}} telah memuat naik bukti kerja untuk tugasan "{{title}}". Sila semak dan sahkan.', {
+            name: profile?.full_name,
+            title: job.title,
+          }),
           type: 'SUCCESS',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -266,7 +280,7 @@ export function PolyTaskJobDetail() {
       fetchJobDetails();
     } catch (error) {
       console.error('Upload proof error:', error);
-      toast.error('Gagal memuat naik bukti kerja', { id: toastId });
+      toast.error(t('gig:error_upload_proof', 'Gagal memuat naik bukti kerja'), { id: toastId });
     } finally {
       setUploadingProof(false);
     }
@@ -320,12 +334,12 @@ export function PolyTaskJobDetail() {
   const handleShare = async () => {
     if (!job) return;
     const shareUrl = `${window.location.origin}/polytask/job/${job.id}`;
-    const shareText = `Ada kerja kosong di PolyTask!\nUpah RM${job.budget.toFixed(2)} untuk tugasan "${job.title}".\nKlik link ini:`;
+    const shareText = t('gig:share_job_text', 'Ada kerja kosong di PolyTask!\nUpah RM{{amount}} untuk tugasan "{{title}}".\nKlik link ini:', { amount: job.budget.toFixed(2), title: job.title });
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Tugasan PolyTask',
+          title: t('gig:polytask_title', 'PolyTask'),
           text: shareText,
           url: shareUrl
         });
@@ -337,9 +351,9 @@ export function PolyTaskJobDetail() {
       // Fallback for desktop/unsupported browsers
       try {
         await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-        toast.success('Pautan berjaya disalin ke papan keratan (clipboard)!');
+        toast.success(t('gig:link_copied_clipboard', 'Pautan berjaya disalin ke papan keratan (clipboard)!'));
       } catch (err) {
-        toast.error('Gagal menyalin pautan.');
+        toast.error(t('gig:error_copy_link', 'Gagal menyalin pautan.'));
       }
     }
   };
@@ -364,24 +378,24 @@ export function PolyTaskJobDetail() {
           onClick={() => navigate(-1)} 
           className="flex items-center text-sm text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
+          <ArrowLeft className="w-4 h-4 mr-2" /> {t('gig:back_btn', 'Kembali')}
         </button>
 
         <button
           onClick={handleShare}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95"
         >
-          <Share2 className="w-3.5 h-3.5" /> Kongsi
+          <Share2 className="w-3.5 h-3.5" /> {t('gig:share_btn', 'Kongsi')}
         </button>
       </div>
 
       {/* Job Details Card */}
       <div className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-6 flex flex-col items-end gap-2">
-           {job.status === 'OPEN' && <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">DIBUKA</span>}
-           {job.status === 'IN_PROGRESS' && <span className="px-4 py-1.5 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">SEDANG DIJALANKAN</span>}
-           {job.status === 'COMPLETED' && <span className="px-4 py-1.5 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">SELESAI</span>}
-           {job.status === 'DISPUTED' && <span className="px-4 py-1.5 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">DALAM PERTIKAIAN</span>}
+           {job.status === 'OPEN' && <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">{t('gig:status_open', 'DIBUKA')}</span>}
+           {job.status === 'IN_PROGRESS' && <span className="px-4 py-1.5 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">{t('gig:status_in_progress', 'SEDANG DIJALANKAN')}</span>}
+           {job.status === 'COMPLETED' && <span className="px-4 py-1.5 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">{t('gig:status_completed_task', 'SELESAI')}</span>}
+           {job.status === 'DISPUTED' && <span className="px-4 py-1.5 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">{t('gig:status_disputed', 'DALAM PERTIKAIAN')}</span>}
            
            {/* Dispute Button */}
            {(isRequester || isAcceptedTasker) && (job.status === 'IN_PROGRESS') && (
@@ -389,7 +403,7 @@ export function PolyTaskJobDetail() {
                onClick={() => setIsDisputeModalOpen(true)}
                className="mt-2 text-[10px] text-rose-400 hover:text-rose-300 font-bold uppercase tracking-wider flex items-center gap-1 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 transition-colors"
              >
-               <AlertTriangle className="w-3 h-3" /> Lapor Isu
+               <AlertTriangle className="w-3 h-3" /> {t('gig:report_issue', 'Lapor Isu')}
              </button>
            )}
         </div>
@@ -407,7 +421,7 @@ export function PolyTaskJobDetail() {
               <MapPin className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Lokasi</p>
+              <p className="text-xs text-slate-500 font-medium">{t('gig:location_label_simple', 'Lokasi')}</p>
               <p className="text-sm font-semibold text-white truncate max-w-[150px]">{job.location}</p>
             </div>
           </div>
@@ -416,7 +430,7 @@ export function PolyTaskJobDetail() {
               <Clock className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Tarikh Akhir</p>
+              <p className="text-xs text-slate-500 font-medium">{t('gig:deadline_label', 'Tarikh Akhir')}</p>
               <p className="text-sm font-semibold text-white">{new Date(job.deadline).toLocaleDateString('ms-MY')}</p>
             </div>
           </div>
@@ -425,7 +439,7 @@ export function PolyTaskJobDetail() {
               <DollarSign className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-emerald-500/70 font-medium">Upah Ditawarkan</p>
+              <p className="text-xs text-emerald-500/70 font-medium">{t('gig:offered_reward', 'Upah Ditawarkan')}</p>
               <p className="text-sm font-bold text-emerald-400">RM {job.budget.toFixed(2)}</p>
             </div>
           </div>
@@ -442,7 +456,7 @@ export function PolyTaskJobDetail() {
               )}
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Peminta (Requester)</p>
+              <p className="text-xs text-slate-500 font-medium">{t('gig:requester_label', 'Peminta (Requester)')}</p>
               <p className="text-sm font-bold text-white">{(isRequester || isAcceptedTasker) ? job.requester?.full_name : formatMaskedName(job.requester?.full_name)}</p>
             </div>
           </div>
@@ -451,16 +465,16 @@ export function PolyTaskJobDetail() {
             {((job.status === 'IN_PROGRESS' || job.status === 'COMPLETED' || job.status === 'DISPUTED') && (isRequester || isAcceptedTasker)) && (
               <>
                 <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                  <span className="text-xs text-indigo-300 hidden sm:inline">No. Tel Peminta:</span>
+                  <span className="text-xs text-indigo-300 hidden sm:inline">{t('gig:requester_phone', 'No. Tel Peminta:')}</span>
                   <a href={`https://wa.me/${job.requester?.phone?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-indigo-400 hover:underline">
-                    {job.requester?.phone || 'Tiada Nombor'}
+                    {job.requester?.phone || t('gig:no_phone', 'Tiada Nombor')}
                   </a>
                 </div>
                 <button
                   onClick={() => setIsChatModalOpen(true)}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
                 >
-                  <MessageCircle className="w-4 h-4" /> Chat Maya
+                  <MessageCircle className="w-4 h-4" /> {t('gig:virtual_chat', 'Chat Maya')}
                 </button>
               </>
             )}
@@ -472,14 +486,14 @@ export function PolyTaskJobDetail() {
       {!isRequester && job.status === 'OPEN' && !myBid && (
         <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-3xl p-6 md:p-8 mb-8">
           <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-            Hantar Bidaan <ShieldAlert className="w-5 h-5 text-indigo-400" />
+            {t('gig:submit_bid_title', 'Hantar Bidaan')} <ShieldAlert className="w-5 h-5 text-indigo-400" />
           </h2>
-          <p className="text-slate-400 text-sm mb-6">Tawarkan harga upah anda dan berikan sebab mengapa anda sesuai untuk tugasan ini.</p>
+          <p className="text-slate-400 text-sm mb-6">{t('gig:submit_bid_desc', 'Tawarkan harga upah anda dan berikan sebab mengapa anda sesuai untuk tugasan ini.')}</p>
           
           <form onSubmit={handleSubmitBid} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 space-y-2">
-                <label className="text-xs font-medium text-slate-300">Harga Bidaan Anda (RM)</label>
+                <label className="text-xs font-medium text-slate-300">{t('gig:bid_price_label', 'Harga Bidaan Anda (RM)')}</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">RM</span>
                   <input 
@@ -491,11 +505,11 @@ export function PolyTaskJobDetail() {
                 </div>
               </div>
               <div className="flex-[2] space-y-2">
-                <label className="text-xs font-medium text-slate-300">Mesej Kepada Peminta (Pilihan)</label>
+                <label className="text-xs font-medium text-slate-300">{t('gig:bid_message_label', 'Mesej Kepada Peminta (Pilihan)')}</label>
                 <input 
                   type="text" 
                   value={bidMessage} onChange={e => setBidMessage(e.target.value)}
-                  placeholder="Cth: Saya ada laptop tool set dan boleh siapkan malam ni." 
+                  placeholder={t('gig:bid_message_placeholder', 'Cth: Saya ada laptop tool set dan boleh siapkan malam ni.')} 
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50"
                 />
               </div>
@@ -504,7 +518,7 @@ export function PolyTaskJobDetail() {
               type="submit" disabled={submittingBid}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
             >
-              {submittingBid ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Hantar Bidaan'}
+              {submittingBid ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('gig:submit_bid_button', 'Hantar Bidaan')}
             </button>
           </form>
         </div>
@@ -528,22 +542,22 @@ export function PolyTaskJobDetail() {
                <Clock className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Status Bidaan Anda</h3>
+              <h3 className="text-lg font-bold text-white">{t('gig:my_bid_status', 'Status Bidaan Anda')}</h3>
               <p className={`text-sm font-semibold ${
                 myBid.status === 'ACCEPTED' ? 'text-emerald-400' :
                 myBid.status === 'REJECTED' ? 'text-rose-400' :
                 'text-indigo-400'
               }`}>
-                {myBid.status === 'PENDING' && 'Sedang Menunggu Maklum Balas'}
-                {myBid.status === 'ACCEPTED' && 'Tahniah! Bidaan Diterima'}
-                {myBid.status === 'REJECTED' && 'Bidaan Ditolak'}
+                {myBid.status === 'PENDING' && t('gig:bid_pending_response', 'Sedang Menunggu Maklum Balas')}
+                {myBid.status === 'ACCEPTED' && t('gig:bid_accepted_congrats', 'Tahniah! Bidaan Diterima')}
+                {myBid.status === 'REJECTED' && t('gig:bid_rejected', 'Bidaan Ditolak')}
               </p>
             </div>
           </div>
           
           <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-400">Harga Ditawarkan:</span>
+              <span className="text-sm text-slate-400">{t('gig:offered_price', 'Harga Ditawarkan:')}</span>
               <span className="font-bold text-white">RM {myBid.bid_amount.toFixed(2)}</span>
             </div>
             {myBid.proposal_note && (
@@ -556,21 +570,21 @@ export function PolyTaskJobDetail() {
             {myBid.status === 'ACCEPTED' && job.status === 'IN_PROGRESS' && (
               <div className="mt-6 pt-4 border-t border-white/10">
                 <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                  <FileImage className="w-4 h-4 text-emerald-400" /> Bukti Kerja (Proof of Work)
+                  <FileImage className="w-4 h-4 text-emerald-400" /> {t('gig:proof_of_work', 'Bukti Kerja (Proof of Work)')}
                 </h4>
                 
                 {job.proof_image_url ? (
                   <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col items-center gap-3">
                     <CheckCircle className="w-8 h-8 text-emerald-400" />
-                    <p className="text-sm text-emerald-300 text-center font-bold">Bukti telah dihantar kepada Peminta</p>
+                    <p className="text-sm text-emerald-300 text-center font-bold">{t('gig:proof_submitted', 'Bukti telah dihantar kepada Peminta')}</p>
                     <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-emerald-400 hover:text-emerald-300 underline flex items-center gap-1 mt-1">
-                      <ExternalLink className="w-3 h-3" /> Lihat Gambar Bukti
+                      <ExternalLink className="w-3 h-3" /> {t('gig:view_proof_image', 'Lihat Gambar Bukti')}
                     </a>
-                    <p className="text-xs text-slate-400 mt-2 text-center">Menunggu pengesahan dan bayaran dari Peminta.</p>
+                    <p className="text-xs text-slate-400 mt-2 text-center">{t('gig:awaiting_confirmation_payment', 'Menunggu pengesahan dan bayaran dari Peminta.')}</p>
                   </div>
                 ) : (
                   <div className="bg-slate-900/50 border border-white/10 border-dashed p-6 rounded-xl flex flex-col items-center text-center">
-                    <p className="text-sm text-slate-300 mb-4">Muat naik gambar bukti kerja anda setelah selesai untuk rujukan Peminta dan pihak JPP.</p>
+                    <p className="text-sm text-slate-300 mb-4">{t('gig:upload_proof_desc', 'Muat naik gambar bukti kerja anda setelah selesai untuk rujukan Peminta dan pihak JPP.')}</p>
                     <input
                       type="file"
                       id="proof-upload"
@@ -586,7 +600,7 @@ export function PolyTaskJobDetail() {
                       }`}
                     >
                       {uploadingProof ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                      {uploadingProof ? 'Memuat naik...' : 'Muat Naik Gambar'}
+                      {uploadingProof ? t('gig:uploading', 'Memuat naik...') : t('gig:upload_photo', 'Muat Naik Gambar')}
                     </label>
                   </div>
                 )}
@@ -596,13 +610,13 @@ export function PolyTaskJobDetail() {
             {myBid.status === 'ACCEPTED' && job.status === 'IN_PROGRESS' && (
               <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-xs text-rose-400 max-w-sm">
-                  Menarik diri dari tugasan ini akan menaikkan Cancellation Rate anda dan direkodkan dalam sistem JPP.
+                  {t('gig:withdraw_warning', 'Menarik diri dari tugasan ini akan menaikkan Cancellation Rate anda dan direkodkan dalam sistem JPP.')}
                 </p>
                 <button 
                   onClick={handleCancelJobTasker}
                   className="w-full sm:w-auto px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-sm font-bold transition-colors shrink-0 flex items-center justify-center gap-2"
                 >
-                  <AlertTriangle className="w-4 h-4" /> Batal & Tarik Diri
+                  <AlertTriangle className="w-4 h-4" /> {t('gig:withdraw_task', 'Batal & Tarik Diri')}
                 </button>
               </div>
             )}
@@ -616,18 +630,18 @@ export function PolyTaskJobDetail() {
           <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Tugasan Sedang Dijalankan</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('gig:task_running_title', 'Tugasan Sedang Dijalankan')}</h2>
           <p className="text-slate-400 max-w-md mx-auto mb-6">
-            Tasker yang dilantik sedang melaksanakan tugasan anda. Pastikan kerja siap sebelum mengesahkan.
+            {t('gig:task_running_desc', 'Tasker yang dilantik sedang melaksanakan tugasan anda. Pastikan kerja siap sebelum mengesahkan.')}
           </p>
 
           {job.proof_image_url && (
             <div className="w-full max-w-md mb-8 bg-slate-900/50 p-4 rounded-2xl border border-emerald-500/30">
               <h4 className="text-sm font-bold text-emerald-400 mb-2 flex items-center justify-center gap-2">
-                <FileImage className="w-4 h-4" /> Tasker Telah Memuat Naik Bukti
+                <FileImage className="w-4 h-4" /> {t('gig:tasker_uploaded_proof', 'Tasker Telah Memuat Naik Bukti')}
               </h4>
-              <img src={job.proof_image_url} alt="Bukti Kerja" className="w-full h-48 object-cover rounded-xl mb-2" />
-              <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 underline">Lihat Imej Penuh</a>
+              <img src={job.proof_image_url} alt={t('gig:work_proof_alt', 'Bukti Kerja')} className="w-full h-48 object-cover rounded-xl mb-2" />
+              <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 underline">{t('gig:view_full_image', 'Lihat Imej Penuh')}</a>
             </div>
           )}
 
@@ -635,7 +649,7 @@ export function PolyTaskJobDetail() {
             onClick={handleMarkCompleted}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
           >
-            <Check className="w-5 h-5" /> Sahkan Tugasan Selesai
+            <Check className="w-5 h-5" /> {t('gig:confirm_task_completed', 'Sahkan Tugasan Selesai')}
           </button>
         </div>
       )}
@@ -644,11 +658,11 @@ export function PolyTaskJobDetail() {
       {isRequester && job.status === 'COMPLETED' && acceptedBid && (
         <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-3xl p-6 md:p-8 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h2 className="text-xl font-bold text-white mb-2">Tugasan Selesai! 🎉</h2>
+            <h2 className="text-xl font-bold text-white mb-2">{t('gig:task_completed_celebration', 'Tugasan Selesai! 🎉')}</h2>
             <p className="text-slate-400 text-sm">
               {hasReviewed 
-                ? 'Terima kasih kerana memberikan ulasan untuk Tasker ini.' 
-                : 'Bagaimana hasil kerja Tasker ini? Berikan rating anda.'}
+                ? t('gig:review_thank_you', 'Terima kasih kerana memberikan ulasan untuk Tasker ini.') 
+                : t('gig:review_prompt', 'Bagaimana hasil kerja Tasker ini? Berikan rating anda.')}
             </p>
           </div>
           {!hasReviewed && (
@@ -656,7 +670,7 @@ export function PolyTaskJobDetail() {
               onClick={() => setIsReviewModalOpen(true)}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shrink-0"
             >
-              <Star className="w-5 h-5 fill-white text-white" /> Nilaikan Tasker
+              <Star className="w-5 h-5 fill-white text-white" /> {t('gig:rate_tasker_btn', 'Nilaikan Tasker')}
             </button>
           )}
         </div>
@@ -665,11 +679,11 @@ export function PolyTaskJobDetail() {
       {/* --- REQUESTER VIEW: LIST OF BIDS --- */}
       {isRequester && job.status === 'OPEN' && (
         <div>
-          <h2 className="text-xl font-bold text-white mb-6">Senarai Bidaan ({bids.length})</h2>
+          <h2 className="text-xl font-bold text-white mb-6">{t('gig:bids_list_title', 'Senarai Bidaan ({{count}})', { count: bids.length })}</h2>
           
           {bids.length === 0 ? (
             <div className="bg-slate-900/30 border border-dashed border-white/10 rounded-3xl p-12 text-center">
-              <p className="text-slate-400">Belum ada sebarang bidaan diterima daripada pelajar lain.</p>
+              <p className="text-slate-400">{t('gig:no_bids_yet', 'Belum ada sebarang bidaan diterima daripada pelajar lain.')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -712,7 +726,7 @@ export function PolyTaskJobDetail() {
                   
                   <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-4 sm:border-l border-white/10 sm:pl-6 min-w-[140px]">
                     <div className="text-center">
-                      <p className="text-xs text-slate-400 font-medium mb-1">Tawaran Harga</p>
+                      <p className="text-xs text-slate-400 font-medium mb-1">{t('gig:price_offer', 'Tawaran Harga')}</p>
                       <p className="text-xl font-bold text-emerald-400">RM {bid.bid_amount.toFixed(2)}</p>
                     </div>
 
@@ -721,19 +735,19 @@ export function PolyTaskJobDetail() {
                         onClick={() => handleAcceptBid(bid.id, bid.tasker_id)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold w-full transition-colors"
                       >
-                        Terima Bid
+                        {t('gig:accept_bid_btn', 'Terima Bid')}
                       </button>
                     )}
 
                     {bid.status === 'ACCEPTED' && (
                       <div className="bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl text-sm font-bold w-full text-center flex items-center justify-center gap-2">
-                        <CheckCircle className="w-4 h-4" /> Diterima
+                        <CheckCircle className="w-4 h-4" /> {t('gig:bid_accepted_badge', 'Diterima')}
                       </div>
                     )}
                     
                     {bid.status === 'REJECTED' && (
                       <div className="bg-white/5 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold w-full text-center">
-                        Ditolak
+                        {t('gig:bid_declined_badge', 'Ditolak')}
                       </div>
                     )}
                   </div>

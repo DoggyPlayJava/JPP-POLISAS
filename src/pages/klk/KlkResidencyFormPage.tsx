@@ -3,6 +3,7 @@
 // Standalone page — boleh dicapai dari notifikasi / direct link
 // ============================================================
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { MapPin, Home, Building2, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 export function KlkResidencyFormPage() {
+  const { t } = useTranslation(['housing', 'klk', 'common']);
   const { profile, user } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
@@ -95,19 +97,19 @@ export function KlkResidencyFormPage() {
         await supabase.from('klk_student_residency').insert(payload);
       }
       setStep('done');
-    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    } catch { toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.')); }
     finally { setLoading(false); }
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!alamat.trim()) { toast.error('Sila isi alamat kediaman.'); return; }
-    if (!kawasan) { toast.error('Sila pilih kawasan kediaman.'); return; }
-    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error('Sila nyatakan kawasan.'); return; }
+    if (!alamat.trim()) { toast.error(t('housing:fill_address_required', 'Sila isi alamat kediaman.')); return; }
+    if (!kawasan) { toast.error(t('housing:choose_area_required', 'Sila pilih kawasan kediaman.')); return; }
+    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error(t('housing:specify_area_required', 'Sila nyatakan kawasan.')); return; }
     // Validate required dynamic fields
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
-        toast.error(`Sila isi: ${f.label}`); return;
+        toast.error(t('housing:fill_dynamic_field_required', 'Sila isi: {{field}}', { field: f.label })); return;
       }
     }
 
@@ -128,9 +130,9 @@ export function KlkResidencyFormPage() {
       } else {
         await supabase.from('klk_student_residency').insert(payload);
       }
-      toast.success('Maklumat kediaman berjaya disimpan!');
+      toast.success(t('housing:residence_saved_success', 'Maklumat kediaman berjaya disimpan!'));
       setStep('done');
-    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    } catch { toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.')); }
     finally { setLoading(false); }
   };
 
@@ -158,8 +160,10 @@ export function KlkResidencyFormPage() {
             <ArrowLeft className="w-4 h-4 text-slate-400" />
           </button>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Exco Kediaman Luar Kampus</p>
-            <h1 className="text-lg font-black text-white leading-tight">Deklarasi Status Kediaman</h1>
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{t('klk:exco_klk_title', 'Exco Kediaman Luar Kampus')}</p>
+            <h1 className="text-lg font-black text-white leading-tight">
+              {t('housing:declare_residence', 'Hantar Deklarasi Kediaman Luar Kampus')}
+            </h1>
           </div>
         </motion.div>
 
@@ -176,11 +180,11 @@ export function KlkResidencyFormPage() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-white truncate">{profile?.full_name}</p>
             <p className="text-[10px] text-slate-500 font-medium">
-              {profile?.matric_no?.toUpperCase()} · {jabatanLabel} · Semester {semInfo.semester}
+              {profile?.matric_no?.toUpperCase()} · {jabatanLabel} · {t('common:semester', 'Semester')} {semInfo.semester}
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-600">Tahun Akademik</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-600">{t('housing:academic_year', 'Tahun Akademik')}</p>
             <p className="text-xs font-black text-slate-400">{academicYear}</p>
           </div>
         </motion.div>
@@ -204,7 +208,7 @@ export function KlkResidencyFormPage() {
                     <MapPin className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-white">Di mana anda tinggal?</h2>
+                    <h2 className="text-lg font-black text-white">{t('housing:where_do_you_live', 'Di mana anda tinggal?')}</h2>
                     <p className="text-[11px] text-slate-500">Semester {semInfo.semester} — {academicYear}</p>
                   </div>
                 </div>
@@ -219,8 +223,8 @@ export function KlkResidencyFormPage() {
                       <Building2 className="w-7 h-7 text-emerald-400" />
                     </div>
                     <div className="text-center">
-                      <p className="font-black text-emerald-300 text-sm">Dalam KAMSIS</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Tinggal di asrama</p>
+                      <p className="font-black text-emerald-300 text-sm">{t('housing:in_kamsis', 'Dalam KAMSIS')}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:stay_hostel', 'Tinggal di asrama')}</p>
                     </div>
                   </motion.button>
 
@@ -233,15 +237,15 @@ export function KlkResidencyFormPage() {
                       <Home className="w-7 h-7 text-blue-400" />
                     </div>
                     <div className="text-center">
-                      <p className="font-black text-blue-300 text-sm">Luar Kampus</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Sewa / Rumah sendiri</p>
+                      <p className="font-black text-blue-300 text-sm">{t('housing:off_campus', 'Luar Kampus')}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:stay_rental_home', 'Sewa / Rumah sendiri')}</p>
                     </div>
                   </motion.button>
                 </div>
 
                 {loading && (
                   <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...
+                    <Loader2 className="w-4 h-4 animate-spin" /> {t('common:saving', 'Menyimpan...')}
                   </div>
                 )}
               </motion.div>
@@ -258,9 +262,9 @@ export function KlkResidencyFormPage() {
                     <ArrowLeft className="w-4 h-4 text-slate-400" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-black text-white">Maklumat Kediaman</h2>
+                    <h2 className="text-lg font-black text-white">{t('housing:residence_info', 'Maklumat Kediaman')}</h2>
                     <p className="text-[11px] text-slate-500">
-                      {existingRecord ? 'Kemaskini maklumat kediaman anda' : 'Isi maklumat tempat tinggal anda'}
+                      {existingRecord ? t('housing:update_residence_info', 'Kemaskini maklumat kediaman anda') : t('housing:fill_residence_info', 'Isi maklumat tempat tinggal anda')}
                     </p>
                   </div>
                 </div>
@@ -268,24 +272,24 @@ export function KlkResidencyFormPage() {
                 <form onSubmit={handleSubmitForm} className="space-y-5">
                   {/* Read-only fields */}
                   <div className="grid grid-cols-2 gap-4">
-                    <FieldReadOnly label="Nama Pelajar" value={profile?.full_name ?? ''} />
-                    <FieldReadOnly label="No. Matrik" value={profile?.matric_no?.toUpperCase() ?? ''} />
+                    <FieldReadOnly label={t('housing:student_name', 'Nama Pelajar')} value={profile?.full_name ?? ''} />
+                    <FieldReadOnly label={t('housing:matric_no', 'No. Matrik')} value={profile?.matric_no?.toUpperCase() ?? ''} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <FieldReadOnly label="No. Telefon" value={profile?.phone ?? '—'} />
-                    <FieldReadOnly label="Jabatan" value={jabatanLabel} />
+                    <FieldReadOnly label={t('housing:phone_number', 'No. Telefon')} value={profile?.phone ?? '—'} />
+                    <FieldReadOnly label={t('housing:department', 'Jabatan')} value={jabatanLabel} />
                   </div>
 
                   {/* Editable fields */}
                   <FieldTextarea
-                    label="Alamat Kediaman" required
+                    label={t('housing:emergency_contact_address', 'Alamat Kecemasan Tempatan')} required
                     value={alamat} onChange={setAlamat}
-                    placeholder="Contoh: No. 12, Jalan Semambu 1..."
+                    placeholder={t('housing:address_placeholder', 'Contoh: No. 12, Jalan Semambu 1...')}
                   />
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      Kawasan Kediaman <span className="text-red-400">*</span>
+                      {t('housing:residential_area', 'Kawasan Kediaman')} <span className="text-red-400">*</span>
                     </label>
                     <KawasanSearchSelect
                       value={kawasan}
@@ -298,23 +302,27 @@ export function KlkResidencyFormPage() {
 
                   {kawasan === 'LAIN_LAIN' && (
                     <FieldText
-                      label="Nyatakan Kawasan" required
+                      label={t('housing:specify_area', 'Nyatakan Kawasan')} required
                       value={kawasanCustom} onChange={setKawasanCustom}
-                      placeholder="Nama kawasan..."
+                      placeholder={t('housing:area_name_placeholder', 'Nama kawasan...')}
                     />
                   )}
 
+                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                    <span className="font-bold">{t('housing:landlord_contact', 'Maklumat Tuan Rumah Sah')}:</span> {t('housing:landlord_agreement_note', 'Sila simpan salinan perjanjian dan nombor telefon pemilik kediaman untuk rujukan kecemasan Exco.')}
+                  </div>
+
                   <FieldTextarea
-                    label="Cadangan / Penambahbaikan"
+                    label={t('housing:suggestions_feedback', 'Cadangan / Penambahbaikan')}
                     value={cadangan} onChange={setCadangan}
-                    placeholder="Cadangan kepada Exco KLK... (pilihan)"
+                    placeholder={t('housing:suggestions_placeholder', 'Cadangan kepada Exco KLK... (pilihan)')}
                     optional
                   />
 
                   {/* Soalan Dinamik dari Form Builder */}
                   {dynamicFields.length > 0 && (
                     <div className="space-y-4 pt-2 border-t border-white/[0.05]">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Soalan Tambahan</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">{t('housing:additional_questions', 'Soalan Tambahan')}</p>
                       <KlkDynamicFieldRenderer
                         fields={dynamicFields}
                         values={extraData}
@@ -332,7 +340,7 @@ export function KlkResidencyFormPage() {
                       <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Menyimpan...</span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        {existingRecord ? 'Kemaskini Maklumat' : 'Hantar Maklumat'}
+                        {existingRecord ? t('housing:update_info', 'Kemaskini Maklumat') : t('housing:submit_info', 'Hantar Maklumat')}
                         <ArrowRight className="w-4 h-4" />
                       </span>
                     )}
@@ -351,14 +359,14 @@ export function KlkResidencyFormPage() {
                 >
                   <CheckCircle2 className="w-10 h-10 text-emerald-400" />
                 </motion.div>
-                <h2 className="text-2xl font-black text-white mb-2">Terima Kasih!</h2>
-                <p className="text-sm text-slate-400 mb-6">Maklumat kediaman anda telah disimpan untuk semester ini.</p>
+                <h2 className="text-2xl font-black text-white mb-2">{t('common:thank_you', 'Terima Kasih!')}</h2>
+                <p className="text-sm text-slate-400 mb-6">{t('housing:residence_saved_desc', 'Maklumat kediaman anda telah disimpan untuk semester ini.')}</p>
                 <Button
                   onClick={() => navigate('/portal')}
                   className="rounded-xl font-black text-sm uppercase tracking-widest"
                   variant="outline"
                 >
-                  Kembali ke Portal
+                  {t('housing:back_to_portal', 'Kembali ke Portal')}
                 </Button>
               </motion.div>
             )}
@@ -385,12 +393,13 @@ function FieldText({ label, value, onChange, placeholder, required, optional }: 
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; optional?: boolean;
 }) {
+  const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-slate-600">(Pilihan)</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-slate-600">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <input
         type="text" value={value} onChange={e => onChange(e.target.value)}
@@ -405,12 +414,13 @@ function FieldTextarea({ label, value, onChange, placeholder, required, optional
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; optional?: boolean;
 }) {
+  const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
         {required && <span className="text-red-400 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-slate-600">(Pilihan)</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-slate-600">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <textarea
         value={value} onChange={e => onChange(e.target.value)}

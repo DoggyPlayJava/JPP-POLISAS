@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, usePolymart } from './PolyMartLayout';
@@ -71,7 +72,7 @@ export const groupVendorOrders = (rawOrders: any[]): GroupedVendorOrder[] => {
       batchKey = `time_${bucket}`;
     }
 
-    const key = `${buyerId}_${bizId}_${status}_${method}_${batchKey}`;
+    const key = [buyerId, bizId, status, method, batchKey].join('_');
 
     if (!groups[key]) {
       groups[key] = {
@@ -134,6 +135,7 @@ const setStorageItem = (key: string, value: string): void => {
 
 // ── Orchestrator Component ─────────────────────────────────────────────────────
 export function PolyMartVendorDashboard() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   const { refetchCounts } = usePolymart();
   const navigate = useNavigate();
@@ -190,7 +192,7 @@ export function PolyMartVendorDashboard() {
                 is_active: b.is_active ?? true,
               }))
             : [
-                { id: 'mock-biz-1', name: 'Kedai Mock Cik Jah', is_active: true },
+                { id: 'mock-biz-1', name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah'), is_active: true },
                 { id: 'mock-biz-2', name: 'PolyMerch Co.', is_active: false },
               ];
         setMyBusinesses(mockBizList);
@@ -309,11 +311,11 @@ export function PolyMartVendorDashboard() {
       }
     } catch (err: any) {
       console.error('Failed to load PolyMart vendor data:', err);
-      toast.error('Ralat memuatkan data peniaga');
+      toast.error(t('commerce:vendor_toast_load_err', 'Ralat memuatkan data peniaga'));
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   // Initial Load
   useEffect(() => {
@@ -342,7 +344,7 @@ export function PolyMartVendorDashboard() {
         setMyBusinesses(prev =>
           prev.map(b => (b.id === bizId ? { ...b, is_active: !currentStatus } : b))
         );
-        toast.success(`Kedai ${!currentStatus ? 'dibuka!' : 'ditutup!'}`);
+        toast.success(!currentStatus ? t('commerce:vendor_toast_store_opened', 'Kedai dibuka!') : t('commerce:vendor_toast_store_closed', 'Kedai ditutup!'));
         return;
       }
 
@@ -352,15 +354,15 @@ export function PolyMartVendorDashboard() {
         .eq('id', bizId);
 
       if (error) {
-        toast.error('Gagal menukar status kedai: ' + error.message);
+        toast.error(t('commerce:vendor_toast_status_err', 'Ralat mengemaskini status kedai') + ': ' + error.message);
       } else {
-        toast.success(`Kedai ${!currentStatus ? 'dibuka!' : 'ditutup!'}`);
+        toast.success(!currentStatus ? t('commerce:vendor_toast_store_opened', 'Kedai dibuka!') : t('commerce:vendor_toast_store_closed', 'Kedai ditutup!'));
         setMyBusinesses(prev =>
           prev.map(b => (b.id === bizId ? { ...b, is_active: !currentStatus } : b))
         );
       }
     } catch (err: any) {
-      toast.error('Ralat mengemaskini status kedai');
+      toast.error(t('commerce:vendor_toast_status_err', 'Ralat mengemaskini status kedai'));
     } finally {
       setTogglingStatus(false);
     }
@@ -439,15 +441,17 @@ export function PolyMartVendorDashboard() {
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-sm">
           <Store className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-black text-foreground mb-2">Log Masuk Diperlukan</h2>
+        <h2 className="text-xl font-black text-foreground mb-2">
+          {t('commerce:vendor_login_required_title', 'Log Masuk Diperlukan')}
+        </h2>
         <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-          Sila log masuk untuk mengakses Hab Peniaga PolyMart dan mengurus pesanan serta inventori kedai anda.
+          {t('commerce:vendor_login_required_desc', 'Sila log masuk untuk mengakses Hab Peniaga PolyMart dan mengurus pesanan serta inventori kedai anda.')}
         </p>
         <button
           onClick={() => navigate('/auth')}
           className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all active:scale-95"
         >
-          Log Masuk Sekarang
+          {t('commerce:vendor_login_now_btn', 'Log Masuk Sekarang')}
         </button>
       </div>
     );
@@ -460,15 +464,17 @@ export function PolyMartVendorDashboard() {
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-sm">
           <Store className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-black text-foreground mb-2">Tiada Kedai Didaftarkan</h2>
+        <h2 className="text-xl font-black text-foreground mb-2">
+          {t('commerce:vendor_no_store_title', 'Tiada Kedai Didaftarkan')}
+        </h2>
         <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
-          Anda belum mempunyai profil perniagaan siswa yang aktif untuk mengurus pesanan di PolyMart.
+          {t('commerce:vendor_no_store_desc', 'Anda belum mempunyai profil perniagaan siswa yang aktif untuk mengurus pesanan di PolyMart.')}
         </p>
         <button
           onClick={() => navigate('/keusahawanan')}
           className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all inline-flex items-center gap-2 active:scale-95"
         >
-          <span>Daftar Kedai di e-Keusahawanan</span>
+          <span>{t('commerce:vendor_register_store_btn', 'Daftar Kedai di e-Keusahawanan')}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -482,9 +488,11 @@ export function PolyMartVendorDashboard() {
         <div className="flex items-center gap-3 p-3.5 mb-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <div className="text-left flex-1 min-w-0">
-            <p className="text-xs font-black uppercase tracking-wider">Mod Pembangunan Aktif (Mock Mode)</p>
+            <p className="text-xs font-black uppercase tracking-wider">
+              {t('commerce:vendor_mock_banner_title', 'Mod Pembangunan Aktif (Mock Mode)')}
+            </p>
             <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-              Data dipaparkan daripada simpanan tempatan untuk tujuan pengujian sistem.
+              {t('commerce:vendor_mock_banner_desc', 'Data dipaparkan daripada simpanan tempatan untuk tujuan pengujian sistem.')}
             </p>
           </div>
         </div>
@@ -498,11 +506,11 @@ export function PolyMartVendorDashboard() {
               <Store className="w-4 h-4" />
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-              Hab Peniaga PolyMart
+              {t('commerce:vendor_hub_title', 'Hab Peniaga PolyMart')}
             </h1>
           </div>
           <p className="text-xs text-muted-foreground font-medium mt-1">
-            Pusat Kawalan Bersepadu 3 Domain Operasi
+            {t('commerce:vendor_hub_subtitle', 'Pusat Kawalan Bersepadu 3 Domain Operasi')}
           </p>
         </div>
 
@@ -517,7 +525,9 @@ export function PolyMartVendorDashboard() {
                 onChange={e => handleBizChange(e.target.value)}
                 className="bg-transparent font-bold text-foreground pr-4 focus:outline-none cursor-pointer appearance-none"
               >
-                <option value="all">Semua Kedai ({myBusinesses.length})</option>
+                <option value="all">
+                  {t('commerce:vendor_all_stores_option', 'Semua Kedai ({{count}})', { count: myBusinesses.length })}
+                </option>
                 {myBusinesses.map(b => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -543,17 +553,23 @@ export function PolyMartVendorDashboard() {
                     activeStore.is_active ? 'bg-emerald-500' : 'bg-rose-500'
                   }`}
                 />
-                {activeStore.is_active ? 'BUKA' : 'TUTUP'}
+                {activeStore.is_active 
+                  ? t('commerce:vendor_store_open', 'BUKA') 
+                  : t('commerce:vendor_store_closed', 'TUTUP')}
               </span>
 
               <button
                 type="button"
                 onClick={() => handleToggleStoreStatus(activeStore.id, activeStore.is_active)}
                 disabled={togglingStatus}
-                aria-label="Tukar status operasi kedai"
+                aria-label={t('commerce:vendor_aria_toggle_store', 'Tukar status operasi kedai')}
                 className="text-[11px] font-bold px-2.5 py-1 rounded-full text-foreground hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
               >
-                {togglingStatus ? 'Memproses...' : activeStore.is_active ? 'Tutup Kedai' : 'Buka Kedai'}
+                {togglingStatus 
+                  ? t('commerce:vendor_processing_action', 'Memproses...') 
+                  : activeStore.is_active 
+                    ? t('commerce:vendor_close_store_action', 'Tutup Kedai') 
+                    : t('commerce:vendor_open_store_action', 'Buka Kedai')}
               </button>
             </div>
           )}
@@ -569,7 +585,7 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${autoRefresh ? 'text-emerald-500' : ''}`} />
-            <span className="hidden sm:inline">Kemas Kini Auto</span>
+            <span className="hidden sm:inline">{t('commerce:vendor_auto_refresh', 'Kemas Kini Auto')}</span>
             <span>{autoRefresh ? '(On)' : '(Off)'}</span>
           </button>
         </div>
@@ -597,12 +613,12 @@ export function PolyMartVendorDashboard() {
                 {stats.todayCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
-                Pesanan Hari Ini
+                {t('commerce:vendor_kpi_today_orders', 'Pesanan Hari Ini')}
               </p>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-2 truncate">
-            Tempahan masuk hari ini
+            {t('commerce:vendor_kpi_today_orders_sub', 'Tempahan masuk hari ini')}
           </p>
         </div>
 
@@ -626,12 +642,12 @@ export function PolyMartVendorDashboard() {
                 {stats.pendingCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
-                Menunggu Sahkan
+                {t('commerce:vendor_kpi_pending_confirm', 'Menunggu Sahkan')}
               </p>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-2 truncate">
-            Perlu tindakan pengesahan
+            {t('commerce:vendor_kpi_pending_confirm_sub', 'Perlu tindakan pengesahan')}
           </p>
         </div>
 
@@ -655,12 +671,12 @@ export function PolyMartVendorDashboard() {
                 {stats.activeCount}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
-                Aktif Sekarang
+                {t('commerce:vendor_kpi_active_now', 'Aktif Sekarang')}
               </p>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-2 truncate">
-            Sedang disedia &amp; sedia diambil
+            {t('commerce:vendor_kpi_active_now_sub', 'Sedang disedia & sedia diambil')}
           </p>
         </div>
 
@@ -684,12 +700,12 @@ export function PolyMartVendorDashboard() {
                 RM {stats.revenue.toFixed(2)}
               </p>
               <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-muted-foreground/70 mt-1 truncate">
-                Hasil Selesai
+                {t('commerce:vendor_kpi_completed_rev', 'Hasil Selesai')}
               </p>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 mt-2 truncate">
-            Jumlah pesanan yang selesai
+            {t('commerce:vendor_kpi_completed_rev_sub', 'Jumlah pesanan yang selesai')}
           </p>
         </div>
       </div>
@@ -708,7 +724,7 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <ShoppingBag className="w-4 h-4 shrink-0" />
-            <span className="truncate">Pesanan Masuk</span>
+            <span className="truncate">{t('commerce:vendor_tab_incoming_orders', 'Pesanan Masuk')}</span>
             {stats.pendingCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-sm shrink-0">
                 {stats.pendingCount}
@@ -727,7 +743,7 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <Tag className="w-4 h-4 shrink-0" />
-            <span className="truncate">Katalog &amp; Stok</span>
+            <span className="truncate">{t('commerce:vendor_tab_catalog_stock', 'Katalog &amp; Stok')}</span>
             {products.length > 0 && (
               <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full text-[10px] font-black bg-zinc-200 dark:bg-zinc-700 text-muted-foreground shrink-0">
                 {products.length}
@@ -746,10 +762,10 @@ export function PolyMartVendorDashboard() {
             }`}
           >
             <TrendingUp className="w-4 h-4 shrink-0" />
-            <span className="truncate">Prestasi &amp; Iklan</span>
+            <span className="truncate">{t('commerce:vendor_tab_performance_ads', 'Prestasi &amp; Iklan')}</span>
             {lowStockCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 border border-rose-500/30 text-rose-500 shrink-0">
-                {lowStockCount} Amaran
+                {t('commerce:vendor_warnings_count', '{{count}} Amaran', { count: lowStockCount })}
               </span>
             )}
           </button>

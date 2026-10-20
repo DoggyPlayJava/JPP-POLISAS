@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Plus, Trash2, UserCircle, MessageCircle, X, Save, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -25,6 +26,7 @@ interface SOSContactsManagerProps {
 }
 
 export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobLocation, onClose }: SOSContactsManagerProps) {
+  const { t, i18n } = useTranslation(['gig', 'common']);
   const { user } = useAuth();
   const [contacts, setContacts] = useState<SOSContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,10 +51,10 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
 
   const addContact = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
-      toast.error('Nama dan no. telefon wajib diisi.'); return;
+      toast.error(t('gig:name_and_phone_required', 'Nama dan no. telefon wajib diisi.')); return;
     }
     if (contacts.length >= MAX_CONTACTS) {
-      toast.error(`Maksimum ${MAX_CONTACTS} kenalan kecemasan sahaja.`); return;
+      toast.error(t('gig:max_contacts_limit', 'Maksimum {{count}} kenalan kecemasan sahaja.', { count: MAX_CONTACTS })); return;
     }
     // Normalize phone — strip spaces/dashes and add 60 prefix
     let phone = form.phone.replace(/[\s\-]/g, '');
@@ -64,28 +66,28 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
       user_id: user!.id,
       name: form.name.trim(),
       phone,
-      relation: form.relation.trim() || 'Kenalan Kecemasan',
+      relation: form.relation.trim() || t('gig:default_emergency_relation', 'Kenalan Kecemasan'),
     });
     setSaving(false);
     if (!error) {
-      toast.success('Kenalan ditambah!');
+      toast.success(t('gig:contact_added_success', 'Kenalan ditambah!'));
       setForm({ name: '', phone: '', relation: '' });
       setShowAddForm(false);
       fetchContacts();
     } else {
-      toast.error('Gagal tambah kenalan.');
+      toast.error(t('gig:contact_add_failed', 'Gagal tambah kenalan.'));
     }
   };
 
   const deleteContact = async (id: string) => {
     const { error } = await supabase.from('polyrider_sos_contacts').delete().eq('id', id);
-    if (!error) { toast.success('Kenalan dipadam.'); fetchContacts(); }
+    if (!error) { toast.success(t('gig:contact_deleted_success', 'Kenalan dipadam.')); fetchContacts(); }
   };
 
   const buildSOSMessage = (contact: SOSContact) => {
-    const now = new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
-    const loc = jobLocation ? ` Lokasi saya: ${jobLocation}` : '';
-    return `🚨 SOS KECEMASAN!\nSaya memerlukan bantuan segera semasa menaiki PolyRider (${now}).${loc}\nSila hubungi saya atau beritahu pihak berkuasa. Terima kasih.`;
+    const now = new Date().toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { hour: '2-digit', minute: '2-digit' });
+    const loc = jobLocation ? t('gig:sos_my_location', ' Lokasi saya: {{location}}', { location: jobLocation }) : '';
+    return t('gig:sos_message_text', '🚨 SOS KECEMASAN!\nSaya memerlukan bantuan segera semasa menaiki PolyRider ({{time}}).{{loc}}\nSila hubungi saya atau beritahu pihak berkuasa. Terima kasih.', { time: now, loc });
   };
 
   const openWhatsApp = (contact: SOSContact) => {
@@ -105,12 +107,12 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-500" />
-            {postSOSMode ? 'Hantar Mesej Kecemasan' : 'Kenalan Kecemasan SOS'}
+            {postSOSMode ? t('gig:send_emergency_message', 'Hantar Mesej Kecemasan') : t('gig:sos_emergency_contacts', 'Kenalan Kecemasan SOS')}
           </h2>
           <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5">
             {postSOSMode
-              ? 'Tekan untuk hantar mesej kepada kenalan anda melalui WhatsApp atau SMS'
-              : `Hingga ${MAX_CONTACTS} kenalan. Mereka akan dimaklumkan semasa SOS dicetuskan.`}
+              ? t('gig:send_emergency_message_desc', 'Tekan untuk hantar mesej kepada kenalan anda melalui WhatsApp atau SMS')
+              : t('gig:sos_contacts_desc', 'Hingga {{count}} kenalan. Mereka akan dimaklumkan semasa SOS dicetuskan.', { count: MAX_CONTACTS })}
           </p>
         </div>
         {onClose && (
@@ -128,8 +130,8 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
       ) : contacts.length === 0 ? (
         <div className="text-center py-10 bg-slate-50 dark:bg-zinc-900 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 mb-4">
           <UserCircle className="w-10 h-10 text-slate-300 dark:text-white/20 mx-auto mb-2" />
-          <p className="text-sm font-bold text-slate-400 dark:text-white/40">Tiada kenalan kecemasan</p>
-          <p className="text-xs text-slate-400 dark:text-white/30 mt-1">Tambah kenalan supaya mereka boleh dimaklumkan semasa kecemasan.</p>
+          <p className="text-sm font-bold text-slate-400 dark:text-white/40">{t('gig:no_emergency_contacts', 'Tiada kenalan kecemasan')}</p>
+          <p className="text-xs text-slate-400 dark:text-white/30 mt-1">{t('gig:no_emergency_contacts_desc', 'Tambah kenalan supaya mereka boleh dimaklumkan semasa kecemasan.')}</p>
         </div>
       ) : (
         <div className="space-y-3 mb-4">
@@ -166,14 +168,14 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
                   className="flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-colors"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
-                  WhatsApp SOS
+                  {t('gig:whatsapp_sos', 'WhatsApp SOS')}
                 </button>
                 <button
                   onClick={() => openSMS(contact)}
                   className="flex items-center justify-center gap-1.5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-xl transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  SMS SOS
+                  {t('gig:sms_sos', 'SMS SOS')}
                 </button>
               </div>
             </motion.div>
@@ -186,30 +188,30 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
         <AnimatePresence>
           {showAddForm ? (
             <motion.div
-              initial={{ opacity: 0, }}
-              animate={{ opacity: 1, }}
-              exit={{ opacity: 0, }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="bg-slate-50 dark:bg-zinc-900 rounded-2xl p-4 border border-slate-200 dark:border-white/10 overflow-hidden mb-3"
             >
-              <p className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-3">Kenalan Baharu</p>
+              <p className="text-xs font-black text-slate-500 dark:text-white/50 uppercase tracking-widest mb-3">{t('gig:new_contact', 'Kenalan Baharu')}</p>
               <div className="space-y-3">
                 <input
                   type="text"
-                  placeholder="Nama (Cth: Ibu, Ayah, Abang)"
+                  placeholder={t('gig:placeholder_name', 'Nama (Cth: Ibu, Ayah, Abang)')}
                   value={form.name}
                   onChange={e => setForm({...form, name: e.target.value})}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-amber-500"
                 />
                 <input
                   type="tel"
-                  placeholder="No. Telefon (Cth: 012-3456789)"
+                  placeholder={t('gig:placeholder_phone', 'No. Telefon (Cth: 012-3456789)')}
                   value={form.phone}
                   onChange={e => setForm({...form, phone: e.target.value})}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-amber-500"
                 />
                 <input
                   type="text"
-                  placeholder="Hubungan (Cth: Ibu, Rakan, Pengawal)"
+                  placeholder={t('gig:placeholder_relation', 'Hubungan (Cth: Ibu, Rakan, Pengawal)')}
                   value={form.relation}
                   onChange={e => setForm({...form, relation: e.target.value})}
                   className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-amber-500"
@@ -218,7 +220,7 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
                   <button onClick={addContact} disabled={saving}
                     className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                     <Save className="w-4 h-4" />
-                    {saving ? 'Menyimpan...' : 'Simpan Kenalan'}
+                    {saving ? t('common:saving', 'Menyimpan...') : t('gig:save_contact', 'Simpan Kenalan')}
                   </button>
                   <button onClick={() => setShowAddForm(false)}
                     className="w-12 py-3 bg-slate-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center">
@@ -235,7 +237,7 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
               className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold text-slate-400 dark:text-white/40 flex items-center justify-center gap-2 hover:border-amber-400 hover:text-amber-500 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Tambah Kenalan Kecemasan ({contacts.length}/{MAX_CONTACTS})
+              {t('gig:add_emergency_contact_btn', 'Tambah Kenalan Kecemasan ({{current}}/{{max}})', { current: contacts.length, max: MAX_CONTACTS })}
             </motion.button>
           )}
         </AnimatePresence>
@@ -247,7 +249,7 @@ export function SOSContactsManager({ fullPage = false, postSOSMode = false, jobL
           <a href="tel:999"
             className="w-full py-3 bg-red-600 text-white font-black rounded-xl flex items-center justify-center gap-2 text-sm"
           >
-            <Phone className="w-4 h-4" /> Hubungi Polis/Bomba: 999
+            <Phone className="w-4 h-4" /> {t('gig:call_police_hotline', 'Hubungi Polis/Bomba: 999')}
           </a>
         </div>
       )}

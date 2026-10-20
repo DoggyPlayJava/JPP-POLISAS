@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Filter, ChevronRight } from 'lucide-react';
 import { useSupsas, SupsasFixture } from '@/contexts/SupsasContext';
 import { cn } from '@/lib/utils';
-
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  upcoming:  { label: 'Akan Datang', cls: 'bg-white/5 border-white/10 text-white/40' },
-  live:      { label: '🔴 LIVE',     cls: 'bg-red-500/20 border-red-500/30 text-red-400 animate-pulse' },
-  completed: { label: 'Selesai',     cls: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' },
-  postponed: { label: 'Ditangguh',   cls: 'bg-amber-500/10 border-amber-500/20 text-amber-400' },
-};
 
 function FixtureCard({ fixture, kontingenMap, sportMap }: {
   fixture: SupsasFixture;
   kontingenMap: Record<string, { name: string; short_code: string; color: string }>;
   sportMap: Record<string, { name: string }>;
 }) {
+  const { t, i18n } = useTranslation(['supsas']);
   const a  = fixture.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
   const b  = fixture.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
   const sp = fixture.sport_id ? sportMap[fixture.sport_id] : null;
-  const st = STATUS_BADGE[fixture.status] ?? STATUS_BADGE.upcoming;
   const isCompleted = fixture.status === 'completed';
   const isLive = fixture.status === 'live';
+  const isPostponed = fixture.status === 'postponed';
+
+  const st = isLive
+    ? { label: t('supsas:status_live_caps', '🔴 LIVE'), cls: 'bg-red-500/20 border-red-500/30 text-red-400 animate-pulse' }
+    : isCompleted
+    ? { label: t('supsas:status_completed', 'Selesai'), cls: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' }
+    : isPostponed
+    ? { label: t('supsas:status_postponed', 'Ditangguh'), cls: 'bg-amber-500/10 border-amber-500/20 text-amber-400' }
+    : { label: t('supsas:status_upcoming', 'Akan Datang'), cls: 'bg-white/5 border-white/10 text-white/40' };
 
   return (
     <motion.div
@@ -126,7 +129,7 @@ function FixtureCard({ fixture, kontingenMap, sportMap }: {
           {fixture.match_date && (
             <div className="flex items-center gap-1.5 text-[9px] text-white/25 font-bold">
               <Calendar className="w-3 h-3" />
-              {new Date(fixture.match_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long' })}
+              {new Date(fixture.match_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { day: 'numeric', month: 'long' })}
             </div>
           )}
           {fixture.venue && (
@@ -145,6 +148,7 @@ function FixtureCard({ fixture, kontingenMap, sportMap }: {
 }
 
 export function SupsasSchedulePage() {
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const { fixtures, kontingen, sports, edition } = useSupsas();
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
   const [filterSport, setFilterSport] = useState<string>('all');
@@ -161,7 +165,7 @@ export function SupsasSchedulePage() {
   // Group by date
   const grouped: Record<string, SupsasFixture[]> = {};
   filtered.forEach(f => {
-    const key = f.match_date ?? 'Tarikh Belum Ditetapkan';
+    const key = f.match_date ?? '__unset__';
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(f);
   });
@@ -176,7 +180,7 @@ export function SupsasSchedulePage() {
               <Calendar className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">Jadual Pertandingan</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white leading-none">{t('supsas:match_schedule_title', 'Jadual Pertandingan')}</h1>
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">{edition?.name}</p>
             </div>
           </div>
@@ -196,7 +200,7 @@ export function SupsasSchedulePage() {
                       : 'bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10'
                   )}
                 >
-                  {s === 'all' ? 'Semua' : s === 'live' ? '🔴 Live' : s === 'upcoming' ? 'Akan Datang' : 'Selesai'}
+                  {s === 'all' ? t('common:all', 'Semua') : s === 'live' ? t('supsas:status_live_badge', '🔴 Live') : s === 'upcoming' ? t('supsas:status_upcoming', 'Akan Datang') : t('supsas:status_completed', 'Selesai')}
                 </button>
               ))}
             </div>
@@ -205,7 +209,7 @@ export function SupsasSchedulePage() {
               onChange={e => setFilterSport(e.target.value)}
               className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:border-amber-500/40 transition-all"
             >
-              <option value="all">Semua Sukan</option>
+              <option value="all">{t('supsas:all_sports', 'Semua Sukan')}</option>
               {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
@@ -218,7 +222,7 @@ export function SupsasSchedulePage() {
           {Object.keys(grouped).length === 0 ? (
             <div className="text-center py-24">
               <Calendar className="w-12 h-12 text-white/10 mx-auto mb-4" />
-              <p className="text-white/30 font-black uppercase tracking-widest text-sm">Tiada perlawanan dijadualkan</p>
+              <p className="text-white/30 font-black uppercase tracking-widest text-sm">{t('supsas:no_matches_scheduled', 'Tiada perlawanan dijadualkan')}</p>
             </div>
           ) : (
             <div className="space-y-10">
@@ -227,7 +231,7 @@ export function SupsasSchedulePage() {
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px flex-1 bg-white/5" />
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-3">
-                      {date === 'Tarikh Belum Ditetapkan' ? date : new Date(date).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {date === '__unset__' ? t('supsas:date_unset', 'Tarikh Belum Ditetapkan') : new Date(date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </span>
                     <div className="h-px flex-1 bg-white/5" />
                   </div>

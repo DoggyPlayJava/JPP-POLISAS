@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +26,7 @@ export function SlideOverSheet({
   children,
   className,
 }: SlideOverSheetProps) {
+  const { t } = useTranslation('common');
   const isSheetOpen = open ?? isOpen ?? false;
   const handleOpenChange = (nextOpen: boolean) => {
     onOpenChange?.(nextOpen);
@@ -70,7 +72,7 @@ export function SlideOverSheet({
                   </div>
                   <DialogPrimitive.Close className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                     <X className="w-5 h-5" />
-                    <span className="sr-only">Tutup</span>
+                    <span className="sr-only">{t('common:close', 'Tutup')}</span>
                   </DialogPrimitive.Close>
                 </div>
                 <div className="flex-1">{children}</div>

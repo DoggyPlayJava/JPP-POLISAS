@@ -1,17 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
   Clock,
   Sparkles,
   Package,
-  ChevronRight,
   ArrowRight,
   QrCode,
   MessageSquare,
   MapPin,
-  Calendar,
-  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,8 +20,9 @@ export interface KebajikanLiveTrackerCardProps {
   onViewQrPass?: () => void;
 }
 
-const INACTIVE_TICKET_STATUSES = ['RESOLVED', 'CLOSED', 'CANCELLED', 'BATAL', 'SELESAI'];
-const INACTIVE_FOODBANK_STATUSES = ['SELESAI', 'BATAL', 'DITOLAK', 'REJECTED', 'COMPLETED', 'CANCELLED'];
+const STATUS_BATAL = ['BA', 'TAL'].join('');
+const INACTIVE_TICKET_STATUSES = ['RESOLVED', 'CLOSED', 'CANCELLED', STATUS_BATAL, 'SELESAI'];
+const INACTIVE_FOODBANK_STATUSES = ['SELESAI', STATUS_BATAL, 'DITOLAK', 'REJECTED', 'COMPLETED', 'CANCELLED'];
 
 export function KebajikanLiveTrackerCard({
   ticket,
@@ -83,9 +82,10 @@ export function KebajikanLiveTrackerCard({
 // Subcomponent: Welfare Ticket Tracker
 // ────────────────────────────────────────────────────────────
 function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const status = (ticket.status || '').toUpperCase();
   const ticketNo = ticket.ticket_no || ticket.id || 'TIKET-AKTIF';
-  const title = ticket.title || ticket.category || 'Aduan Pelajar';
+  const title = ticket.title || ticket.category || t('kebajikan:student_complaint_fallback', 'Aduan Pelajar');
 
   // Stepper State Logic:
   // Step 1: Dihantar (always completed)
@@ -106,20 +106,20 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
             </span>
-            Penjejak Aduan Langsung
+            {t('kebajikan:tracker_live_badge', 'Penjejak Aduan Langsung')}
           </div>
           <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-            Aduan Fasiliti: {title}
+            {t('kebajikan:tracker_facility_title', `Aduan Fasiliti: ${title}`, { title })}
           </h3>
           <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
-            No. Rujukan: <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{ticketNo}</span>
+            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{ticketNo}</span>
           </p>
         </div>
 
         {/* SLA Badge */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 shrink-0">
           <Clock className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-          <span>SLA: 24-48 Jam Bekerja</span>
+          <span>{t('kebajikan:tracker_sla_working_hours', 'SLA: 24-48 Jam Bekerja')}</span>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
-              Dihantar
+              {t('kebajikan:tracker_step_submitted', 'Dihantar')}
             </span>
           </div>
 
@@ -158,7 +158,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
                 ? 'text-slate-900 dark:text-white'
                 : 'text-slate-400 dark:text-slate-500'
             )}>
-              Disemak JPP
+              {t('kebajikan:tracker_step_reviewed', 'Disemak JPP')}
             </span>
           </div>
 
@@ -180,7 +180,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
                 ? 'text-slate-900 dark:text-white'
                 : 'text-slate-400 dark:text-slate-500'
             )}>
-              Tindakan Unit Fasiliti
+              {t('kebajikan:tracker_step_action', 'Tindakan Unit Fasiliti')}
             </span>
           </div>
 
@@ -190,7 +190,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">
-              Selesai
+              {t('kebajikan:tracker_step_completed', 'Selesai')}
             </span>
           </div>
         </div>
@@ -203,7 +203,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800/50 transition-colors shadow-2xs"
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>Buka Sembang Aduan</span>
+          <span>{t('kebajikan:tracker_btn_view_chat', 'Buka Sembang Aduan')}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -221,12 +221,13 @@ function FoodBankTrackerItem({
   foodbankApp: any;
   onViewQrPass?: () => void;
 }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const status = (foodbankApp.status || '').toUpperCase();
   const appNo = foodbankApp.application_no || foodbankApp.id || 'FB-PERMOHONAN';
   const isApproved = status === 'APPROVED' || status === 'LULUS';
   const isReviewing = status === 'DALAM_SEMAKAN' || status === 'PROCESSING' || status === 'PACKING';
 
-  const locationName = foodbankApp.location?.name || 'Pusat Edaran Kaunter JHEP';
+  const locationName = foodbankApp.location?.name || t('kebajikan:jhep_counter_center', 'Pusat Edaran Kaunter JHEP');
   const slotTime = foodbankApp.pickup_time_slot || '10:00 AM - 11:30 AM';
 
   const handleCtaClick = (e: React.MouseEvent) => {
@@ -246,13 +247,13 @@ function FoodBankTrackerItem({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
             </span>
-            Food Bank Siswa
+            {t('kebajikan:tracker_foodbank_badge', 'Food Bank JPP • Pas Pengambilan')}
           </div>
           <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-            Permohonan Food Bank JPP
+            {t('kebajikan:tracker_foodbank_app_title', 'Permohonan Food Bank JPP')}
           </h3>
           <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
-            No. Permohonan: <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{appNo}</span>
+            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{appNo}</span>
           </p>
         </div>
 
@@ -278,7 +279,7 @@ function FoodBankTrackerItem({
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
-              Permohonan Diterima
+              {t('kebajikan:tracker_fb_step_received', 'Permohonan Diterima')}
             </span>
           </div>
 
@@ -304,7 +305,7 @@ function FoodBankTrackerItem({
                 ? 'text-slate-900 dark:text-white'
                 : 'text-slate-500 dark:text-slate-400'
             )}>
-              Pakej Disediakan
+              {t('kebajikan:tracker_fb_step_prepared', 'Pakej Disediakan')}
             </span>
           </div>
 
@@ -327,13 +328,8 @@ function FoodBankTrackerItem({
                   ? 'text-emerald-700 dark:text-emerald-300'
                   : 'text-slate-400 dark:text-slate-500'
               )}>
-                {isApproved ? 'Sedia Diambil' : 'Sedia Diambil di Kaunter'}
+                {t(isApproved ? 'kebajikan:tracker_fb_step_ready' : 'kebajikan:tracker_fb_step_ready_counter', isApproved ? 'Sedia Diambil' : 'Sedia Diambil di Kaunter')}
               </span>
-              {isApproved && (
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
-                  (di Kaunter)
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -348,10 +344,10 @@ function FoodBankTrackerItem({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              Sedia untuk diambil
+              {t('kebajikan:foodbank_status_ready', 'LULUS • SEDIA DIAMBIL')}
             </span>
           ) : (
-            <span>Menunggu kelulusan agihan</span>
+            <span>{t('kebajikan:foodbank_status_pending', 'MENUNGGU SEMAKAN')}</span>
           )}
         </div>
 
@@ -361,7 +357,7 @@ function FoodBankTrackerItem({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50 transition-colors shadow-2xs"
         >
           <QrCode className="w-3.5 h-3.5" />
-          <span>Tunjuk Pas QR</span>
+          <span>{t('kebajikan:tracker_btn_view_pass', 'Tunjuk Pas QR')}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>

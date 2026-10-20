@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -19,14 +20,14 @@ const THEME = '#818CF8';
 
 // BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
 
-const FOLDER_PRESETS = [
-  { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },
-  { name: 'Sijil Penghargaan',   description: 'Sijil penghargaan dan anugerah' },
-  { name: 'Slip Keputusan',      description: 'Slip keputusan peperiksaan setiap semester' },
-  { name: 'Surat Tawaran',       description: 'Surat tawaran masuk & tawaran biasiswa' },
-  { name: 'Resit Pembayaran',    description: 'Resit pembayaran yuran pengajian & asrama' },
-  { name: 'Nota Peribadi',       description: 'Nota dan bahan rujukan peribadi' },
-  { name: 'Lain-lain',           description: 'Dokumen dan fail am' },
+const getFolderPresets = (t: (key: string, fallback: string) => string) => [
+  { name: t('akademik:preset_cert_participation_name', 'Sijil Penyertaan'),    description: t('akademik:preset_cert_participation_desc', 'Sijil penyertaan program dan bengkel') },
+  { name: t('akademik:preset_cert_appreciation_name', 'Sijil Penghargaan'),   description: t('akademik:preset_cert_appreciation_desc', 'Sijil penghargaan dan anugerah') },
+  { name: t('akademik:preset_result_slip_name', 'Slip Keputusan'),      description: t('akademik:preset_result_slip_desc', 'Slip keputusan peperiksaan setiap semester') },
+  { name: t('akademik:preset_offer_letter_name', 'Surat Tawaran'),       description: t('akademik:preset_offer_letter_desc', 'Surat tawaran masuk & tawaran biasiswa') },
+  { name: t('akademik:preset_payment_receipt_name', 'Resit Pembayaran'),    description: t('akademik:preset_payment_receipt_desc', 'Resit pembayaran yuran pengajian & asrama') },
+  { name: t('akademik:preset_personal_notes_name', 'Nota Peribadi'),       description: t('akademik:preset_personal_notes_desc', 'Nota dan bahan rujukan peribadi') },
+  { name: t('akademik:preset_other_docs_name', 'Lain-lain'),           description: t('akademik:preset_other_docs_desc', 'Dokumen dan fail am') },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -113,7 +114,8 @@ async function fetchAsBytes(
 async function buildAndDownloadZip(
   folderMap: Record<string, { folderName: string; files: any[] }>,
   zipName: string,
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  t: (key: string, fallback: string, options?: any) => string = (_k, fb) => fb
 ) {
   const zipEntries: Record<string, Uint8Array> = {};
   const failed: string[] = []; // files that couldn't be fetched
@@ -142,12 +144,12 @@ async function buildAndDownloadZip(
   }
 
   if (Object.keys(zipEntries).length === 0) {
-    throw new Error('Gagal muat turun mana-mana fail. Sila cuba lagi.');
+    throw new Error(t('akademik:zip_error_no_files', 'Gagal muat turun mana-mana fail. Sila cuba lagi.'));
   }
 
   // Add a note for any files that failed (edge cases)
   if (failed.length > 0) {
-    const note = ['FAIL YANG TIDAK BERJAYA DIMUAT TURUN:', '', ...failed].join('\n');
+    const note = [t('akademik:zip_failed_header', 'FAIL YANG TIDAK BERJAYA DIMUAT TURUN:'), '', ...failed].join('\n');
     zipEntries['_gagal.txt'] = strToU8(note);
   }
 
@@ -179,6 +181,7 @@ export function InAppDocumentPreviewer({
   file: any;
   onClose: () => void;
 }) {
+  const { t } = useTranslation(['akademik', 'common']);
   if (!file) return null;
 
   const displayName = file.file_name || file.name || 'Dokumen';
@@ -229,7 +232,7 @@ export function InAppDocumentPreviewer({
             <div className="min-w-0">
               <h3 className="text-sm font-black text-slate-900 dark:text-white truncate">{displayName}</h3>
               <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold mt-0.5">
-                {isPdf ? 'Dokumen PDF' : isImage ? 'Imej' : 'Fail'}
+                {isPdf ? t('akademik:doc_pdf', 'Dokumen PDF') : isImage ? t('akademik:doc_image', 'Imej') : t('akademik:doc_file', 'Fail')}
                 {size && ` · ${size}`}
                 {formattedDate && ` · ${formattedDate}`}
               </p>
@@ -238,8 +241,8 @@ export function InAppDocumentPreviewer({
           <button
             onClick={onClose}
             className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-400 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all min-h-[44px] min-w-[44px] shrink-0"
-            title="Tutup Pratonton"
-            aria-label="Tutup Pratonton"
+            title={t('akademik:close_preview', 'Tutup Pratonton')}
+            aria-label={t('akademik:close_preview', 'Tutup Pratonton')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -272,7 +275,7 @@ export function InAppDocumentPreviewer({
               <div>
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{displayName}</p>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-1 max-w-sm">
-                  Pratonton terus tidak disokong untuk format fail ini. Sila muat turun fail atau buka tab luaran.
+                  {t('akademik:preview_not_supported', 'Pratonton terus tidak disokong untuk format fail ini. Sila muat turun fail atau buka tab luaran.')}
                 </p>
               </div>
             </div>
@@ -294,7 +297,7 @@ export function InAppDocumentPreviewer({
             }}
           >
             <Download className="w-4 h-4" />
-            Muat Turun Fail
+            {t('akademik:download_file_btn', 'Muat Turun Fail')}
           </a>
           {externalUrl && (
             <a
@@ -304,7 +307,7 @@ export function InAppDocumentPreviewer({
               className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-white transition-all min-h-[44px] flex-1 sm:flex-initial border border-slate-200 dark:border-white/10"
             >
               <ExternalLink className="w-4 h-4" />
-              Buka Tab Luaran
+              {t('akademik:open_external_tab_btn', 'Buka Tab Luaran')}
             </a>
           )}
         </div>
@@ -357,10 +360,10 @@ function FileCard({
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 min-h-[36px]"
           style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
-          title="Muat turun fail ini"
+          title={t('akademik:download_file_btn', 'Muat turun fail ini')}
         >
           <Download className="w-3 h-3" />
-          Muat Turun
+          {t('akademik:download_btn', 'Muat Turun')}
         </a>
         {isAdmin && (
           <button
@@ -369,7 +372,7 @@ function FileCard({
               onDelete();
             }}
             className="p-1.5 rounded-xl text-slate-400 dark:text-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
-            title="Padam fail"
+            title={t('akademik:delete_file', 'Padam fail')}
           >
             ×
           </button>
@@ -382,7 +385,7 @@ function FileCard({
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
         className="shrink-0 text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-colors md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
-        title="Muat turun fail"
+        title={t('akademik:download_file_btn', 'Muat turun fail')}
       >
         <Download className="w-4 h-4" />
       </a>
@@ -410,7 +413,7 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
           {folder.description && (
             <p className="text-[10px] text-slate-500 dark:text-white/30 font-medium mt-0.5 line-clamp-1 text-left">{folder.description}</p>
           )}
-          <p className="text-[9px] text-slate-400 dark:text-white/20 font-bold mt-1 text-left">{fileCount} fail</p>
+          <p className="text-[9px] text-slate-400 dark:text-white/20 font-bold mt-1 text-left">{t('akademik:files_count', '{{count}} fail', { count: fileCount })}</p>
         </div>
         <ChevronRight className={`w-4 h-4 text-slate-400 dark:text-white/20 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
       </div>
@@ -420,6 +423,7 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
 
 // ─── Main Folder Page ─────────────────────────────────────────
 export function AkademikFolderPage() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
   // Semua pengguna adalah 'admin' untuk folder peribadi mereka sendiri
   const isAdmin = true;
@@ -478,7 +482,7 @@ export function AkademikFolderPage() {
     setUploadingFor(null);
 
     try {
-      toast.loading('Memuat naik fail...', { id: 'file-upload' });
+      toast.loading(t('akademik:toast_uploading_file', 'Memuat naik fail...'), { id: 'file-upload' });
       let url: string;
       if (file.type === 'application/pdf') {
         url = await uploadPdfToDrive(file, `akademik/folders/${folderId}`, file.name.replace(/\.[^.]+$/, ''));
@@ -496,10 +500,10 @@ export function AkademikFolderPage() {
         uploaded_by:        profile?.id,
       });
       if (insertError) throw insertError;
-      toast.success('Fail berjaya dimuat naik!', { id: 'file-upload' });
+      toast.success(t('akademik:toast_file_uploaded', 'Fail berjaya dimuat naik!'), { id: 'file-upload' });
       await loadFilesForFolder(folderId, true);
     } catch (e: any) {
-      toast.error(`Gagal muat naik: ${e.message}`, { id: 'file-upload' });
+      toast.error(t('akademik:toast_upload_failed', 'Gagal muat naik: {{error}}', { error: e.message }), { id: 'file-upload' });
     }
   };
 
@@ -508,22 +512,22 @@ export function AkademikFolderPage() {
     setTimeout(() => fileInputRef.current?.click(), 50);
   };
   const handleDeleteFile = async (fileId: string, folderId: string) => {
-    if (!confirm('Padam fail ini?')) return;
+    if (!confirm(t('akademik:confirm_delete_file', 'Padam fail ini?'))) return;
     const { error } = await supabase.from('akademik_files').delete().eq('id', fileId);
-    if (error) { toast.error('Gagal padam fail.'); return; }
+    if (error) { toast.error(t('akademik:toast_delete_file_failed', 'Gagal padam fail.')); return; }
     setFilesMap(p => ({ ...p, [folderId]: (p[folderId] || []).filter(f => f.id !== fileId) }));
-    toast.success('Fail dipadam.');
+    toast.success(t('akademik:toast_file_deleted', 'Fail dipadam.'));
   };
 
   const handleCreateFolder = async () => {
-    if (!newFolder.name) { toast.error('Nama folder diperlukan.'); return; }
+    if (!newFolder.name) { toast.error(t('akademik:toast_folder_name_required', 'Nama folder diperlukan.')); return; }
     const { error } = await supabase.from('akademik_folders').insert({
       name: newFolder.name,
       description: newFolder.description || null,
       created_by: profile?.id,
     });
-    if (error) { toast.error(`Gagal: ${error.message}`); return; }
-    toast.success('Folder dicipta!');
+    if (error) { toast.error(t('akademik:toast_create_folder_failed', 'Gagal: {{error}}', { error: error.message })); return; }
+    toast.success(t('akademik:toast_folder_created', 'Folder dicipta!'));
     setNewFolder({ name: '', description: '' });
     setShowCreate(false);
     loadFolders();
@@ -532,32 +536,33 @@ export function AkademikFolderPage() {
   // ── ZIP: Download one folder ──────────────────────────────────
   const handleDownloadFolder = async (folder: any) => {
     const files = filesMap[folder.id] || [];
-    if (files.length === 0) { toast.error('Folder ini kosong.'); return; }
+    if (files.length === 0) { toast.error(t('akademik:toast_folder_empty', 'Folder ini kosong.')); return; }
 
     setZipping('folder');
     setZipProgress({ done: 0, total: files.length });
     const toastId = 'zip-folder';
 
     try {
-      toast.loading(`Menyediakan ZIP "${folder.name}"...`, { id: toastId });
+      toast.loading(t('akademik:toast_preparing_zip_named', 'Menyediakan ZIP "{{name}}"...', { name: folder.name }), { id: toastId });
       const failedCount = await buildAndDownloadZip(
         { [folder.id]: { folderName: folder.name, files } },
         sanitizeFilename(folder.name),
         (done, total) => {
           setZipProgress({ done, total });
-          toast.loading(`Menyediakan ZIP... (${done}/${total} fail)`, { id: toastId });
-        }
+          toast.loading(t('akademik:toast_preparing_zip_progress', 'Menyediakan ZIP... ({{done}}/{{total}} fail)', { done, total }), { id: toastId });
+        },
+        t
       );
       if (failedCount > 0) {
         toast.success(
-          `ZIP berjaya! (${failedCount} fail gagal dimuat turun — semak _gagal.txt dalam ZIP)`,
+          t('akademik:toast_zip_success_with_failed', 'ZIP berjaya! ({{count}} fail gagal dimuat turun — semak _gagal.txt dalam ZIP)', { count: failedCount }),
           { id: toastId, duration: 7000 }
         );
       } else {
-        toast.success(`ZIP "${folder.name}" berjaya! Semua fail termasuk.`, { id: toastId });
+        toast.success(t('akademik:toast_zip_folder_success', 'ZIP "{{name}}" berjaya! Semua fail termasuk.', { name: folder.name }), { id: toastId });
       }
     } catch (e: any) {
-      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+      toast.error(e.message || t('akademik:toast_zip_failed', 'Gagal buat ZIP.'), { id: toastId });
     } finally {
       setZipping(null);
     }
@@ -565,7 +570,7 @@ export function AkademikFolderPage() {
 
   // ── ZIP: Download all folders ─────────────────────────────────
   const handleDownloadAll = async () => {
-    if (folders.length === 0) { toast.error('Tiada folder untuk dimuat turun.'); return; }
+    if (folders.length === 0) { toast.error(t('akademik:toast_no_folders_to_download', 'Tiada folder untuk dimuat turun.')); return; }
 
     setZipping('all');
     const toastId = 'zip-all';
@@ -573,7 +578,7 @@ export function AkademikFolderPage() {
     try {
 
       // Load all unloaded folders first
-      toast.loading('Memuat data folder...', { id: toastId });
+      toast.loading(t('akademik:toast_loading_folder_data', 'Memuat data folder...'), { id: toastId });
       await Promise.all(folders.map(f => loadFilesForFolder(f.id, false)));
 
       // Brief delay to allow state to settle
@@ -591,31 +596,32 @@ export function AkademikFolderPage() {
       }
 
       if (Object.keys(folderMap).length === 0) {
-        toast.error('Semua folder kosong.', { id: toastId });
+        toast.error(t('akademik:toast_all_folders_empty', 'Semua folder kosong.'), { id: toastId });
         setZipping(null);
         return;
       }
 
-      toast.loading(`Menyediakan ZIP keseluruhan...`, { id: toastId });
+      toast.loading(t('akademik:toast_preparing_all_zip', 'Menyediakan ZIP keseluruhan...'), { id: toastId });
       const failedCount = await buildAndDownloadZip(
         folderMap,
         'akademik_dokumen',
         (done, total) => {
           setZipProgress({ done, total });
-          toast.loading(`Menyediakan ZIP keseluruhan... (${done}/${total} fail)`, { id: toastId });
-        }
+          toast.loading(t('akademik:toast_preparing_all_zip_progress', 'Menyediakan ZIP keseluruhan... ({{done}}/{{total}} fail)', { done, total }), { id: toastId });
+        },
+        t
       );
 
       if (failedCount > 0) {
         toast.success(
-          `ZIP keseluruhan berjaya! (${failedCount} fail gagal — semak _gagal.txt dalam ZIP)`,
+          t('akademik:toast_zip_all_success_with_failed', 'ZIP keseluruhan berjaya! ({{count}} fail gagal — semak _gagal.txt dalam ZIP)', { count: failedCount }),
           { id: toastId, duration: 8000 }
         );
       } else {
-        toast.success('ZIP keseluruhan berjaya! Semua fail termasuk.', { id: toastId });
+        toast.success(t('akademik:toast_zip_all_success', 'ZIP keseluruhan berjaya! Semua fail termasuk.'), { id: toastId });
       }
     } catch (e: any) {
-      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+      toast.error(e.message || t('akademik:toast_zip_failed', 'Gagal buat ZIP.'), { id: toastId });
     } finally {
       setZipping(null);
     }
@@ -638,8 +644,8 @@ export function AkademikFolderPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Akademik</p>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Dokumen Peribadi</h1>
-          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Muat naik dan simpan sijil serta dokumen akademik anda</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">{t('akademik:folder_title', 'Dokumen Peribadi')}</h1>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">{t('akademik:folder_subtitle', 'Muat naik dan simpan sijil serta dokumen akademik anda')}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Download All ZIP */}
@@ -648,7 +654,7 @@ export function AkademikFolderPage() {
             disabled={isZipping || folders.length === 0}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
             style={{ background: hexToRgba('#34D399', 0.12), color: '#34D399', border: `1px solid ${hexToRgba('#34D399', 0.2)}` }}
-            title="Muat turun semua dokumen sebagai ZIP"
+            title={t('akademik:download_all_zip_title', 'Muat turun semua dokumen sebagai ZIP')}
           >
             {zipping === 'all'
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -656,7 +662,7 @@ export function AkademikFolderPage() {
             }
             {zipping === 'all'
               ? `${zipProgress.done}/${zipProgress.total}`
-              : 'Muat Turun Semua'
+              : t('akademik:folder_download_zip', 'Muat Turun Semua')
             }
           </button>
 
@@ -667,7 +673,7 @@ export function AkademikFolderPage() {
               style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
             >
               <Plus className="w-3.5 h-3.5" />
-              Folder Baru
+              {t('akademik:new_folder_btn', 'Folder Baru')}
             </button>
           )}
         </div>
@@ -677,7 +683,7 @@ export function AkademikFolderPage() {
       <div className="flex items-start gap-2 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-500/15 bg-amber-50 dark:bg-amber-500/[0.06]">
         <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400/70 shrink-0 mt-0.5" />
         <p className="text-[10px] text-amber-700 dark:text-amber-300/60 font-medium leading-relaxed">
-          <span className="font-black text-amber-800 dark:text-amber-300/80">Nota:</span> Fail PDF disimpan di Google Drive (jimat storan) — muat turun terus via butang atau link. Gambar boleh disertakan dalam ZIP.
+          {t('akademik:pdf_notice_gdrive', 'Fail PDF disimpan di Google Drive (jimat storan) — muat turun terus via butang atau link. Gambar boleh disertakan dalam ZIP.')}
         </p>
       </div>
 
@@ -691,7 +697,7 @@ export function AkademikFolderPage() {
             className="overflow-hidden"
           >
             <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] space-y-4 shadow-xs">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Folder Baru</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('akademik:new_folder_title', 'Folder Baru')}</p>
 
               <div>
                 <button
@@ -700,7 +706,7 @@ export function AkademikFolderPage() {
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-                    <span>Pilih cadangan folder...</span>
+                    <span>{t('akademik:choose_folder_preset', 'Pilih cadangan folder...')}</span>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-white/30 transition-transform ${showPresets ? 'rotate-180' : ''}`} />
                 </button>
@@ -713,7 +719,7 @@ export function AkademikFolderPage() {
                       className="overflow-hidden"
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                        {FOLDER_PRESETS.map(p => (
+                        {getFolderPresets(t).map(p => (
                           <button
                             key={p.name}
                             onClick={() => {
@@ -735,13 +741,13 @@ export function AkademikFolderPage() {
               <input
                 value={newFolder.name}
                 onChange={e => setNewFolder(p => ({ ...p, name: e.target.value }))}
-                placeholder="Nama folder *"
+                placeholder={t('akademik:folder_name_placeholder', 'Nama folder *')}
                 className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20 font-bold"
               />
               <input
                 value={newFolder.description}
                 onChange={e => setNewFolder(p => ({ ...p, description: e.target.value }))}
-                placeholder="Penerangan folder (optional)"
+                placeholder={t('akademik:folder_desc_placeholder', 'Penerangan folder (optional)')}
                 className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-indigo-400 dark:focus:border-white/20"
               />
               <div className="flex gap-2">
@@ -750,13 +756,13 @@ export function AkademikFolderPage() {
                   className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest"
                   style={{ background: THEME, color: '#fff' }}
                 >
-                  Cipta Folder
+                  {t('akademik:create_folder_submit', 'Cipta Folder')}
                 </button>
                 <button
                   onClick={() => { setShowCreate(false); setShowPresets(false); }}
                   className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30 bg-slate-100 dark:bg-white/[0.04]"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
               </div>
             </div>
@@ -772,8 +778,8 @@ export function AkademikFolderPage() {
       ) : folders.length === 0 ? (
         <div className="py-20 text-center space-y-3">
           <Folder className="w-10 h-10 mx-auto text-slate-300 dark:text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada folder peribadi</p>
-          <p className="text-[10px] text-slate-400 dark:text-white/15">Klik "Folder Baru" untuk mula simpan dokumen anda</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('akademik:no_personal_folders', 'Tiada folder peribadi')}</p>
+          <p className="text-[10px] text-slate-400 dark:text-white/15">{t('akademik:click_new_folder_hint', 'Klik "Folder Baru" untuk mula simpan dokumen anda')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -813,7 +819,7 @@ export function AkademikFolderPage() {
                                 ? <Loader2 className="w-3 h-3 animate-spin" />
                                 : <Upload className="w-3 h-3" />
                               }
-                              {isCurrentlyUploading ? 'Memuat Naik...' : 'Muat Naik Fail'}
+                              {isCurrentlyUploading ? t('akademik:uploading', 'Memuat Naik...') : t('akademik:upload_file_btn', 'Muat Naik Fail')}
                             </button>
                           )}
 
@@ -824,7 +830,7 @@ export function AkademikFolderPage() {
                               disabled={isZipping}
                               className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
                               style={{ background: hexToRgba('#34D399', 0.08), color: '#34D399', border: `1px solid ${hexToRgba('#34D399', 0.15)}` }}
-                              title="Muat turun semua fail dalam folder ini sebagai ZIP"
+                              title={t('akademik:download_folder_zip_tooltip', 'Muat turun semua fail dalam folder ini sebagai ZIP')}
                             >
                               {zipping === 'folder'
                                 ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -832,7 +838,7 @@ export function AkademikFolderPage() {
                               }
                               {zipping === 'folder'
                                 ? `${zipProgress.done}/${zipProgress.total}`
-                                : `Muat Turun Folder (${files.length} fail)`
+                                : t('akademik:download_folder_count', 'Muat Turun Folder ({{count}} fail)', { count: files.length })
                               }
                             </button>
                           )}
@@ -840,8 +846,8 @@ export function AkademikFolderPage() {
 
                         {files.length === 0 ? (
                           <div className="py-6 text-center">
-                            <p className="text-[10px] text-slate-400 dark:text-white/20 font-medium">Tiada fail dalam folder ini</p>
-                            {isAdmin && <p className="text-[9px] text-slate-400 dark:text-white/10 mt-1">Klik "Muat Naik Fail" untuk tambah dokumen</p>}
+                            <p className="text-[10px] text-slate-400 dark:text-white/20 font-medium">{t('akademik:no_files_in_folder', 'Tiada fail dalam folder ini')}</p>
+                            {isAdmin && <p className="text-[9px] text-slate-400 dark:text-white/10 mt-1">{t('akademik:upload_file_hint', 'Klik "Muat Naik Fail" untuk tambah dokumen')}</p>}
                           </div>
                         ) : (
                           <div className="space-y-2">

@@ -1,25 +1,30 @@
 // PolyRider — Shared Constants
 // Diimport oleh PolyRiderHome.tsx dan PolyRiderDashboard.tsx
 
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
+
 export const POLYRIDER_ADDONS = [
   {
-    key: 'BESAR',
-    label: 'Barang Besar/Berat',
+    key: 'BESAR' as const,
+    label: t('gig:pref_large_cargo', 'Barang Besar/Berat'),
     emoji: '📦',
-    hint: 'Bagasi, dobi, barang beli-belah berat',
+    hint: t('gig:pref_large_cargo_desc', 'Bagasi, dobi, barang beli-belah berat'),
   },
   {
-    key: 'LEBIH_SEORANG',
-    label: 'Lebih dari 1 Orang',
+    key: 'LEBIH_SEORANG' as const,
+    label: t('gig:pref_more_than_one', 'Lebih dari 1 Orang'),
     emoji: '👥',
-    hint: 'Akan ada 2 orang atau lebih',
+    hint: t('gig:pref_more_than_one_desc', 'Akan ada 2 orang atau lebih'),
   },
   {
-    key: 'HUJAN',
-    label: 'Perlu Perlindungan',
+    key: 'HUJAN' as const,
+    label: t('gig:pref_need_shelter', 'Perlu Perlindungan'),
     emoji: '☂️',
-    hint: 'Lebih suka kereta semasa hujan',
+    hint: t('gig:pref_need_shelter_desc', 'Lebih suka kereta semasa hujan'),
   },
-] as const;
+];
 
 export type AddonKey = (typeof POLYRIDER_ADDONS)[number]['key'];

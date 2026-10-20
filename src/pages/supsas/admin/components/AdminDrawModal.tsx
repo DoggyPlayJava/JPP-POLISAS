@@ -5,9 +5,10 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Shuffle, CheckCircle, Loader, AlertTriangle, Wifi, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useLiveDraw, generateGroupKnockoutFixtures, DrawEntry } from '@/hooks/useLiveDraw';
-import { useSupsas, SupsasSport, SupsasKontingen } from '@/contexts/SupsasContext';
+import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -23,13 +24,14 @@ function GroupPreview({ label, color, slots }: {
   color: string;
   slots: Array<{ shortCode: string | null; name: string | null; color: string | null; revealed: boolean }>;
 }) {
+  const { t } = useTranslation('supsas');
   return (
     <div className="flex-1 space-y-2">
       <div
         className="text-center py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest"
         style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}
       >
-        KUMPULAN {label}
+        {t('supsas:group_upper', 'KUMPULAN')} {label}
       </div>
       <div className="space-y-1.5">
         {slots.map((slot, i) => (
@@ -73,6 +75,7 @@ function GroupPreview({ label, color, slots }: {
 }
 
 export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: AdminDrawModalProps) {
+  const { t } = useTranslation(['supsas', 'common']);
   const { kontingen, teams: allTeams, refetch } = useSupsas();
   const { drawState, startDraw, cancelDraw, resetDraw } = useLiveDraw(editionId, true);
   const [confirming, setConfirming] = useState(false);
@@ -122,7 +125,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
   // ── Start draw ─────────────────────────────────────────────
   const handleStartDraw = async () => {
     if (drawEntries.length < 4) {
-      toast.error('Perlukan sekurang-kurangnya 4 entri untuk format Kumpulan+KO.');
+      toast.error(t('supsas:min_entries_for_group_ko', 'Perlukan sekurang-kurangnya 4 entri untuk format Kumpulan+KO.'));
       return;
     }
 
@@ -131,7 +134,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
         .from('supsas_fixtures')
         .delete()
         .eq('sport_id', sport.id);
-      if (error) { toast.error('Gagal padam fixture lama: ' + error.message); return; }
+      if (error) { toast.error(t('supsas:delete_old_fixtures_failed_with_msg', 'Gagal padam fixture lama: {{msg}}', { msg: error.message })); return; }
     }
 
     const result = await startDraw(sport, drawEntries);
@@ -149,7 +152,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
   // ── Confirm: save 9 fixtures ───────────────────────────────
   const handleConfirm = async () => {
     if (drawState.status !== 'complete' || !savedGroupsRef.current) {
-      toast.error('Sila tunggu undian selesai dahulu.');
+      toast.error(t('supsas:wait_draw_complete', 'Sila tunggu undian selesai dahulu.'));
       return;
     }
     setConfirming(true);
@@ -163,7 +166,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
       .select('id, bracket_round, bracket_position');
 
     if (error || !inserted) {
-      toast.error('Gagal simpan bracket: ' + (error?.message ?? 'ralat tidak diketahui'));
+      toast.error(t('supsas:save_bracket_failed_with_msg', 'Gagal simpan bracket: {{msg}}', { msg: error?.message ?? t('supsas:unknown_error', 'Ralat tidak diketahui') }));
       setConfirming(false);
       return;
     }
@@ -186,7 +189,11 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
     const groupCount = fixtures.filter(f => f.group_name).length;
     const koCount = fixtures.filter(f => !f.group_name).length;
     toast.success(
-      `Bracket ${sport.name} berjaya! ${groupCount} match kumpulan + ${koCount} match KO.`
+      t('supsas:bracket_generated_summary', 'Bracket {{sport}} berjaya! {{group}} match kumpulan + {{ko}} match KO.', {
+        sport: sport.name,
+        group: groupCount,
+        ko: koCount,
+      })
     );
 
     setConfirming(false);
@@ -216,7 +223,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-white">🎰 Undian Kumpulan</h2>
+              <h2 className="text-lg font-black text-white">🎰 {t('supsas:draw_groups_title', 'Undian Kumpulan')}</h2>
               <p className="text-amber-400 text-xs font-bold mt-0.5">{sport.name}</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
@@ -227,11 +234,11 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
           {/* Format info */}
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
-              { label: '6 Match', sub: 'Kumpulan' },
-              { label: '2 Match', sub: 'Separuh Akhir' },
-              { label: '1 Match', sub: 'Akhir' },
+              { label: t('supsas:six_matches', '6 Match'), sub: t('supsas:group_upper', 'Kumpulan') },
+              { label: t('supsas:two_matches', '2 Match'), sub: t('supsas:bracket_semifinals', 'Separuh Akhir') },
+              { label: t('supsas:one_match', '1 Match'), sub: t('supsas:bracket_finals', 'Akhir') },
             ].map(item => (
-              <div key={item.label} className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+              <div key={item.sub} className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
                 <p className="text-amber-400 font-black text-sm">{item.label}</p>
                 <p className="text-white/30 text-[9px] font-bold uppercase tracking-widest">{item.sub}</p>
               </div>
@@ -242,7 +249,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
             <Wifi className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              Pelajar dapat menonton undian secara langsung
+              {t('supsas:live_draw_broadcast_hint', 'Pelajar dapat menonton undian secara langsung')}
             </span>
           </div>
 
@@ -251,7 +258,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-3.5 h-3.5 text-white/30" />
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                {drawEntries.length} {isMultiGroup ? 'Kumpulan Berdaftar' : 'Kontinjen Aktif'}
+                {drawEntries.length} {isMultiGroup ? t('supsas:registered_groups', 'Kumpulan Berdaftar') : t('supsas:active_contingents_type', 'Kontinjen Aktif')}
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -272,7 +279,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
             <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-amber-400/80 font-medium">
-                Fixture sedia ada untuk sukan ini akan <strong>dipadam</strong> dan diganti dengan bracket baru.
+                {t('supsas:draw_replace_warning', 'Fixture sedia ada untuk sukan ini akan dipadam dan diganti dengan bracket baru.')}
               </p>
             </div>
           )}
@@ -281,9 +288,9 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
           <AnimatePresence>
             {(isDrawing || isComplete) && (
               <motion.div
-                initial={{ opacity: 0, }}
-                animate={{ opacity: 1, }}
-                exit={{ opacity: 0, }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="flex gap-3"
               >
                 <GroupPreview
@@ -309,7 +316,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
                 className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2"
               >
                 <Shuffle className="w-4 h-4" />
-                Mulakan Undian Langsung
+                {t('supsas:start_live_draw', 'Mulakan Undian Langsung')}
               </button>
             )}
 
@@ -318,7 +325,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                   <Shuffle className="w-4 h-4" />
                 </motion.div>
-                Undian Sedang Berjalan...
+                {t('supsas:draw_in_progress', 'Undian Sedang Berjalan...')}
               </div>
             )}
 
@@ -330,21 +337,21 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
                   className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2"
                 >
                   {confirming ? <Loader className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  {confirming ? 'Menyimpan 9 Perlawanan...' : 'Sahkan & Jana Bracket'}
+                  {confirming ? t('supsas:saving_fixtures_count', 'Menyimpan 9 Perlawanan...') : t('supsas:confirm_generate_bracket_btn', 'Sahkan & Jana Bracket')}
                 </button>
                 <button
                   onClick={handleReDraw}
                   className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2"
                 >
                   <Shuffle className="w-4 h-4" />
-                  Ulang Undian
+                  {t('supsas:redraw', 'Ulang Undian')}
                 </button>
               </>
             )}
           </div>
 
           <p className="text-[10px] text-white/20 text-center">
-            Pembahagian kumpulan adalah rawak sepenuhnya untuk memastikan ketelusan.
+            {t('supsas:draw_random_hint', 'Pembahagian kumpulan adalah rawak sepenuhnya untuk memastikan ketelusan.')}
           </p>
         </div>
       </motion.div>

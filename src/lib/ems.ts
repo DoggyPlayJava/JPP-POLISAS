@@ -14,6 +14,8 @@ import type {
   EmsCertificate,
 } from '../types';
 
+const t = (key: string, fallback: string, _options?: Record<string, unknown>): string => fallback;
+
 export interface EmsLeaderboardItem {
   participant: EmsParticipant;
   total_score: number;
@@ -163,7 +165,7 @@ export async function createEmsEvent(
     .single();
 
   if (eventError || !event) {
-    throw new Error(`Gagal mencipta acara: ${eventError?.message || 'Tiada data'}`);
+    throw new Error(t('ems:err_create_event', 'Gagal mencipta acara: {{error}}', { error: eventError?.message || t('ems:no_data', 'Tiada data') }));
   }
 
   const fieldInserts = formFields.map((field, idx) => ({
@@ -217,7 +219,7 @@ export async function updateEmsEvent(
     .single();
 
   if (eventError || !event) {
-    throw new Error(`Gagal mengemaskini acara: ${eventError?.message || 'Tiada data'}`);
+    throw new Error(t('ems:err_update_event', 'Gagal mengemaskini acara: {{error}}', { error: eventError?.message || t('ems:no_data', 'Tiada data') }));
   }
 
   const updateTasks: Promise<any>[] = [];
@@ -283,17 +285,17 @@ export async function approveEmsEvent(
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal mengubah status acara: ${error?.message || 'Tiada data'}`);
+    throw new Error(t('ems:err_update_status', 'Gagal mengubah status acara: {{error}}', { error: error?.message || t('ems:no_data', 'Tiada data') }));
   }
 
   // Send automated notification to event creator
   if (data.created_by) {
     const isApproved = status === 'APPROVED';
     sendNotificationToUser(data.created_by, {
-      title: isApproved ? 'Acara Diluluskan 🎉' : 'Acara Ditolak ⚠️',
+      title: isApproved ? t('ems:notif_event_approved_title', 'Acara Diluluskan') : t('ems:notif_event_rejected_title', 'Acara Ditolak'),
       message: isApproved
-        ? `Acara "${data.title}" telah diluluskan oleh JPP HQ.`
-        : `Acara "${data.title}" telah ditolak.${note ? ' Sebab: ' + note : ''}`,
+        ? t('ems:notif_event_approved_msg', 'Acara "{{title}}" telah diluluskan oleh JPP HQ.', { title: data.title })
+        : t('ems:notif_event_rejected_msg', 'Acara "{{title}}" telah ditolak.{{reason}}', { title: data.title, reason: note ? ' Sebab: ' + note : '' }),
       type: isApproved ? 'EMS_EVENT_APPROVED' : 'EMS_EVENT_REJECTED',
       module: 'JPP',
       link: '/ems/dashboard',
@@ -324,7 +326,7 @@ export async function registerEmsParticipant(
       .limit(1)
       .maybeSingle();
     if (existing) {
-      throw new Error('Anda telah mendaftar untuk acara ini. Sila gunakan Pass sedia ada.');
+      throw new Error(t('ems:err_already_registered', 'Anda telah mendaftar untuk acara ini. Sila gunakan Pass sedia ada.'));
     }
   }
 
@@ -335,7 +337,7 @@ export async function registerEmsParticipant(
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal mendaftar peserta: ${error?.message || 'Sila cuba lagi'}`);
+    throw new Error(t('ems:err_register_participant', 'Gagal mendaftar peserta: {{error}}', { error: error?.message || t('ems:please_try_again', 'Sila cuba lagi') }));
   }
 
   // Send automated notification to registrant with link to Pass QR code
@@ -367,8 +369,8 @@ export async function registerEmsParticipant(
 
       if (targetUserId) {
         await sendNotificationToUser(targetUserId, {
-          title: 'Pendaftaran Acara Berjaya 🎟️',
-          message: `Pendaftaran anda untuk acara telah berjaya. Pas QR anda sedia untuk digunakan.`,
+          title: t('ems:notif_registration_success_title', 'Pendaftaran Acara Berjaya'),
+          message: t('ems:notif_registration_success_msg', 'Pendaftaran anda untuk acara telah berjaya. Pas QR anda sedia untuk digunakan.'),
           type: 'EMS_REGISTRATION_SUCCESS',
           module: 'JPP',
           link: `/ems/checkin/${data.event_id}`,
@@ -418,7 +420,7 @@ export async function createEmsParticipantManual(participantData: {
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal mendaftar peserta secara manual: ${error?.message || 'Ralat tidak diketahui'}`);
+    throw new Error(t('ems:err_register_manual', 'Gagal mendaftar peserta secara manual: {{error}}', { error: error?.message || t('ems:unknown_error', 'Ralat tidak diketahui') }));
   }
 
   return data;
@@ -440,7 +442,7 @@ export async function toggleJuryCodeActive(
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal mengemaskini status kod juri: ${error?.message || 'Ralat sistem'}`);
+    throw new Error(t('ems:err_toggle_jury_code', 'Gagal mengemaskini status kod juri: {{error}}', { error: error?.message || t('ems:system_error', 'Ralat sistem') }));
   }
 
   return data;
@@ -456,7 +458,7 @@ export async function deleteJuryCode(codeId: string): Promise<boolean> {
     .eq('id', codeId);
 
   if (error) {
-    throw new Error(`Gagal memadam kod juri: ${error.message}`);
+    throw new Error(t('ems:err_delete_jury_code', 'Gagal memadam kod juri: {{error}}', { error: error.message }));
   }
 
   return true;
@@ -474,7 +476,7 @@ export async function completeEmsEvent(eventId: string): Promise<EmsEvent> {
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal menandakan acara selesai: ${error?.message || 'Ralat sistem'}`);
+    throw new Error(t('ems:err_complete_event', 'Gagal menandakan acara selesai: {{error}}', { error: error?.message || t('ems:system_error', 'Ralat sistem') }));
   }
 
   // Automatically trigger certificate generation
@@ -492,7 +494,7 @@ export async function checkinEmsParticipant(
 ): Promise<EmsParticipant> {
   let cleanInput = searchInput.trim();
   if (!cleanInput) {
-    throw new Error('Sila masukkan No. Matrik, ID, atau Emel peserta.');
+    throw new Error(t('ems:err_enter_matrix_id', 'Sila masukkan No. Matrik, ID, atau Emel peserta.'));
   }
 
   // Support DEV_GUIDELINE 22.4 Smart Routing payload protocols (e.g. EMS-PASS::<id>, URLs, JSON)
@@ -528,7 +530,7 @@ export async function checkinEmsParticipant(
   const { data: participants, error: findError } = await query;
 
   if (findError || !participants || participants.length === 0) {
-    throw new Error(`Peserta dengan carian "${cleanInput}" tidak dijumpai.`);
+    throw new Error(t('ems:err_participant_not_found', 'Peserta dengan carian "{{input}}" tidak dijumpai.', { input: cleanInput }));
   }
 
   const participant = participants[0];
@@ -544,7 +546,7 @@ export async function checkinEmsParticipant(
     .single();
 
   if (updateError || !updated) {
-    throw new Error(`Gagal daftar masuk peserta: ${updateError?.message || 'Ralat sistem'}`);
+    throw new Error(t('ems:err_checkin_participant', 'Gagal daftar masuk peserta: {{error}}', { error: updateError?.message || t('ems:system_error', 'Ralat sistem') }));
   }
 
   return updated;
@@ -579,7 +581,7 @@ export async function createJuryCode(
     .single();
 
   if (error || !data) {
-    throw new Error(`Gagal mencipta kod juri: ${error?.message || 'Ralat sistem'}`);
+    throw new Error(t('ems:err_create_jury_code', 'Gagal mencipta kod juri: {{error}}', { error: error?.message || t('ems:system_error', 'Ralat sistem') }));
   }
 
   return data;
@@ -657,7 +659,7 @@ export async function submitJuryScore(
     );
 
   if (error) {
-    throw new Error(`Gagal menyimpan markah juri: ${error.message}`);
+    throw new Error(t('ems:err_save_jury_score', 'Gagal menyimpan markah juri: {{error}}', { error: error.message }));
   }
 
   return true;
@@ -693,7 +695,7 @@ export async function overrideJuryScore(
     );
 
   if (error) {
-    throw new Error(`Gagal meminda markah juri: ${error.message}`);
+    throw new Error(t('ems:err_override_jury_score', 'Gagal meminda markah juri: {{error}}', { error: error.message }));
   }
 
   return true;
@@ -850,7 +852,7 @@ export async function resolveTieWinner(
     .eq('event_id', eventId);
 
   if (fetchErr || !participants) {
-    throw new Error(`Gagal memproses penentuan pemenang seri: ${fetchErr?.message}`);
+    throw new Error(t('ems:err_resolve_tie', 'Gagal memproses penentuan pemenang seri: {{error}}', { error: fetchErr?.message }));
   }
 
   const updateTasks = participants.map((p) => {
@@ -928,7 +930,7 @@ export async function generateEmsCertificates(eventId: string): Promise<EmsCerti
   if (certInserts.length > 0) {
     const { error } = await supabase.from('ems_certificates').insert(certInserts);
     if (error) {
-      throw new Error(`Gagal menjana sijil: ${error.message}`);
+      throw new Error(t('ems:err_generate_certs', 'Gagal menjana sijil: {{error}}', { error: error.message }));
     }
   }
 
@@ -954,7 +956,7 @@ export async function fetchEventCertificates(eventId: string): Promise<Array<Ems
 
   if (certsRes.error) throw certsRes.error;
   const certs = certsRes.data || [];
-  const eventTitle = eventRes.data?.title || 'Acara EMS';
+  const eventTitle = eventRes.data?.title || t('ems:default_event_title', 'Acara EMS');
   const participantsMap = new Map((participantsRes.data || []).map((p) => [p.id, p]));
   const juriesMap = new Map((juriesRes.data || []).map((j) => [j.id, j]));
 
@@ -1004,8 +1006,8 @@ export async function fetchUserCertificates(email?: string, matrixNo?: string): 
 
   return certs.map((c) => ({
     ...c,
-    event_title: eventsMap.get(c.event_id) || 'Acara EMS',
-    recipient_name: c.participant_id ? participantsMap.get(c.participant_id) : 'Peserta',
+    event_title: eventsMap.get(c.event_id) || t('ems:default_event_title', 'Acara EMS'),
+    recipient_name: c.participant_id ? participantsMap.get(c.participant_id) : t('ems:default_recipient_participant', 'Peserta'),
   }));
 }
 
@@ -1108,7 +1110,7 @@ export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
     iconName: 'Sparkles',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-emerald-600 text-white border-emerald-500 ring-2 ring-emerald-500/30 shadow-md',
-    defaultDescriptor: 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.',
+    defaultDescriptor: t('ems:likert_desc_5', 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.'),
   },
   {
     value: 4,
@@ -1117,7 +1119,7 @@ export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
     iconName: 'ThumbsUp',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-slate-900 dark:bg-slate-700 text-white border-slate-700 dark:border-slate-600 ring-2 ring-slate-500/30 shadow-md',
-    defaultDescriptor: 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
+    defaultDescriptor: t('ems:likert_desc_4', 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.'),
   },
   {
     value: 3,
@@ -1126,7 +1128,7 @@ export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
     iconName: 'MinusCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-slate-900 dark:bg-slate-700 text-white border-slate-700 dark:border-slate-600 ring-2 ring-slate-500/30 shadow-md',
-    defaultDescriptor: 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
+    defaultDescriptor: t('ems:likert_desc_3', 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.'),
   },
   {
     value: 2,
@@ -1135,7 +1137,7 @@ export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
     iconName: 'AlertCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-amber-600 text-white border-amber-500 ring-2 ring-amber-500/30 shadow-md',
-    defaultDescriptor: 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.',
+    defaultDescriptor: t('ems:likert_desc_2', 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.'),
   },
   {
     value: 1,
@@ -1144,7 +1146,7 @@ export const EMS_LIKERT_OPTIONS: EmsLikertOption[] = [
     iconName: 'XCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-rose-600 text-white border-rose-500 ring-2 ring-rose-500/30 shadow-md',
-    defaultDescriptor: 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.',
+    defaultDescriptor: t('ems:likert_desc_1', 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.'),
   },
 ];
 

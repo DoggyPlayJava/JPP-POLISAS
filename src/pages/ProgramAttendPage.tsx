@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,12 +43,17 @@ interface ProgramInfo {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export function ProgramAttendPage() {
+interface ProgramAttendPageProps {
+  initialState?: ScanState;
+}
+
+export function ProgramAttendPage({ initialState }: ProgramAttendPageProps = {}) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { token } = useParams<{ token: string }>();
   const navigate   = useNavigate();
   const { user, profile } = useAuth();
 
-  const [state, setState]   = useState<ScanState>('loading');
+  const [state, setState]   = useState<ScanState>(initialState ?? (token ? 'loading' : 'not_found'));
   const [program, setProgram] = useState<ProgramInfo | null>(null);
   const [attendeeId, setAttendeeId] = useState<string | null>(null);
 
@@ -234,22 +240,22 @@ export function ProgramAttendPage() {
       // Hantar notifikasi in-app kepada peserta
       if (program.merit_kelab > 0) {
         await sendNotificationToUser(user.id, {
-          title: `+${program.merit_kelab} Merit Program! 🏆`,
-          message: `Anda telah berjaya hadir "${program.title}". Merit Kelab telah dikreditkan.`,
+          title: t('kpp:program_merit_credited_title', '+{{points}} Merit Program! 🏆', { points: program.merit_kelab }),
+          message: t('kpp:program_merit_credited_desc', 'Anda telah berjaya hadir "{{title}}". Merit Kelab telah dikreditkan.', { title: program.title }),
           type: 'MERIT_CREDITED',
           module: 'AKADEMIK',
           link: '/akademik/merit',
           reference_id: program.id,
-          actor_name: 'Sistem Program',
+          actor_name: t('kpp:program_system_sender', 'Sistem Program'),
         });
       } else {
         await sendNotificationToUser(user.id, {
-          title: `Kehadiran Disahkan ✅`,
-          message: `Anda telah berjaya daftar hadir untuk "${program.title}".`,
+          title: t('kpp:attendance_confirmed_title', 'Kehadiran Disahkan ✅'),
+          message: t('kpp:attendance_confirmed_desc', 'Anda telah berjaya daftar hadir untuk "{{title}}".', { title: program.title }),
           type: 'ATTENDANCE_CONFIRMED',
           module: 'EKPP',
           reference_id: program.id,
-          actor_name: 'Sistem Program',
+          actor_name: t('kpp:program_system_sender', 'Sistem Program'),
         });
       }
 
@@ -263,7 +269,7 @@ export function ProgramAttendPage() {
 
       setState('success');
     } catch (err: any) {
-      toast.error(err.message || 'Ralat semasa mendaftar kehadiran.');
+      toast.error(err.message || t('common:unexpected_error', 'Ralat semasa mendaftar kehadiran.'));
       setState('ready');
     }
   };
@@ -283,7 +289,7 @@ export function ProgramAttendPage() {
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="text-center space-y-4">
               <Loader2 className="w-10 h-10 text-slate-500 animate-spin mx-auto" />
-              <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Memuatkan...</p>
+              <p className="text-sm font-black text-slate-500 uppercase tracking-widest">{t('common:loading', 'Memuatkan...')}</p>
             </motion.div>
           )}
 
@@ -292,12 +298,12 @@ export function ProgramAttendPage() {
             <motion.div key="not_found" {...fadeIn} className="text-center space-y-6">
               <StatusIcon icon={XCircle} color="rose" />
               <div>
-                <h1 className="text-2xl font-black text-white">QR Tidak Sah</h1>
-                <p className="text-sm text-slate-500 mt-2">Kod QR ini tidak wujud atau sudah tidak aktif.</p>
+                <h1 className="text-2xl font-black text-white">{t('kpp:invalid_qr', 'QR Tidak Sah')}</h1>
+                <p className="text-sm text-slate-500 mt-2">{t('kpp:qr_not_exist_or_inactive', 'Kod QR ini tidak wujud atau sudah tidak aktif.')}</p>
               </div>
               <Button onClick={() => navigate('/')} variant="outline" className="rounded-2xl text-slate-400 border-slate-700">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Kembali ke Portal
+                {t('kpp:back_to_portal', 'Kembali ke Portal')}
               </Button>
             </motion.div>
           )}
@@ -308,9 +314,9 @@ export function ProgramAttendPage() {
               <StatusIcon icon={Clock} color="amber" />
               <ProgramCard program={program} />
               <div className="rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-center">
-                <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">QR Belum Dibuka</p>
+                <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">{t('kpp:qr_not_open_yet', 'QR Belum Dibuka')}</p>
                 <p className="text-sm text-amber-300/80">
-                  QR akan dibuka pada{' '}
+                  {t('kpp:qr_will_open_on', 'QR akan dibuka pada')}{' '}
                   <span className="font-black">
                     {program.qr_open_at ? format(parseISO(program.qr_open_at), "d MMM, h:mm a", { locale: ms }) : '—'}
                   </span>
@@ -325,8 +331,8 @@ export function ProgramAttendPage() {
               <StatusIcon icon={XCircle} color="rose" />
               <ProgramCard program={program} />
               <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 text-center">
-                <p className="text-xs font-black text-rose-400 uppercase tracking-widest mb-1">QR Sudah Ditutup</p>
-                <p className="text-sm text-rose-300/80">Masa daftar hadir telah tamat.</p>
+                <p className="text-xs font-black text-rose-400 uppercase tracking-widest mb-1">{t('kpp:qr_already_closed', 'QR Sudah Ditutup')}</p>
+                <p className="text-sm text-rose-300/80">{t('kpp:checkin_time_expired', 'Masa daftar hadir telah tamat.')}</p>
               </div>
             </motion.div>
           )}
@@ -337,13 +343,13 @@ export function ProgramAttendPage() {
               <StatusIcon icon={Shield} color="indigo" />
               <ProgramCard program={program} />
               <div className="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-4 text-center">
-                <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">Log Masuk Diperlukan</p>
-                <p className="text-sm text-indigo-300/80">Anda perlu log masuk ke akaun JPP-POLISAS untuk mendaftar kehadiran.</p>
+                <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">{t('kpp:login_required', 'Log Masuk Diperlukan')}</p>
+                <p className="text-sm text-indigo-300/80">{t('kpp:login_required_desc', 'Anda perlu log masuk ke akaun JPP-POLISAS untuk mendaftar kehadiran.')}</p>
               </div>
               <Button onClick={handleLogin}
                 className="w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/50">
                 <LogIn className="w-4 h-4 mr-2" />
-                Log Masuk & Claim
+                {t('kpp:login_and_claim', 'Log Masuk & Claim')}
               </Button>
             </motion.div>
           )}
@@ -354,12 +360,12 @@ export function ProgramAttendPage() {
               <StatusIcon icon={AlertCircle} color="amber" />
               <ProgramCard program={program} />
               <div className="rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-center">
-                <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">Pendaftaran Diperlukan</p>
-                <p className="text-sm text-amber-300/80">Program ini memerlukan pendaftaran awal. Sila daftar terlebih dahulu dalam app.</p>
+                <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">{t('kpp:registration_required', 'Pendaftaran Diperlukan')}</p>
+                <p className="text-sm text-amber-300/80">{t('kpp:pre_reg_required_desc', 'Program ini memerlukan pendaftaran awal. Sila daftar terlebih dahulu dalam app.')}</p>
               </div>
               <Button onClick={() => navigate('/aktiviti')} variant="outline"
                 className="w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest border-slate-700 text-slate-400">
-                Pergi ke Aktiviti
+                {t('kpp:go_to_activities', 'Pergi ke Aktiviti')}
               </Button>
             </motion.div>
           )}
@@ -370,13 +376,13 @@ export function ProgramAttendPage() {
               <StatusIcon icon={CheckCircle} color="emerald" />
               <ProgramCard program={program} />
               <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-center">
-                <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">Sudah Hadir ✓</p>
-                <p className="text-sm text-emerald-300/80">Anda sudah mendaftar hadir untuk program ini.</p>
+                <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{t('kpp:already_attended', 'Sudah Hadir ✓')}</p>
+                <p className="text-sm text-emerald-300/80">{t('kpp:already_attended_desc', 'Anda sudah mendaftar hadir untuk program ini.')}</p>
               </div>
               <Button onClick={() => navigate('/aktiviti')} variant="outline"
                 className="w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest border-slate-700 text-slate-400">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Kembali
+                {t('common:back', 'Kembali')}
               </Button>
             </motion.div>
           )}
@@ -389,7 +395,7 @@ export function ProgramAttendPage() {
                 <div className="w-16 h-16 rounded-[1.5rem] bg-primary/15 border border-primary/20 flex items-center justify-center mx-auto mb-4">
                   <QrCode className="w-8 h-8 text-primary" />
                 </div>
-                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">Daftar Hadir</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">{t('kpp:check_in', 'Daftar Hadir')}</p>
               </div>
 
               {/* Program info */}
@@ -414,8 +420,8 @@ export function ProgramAttendPage() {
                 <div className="flex items-center gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-3.5">
                   <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Merit Kelab</p>
-                    <p className="text-lg font-black text-amber-300">+{program.merit_kelab} Merit</p>
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">{t('kpp:club_merit', 'Merit Kelab')}</p>
+                    <p className="text-lg font-black text-amber-300">+{program.merit_kelab} {t('kpp:merit', 'Merit')}</p>
                   </div>
                 </div>
               )}
@@ -426,7 +432,7 @@ export function ProgramAttendPage() {
                 className="w-full h-14 rounded-2xl font-black text-[12px] uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-900/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                Claim Kehadiran
+                {t('kpp:claim_attendance', 'Claim Kehadiran')}
               </Button>
             </motion.div>
           )}
@@ -435,7 +441,7 @@ export function ProgramAttendPage() {
           {state === 'claiming' && (
             <motion.div key="claiming" {...fadeIn} className="text-center space-y-4">
               <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mx-auto" />
-              <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Mendaftar kehadiran...</p>
+              <p className="text-sm font-black text-slate-400 uppercase tracking-widest">{t('kpp:registering_attendance', 'Mendaftar kehadiran...')}</p>
             </motion.div>
           )}
 
@@ -451,8 +457,8 @@ export function ProgramAttendPage() {
                 <div className="w-20 h-20 rounded-[2rem] bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-10 h-10 text-emerald-400" />
                 </div>
-                <h1 className="text-3xl font-black text-white tracking-tight">Berjaya! 🎉</h1>
-                <p className="text-sm text-slate-500 mt-2">Kehadiran anda telah didaftarkan.</p>
+                <h1 className="text-3xl font-black text-white tracking-tight">{t('kpp:success_exclamation', 'Berjaya! 🎉')}</h1>
+                <p className="text-sm text-slate-500 mt-2">{t('kpp:attendance_registered_desc', 'Kehadiran anda telah didaftarkan.')}</p>
               </motion.div>
 
               <ProgramCard program={program} />
@@ -464,9 +470,9 @@ export function ProgramAttendPage() {
                   transition={{ delay: 0.3 }}
                   className="rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-4 text-center"
                 >
-                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Merit Kelab Dikreditkan</p>
+                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">{t('kpp:club_merit_credited', 'Merit Kelab Dikreditkan')}</p>
                   <p className="text-3xl font-black text-amber-300">+{program.merit_kelab}</p>
-                  <p className="text-[10px] text-amber-400/60 mt-1 font-medium">merit telah ditambah ke akaun anda</p>
+                  <p className="text-[10px] text-amber-400/60 mt-1 font-medium">{t('kpp:merit_added_to_account', 'merit telah ditambah ke akaun anda')}</p>
                 </motion.div>
               )}
 
@@ -474,12 +480,12 @@ export function ProgramAttendPage() {
                 <Button onClick={() => navigate('/akademik/merit')} variant="outline"
                   className="h-11 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-700 text-slate-400">
                   <Trophy className="w-3.5 h-3.5 mr-1.5" />
-                  Merit Saya
+                  {t('kpp:my_merits', 'Merit Saya')}
                 </Button>
                 <Button onClick={() => navigate('/aktiviti')}
                   className="h-11 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-primary text-white">
                   <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-                  Aktiviti
+                  {t('kpp:activities', 'Aktiviti')}
                 </Button>
               </div>
             </motion.div>
@@ -517,6 +523,7 @@ function StatusIcon({ icon: Icon, color }: { icon: any; color: string }) {
 }
 
 function ProgramCard({ program }: { program: ProgramInfo }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const formatDate = (d?: string | null) => {
     if (!d) return null;
     try {
@@ -526,7 +533,7 @@ function ProgramCard({ program }: { program: ProgramInfo }) {
     } catch { return d; }
   };
 
-  const typeLabel = program.type === 'takwim' ? 'Takwim Rasmi' : 'Aktiviti Kelab';
+  const typeLabel = program.type === 'takwim' ? t('kpp:official_takwim', 'Takwim Rasmi') : t('kpp:club_activity', 'Aktiviti Kelab');
   const typeColor = program.type === 'takwim'
     ? 'bg-primary/15 text-primary border-primary/25'
     : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25';

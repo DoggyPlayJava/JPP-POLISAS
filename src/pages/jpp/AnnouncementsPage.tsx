@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Bell, Plus, ShieldAlert, AlertTriangle, Info, Lock, 
   Trash2, FileText, CheckCircle2, XCircle, Users, Activity, X, Upload, Star, Gift, Megaphone, Calendar
@@ -18,6 +19,7 @@ import { SlideOverSheet } from '@/components/jpp/SlideOverSheet';
 import { SystemAnnouncement, AnnouncementFormField, AnnouncementPriority, AnnouncementTarget } from '@/types';
 
 export function AnnouncementsPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -66,7 +68,7 @@ export function AnnouncementsPage() {
       if (error) throw error;
       setAnnouncements(data || []);
     } catch (err: any) {
-      toast.error('Gagal memuat turun senarai makluman');
+      toast.error(t('jpp:announcements_fetch_failed', 'Gagal memuat turun senarai makluman'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export function AnnouncementsPage() {
 
   const handleCreate = async () => {
     if (!title || !content) {
-      toast.error('Sila isi tajuk dan kandungan');
+      toast.error(t('jpp:announcements_fill_title_content', 'Sila isi tajuk dan kandungan'));
       return;
     }
 
@@ -91,7 +93,7 @@ export function AnnouncementsPage() {
       let finalImageUrl = imagePreview && !imageFile ? imagePreview : null;
 
       if (!editingId && imageFile) {
-        toast.loading('Memuat naik imej...', { id: 'upload_image' });
+        toast.loading(t('jpp:announcements_uploading_image', 'Memuat naik imej...'), { id: 'upload_image' });
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}_${window.crypto.randomUUID()}.${fileExt}`;
         
@@ -127,7 +129,7 @@ export function AnnouncementsPage() {
           .eq('id', editingId);
 
         if (dbError) throw dbError;
-        toast.success('Hebahan berjaya dikemas kini.');
+        toast.success(t('jpp:announcements_broadcast_updated', 'Hebahan berjaya dikemas kini.'));
       } else {
         const { error: dbError } = await supabase
           .from('system_announcements')
@@ -144,7 +146,7 @@ export function AnnouncementsPage() {
           });
 
         if (dbError) throw dbError;
-        toast.success('Hebahan berjaya dicipta.');
+        toast.success(t('jpp:announcements_broadcast_created', 'Hebahan berjaya dicipta.'));
 
         // --- Trigger Push Notification ---
         try {
@@ -154,14 +156,14 @@ export function AnnouncementsPage() {
                               target === 'STAFF' ? ['STAFF', 'CLUB_ADVISOR', 'SUPER_ADMIN_JPP'] : [];
           
           await broadcastAnnouncement({
-            title: 'Notis Baru JPP',
+            title: t('jpp:announcements_notif_push_title', 'Notis Baru JPP'),
             message: title,
             type: 'ANNOUNCEMENT',
             module: 'JPP',
             link: '/portal' // Or any relevant link
           }, targetRoles);
         } catch (e) {
-          console.error("Gagal menghantar notifikasi push", e);
+          console.error(t('jpp:announcements_push_failed_log', 'Gagal menghantar notifikasi push'), e);
         }
       }
 
@@ -169,7 +171,7 @@ export function AnnouncementsPage() {
       resetForm();
       fetchAnnouncements();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal memproses makluman');
+      toast.error(err.message || t('jpp:announcements_process_failed', 'Gagal memproses makluman'));
     } finally {
       setCreating(false);
     }
@@ -181,9 +183,9 @@ export function AnnouncementsPage() {
       .update({ is_active: !currentStatus })
       .eq('id', id);
     
-    if (error) toast.error('Ralat mengemaskini status');
+    if (error) toast.error(t('jpp:announcements_status_update_error', 'Ralat mengemaskini status'));
     else {
-      toast.success('Status dikemaskini');
+      toast.success(t('jpp:announcements_status_updated', 'Status dikemaskini'));
       fetchAnnouncements();
     }
   };
@@ -201,9 +203,9 @@ export function AnnouncementsPage() {
 
     const { error } = await supabase.from('system_announcements').delete().eq('id', id);
     if (error) {
-      toast.error('Gagal memadam makluman.');
+      toast.error(t('jpp:announcements_delete_failed', 'Gagal memadam makluman.'));
     } else {
-      toast.success('Makluman berjaya dipadam.');
+      toast.success(t('jpp:announcements_broadcast_deleted', 'Makluman berjaya dipadam.'));
       setDeleteTarget(null);
       fetchAnnouncements();
     }
@@ -245,7 +247,7 @@ export function AnnouncementsPage() {
     const announcement = broadcastTarget;
     
     setBroadcastingId(announcement.id);
-    toast.loading('Menghantar notifikasi push...', { id: 'broadcast_push' });
+    toast.loading(t('jpp:announcements_sending_push', 'Menghantar notifikasi push...'), { id: 'broadcast_push' });
     
     try {
       const { broadcastAnnouncement } = await import('@/lib/notifications');
@@ -265,11 +267,11 @@ export function AnnouncementsPage() {
         link: '/portal'
       }, targetRoles);
       
-      toast.success('Hebahan push berjaya dihantar.', { id: 'broadcast_push' });
+      toast.success(t('jpp:announcements_push_sent', 'Hebahan push berjaya dihantar.'), { id: 'broadcast_push' });
       setBroadcastTarget(null);
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal menghantar hebahan', { id: 'broadcast_push' });
+      toast.error(t('jpp:announcements_broadcast_failed', 'Gagal menghantar hebahan'), { id: 'broadcast_push' });
     } finally {
       setBroadcastingId(null);
     }
@@ -279,7 +281,7 @@ export function AnnouncementsPage() {
     setFormFields([...formFields, {
       id: `field_${Date.now()}`,
       type: 'text',
-      label: 'Soalan Baru',
+      label: t('jpp:announcements_new_question_default', 'Soalan Baru'),
       required: true
     }]);
   };
@@ -314,7 +316,7 @@ export function AnnouncementsPage() {
       if (error) throw error;
       setResponses(data || []);
     } catch (err: any) {
-      toast.error('Gagal memuat turun respon');
+      toast.error(t('jpp:announcements_responses_fetch_failed', 'Gagal memuat turun respon'));
     } finally {
       setLoadingResponses(false);
     }
@@ -328,12 +330,14 @@ export function AnnouncementsPage() {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-3">
             JPP HQ • Hebahan Rasmi
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Makluman Global</h1>
-          <p className="text-muted-foreground font-medium max-w-2xl text-xs sm:text-sm mt-1">Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul Popout Bersepadu.</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            {t('jpp:broadcast_announcements', 'Pusat Pengumuman Kampus')}
+          </h1>
+          <p className="text-muted-foreground font-medium max-w-2xl text-xs sm:text-sm mt-1">{t('jpp:announcements_page_subtitle', 'Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul Popout Bersepadu.')}</p>
         </div>
         {!showCreate && (
           <Button onClick={() => setShowCreate(true)} className="h-11 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xs hover:scale-[1.02] active:scale-[0.98] transition-all font-bold text-xs uppercase tracking-wider">
-            <Plus className="mr-2 h-4 w-4" /> Cipta Hebahan Baharu
+            <Plus className="mr-2 h-4 w-4" /> {t('jpp:create_announcement_btn', 'Cipta Pengumuman')}
           </Button>
         )}
       </div>
@@ -341,71 +345,70 @@ export function AnnouncementsPage() {
       {showCreate ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-[2rem] border border-border/50 shadow-2xl overflow-hidden">
           <div className="p-8 border-b border-border/50 bg-muted/20">
-            <h2 className="text-2xl font-black tracking-tight text-foreground">{editingId ? 'Sunting Hebahan' : 'Enjin Pencipta Hebahan'}</h2>
-            <p className="text-sm text-muted-foreground">{editingId ? 'Kemaskini maklumat di bawah. Pertukaran imej dihadkan untuk elakkan isu storan.' : 'Parameter hebahan akan dibaca terus oleh sistem login pengguna.'}</p>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">{editingId ? t('jpp:announcements_edit_title', 'Sunting Hebahan') : t('jpp:announcements_composer_title', 'Enjin Pencipta Hebahan')}</h2>
+            <p className="text-sm text-muted-foreground">{editingId ? t('jpp:announcements_edit_desc', 'Kemaskini maklumat di bawah. Pertukaran imej dihadkan untuk elakkan isu storan.') : t('jpp:announcements_composer_desc', 'Parameter hebahan akan dibaca terus oleh sistem login pengguna.')}</p>
           </div>
           
           <div className="p-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <Label className="font-bold">Tajuk Notis</Label>
-                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Contoh: Kemaskini Alamat Rumah" className="h-12 bg-muted/50 rounded-xl" />
+                <Label className="font-bold">{t('jpp:announcements_notice_title', 'Tajuk Notis')}</Label>
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={t('jpp:announcements_title_placeholder', 'Contoh: Kemaskini Alamat Rumah')} className="h-12 bg-muted/50 rounded-xl" />
               </div>
               <div className="space-y-4">
-                <Label className="font-bold">Sasaran Pengguna</Label>
+                <Label className="font-bold">{t('jpp:announcements_target_audience', 'Sasaran Pengguna')}</Label>
                 <Select value={target} onValueChange={(val: any) => setTarget(val)}>
                   <SelectTrigger className="h-12 bg-muted/50 rounded-xl">
-                    <SelectValue placeholder="Pilih sasaran" />
+                    <SelectValue placeholder={t('jpp:announcements_select_target_ph', 'Pilih sasaran')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Semua (Pelajar & Staf)</SelectItem>
-                    <SelectItem value="STUDENT">Pelajar Sahaja</SelectItem>
-                    <SelectItem value="STAFF">Staf Sahaja</SelectItem>
+                    <SelectItem value="ALL">{t('jpp:announcements_target_all', 'Semua (Pelajar & Staf)')}</SelectItem>
+                    <SelectItem value="STUDENT">{t('jpp:announcements_target_student', 'Pelajar Sahaja')}</SelectItem>
+                    <SelectItem value="STAFF">{t('jpp:announcements_target_staff', 'Staf Sahaja')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-4">
-              <Label className="font-bold">Kandungan Utama</Label>
+              <Label className="font-bold">{t('jpp:announcements_content_label', 'Kandungan Utama')}</Label>
               <Textarea value={content} onChange={e => setContent(e.target.value)} rows={4} placeholder="Penerangan terperinci notis..." className="resize-none bg-muted/50 rounded-xl p-4" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="space-y-4">
-                  <Label className="font-bold">Pilihan Ikon</Label>
+                  <Label className="font-bold">{t('jpp:announcements_icon_selection', 'Pilihan Ikon')}</Label>
                   <Select value={iconType} onValueChange={(val: any) => setIconType(val)}>
                      <SelectTrigger className="h-12 bg-muted/50 rounded-xl">
-                        <SelectValue placeholder="Pilih Ikon" />
+                        <SelectValue placeholder={t('jpp:announcements_select_icon_ph', 'Pilih Ikon')} />
                      </SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="INFO"><div className="flex items-center"><Info size={16} className="mr-2"/> Info Umum</div></SelectItem>
-                        <SelectItem value="ALERT"><div className="flex items-center"><ShieldAlert size={16} className="mr-2"/> Amaran / Penting</div></SelectItem>
-                        <SelectItem value="GIFT"><div className="flex items-center"><Gift size={16} className="mr-2"/> Hadiah / Imbuhan</div></SelectItem>
-                        <SelectItem value="STAR"><div className="flex items-center"><Star size={16} className="mr-2"/> Sorotan utama</div></SelectItem>
-                        <SelectItem value="MEGAPHONE"><div className="flex items-center"><Megaphone size={16} className="mr-2"/> Sorakan / Promosi</div></SelectItem>
-                        <SelectItem value="CALENDAR"><div className="flex items-center"><Calendar size={16} className="mr-2"/> Tarikh Acara</div></SelectItem>
+                        <SelectItem value="INFO"><div className="flex items-center"><Info size={16} className="mr-2"/> {t('jpp:announcements_icon_info', 'Info Umum')}</div></SelectItem>
+                        <SelectItem value="ALERT"><div className="flex items-center"><ShieldAlert size={16} className="mr-2"/> {t('jpp:announcements_icon_alert', 'Amaran / Penting')}</div></SelectItem>
+                        <SelectItem value="GIFT"><div className="flex items-center"><Gift size={16} className="mr-2"/> {t('jpp:announcements_icon_gift', 'Hadiah / Imbuhan')}</div></SelectItem>
+                        <SelectItem value="STAR"><div className="flex items-center"><Star size={16} className="mr-2"/> {t('jpp:announcements_icon_star', 'Sorotan utama')}</div></SelectItem>
+                        <SelectItem value="MEGAPHONE"><div className="flex items-center"><Megaphone size={16} className="mr-2"/> {t('jpp:announcements_icon_megaphone', 'Sorakan / Promosi')}</div></SelectItem>
+                        <SelectItem value="CALENDAR"><div className="flex items-center"><Calendar size={16} className="mr-2"/> {t('jpp:announcements_icon_calendar', 'Tarikh Acara')}</div></SelectItem>
                      </SelectContent>
                   </Select>
                </div>
                
                <div className="space-y-4">
-                  <Label className="font-bold">Poster / Imej {editingId ? '(Dikunci)' : '(Opsional)'}</Label>
+                  <Label className="font-bold">{t('jpp:announcements_poster_label', 'Poster / Imej')} {editingId ? t('jpp:announcements_poster_locked', '(Dikunci)') : t('jpp:announcements_poster_optional', '(Opsional)')}</Label>
                   {!editingId ? (
                      <>
                         <label className="flex items-center justify-center gap-2 h-12 bg-muted/50 rounded-xl border border-dashed border-border/50 cursor-pointer hover:bg-muted/80 transition-colors">
                            <Upload size={16} className="text-muted-foreground" />
-                           <span className="text-sm font-medium text-muted-foreground">Muat Naik Gambar (Max 10MB)</span>
+                           <span className="text-sm font-medium text-muted-foreground">{t('jpp:announcements_upload_poster_btn', 'Muat Naik Gambar (Max 10MB)')}</span>
                            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                         </label>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                           * Nisbah terbaik: <b>Lanskap (16:9)</b> atau <b>Segi Empat Sama (1:1)</b>.<br/>
-                           * <i>Format Memanjang (9:16) dibenarkan</i>; ruang tepi akan diisi dengan estetik kesan kabur (blur).
+                           {t('jpp:announcements_image_aspect_ratio_hint', '* Nisbah terbaik: Lanskap (16:9) atau Segi Empat Sama (1:1). Format Memanjang (9:16) dibenarkan; ruang tepi akan diisi dengan estetik kesan kabur (blur).')}
                         </p>
                      </>
                   ) : (
                      <p className="text-[10px] text-amber-500 font-bold bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                        * Pemuat naik gambar dimatikan semasa suntingan bagi mengimbangi integriti storan. Sila padam dan cipta hebahan baharu sekiranya gambar perlu ditukar.
+                        {t('jpp:announcements_image_locked_note', '* Pemuat naik gambar dimatikan semasa suntingan bagi mengimbangi integriti storan. Sila padam dan cipta hebahan baharu sekiranya gambar perlu ditukar.')}
                      </p>
                   )}
                   {imagePreview && (
@@ -420,12 +423,12 @@ export function AnnouncementsPage() {
             </div>
 
             <div className="space-y-4">
-              <Label className="font-bold text-lg">Tahap Keutamaan (Priority)</Label>
+              <Label className="font-bold text-lg">{t('jpp:announcements_priority_level', 'Tahap Keutamaan (Priority)')}</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { id: 'EASY', title: 'Hebahan Biasa', desc: 'Boleh dipangkah dan ada butang "Jangan Minta Lagi".' },
-                  { id: 'MEDIUM', title: 'Peringatan Setiap Sesi', desc: 'Boleh dipangkah tapi akan muncul selagi notis aktif.' },
-                  { id: 'HIGH', title: 'Paksaan (Mandatori)', desc: 'Menghalang login skrin sepenuhnya sehingga syarat dipenuhi.' }
+                  { id: 'EASY', title: t('jpp:announcements_priority_easy', 'Hebahan Biasa'), desc: t('jpp:announcements_priority_easy_desc', 'Boleh dipangkah dan ada butang "Jangan Minta Lagi".') },
+                  { id: 'MEDIUM', title: t('jpp:announcements_priority_medium', 'Peringatan Setiap Sesi'), desc: t('jpp:announcements_priority_medium_desc', 'Boleh dipangkah tapi akan muncul selagi notis aktif.') },
+                  { id: 'HIGH', title: t('jpp:announcements_priority_high', 'Paksaan (Mandatori)'), desc: t('jpp:announcements_priority_high_desc', 'Menghalang login skrin sepenuhnya sehingga syarat dipenuhi.') }
                 ].map(p => (
                   <div 
                     key={p.id}
@@ -446,30 +449,30 @@ export function AnnouncementsPage() {
               <div className="flex gap-4 items-center">
                 <div className="p-3 bg-primary/20 text-primary rounded-xl"><Lock size={20} /></div>
                 <div>
-                  <h3 className="font-black text-primary">Tindakan Aksi & Borang (Opsional)</h3>
-                  <p className="text-sm text-muted-foreground">Kumpul pendaftaran (seperti Fun Run) atau lilit butang URL luaran.</p>
+                  <h3 className="font-black text-primary">{t('jpp:announcements_actions_and_forms', 'Tindakan Aksi & Borang (Opsional)')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('jpp:announcements_actions_desc', 'Kumpul pendaftaran (seperti Fun Run) atau lilit butang URL luaran.')}</p>
                 </div>
               </div>
 
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-background">
                    <Switch checked={useFormBuilder} onCheckedChange={setUseFormBuilder} />
                    <div>
-                     <Label className="font-bold">Gunakan JSON Form Builder (Kutip Data di JPP-POLISAS)</Label>
-                     <p className="text-xs text-muted-foreground">Bina borang in-house tanpa perlukan Google form luaran.</p>
+                     <Label className="font-bold">{t('jpp:announcements_use_form_builder', 'Gunakan JSON Form Builder (Kutip Data di JPP-POLISAS)')}</Label>
+                     <p className="text-xs text-muted-foreground">{t('jpp:announcements_form_builder_desc', 'Bina borang in-house tanpa perlukan Google form luaran.')}</p>
                    </div>
                 </div>
 
                 {!useFormBuilder ? (
                   <div className="space-y-4 pt-4 border-t border-border/50">
-                    <Label className="font-bold">Action URL (Pautan Borang Luaran - Optional)</Label>
+                    <Label className="font-bold">{t('jpp:announcements_action_url_label', 'Action URL (Pautan Borang Luaran - Optional)')}</Label>
                     <Input value={actionUrl} onChange={e => setActionUrl(e.target.value)} placeholder="https://forms.gle/..." className="h-12 bg-background rounded-xl" />
-                    <p className="text-xs text-muted-foreground">Jika diisi, modal akan memaparkan butang "Buka Pautan" ke pautan di atas dan butang pengesahan.</p>
+                    <p className="text-xs text-muted-foreground">{t('jpp:announcements_action_url_hint', 'Jika diisi, modal akan memaparkan butang "Buka Pautan" ke pautan di atas dan butang pengesahan.')}</p>
                   </div>
                 ) : (
                   <div className="space-y-6 pt-4 border-t border-border/50">
                      <div className="flex justify-between items-center">
-                        <Label className="font-bold text-lg">Konfigurasi Borang Dinamik</Label>
-                        <Button variant="outline" size="sm" onClick={addFormField} className="rounded-xl"><Plus size={16} className="mr-2"/> Tambah Soalan</Button>
+                        <Label className="font-bold text-lg">{t('jpp:announcements_dynamic_form_config', 'Konfigurasi Borang Dinamik')}</Label>
+                        <Button variant="outline" size="sm" onClick={addFormField} className="rounded-xl"><Plus size={16} className="mr-2"/> {t('jpp:announcements_add_question', 'Tambah Soalan')}</Button>
                      </div>
                      
                      <div className="space-y-4">
@@ -477,36 +480,36 @@ export function AnnouncementsPage() {
                            <div key={field.id} className="grid grid-cols-12 gap-4 items-end bg-background p-4 rounded-[1.5rem] border border-border/50 relative group">
                               <Button variant="destructive" size="icon" className="absolute -top-3 -right-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setFormFields(formFields.filter((_, i) => i !== idx))}><Trash2 size={14}/></Button>
                               <div className="col-span-12 md:col-span-6 space-y-2">
-                                 <Label className="text-xs font-bold text-muted-foreground uppercase">Soalan / Label</Label>
+                                 <Label className="text-xs font-bold text-muted-foreground uppercase">{t('jpp:announcements_question_label', 'Soalan / Label')}</Label>
                                  <Input value={field.label} onChange={(e) => {
                                     const nf = [...formFields]; nf[idx].label = e.target.value; setFormFields(nf);
                                  }} className="bg-muted/50" />
                               </div>
                               <div className="col-span-12 md:col-span-6 space-y-2">
-                                 <Label className="text-xs font-bold text-muted-foreground uppercase">Jenis Data</Label>
+                                 <Label className="text-xs font-bold text-muted-foreground uppercase">{t('jpp:announcements_data_type_label', 'Jenis Data')}</Label>
                                  <Select value={field.type} onValueChange={(val: any) => {
                                     const nf = [...formFields]; nf[idx].type = val; setFormFields(nf);
                                  }}>
                                     <SelectTrigger className="bg-muted/50"><SelectValue/></SelectTrigger>
                                     <SelectContent>
-                                       <SelectItem value="text">Teks Pendek</SelectItem>
-                                       <SelectItem value="number">Nombor</SelectItem>
-                                       <SelectItem value="tel">Nombor Telefon</SelectItem>
+                                       <SelectItem value="text">{t('jpp:announcements_type_short_text', 'Teks Pendek')}</SelectItem>
+                                       <SelectItem value="number">{t('jpp:announcements_type_number', 'Nombor')}</SelectItem>
+                                       <SelectItem value="tel">{t('jpp:announcements_type_phone', 'Nombor Telefon')}</SelectItem>
                                     </SelectContent>
                                  </Select>
                               </div>
                            </div>
                         ))}
-                        {formFields.length === 0 && <div className="text-center p-8 border-2 border-dashed border-border/50 rounded-[1.5rem] text-muted-foreground text-sm font-medium">Klik butang 'Tambah Soalan' untuk bina medan borang.</div>}
+                        {formFields.length === 0 && <div className="text-center p-8 border-2 border-dashed border-border/50 rounded-[1.5rem] text-muted-foreground text-sm font-medium">{t('jpp:announcements_empty_form_fields', 'Klik butang \'Tambah Soalan\' untuk bina medan borang.')}</div>}
                      </div>
                   </div>
                 )}
                </div>
 
             <div className="flex justify-end gap-4 pt-8 border-t border-border/50">
-              <Button variant="ghost" onClick={() => {setShowCreate(false); resetForm();}} className="h-12 px-8 rounded-xl font-bold">Batal</Button>
+              <Button variant="ghost" onClick={() => {setShowCreate(false); resetForm();}} className="h-12 px-8 rounded-xl font-bold">{t('common:cancel', 'Batal')}</Button>
               <Button disabled={creating} onClick={handleCreate} className="h-12 px-8 rounded-xl bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all font-bold">
-                {creating ? 'Menyimpan...' : 'Terbitkan Notis'}
+                {creating ? t('common:saving', 'Menyimpan...') : t('jpp:announcements_publish_button', 'Terbitkan Notis')}
               </Button>
             </div>
           </div>
@@ -539,11 +542,11 @@ export function AnnouncementsPage() {
                 <div className="w-12 h-12 rounded-2xl bg-muted/40 mx-auto flex items-center justify-center text-muted-foreground">
                    <Megaphone className="w-6 h-6" />
                 </div>
-                <p className="text-base font-bold text-foreground">Tiada makluman direkodkan setakat ini</p>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">Pengumuman global yang dicipta akan disiarkan ke papan pemuka mahasiswa dan portal rasmi.</p>
+                <p className="text-base font-bold text-foreground">{t('jpp:announcements_empty_title')}</p>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">{t('jpp:announcements_empty_desc')}</p>
                 {!showCreate && (
                    <Button onClick={() => setShowCreate(true)} variant="outline" className="h-9 rounded-xl text-xs font-bold mt-2">
-                      <Plus className="w-3.5 h-3.5 mr-1.5" /> Bina Hebahan Pertama
+                      <Plus className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:announcements_create_first')}
                    </Button>
                 )}
              </div>
@@ -557,11 +560,11 @@ export function AnnouncementsPage() {
                        <Icon size={12} className="inline mr-1" /> {a.priority} Priority
                      </span>
                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground`}>
-                       Sasaran: {a.target_audience}
+                       {t('jpp:announcements_target_label', { target: a.target_audience })}
                      </span>
                      {!a.is_active && (
                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                         TIDAK AKTIF / DITUTUP
+                         {t('jpp:announcements_inactive_badge')}
                        </span>
                      )}
                    </div>
@@ -571,15 +574,15 @@ export function AnnouncementsPage() {
                    
                    {a.priority === 'HIGH' && a.form_schema && a.form_schema.length > 0 && (
                      <div className="p-4 bg-muted/40 rounded-xl rounded-tl-sm text-xs font-bold text-muted-foreground border-l-4 border-indigo-500 flex flex-col gap-2">
-                       <span className="text-indigo-500 uppercase tracking-widest text-[10px]">Tugasan Berorientasikan Borang (Data Responses)</span>
-                       Mempunyai {a.form_schema.length} soalan tertanam: {a.form_schema.map(f => f.label).join(', ')}.
+                       <span className="text-indigo-500 uppercase tracking-widest text-[10px]">{t('jpp:announcements_form_task_title', 'Tugasan Berorientasikan Borang (Data Responses)')}</span>
+                       {t('jpp:announcements_form_task_desc', 'Mempunyai {{count}} soalan tertanam: {{fields}}.', { count: a.form_schema.length, fields: a.form_schema.map(f => f.label).join(', ') })}
                      </div>
                    )}
                  </div>
                  
                  <div className="md:w-64 flex flex-col justify-center items-stretch gap-3 md:border-l border-border/50 md:pl-8">
                    <div className="flex items-center justify-between mb-2">
-                     <Label className="text-xs font-bold uppercase text-muted-foreground">Status Aktif</Label>
+                     <Label className="text-xs font-bold uppercase text-muted-foreground">{t('jpp:announcements_active_status')}</Label>
                      <Switch checked={a.is_active} onCheckedChange={() => toggleActive(a.id, a.is_active)} className="data-[state=checked]:bg-emerald-500" />
                    </div>
                    <Button 
@@ -588,14 +591,14 @@ export function AnnouncementsPage() {
                      className="h-10 rounded-xl w-full bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                    >
                      {broadcastingId === a.id ? (
-                       <><Activity size={14} className="mr-2 animate-spin" /> Menghantar...</>
+                       <><Activity size={14} className="mr-2 animate-spin" /> {t('jpp:announcements_sending')}</>
                      ) : (
-                       <><Megaphone size={14} className="mr-2" /> Hebah Notifikasi</>
+                       <><Megaphone size={14} className="mr-2" /> {t('jpp:announcements_broadcast_push')}</>
                      )}
                    </Button>
-                   <Button variant="outline" onClick={() => handleEdit(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold"><Plus size={14} className="mr-2"/> Sunting Notis</Button>
-                   <Button variant="outline" onClick={() => handleViewResponses(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> Lihat Respon Pelajar</Button>
-                   <Button variant="ghost" onClick={() => setDeleteTarget({ id: a.id, imageUrl: a.image_url })} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis</Button>
+                   <Button variant="outline" onClick={() => handleEdit(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold"><Plus size={14} className="mr-2"/> {t('jpp:announcements_edit_notice')}</Button>
+                   <Button variant="outline" onClick={() => handleViewResponses(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> {t('jpp:announcements_view_responses')}</Button>
+                   <Button variant="ghost" onClick={() => setDeleteTarget({ id: a.id, imageUrl: a.image_url })} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> {t('jpp:announcements_delete_notice')}</Button>
                  </div>
                </div>
              )
@@ -607,9 +610,9 @@ export function AnnouncementsPage() {
       <SlideOverSheet
         isOpen={Boolean(viewingResponsesFor)}
         onClose={() => setViewingResponsesFor(null)}
-        title={viewingResponsesFor?.title || 'Respons Pelajar'}
-        subtitle={`Jumlah respons direkodkan: ${responses.length}`}
-        maxWidth="max-w-2xl"
+        title={viewingResponsesFor?.title || t('jpp:announcements_responses_title')}
+        description={t('jpp:announcements_responses_count', { count: responses.length })}
+        className="max-w-2xl"
       >
         <div className="p-6 space-y-4">
           {loadingResponses ? (
@@ -624,8 +627,8 @@ export function AnnouncementsPage() {
           ) : responses.length === 0 ? (
             <div className="text-center p-12 border border-dashed border-border/50 rounded-2xl text-muted-foreground space-y-2">
               <Users className="w-8 h-8 mx-auto text-muted-foreground/50" />
-              <p className="text-sm font-bold text-foreground">Tiada respon diterima setakat ini</p>
-              <p className="text-xs text-muted-foreground">Maklum balas pelajar bagi hebahan ini akan dipaparkan di sini.</p>
+              <p className="text-sm font-bold text-foreground">{t('jpp:announcements_responses_empty')}</p>
+              <p className="text-xs text-muted-foreground">{t('jpp:announcements_responses_desc')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -633,8 +636,8 @@ export function AnnouncementsPage() {
                 <div key={i} className="bg-muted/30 border border-border/50 p-4 rounded-xl flex flex-col gap-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-bold text-foreground text-sm">{r.profiles?.full_name || 'Pelajar'}</p>
-                      <p className="text-xs font-mono text-muted-foreground">{r.profiles?.matric_no || 'Tiada No. Matrik'}</p>
+                      <p className="font-bold text-foreground text-sm">{r.profiles?.full_name || t('jpp:announcements_default_student', 'Pelajar')}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{r.profiles?.matric_no || t('jpp:announcements_no_matric', 'Tiada No. Matrik')}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-muted text-muted-foreground'}`}>
                       {r.status}
@@ -663,10 +666,10 @@ export function AnnouncementsPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Padam Makluman Hebahan"
-        description="Adakah anda pasti untuk memadam makluman ini? Semua jawapan borang atau respon pelajar yang berkaitan akan turut terpadam secara kekal."
-        confirmLabel="Padam Makluman"
-        cancelLabel="Batal"
+        title={t('jpp:announcements_delete_confirm_title')}
+        description={t('jpp:announcements_delete_confirm_desc')}
+        confirmLabel={t('jpp:announcements_delete_notice')}
+        cancelLabel={t('common:cancel')}
         variant="destructive"
         isLoading={deleting}
         onConfirm={executeDelete}
@@ -676,10 +679,10 @@ export function AnnouncementsPage() {
       <ConfirmDialog
         open={Boolean(broadcastTarget)}
         onOpenChange={(open) => !open && setBroadcastTarget(null)}
-        title="Hantar Notifikasi Push Hebahan"
-        description="Adakah anda pasti mahu menghantar notifikasi push ini kepada semua pengguna bersasar? Tindakan ini akan menyiarkan makluman ke peranti pengguna serta-merta."
-        confirmLabel="Hantar Notifikasi"
-        cancelLabel="Batal"
+        title={t('jpp:announcements_broadcast_confirm_title')}
+        description={t('jpp:announcements_broadcast_confirm_desc')}
+        confirmLabel={t('jpp:announcements_broadcast_push')}
+        cancelLabel={t('common:cancel')}
         variant="default"
         isLoading={Boolean(broadcastingId)}
         onConfirm={executeBroadcast}

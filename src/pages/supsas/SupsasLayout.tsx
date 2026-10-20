@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield, Clock, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,15 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
-const NAV_ITEMS = [
-  { label: 'Laman Utama',  path: '/supsas',            icon: Trophy },
-  { label: 'Kedudukan',    path: '/supsas/scoreboard',  icon: BarChart3 },
-  { label: 'Jadual',       path: '/supsas/jadual',      icon: Calendar },
-  { label: 'Sukan',        path: '/supsas/sukan',       icon: Users },
-  { label: 'Sejarah',      path: '/supsas/sejarah',     icon: Clock },
-];
-
 export function SupsasLayout() {
+  const { t } = useTranslation(['supsas', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
   const { edition, isLive, isLoading, lastUpdated, refetch } = useSupsas();
@@ -24,6 +18,14 @@ export function SupsasLayout() {
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [scrolled,     setScrolled]     = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const NAV_ITEMS = [
+    { label: t('supsas:nav_home', 'Laman Utama'),  path: '/supsas',            icon: Trophy },
+    { label: t('supsas:nav_scoreboard', 'Kedudukan'),    path: '/supsas/scoreboard',  icon: BarChart3 },
+    { label: t('supsas:nav_schedule', 'Jadual'),       path: '/supsas/jadual',      icon: Calendar },
+    { label: t('supsas:nav_sports', 'Sukan'),        path: '/supsas/sukan',       icon: Users },
+    { label: t('supsas:nav_history', 'Sejarah'),      path: '/supsas/sejarah',     icon: Clock },
+  ];
 
   const isAdmin = isSuperAdmin || profile?.role === 'JPP';
 
@@ -35,12 +37,12 @@ export function SupsasLayout() {
 
   // Format masa relative (contoh: "2 minit lalu")
   const getRelativeTime = (date: Date | null): string => {
-    if (!date) return 'Belum pernah';
+    if (!date) return t('supsas:time_never', 'Belum pernah');
     const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'Baru sahaja';
-    if (diffMins === 1) return '1 minit lalu';
-    return `${diffMins} minit lalu`;
+    if (diffMins < 1) return t('supsas:time_just_now', 'Baru sahaja');
+    if (diffMins === 1) return t('supsas:time_one_min_ago', '1 minit lalu');
+    return t('supsas:time_minutes_ago', '{{count}} minit lalu', { count: diffMins });
   };
 
   const [relativeTime, setRelativeTime] = useState(() => getRelativeTime(lastUpdated));
@@ -95,14 +97,14 @@ export function SupsasLayout() {
           <div className="flex flex-col">
             <span className="font-black text-sm tracking-tight text-white leading-none">SUPSAS</span>
             <span className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-400 leading-none mt-0.5">
-              {edition?.name ?? 'Sukan Polisas'}
+              {edition?.name ?? t('supsas:default_supsas_subtitle', 'Sukan POLISAS')}
             </span>
           </div>
           {/* Live badge */}
           {isLive && (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-              <span className="text-[8px] font-black uppercase tracking-widest text-red-400">Live</span>
+              <span className="text-[8px] font-black uppercase tracking-widest text-red-400">{t('common:live', 'Live')}</span>
             </div>
           )}
           {/* Bar Terakhir Dikemas Kini — untuk semua pengguna (bukan admin realtime) */}
@@ -114,7 +116,7 @@ export function SupsasLayout() {
                 className="flex items-center gap-1 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-wider transition-all disabled:opacity-50 bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10"
               >
                 <RefreshCw className={`w-2.5 h-2.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Memuatkan...' : relativeTime}
+                {isRefreshing ? t('common:loading', 'Memuatkan...') : relativeTime}
               </button>
             </div>
           )}
@@ -150,7 +152,7 @@ export function SupsasLayout() {
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 text-[11px] font-black uppercase tracking-widest transition-all"
             >
               <Settings className="w-3.5 h-3.5" />
-              Admin
+              {t('supsas:nav_admin', 'Admin')}
             </button>
           )}
           {/* Portal Ketua — only for logged-in users */}
@@ -160,7 +162,7 @@ export function SupsasLayout() {
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/20 text-[11px] font-black uppercase tracking-widest transition-all"
             >
               <Shield className="w-3.5 h-3.5" />
-              Portal Ketua
+              {t('supsas:nav_leader_portal', 'Portal Ketua')}
             </button>
           )}
           {profile && isAdmin && (
@@ -169,7 +171,7 @@ export function SupsasLayout() {
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10 text-[11px] font-black uppercase tracking-widest transition-all"
             >
               <Shield className="w-3.5 h-3.5" />
-              Ketua
+              {t('supsas:nav_leader_short', 'Ketua')}
             </button>
           )}
           <button
@@ -177,7 +179,7 @@ export function SupsasLayout() {
             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white text-[11px] font-black uppercase tracking-widest transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Portal
+            {t('common:portal', 'Portal')}
           </button>
           {/* Mobile hamburger */}
           <button
@@ -228,7 +230,7 @@ export function SupsasLayout() {
                 className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-amber-500/20 mt-1"
               >
                 <Settings className="w-4 h-4 flex-shrink-0" />
-                Panel Admin
+                {t('supsas:nav_admin_panel', 'Panel Admin')}
               </button>
             )}
             {profile && (
@@ -237,7 +239,7 @@ export function SupsasLayout() {
                 className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 transition-all border border-amber-500/20 mt-1"
               >
                 <Shield className="w-4 h-4 flex-shrink-0" />
-                Portal Ketua Kontinjen
+                {t('supsas:nav_contingent_leader_portal', 'Portal Ketua Kontinjen')}
               </button>
             )}
             {/* Butang Refresh Data — untuk pengguna mobile yang tiada auto-live */}
@@ -248,7 +250,7 @@ export function SupsasLayout() {
                 className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest transition-all border-t border-white/5 mt-1 disabled:opacity-50 text-white/40 hover:text-white hover:bg-white/5"
               >
                 <RefreshCw className={`w-4 h-4 flex-shrink-0 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span>{isRefreshing ? 'Memuatkan...' : `Muat Semula Data`}</span>
+                <span>{isRefreshing ? t('common:loading', 'Memuatkan...') : t('supsas:btn_refresh_data', 'Muat Semula Data')}</span>
                 {lastUpdated && !isRefreshing && (
                   <span className="ml-auto text-[9px] font-bold text-white/20">{relativeTime}</span>
                 )}
@@ -259,7 +261,7 @@ export function SupsasLayout() {
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest text-white/30 hover:text-white hover:bg-white/5 transition-all border-t border-white/5 mt-1"
             >
               <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-              Kembali ke Portal
+              {t('common:back_to_portal', 'Kembali ke Portal')}
             </button>
           </motion.div>
 
@@ -293,7 +295,7 @@ export function SupsasLayout() {
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
               className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-500"
             >
-              Memuatkan Data SUPSAS...
+              {t('supsas:loading_supsas_data', 'Memuatkan Data SUPSAS...')}
             </motion.p>
           </div>
         ) : (

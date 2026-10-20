@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Store,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, registerEmsParticipant, type EmsEventDetail } from '@/lib/ems';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
@@ -36,6 +37,7 @@ import type { EmsParticipant } from '@/types';
 import { StudentSearchCombobox } from '@/components/ems/StudentSearchCombobox';
 import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 
 interface TeamMember {
   name: string;
@@ -50,15 +52,26 @@ interface MemberStatus {
   hasAccount: boolean;
 }
 
-export function EmsPublicRegisterPage() {
+export interface EmsPublicRegisterPageProps {
+  initialLoading?: boolean;
+  initialEventDetail?: EmsEventDetail | null;
+  initialEventError?: string | null;
+}
+
+export function EmsPublicRegisterPage({
+  initialLoading = true,
+  initialEventDetail = null,
+  initialEventError = null,
+}: EmsPublicRegisterPageProps = {}) {
+  const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user, profile, isAuthenticated } = useAuth();
 
   // Loading & Event state
-  const [eventDetail, setEventDetail] = useState<EmsEventDetail | null>(null);
-  const [loadingEvent, setLoadingEvent] = useState(true);
-  const [eventError, setEventError] = useState<string | null>(null);
+  const [eventDetail, setEventDetail] = useState<EmsEventDetail | null>(initialEventDetail);
+  const [loadingEvent, setLoadingEvent] = useState(initialLoading);
+  const [eventError, setEventError] = useState<string | null>(initialEventError);
 
   // Multi-step state (1: Info, 2: Dynamic Fields, 3: Media, 4: Pass)
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -148,7 +161,7 @@ export function EmsPublicRegisterPage() {
             }
 
             return {
-              name: m.name || 'Ahli Pasukan',
+              name: m.name || t('ems:team_member_fallback', 'Ahli Pasukan'),
               matrix_no: m.matrix_no_or_ic || '-',
               email: m.email,
               hasAccount,
@@ -183,7 +196,7 @@ export function EmsPublicRegisterPage() {
     file: File
   ) => {
     setUploadingFields((prev) => ({ ...prev, [fieldId]: true }));
-    const toastId = toast.loading('Memuat naik fail...');
+    const toastId = toast.loading(t('ems:uploading_file', 'Memuat naik fail...'));
 
     try {
       let url = '';
@@ -203,10 +216,10 @@ export function EmsPublicRegisterPage() {
 
       if (url) {
         setCustomResponses((prev) => ({ ...prev, [fieldKey]: url }));
-        toast.success('Fail berjaya dimuat naik!', { id: toastId });
+        toast.success(t('ems:file_upload_success', 'Fail berjaya dimuat naik!'), { id: toastId });
       }
     } catch (err: any) {
-      toast.error(`Gagal memuat naik fail: ${err.message || 'Ralat pelayan'}`, { id: toastId });
+      toast.error(t('ems:failed_upload_file', 'Gagal memuat naik fail: {{error}}', { error: err.message || t('ems:server_error', 'Ralat pelayan') }), { id: toastId });
     } finally {
       setUploadingFields((prev) => ({ ...prev, [fieldId]: false }));
     }
@@ -215,7 +228,7 @@ export function EmsPublicRegisterPage() {
   // Load Event Details
   useEffect(() => {
     if (!eventId) {
-      setEventError('ID Acara tidak ditemui.');
+      setEventError(t('ems:event_id_not_found', 'ID Acara tidak ditemui.'));
       setLoadingEvent(false);
       return;
     }
@@ -228,9 +241,9 @@ export function EmsPublicRegisterPage() {
         if (!isMounted) return;
 
         if (!data) {
-          setEventError('Acara tidak wujud atau telah dipadamkan.');
+          setEventError(t('ems:event_not_found_or_deleted', 'Acara tidak wujud atau telah dipadamkan.'));
         } else if (data.status === 'CANCELLED') {
-          setEventError('Acara ini telah dibatalkan.');
+          setEventError(t('ems:event_cancelled_msg', 'Acara ini telah dibatalkan.'));
         } else {
           setEventDetail(data);
           // Set default entity mode if event specifies TEAM_BOOTH or TEAM
@@ -239,7 +252,7 @@ export function EmsPublicRegisterPage() {
           }
         }
       } catch (err: any) {
-        if (isMounted) setEventError(err.message || 'Gagal memuatkan data acara.');
+        if (isMounted) setEventError(err.message || t('ems:failed_load_event_data', 'Gagal memuatkan data acara.'));
       } finally {
         if (isMounted) setLoadingEvent(false);
       }
@@ -276,7 +289,7 @@ export function EmsPublicRegisterPage() {
       });
       if (error) throw error;
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyambung ke Google.');
+      toast.error(err.message || t('ems:failed_connect_google', 'Gagal menyambung ke Google.'));
     }
   };
 
@@ -307,7 +320,7 @@ export function EmsPublicRegisterPage() {
       email: student.email || updated[index].email,
     };
     setMembersList(updated);
-    toast.success(`Ahli #${index + 1} diisi automatik: ${student.full_name}`);
+    toast.success(t('ems:member_autofilled', 'Ahli #{{index}} diisi automatik: {{name}}', { index: index + 1, name: student.full_name }));
   };
 
   // Helper for options parsing in dynamic fields
@@ -331,7 +344,7 @@ export function EmsPublicRegisterPage() {
     if (!files || files.length === 0) return;
 
     setUploadingMedia(true);
-    const toastId = toast.loading('Memuat naik fail...');
+    const toastId = toast.loading(t('ems:uploading_file', 'Memuat naik fail...'));
 
     try {
       const uploadedList: string[] = [];
@@ -341,9 +354,9 @@ export function EmsPublicRegisterPage() {
         if (url) uploadedList.push(url);
       }
       setMediaUrls((prev) => [...prev, ...uploadedList]);
-      toast.success(`${uploadedList.length} fail berjaya dimuat naik!`, { id: toastId });
+      toast.success(t('ems:files_uploaded_success', '{{count}} fail berjaya dimuat naik!', { count: uploadedList.length }), { id: toastId });
     } catch (err: any) {
-      toast.error(`Gagal memuat naik fail: ${err.message || 'Ralat pelayan'}`, { id: toastId });
+      toast.error(t('ems:failed_upload_file', 'Gagal memuat naik fail: {{error}}', { error: err.message || t('ems:server_error', 'Ralat pelayan') }), { id: toastId });
     } finally {
       setUploadingMedia(false);
       e.target.value = '';
@@ -357,28 +370,28 @@ export function EmsPublicRegisterPage() {
   // Step Navigations & Validation
   const validateStep1 = (): boolean => {
     if (isQuotaFull) {
-      toast.error('Pendaftaran bagi acara ini telah penuh.');
+      toast.error(t('ems:reg_quota_full_desc', 'Pendaftaran bagi acara ini telah penuh.'));
       return false;
     }
     if (!leaderName.trim()) {
-      toast.error('Sila masukkan Nama Ketua / Peserta.');
+      toast.error(t('ems:manual_reg_toast_name_required', 'Sila masukkan Nama Ketua / Peserta.'));
       return false;
     }
     if (participantCategory === 'STUDENT' && !matrixNo.trim()) {
-      toast.error('Sila masukkan No. Matrik.');
+      toast.error(t('ems:nom_matric_required_toast', 'Sila masukkan No. Matrik.'));
       return false;
     }
     if (!email.trim() || !email.includes('@')) {
-      toast.error('Sila masukkan alamat Emel yang sah.');
+      toast.error(t('ems:enter_valid_email', 'Sila masukkan alamat Emel yang sah.'));
       return false;
     }
     if (!phone.trim()) {
-      toast.error('Sila masukkan Nombor Telefon.');
+      toast.error(t('ems:enter_phone', 'Sila masukkan Nombor Telefon.'));
       return false;
     }
     if (entityMode === 'TEAM') {
       if (!teamName.trim()) {
-        toast.error('Sila masukkan Nama Pasukan / Gerai.');
+        toast.error(t('ems:enter_team_name', 'Sila masukkan Nama Pasukan / Gerai.'));
         return false;
       }
     }
@@ -393,9 +406,9 @@ export function EmsPublicRegisterPage() {
       if (entityMode === 'TEAM') {
         const labelLower = (field.field_label || '').toLowerCase();
         if (
-          labelLower.includes('senarai ahli') ||
-          labelLower.includes('nama ahli') ||
-          labelLower.includes('ahli pasukan') ||
+          labelLower.includes(t('ems:filter_member_list', 'senarai ahli')) ||
+          labelLower.includes(t('ems:filter_member_name', 'nama ahli')) ||
+          labelLower.includes(t('ems:filter_team_members', 'ahli pasukan')) ||
           labelLower.includes('member name') ||
           labelLower.includes('team member')
         ) {
@@ -406,7 +419,7 @@ export function EmsPublicRegisterPage() {
       if (field.is_required) {
         const val = customResponses[field.field_label || field.id];
         if (val === undefined || val === null || String(val).trim() === '') {
-          toast.error(`Sila isi ruangan wajib: "${field.field_label}"`);
+          toast.error(t('ems:fill_required_field', 'Sila isi ruangan wajib: "{{field}}"', { field: field.field_label }));
           return false;
         }
       }
@@ -436,11 +449,11 @@ export function EmsPublicRegisterPage() {
   const handleSubmitRegistration = async () => {
     if (!eventId || !eventDetail) return;
     if (isQuotaFull) {
-      toast.error('Pendaftaran bagi acara ini telah penuh.');
+      toast.error(t('ems:registration_quota_full', 'Pendaftaran bagi acara ini telah penuh.'));
       return;
     }
     setSubmitting(true);
-    const toastId = toast.loading('Mendaftar pendaftaran anda...');
+    const toastId = toast.loading(t('ems:processing_registration', 'Mendaftar pendaftaran anda...'));
 
     try {
       // Filter clean members list
@@ -483,7 +496,7 @@ export function EmsPublicRegisterPage() {
 
           if (provisionRes.success && provisionRes.registrationNo) {
             toast.success(
-              `Profil Perniagaan Siswapreneur EMS (${provisionRes.registrationNo}) berjaya dicipta secara automatik di e-Keusahawanan!`,
+              t('ems:siswapreneur_profile_provisioned', 'Profil Perniagaan Siswapreneur EMS ({{regNo}}) berjaya dicipta secara automatik di e-Keusahawanan!', { regNo: provisionRes.registrationNo }),
               { duration: 6000 }
             );
           }
@@ -492,10 +505,10 @@ export function EmsPublicRegisterPage() {
         }
       }
 
-      toast.success('Pendaftaran Berjaya!', { id: toastId });
+      toast.success(t('ems:reg_success_title', 'Pendaftaran Berjaya!'), { id: toastId });
       setCurrentStep(4);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal melakukan pendaftaran. Sila cuba lagi.', { id: toastId });
+      toast.error(err.message || t('ems:registration_failed_try_again', 'Gagal melakukan pendaftaran. Sila cuba lagi.'), { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -506,7 +519,7 @@ export function EmsPublicRegisterPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
         <RefreshCw className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">Memuatkan borang pendaftaran acara...</p>
+        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">{t('reg_loading_form', 'Memuatkan borang pendaftaran acara...')}</p>
       </div>
     );
   }
@@ -518,13 +531,13 @@ export function EmsPublicRegisterPage() {
         <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-500">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Pendaftaran Tidak Tersedia</h1>
-        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || 'Maklumat acara tidak dapat dijumpai.'}</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('reg_unavailable_title', 'Pendaftaran Tidak Tersedia')}</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || t('reg_event_not_found', 'Maklumat acara tidak dapat dijumpai.')}</p>
         <button
           onClick={() => navigate('/')}
           className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium transition text-sm"
         >
-          Kembali ke Halaman Utama
+          {t('reg_back_home', 'Kembali ke Halaman Utama')}
         </button>
       </div>
     );
@@ -573,16 +586,17 @@ export function EmsPublicRegisterPage() {
             onClick={() => navigate('/')}
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
           >
-            <ArrowLeft className="w-4 h-4" /> Kembali ke Portal
+            <ArrowLeft className="w-4 h-4" /> {t('reg_back_home', 'Kembali ke Portal')}
           </button>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Borang Pendaftaran Awam EMS
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> {t('reg_title', 'Borang Pendaftaran Awam EMS')}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3 [text-wrap:balance]">
             {eventDetail.title}
@@ -622,11 +636,11 @@ export function EmsPublicRegisterPage() {
               >
                 <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>
-                  Peserta: {totalParticipants} / {maxParticipants}
+                  {t('reg_participants_count', { count: totalParticipants, max: maxParticipants, defaultValue: `Peserta: ${totalParticipants} / ${maxParticipants}` })}
                 </span>
                 {isQuotaFull && (
                   <span className="ml-1.5 px-2 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wide shadow-sm">
-                    Pendaftaran Penuh
+                    {t('reg_quota_full', 'Pendaftaran Penuh')}
                   </span>
                 )}
               </div>
@@ -642,9 +656,9 @@ export function EmsPublicRegisterPage() {
           <div className="bg-white dark:bg-slate-900/90  border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-xl transition-colors">
             <div className="flex items-center justify-between">
               {[
-                { step: 1, label: 'Kategori & Info' },
-                { step: 2, label: 'Borang Acara' },
-                { step: 3, label: 'Muat Naik Media' },
+                { step: 1, label: t('reg_step_info', 'Kategori & Info') },
+                { step: 2, label: t('reg_step_form', 'Borang Acara') },
+                { step: 3, label: t('reg_step_media', 'Muat Naik Media') },
               ].map((item, idx) => (
                 <React.Fragment key={item.step}>
                   <div className="flex items-center gap-2">
@@ -692,13 +706,13 @@ export function EmsPublicRegisterPage() {
               <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-rose-200 text-sm">Pendaftaran Penuh</span>
+                  <span className="font-extrabold text-rose-200 text-sm">{t('reg_quota_full', 'Pendaftaran Penuh')}</span>
                   <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">
-                    {totalParticipants} / {maxParticipants} Peserta
+                    {totalParticipants} / {maxParticipants} {t('reg_participants_label', 'Peserta')}
                   </span>
                 </div>
                 <p className="text-slate-300">
-                  Maaf, kuota maksimum peserta bagi acara ini telah dipenuhi. Pendaftaran baharu dikunci.
+                  {t('reg_quota_full_desc', 'Maaf, kuota maksimum peserta bagi acara ini telah dipenuhi. Pendaftaran baharu dikunci.')}
                 </p>
               </div>
             </div>
@@ -709,14 +723,14 @@ export function EmsPublicRegisterPage() {
             <div className="space-y-6 animate-fadeIn">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Step 1: Kategori & Maklumat Asas
+                  <User className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Step 1: {t('reg_step_info', 'Kategori & Maklumat Asas')}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Pilih kategori penyertaan anda dan lengkapkan butiran peribadi.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">{t('ems:reg_step_info_desc', 'Pilih kategori penyertaan anda dan lengkapkan butiran peribadi.')}</p>
               </div>
 
               {/* Participant Category Toggle */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Kategori Peserta</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{t('reg_participant_cat', 'Kategori Peserta')}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -727,7 +741,7 @@ export function EmsPublicRegisterPage() {
                         : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Building2 className="w-4 h-4" /> Pelajar POLISAS
+                    <Building2 className="w-4 h-4" /> {t('reg_cat_student', 'Pelajar POLISAS')}
                   </button>
                   <button
                     type="button"
@@ -738,7 +752,7 @@ export function EmsPublicRegisterPage() {
                         : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Users className="w-4 h-4" /> Orang Luar / Awam
+                    <Users className="w-4 h-4" /> {t('reg_cat_public', 'Orang Luar / Awam')}
                   </button>
                 </div>
               </div>
@@ -753,10 +767,10 @@ export function EmsPublicRegisterPage() {
                           <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold">Log Masuk Sebagai:</p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold">{t('ems:logged_in_as', 'Log Masuk Sebagai:')}</p>
                           <p className="text-sm font-bold text-slate-900 dark:text-white">{profile?.full_name || user?.email}</p>
                           {(profile?.matrix_no || profile?.matric_no) && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">No. Matrik: <span className="font-mono text-amber-700 dark:text-amber-300 font-bold">{profile.matrix_no || profile.matric_no}</span></p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{t('ems:matrix_no_label', 'No. Matrik:')} <span className="font-mono text-amber-700 dark:text-amber-300 font-bold">{profile.matrix_no || profile.matric_no}</span></p>
                           )}
                         </div>
                       </div>
@@ -767,16 +781,16 @@ export function EmsPublicRegisterPage() {
                   ) : (
                     <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Adakah anda mempunyai akaun sistem?</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">{t('ems:have_system_account_question', 'Adakah anda mempunyai akaun sistem?')}</p>
                         <button
                           type="button"
                           onClick={handleGoogleLogin}
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 dark:border-transparent text-slate-900 hover:bg-slate-100 font-semibold text-xs transition shadow-sm"
                         >
-                          <LogIn className="w-3.5 h-3.5 text-amber-600" /> Log Masuk Google
+                          <LogIn className="w-3.5 h-3.5 text-amber-600" /> {t('ems:google_login_btn', 'Log Masuk Google')}
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Atau anda boleh memasukkan No. Matrik secara manual di bawah:</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('ems:or_enter_matrix_manually', 'Atau anda boleh memasukkan No. Matrik secara manual di bawah:')}</p>
                     </div>
                   )}
                 </div>
@@ -785,7 +799,7 @@ export function EmsPublicRegisterPage() {
               {/* Entity Mode Toggle (if event supports TEAM or TEAM_BOOTH) */}
               {(eventDetail.event_mode === 'TEAM_BOOTH' || eventDetail.event_mode === 'TEAM') && (
                 <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Mod Pendaftaran</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{t('reg_entity_mode', 'Mod Pendaftaran')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -796,7 +810,7 @@ export function EmsPublicRegisterPage() {
                           : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <User className="w-4 h-4" /> Pendaftaran Individu
+                      <User className="w-4 h-4" /> {t('reg_mode_individual', 'Pendaftaran Individu')}
                     </button>
                     <button
                       type="button"
@@ -807,7 +821,7 @@ export function EmsPublicRegisterPage() {
                           : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <Users className="w-4 h-4" /> Pendaftaran Pasukan / Gerai
+                      <Users className="w-4 h-4" /> {t('reg_mode_team', 'Pendaftaran Pasukan / Gerai')}
                     </button>
                   </div>
                 </div>
@@ -817,7 +831,7 @@ export function EmsPublicRegisterPage() {
               <div className="space-y-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Nama Penuh {entityMode === 'TEAM' ? 'Ketua Pasukan' : 'Peserta'} <span className="text-rose-500">*</span>
+                    {t('reg_leader_name', 'Nama Penuh')} ({entityMode === 'TEAM' ? t('ems:team_leader_role', 'Ketua Pasukan') : t('ems:participant_role', 'Peserta')}) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -831,7 +845,7 @@ export function EmsPublicRegisterPage() {
                 {participantCategory === 'STUDENT' && (
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Nombor Matrik POLISAS <span className="text-rose-500">*</span>
+                      {t('reg_matrix_no', 'Nombor Matrik POLISAS')} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -846,7 +860,7 @@ export function EmsPublicRegisterPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Alamat Emel <span className="text-rose-500">*</span>
+                      {t('reg_email', 'Alamat Emel')} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -858,7 +872,7 @@ export function EmsPublicRegisterPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Nombor Telefon / WhatsApp <span className="text-rose-500">*</span>
+                      {t('reg_phone', 'Nombor Telefon / WhatsApp')} <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -874,13 +888,13 @@ export function EmsPublicRegisterPage() {
                 {entityMode === 'TEAM' && (
                   <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fadeIn">
                     <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                      <Users className="w-4 h-4" /> Maklumat Pasukan & Gerai
+                      <Users className="w-4 h-4" /> {t('reg_members_list', 'Maklumat Pasukan & Gerai')}
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Nama Pasukan / Projek / Gerai <span className="text-rose-500">*</span>
+                          {t('reg_team_name', 'Nama Pasukan / Projek / Gerai')} <span className="text-rose-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -892,7 +906,7 @@ export function EmsPublicRegisterPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Nombor Booth (Jika Ada)
+                          {t('reg_booth_no', 'Nombor Booth (Jika Ada)')}
                         </label>
                         <input
                           type="text"
@@ -906,13 +920,13 @@ export function EmsPublicRegisterPage() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Kategori Produk / Inovasi
+                        {t('reg_category_name', 'Kategori Pertandingan')}
                       </label>
                       <input
                         type="text"
                         value={categoryName}
                         onChange={(e) => setCategoryName(e.target.value)}
-                        placeholder="Contoh: Inovasi Kejuruteraan / Teknologi Maklumat"
+                        placeholder={t('ems:competition_category_placeholder', 'Contoh: Inovasi Kejuruteraan / Teknologi Maklumat')}
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                       />
                     </div>
@@ -921,9 +935,9 @@ export function EmsPublicRegisterPage() {
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Senarai Ahli Pasukan</label>
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('ems:team_members_list', 'Senarai Ahli Pasukan')}</label>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Cari pelajar POLISAS untuk mengisi nama & no. matrik secara automatik.
+                            {t('ems:search_polisas_student_autofill', 'Cari pelajar POLISAS untuk mengisi nama & no. matrik secara automatik.')}
                           </p>
                         </div>
                         <button
@@ -931,7 +945,7 @@ export function EmsPublicRegisterPage() {
                           onClick={handleAddMember}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-500/30 transition"
                         >
-                          <Plus className="w-3.5 h-3.5" /> Tambah Ahli
+                          <Plus className="w-3.5 h-3.5" /> {t('ems:add_member_btn', 'Tambah Ahli')}
                         </button>
                       </div>
 
@@ -939,14 +953,14 @@ export function EmsPublicRegisterPage() {
                         <div key={idx} className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/20">
-                              Ahli Pasukan #{idx + 1}
+                              {t('ems:team_member_indexed', 'Ahli Pasukan #{{index}}', { index: idx + 1 })}
                             </span>
                             {membersList.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMember(idx)}
                                 className="text-slate-400 hover:text-rose-500 p-1 transition"
-                                title="Padam Ahli"
+                                title={t('ems:delete_member_title', 'Padam Ahli')}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -956,11 +970,11 @@ export function EmsPublicRegisterPage() {
                           {/* Student Combobox */}
                           <div>
                             <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
-                              Cari & Pilih Pelajar POLISAS:
+                              {t('ems:search_select_polisas_student', 'Cari & Pilih Pelajar POLISAS:')}
                             </label>
                             <StudentSearchCombobox
                               onSelectStudent={(student) => handleSelectStudentForMember(idx, student)}
-                              placeholder="Cari mengikut Nama atau No. Matrik POLISAS..."
+                              placeholder={t('ems:search_name_or_matrix_placeholder', 'Cari mengikut Nama atau No. Matrik POLISAS...')}
                               value={member.name}
                             />
                           </div>
@@ -968,22 +982,22 @@ export function EmsPublicRegisterPage() {
                           {/* Manual adjustment fields */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Nama Ahli</label>
+                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">{t('ems:member_name_label', 'Nama Ahli')}</label>
                               <input
                                 type="text"
                                 value={member.name}
                                 onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                                placeholder="Nama Penuh Ahli"
+                                placeholder={t('ems:member_fullname_placeholder', 'Nama Penuh Ahli')}
                                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
                               />
                             </div>
                             <div>
-                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">No. Matrik / IC</label>
+                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">{t('ems:matrix_or_ic_label', 'No. Matrik / IC')}</label>
                               <input
                                 type="text"
                                 value={member.matrix_no_or_ic}
                                 onChange={(e) => handleMemberChange(idx, 'matrix_no_or_ic', e.target.value)}
-                                placeholder="No. Matrik / IC"
+                                placeholder={t('ems:matrix_or_ic_placeholder', 'No. Matrik / IC')}
                                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono uppercase placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
                               />
                             </div>
@@ -1002,9 +1016,9 @@ export function EmsPublicRegisterPage() {
             <div className="space-y-6 animate-fadeIn">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Step 2: Maklumat Tambahan Acara
+                  <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" /> {t('reg_step2_extra_info', 'Step 2: Maklumat Tambahan Acara')}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Sila isi borang soalan khas yang ditetapkan oleh penganjur.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">{t('reg_step2_fill_instructions', 'Sila isi borang soalan khas yang ditetapkan oleh penganjur.')}</p>
               </div>
 
               {(() => {
@@ -1013,9 +1027,9 @@ export function EmsPublicRegisterPage() {
                   if (entityMode === 'TEAM') {
                     const labelLower = (field.field_label || '').toLowerCase();
                     if (
-                      labelLower.includes('senarai ahli') ||
-                      labelLower.includes('nama ahli') ||
-                      labelLower.includes('ahli pasukan') ||
+                      labelLower.includes(t('ems:filter_member_list', 'senarai ahli')) ||
+                      labelLower.includes(t('ems:filter_member_name', 'nama ahli')) ||
+                      labelLower.includes(t('ems:filter_team_members', 'ahli pasukan')) ||
                       labelLower.includes('member name') ||
                       labelLower.includes('team member')
                     ) {
@@ -1029,9 +1043,9 @@ export function EmsPublicRegisterPage() {
                   return (
                     <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center space-y-2">
                       <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto opacity-80" />
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Tiada Borang Tambahan Diperlukan</p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('ems:no_additional_form_needed', 'Tiada Borang Tambahan Diperlukan')}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Penganjur tidak menetapkan sebarang medan dinamik bagi acara ini. Sila terus ke langkah seterusnya.
+                        {t('ems:no_dynamic_fields_desc', 'Penganjur tidak menetapkan sebarang medan dinamik bagi acara ini. Sila terus ke langkah seterusnya.')}
                       </p>
                     </div>
                   );
@@ -1054,7 +1068,7 @@ export function EmsPublicRegisterPage() {
                               rows={3}
                               value={customResponses[fieldKey] || ''}
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                              placeholder="Jawapan anda..."
+                              placeholder={t('ems:your_answer_placeholder', 'Jawapan anda...')}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                             />
                           ) : field.field_type === 'select' ? (
@@ -1063,7 +1077,7 @@ export function EmsPublicRegisterPage() {
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
                             >
-                              <option value="">-- Pilih Opsi --</option>
+                              <option value="">{t('ems:reg_select_option', '-- Pilih Opsi --')}</option>
                               {options.map((opt, i) => (
                                 <option key={i} value={opt}>
                                   {opt}
@@ -1080,7 +1094,7 @@ export function EmsPublicRegisterPage() {
                                 className="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-amber-600 focus:ring-amber-500"
                               />
                               <label htmlFor={`check_${field.id}`} className="text-xs text-slate-700 dark:text-slate-300 font-medium">
-                                Ya, saya bersetuju / mengesahkan
+                                {t('ems:reg_declaration_agree', 'Ya, saya bersetuju / mengesahkan')}
                               </label>
                             </div>
                           ) : field.field_type === 'image_upload' ? (
@@ -1100,7 +1114,7 @@ export function EmsPublicRegisterPage() {
                                       setCustomResponses(updated);
                                     }}
                                     className="absolute top-2 right-2 bg-rose-600/90 text-white p-2 rounded-xl hover:bg-rose-500 transition shadow"
-                                    title="Padam Gambar"
+                                    title={t('ems:reg_delete_image', 'Padam Gambar')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1133,7 +1147,7 @@ export function EmsPublicRegisterPage() {
                                     </div>
                                     <div>
                                       <p className="text-xs font-bold text-slate-900 dark:text-white">
-                                        {uploadingFields[field.id] ? 'Memuat naik gambar...' : 'Pilih / Muat Naik Gambar'}
+                                        {uploadingFields[field.id] ? t('ems:uploading_image', 'Memuat naik gambar...') : t('ems:select_upload_image', 'Pilih / Muat Naik Gambar')}
                                       </p>
                                       <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
                                     </div>
@@ -1159,7 +1173,7 @@ export function EmsPublicRegisterPage() {
                                         rel="noopener noreferrer"
                                         className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-medium"
                                       >
-                                        Lihat Dokumen
+                                        {t('ems:view_document', 'Lihat Dokumen')}
                                       </a>
                                     </div>
                                   </div>
@@ -1171,7 +1185,7 @@ export function EmsPublicRegisterPage() {
                                       setCustomResponses(updated);
                                     }}
                                     className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
-                                    title="Padam Dokumen"
+                                    title={t('ems:reg_delete_file', 'Padam Dokumen')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1204,7 +1218,7 @@ export function EmsPublicRegisterPage() {
                                     </div>
                                     <div>
                                       <p className="text-xs font-bold text-slate-900 dark:text-white">
-                                        {uploadingFields[field.id] ? 'Memuat naik dokumen...' : 'Pilih / Muat Naik Dokumen'}
+                                        {uploadingFields[field.id] ? t('ems:uploading_document', 'Memuat naik dokumen...') : t('ems:select_upload_document', 'Pilih / Muat Naik Dokumen')}
                                       </p>
                                       <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
                                     </div>
@@ -1217,7 +1231,7 @@ export function EmsPublicRegisterPage() {
                               type="text"
                               value={customResponses[fieldKey] || ''}
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                              placeholder="Masukkan jawapan anda"
+                              placeholder={t('ems:enter_your_answer_placeholder', 'Masukkan jawapan anda')}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
                             />
                           )}
@@ -1235,9 +1249,9 @@ export function EmsPublicRegisterPage() {
             <div className="space-y-6 animate-fadeIn">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Step 3: Muat Naik Media & Gambar
+                  <ImageIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" /> {t('ems:step3_media_upload_title', 'Step 3: Muat Naik Media & Gambar')}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Muat naik gambar Booth, Poster, Gambar Produk, atau Dokumen berkaitan (jika ada).</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">{t('ems:step3_media_upload_desc', 'Muat naik gambar Booth, Poster, Gambar Produk, atau Dokumen berkaitan (jika ada).')}</p>
               </div>
 
               {/* Upload Box */}
@@ -1259,8 +1273,8 @@ export function EmsPublicRegisterPage() {
                     <Upload className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">Klik untuk memilih fail</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Menyokong format imej (PNG, JPG, WEBP) & PDF (Maks 10MB)</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{t('ems:click_to_select_file', 'Klik untuk memilih fail')}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{t('ems:supported_file_formats_desc', 'Menyokong format imej (PNG, JPG, WEBP) & PDF (Maks 10MB)')}</p>
                   </div>
                 </label>
               </div>
@@ -1268,7 +1282,7 @@ export function EmsPublicRegisterPage() {
               {/* Uploaded items grid */}
               {mediaUrls.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">Fail Diumuat Naik ({mediaUrls.length})</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">{t('ems:uploaded_files_count', 'Fail Dimuat Naik ({{count}})', { count: mediaUrls.length })}</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {mediaUrls.map((url, idx) => (
                       <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 aspect-video flex items-center justify-center shadow-sm">
@@ -1305,7 +1319,7 @@ export function EmsPublicRegisterPage() {
                   disabled={submitting}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs sm:text-sm transition border border-slate-700 disabled:opacity-50"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Kembali
+                  <ArrowLeft className="w-4 h-4" /> {t('reg_btn_prev', 'Kembali')}
                 </button>
 
                 {currentStep < 3 ? (
@@ -1321,11 +1335,11 @@ export function EmsPublicRegisterPage() {
                   >
                     {isQuotaFull ? (
                       <>
-                        <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
+                        <AlertCircle className="w-4 h-4 text-rose-400" /> {t('reg_quota_full', 'Pendaftaran Penuh')}
                       </>
                     ) : (
                       <>
-                        Seterusnya <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                        {t('reg_btn_next', 'Seterusnya')} <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                       </>
                     )}
                   </button>
@@ -1342,15 +1356,15 @@ export function EmsPublicRegisterPage() {
                   >
                     {submitting ? (
                       <>
-                        <RefreshCw className="w-4 h-4 animate-spin" /> Memproses...
+                        <RefreshCw className="w-4 h-4 animate-spin" /> {t('reg_submitting', 'Memproses...')}
                       </>
                     ) : isQuotaFull ? (
                       <>
-                        <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
+                        <AlertCircle className="w-4 h-4 text-rose-400" /> {t('reg_quota_full', 'Pendaftaran Penuh')}
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 className="w-4 h-4 stroke-[3]" /> Hantar Pendaftaran
+                        <CheckCircle2 className="w-4 h-4 stroke-[3]" /> {t('reg_submit_btn', 'Hantar Pendaftaran')}
                       </>
                     )}
                   </button>
@@ -1365,9 +1379,9 @@ export function EmsPublicRegisterPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 mb-2">
                 <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pendaftaran Berjaya!</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">{t('reg_success_title', 'Pendaftaran Berjaya!')}</h2>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
-                Tahniah, pendaftaran anda untuk acara <span className="text-slate-900 dark:text-white font-semibold">{eventDetail.title}</span> telah direkodkan. Sila simpan atau cetak Pass Acara anda di bawah.
+                {t('ems:reg_congrats_recorded', 'Tahniah, pendaftaran anda untuk acara {{title}} telah direkodkan.', { title: eventDetail.title })} {t('reg_success_desc', 'Sila simpan atau cetak Pass Acara anda di bawah.')}
               </p>
 
               {/* Digital Event Pass Card */}
@@ -1384,19 +1398,19 @@ export function EmsPublicRegisterPage() {
                   <div className="flex-1 space-y-4">
                     <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div className="inline-block px-2.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold tracking-wider uppercase mb-1">
-                        PASS MASUK RASMI EMS
+                        {t('reg_step_pass', 'PASS MASUK RASMI EMS')}
                       </div>
                       <h3 className="text-xl font-black text-slate-900 dark:text-white">{eventDetail.title}</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                        {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Tarikh Acara'}
+                        {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }) : t('ems:event_date_fallback', 'Tarikh Acara')}
                         {eventDetail.location && ` • ${eventDetail.location}`}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Peserta / Ketua</span>
+                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">{t('reg_leader_name', 'Peserta / Ketua')}</span>
                         <span className="text-slate-900 dark:text-white font-bold text-sm block truncate">{registeredParticipant.leader_name}</span>
                         {registeredParticipant.matrix_no && (
                           <span className="text-amber-600 dark:text-amber-400 font-mono text-xs block">{registeredParticipant.matrix_no}</span>
@@ -1405,28 +1419,28 @@ export function EmsPublicRegisterPage() {
 
                       {registeredParticipant.team_name && (
                         <div>
-                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Nama Pasukan</span>
+                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">{t('reg_team_name', 'Nama Pasukan')}</span>
                           <span className="text-amber-700 dark:text-amber-300 font-bold text-sm block truncate">{registeredParticipant.team_name}</span>
                         </div>
                       )}
 
                       {registeredParticipant.booth_no && (
                         <div>
-                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">No. Booth</span>
+                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">{t('reg_booth_no', 'No. Booth')}</span>
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm block font-mono">{registeredParticipant.booth_no}</span>
                         </div>
                       )}
 
                       <div>
-                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Kategori</span>
+                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">{t('reg_participant_cat', 'Kategori')}</span>
                         <span className="text-slate-700 dark:text-slate-300 font-medium block">
-                          {registeredParticipant.participant_type === 'STUDENT' ? 'Pelajar POLISAS' : 'Awam / Luar'}
+                          {registeredParticipant.participant_type === 'STUDENT' ? t('reg_cat_student', 'Pelajar POLISAS') : t('reg_cat_public', 'Awam / Luar')}
                         </span>
                       </div>
                     </div>
 
                     <div className="pt-2">
-                      <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">ID Pendaftaran Pass</span>
+                      <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">{t('reg_pass_id', 'ID Pendaftaran Pass')}</span>
                       <span className="font-mono text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded border border-amber-200 dark:border-amber-500/30 inline-block mt-0.5">
                         {registeredParticipant.id}
                       </span>
@@ -1442,7 +1456,7 @@ export function EmsPublicRegisterPage() {
                       includeMargin={true}
                     />
                     <span className="text-[10px] font-bold text-slate-800 font-mono mt-2 tracking-widest uppercase">
-                      IMBAS UNTUK SEMAKAN
+                      {t('reg_pass_notice', 'IMBAS UNTUK SEMAKAN')}
                     </span>
                   </div>
                 </div>
@@ -1458,10 +1472,10 @@ export function EmsPublicRegisterPage() {
                     <div>
                       <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                        Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan
+                        {t('ems:reg_team_access_title', 'Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan')}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.
+                        {t('ems:reg_team_access_desc', 'Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.')}
                       </p>
                     </div>
 
@@ -1469,21 +1483,21 @@ export function EmsPublicRegisterPage() {
                       type="button"
                       onClick={() => {
                         const targetTeamName = registeredParticipant?.team_name || teamName || leaderName;
-                        const text = `Salam/Hai ahli pasukan ${targetTeamName}! Sila daftar akaun Portal POLISAS anda melalui pautan ini supaya anda boleh mengakses Dashboard Perniagaan Siswapreneur & POS Polymart kami: https://jpp.cipher-node.org/register`;
+                        const text = t('ems:whatsapp_member_invite', 'Salam/Hai ahli pasukan {{team}}! Sila daftar akaun Portal POLISAS anda melalui pautan ini supaya anda boleh mengakses Dashboard Perniagaan Siswapreneur & POS Polymart kami: https://jpp.cipher-node.org/register', { team: targetTeamName });
                         const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
                         window.open(waUrl, '_blank', 'noopener,noreferrer');
                       }}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-600/20 shrink-0"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      Kongsi Pautan Pendaftaran ke WhatsApp Pasukan
+                      {t('ems:share_registration_link_whatsapp', 'Kongsi Pautan Pendaftaran ke WhatsApp Pasukan')}
                     </button>
                   </div>
 
                   {loadingTeamStatuses ? (
                     <div className="flex items-center justify-center py-6 text-xs text-slate-500 dark:text-slate-400 gap-2 font-medium">
                       <RefreshCw className="w-4 h-4 animate-spin text-amber-600 dark:text-amber-400" />
-                      Memeriksa status akaun ahli pasukan...
+                      {t('ems:checking_team_account_status', 'Memeriksa status akaun ahli pasukan...')}
                     </div>
                   ) : teamMemberStatuses.length > 0 ? (
                     <div className="space-y-3">
@@ -1497,7 +1511,7 @@ export function EmsPublicRegisterPage() {
                               <span className="text-xs font-bold text-slate-900 dark:text-white">{member.name}</span>
                             </div>
                             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono block mt-0.5">
-                              No. Matrik / IC: {member.matrix_no}
+                              {t('ems:matrix_or_ic_label', 'No. Matrik / IC:')} {member.matrix_no}
                             </span>
                           </div>
 
@@ -1505,15 +1519,15 @@ export function EmsPublicRegisterPage() {
                             {member.hasAccount ? (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>Akaun POLISAS Aktif</span>
+                                <span>{t('ems:polisas_account_active', 'Akaun POLISAS Aktif')}</span>
                                 <span className="hidden md:inline text-[11px] font-normal text-emerald-600/80 dark:text-emerald-300/80">
-                                  (Mempunyai Akses Penuh Dashboard Perniagaan)
+                                  {t('ems:full_business_dashboard_access', '(Mempunyai Akses Penuh Dashboard Perniagaan)')}
                                 </span>
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                 <AlertCircle className="w-3.5 h-3.5" />
-                                <span>Belum Berdaftar di Portal</span>
+                                <span>{t('ems:not_registered_in_portal', 'Belum Berdaftar di Portal')}</span>
                               </span>
                             )}
                           </div>
@@ -1522,7 +1536,7 @@ export function EmsPublicRegisterPage() {
                     </div>
                   ) : (
                     <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                      Sila pastikan semua ahli pasukan mendaftar akaun di Portal POLISAS supaya anda boleh memberikan akses penuh Dashboard Perniagaan.
+                      {t('ems:ensure_members_register_portal_desc', 'Sila pastikan semua ahli pasukan mendaftar akaun di Portal POLISAS supaya anda boleh memberikan akses penuh Dashboard Perniagaan.')}
                     </p>
                   )}
                 </div>
@@ -1535,24 +1549,24 @@ export function EmsPublicRegisterPage() {
                   onClick={() => window.print()}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold active:scale-[0.98] text-sm transition shadow-lg shadow-amber-500/20"
                 >
-                  <Printer className="w-4 h-4" /> Cetak / Muat Turun Pass
+                  <Printer className="w-4 h-4" /> {t('reg_print_pass', 'Cetak / Muat Turun Pass')}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/ems/cert/verify')}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition shadow-lg shadow-teal-600/20"
                 >
-                  <Award className="w-4 h-4" /> Semak / Muat Turun E-Sijil
+                  <Award className="w-4 h-4" /> {t('ems:check_download_ecert', 'Semak / Muat Turun E-Sijil')}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(registeredParticipant.id);
-                    toast.success('ID Pendaftaran disalin!');
+                    toast.success(t('ems:reg_id_copied', 'ID Pendaftaran disalin!'));
                   }}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition border border-slate-200 dark:border-transparent"
                 >
-                  Salin ID Pass
+                  {t('ems:copy_pass_id', 'Salin ID Pass')}
                 </button>
                 {eventDetail?.is_siswapreneur && (
                   <button
@@ -1560,7 +1574,7 @@ export function EmsPublicRegisterPage() {
                     onClick={() => navigate('/keusahawanan')}
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-amber-500/20"
                   >
-                    <Store className="w-4 h-4" /> Buka e-Keusahawanan
+                    <Store className="w-4 h-4" /> {t('reg_open_entrepreneurship', 'Buka e-Keusahawanan')}
                   </button>
                 )}
                 <button
@@ -1571,7 +1585,7 @@ export function EmsPublicRegisterPage() {
                   }}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition"
                 >
-                  Daftar Peserta Lain
+                  {t('reg_register_another_participant', 'Daftar Peserta Lain')}
                 </button>
               </div>
 

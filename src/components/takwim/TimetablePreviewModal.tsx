@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import type { ClassType, StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { COURSE_PALETTE, matchRoomToLocation, type RoomLocationLookup } from '@/lib/timetableParser';
+import i18n from '@/lib/i18n';
 
 export const DAY_NAMES: { value: number; label: string }[] = [
   { value: 1, label: 'Isnin' },
@@ -68,6 +70,8 @@ export function parseTimeToMinutes(t: string): number {
   return hours * 60 + mins;
 }
 
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
+
 export function checkTimetableConflicts(
   slots: { day_of_week: number; start_time: string; end_time: string; course_code: string }[]
 ): ConflictInfo[] {
@@ -92,12 +96,12 @@ export function checkTimetableConflicts(
         const endB = parseTimeToMinutes(b.end_time);
 
         if (startA < endB && endA > startB) {
-          const dayName = dayNameMap[a.day_of_week] || `Hari ${a.day_of_week}`;
+          const dayName = dayNameMap[a.day_of_week] || t('jpp:day_fallback', 'Hari {{day}}', { day: a.day_of_week });
           conflicts.push({
             indexA: i,
             indexB: j,
             dayOfWeek: a.day_of_week,
-            message: `Pertindihan pada hari ${dayName}: ${a.course_code || 'Slot'} (${a.start_time.slice(0, 5)} - ${a.end_time.slice(0, 5)}) dengan ${b.course_code || 'Slot'} (${b.start_time.slice(0, 5)} - ${b.end_time.slice(0, 5)})`,
+            message: t('jpp:timetable_conflict_msg', 'Pertindihan pada hari {{day}}: {{slotA}} ({{startA}} - {{endA}}) dengan {{slotB}} ({{startB}} - {{endB}})', { day: dayName, slotA: a.course_code || 'Slot', startA: a.start_time.slice(0, 5), endA: a.end_time.slice(0, 5), slotB: b.course_code || 'Slot', startB: b.start_time.slice(0, 5), endB: b.end_time.slice(0, 5) }),
           });
         }
       }
@@ -179,6 +183,7 @@ export function TimetablePreviewModal({
   initialEntries = [],
   onSuccess,
 }: TimetablePreviewModalProps) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { user } = useAuth();
 
   const [session, setSession] = useState('');
@@ -323,28 +328,28 @@ export function TimetablePreviewModal({
 
   const handleSave = async () => {
     if (!user) {
-      toast.error('Sila log masuk untuk menyimpan jadual kuliah.');
+      toast.error(t('kpp:login_required_save_timetable', 'Sila log masuk untuk menyimpan jadual kuliah.'));
       return;
     }
 
     if (!className.trim()) {
-      toast.error('Sila masukkan nama / kod kelas (cth: DEE1A).');
+      toast.error(t('kpp:class_name_required', 'Sila masukkan nama / kod kelas (cth: DEE1A).'));
       return;
     }
 
     if (!startDate || !endDate) {
-      toast.error('Sila tetapkan tarikh mula dan tamat semester.');
+      toast.error(t('kpp:semester_dates_required', 'Sila tetapkan tarikh mula dan tamat semester.'));
       return;
     }
 
     if (slots.length === 0) {
-      toast.error('Sila tambah sekurang-kurangnya satu slot kelas.');
+      toast.error(t('kpp:at_least_one_slot_required', 'Sila tambah sekurang-kurangnya satu slot kelas.'));
       return;
     }
 
     const invalidSlot = slots.some(s => !s.course_code.trim());
     if (invalidSlot) {
-      toast.error('Sila pastikan semua slot mempunyai kod kursus.');
+      toast.error(t('kpp:all_slots_need_course_code', 'Sila pastikan semua slot mempunyai kod kursus.'));
       return;
     }
 
@@ -368,7 +373,7 @@ export function TimetablePreviewModal({
       return startMin >= endMin;
     });
     if (hasInvalidTime) {
-      toast.error('Sila pastikan waktu mula dan waktu tamat adalah sah.');
+      toast.error(t('kpp:valid_start_end_time_required', 'Sila pastikan waktu mula dan waktu tamat adalah sah.'));
       return;
     }
 
@@ -435,7 +440,7 @@ export function TimetablePreviewModal({
             semester_end_date: endDate,
             is_active: true,
           },
-          { onConflict: 'user_id,academic_session,semester' }
+          { onConflict: t('jpp:onconflict_user_session_sem', 'user_id,academic_session,semester') }
         );
 
       if (metaError) {
@@ -457,7 +462,7 @@ export function TimetablePreviewModal({
             unrecognizedRooms.map(roomCode =>
               supabase.rpc('report_missing_timetable_room', {
                 p_room_code: roomCode,
-                p_description: `Dikesan daripada jadual waktu kelas ${className.trim().toUpperCase()} (${session.trim() || 'Semasa'})`,
+                p_description: t('jpp:timetable_missing_room_desc', 'Dikesan daripada jadual waktu kelas {{class}} ({{session}})', { class: className.trim().toUpperCase(), session: session.trim() || 'Semasa' }),
               })
             )
           ).catch(err => {
@@ -468,12 +473,12 @@ export function TimetablePreviewModal({
         console.warn('Auto-report trigger error:', err);
       }
 
-      toast.success('Jadual kuliah berjaya disahkan dan disimpan!');
+      toast.success(t('kpp:timetable_saved_success', 'Jadual kuliah berjaya disahkan dan disimpan!'));
       onSuccess?.();
       onClose();
     } catch (err: any) {
       console.error('Failed to save timetable:', err);
-      toast.error(err.message || 'Gagal menyimpan jadual. Sila cuba lagi.');
+      toast.error(err.message || t('kpp:failed_to_save_timetable', 'Gagal menyimpan jadual. Sila cuba lagi.'));
     } finally {
       setIsSaving(false);
     }
@@ -493,15 +498,15 @@ export function TimetablePreviewModal({
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
               <DialogTitle className="text-xl font-bold">
-                Pengesahan & Suntingan Jadual Waktu Kuliah
+                {t('kpp:verify_edit_timetable', 'Pengesahan & Suntingan Jadual Waktu Kuliah')}
               </DialogTitle>
             </div>
             <span className="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold text-foreground">
-              {slots.length} Slot Dikesan
+              {t('kpp:slots_detected_badge', '{{count}} Slot Dikesan', { count: slots.length })}
             </span>
           </div>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
-            Semak maklumat kelas, tarikh semester, dan slot waktu kuliah anda. Anda boleh menambah atau memadam subjek mengikut keperluan.
+            {t('kpp:preview_timetable_desc', 'Semak maklumat kelas, tarikh semester, dan slot waktu kuliah anda. Anda boleh menambah atau memadam subjek mengikut keperluan.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -510,9 +515,9 @@ export function TimetablePreviewModal({
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-amber-900 dark:text-amber-200 text-sm">
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="font-semibold block">Peringatan:</span>
+              <span className="font-semibold block">{t('kpp:timetable_reminder', 'Peringatan:')}</span>
               <p className="mt-0.5 leading-relaxed">
-                Ini adalah jadual kuliah mingguan biasa. Untuk minggu peperiksaan, cuti umum, atau minggu amali khas, sila rujuk Takwim Rasmi atau arahan pensyarah.
+                {t('kpp:timetable_reminder_desc', 'Ini adalah jadual kuliah mingguan biasa. Untuk minggu peperiksaan, cuti umum, atau minggu amali khas, sila rujuk Takwim Rasmi atau arahan pensyarah.')}
               </p>
             </div>
           </div>
@@ -522,7 +527,7 @@ export function TimetablePreviewModal({
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 space-y-2 text-destructive">
               <div className="flex items-center gap-2 font-semibold text-sm">
                 <AlertCircle className="w-4 h-4" />
-                <span>Pertindihan Slot Dikesan ({conflicts.length} konflik)</span>
+                <span>{t('kpp:slot_conflict_detected', 'Pertindihan Slot Dikesan ({{count}} konflik)', { count: conflicts.length })}</span>
               </div>
               <ul className="text-xs space-y-1 pl-6 list-disc">
                 {conflicts.map((c, i) => (
@@ -536,7 +541,7 @@ export function TimetablePreviewModal({
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 p-4 bg-muted/40 rounded-xl border">
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">
-                Sesi Akademik
+                {t('kpp:academic_session', 'Sesi Akademik')}
               </label>
               <Input
                 value={session}
@@ -547,7 +552,7 @@ export function TimetablePreviewModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">
-                Kelas
+                {t('kpp:class', 'Kelas')}
               </label>
               <Input
                 value={className}
@@ -558,16 +563,16 @@ export function TimetablePreviewModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">
-                Semester
+                {t('kpp:semester', 'Semester')}
               </label>
               <Select value={semester} onValueChange={setSemester}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Semester" />
+                  <SelectValue placeholder={t('kpp:semester', 'Semester')} />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
                     <SelectItem key={s} value={String(s)}>
-                      Semester {s}
+                      {t('kpp:semester', 'Semester')} {s}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -575,7 +580,7 @@ export function TimetablePreviewModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">
-                Mula Semester
+                {t('kpp:semester_start', 'Mula Semester')}
               </label>
               <Input
                 type="date"
@@ -586,7 +591,7 @@ export function TimetablePreviewModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">
-                Tamat Semester
+                {t('kpp:semester_end', 'Tamat Semester')}
               </label>
               <Input
                 type="date"
@@ -606,7 +611,7 @@ export function TimetablePreviewModal({
                 onClick={() => setSelectedDayFilter(0)}
                 className="text-xs h-8"
               >
-                Semua ({slots.length})
+                {t('kpp:all', 'Semua')} ({slots.length})
               </Button>
               {DAY_NAMES.map(d => {
                 const count = slots.filter(s => s.day_of_week === d.value).length;
@@ -631,7 +636,7 @@ export function TimetablePreviewModal({
               className="text-xs h-8 gap-1.5 border-dashed"
             >
               <Plus className="w-3.5 h-3.5" />
-              Tambah Slot Kelas Manual
+              {t('kpp:add_slot_manual', 'Tambah Slot Kelas Manual')}
             </Button>
           </div>
 
@@ -640,7 +645,7 @@ export function TimetablePreviewModal({
             <div className="text-center py-12 border border-dashed rounded-xl space-y-3">
               <Calendar className="w-10 h-10 mx-auto text-muted-foreground/60" />
               <div className="text-sm font-medium text-muted-foreground">
-                Tiada slot kelas untuk paparan ini.
+                {t('kpp:no_slots_for_view', 'Tiada slot kelas untuk paparan ini.')}
               </div>
               <Button
                 variant="outline"
@@ -649,7 +654,7 @@ export function TimetablePreviewModal({
                 className="gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                Tambah Slot Manual
+                {t('kpp:add_slot_manual', 'Tambah Slot Manual')}
               </Button>
             </div>
           ) : (
@@ -671,7 +676,7 @@ export function TimetablePreviewModal({
                         <button
                           type="button"
                           onClick={() => handleCycleColor(index)}
-                          title="Klik untuk tukar warna"
+                          title={t('kpp:click_to_change_color', 'Klik untuk tukar warna')}
                           className="w-4 h-8 rounded-md shrink-0 transition-transform active:scale-95 shadow-sm"
                           style={{ backgroundColor: slot.color }}
                         />
@@ -714,13 +719,13 @@ export function TimetablePreviewModal({
                         <Input
                           value={slot.course_code}
                           onChange={e => handleUpdateSlot(index, 'course_code', e.target.value)}
-                          placeholder="Kod (cth: DEC1013)"
+                          placeholder={t('kpp:course_code_placeholder', 'Kod (cth: DEC1013)')}
                           className="h-8 text-xs font-semibold uppercase"
                         />
                         <Input
                           value={slot.course_name}
                           onChange={e => handleUpdateSlot(index, 'course_name', e.target.value)}
-                          placeholder="Nama Kursus"
+                          placeholder={t('kpp:course_name_placeholder', 'Nama Kursus')}
                           className="h-8 text-xs"
                         />
                       </div>
@@ -735,9 +740,9 @@ export function TimetablePreviewModal({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {CLASS_TYPE_OPTIONS.map(t => (
-                              <SelectItem key={t.value} value={t.value} className="text-xs">
-                                {t.label}
+                            {CLASS_TYPE_OPTIONS.map(tOption => (
+                              <SelectItem key={tOption.value} value={tOption.value} className="text-xs">
+                                {tOption.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -746,7 +751,7 @@ export function TimetablePreviewModal({
                         <Input
                           value={slot.lecturer_code || ''}
                           onChange={e => handleUpdateSlot(index, 'lecturer_code', e.target.value)}
-                          placeholder="Pensyarah"
+                          placeholder={t('kpp:lecturer_placeholder', 'Pensyarah')}
                           className="h-8 text-xs uppercase"
                         />
                       </div>
@@ -757,7 +762,7 @@ export function TimetablePreviewModal({
                           <Input
                             value={slot.room_raw}
                             onChange={e => handleUpdateSlot(index, 'room_raw', e.target.value)}
-                            placeholder="Bilik / Kod Ruang"
+                            placeholder={t('kpp:room_placeholder', 'Bilik / Kod Ruang')}
                             className="h-8 text-xs"
                           />
                         </div>
@@ -766,12 +771,12 @@ export function TimetablePreviewModal({
                         {slot.is_online ? (
                           <span className="inline-flex items-center rounded-md border text-[10px] font-semibold h-6 px-1.5 gap-1 shrink-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
                             <Wifi className="w-3 h-3" />
-                            Online
+                            {t('kpp:online', 'Online')}
                           </span>
                         ) : slot.location_id ? (
                           <span className="inline-flex items-center rounded-md border text-[10px] font-semibold h-6 px-1.5 gap-1 shrink-0 text-emerald-600 border-emerald-500/30 bg-emerald-500/5">
                             <MapPin className="w-3 h-3" />
-                            Peta
+                            {t('kpp:map', 'Peta')}
                           </span>
                         ) : null}
 
@@ -779,7 +784,7 @@ export function TimetablePreviewModal({
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteSlot(index)}
-                          title="Padam Slot"
+                          title={t('kpp:delete_slot', 'Padam Slot')}
                           className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -795,15 +800,15 @@ export function TimetablePreviewModal({
 
         <DialogFooter className="shrink-0 pt-3 border-t flex sm:justify-between items-center gap-3">
           <div className="text-xs text-muted-foreground">
-            Jumlah: <span className="font-semibold text-foreground">{slots.length} slot</span> jadual
+            {t('kpp:total_slots_label', 'Jumlah: {{count}} slot jadual', { count: slots.length })}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button onClick={handleSave} disabled={isSaving} className="gap-2">
               <CheckCircle2 className="w-4 h-4" />
-              {isSaving ? 'Menyimpan...' : 'Sahkan & Simpan Jadual'}
+              {isSaving ? t('kpp:saving', 'Menyimpan...') : t('kpp:confirm_save_timetable', 'Sahkan & Simpan Jadual')}
             </Button>
           </div>
         </DialogFooter>

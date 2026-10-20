@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy, Phone } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { useTranslation } from 'react-i18next';
 import type ExcelJS from 'exceljs';
 import type { MakmpSubmission } from '@/types';
 
@@ -13,12 +14,12 @@ interface MakmpWinnerDocsPanelProps {
 // Satu submission boleh masuk >1 anugerah. winner_status='DIJEMPUT' adalah
 // ground-truth (ditetapkan oleh finalize RPC). Kita papar anugerah yang
 // submission ini sertai & telah finalized, dengan rank (final_rank jika ada).
-function getWinnerAwards(sub: MakmpSubmission): string[] {
+function getWinnerAwards(sub: MakmpSubmission, t: (key: string, fallback: string) => string): string[] {
   const names: string[] = [];
   const awards = sub.awards || [];
   for (const sa of awards) {
     if (!sa.is_finalized) continue;
-    const label = sa.award?.name || 'Anugerah';
+    const label = sa.award?.name || t('makmp:award_fallback', 'Anugerah');
     if (typeof sa.final_rank === 'number' && sa.final_rank >= 1) {
       names.push(`${label} (#${sa.final_rank})`);
     } else {
@@ -29,6 +30,7 @@ function getWinnerAwards(sub: MakmpSubmission): string[] {
 }
 
 export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPanelProps) {
+  const { t } = useTranslation(['makmp', 'common']);
   const [downloading, setDownloading] = useState(false);
   const [downloadIdx, setDownloadIdx] = useState<string | null>(null);
   const [zipProgress, setZipProgress] = useState<string>('');
@@ -52,13 +54,13 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
     setDownloadIdx(sub.id);
     try {
       const res = await fetch(sub.winner_photo_url);
-      if (!res.ok) throw new Error('Gagal muat turun imej (status ' + res.status + ')');
+      if (!res.ok) throw new Error(t('makmp:winner_docs_err_download_img', 'Gagal muat turun imej (status {{status}})', { status: res.status }));
       const blob = await res.blob();
       const ext = (sub.winner_photo_url.split('.').pop() || 'jpg').split('?')[0];
       const cleanName = (sub.full_name || 'pelajar').replace(/[^a-zA-Z0-9]/g, '_');
       saveAs(blob, `${cleanName}_${sub.matric_no}_passport.${ext}`);
     } catch (err: any) {
-      alert('Ralat: ' + (err.message || 'Gagal muat turun'));
+      alert(t('makmp:error_prefix', 'Ralat:') + ' ' + (err.message || t('makmp:failed_to_download', 'Gagal muat turun')));
     } finally {
       setDownloadIdx(null);
     }
@@ -68,17 +70,17 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
   const downloadAllZip = async () => {
     const withPhoto = winners.filter((s) => s.winner_photo_url);
     if (withPhoto.length === 0) {
-      alert('Tiada gambar untuk dimuat turun.');
+      alert(t('makmp:no_photos_to_download', 'Tiada gambar untuk dimuat turun.'));
       return;
     }
     setDownloading(true);
-    setZipProgress('Menyediakan...');
+    setZipProgress(t('makmp:zip_preparing', 'Menyediakan...'));
     try {
       const zip = new JSZip();
       const folder = zip.folder('makmp_pemenang')!;
       for (let i = 0; i < withPhoto.length; i++) {
         const sub = withPhoto[i];
-        setZipProgress(`Memuat turun ${i + 1}/${withPhoto.length}: ${sub.full_name}`);
+        setZipProgress(t('makmp:zip_downloading_progress', 'Memuat turun {{current}}/{{total}}: {{name}}', { current: i + 1, total: withPhoto.length, name: sub.full_name }));
         const res = await fetch(sub.winner_photo_url!);
         if (!res.ok) continue;
         const blob = await res.blob();
@@ -86,12 +88,12 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         const cleanName = (sub.full_name || 'pelajar').replace(/[^a-zA-Z0-9]/g, '_');
         folder.file(`${cleanName}_${sub.matric_no}.${ext}`, blob);
       }
-      setZipProgress('Menghasilkan ZIP...');
+      setZipProgress(t('makmp:zip_generating', 'Menghasilkan ZIP...'));
       const blob = await zip.generateAsync({ type: 'blob' });
-      saveAs(blob, `MAKMP_Pemenang_Passport_${Date.now()}.zip`);
+      saveAs(blob, t('makmp:zip_filename', 'MAKMP_Pemenang_Passport_{{timestamp}}.zip', { timestamp: Date.now() }));
       setZipProgress('');
     } catch (err: any) {
-      alert('Ralat: ' + (err.message || 'Gagal menghasilkan ZIP'));
+      alert(t('makmp:error_prefix', 'Ralat:') + ' ' + (err.message || t('makmp:failed_to_generate_zip', 'Gagal menghasilkan ZIP')));
       setZipProgress('');
     } finally {
       setDownloading(false);
@@ -125,7 +127,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         // Untuk finalized lama, semua DIJEMPUT adalah pemenang.
         const isWinner = rank > 0 ? rank <= 3 : sub.winner_status === 'DIJEMPUT';
         if (!isWinner) continue;
-        const name = sa.award?.name || 'Anugerah';
+        const name = sa.award?.name || t('makmp:award_fallback', 'Anugerah');
         if (!byAward.has(name)) byAward.set(name, []);
         byAward.get(name)!.push({ sub, rank, merit });
       }
@@ -159,7 +161,16 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
       const groups = buildAwardGroups();
 
       // Kolum tetap: No. | Nama | No. Matrik | No. Telefon | No. IC | Emel | Jabatan | Gambar
-      const HEADERS = ['No.', 'Nama', 'No. Matrik', 'No. Telefon', 'No. IC', 'Emel', 'Jabatan', 'Gambar (Link)'];
+      const HEADERS = [
+        t('makmp:col_no', 'No.'),
+        t('makmp:col_name', 'Nama'),
+        t('makmp:col_matric_no', 'No. Matrik'),
+        t('makmp:col_phone_no', 'No. Telefon'),
+        t('makmp:col_ic_no', 'No. IC'),
+        t('makmp:col_email', 'Emel'),
+        t('makmp:col_department', 'Jabatan'),
+        t('makmp:col_photo_link', 'Gambar (Link)'),
+      ];
       const WIDTHS = [8, 30, 16, 16, 16, 26, 22, 40];
       const TEXT_COLS = [2, 3, 4, 7]; // 0-indexed: No. Matrik, No. Telefon, No. IC, Gambar(link)
 
@@ -243,7 +254,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         ws.getColumn(linkCol).eachCell((cell, rowNumber) => {
           if (rowNumber > 1 && typeof cell.value === 'string' && cell.value.startsWith('http')) {
             const url = cell.value as string;
-            cell.value = { text: 'Buka Gambar', hyperlink: url };
+            cell.value = { text: t('makmp:open_photo', 'Buka Gambar'), hyperlink: url };
             cell.font = { color: { argb: 'FF2563EB' }, underline: true };
           }
         });
@@ -251,16 +262,16 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         ws.views = [{ state: 'frozen', ySplit: 1 }];
       };
 
-      const wsFull = wb.addWorksheet('Senarai Penuh');
+      const wsFull = wb.addWorksheet(t('makmp:sheet_full_list', 'Senarai Penuh'));
       fillSheet(wsFull, false);
 
-      const wsRawak = wb.addWorksheet('Rawak (Pendaftaran)');
+      const wsRawak = wb.addWorksheet(t('makmp:sheet_random_reg', 'Rawak (Pendaftaran)'));
       fillSheet(wsRawak, true);
 
       const buf = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `MAKMP_Dokumen_Pemenang_${Date.now()}.xlsx`);
+      saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), t('makmp:xlsx_filename', 'MAKMP_Dokumen_Pemenang_{{timestamp}}.xlsx', { timestamp: Date.now() }));
     } catch (err: any) {
-      alert('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
+      alert(t('makmp:error_prefix', 'Ralat:') + ' ' + (err.message || t('makmp:failed_to_generate_xlsx', 'Gagal menghasilkan XLSX')));
     } finally {
       setExportingXlsx(false);
     }
@@ -273,25 +284,25 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         <div>
           <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <IdCard className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            Dokumen Pemenang (Dicalonkan 3 Teratas)
+            {t('makmp:winner_docs_title', 'Dokumen Pemenang (Dicalonkan 3 Teratas)')}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Senarai nombor IC, gambar passport & muat turun untuk multimedia & urus setia.
+            {t('makmp:winner_docs_subtitle', 'Senarai nombor IC, gambar passport & muat turun untuk multimedia & urus setia.')}
           </p>
         </div>
 
         {/* Statistik */}
         <div className="flex flex-wrap gap-2">
           <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Jumlah:</span>{' '}
+            <span className="text-slate-500 dark:text-slate-400">{t('makmp:stat_total', 'Jumlah:')}</span>{' '}
             <span className="font-bold text-slate-900 dark:text-white">{stats.total}</span>
           </div>
           <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Ada Gambar:</span>{' '}
+            <span className="text-slate-500 dark:text-slate-400">{t('makmp:stat_has_photo', 'Ada Gambar:')}</span>{' '}
             <span className="font-bold text-emerald-600 dark:text-emerald-400">{stats.withPhoto}</span>
           </div>
           <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Ada IC:</span>{' '}
+            <span className="text-slate-500 dark:text-slate-400">{t('makmp:stat_has_ic', 'Ada IC:')}</span>{' '}
             <span className="font-bold text-blue-600 dark:text-blue-400">{stats.withIc}</span>
           </div>
         </div>
@@ -305,7 +316,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
           {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderArchive className="w-4 h-4" />}
-          Muat Turun Semua Gambar (ZIP)
+          {t('makmp:download_all_zip_btn', 'Muat Turun Semua Gambar (ZIP)')}
         </button>
         <button
           onClick={exportXlsxFile}
@@ -313,7 +324,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
           {exportingXlsx ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-          Export Dokumen Pemenang (XLSX)
+          {t('makmp:export_winner_docs_btn', 'Export Dokumen Pemenang (XLSX)')}
         </button>
       </div>
 
@@ -327,26 +338,26 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
       {/* Table */}
       {winners.length === 0 ? (
         <div className="p-10 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 text-sm shadow-sm">
-          Tiada pemenang (Dicalonkan 3 Teratas) untuk edisi yang dipilih.
+          {t('makmp:no_winners_for_edition', 'Tiada pemenang (Dicalonkan 3 Teratas) untuk edisi yang dipilih.')}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Gambar</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Nama</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. Matrik</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. Telefon</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. IC</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Anugerah</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Status</th>
-                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Tindakan</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_photo', 'Gambar')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_name', 'Nama')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_matric_no', 'No. Matrik')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_phone_no', 'No. Telefon')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_ic_no', 'No. IC')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_award', 'Anugerah')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_status', 'Status')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">{t('makmp:th_actions', 'Tindakan')}</th>
               </tr>
             </thead>
             <tbody>
               {winners.map((sub) => {
-                const awards = getWinnerAwards(sub);
+                const awards = getWinnerAwards(sub, t);
                 const hasPhoto = !!sub.winner_photo_url;
                 const hasIc = !!sub.winner_ic_no && sub.winner_ic_no.trim() !== '';
                 return (
@@ -390,7 +401,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
                       {hasIc ? (
                         <span className="text-slate-900 dark:text-white font-semibold tracking-wider">{sub.winner_ic_no}</span>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-600 italic">Belum diisi</span>
+                        <span className="text-slate-400 dark:text-slate-600 italic">{t('makmp:status_not_filled', 'Belum diisi')}</span>
                       )}
                     </td>
                     {/* Anugerah */}
@@ -411,11 +422,11 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
                     <td className="px-4 py-3">
                       {hasPhoto && hasIc ? (
                         <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Lengkap
+                          <CheckCircle2 className="w-3.5 h-3.5" /> {t('makmp:status_complete', 'Lengkap')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
-                          <AlertCircle className="w-3.5 h-3.5" /> Belum lengkap
+                          <AlertCircle className="w-3.5 h-3.5" /> {t('makmp:status_incomplete', 'Belum lengkap')}
                         </span>
                       )}
                     </td>
@@ -427,7 +438,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {downloadIdx === sub.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageDown className="w-3.5 h-3.5" />}
-                        Muat Turun
+                        {t('makmp:download_btn', 'Muat Turun')}
                       </button>
                     </td>
                   </tr>

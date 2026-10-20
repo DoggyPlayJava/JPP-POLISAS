@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { ALL_CLUBS } from '@/types';
 import {
@@ -12,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Menggunakan AuthContext.selectedClubId + setSelectedClubId untuk tukar paparan.
  */
 export function ClubSwitcher() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { userClubIds, selectedClubId, setSelectedClubId, isSuperAdmin } = useAuth();
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -47,11 +49,11 @@ export function ClubSwitcher() {
           <Flag className="w-3.5 h-3.5 text-indigo-500" />
         </div>
         <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 shrink-0 hidden sm:inline-block">
-          Kelab:
+          {t('kpp:club_label', 'Kelab:')}
         </span>
         <Select value={selectedClubId ?? ''} onValueChange={setSelectedClubId}>
           <SelectTrigger className="h-9 w-full sm:w-[160px] flex-1 rounded-xl border-none bg-indigo-500/10 text-indigo-700 font-black text-xs focus:ring-indigo-500/20 min-w-0">
-            <SelectValue placeholder="Pilih kelab..." />
+            <SelectValue placeholder={t('kpp:select_club_placeholder', 'Pilih kelab...')} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl shadow-2xl border-border/60">
             {clubs.map(club => (
@@ -86,7 +88,7 @@ export function ClubSwitcher() {
               <div className="relative z-10 flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold leading-tight">
-                    Anda boleh menukar paparan kelab anda di sini.
+                    {t('kpp:switch_club_hint', 'Anda boleh menukar paparan kelab anda di sini.')}
                   </p>
                   <button 
                     onClick={() => setShowTooltip(false)}
@@ -99,7 +101,7 @@ export function ClubSwitcher() {
                   onClick={handleDismissForever}
                   className="text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 w-fit mt-1 transition-colors"
                 >
-                  Jangan tunjuk lagi
+                  {t('common:dont_show_again', 'Jangan tunjuk lagi')}
                 </button>
               </div>
             </motion.div>

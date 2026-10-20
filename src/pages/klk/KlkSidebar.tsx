@@ -4,6 +4,7 @@
 // ============================================================
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   MapPin, Settings, LayoutDashboard,
   ChevronLeft, LayoutGrid, Crown,
@@ -18,13 +19,14 @@ import { cn, hexToRgba } from '@/lib/utils';
 const KLS_COLOR = '#60A5FA';
 
 export function KlkSidebar() {
+  const { t } = useTranslation(['klk', 'housing', 'nav', 'common']);
   const { user, profile, signOut, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const unreadCount = useNotificationStore(state => state.unreadCount);
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const posLabel = profile?.jpp_unit === 'KLS' ? 'Exco KLK' : isSuperAdmin ? 'Super Admin' : 'JPP';
+  const posLabel = profile?.jpp_unit === 'KLS' ? t('klk:exco_klk_badge', 'Exco KLK') : isSuperAdmin ? 'Super Admin' : 'JPP';
   const isJpp = isSuperAdmin || profile?.role === 'JPP' || profile?.role === 'SUPER_ADMIN_JPP';
 
   // Helper: nav item (ikut pattern KebajikanSidebar)
@@ -96,7 +98,7 @@ export function KlkSidebar() {
           className="flex items-center gap-2 px-6 pt-5 pb-3 text-slate-500 hover:text-blue-400 transition-colors group"
         >
           <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
           <LayoutGrid className="w-3.5 h-3.5 ml-1" />
         </NavLink>
 
@@ -112,9 +114,9 @@ export function KlkSidebar() {
             <MapPin className="w-6 h-6" style={{ color: KLS_COLOR }} />
           </div>
           <div>
-            <p className="font-black text-lg text-slate-50 tracking-tight leading-none mb-1">E-Kediaman</p>
+            <p className="font-black text-lg text-slate-50 tracking-tight leading-none mb-1">{t('klk:ekediaman', 'E-Kediaman')}</p>
             <p className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: hexToRgba(KLS_COLOR, 0.7) }}>
-              Kediaman Luar Kampus
+              {t('klk:kediaman_luar_kampus', 'Kediaman Luar Kampus')}
             </p>
           </div>
         </div>
@@ -123,16 +125,16 @@ export function KlkSidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto scrollbar-hide relative z-10">
         <p className="px-4 mb-3 mt-2 text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: hexToRgba(KLS_COLOR, 0.5) }}>
-          Pengurusan
+          {t('klk:management', 'Pengurusan')}
         </p>
-        {navItem('/klk', LayoutDashboard, 'Dashboard', true, unreadCount)}
-        {navItem('/klk/statistik', BarChart3, 'Statistik Awam')}
-        {navItem('/klk/tetapan', Settings, 'Tetapan & Import')}
+        {navItem('/klk', LayoutDashboard, t('nav:dashboard', 'Dashboard'), true, unreadCount)}
+        {navItem('/klk/statistik', BarChart3, t('klk:public_stats', 'Statistik Awam'))}
+        {navItem('/klk/tetapan', Settings, t('klk:settings_and_import', 'Tetapan & Import'))}
         
         <p className="px-4 mb-3 mt-6 text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: hexToRgba(KLS_COLOR, 0.5) }}>
-          Logistik
+          {t('klk:logistics', 'Logistik')}
         </p>
-        {navItem('/polyrider-admin', Bike, 'PolyRider Admin')}
+        {navItem('/polyrider-admin', Bike, t('klk:polyrider_admin', 'PolyRider Admin'))}
       </nav>
 
       {/* ── Global JPP Dashboard — sama seperti Kebajikan ── */}
@@ -146,7 +148,7 @@ export function KlkSidebar() {
               <Crown className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400 text-left">
-              Global JPP<br />Dashboard
+              {t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}
             </span>
           </button>
         </div>
@@ -188,7 +190,7 @@ export function KlkSidebar() {
           className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Log Keluar
+          {t('nav:logout', 'Log Keluar')}
         </Button>
       </div>
     </aside>

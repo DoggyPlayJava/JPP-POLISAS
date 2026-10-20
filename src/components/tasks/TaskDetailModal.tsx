@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
+    const { t } = useTranslation(['jpp', 'common']);
     const { user } = useAuth();
     const [uploading, setUploading] = useState(false);
     const [file, setFile] = useState<File | null>(null);
@@ -34,7 +36,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
         if (!file || !task) return;
         
         if (user?.id !== task.assigned_to?.id && user?.id !== task.assigned_to) {
-            toast.error("Anda tidak mempunyai kebenaran untuk menghantar tugas ini.");
+            toast.error(t('jpp:task_no_permission_submit', 'Anda tidak mempunyai kebenaran untuk menghantar tugas ini.'));
             return;
         }
 
@@ -79,15 +81,18 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
                 club_id: task.club_id,
                 user_id: user?.id,
                 type: 'TASK_SUBMISSION',
-                content: `Ahli [${user?.email}] menghantar bukti tugasan: ${task.title}`
+                content: t('jpp:log_member_submitted_proof', 'Ahli [{{email}}] menghantar bukti tugasan: {{title}}', {
+                    email: user?.email,
+                    title: task.title
+                })
             }]);
 
-            toast.success("Bukti berjaya dihantar!");
+            toast.success(t('jpp:proof_upload_success', 'Bukti berjaya dihantar!'));
             onRefresh();
             onClose();
         } catch (err) {
             console.error(err);
-            toast.error("Gagal memuat naik bukti.");
+            toast.error(t('jpp:proof_upload_failed', 'Gagal memuat naik bukti.'));
         } finally {
             setUploading(false);
         }
@@ -97,25 +102,31 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-black tracking-tighter">Detail Tugasan</DialogTitle>
+                    <DialogTitle className="text-2xl font-black tracking-tighter">
+                        {t('jpp:task_detail_title', 'Detail Tugasan')}
+                    </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6 pt-4">
                     <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
                         <h3 className="font-bold text-lg">{task?.title}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">{task?.description || 'Tiada penerangan tambahan.'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {task?.description || t('jpp:no_additional_description', 'Tiada penerangan tambahan.')}
+                        </p>
                     </div>
 
                     {submission ? (
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 text-emerald-600 font-black text-xs uppercase">
-                                <CheckCircle className="w-4 h-4" /> Tugasan Selesai
+                                <CheckCircle className="w-4 h-4" /> {t('jpp:task_completed', 'Tugasan Selesai')}
                             </div>
                             <div className="p-4 border rounded-2xl bg-muted/20">
-                                <p className="text-[10px] font-bold uppercase opacity-50 mb-2">Bukti Dihantar:</p>
+                                <p className="text-[10px] font-bold uppercase opacity-50 mb-2">
+                                    {t('jpp:proof_submitted_label', 'Bukti Dihantar:')}
+                                </p>
                                 <a href={submission.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-primary font-bold text-sm hover:underline">
                                     {submission.file_type === 'pdf' ? <FileText /> : <ImageIcon />}
-                                    Lihat Fail Bukti ({submission.file_type})
+                                    {t('jpp:view_proof_file', 'Lihat Fail Bukti ({{type}})', { type: submission.file_type })}
                                 </a>
                                 {submission.notes && <p className="text-xs mt-3 italic text-muted-foreground">"{submission.notes}"</p>}
                             </div>
@@ -123,7 +134,9 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
                     ) : (
                         <form onSubmit={handleUpload} className="space-y-4">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Muat Naik Bukti (PNG/JPG/PDF)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                                    {t('jpp:upload_proof_label', 'Muat Naik Bukti (PNG/JPG/PDF)')}
+                                </label>
                                 <label className={cn(
                                     "relative flex flex-col items-center justify-center gap-4 p-10 rounded-[2rem] border-2 border-dashed transition-all cursor-pointer group",
                                     file ? "bg-emerald-50/50 border-emerald-500/30 shadow-inner" : "bg-muted/30 border-muted-foreground/20 hover:bg-muted/50 hover:border-primary/30"
@@ -142,26 +155,28 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
                                     </div>
                                     <div className="text-center">
                                         <p className="text-sm font-black text-foreground">
-                                            {file ? file.name : "Pilih fail atau seret ke sini"}
+                                            {file ? file.name : t('jpp:select_file_or_drag', 'Pilih fail atau seret ke sini')}
                                         </p>
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                                            {file ? "Klik untuk tukar fail" : "Maksimum 5MB"}
+                                            {file ? t('jpp:click_to_change_file', 'Klik untuk tukar fail') : t('jpp:max_file_size_5mb', 'Maksimum 5MB')}
                                         </p>
                                     </div>
                                 </label>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase opacity-50">Nota Tambahan (Opsional)</label>
+                                <label className="text-[10px] font-black uppercase opacity-50">
+                                    {t('jpp:additional_notes_optional', 'Nota Tambahan (Opsional)')}
+                                </label>
                                 <Textarea
-                                    placeholder="Berikan sedikit ulasan tentang tugasan anda..."
+                                    placeholder={t('jpp:task_notes_placeholder', 'Berikan sedikit ulasan tentang tugasan anda...')}
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                 />
                             </div>
 
                             <Button type="submit" disabled={uploading || !file} className="w-full rounded-xl font-black uppercase tracking-widest h-12">
-                                {uploading ? <Loader2 className="animate-spin" /> : 'Hantar Bukti Selesai'}
+                                {uploading ? <Loader2 className="animate-spin" /> : t('jpp:submit_task_proof', 'Hantar Bukti Selesai')}
                             </Button>
                         </form>
                     )}

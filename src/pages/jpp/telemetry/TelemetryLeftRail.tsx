@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { TelemetryData } from './telemetryTypes';
 import { formatUptime } from './telemetryUtils';
+import { useTranslation } from 'react-i18next';
 
 interface TelemetryLeftRailProps {
   data: TelemetryData;
@@ -26,6 +27,7 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
   totalAlertsCount,
   onOpenIncidentsClick,
 }) => {
+  const { t } = useTranslation(['jpp', 'common']);
   const { resilience_score, resilience_rating, resilience_deductions, server } = data;
 
   // Determine critical vs medium issues count
@@ -37,14 +39,14 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
       {/* ── 1. Greeting Card (Soft Peach / Sunset Gradient like SentinelAI) ── */}
       <div className="rounded-2xl p-5 bg-gradient-to-br from-[#FFF0EB] via-[#FFE8E0] to-[#FFDDD2] border border-[#FFD2C4]/80 shadow-2xs relative overflow-hidden">
         <h2 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
-          Good morning,
+          {t('jpp:telemetry_rail_good_morning', 'Good morning,')}
           <br />
-          Admin
+          {t('jpp:telemetry_rail_admin', 'Admin')}
         </h2>
         <p className="text-xs text-slate-700/90 font-medium leading-relaxed mt-2.5">
           {totalAlertsCount > 0
-            ? `${totalAlertsCount} amaran integriti dikesan semalaman. Satu insiden memerlukan pengesahan anda.`
-            : 'Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.'}
+            ? t('jpp:telemetry_rail_alerts_detected', '{{count}} amaran integriti dikesan semalaman. Satu insiden memerlukan pengesahan anda.', { count: totalAlertsCount })
+            : t('jpp:telemetry_rail_healthy_desc', 'Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.')}
         </p>
 
         <button
@@ -52,7 +54,7 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
           disabled={loading}
           className="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-black text-white bg-[#FF5B37] hover:bg-[#E84E2A] active:scale-[0.98] transition-all flex items-center justify-between shadow-xs disabled:opacity-50"
         >
-          <span>{loading ? 'Menyegerak...' : 'Review Incident'}</span>
+          <span>{loading ? t('jpp:telemetry_rail_syncing', 'Menyegerak...') : t('jpp:telemetry_rail_review_incident', 'Review Incident')}</span>
           <ArrowRight className="w-4 h-4 ml-1" />
         </button>
       </div>
@@ -61,7 +63,7 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
       <div>
         <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
           <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-            Security Score
+            {t('jpp:telemetry_rail_security_score', 'Security Score')}
           </span>
           <span className="text-slate-400 font-mono">%</span>
         </div>
@@ -84,7 +86,7 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
           <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
             <span className="flex items-center gap-1 text-emerald-600 font-bold">
               <TrendingUp className="w-3 h-3" />
-              +2.4% vs semalam
+              {t('jpp:telemetry_rail_vs_yesterday', '+2.4% vs semalam')}
             </span>
             <span className="text-slate-400 font-mono">{resilience_score}%</span>
           </div>
@@ -102,24 +104,24 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
       {/* ── 3. Open Incidents ── */}
       <div>
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
-          Open Incidents
+          {t('jpp:telemetry_rail_open_incidents', 'Open Incidents')}
         </span>
 
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black text-[#EA580C] tabular-nums">
             {resilience_deductions.length}
           </span>
-          <span className="text-xs font-bold text-slate-600">Perhatian diperlukan</span>
+          <span className="text-xs font-bold text-slate-600">{t('jpp:telemetry_rail_attention_needed', 'Perhatian diperlukan')}</span>
         </div>
 
         <div className="flex items-center gap-3 mt-2 text-[10px] font-bold text-slate-500">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            High: {criticalCount}
+            {t('jpp:telemetry_rail_high', 'High: {{count}}', { count: criticalCount })}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Medium: {mediumCount}
+            {t('jpp:telemetry_rail_medium', 'Medium: {{count}}', { count: mediumCount })}
           </span>
         </div>
       </div>
@@ -129,13 +131,13 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
       {/* ── 4. Auto Resolution ── */}
       <div>
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
-          Auto Resolution
+          {t('jpp:telemetry_rail_auto_resolution', 'Auto Resolution')}
         </span>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black text-slate-900 tabular-nums">94%</span>
         </div>
         <p className="text-[10px] text-slate-400 font-bold mt-1">
-          +3% vs semalam • Cron & Snapshot Aktif
+          {t('jpp:telemetry_rail_cron_active', '+3% vs semalam • Cron & Snapshot Aktif')}
         </p>
       </div>
 
@@ -144,13 +146,13 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
       {/* ── 5. AI Confidence & Engine ── */}
       <div>
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
-          AI Confidence
+          {t('jpp:telemetry_rail_ai_confidence', 'AI Confidence')}
         </span>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black text-slate-900 tabular-nums">97%</span>
         </div>
         <p className="text-[10px] text-slate-400 font-bold mt-1">
-          AI model confidence tinggi • PID {server.pid}
+          {t('jpp:telemetry_rail_ai_confidence_note', 'AI model confidence tinggi • PID {{pid}}', { pid: server.pid })}
         </p>
       </div>
     </div>

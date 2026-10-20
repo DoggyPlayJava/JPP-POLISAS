@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
   Ticket, Home, Megaphone, CalendarRange, Flag, Layers,
@@ -33,6 +34,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowDesktop = false }: BottomNavProps) {
+  const { t } = useTranslation(['nav', 'portal', 'common']);
   const [mounted, setMounted] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -101,13 +103,13 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   }, [location.pathname]);
 
   const leftLinks = customLinks?.left || [
-    { icon: Menu, label: 'Menu', onClick: onOpenSidebar || (() => {}) },
-    { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: location.pathname === '/portal' }
+    { icon: Menu, label: t('nav:menu', 'Menu'), onClick: onOpenSidebar || (() => {}) },
+    { icon: Home, label: t('nav:primary_nav', 'Utama'), onClick: () => navigate('/portal'), isActive: location.pathname === '/portal' }
   ];
 
   const rightLinks = customLinks?.right || [
-    { icon: QrCode, label: 'QR Merit', onClick: () => navigate('/akademik/qr'), isActive: location.pathname === '/akademik/qr' },
-    { icon: User, label: 'Profil', onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' }
+    { icon: QrCode, label: t('nav:qr_merit', 'QR Merit'), onClick: () => navigate('/akademik/qr'), isActive: location.pathname === '/akademik/qr' },
+    { icon: User, label: t('nav:profile', 'Profil'), onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' }
   ];
 
   // -- Unified Institutional Theme Logic --
@@ -172,7 +174,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 onPointerDown={(e) => quickActionsDragControls.start(e)}
                 className="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
               />
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">Tindakan Pantas</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">{t('nav:quick_actions', 'Tindakan Pantas')}</h3>
               <motion.div 
                 className="grid grid-cols-4 gap-y-6 gap-x-2"
                 initial="hidden"
@@ -186,17 +188,17 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                 }}
               >
                 <QuickActionButton icon={Layers} label="PolyServices" color="bg-amber-500" onClick={() => { setIsActionsOpen(false); setShowPolymartModal(true); }} />
-                <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
-                <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
-                <QuickActionButton icon={Landmark} label="Kelab" color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
+                <QuickActionButton icon={CalendarRange} label={t('nav:takwim', 'Takwim')} color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
+                <QuickActionButton icon={HeartHandshake} label={t('nav:complaints', 'Aduan')} color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
+                <QuickActionButton icon={Landmark} label={t('nav:clubs_short', 'Kelab')} color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
                 
-                <QuickActionButton icon={Lightbulb} label="Bisnes" color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan/dashboard')} />
+                <QuickActionButton icon={Lightbulb} label={t('nav:business', 'Bisnes')} color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan/dashboard')} />
                 {isKlkEligible && (
-                  <QuickActionButton icon={Building2} label="Kediaman" color="bg-orange-500" onClick={() => handleQuickAction('/tetapan?tab=kediaman')} />
+                  <QuickActionButton icon={Building2} label={t('nav:housing_short', 'Kediaman')} color="bg-orange-500" onClick={() => handleQuickAction('/tetapan?tab=kediaman')} />
                 )}
                 
                 {(isSuperAdmin || isJppMember) && (
-                  <QuickActionButton icon={Crown} label="JPP HQ" color="bg-indigo-500" onClick={() => handleQuickAction('/jpp')} />
+                  <QuickActionButton icon={Crown} label={t('nav:jpp_hq', 'JPP HQ')} color="bg-indigo-500" onClick={() => handleQuickAction('/jpp')} />
                 )}
               </motion.div>
             </motion.div>
@@ -252,7 +254,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
                   >
                     <div className="flex items-start justify-between gap-2 w-full">
                       <p className="text-xs font-bold leading-tight flex-1 text-left">
-                        Menu pintas & fungsi utama portal
+                        {t('nav:quick_actions_tooltip', 'Menu pintas & fungsi utama portal')}
                       </p>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleDismissTooltip(); }}

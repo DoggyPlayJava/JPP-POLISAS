@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Info } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -11,6 +12,7 @@ interface PolyRentReverseFormProps {
 }
 
 export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormProps) {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [kawasanList, setKawasanList] = useState<any[]>([]);
@@ -38,7 +40,7 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
   const handleSubmit = async () => {
     if (!profile) return;
     if (!formData.budget || !formData.description) {
-      toast.error('Sila lengkapkan maklumat wajib (Bajet & Deskripsi)');
+      toast.error(t('housing:reverse_fill_required', 'Sila lengkapkan maklumat wajib (Bajet & Deskripsi)'));
       return;
     }
 
@@ -54,11 +56,11 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
       });
 
       if (error) throw error;
-      toast.success('Iklan pencarian anda telah diterbitkan!');
+      toast.success(t('housing:reverse_published_success', 'Iklan pencarian anda telah diterbitkan!'));
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Gagal menyimpan iklan');
+      toast.error(err.message || t('housing:reverse_save_failed', 'Gagal menyimpan iklan'));
     } finally {
       setIsSubmitting(false);
     }
@@ -82,8 +84,8 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
           {/* Header */}
           <div className="flex-none p-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">Cari Rumah</h2>
-              <p className="text-xs text-slate-500">Iklankan apa yang anda cari</p>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('housing:reverse_title', 'Cari Rumah')}</h2>
+              <p className="text-xs text-slate-500">{t('housing:reverse_subtitle', 'Iklankan apa yang anda cari')}</p>
             </div>
             <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
               <X className="w-5 h-5" />
@@ -93,7 +95,7 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Bajet Maksimum (Bulanan) <span className="text-rose-500">*</span></label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:reverse_max_budget', 'Bajet Maksimum (Bulanan)')} <span className="text-rose-500">*</span></label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">RM</span>
                 <input
@@ -107,13 +109,13 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kawasan Pilihan (Pilihan)</label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:reverse_preferred_area', 'Kawasan Pilihan (Pilihan)')}</label>
               <select
                 value={formData.kawasan_id}
                 onChange={(e) => handleInputChange('kawasan_id', e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white"
               >
-                <option value="">Mana-mana kawasan KLK</option>
+                <option value="">{t('housing:any_area', 'Mana-mana kawasan KLK')}</option>
                 {kawasanList.map(k => (
                   <option key={k.id} value={k.id}>{k.name}</option>
                 ))}
@@ -121,29 +123,33 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Jantina Preferensi <span className="text-rose-500">*</span></label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:reverse_gender_preference', 'Jantina Preferensi')} <span className="text-rose-500">*</span></label>
               <div className="grid grid-cols-3 gap-2">
-                {['CAMPURAN', 'LELAKI', 'PEREMPUAN'].map((opt) => (
+                {[
+                  { key: 'CAMPURAN', label: t('housing:gender_mixed', 'Campur') },
+                  { key: 'LELAKI', label: t('housing:gender_male', 'Lelaki') },
+                  { key: 'PEREMPUAN', label: t('housing:gender_female', 'Perempuan') },
+                ].map((opt) => (
                   <button
-                    key={opt}
-                    onClick={() => handleInputChange('jantina_prefer', opt)}
+                    key={opt.key}
+                    onClick={() => handleInputChange('jantina_prefer', opt.key)}
                     className={`py-3 rounded-xl text-xs font-bold transition-all border ${
-                      formData.jantina_prefer === opt 
+                      formData.jantina_prefer === opt.key 
                         ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400' 
                         : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 text-slate-500'
                     }`}
                   >
-                    {opt === 'CAMPURAN' ? 'Campur' : opt === 'LELAKI' ? 'Lelaki' : 'Perempuan'}
+                    {opt.label}
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Deskripsi (Syarat/Permintaan) <span className="text-rose-500">*</span></label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:reverse_description_label', 'Deskripsi (Syarat/Permintaan)')} <span className="text-rose-500">*</span></label>
               <textarea
                 rows={4}
-                placeholder="Cth: Sedang mencari 1 bilik single atau kongsi berdua. Nak yang ada mesin basuh dan unifi."
+                placeholder={t('housing:reverse_desc_placeholder', 'Cth: Sedang mencari 1 bilik single atau kongsi berdua. Nak yang ada mesin basuh dan unifi.')}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white resize-none"
@@ -151,7 +157,7 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tarikh Kemasukan (Anggaran)</label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('housing:reverse_move_in_date', 'Tarikh Kemasukan (Anggaran)')}</label>
               <input
                 type="date"
                 value={formData.move_in_date}
@@ -169,7 +175,7 @@ export function PolyRentReverseForm({ onClose, onSuccess }: PolyRentReverseFormP
               className="w-full py-4 rounded-xl bg-teal-500 text-white font-bold hover:bg-teal-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-teal-500/30 disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-              {isSubmitting ? 'Menerbitkan...' : 'Terbit Iklan Pencarian'}
+              {isSubmitting ? t('housing:reverse_publishing', 'Menerbitkan...') : t('housing:reverse_publish_btn', 'Terbit Iklan Pencarian')}
             </button>
           </div>
         </motion.div>

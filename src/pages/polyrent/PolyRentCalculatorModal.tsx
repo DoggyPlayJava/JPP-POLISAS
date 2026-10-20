@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calculator, Plus, Minus, FileText, Zap, Droplets, Wifi, RefreshCw, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CalculatorModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface CalculatorModalProps {
 }
 
 export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
+  const { t } = useTranslation(['housing', 'common']);
   const [tenants, setTenants] = useState(2);
   
   const [rent, setRent] = useState<number | ''>('');
@@ -54,8 +56,8 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                     <Calculator className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Kalkulator Bil</h2>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Kira Pecahan Ahli Rumah</p>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('housing:calc_bill_title', 'Kalkulator Bil')}</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t('housing:calc_bill_subtitle', 'Kira Pecahan Ahli Rumah')}</p>
                   </div>
                 </div>
                 <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
@@ -69,9 +71,9 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
               
               {/* Ahli Rumah */}
               <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-white/5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">Jumlah Ahli Rumah</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">{t('housing:calc_total_tenants', 'Jumlah Ahli Rumah')}</label>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Berapa orang yang berkongsi bayar?</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('housing:calc_how_many_share', 'Berapa orang yang berkongsi bayar?')}</span>
                   <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-2 py-1 rounded-full shadow-sm border border-slate-200 dark:border-white/5">
                     <button 
                       onClick={() => setTenants(prev => Math.max(1, prev - 1))}
@@ -92,7 +94,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
 
               {/* Bil Inputs */}
               <div className="space-y-4">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">Masukkan Jumlah Bil (Bulan Ini)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">{t('housing:calc_enter_bills_heading', 'Masukkan Jumlah Bil (Bulan Ini)')}</label>
                 
                 <div className="grid gap-3">
                   <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-white/10 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
@@ -100,7 +102,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                       <Home className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Sewa Rumah</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t('housing:calc_rent_label', 'Sewa Rumah')}</label>
                       <div className="flex items-center text-slate-900 dark:text-white font-bold">
                         RM <input type="number" value={rent} onChange={e => setRent(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full bg-transparent border-none p-0 ml-1 focus:ring-0 text-lg placeholder:text-slate-300 dark:placeholder:text-slate-700" />
                       </div>
@@ -112,7 +114,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                       <Zap className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Elektrik (TNB)</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t('housing:calc_electric_label', 'Elektrik (TNB)')}</label>
                       <div className="flex items-center text-slate-900 dark:text-white font-bold">
                         RM <input type="number" value={electric} onChange={e => setElectric(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full bg-transparent border-none p-0 ml-1 focus:ring-0 text-lg placeholder:text-slate-300 dark:placeholder:text-slate-700" />
                       </div>
@@ -124,7 +126,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                       <Droplets className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Air (PAIP)</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t('housing:calc_water_label', 'Air (PAIP)')}</label>
                       <div className="flex items-center text-slate-900 dark:text-white font-bold">
                         RM <input type="number" value={water} onChange={e => setWater(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full bg-transparent border-none p-0 ml-1 focus:ring-0 text-lg placeholder:text-slate-300 dark:placeholder:text-slate-700" />
                       </div>
@@ -136,7 +138,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                       <Wifi className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Internet / WiFi</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t('housing:calc_wifi_label', 'Internet / WiFi')}</label>
                       <div className="flex items-center text-slate-900 dark:text-white font-bold">
                         RM <input type="number" value={wifi} onChange={e => setWifi(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full bg-transparent border-none p-0 ml-1 focus:ring-0 text-lg placeholder:text-slate-300 dark:placeholder:text-slate-700" />
                       </div>
@@ -148,7 +150,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">Lain-lain / Utiliti</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">{t('housing:calc_others_label', 'Lain-lain / Utiliti')}</label>
                       <div className="flex items-center text-slate-900 dark:text-white font-bold">
                         RM <input type="number" value={others} onChange={e => setOthers(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full bg-transparent border-none p-0 ml-1 focus:ring-0 text-lg placeholder:text-slate-300 dark:placeholder:text-slate-700" />
                       </div>
@@ -162,7 +164,7 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
                 onClick={handleReset}
                 className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
               >
-                <RefreshCw className="w-4 h-4" /> Reset Borang
+                <RefreshCw className="w-4 h-4" /> {t('housing:calc_reset_form', 'Reset Borang')}
               </button>
 
             </div>
@@ -171,22 +173,31 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
             <div className="bg-indigo-600 p-6 rounded-t-3xl shadow-[0_-10px_40px_rgba(79,70,229,0.3)]">
               <div className="flex justify-between items-end mb-4 text-indigo-100">
                 <div>
-                  <p className="text-xs font-medium opacity-80">Jumlah Keseluruhan</p>
+                  <p className="text-xs font-medium opacity-80">{t('housing:calc_total_amount', 'Jumlah Keseluruhan')}</p>
                   <p className="text-lg font-bold">RM {total.toFixed(2)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">Seorang Perlu Bayar</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">{t('housing:calc_per_person_pay', 'Seorang Perlu Bayar')}</p>
                   <p className="text-4xl font-black text-white">RM {perPerson.toFixed(2)}</p>
                 </div>
               </div>
               <button 
                 onClick={() => {
-                  const msg = `*[ REKOD BIL RUMAH SEWA ]*\n\nSewa Rumah   : RM ${Number(rent||0).toFixed(2)}\nElektrik TNB : RM ${Number(electric||0).toFixed(2)}\nAir (PAIP)   : RM ${Number(water||0).toFixed(2)}\nInternet     : RM ${Number(wifi||0).toFixed(2)}\nLain-lain    : RM ${Number(others||0).toFixed(2)}\n-----------------------------------\nJUMLAH KESELURUHAN : RM ${total.toFixed(2)}\n-----------------------------------\n\n*SEORANG PERLU BAYAR : RM ${perPerson.toFixed(2)}*\n_(Dibahagikan kepada ${tenants} orang)_\n\nSila buat bayaran dengan segera. Terima kasih!`;
+                  const msg = t('housing:calc_wa_bill_template', '*[ REKOD BIL RUMAH SEWA ]*\n\nSewa Rumah   : RM {{rent}}\nElektrik TNB : RM {{electric}}\nAir (PAIP)   : RM {{water}}\nInternet     : RM {{wifi}}\nLain-lain    : RM {{others}}\n-----------------------------------\nJUMLAH KESELURUHAN : RM {{total}}\n-----------------------------------\n\n*SEORANG PERLU BAYAR : RM {{perPerson}}*\n_(Dibahagikan kepada {{tenants}} orang)_\n\nSila buat bayaran dengan segera. Terima kasih!', {
+                    rent: Number(rent || 0).toFixed(2),
+                    electric: Number(electric || 0).toFixed(2),
+                    water: Number(water || 0).toFixed(2),
+                    wifi: Number(wifi || 0).toFixed(2),
+                    others: Number(others || 0).toFixed(2),
+                    total: total.toFixed(2),
+                    perPerson: perPerson.toFixed(2),
+                    tenants
+                  });
                   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
                 className="w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold text-sm hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg"
               >
-                Kongsi ke Group WhatsApp
+                {t('housing:calc_share_wa', 'Kongsi ke Group WhatsApp')}
               </button>
             </div>
 
