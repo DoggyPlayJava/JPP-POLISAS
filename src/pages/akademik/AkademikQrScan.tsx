@@ -425,11 +425,11 @@ export function AkademikQrScan() {
 }
 
 // ─── QR Manager (dalam admin dashboard) ──────────────────────
-export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) {
+export function QrMeritManager({ themeColor = THEME, initialTokens }: { themeColor?: string; initialTokens?: any[] }) {
   const { t } = useTranslation(['akademik', 'common']);
   const { profile, isSuperAdmin } = useAuth();
-  const [tokens, setTokens]     = useState<any[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [tokens, setTokens]     = useState<any[]>(initialTokens || []);
+  const [loading, setLoading]   = useState(!initialTokens);
   const [showCreate, setShowCreate] = useState(false);
   
   const generatePin = () => Math.floor(1000 + Math.random() * 9000).toString();
@@ -448,10 +448,15 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
 
   // Use VITE_APP_URL for production, fallback to current origin
   const BASE_URL = ((import.meta as any).env?.VITE_APP_URL as string | undefined)?.replace(/\/$/, '')
-    || window.location.origin;
-  const isLocalhost = BASE_URL.includes('localhost') || BASE_URL.includes('127.0.0.1');
+    || (typeof window !== 'undefined' ? (window.location.origin || window.location.href || '') : '')
+    || 'http://localhost:5173';
+  const isLocalhost = Boolean(BASE_URL.includes('localhost') || BASE_URL.includes('127.0.0.1'));
 
   const load = useCallback(async () => {
+    if (initialTokens) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     
     // Auto-garbage collect tokens expired more than 1 day ago
@@ -466,7 +471,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
     if (error) console.error('[qr] load error:', error.message);
     setTokens(data || []);
     setLoading(false);
-  }, []);
+  }, [initialTokens]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -475,7 +480,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
     const { error } = await supabase.from('akademik_qr_tokens').delete().eq('id', id);
     if (!error) {
       toast.success('Token berjaya dipadam.');
-      setTokens(prev => prev.filter(t => t.id !== id));
+      setTokens(prev => prev.filter(tok => tok.id !== id));
     } else {
       toast.error('Gagal memadam token.');
     }
@@ -486,19 +491,19 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
     const { error } = await supabase.from('akademik_qr_tokens').update({ verification_pin: newPin }).eq('id', id);
     if (!error) {
       toast.success(t('akademik:new_pin_generated', 'PIN baharu dijana!'));
-      setTokens(prev => prev.map(t => t.id === id ? { ...t, verification_pin: newPin } : t));
+      setTokens(prev => prev.map(tok => tok.id === id ? { ...tok, verification_pin: newPin } : tok));
     }
   };
 
   // Generate QR images for each token
   useEffect(() => {
-    tokens.forEach(async (t) => {
-      if (qrUrls[t.id]) return;
-      if (!t.token) return; // skip if no token UUID
-      const url = `${BASE_URL}/akademik/qr/${t.token}`;
+    tokens.forEach(async (tok) => {
+      if (qrUrls[tok.id]) return;
+      if (!tok.token) return; // skip if no token UUID
+      const url = `${BASE_URL}/akademik/qr/${tok.token}`;
       try {
         const dataUrl = await QRCode.toDataURL(url, { width: 256, margin: 2, color: { dark: '#FFFFFF', light: '#0F172A' } });
-        setQrUrls(prev => ({ ...prev, [t.id]: dataUrl }));
+        setQrUrls(prev => ({ ...prev, [tok.id]: dataUrl }));
       } catch {}
     });
   }, [tokens]);
@@ -549,7 +554,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
 
   const toggleActive = async (id: string, current: boolean) => {
     await supabase.from('akademik_qr_tokens').update({ is_active: !current }).eq('id', id);
-    setTokens(prev => prev.map(t => t.id === id ? { ...t, is_active: !current } : t));
+    setTokens(prev => prev.map(tok => tok.id === id ? { ...tok, is_active: !current } : tok));
   };
 
   const downloadQr = (tokenId: string, title: string) => {
@@ -764,16 +769,18 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
         </div>
       ) : (
         <div className="space-y-3">
-          {tokens.map(t => {
-            const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
-            const isFull    = t.max_scans_total && t.current_scans_total >= t.max_scans_total;
-            const scanUrl   = `${BASE_URL}/akademik/qr/${t.token}`;
+          {tokens.map(tok => {
+            const isExpired = tok.expires_at && new Date(tok.expires_at) < new Date();
+            const maxScans  = tok.max_scans_total ?? tok.max_scans;
+            const curScans  = tok.current_scans_total ?? tok.current_scans ?? 0;
+            const isFull    = maxScans && curScans >= maxScans;
+            const scanUrl   = `${BASE_URL}/akademik/qr/${tok.token}`;
             return (
-              <div key={t.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+              <div key={tok.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
                 <div className="flex items-start gap-4">
                   {/* QR Preview */}
-                  {qrUrls[t.id] ? (
-                    <img src={qrUrls[t.id]} alt="QR" className="w-14 h-14 rounded-xl shrink-0 border border-white/[0.08]" />
+                  {qrUrls[tok.id] ? (
+                    <img src={qrUrls[tok.id]} alt="QR" className="w-14 h-14 rounded-xl shrink-0 border border-white/[0.08]" />
                   ) : (
                     <div className="w-14 h-14 rounded-xl shrink-0 bg-white/[0.04] flex items-center justify-center border border-white/[0.08]">
                       <Loader2 className="w-4 h-4 animate-spin text-white/20" />
@@ -782,46 +789,46 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-black text-white">{t.title}</p>
+                      <p className="text-sm font-black text-white">{tok.title}</p>
                       {/* Time window badge */}
-                      {t.available_from && t.available_until && (
+                      {tok.available_from && tok.available_until && (
                         <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 flex items-center gap-1">
                           <Clock className="w-2 h-2" />
-                          {t.available_from.substring(0,5)} – {t.available_until.substring(0,5)}
+                          {tok.available_from.substring(0,5)} – {tok.available_until.substring(0,5)}
                         </span>
                       )}
                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                        !t.is_active || isExpired || isFull
+                        !tok.is_active || isExpired || isFull
                           ? 'bg-white/5 text-white/25'
                           : 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-400'
                       }`}>
-                        {!t.is_active ? 'Tidak Aktif' : isExpired || isFull ? 'Tamat' : 'Aktif'}
+                        {!tok.is_active ? t('common:inactive', 'Tidak Aktif') : isExpired || isFull ? t('akademik:status_expired', 'Tamat') : t('common:active', 'Aktif')}
                       </span>
-                      {t.location_lat && (
+                      {tok.location_lat && (
                          <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 flex items-center gap-1">
                            <MapPin className="w-2 h-2" /> GPS
                          </span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="text-[10px] text-white/30 font-bold">+{t.merit_value} merit</span>
+                      <span className="text-[10px] text-white/30 font-bold">+{tok.merit_value} merit</span>
                       <span className="text-[10px] text-white/20">·</span>
-                      <span className="text-[10px] text-white/30 font-bold">Cooldown {t.cooldown_hours}j</span>
+                      <span className="text-[10px] text-white/30 font-bold">Cooldown {tok.cooldown_hours}j</span>
                       <span className="text-[10px] text-white/20">·</span>
                       <span className="text-[10px] text-white/30 font-bold">
-                        {t.current_scans_total}/{t.max_scans_total || '∞'} scan
+                        {curScans}/{maxScans || '∞'} scan
                       </span>
                     </div>
 
                     {/* Verification PIN Box */}
-                    {t.verification_pin && (
+                    {tok.verification_pin && (
                        <div className="mt-3 flex items-center gap-3 p-2 bg-amber-500/10 rounded-xl border border-amber-500/20 inline-flex">
                          <KeyRound className="w-4 h-4 text-amber-400 shrink-0" />
                          <div>
                            <p className="text-[8px] font-black uppercase tracking-widest text-amber-300">{t('akademik:hall_pin_label', 'PIN Dewan')}</p>
-                           <p className="text-sm font-black tracking-[0.2em] text-white">{t.verification_pin}</p>
+                           <p className="text-sm font-black tracking-[0.2em] text-white">{tok.verification_pin}</p>
                          </div>
-                         <button onClick={() => regeneratePin(t.id)} title={t('akademik:change_pin_now', 'Tukar PIN sekarang')}
+                         <button onClick={() => regeneratePin(tok.id)} title={t('akademik:change_pin_now', 'Tukar PIN sekarang')}
                            className="ml-2 p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 transition-colors">
                            <RefreshCw className="w-3.5 h-3.5" />
                          </button>
@@ -830,20 +837,20 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                   </div>
 
                   <div className="flex flex-col gap-1.5 shrink-0">
-                    <button onClick={() => toggleActive(t.id, t.is_active)}
+                    <button onClick={() => toggleActive(tok.id, tok.is_active)}
                       className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border transition-all ${
-                        t.is_active
+                        tok.is_active
                           ? 'text-rose-400 border-rose-500/20 hover:bg-rose-500/10'
                           : 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10'
                       }`}>
-                      {t.is_active ? t('akademik:deactivate', 'Nyahaktif') : t('akademik:activate', 'Aktifkan')}
+                      {tok.is_active ? t('akademik:deactivate', 'Nyahaktif') : t('akademik:activate', 'Aktifkan')}
                     </button>
-                    <button onClick={() => deleteToken(t.id)}
+                    <button onClick={() => deleteToken(tok.id)}
                       className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-rose-500/10 text-rose-400 hover:bg-rose-500/10 transition-all">
                       {t('akademik:delete', 'Padam')}
                     </button>
-                    {qrUrls[t.id] && (
-                      <button onClick={() => downloadQr(t.id, t.title)}
+                    {qrUrls[tok.id] && (
+                      <button onClick={() => downloadQr(tok.id, tok.title)}
                         className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-white/[0.08] text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all">
                         {t('akademik:download', 'Download')}
                       </button>

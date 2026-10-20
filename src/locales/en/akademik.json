@@ -52,6 +52,7 @@
   "status_pending": "Pending Review",
   "status_approved": "Verified",
   "status_rejected": "Rejected",
+  "status_expired": "Expired",
   "unlock_request_btn": "Request Unlock",
   "unlock_reason_placeholder": "State reason for request...",
   "qr_invalid_title": "Invalid QR",
