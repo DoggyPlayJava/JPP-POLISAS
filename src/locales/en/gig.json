@@ -38,6 +38,7 @@
   "offer_price": "Offer RM",
   "system_estimate": "System Estimate (Biddable)",
   "gender_label": "Gender",
+  "passenger_gender": "Passenger Gender",
   "gender_male": "Male",
   "gender_female": "Female",
   "gender_all": "All",

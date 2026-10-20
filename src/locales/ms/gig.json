@@ -38,6 +38,7 @@
   "offer_price": "Tawaran RM",
   "system_estimate": "Anggaran Sistem (Boleh Bida)",
   "gender_label": "Jantina",
+  "passenger_gender": "Jantina Penumpang",
   "gender_male": "Lelaki",
   "gender_female": "Perempuan",
   "gender_all": "Semua",
