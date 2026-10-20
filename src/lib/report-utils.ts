@@ -1,4 +1,8 @@
 import { format, parseISO } from 'date-fns';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 export interface RawActivity {
   id: string;
@@ -34,7 +38,7 @@ export function normalizeReportData(activities: RawActivity[], programs: RawProg
     end_date: p.tarikh_tamat,
     location: p.location,
     budget: p.budget,
-    tindakan: p.tindakan || p.deskripsi || 'Program Takwim Rasmi',
+    tindakan: p.tindakan || p.deskripsi || t('services:official_calendar_program', 'Program Takwim Rasmi'),
     image_urls: p.image_urls || [],
     _source: 'takwim',
   }));

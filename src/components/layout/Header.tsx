@@ -24,7 +24,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
     const found = ALL_CLUBS.find(c => c.id === activeClubId);
     if (found?.name) return found.name;
     if (/^[0-9a-fA-F-]{30,}$/.test(activeClubId)) {
-      return isSuperAdmin ? 'Pentadbiran JPP' : 'Kelab Siswa';
+      return isSuperAdmin ? 'Pentadbiran JPP' : t('nav:student_clubs', 'Kelab Siswa');
     }
     return activeClubId.replace('club_', '').toUpperCase();
   })();

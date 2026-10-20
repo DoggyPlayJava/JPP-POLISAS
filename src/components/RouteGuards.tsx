@@ -4,8 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 function LoadingScreen() {
+  const { t } = useTranslation();
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ function LoadingScreen() {
             </span>
           </div>
           <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 text-center max-w-[350px] leading-relaxed">
-            & Exco Kelab, Persatuan Dan Perpaduan
+            {t('nav:exco_kpp_title', '& Exco Kelab, Persatuan Dan Perpaduan')}
           </p>
         </div>
       </motion.div>
@@ -64,7 +66,7 @@ function LoadingScreen() {
                 <AlertTriangle className="w-4 h-4" />
                 <span>Internet lambat?</span>
               </div>
-              <span>Anda mungkin menghadapi masalah sambungan. Sila <strong>refresh/reopen</strong> portal ini.</span>
+              <span>{t('nav:connection_trouble_prefix', 'Anda mungkin menghadapi masalah sambungan. Sila')} <strong>refresh/reopen</strong> {t('nav:connection_trouble_suffix', 'portal ini.')}</span>
             </motion.div>
           </div>
         )}

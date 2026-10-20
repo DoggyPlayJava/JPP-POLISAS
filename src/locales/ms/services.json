@@ -700,5 +700,22 @@
   "rpc_comment_emergency_escalate_reason": "🚨 KECEMASAN/KRISIS ESKALASI: Pelajar melaporkan ulasan ini memerlukan perhatian kecemasan Exco Kebajikan.",
   "already_reported_substr": "sudah melaporkan",
   "notif_comment_emergency_title": "🚨 Kecemasan Ulasan PolySuara",
-  "notif_comment_emergency_msg": "Pelajar melaporkan ulasan (\"{{snippet}}...\") memerlukan tindakan kebajikan segera."
+  "notif_comment_emergency_msg": "Pelajar melaporkan ulasan (\"{{snippet}}...\") memerlukan tindakan kebajikan segera.",
+  "failed_compress_image": "Gagal compress gambar",
+  "failed_read_image": "Gagal baca gambar",
+  "upload_failed_msg": "Upload gagal: {{msg}}",
+  "pdf_only_hybrid_drive": "Hanya fail PDF dibenarkan untuk dimuat naik secara hibrid ke Google Drive.",
+  "please_login_upload": "Sila log masuk untuk memuat naik fail.",
+  "edge_function_error_status": "Edge Function Error ({{status}})",
+  "drive_upload_failed_msg": "Muat naik ke Drive gagal: {{msg}}",
+  "invalid_edge_json_response": "Respons Edge Function bukan JSON yang sah.",
+  "google_drive_error_msg": "Ralat Google Drive: {{error}}",
+  "drive_no_doc_url_returned": "URL dokumen tidak dikembalikan oleh Drive.",
+  "anonymous_student": "Pelajar Anon",
+  "please_enter_required_info": "Sila masukkan maklumat yang diperlukan.",
+  "please_enter_valid_number": "Sila masukkan nombor yang sah.",
+  "min_value_is": "Nilai minimum ialah {{min}}.",
+  "max_value_is": "Nilai maksimum ialah {{max}}.",
+  "official_calendar_program": "Program Takwim Rasmi",
+  "polisas_student": "Pelajar POLISAS"
 }

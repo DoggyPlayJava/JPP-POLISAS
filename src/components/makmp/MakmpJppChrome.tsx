@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Home, Menu, Search, User, ChevronLeft, LayoutGrid } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +17,7 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
  * - Spacer bawah supaya content tak bertindih dengan floating bottom nav
  */
 export function MakmpJppChrome() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
@@ -37,7 +39,7 @@ export function MakmpJppChrome() {
           right: [
             {
               icon: Search,
-              label: 'Status',
+              label: t('makmp:status_nav', 'Status'),
               onClick: () => navigate('/makmp/status'),
               isActive: isStatus,
             },
@@ -58,6 +60,7 @@ export function MakmpJppChrome() {
  * Menunjukkan MAKMP adalah modul di bawah JPP Polisas.
  */
 export function MakmpJppHeader({ subtitle }: { subtitle?: string }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <div className="border-b border-slate-200/80 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/40  transition-colors sticky top-0 z-40">

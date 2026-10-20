@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WifiOff, Wifi, ServerCrash, MessageCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -8,6 +9,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const JPP_WHATSAPP = 'https://wa.me/601139413699?text=Salam%20JPP%2C%20sistem%20portal%20sedang%20mengalami%20gangguan.%20Mohon%20semak.';
 
 export function OfflineIndicator() {
+  const { t } = useTranslation('common');
   const [status, setStatus] = useState<ConnectionStatus>('online');
   const [showRecovered, setShowRecovered] = useState(false);
   const failCountRef = useRef(0);
@@ -103,7 +105,7 @@ export function OfflineIndicator() {
           className={`${pillBase} bg-red-500/90 shadow-red-500/20`}
         >
           <WifiOff className="w-3.5 h-3.5 animate-pulse" />
-          Tiada Sambungan
+          {t('common:no_connection', 'Tiada Sambungan')}
         </motion.div>
       )}
 
@@ -117,7 +119,7 @@ export function OfflineIndicator() {
           className={`${pillBase} bg-amber-500/90 shadow-amber-500/20`}
         >
           <ServerCrash className="w-3.5 h-3.5 animate-pulse" />
-          <span>Pelayan Gangguan</span>
+          <span>{t('common:server_interruption', 'Pelayan Gangguan')}</span>
           <span className="w-px h-3 bg-white/30" />
           <motion.button
             onClick={(e) => { e.stopPropagation(); window.open(JPP_WHATSAPP, '_blank'); }}
@@ -127,7 +129,7 @@ export function OfflineIndicator() {
           >
             <span className="absolute inset-0 rounded-full bg-emerald-400/50 animate-ping" />
             <MessageCircle className="w-3 h-3 relative z-10" />
-            <span className="relative z-10">Hubungi JPP</span>
+            <span className="relative z-10">{t('common:contact_jpp', 'Hubungi JPP')}</span>
           </motion.button>
         </motion.div>
       )}
@@ -142,7 +144,7 @@ export function OfflineIndicator() {
           className={`${pillBase} bg-emerald-500/90 shadow-emerald-500/20`}
         >
           <Wifi className="w-3.5 h-3.5" />
-          Sambungan Dipulihkan
+          {t('common:connection_recovered', 'Sambungan Dipulihkan')}
         </motion.div>
       )}
     </AnimatePresence>

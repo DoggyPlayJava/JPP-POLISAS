@@ -5,8 +5,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    '[FATAL] VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY mesti dikonfigurasi dalam env vars. ' +
-    'Jangan hardcode credentials dalam source code.'
+    '[FATAL] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be configured in environment variables. ' +
+    'Do not hardcode credentials in source code.'
   );
 }
 

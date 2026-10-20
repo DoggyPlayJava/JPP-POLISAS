@@ -3,6 +3,7 @@
 // Merges data from: takwim_pusat + programs (non-DRAFT) + takwim_holidays
 // ============================================================
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import type { TakwimItem } from '@/config/takwim-constants';
 import { JPP_UNIT_JENIS } from '@/config/takwim-constants';
@@ -26,6 +27,7 @@ interface UseTakwimPusatReturn {
 }
 
 export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPusatReturn {
+  const { t } = useTranslation();
   const { filter = 'KESELURUHAN', sesi, clubId, clubIds, excludeJenis, enabled = true } = options;
 
   const [items, setItems] = useState<TakwimItem[]>([]);
@@ -152,7 +154,7 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
 
     } catch (err: any) {
       console.error('useTakwimPusat error:', err);
-      setError(err.message || 'Gagal memuatkan data takwim');
+      setError(err.message || t('akademik:failed_load_takwim_data', 'Gagal memuatkan data takwim'));
     } finally {
       setLoading(false);
     }

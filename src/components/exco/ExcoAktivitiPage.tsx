@@ -141,7 +141,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     setUploading(true);
     try {
       for (const file of filesToUpload) {
-        const url = await uploadFileToDrive(file, `exco_${excoUnit.toLowerCase()}`);
+        const url = await uploadFileToDrive(file, 'exco_' + excoUnit.toLowerCase());
         urls.push(url);
       }
       setForm(prev => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));

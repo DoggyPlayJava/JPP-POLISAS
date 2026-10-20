@@ -486,5 +486,7 @@
   "wins": "menang",
   "year_label": "Tahun",
   "yellow_card_for": "Kad Kuning: {{name}}",
-  "score_label": "Skor"
+  "score_label": "Skor",
+  "failed_delete_old_fixture": "Gagal padam fixture lama:",
+  "error_inserting_fixture": "Ralat insert fixture"
 }

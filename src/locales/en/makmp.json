@@ -842,5 +842,8 @@
   "zip_generating": "Generating ZIP...",
   "zip_preparing": "Preparing...",
   "zoom_in_tooltip": "Zoom In",
-  "zoom_out_tooltip": "Zoom Out"
+  "zoom_out_tooltip": "Zoom Out",
+  "invited_to_makmp_title": "You Are Invited to MAKMP 2026! 🎉",
+  "invited_to_makmp_desc": "Congratulations! Click to complete your details & passport photo.",
+  "status_nav": "Status"
 }

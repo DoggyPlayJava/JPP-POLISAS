@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import {
@@ -12,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Menggunakan BusinessSwitcherContext.
  */
 export function BusinessSwitcher() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { isSuperAdmin } = useAuth();
   const { allBusinesses, selectedBusinessId, setSelectedBusinessId, canSwitch, isLoading } = useBusinessSwitcher();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -40,11 +42,11 @@ export function BusinessSwitcher() {
           <Store className="w-3.5 h-3.5 text-emerald-500" />
         </div>
         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 shrink-0 hidden sm:inline-block">
-          Perniagaan:
+          {t('commerce:business_label', 'Perniagaan:')}
         </span>
         <Select value={selectedBusinessId ?? ''} onValueChange={setSelectedBusinessId}>
           <SelectTrigger className="h-9 w-full sm:w-[160px] flex-1 rounded-xl border-none bg-emerald-500/10 text-emerald-700 font-black text-xs focus:ring-emerald-500/20 min-w-0">
-            <SelectValue placeholder="Pilih perniagaan..." />
+            <SelectValue placeholder={t('commerce:select_business_placeholder', 'Pilih perniagaan...')} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl shadow-2xl border-border/60">
             {allBusinesses.map(biz => (
@@ -79,7 +81,7 @@ export function BusinessSwitcher() {
               <div className="relative z-10 flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold leading-tight">
-                    Anda boleh menukar paparan perniagaan anda di sini.
+                    {t('commerce:switch_business_hint', 'Anda boleh menukar paparan perniagaan anda di sini.')}
                   </p>
                   <button 
                     onClick={() => setShowTooltip(false)}
@@ -92,7 +94,7 @@ export function BusinessSwitcher() {
                   onClick={handleDismissForever}
                   className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 w-fit mt-1 transition-colors"
                 >
-                  Jangan tunjuk lagi
+                  {t('common:dont_show_again', 'Jangan tunjuk lagi')}
                 </button>
               </div>
             </motion.div>

@@ -10,8 +10,10 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 export function InstallAppPrompt() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -115,7 +117,7 @@ export function InstallAppPrompt() {
                 Pasang Aplikasi JPP
               </DrawerTitle>
               <DrawerDescription className="text-sm mt-1 font-medium text-slate-600 dark:text-white/60">
-                Akses pantas portal JPP terus dari skrin utama peranti anda tanpa perlu membuka pelayar web setiap kali.
+                {t('portal:pwa_install_desc', 'Akses pantas portal JPP terus dari skrin utama peranti anda tanpa perlu membuka pelayar web setiap kali.')}
               </DrawerDescription>
             </div>
           </div>
@@ -129,17 +131,17 @@ export function InstallAppPrompt() {
               </p>
               <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-200">
                 <span className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-xs font-bold text-xs text-emerald-600 dark:text-emerald-400">1</span>
-                <span>Tekan butang <MoreHorizontal className="w-5 h-5 inline-block mx-0.5 text-slate-800 dark:text-white" /> (Menu), kemudian pilih <Share className="w-4 h-4 inline-block ml-1 mr-0.5 text-slate-800 dark:text-white" /> <b>Share</b>.</span>
+                <span>Tekan butang <MoreHorizontal className="w-5 h-5 inline-block mx-0.5 text-slate-800 dark:text-white" /> {t('portal:pwa_menu_then_select', '(Menu), kemudian pilih')} <Share className="w-4 h-4 inline-block ml-1 mr-0.5 text-slate-800 dark:text-white" /> <b>Share</b>.</span>
               </div>
               <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-200">
                 <span className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-white/10 shadow-xs font-bold text-xs text-emerald-600 dark:text-emerald-400">2</span>
-                <span>Tatal ke bawah dan pilih <PlusSquare className="w-5 h-5 inline-block mx-1 text-slate-800 dark:text-white" /> <b>Add to Home Screen</b>.</span>
+                <span>{t('portal:pwa_scroll_and_select', 'Tatal ke bawah dan pilih')} <PlusSquare className="w-5 h-5 inline-block mx-1 text-slate-800 dark:text-white" /> <b>Add to Home Screen</b>.</span>
               </div>
             </div>
           ) : (
             <div className="bg-emerald-500/10 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center gap-3">
               <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>Pemasangan segera disokong untuk pelayar Chrome dan Edge di telefon pintar anda.</span>
+              <span>{t('portal:pwa_supported_browsers', 'Pemasangan segera disokong untuk pelayar Chrome dan Edge di telefon pintar anda.')}</span>
             </div>
           )}
         </div>
@@ -159,7 +161,7 @@ export function InstallAppPrompt() {
               className="w-full rounded-xl mt-2 text-slate-500 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 font-semibold h-12"
               onClick={handleDismiss}
             >
-              Nanti Sahaja
+              {t('portal:later', 'Nanti Sahaja')}
             </Button>
           </DrawerClose>
         </DrawerFooter>

@@ -1,5 +1,9 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 interface ShareData {
   title?: string;
@@ -18,7 +22,7 @@ export function useNativeShare() {
         // AbortError is triggered when user cancels the share sheet
         if (error.name !== 'AbortError') {
           console.error('Error sharing:', error);
-          toast.error('Gagal membuka menu kongsi.');
+          toast.error(t('portal:share_failed_open', 'Gagal membuka menu kongsi.'));
         }
         return false;
       }
@@ -27,21 +31,21 @@ export function useNativeShare() {
       if (data.url) {
         try {
           await navigator.clipboard.writeText(data.url);
-          toast.success('Pautan disalin ke papan keratan.');
+          toast.success(t('portal:link_copied_clipboard', 'Pautan disalin ke papan keratan.'));
           return true;
         } catch (error) {
           console.error('Failed to copy to clipboard:', error);
-          toast.error('Gagal menyalin pautan.');
+          toast.error(t('portal:failed_copy_link', 'Gagal menyalin pautan.'));
           return false;
         }
       } else if (data.text) {
         try {
           await navigator.clipboard.writeText(data.text);
-          toast.success('Teks disalin ke papan keratan.');
+          toast.success(t('portal:text_copied_clipboard', 'Teks disalin ke papan keratan.'));
           return true;
         } catch (error) {
           console.error('Failed to copy to clipboard:', error);
-          toast.error('Gagal menyalin teks.');
+          toast.error(t('portal:failed_copy_text', 'Gagal menyalin teks.'));
           return false;
         }
       }

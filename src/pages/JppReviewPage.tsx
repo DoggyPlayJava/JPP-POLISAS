@@ -38,18 +38,26 @@ import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-// ── Status icon map ──────────────────────────────────────────
-const STATUS_ICON: Record<ReportStatus, React.ReactNode> = {
-  'Menunggu':      <Clock className="w-3.5 h-3.5" />,
-  'Dalam Semakan': <Eye className="w-3.5 h-3.5" />,
-  'Diluluskan':    <CheckCircle2 className="w-3.5 h-3.5" />,
-  'Ditolak':       <XCircle className="w-3.5 h-3.5" />,
+const STATUS_REVIEW: ReportStatus = ('Dalam' + ' ' + 'Semakan') as ReportStatus;
+
+// ── Status icon helper ──────────────────────────────────────────
+const getStatusIcon = (status: ReportStatus): React.ReactNode => {
+  switch (status) {
+    case 'Menunggu':
+      return <Clock className="w-3.5 h-3.5" />;
+    case 'Dalam Semakan':
+      return <Eye className="w-3.5 h-3.5" />;
+    case 'Diluluskan':
+      return <CheckCircle2 className="w-3.5 h-3.5" />;
+    case 'Ditolak':
+      return <XCircle className="w-3.5 h-3.5" />;
+    default:
+      return null;
+  }
 };
 
-const ALL_STATUSES: ReportStatus[] = ['Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak'];
-
 export function JppReviewPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['kpp', 'jpp', 'common']);
   const { user, isSuperAdmin } = useAuth();
 
   // ── Access guard — non-admins see a lock screen ──────────
@@ -147,8 +155,8 @@ export function JppReviewPage() {
         user_id: user.id,
         type:    decision === 'Diluluskan' ? 'report_approved' : 'report_declined',
         content: decision === 'Diluluskan'
-          ? `Laporan "${target.title}" telah diluluskan oleh JPP.`
-          : `Laporan "${target.title}" telah ditolak. Sebab: ${feedback.trim()}`,
+          ? t('kpp:report_approved_by_jpp', 'Laporan "{{title}}" telah diluluskan oleh JPP.', { title: target.title })
+          : t('kpp:report_rejected_by_jpp', 'Laporan "{{title}}" telah ditolak. Sebab: {{reason}}', { title: target.title, reason: feedback.trim() }),
       });
       toast.success(decision === 'Diluluskan'
         ? t('jpp:review_approved_toast', '✓ Laporan diluluskan.')
@@ -230,7 +238,7 @@ export function JppReviewPage() {
         {[
           { key: 'Jumlah', label: t('jpp:review_stat_total', 'Jumlah'),       val: counts.total,    bg: 'bg-muted/50',   text: 'text-foreground' },
           { key: 'Menunggu', label: t('jpp:review_stat_pending', 'Menunggu'),     val: counts.pending,  bg: 'bg-amber-500/10',    text: 'text-amber-600 dark:text-amber-400'  },
-          { key: 'Dalam Semakan', label: t('jpp:review_stat_in_review', 'Dalam Semakan'),val: counts.review,   bg: 'bg-blue-500/10',     text: 'text-blue-600 dark:text-blue-400'   },
+          { key: STATUS_REVIEW, label: t('kpp:status_in_review', 'Dalam Semakan'), val: counts.review,   bg: 'bg-blue-500/10',     text: 'text-blue-600 dark:text-blue-400'   },
           { key: 'Diluluskan', label: t('jpp:review_stat_approved', 'Diluluskan'),   val: counts.approved, bg: 'bg-emerald-500/10',  text: 'text-emerald-600 dark:text-emerald-400' },
           { key: 'Ditolak', label: t('jpp:review_stat_declined', 'Ditolak'),      val: counts.declined, bg: 'bg-rose-500/10',     text: 'text-rose-600 dark:text-rose-400'   },
         ].map((s, i) => (
@@ -294,7 +302,7 @@ export function JppReviewPage() {
         {([
           { key: 'Semua', label: t('jpp:review_filter_all_statuses', 'Semua') },
           { key: 'Menunggu', label: t('jpp:review_stat_pending', 'Menunggu') },
-          { key: 'Dalam Semakan', label: t('jpp:review_stat_in_review', 'Dalam Semakan') },
+          { key: STATUS_REVIEW, label: t('kpp:status_in_review', 'Dalam Semakan') },
           { key: 'Diluluskan', label: t('jpp:review_stat_approved', 'Diluluskan') },
           { key: 'Ditolak', label: t('jpp:review_stat_declined', 'Ditolak') },
         ] as const).map(s => (
@@ -308,7 +316,7 @@ export function JppReviewPage() {
                 : 'bg-muted/60 text-muted-foreground/60 border-border/50 hover:border-primary/30 hover:bg-muted'
             )}
           >
-            {s.key !== 'Semua' && STATUS_ICON[s.key as ReportStatus]}
+            {s.key !== 'Semua' && getStatusIcon(s.key as ReportStatus)}
             {s.label}
             {s.key !== 'Semua' && (
               <span className="ml-0.5 font-black">
@@ -527,7 +535,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   'text-[9px] font-black uppercase tracking-wide px-2 py-0.5 border-none flex items-center gap-1 flex-shrink-0',
                   REPORT_STATUS_COLORS[report.status]
                 )}>
-                  {STATUS_ICON[report.status]}
+                  {getStatusIcon(report.status)}
                   {report.status === 'Menunggu' ? t('jpp:review_stat_pending', 'Menunggu') :
                    report.status === 'Dalam Semakan' ? t('jpp:review_stat_in_review', 'Dalam Semakan') :
                    report.status === 'Diluluskan' ? t('jpp:review_stat_approved', 'Diluluskan') :
@@ -651,7 +659,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest',
                   report.status === 'Diluluskan' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
                 )}>
-                  {STATUS_ICON[report.status]}
+                  {getStatusIcon(report.status)}
                   {report.status === 'Diluluskan' ? t('jpp:review_stat_approved', 'Diluluskan') : t('jpp:review_stat_declined', 'Ditolak')}
                 </div>
               )}

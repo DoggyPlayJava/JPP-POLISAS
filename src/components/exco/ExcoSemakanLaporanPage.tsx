@@ -152,11 +152,11 @@ export function ExcoSemakanLaporanPage() {
         await sendNotificationToUser(actionDialog.report.submitted_by, {
           type:     actionDialog.type === 'Diluluskan' ? 'REPORT_APPROVED' : 'REPORT_REJECTED',
           title:    actionDialog.type === 'Diluluskan'
-            ? `Laporan ${excoLabel} Diluluskan`
-            : `Laporan ${excoLabel} Ditolak`,
+            ? t('kpp:report_exco_approved_title', 'Laporan {{unit}} Diluluskan', { unit: excoLabel })
+            : t('kpp:report_exco_rejected_title', 'Laporan {{unit}} Ditolak', { unit: excoLabel }),
           message: actionDialog.type === 'Diluluskan'
-            ? `Laporan anda bertajuk "${actionDialog.report.file_name}" telah diluluskan oleh MT.`
-            : `Laporan "${actionDialog.report.file_name}" telah ditolak. Nota: ${remarks}`,
+            ? t('kpp:report_approved_by_mt_desc', 'Laporan anda bertajuk "{{fileName}}" telah diluluskan oleh MT.', { fileName: actionDialog.report.file_name })
+            : t('kpp:report_rejected_by_mt_desc', 'Laporan "{{fileName}}" telah ditolak. Nota: {{remarks}}', { fileName: actionDialog.report.file_name, remarks }),
           module: 'EKPP',
           link: `/exco/${excoUnit.toLowerCase()}/laporan`,
         });

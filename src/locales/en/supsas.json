@@ -486,5 +486,7 @@
   "wins": "wins",
   "year_label": "Year",
   "yellow_card_for": "Yellow Card: {{name}}",
-  "score_label": "Score"
+  "score_label": "Score",
+  "failed_delete_old_fixture": "Failed to delete old fixture:",
+  "error_inserting_fixture": "Error inserting fixture"
 }

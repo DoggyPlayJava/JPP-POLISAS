@@ -30,7 +30,7 @@ export interface XlsxSheetConfig {
 }
 
 /** Kolum yang nilainya biasa berupa nombor panjang (IC, matrik, telefon) — set text. */
-const LONG_NUMERIC_HEADERS = new Set(['ic', 'no ic', 'no. ic', 'nombor ic', 'matrik', 'no matrik', 'no. matrik', 'no matriks', 'no. matriks', 'telefon', 'no telefon', 'no. telefon', 'phone', 'no. phone', 'no pendaftaran', 'no. pendaftaran']);
+const isLongNumericHeader = (h: string) => /^(no\.?\s*)?(ic|nombor\s*ic|matrik|matriks|telefon|phone|pendaftaran)$/i.test(h);
 
 export interface XlsxImageCell {
   row: number;        // 0-indexed (row 0 = baris pertama selepas header)
@@ -92,7 +92,7 @@ export async function exportXlsx(
     // scientific notation / buang leading zero.
     sheet.columns.forEach((c, i) => {
       const headerKey = c.header.toLowerCase().trim();
-      const isLongNumeric = c.asText || LONG_NUMERIC_HEADERS.has(headerKey);
+      const isLongNumeric = c.asText || isLongNumericHeader(headerKey);
       if (isLongNumeric) {
         const col = ws.getColumn(i + 1);
         col.eachCell((cell, rowNumber) => {

@@ -1,3 +1,8 @@
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string =>
+  (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
+
 /**
  * polySuaraHelpers.ts
  *
@@ -423,8 +428,8 @@ export function getFriendlyAnonName(
 ): { displayName: string; name: string; emoji: string; bgClass: string; isOP?: boolean } {
   if (!codename || typeof codename !== 'string' || !codename.trim()) {
     return {
-      displayName: 'Pelajar Anon',
-      name: 'Pelajar Anon',
+      displayName: t('services:anonymous_student', 'Pelajar Anon'),
+      name: t('services:anonymous_student', 'Pelajar Anon'),
       emoji: '👻',
       bgClass: DEFAULT_AVATAR.bgClass,
       isOP: Boolean(isOP),
@@ -437,8 +442,8 @@ export function getFriendlyAnonName(
 
   if (!cleanName) {
     return {
-      displayName: 'Pelajar Anon',
-      name: 'Pelajar Anon',
+      displayName: t('services:anonymous_student', 'Pelajar Anon'),
+      name: t('services:anonymous_student', 'Pelajar Anon'),
       emoji: '👻',
       bgClass: DEFAULT_AVATAR.bgClass,
       isOP: isOriginalPoster,

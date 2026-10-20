@@ -29,7 +29,7 @@ export function RejectedPage() {
       window.location.href = '/login';
     } catch (error: any) {
       console.error(error);
-      toast.error(`${t('common:error', 'Ralat')}: ${error.message}`, { id: toastId });
+      toast.error(t('common:error_with_details', 'Ralat: {{message}}', { message: error.message }), { id: toastId });
     } finally {
       setIsDeleting(false);
     }
