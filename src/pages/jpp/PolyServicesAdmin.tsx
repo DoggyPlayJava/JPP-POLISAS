@@ -457,9 +457,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <ShieldAlert className="w-7 h-7" style={{ color: themeColor }} />
-            Moderasi PolyServices
+            {t('jpp:services_admin_title', 'Pengurusan Katalog Perkhidmatan Kampus')}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Pantau dan urus kandungan pengguna untuk modul PolySuara.</p>
+          <p className="text-sm text-slate-500 dark:text-white/50 mt-1">{t('jpp:services_admin_subtitle', 'Pantau dan urus kandungan pengguna untuk modul PolySuara.')}</p>
         </div>
       </div>
 
@@ -474,7 +474,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             )}
             style={{ background: activeTab === 'POLYSUARA' ? (themeColor || '#8B5CF6') : undefined }}
           >
-            {t('jpp:services_tab_polysuara', 'PolySuara')}
+            {t('jpp:services_filter_all', 'Semua Perkhidmatan')}
           </button>
 
           <button

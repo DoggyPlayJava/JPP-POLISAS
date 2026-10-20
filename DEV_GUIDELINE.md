@@ -4773,3 +4773,36 @@ Domain 5 menguruskan ekosistem perdagangan digital kampus, sewaan penginapan lua
    - `src/__tests__/polymartVendorSuperApp.test.ts` (36 ujian unit teras merangkumi `ReceiptReviewSheet`, `VendorOrdersPipeline`, `VendorCatalogManager`, `VendorAnalyticsPromo`, dan `PolyMartVendorDashboard`).
    - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master merangkumi keseluruhan pangkalan kod JPP-POLISAS).
    - **Keputusan:** 76/76 ujian berkaitan Domain 5 lulus dengan cemerlang tanpa sebarang regresi.
+
+### 36.14 Penyetempatan Menyeluruh Domain 2 (JPP HQ Administration, Food Bank Counter & Unit Dashboards)
+Domain 2 merangkumi pusat kawalan eksekutif JPP HQ, pengurusan tadbir urus mahasiswa, operasi kaunter Food Bank fizikal, konfigurasi navigasi 360 PolyMaps, papan pemuka kepimpinan unit (Kebajikan & KK), pengurusan asrama (KAMSIS), takwim akademik berpusat, direktori kepimpinan JPP, moderasi perkhidmatan kampus, pusat hebahan makluman, akaun pengguna RBAC, dan lejar jejak audit sistem.
+
+1. **Senarai Fail Terlibat (12 Fail Lengkap 100% Diterjemahkan Baris-demi-Baris):**
+   - `src/pages/jpp/JppFoodBankAdmin.tsx` (Kawalan Berpusat Food Bank: HUD pengimbas pas digital Obsidian Emerald, verifikasi 1-tap RPC atomik kaunter, penyelarasan inventori & stok lokasi, lejar audit bajet RM70k, borang kuota & lantikan pegawai pengagihan)
+   - `src/pages/jpp/JppPolyMapsAdmin.tsx` (Pengurusan Peta 360 & Bangunan Kampus: koordinat GPS mercu tanda, panorama 360 darjah Pannellum, senarai bilik kuliah & aras lantai, lukisan laluan berbumbung & semakan laporan lokasi hilang)
+   - `src/pages/jpp/units/KebajikanUnitDashboard.tsx` (Pusat Kawalan Unit Kebajikan & Aduan: metrik aduan aktif/selesai, bantuan kewangan & kecemasan, semakan aktiviti & laporan exco, navigasi modul e-kebajikan & tindakan pantas eksekutif)
+   - `src/pages/jpp/units/KkUnitDashboard.tsx` (Pusat Kawalan Unit Kelab & Perpaduan / Kediaman & Kerohanian: banner rujukan asrama, panel lantikan staf Unit Pengurusan Asrama, semakan merit rasmi, pengurus QR merit, takwim unit & sistem demerit)
+   - `src/pages/jpp/JppAsramaPage.tsx` (Pengurusan Penginapan Asrama KAMSIS: suis sesi akademik & semester dinamik, kad statistik permohonan, penapis tahap kohort & program, senarai penghuni KAMSIS, rayuan asrama & kediaman luar kampus KLK)
+   - `src/pages/jpp/JppTakwimPage.tsx` (Takwim Aktiviti Kampus & Jadual Akademik: paparan jadual & grid kalendar bulanan, fungsi auto-fill takwim akademik, pemicu hebahan notis segera YDP, penjanaan & muat turun dokumen PDF takwim rasmi serta penyesuaian warna rasmi)
+   - `src/pages/jpp/JppMembersPage.tsx` (Senarai Ahli Majlis JPP: direktori kepimpinan Majlis Tertinggi & Barisan Exco, lantikan ahli baharu, pengurusan portfolio penyeliaan unit, pautan pangkalan data pengguna & modul tetapan struktur JPP)
+   - `src/pages/jpp/PolyServicesAdmin.tsx` (Pengurusan Katalog Perkhidmatan Kampus: moderasi luahan & ulasan PolySuara, ambang laporan auto-hide, kawalan notifikasi push upvote pelajar, senarai perkataan sensor profanity & eksport kad IG Story)
+   - `src/pages/jpp/JppOverviewPage.tsx` (Analisis Prestasi Rentas-Kelab: graf analitik aktiviti, populasi pendaftaran pelajar, taburan tiket kebajikan mengikut status & metrik kesihatan ekosistem mahasiswa)
+   - `src/pages/jpp/AnnouncementsPage.tsx` (Pusat Pengumuman Kampus: penciptaan hebahan popout bersepadu, penapis sasaran audiens pelajar/staf, pilihan keutamaan Info/Amaran/Kecemasan, pemicu notifikasi push segera & arkib respons maklum balas)
+   - `src/pages/jpp/JppUsersPage.tsx` (Akaun Pelajar & Staf: pengurusan akaun pengguna berpusat, penugasan peranan RBAC, status sekatan aktif/gantung, pengesanan automatik akaun pendua & carian pantas no. matrik)
+   - `src/pages/jpp/JppLogsPage.tsx` (Jejak Audit Sistem: log aktiviti langsung pentadbir dan exco, penapis modul dan tindakan, eksport lejar audit penuh ke XLSX, ringkasan pintar analitik AI & pengauditan integriti fail storan)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/jpp.json`: **677 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/common.json`: **175 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Pematuhan Pariti:** Disahkan secara automatik oleh suite `masterLocales.test.ts`.
+
+3. **Piawaian Salinan & Fallback Mandatori:**
+   - Setiap rentetan menggunakan struktur sintaksis AST mandatori: `t('jpp:key', 'Literal BM Asal', { params })`.
+   - Pencegahan Ralat Skop Sub-komponen: Komponen bersarang (seperti `AsramaBanner`, `UnitAsramaTab`, `TakwimTable`, `TakwimCalendar`, `EmptyState`) mengisytiharkan cangkuk penterjemahan `const { t } = useTranslation(['jpp', 'common'])` dalam skop fungsi masing-masing untuk mengelakkan ralat rujukan atau kegagalan konteks.
+   - Mengelakkan shadowing pembolehubah `t` dalam operasi gelung pemetaan (seperti `.map(tabItem => ...)` atau `.map(member => ...)`).
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain2JppAdminCompleteI18n.test.tsx` (32 ujian menyeluruh merangkumi 100% pariti kamus, rendering SSR/DOM dalam Bahasa Inggeris bagi kesemua 12 portal, rendering Bahasa Melayu, dan pertukaran bahasa dinamik masa nyata).
+   - `src/__tests__/Domain2JppAdminI18n.test.tsx` (20 ujian integrasi Domain 2).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master).
+   - **Keputusan:** 72/72 ujian berkaitan Domain 2 lulus dengan cemerlang tanpa sebarang ralat atau regresi.

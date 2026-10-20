@@ -809,7 +809,7 @@ export function JppFoodBankAdmin() {
         }
 
         toast.success(
-          `Pengesahan Berjaya! Barangan telah diserahkan untuk permohonan ${rpcResult.application_no || ''}.`,
+          t('jpp:foodbank_pickup_success', 'Pengesahan Berjaya! Barangan telah diserahkan untuk permohonan {{appNo}}.', { appNo: rpcResult.application_no || '' }),
           { duration: 5000 }
         );
 
@@ -834,7 +834,7 @@ export function JppFoodBankAdmin() {
         // Muat semula data di latar belakang
         fetchAllData(true);
       } else {
-        toast.error(rpcResult?.message || 'Pengesahan gagal diselesaikan.');
+        toast.error(rpcResult?.message || t('jpp:foodbank_verification_failed', 'Pengesahan gagal diselesaikan.'));
       }
     } catch (err: any) {
       console.error('Counter verify error:', err);
@@ -1402,9 +1402,9 @@ export function JppFoodBankAdmin() {
   const handleDeleteItem = (item: FoodBankItem) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Padam Item Katalog',
+      title: t('jpp:foodbank_delete_catalog_title', 'Padam Item Katalog'),
       description: `Adakah anda pasti ingin memadam item "${item.name}" daripada katalog? Tindakan ini tidak boleh diundur.`,
-      confirmLabel: 'Padam Item',
+      confirmLabel: t('jpp:foodbank_item_deleted_title', 'Padam Item'),
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -1820,9 +1820,9 @@ export function JppFoodBankAdmin() {
     const officerName = officer.user?.full_name || 'Pegawai';
     setConfirmConfig({
       isOpen: true,
-      title: 'Batalkan Lantikan Pegawai',
+      title: t('jpp:foodbank_revoke_officer_title', 'Batalkan Lantikan Pegawai'),
       description: `Adakah anda pasti ingin membatalkan lantikan pegawai "${officerName}"?`,
-      confirmLabel: 'Batalkan Lantikan',
+      confirmLabel: t('jpp:foodbank_revoke_officer_confirm', 'Batalkan Lantikan'),
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -2514,7 +2514,7 @@ export function JppFoodBankAdmin() {
                       <span>{t('jpp:pass_verification_title', 'Pengesahan Pas Pengambilan Mahasiswa')}</span>
                     </h2>
                     <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                      Imbas kod QR pas digital pelajar atau buat carian No. Matrik secara pantas. Pengesahan 1-tap akan mengemas kini status dan menolak inventori secara atomik.
+                      {t('jpp:foodbank_pass_desc', 'Imbas kod QR pas digital pelajar atau buat carian No. Matrik secara pantas. Pengesahan 1-tap akan mengemaskini inventori.')}
                     </p>
                   </div>
 
@@ -2924,7 +2924,7 @@ export function JppFoodBankAdmin() {
                                       </>
                                     ) : (
                                       <>
-                                        <AlertTriangle className="w-2.5 h-2.5" /> Perlu Sahkan IC/Matrik
+                                        <AlertTriangle className="w-2.5 h-2.5" /> {t('jpp:foodbank_verify_ic_needed', 'Perlu Sahkan IC/Matrik')}
                                       </>
                                     )}
                                   </span>
@@ -3051,7 +3051,7 @@ export function JppFoodBankAdmin() {
                                       className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50"
                                     >
                                       <CheckCircle2 className="w-3 h-3" />
-                                      Sahkan Ambilan
+                                      {t('jpp:foodbank_confirm_pickup', 'Sahkan Ambilan')}
                                     </button>
                                   </>
                                 )}
@@ -3144,7 +3144,7 @@ export function JppFoodBankAdmin() {
                       type="text"
                       value={itemSearch}
                       onChange={e => setItemSearch(e.target.value)}
-                      placeholder="Cari barangan..."
+                      placeholder={t('jpp:foodbank_search_items_placeholder', 'Cari barangan...')}
                       className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
@@ -3166,7 +3166,7 @@ export function JppFoodBankAdmin() {
                     className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
-                    Pindah Stok
+                    {t('jpp:foodbank_stock_transfer_btn', 'Pindah Stok')}
                   </button>
 
                   {/* Pilihan Paparan Grid / Jadual */}
@@ -3208,7 +3208,7 @@ export function JppFoodBankAdmin() {
                     className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Tambah Item
+                    {t('jpp:foodbank_add_item_btn', 'Tambah Item')}
                   </button>
                 </div>
               </div>
@@ -3424,7 +3424,7 @@ export function JppFoodBankAdmin() {
                             <button
                               type="button"
                               onClick={() => handleDeleteItem(item)}
-                              title="Padam Item"
+                              title={t('jpp:foodbank_item_deleted_title', 'Padam Item')}
                               className="p-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -3522,7 +3522,7 @@ export function JppFoodBankAdmin() {
                                   type="button"
                                   onClick={() => handleDeleteItem(item)}
                                   className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 cursor-pointer"
-                                  title="Padam Item"
+                                  title={t('jpp:foodbank_item_deleted_title', 'Padam Item')}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -3632,7 +3632,7 @@ export function JppFoodBankAdmin() {
                       type="text"
                       value={txSearch}
                       onChange={e => setTxSearch(e.target.value)}
-                      placeholder="Cari transaksi / keterangan..."
+                      placeholder={t('jpp:foodbank_search_ledger_placeholder', 'Cari transaksi / keterangan...')}
                       className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
                     />
                   </div>
@@ -3919,7 +3919,7 @@ export function JppFoodBankAdmin() {
                     className="w-full py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
-                    {isSavingSettings ? 'Menyimpan...' : 'Simpan Tetapan Sesi'}
+                    {isSavingSettings ? t('jpp:foodbank_saving_settings', 'Menyimpan...') : t('jpp:foodbank_save_settings_btn', 'Simpan Tetapan Sesi')}
                   </button>
                 </form>
               </div>

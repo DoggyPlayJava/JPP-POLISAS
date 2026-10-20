@@ -348,9 +348,9 @@ export function JppPolyMapsAdmin() {
   const rejectReport = (reportId: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: 'Tolak Laporan',
-      description: 'Adakah anda pasti mahu menolak laporan ini?',
-      confirmLabel: 'Tolak Laporan',
+      title: t('jpp:polymaps_reject_report_title', 'Tolak Laporan'),
+      description: t('jpp:polymaps_reject_report_desc', 'Adakah anda pasti mahu menolak laporan ini?'),
+      confirmLabel: t('jpp:polymaps_reject_report_title', 'Tolak Laporan'),
       variant: 'danger',
       onConfirm: async () => {
         setIsProcessingReport(prev => ({ ...prev, [reportId]: true }));
@@ -362,11 +362,11 @@ export function JppPolyMapsAdmin() {
 
           if (error) throw error;
 
-          toast.success('Laporan berjaya ditolak.');
+          toast.success(t('jpp:polymaps_report_rejected_toast', 'Laporan berjaya ditolak.'));
           setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'rejected' } : r));
         } catch (err: any) {
           console.error('Error rejecting report:', err);
-          toast.error('Gagal menolak laporan.');
+          toast.error(t('jpp:polymaps_report_reject_failed', 'Gagal menolak laporan.'));
         } finally {
           setIsProcessingReport(prev => ({ ...prev, [reportId]: false }));
         }
@@ -397,7 +397,7 @@ export function JppPolyMapsAdmin() {
     if (!file) return;
 
     setIsUploading(prev => ({...prev, [fieldName]: true}));
-    const toastId = toast.loading('Memproses imej...');
+    const toastId = toast.loading(t('jpp:polymaps_image_processing', 'Memproses imej...'));
 
     try {
       let fileToUpload = file;
@@ -860,16 +860,16 @@ export function JppPolyMapsAdmin() {
             <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
               <Map className="w-5 h-5 text-sky-500 dark:text-sky-400" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('jpp:polymaps_admin_title')}</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('jpp:polymaps_admin_title', 'Pengurusan Peta 360 & Bangunan Kampus')}</h1>
           </div>
-          <p className="text-sm font-medium text-slate-600 dark:text-white/50">{t('jpp:polymaps_admin_subtitle')}</p>
+          <p className="text-sm font-medium text-slate-600 dark:text-white/50">{t('jpp:polymaps_admin_subtitle', 'Konfigurasi koordinat GPS, panorama 360 darjah, senarai bilik dan aras lantai bangunan POLISAS.')}</p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
               <Compass className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Liputan 360° Bangunan: {buildings.filter(b => b.panorama_360_url && b.panorama_360_url.trim() !== '').length}/{buildings.length}</span>
+              <span>{t('jpp:polymaps_coverage_buildings', 'Liputan 360° Bangunan:')} {buildings.filter(b => b.panorama_360_url && b.panorama_360_url.trim() !== '').length}/{buildings.length}</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/70 text-xs font-bold">
-              <span>{locations.filter(l => l.panorama_360_url && l.panorama_360_url.trim() !== '').length} Bilik 360°</span>
+              <span>{locations.filter(l => l.panorama_360_url && l.panorama_360_url.trim() !== '').length} {t('jpp:polymaps_rooms_360', 'Bilik 360°')}</span>
             </span>
           </div>
         </div>
@@ -887,7 +887,7 @@ export function JppPolyMapsAdmin() {
               onClick={() => { setCurrentBuilding({}); setShowBuildingModal(true); }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg shadow-sky-500/20"
             >
-              <Plus className="w-4 h-4" /> {t('jpp:polymaps_add_building')}
+              <Plus className="w-4 h-4" /> {t('jpp:polymaps_add_building_btn', 'Tambah Bangunan')}
             </button>
           ) : activeTab === 'locations' ? (
             <button

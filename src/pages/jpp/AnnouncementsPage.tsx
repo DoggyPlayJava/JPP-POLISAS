@@ -331,13 +331,13 @@ export function AnnouncementsPage() {
             JPP HQ • Hebahan Rasmi
           </span>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            {t('jpp:announcements_page_title', 'Pusat Hebahan Kampus')}
+            {t('jpp:broadcast_announcements', 'Pusat Pengumuman Kampus')}
           </h1>
           <p className="text-muted-foreground font-medium max-w-2xl text-xs sm:text-sm mt-1">{t('jpp:announcements_page_subtitle', 'Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul Popout Bersepadu.')}</p>
         </div>
         {!showCreate && (
           <Button onClick={() => setShowCreate(true)} className="h-11 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xs hover:scale-[1.02] active:scale-[0.98] transition-all font-bold text-xs uppercase tracking-wider">
-            <Plus className="mr-2 h-4 w-4" /> {t('jpp:announcements_create_new', 'Cipta Hebahan Baharu')}
+            <Plus className="mr-2 h-4 w-4" /> {t('jpp:create_announcement_btn', 'Cipta Pengumuman')}
           </Button>
         )}
       </div>

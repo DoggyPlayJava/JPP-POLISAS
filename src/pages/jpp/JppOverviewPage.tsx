@@ -689,10 +689,10 @@ export function JppOverviewPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">
-                {t('jpp:cross_club_oversight')}
+                {t('jpp:overview_title', 'Analisis Prestasi Rentas-Kelab')}
               </h1>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">
-                Data keseluruhan portal JPP
+                {t('jpp:overview_subtitle', 'Indeks komprehensif, metrik kesihatan, dan pematuhan program semua kelab mahasiswa POLISAS.')}
               </p>
             </div>
           </div>
