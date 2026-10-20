@@ -2208,5 +2208,21 @@
   "viewfinder_camera_title": "Digital Camera Viewfinder",
   "waiting_pass_scan": "Awaiting Student Pass Scan",
   "waiting_pass_scan_desc": "Aim QR code at viewfinder or search Matric No. manually to display student info and disbursement button.",
-  "wrapper_access_denied": "Access Denied"
+  "wrapper_access_denied": "Access Denied",
+  "task_no_permission_submit": "You do not have permission to submit this task.",
+  "log_member_submitted_proof": "Member [{{email}}] submitted task proof: {{title}}",
+  "proof_upload_success": "Proof submitted successfully!",
+  "proof_upload_failed": "Failed to upload proof.",
+  "task_detail_title": "Task Details",
+  "no_additional_description": "No additional description.",
+  "task_completed": "Task Completed",
+  "proof_submitted_label": "Submitted Proof:",
+  "view_proof_file": "View Proof File ({{type}})",
+  "upload_proof_label": "Upload Proof (PNG/JPG/PDF)",
+  "select_file_or_drag": "Select file or drag here",
+  "click_to_change_file": "Click to change file",
+  "max_file_size_5mb": "Maximum 5MB",
+  "additional_notes_optional": "Additional Notes (Optional)",
+  "task_notes_placeholder": "Provide some comments about your task...",
+  "submit_task_proof": "Submit Completed Proof"
 }

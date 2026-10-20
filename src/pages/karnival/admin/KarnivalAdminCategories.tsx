@@ -135,7 +135,7 @@ export function KarnivalAdminCategories() {
 
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:category_name_label', 'Nama Kategori *')}</label>
-              <input value={form.name} onChange={e => update('name', e.target.value)} placeholder="Booth Paling Kreatif" className={inputCls} />
+              <input value={form.name} onChange={e => update('name', e.target.value)} placeholder={t('karnival:placeholder_category_example', 'Booth Paling Kreatif')} className={inputCls} />
             </div>
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:description_optional_label', 'Penerangan (optional)')}</label>

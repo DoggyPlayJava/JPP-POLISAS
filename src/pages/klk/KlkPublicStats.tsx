@@ -60,7 +60,7 @@ export function KlkPublicStats() {
           
           const kawasanMap: Record<string, number> = {};
           luarData.forEach((d: any) => {
-            const k = d.kawasan_kediaman === 'LAIN_LAIN' ? (d.kawasan_custom ?? 'LAIN_LAIN') : (d.kawasan_kediaman ?? 'TIDAK DIISI');
+            const k = d.kawasan_kediaman === 'LAIN_LAIN' ? (d.kawasan_custom ?? 'LAIN_LAIN') : (d.kawasan_kediaman ?? t('housing:unfilled_label', 'TIDAK DIISI'));
             kawasanMap[k] = (kawasanMap[k] ?? 0) + 1;
           });
           const byKawasan = Object.entries(kawasanMap)
@@ -69,7 +69,7 @@ export function KlkPublicStats() {
 
           const jabatanMap: Record<string, number> = {};
           luarData.forEach((d: any) => {
-            const j = d.jabatan ?? 'TIDAK DIISI';
+            const j = d.jabatan ?? t('housing:unfilled_label', 'TIDAK DIISI');
             jabatanMap[j] = (jabatanMap[j] ?? 0) + 1;
           });
           const byJabatan = Object.entries(jabatanMap)

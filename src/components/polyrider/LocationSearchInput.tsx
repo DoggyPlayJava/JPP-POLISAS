@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, MapPin, Loader, X } from 'lucide-react';
 import { queryCache } from '@/lib/cache';
 
@@ -65,12 +66,14 @@ export function LocationSearchInput({
   value,
   onChange,
   onSelect,
-  placeholder = 'Cari lokasi...',
+  placeholder,
   label,
   color = 'blue',
   presets = [],
 }: LocationSearchInputProps) {
+  const { t } = useTranslation('gig');
   const [query, setQuery] = useState(value);
+  const effectivePlaceholder = placeholder || t('gig:search_location_placeholder', 'Cari lokasi...');
   const [results, setResults] = useState<LocationResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -195,7 +198,7 @@ export function LocationSearchInput({
           )}
           <input
             type="text"
-            placeholder={placeholder}
+            placeholder={effectivePlaceholder}
             className="w-full bg-transparent border-none text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-white/20 focus:outline-none focus:ring-0 p-0"
             value={query}
             onChange={handleChange}

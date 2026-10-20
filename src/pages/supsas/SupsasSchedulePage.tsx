@@ -165,7 +165,7 @@ export function SupsasSchedulePage() {
   // Group by date
   const grouped: Record<string, SupsasFixture[]> = {};
   filtered.forEach(f => {
-    const key = f.match_date ?? 'Tarikh Belum Ditetapkan';
+    const key = f.match_date ?? '__unset__';
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(f);
   });
@@ -231,7 +231,7 @@ export function SupsasSchedulePage() {
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px flex-1 bg-white/5" />
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-3">
-                      {date === 'Tarikh Belum Ditetapkan' ? t('supsas:date_unset', 'Tarikh Belum Ditetapkan') : new Date(date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {date === '__unset__' ? t('supsas:date_unset', 'Tarikh Belum Ditetapkan') : new Date(date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </span>
                     <div className="h-px flex-1 bg-white/5" />
                   </div>

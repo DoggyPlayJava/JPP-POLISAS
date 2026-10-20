@@ -246,7 +246,7 @@ export function KarnivalAdminBooths() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:club_booth_name_label', 'Nama Kelab / Booth *')}</label>
-                <input value={form.kelab_name} onChange={e => update('kelab_name', e.target.value)} placeholder="Kelab Muzik POLISAS" className={inputCls} />
+                <input value={form.kelab_name} onChange={e => update('kelab_name', e.target.value)} placeholder={t('karnival:placeholder_club_example', 'Kelab Muzik POLISAS')} className={inputCls} />
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block">{t('karnival:booth_number_label', 'No. Booth')}</label>
@@ -316,7 +316,7 @@ export function KarnivalAdminBooths() {
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {filteredBooths.map((booth, i) => {
-            const qrUrl = `${APP_URL}/karnival/undi?booth=${booth.id}`;
+            const qrUrl = (APP_URL || '') + '/karnival/undi?booth=' + booth.id;
             return (
               <motion.div
                 key={booth.id}

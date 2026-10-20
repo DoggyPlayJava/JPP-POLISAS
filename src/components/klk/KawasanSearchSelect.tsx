@@ -4,6 +4,7 @@
 // Boleh guna dalam: KlkResidencyModal, SettingsPage, KlkResidencyFormPage
 // ============================================================
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, X } from 'lucide-react';
 
 interface KawasanSearchSelectProps {
@@ -23,12 +24,16 @@ export function KawasanSearchSelect({
   value,
   onChange,
   kawasanList,
-  placeholder = '-- Pilih kawasan --',
+  placeholder,
   className = '',
   inputClass = '',
   required,
   disabled,
 }: KawasanSearchSelectProps) {
+  const { t } = useTranslation(['housing', 'common']);
+  const defaultPlaceholder = t('housing:select_area_placeholder', '-- Pilih kawasan --');
+  const effectivePlaceholder = placeholder ?? defaultPlaceholder;
+
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -36,7 +41,7 @@ export function KawasanSearchSelect({
 
   // Label untuk nilai terpilih
   const selectedLabel =
-    value === 'LAIN_LAIN' ? 'Lain-lain' : value || '';
+    value === 'LAIN_LAIN' ? t('housing:other_area_short', 'Lain-lain') : value || '';
 
   // Filter kawasan berdasarkan carian
   const filtered = kawasanList.filter(k =>
@@ -90,7 +95,7 @@ export function KawasanSearchSelect({
         `}
       >
         <span className={selectedLabel ? 'text-foreground' : 'text-muted-foreground'}>
-          {selectedLabel || placeholder}
+          {selectedLabel || effectivePlaceholder}
         </span>
         <div className="flex items-center gap-1 flex-shrink-0">
           {value && (
@@ -116,7 +121,7 @@ export function KawasanSearchSelect({
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Cari kawasan..."
+              placeholder={t('housing:search_area_simple', 'Cari kawasan...')}
               className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
               onKeyDown={e => {
                 if (e.key === 'Escape') { setOpen(false); setSearch(''); }
@@ -134,7 +139,7 @@ export function KawasanSearchSelect({
           <div className="max-h-52 overflow-y-auto">
             {filtered.length === 0 ? (
               <div className="px-4 py-3 text-xs text-muted-foreground text-center">
-                Tiada kawasan sepadan
+                {t('housing:no_matching_area', 'Tiada kawasan sepadan')}
               </div>
             ) : (
               filtered.map(k => (
@@ -160,7 +165,7 @@ export function KawasanSearchSelect({
               `}
             >
               {value === 'LAIN_LAIN' && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
-              Lain-lain (nyatakan sendiri)
+              {t('housing:other_specify', 'Lain-lain (nyatakan sendiri)')}
             </button>
           </div>
         </div>

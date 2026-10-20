@@ -2208,5 +2208,21 @@
   "viewfinder_camera_title": "Viewfinder Kamera Digital",
   "waiting_pass_scan": "Menunggu Imbasan Pas Mahasiswa",
   "waiting_pass_scan_desc": "Halakan kod QR ke viewfinder atau buat carian No. Matrik secara manual untuk memaparkan maklumat pelajar dan butang serahan makanan.",
-  "wrapper_access_denied": "Akses Ditolak"
+  "wrapper_access_denied": "Akses Ditolak",
+  "task_no_permission_submit": "Anda tidak mempunyai kebenaran untuk menghantar tugas ini.",
+  "log_member_submitted_proof": "Ahli [{{email}}] menghantar bukti tugasan: {{title}}",
+  "proof_upload_success": "Bukti berjaya dihantar!",
+  "proof_upload_failed": "Gagal memuat naik bukti.",
+  "task_detail_title": "Detail Tugasan",
+  "no_additional_description": "Tiada penerangan tambahan.",
+  "task_completed": "Tugasan Selesai",
+  "proof_submitted_label": "Bukti Dihantar:",
+  "view_proof_file": "Lihat Fail Bukti ({{type}})",
+  "upload_proof_label": "Muat Naik Bukti (PNG/JPG/PDF)",
+  "select_file_or_drag": "Pilih fail atau seret ke sini",
+  "click_to_change_file": "Klik untuk tukar fail",
+  "max_file_size_5mb": "Maksimum 5MB",
+  "additional_notes_optional": "Nota Tambahan (Opsional)",
+  "task_notes_placeholder": "Berikan sedikit ulasan tentang tugasan anda...",
+  "submit_task_proof": "Hantar Bukti Selesai"
 }

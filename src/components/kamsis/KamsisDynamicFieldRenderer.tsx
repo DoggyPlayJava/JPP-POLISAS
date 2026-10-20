@@ -2,6 +2,7 @@
 // KamsisDynamicFieldRenderer — Render soalan dinamik dari kamsis_dynamic_fields
 // ============================================================
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KamsisFormField } from '@/hooks/useKamsisDynamicFields';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function KamsisDynamicFieldRenderer({ fields, values, onChange, inputClass, theme = 'dark' }: Props) {
+  const { t } = useTranslation(['housing', 'common']);
   if (fields.length === 0) return null;
 
   const isDark = theme === 'dark';
@@ -62,7 +64,7 @@ export function KamsisDynamicFieldRenderer({ fields, values, onChange, inputClas
               required={f.is_required}
               className={`${BASE_INPUT} h-11 appearance-none ${inputClass ?? ''}`}
             >
-              <option value="">-- Pilih --</option>
+              <option value="">{t('housing:select_dropdown_placeholder', '-- Pilih --')}</option>
               {f.options.map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}

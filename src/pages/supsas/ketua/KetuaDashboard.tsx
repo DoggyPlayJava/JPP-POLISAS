@@ -168,7 +168,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
     // Check if already registered for this sport anywhere (any team/kumpulan)
     const alreadyInSport = allParticipants.find(p => p.profile_id === person.id && p.sport_id === sport.id);
     if (alreadyInSport) {
-      toast.error(`${person.full_name} sudah didaftarkan dalam sukan ini (kumpulan lain).`);
+      toast.error(t('supsas:err_player_already_in_sport_group', '{{name}} sudah didaftarkan dalam sukan ini (kumpulan lain).', { name: person.full_name }));
       return;
     }
 
@@ -176,7 +176,7 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
     const { data: crossKont } = await supabase.from('supsas_participants')
       .select('id, kontingen_id').eq('edition_id', editionId).eq('sport_id', sport.id).eq('profile_id', person.id).maybeSingle();
     if (crossKont && crossKont.kontingen_id !== kontingenId) {
-      toast.error(`${person.full_name} sudah dalam kontingen lain untuk sukan ini.`);
+      toast.error(t('supsas:err_player_in_other_contingent', '{{name}} sudah dalam kontingen lain untuk sukan ini.', { name: person.full_name }));
       return;
     }
 
@@ -189,8 +189,8 @@ function AddPlayerModal({ team, sport, editionId, kontingenId, allParticipants, 
       profile_id: person.id,
     });
     setAdding(null);
-    if (error) { toast.error('Gagal daftar: ' + error.message); return; }
-    toast.success(`${person.full_name} ditambah ke ${team.name}!`);
+    if (error) { toast.error(t('supsas:err_register_failed_with_msg', 'Gagal daftar: {{msg}}', { msg: error.message })); return; }
+    toast.success(t('supsas:player_added_to_team', '{{person}} ditambah ke {{team}}!', { person: person.full_name, team: team.name }));
     onAdded();
     setSearchTerm('');
     setSearchResults([]);
@@ -302,8 +302,8 @@ export function KetuaDashboard() {
       group_number: nextNum,
     });
     setCreatingTeam(false);
-    if (error) { toast.error('Gagal cipta kumpulan: ' + error.message); return; }
-    toast.success(`Kumpulan ${nextNum} berjaya dicipta!`);
+    if (error) { toast.error(t('supsas:err_create_group_with_msg', 'Gagal cipta kumpulan: {{msg}}', { msg: error.message })); return; }
+    toast.success(t('supsas:group_created_success', 'Kumpulan {{num}} berjaya dicipta!', { num: nextNum }));
     refetch();
   };
 
@@ -322,7 +322,7 @@ export function KetuaDashboard() {
         group_number: 1,
       }).select().maybeSingle();
       setCreatingTeam(false);
-      if (error || !data) { toast.error('Gagal sedia pasukan: ' + (error?.message ?? '')); return; }
+      if (error || !data) { toast.error(t('supsas:err_prepare_team_with_msg', 'Gagal sedia pasukan: {{msg}}', { msg: error?.message ?? '' })); return; }
       team = data as any;
       await refetch();
     }
@@ -331,24 +331,24 @@ export function KetuaDashboard() {
 
   const handleRenameTeam = async (team: SupsasTeam, newName: string) => {
     const { error } = await supabase.from('supsas_teams').update({ name: newName }).eq('id', team.id);
-    if (error) { toast.error('Gagal ubah nama'); return; }
-    toast.success('Nama kumpulan dikemas kini');
+    if (error) { toast.error(t('supsas:err_rename_failed', 'Gagal ubah nama')); return; }
+    toast.success(t('supsas:group_name_updated', 'Nama kumpulan dikemas kini'));
     refetch();
   };
 
   const handleDeleteTeam = async (team: SupsasTeam) => {
     const hasPlayers = participants.some(p => p.team_id === team.id);
-    if (hasPlayers) { toast.error('Keluarkan semua pemain dahulu sebelum padam kumpulan.'); return; }
+    if (hasPlayers) { toast.error(t('supsas:err_remove_players_before_delete', 'Keluarkan semua pemain dahulu sebelum padam kumpulan.')); return; }
     const { error } = await supabase.from('supsas_teams').delete().eq('id', team.id);
-    if (error) { toast.error('Gagal padam kumpulan'); return; }
-    toast.success('Kumpulan dipadam');
+    if (error) { toast.error(t('supsas:err_delete_group_failed', 'Gagal padam kumpulan')); return; }
+    toast.success(t('supsas:group_deleted', 'Kumpulan dipadam'));
     refetch();
   };
 
   const handleRemovePlayer = async (part: Participant) => {
     const { error } = await supabase.from('supsas_participants').delete().eq('id', part.id);
-    if (error) { toast.error('Gagal padam pemain'); return; }
-    toast.success('Pemain dikeluarkan');
+    if (error) { toast.error(t('supsas:err_delete_player_failed', 'Gagal padam pemain')); return; }
+    toast.success(t('supsas:player_removed', 'Pemain dikeluarkan'));
     fetchParticipants();
   };
 

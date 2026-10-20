@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 export function SupsasAdminHome() {
-  const { t } = useTranslation(['supsas', 'common']);
+  const { t, i18n } = useTranslation(['supsas', 'common']);
   const { edition, kontingen, sports, medalTally, fixtures, isLive } = useSupsas();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
@@ -53,32 +53,56 @@ export function SupsasAdminHome() {
           <td style="padding:6px 10px">${f.winner_id ? (kontingenMap[f.winner_id] ?? '-') : '-'}</td>
         </tr>`).join('');
 
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-        <title>Laporan SUPSAS — ${edition.name}</title>
-        <style>
-          body { font-family: Arial, sans-serif; background: #fff; color: #111; padding: 32px; }
-          h1 { font-size: 28px; font-weight: 900; margin: 0; }
-          h2 { font-size: 16px; font-weight: 900; margin: 32px 0 8px; color: #444; border-bottom: 2px solid #eee; padding-bottom: 6px; }
-          p  { color: #555; margin: 4px 0; }
-          table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-          th { background: #1a1a1a; color: #fbbf24; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
-          tr:nth-child(even) td { background: #f9f9f9; }
-          .footer { margin-top: 48px; font-size: 11px; color: #bbb; text-align: center; }
-        </style></head><body>
-        <h1>SUPSAS — ${edition.name}</h1>
-        ${edition.tagline ? `<p>${edition.tagline}</p>` : ''}
-        <p style="color:#999">Dijana: ${new Date().toLocaleString('ms-MY')} &bull; ${completedFx.length} perlawanan selesai &bull; ${totalMedals} medal &bull; ${kontingen.length} kontinjen</p>
+      const reportTitle = t('supsas:report_title_with_edition', 'Laporan SUPSAS — {{name}}', { name: edition.name });
+      const metaText = t('supsas:report_generated_meta', 'Dijana: {{date}} • {{matches}} perlawanan selesai • {{medals}} medal • {{contingents}} kontinjen', {
+        date: new Date().toLocaleString(i18n.language === 'en' ? 'en-US' : 'ms-MY'),
+        matches: completedFx.length,
+        medals: totalMedals,
+        contingents: kontingen.length,
+      });
+      const medalTitle = t('supsas:medal_standings_title', 'Papan Kedudukan Medal');
+      const resultsTitle = t('supsas:completed_match_results_title', 'Keputusan Perlawanan Selesai');
+      const footerText = t('supsas:report_footer_official', 'Laporan Rasmi SUPSAS • {{name}} • Sistem JPP POLISAS', { name: edition.name });
+      const emptyTallyRow = '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">' + t('supsas:no_data_available', 'Tiada data') + '</td></tr>';
+      const emptyFixtureRow = '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">' + t('supsas:no_completed_matches_found', 'Tiada perlawanan selesai') + '</td></tr>';
+      const thRank = '#';
+      const thContingent = t('supsas:contingent_label', 'Kontinjen');
+      const thGold = t('supsas:gold_medals_label', '🥇 Emas');
+      const thSilver = t('supsas:silver_medals_label', '🥈 Perak');
+      const thBronze = t('supsas:bronze_medals_label', '🥉 Gangsa');
+      const thTotal = t('supsas:total_points', 'Jumlah');
+      const thSport = t('supsas:sport_label', 'Sukan');
+      const thRound = t('supsas:round_label', 'Pusingan');
+      const thTeamA = t('supsas:team_a_label', 'Pasukan A');
+      const thScore = t('supsas:score_label', 'Skor');
+      const thTeamB = t('supsas:team_b_label', 'Pasukan B');
+      const thWinner = t('supsas:winner_label', 'Pemenang');
 
-        <h2>Papan Kedudukan Medal</h2>
-        <table><thead><tr><th>#</th><th>Kontinjen</th><th>🥇 Emas</th><th>🥈 Perak</th><th>🥉 Gangsa</th><th>Jumlah</th></tr></thead>
-        <tbody>${tallyRows || '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">Tiada data</td></tr>'}</tbody></table>
-
-        <h2>Keputusan Perlawanan Selesai</h2>
-        <table><thead><tr><th>Sukan</th><th>Pusingan</th><th>Pasukan A</th><th>Skor</th><th>Pasukan B</th><th>Pemenang</th></tr></thead>
-        <tbody>${fixtureRows || '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">Tiada perlawanan selesai</td></tr>'}</tbody></table>
-
-        <div class="footer">Laporan Rasmi SUPSAS &bull; ${edition.name} &bull; Sistem JPP POLISAS</div>
-        </body></html>`;
+      const html = [
+        '<!DOCTYPE html><html><head><meta charset="utf-8">',
+        '<title>' + reportTitle + '</title>',
+        '<style>',
+        '  body { font-family: Arial, sans-serif; background: #fff; color: #111; padding: 32px; }',
+        '  h1 { font-size: 28px; font-weight: 900; margin: 0; }',
+        '  h2 { font-size: 16px; font-weight: 900; margin: 32px 0 8px; color: #444; border-bottom: 2px solid #eee; padding-bottom: 6px; }',
+        '  p  { color: #555; margin: 4px 0; }',
+        '  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }',
+        '  th { background: #1a1a1a; color: #fbbf24; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }',
+        '  tr:nth-child(even) td { background: #f9f9f9; }',
+        '  .footer { margin-top: 48px; font-size: 11px; color: #bbb; text-align: center; }',
+        '</style></head><body>',
+        '<h1>SUPSAS — ' + edition.name + '</h1>',
+        edition.tagline ? ('<p>' + edition.tagline + '</p>') : '',
+        '<p style="color:#999">' + metaText + '</p>',
+        '<h2>' + medalTitle + '</h2>',
+        '<table><thead><tr><th>' + thRank + '</th><th>' + thContingent + '</th><th>' + thGold + '</th><th>' + thSilver + '</th><th>' + thBronze + '</th><th>' + thTotal + '</th></tr></thead>',
+        '<tbody>' + (tallyRows || emptyTallyRow) + '</tbody></table>',
+        '<h2>' + resultsTitle + '</h2>',
+        '<table><thead><tr><th>' + thSport + '</th><th>' + thRound + '</th><th>' + thTeamA + '</th><th>' + thScore + '</th><th>' + thTeamB + '</th><th>' + thWinner + '</th></tr></thead>',
+        '<tbody>' + (fixtureRows || emptyFixtureRow) + '</tbody></table>',
+        '<div class="footer">' + footerText + '</div>',
+        '</body></html>'
+      ].join('\n');
 
       const win = window.open('', '_blank');
       if (win) {

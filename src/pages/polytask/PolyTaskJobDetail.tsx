@@ -122,8 +122,12 @@ export function PolyTaskJobDetail() {
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Bidaan Baharu Diterima!',
-          message: `${profile.full_name} telah membida RM ${amount.toFixed(2)} untuk tugasan "${job.title}".`,
+          title: t('gig:notif_new_bid_received_title', 'Bidaan Baharu Diterima!'),
+          message: t('gig:notif_new_bid_received_msg', '{{name}} telah membida RM {{amount}} untuk tugasan "{{title}}".', {
+            name: profile.full_name,
+            amount: amount.toFixed(2),
+            title: job.title,
+          }),
           type: 'INFO',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -148,8 +152,10 @@ export function PolyTaskJobDetail() {
       toast.success(t('gig:tasker_assigned_success', 'Tasker berjaya dilantik!'), { id: toastId });
       
       sendNotificationToUser(taskerId, {
-        title: 'Bidaan Anda Diterima!',
-        message: `Tahniah! Bidaan anda untuk tugasan "${job.title}" telah diterima oleh peminta. Sila semak butiran lanjut.`,
+        title: t('gig:notif_bid_accepted_title', 'Bidaan Anda Diterima!'),
+        message: t('gig:notif_bid_accepted_msg', 'Tahniah! Bidaan anda untuk tugasan "{{title}}" telah diterima oleh peminta. Sila semak butiran lanjut.', {
+          title: job.title,
+        }),
         type: 'SUCCESS',
         module: 'POLYTASK',
         link: `/polytask/job/${job.id}`,
@@ -208,8 +214,11 @@ export function PolyTaskJobDetail() {
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Tasker Menarik Diri!',
-          message: `${profile?.full_name} telah membatalkan tugasan "${job.title}". Tugasan kini berstatus DIBUKA semula.`,
+          title: t('gig:notif_tasker_withdrew_title', 'Tasker Menarik Diri!'),
+          message: t('gig:notif_tasker_withdrew_msg', '{{name}} telah membatalkan tugasan "{{title}}". Tugasan kini berstatus DIBUKA semula.', {
+            name: profile?.full_name,
+            title: job.title,
+          }),
           type: 'WARNING',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -257,8 +266,11 @@ export function PolyTaskJobDetail() {
       
       if (job.requester_id) {
         sendNotificationToUser(job.requester_id, {
-          title: 'Bukti Kerja Telah Dihantar',
-          message: `${profile?.full_name} telah memuat naik bukti kerja untuk tugasan "${job.title}". Sila semak dan sahkan.`,
+          title: t('gig:notif_proof_submitted_title', 'Bukti Kerja Telah Dihantar'),
+          message: t('gig:notif_proof_submitted_msg', '{{name}} telah memuat naik bukti kerja untuk tugasan "{{title}}". Sila semak dan sahkan.', {
+            name: profile?.full_name,
+            title: job.title,
+          }),
           type: 'SUCCESS',
           module: 'POLYTASK',
           link: `/polytask/job/${job.id}`,
@@ -628,7 +640,7 @@ export function PolyTaskJobDetail() {
               <h4 className="text-sm font-bold text-emerald-400 mb-2 flex items-center justify-center gap-2">
                 <FileImage className="w-4 h-4" /> {t('gig:tasker_uploaded_proof', 'Tasker Telah Memuat Naik Bukti')}
               </h4>
-              <img src={job.proof_image_url} alt="Bukti Kerja" className="w-full h-48 object-cover rounded-xl mb-2" />
+              <img src={job.proof_image_url} alt={t('gig:work_proof_alt', 'Bukti Kerja')} className="w-full h-48 object-cover rounded-xl mb-2" />
               <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 underline">{t('gig:view_full_image', 'Lihat Imej Penuh')}</a>
             </div>
           )}

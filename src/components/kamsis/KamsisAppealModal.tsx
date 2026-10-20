@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Building2, X, AlertCircle, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +13,7 @@ interface KamsisAppealModalProps {
 }
 
 export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealModalProps) {
+  const { t } = useTranslation(['housing', 'common']);
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { activeSession, semesterString } = useAcademicSession();
@@ -19,7 +21,7 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason.trim()) {
-      toast.error('Sila nyatakan alasan rayuan anda.');
+      toast.error(t('housing:appeal_reason_required', 'Sila nyatakan alasan rayuan anda.'));
       return;
     }
 
@@ -56,8 +58,8 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
       try {
         const { sendNotificationToKamsisAdmin } = await import('@/lib/notifications');
         await sendNotificationToKamsisAdmin({
-          title: 'Rayuan Asrama Baru',
-          message: `Pelajar telah menghantar rayuan asrama baru.`,
+          title: t('housing:notif_new_appeal_title', 'Rayuan Asrama Baru'),
+          message: t('housing:notif_new_appeal_msg', 'Pelajar telah menghantar rayuan asrama baru.'),
           type: 'INFO',
           module: 'KAMSIS',
           link: '/jpp/asrama'
@@ -66,11 +68,11 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
         console.error("Gagal menghantar notifikasi push", e);
       }
 
-      toast.success('Rayuan berjaya dihantar!');
+      toast.success(t('housing:appeal_submitted_success', 'Rayuan berjaya dihantar!'));
       onSuccess();
     } catch (err: any) {
       console.error('Submit appeal error:', err);
-      toast.error('Gagal menghantar rayuan. Sila cuba lagi.');
+      toast.error(t('housing:appeal_submit_failed', 'Gagal menghantar rayuan. Sila cuba lagi.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -100,10 +102,10 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
             </div>
             <div>
               <h3 className="font-black text-lg text-slate-800 dark:text-slate-100 leading-none mb-1">
-                Rayuan Asrama KAMSIS
+                {t('housing:kamsis_hostel_appeal', 'Rayuan Asrama KAMSIS')}
               </h3>
               <p className="text-xs font-bold text-slate-500">
-                Sila nyatakan alasan rayuan anda
+                {t('housing:appeal_reason_prompt', 'Sila nyatakan alasan rayuan anda')}
               </p>
             </div>
           </div>
@@ -120,19 +122,19 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
           <div className="flex gap-3 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 mb-6">
             <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <p className="text-sm font-medium text-blue-800 dark:text-blue-300 leading-relaxed">
-              Rayuan ini akan disemak semula oleh pihak pengurusan asrama. Sila berikan alasan yang kukuh berserta justifikasi mengapa anda memerlukan penginapan di asrama.
+              {t('housing:appeal_review_notice', 'Rayuan ini akan disemak semula oleh pihak pengurusan asrama. Sila berikan alasan yang kukuh berserta justifikasi mengapa anda memerlukan penginapan di asrama.')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">
-                Alasan / Justifikasi Rayuan
+                {t('housing:appeal_reason_label', 'Alasan / Justifikasi Rayuan')}
               </label>
               <textarea
                 value={reason}
                 onChange={e => setReason(e.target.value)}
-                placeholder="Contoh: Saya memerlukan asrama kerana..."
+                placeholder={t('housing:appeal_reason_placeholder', 'Contoh: Saya memerlukan asrama kerana...')}
                 required
                 rows={5}
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none transition-all"
@@ -145,7 +147,7 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
                 onClick={onClose}
                 className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
               >
-                Batal
+                {t('common:cancel', 'Batal')}
               </button>
               <button
                 type="submit"
@@ -153,7 +155,7 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-black transition-all active:scale-95 shadow-lg shadow-amber-500/20"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                <span>Hantar Rayuan</span>
+                <span>{t('housing:btn_submit_appeal', 'Hantar Rayuan')}</span>
               </button>
             </div>
           </form>

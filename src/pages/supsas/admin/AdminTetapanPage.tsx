@@ -21,7 +21,7 @@ interface EditionForm {
 
 const DEFAULT_FORM: EditionForm = {
   name: `SUPSAS ${new Date().getFullYear()}`,
-  tagline: 'Bersatu, Berjuang, Berjaya',
+  tagline: '',
   edition_year: new Date().getFullYear(),
   start_date: '',
   end_date: '',
@@ -34,7 +34,7 @@ const DEFAULT_FORM: EditionForm = {
 export function AdminTetapanPage() {
   const { t } = useTranslation(['supsas', 'common']);
   const { edition, refetch } = useSupsas();
-  const [form, setForm] = useState<EditionForm>(DEFAULT_FORM);
+  const [form, setForm] = useState<EditionForm>(() => ({ ...DEFAULT_FORM, tagline: t('supsas:default_edition_tagline', 'Bersatu, Berjuang, Berjaya') }));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function AdminTetapanPage() {
       ? await supabase.from('supsas_editions').update(payload).eq('id', edition.id)
       : await supabase.from('supsas_editions').insert(payload);
     setSaving(false);
-    if (error) { toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan')}: ${error.message}`); return; }
+    if (error) { toast.error(t('supsas:save_settings_failed_with_msg', 'Gagal simpan: {{msg}}', { msg: error.message })); return; }
     toast.success(t('supsas:edition_settings_saved', 'Tetapan edisi disimpan!'));
     refetch();
   };
@@ -77,7 +77,7 @@ export function AdminTetapanPage() {
   const handleActivate = async () => {
     if (!edition) return;
     const { error } = await supabase.from('supsas_editions').update({ is_active: true }).eq('id', edition.id);
-    if (error) { toast.error(`${t('common:failed', 'Gagal')}: ${error.message}`); return; }
+    if (error) { toast.error(t('supsas:activation_failed_with_msg', 'Gagal: {{msg}}', { msg: error.message })); return; }
     toast.success(t('supsas:edition_activated_success', 'Edisi diaktifkan! SUPSAS sekarang aktif.'));
     refetch();
   };

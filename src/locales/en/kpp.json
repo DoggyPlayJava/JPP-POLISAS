@@ -51,6 +51,7 @@
   "ai_budget_context_desc": "Description: {{desc}}",
   "ai_budget_context_program": "Program: {{title}}",
   "ai_draft_helper": "Generate draft or correct format with AI assistance.",
+  "ai_empty_response": "AI returned an empty response.",
   "ai_illogical_budget": "AI returned an illogical budget structure. Please provide more specific details.",
   "ai_invalid_task_format": "AI generated invalid format. Please specify your objective further.",
   "ai_rough_estimate": "AI Rough Estimate",

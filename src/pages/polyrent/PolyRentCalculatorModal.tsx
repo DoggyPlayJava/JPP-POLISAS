@@ -183,7 +183,16 @@ export function PolyRentCalculatorModal({ isOpen, onClose }: CalculatorModalProp
               </div>
               <button 
                 onClick={() => {
-                  const msg = `*[ REKOD BIL RUMAH SEWA ]*\n\nSewa Rumah   : RM ${Number(rent||0).toFixed(2)}\nElektrik TNB : RM ${Number(electric||0).toFixed(2)}\nAir (PAIP)   : RM ${Number(water||0).toFixed(2)}\nInternet     : RM ${Number(wifi||0).toFixed(2)}\nLain-lain    : RM ${Number(others||0).toFixed(2)}\n-----------------------------------\nJUMLAH KESELURUHAN : RM ${total.toFixed(2)}\n-----------------------------------\n\n*SEORANG PERLU BAYAR : RM ${perPerson.toFixed(2)}*\n_(Dibahagikan kepada ${tenants} orang)_\n\nSila buat bayaran dengan segera. Terima kasih!`;
+                  const msg = t('housing:calc_wa_bill_template', '*[ REKOD BIL RUMAH SEWA ]*\n\nSewa Rumah   : RM {{rent}}\nElektrik TNB : RM {{electric}}\nAir (PAIP)   : RM {{water}}\nInternet     : RM {{wifi}}\nLain-lain    : RM {{others}}\n-----------------------------------\nJUMLAH KESELURUHAN : RM {{total}}\n-----------------------------------\n\n*SEORANG PERLU BAYAR : RM {{perPerson}}*\n_(Dibahagikan kepada {{tenants}} orang)_\n\nSila buat bayaran dengan segera. Terima kasih!', {
+                    rent: Number(rent || 0).toFixed(2),
+                    electric: Number(electric || 0).toFixed(2),
+                    water: Number(water || 0).toFixed(2),
+                    wifi: Number(wifi || 0).toFixed(2),
+                    others: Number(others || 0).toFixed(2),
+                    total: total.toFixed(2),
+                    perPerson: perPerson.toFixed(2),
+                    tenants
+                  });
                   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
                 className="w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold text-sm hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg"

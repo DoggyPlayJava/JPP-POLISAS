@@ -70,7 +70,11 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
     await supabase.rpc('increment_polyrent_interest', { listing_id: listing.id });
     onInterest();
     
-    const messageTemplate = `Salam, saya ${profile?.full_name || 'Pelajar'} dari POLISAS. Adakah bilik di ${listing.lokasi} yang berharga RM${listing.sewa_bulanan} masih ada?`;
+    const messageTemplate = t('housing:wa_inquiry_template', 'Salam, saya {{name}} dari POLISAS. Adakah bilik di {{location}} yang berharga RM{{price}} masih ada?', {
+      name: profile?.full_name || t('housing:student_single', 'Pelajar'),
+      location: listing.lokasi,
+      price: listing.sewa_bulanan
+    });
     window.open(formatWhatsApp(listing.contact_info, messageTemplate), '_blank');
   };
 
@@ -157,7 +161,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
             <div className="relative w-full h-[40vh] min-h-[300px] bg-slate-100 dark:bg-slate-900 shrink-0">
               {images.length > 0 ? (
                 <>
-                  <img src={images[activeImgIndex]} alt="Rumah Sewa" className="w-full h-full object-cover" />
+                  <img src={images[activeImgIndex]} alt={t('housing:rental_house', 'Rumah Sewa')} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
                   
                   {images.length > 1 && (

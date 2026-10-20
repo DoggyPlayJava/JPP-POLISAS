@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { POLISAS_CAMPUS_STICKERS } from '@/lib/polySuaraHelpers';
@@ -16,6 +17,7 @@ export const PolySuaraStickerBadge: React.FC<PolySuaraStickerBadgeProps> = ({
   onRemove,
   className,
 }) => {
+  const { t } = useTranslation('services');
   const sticker = POLISAS_CAMPUS_STICKERS.find((s) => s.id === stickerId);
 
   if (!sticker) {
@@ -93,8 +95,8 @@ export const PolySuaraStickerBadge: React.FC<PolySuaraStickerBadgeProps> = ({
             e.stopPropagation();
             onRemove();
           }}
-          aria-label={`Buang sticker ${sticker.label}`}
-          title="Buang sticker"
+          aria-label={t('services:remove_sticker_with_name', 'Buang sticker {{label}}', { label: sticker.label })}
+          title={t('services:remove_sticker', 'Buang sticker')}
           className={cn(
             'inline-flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-1',
             sizeStyles.closeBtn

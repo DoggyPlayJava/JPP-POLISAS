@@ -30,12 +30,7 @@ const DEFAULT_FORM: FixtureForm = {
   score_a: '', score_b: '', winner_id: '', notes: '',
 };
 
-const STATUS_OPTIONS = [
-  { value: 'upcoming',  label: 'Akan Datang' },
-  { value: 'live',      label: '🔴 Live' },
-  { value: 'completed', label: 'Selesai' },
-  { value: 'postponed', label: 'Ditangguh' },
-];
+
 
 const STATUS_CLS: Record<string, string> = {
   upcoming:  'bg-white/5 border-white/10 text-white/40',
@@ -51,6 +46,12 @@ function inputCls() {
 export function AdminJadualPage() {
   const { t } = useTranslation(['supsas', 'common']);
   const { fixtures, sports, kontingen, edition, refetch } = useSupsas();
+  const statusOptions = [
+    { value: 'upcoming',  label: t('supsas:status_upcoming', 'Akan Datang') },
+    { value: 'live',      label: t('supsas:status_live', 'Live') },
+    { value: 'completed', label: t('supsas:status_completed', 'Selesai') },
+    { value: 'postponed', label: t('supsas:status_postponed', 'Ditangguh') },
+  ];
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasFixture | null>(null);
   const [scoreTarget, setScoreTarget] = useState<SupsasFixture | null>(null);
@@ -144,13 +145,29 @@ export function AdminJadualPage() {
                 toast.error(t('supsas:no_matches_to_copy', 'Tiada perlawanan untuk disalin'));
                 return;
               }
+              const matchFallback = t('supsas:match_singular', 'Perlawanan');
+              const refereePinLabel = t('supsas:referee_pin_label_plain', 'PIN Pengadil');
+              const noneLabel = t('supsas:none_upper', 'TIADA');
+              const linkLabel = t('supsas:link_plain', 'Link');
+              const pinTitle = t('supsas:referee_pin_list_title', 'KOD PIN PENGADIL SUPSAS 2.0');
+
               const lines = fixtures.map(f => {
-                const spName = sportMap[f.sport_id] ?? 'Sukan';
+                const spName = sportMap[f.sport_id] ?? t('supsas:sport_label', 'Sukan');
                 const kontA = f.kontingen_a_id ? kontingenMap[f.kontingen_a_id]?.short_code : 'TBD';
                 const kontB = f.kontingen_b_id ? kontingenMap[f.kontingen_b_id]?.short_code : 'TBD';
-                return `🏆 *${spName}* (${f.round || 'Perlawanan'} #${f.match_number || '-'}): ${kontA} vs ${kontB}\n🔑 PIN Pengadil: *${f.referee_pin || 'TIADA'}*\n📌 Link: ${window.location.origin}/supsas/scorekeeper\n`;
+                return t('supsas:whatsapp_pin_row', '🏆 *{{sport}}* ({{round}} #{{match}}): {{teamA}} vs {{teamB}}\n🔑 {{pinLabel}}: *{{pin}}*\n📌 {{linkLabel}}: {{url}}\n', {
+                  sport: spName,
+                  round: f.round || matchFallback,
+                  match: f.match_number || '-',
+                  teamA: kontA,
+                  teamB: kontB,
+                  pinLabel: refereePinLabel,
+                  pin: f.referee_pin || noneLabel,
+                  linkLabel: linkLabel,
+                  url: window.location.origin + '/supsas/scorekeeper',
+                });
               });
-              const text = `📋 *KOD PIN PENGADIL SUPSAS 2.0*\n========================\n\n` + lines.join('\n');
+              const text = pinTitle + '\n========================\n\n' + lines.join('\n');
               navigator.clipboard.writeText(text);
               toast.success(t('supsas:pin_copied_whatsapp', 'Senarai PIN Pengadil disalin untuk WhatsApp!'));
             }}
@@ -246,7 +263,7 @@ export function AdminJadualPage() {
 
                       {/* Status */}
                       <span className={cn('px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border flex-shrink-0', STATUS_CLS[f.status] ?? STATUS_CLS.upcoming)}>
-                        {STATUS_OPTIONS.find(s => s.value === f.status)?.label ?? f.status}
+                        {statusOptions.find(s => s.value === f.status)?.label ?? f.status}
                       </span>
 
                       {/* Actions */}
@@ -367,7 +384,7 @@ export function AdminJadualPage() {
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:status_label', 'Status')}</label>
                     <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} className={inputCls()}>
-                      {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                   </div>
                 </div>

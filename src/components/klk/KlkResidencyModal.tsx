@@ -167,7 +167,7 @@ export function KlkResidencyModal({ forceShow = false }: KlkResidencyModalProps 
       setStep('done');
       setTimeout(() => setShow(false), 2000);
     } catch (e: any) {
-      toast.error('Gagal simpan. Cuba lagi.');
+      toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.'));
     } finally {
       setLoading(false);
     }
@@ -177,15 +177,15 @@ export function KlkResidencyModal({ forceShow = false }: KlkResidencyModalProps 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile) return;
-    if (!alamat.trim()) { toast.error('Sila isi alamat kediaman.'); return; }
-    if (!kawasan) { toast.error('Sila pilih kawasan kediaman.'); return; }
+    if (!alamat.trim()) { toast.error(t('housing:fill_address_required', 'Sila isi alamat kediaman.')); return; }
+    if (!kawasan) { toast.error(t('housing:choose_area_required', 'Sila pilih kawasan kediaman.')); return; }
     if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) {
-      toast.error('Sila nyatakan kawasan anda.'); return;
+      toast.error(t('housing:specify_area_your_required', 'Sila nyatakan kawasan anda.')); return;
     }
     // Validate required dynamic fields
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
-        toast.error(`Sila isi: ${f.label}`); return;
+        toast.error(t('housing:fill_dynamic_field_required', 'Sila isi: {{field}}', { field: f.label })); return;
       }
     }
 
@@ -217,10 +217,10 @@ export function KlkResidencyModal({ forceShow = false }: KlkResidencyModalProps 
 
       if (error && error.code !== '42P01') throw error;
       setStep('done');
-      toast.success('Maklumat kediaman berjaya disimpan!');
+      toast.success(t('housing:residence_saved_success', 'Maklumat kediaman berjaya disimpan!'));
       setTimeout(() => setShow(false), 2000);
     } catch (e: any) {
-      toast.error('Gagal simpan. Cuba lagi.');
+      toast.error(t('housing:save_failed_retry', 'Gagal simpan. Cuba lagi.'));
     } finally {
       setLoading(false);
     }

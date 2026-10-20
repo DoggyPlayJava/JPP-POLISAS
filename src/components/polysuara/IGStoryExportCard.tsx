@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface ConfessionExport {
   id: string;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function IGStoryExportCard({ confession, elementId }: Props) {
+  const { t, i18n } = useTranslation(['services', 'common']);
   return (
     <div 
       id={elementId}
@@ -79,7 +81,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: '18px', fontWeight: 700, color: '#f43f5e' }}>{confession.codename || 'Pelajar Anon'}</span>
+            <span style={{ fontSize: '18px', fontWeight: 700, color: '#f43f5e' }}>{confession.codename || t('services:anon_student', 'Pelajar Anon')}</span>
             <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
               {format(new Date(confession.created_at), 'dd MMM yyyy', { locale: ms })}
             </span>
@@ -111,7 +113,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
             padding: '30px'
           }}>
             <div style={{ fontSize: '14px', fontWeight: 900, color: '#2dd4bf', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '12px' }}>
-              Maklum Balas JPP
+              {t('services:jpp_feedback', 'Maklum Balas JPP')}
             </div>
             <p style={{ fontSize: '20px', lineHeight: 1.6, color: 'rgba(20, 184, 166, 0.9)', margin: 0 }}>
               {confession.official_reply}

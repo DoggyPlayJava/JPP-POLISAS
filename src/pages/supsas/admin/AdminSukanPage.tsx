@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight, RotateCcw } from 'lucide-react';
+import { Trophy, Plus, AlertTriangle, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight, RotateCcw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
@@ -119,7 +119,7 @@ export function AdminSukanPage() {
     const { data, error } = await supabase.rpc('advance_qf_winners', { p_sport_id: sport.id });
     setAdvancing(null);
     if (error) { toast.error(t('supsas:rpc_error_prefix', 'Ralat RPC: ') + error.message); return; }
-    if (!data) { toast.error('Tiada respons dari pelayan.'); return; }
+    if (!data) { toast.error(t('supsas:no_server_response_short', 'Tiada respons dari pelayan.')); return; }
     if (data?.ok === false) { toast.error(data.error ?? t('supsas:unknown_error', 'Ralat tidak diketahui')); return; }
     toast.success('⚔️ ' + t('supsas:sf_generated_from_qf', 'Separuh Akhir berjaya dijana dari Suku Akhir!'));
     refetch();
@@ -178,15 +178,15 @@ export function AdminSukanPage() {
       {!edition && (
         <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-red-400/70 text-sm space-y-2">
           <p className="font-black">{t('supsas:no_edition_warning', 'Tiada edisi ditemui')}</p>
-          <p className="text-xs text-red-400/50">Pergi ke <strong>Tetapan Edisi</strong> untuk mencipta edisi SUPSAS baharu.</p>
+          <p className="text-xs text-red-400/50">{t('supsas:go_to_edition_settings_desc', 'Pergi ke Tetapan Edisi untuk mencipta edisi SUPSAS baharu.')}</p>
         </div>
       )}
       {edition && !edition.is_active && (
         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
-          <span className="text-amber-400 text-lg">⚠️</span>
+          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
           <div className="flex-1">
-            <p className="text-amber-400 text-xs font-black">{t('supsas:edition_inactive_warning', 'Edisi')} <strong>{edition.name}</strong> belum diaktifkan</p>
-            <p className="text-amber-400/50 text-[10px] mt-0.5">Sukan boleh ditambah sekarang. Aktifkan edisi dalam <strong>Tetapan</strong> supaya scoreboard public hidup.</p>
+            <p className="text-amber-400 text-xs font-black">{t('supsas:edition_name_inactive', 'Edisi {{name}} belum diaktifkan', { name: edition.name })}</p>
+            <p className="text-amber-400/50 text-[10px] mt-0.5">{t('supsas:edition_inactive_subtext', 'Sukan boleh ditambah sekarang. Aktifkan edisi dalam Tetapan supaya scoreboard public hidup.')}</p>
           </div>
         </div>
       )}
@@ -243,7 +243,7 @@ export function AdminSukanPage() {
                         : groupDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                         : 'bg-white/5 border-white/10 text-white/30'
                       )}>
-                        {finalHasTeams ? '🏆 Final' : sfHasTeams ? '⚔️ SF' : groupDone ? '✅ Kumpulan Selesai' : `${sportFixtures.filter(f=>f.status==='completed').length}/${groupFixtures.length} match`}
+                        {finalHasTeams ? t('supsas:match_label_final', 'Akhir') : sfHasTeams ? t('supsas:bracket_semifinals', 'Separuh Akhir') : groupDone ? t('supsas:group_stage_completed', 'Kumpulan Selesai') : t('supsas:matches_completed_progress', '{{completed}}/{{total}} perlawanan', { completed: sportFixtures.filter(f=>f.status==='completed').length, total: groupFixtures.length })}
                       </span>
                     )}
                   </div>
@@ -342,7 +342,7 @@ export function AdminSukanPage() {
                   <button
                     onClick={() => handleResetBracket(sport)}
                     disabled={advancing === sport.id + '_reset'}
-                    title="Padam semua fixtures dan mula semula"
+                    title={t('supsas:tooltip_reset_fixtures', 'Padam semua fixtures dan mula semula')}
                     className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/5 border border-red-500/15 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/25 text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-30"
                   >
                     {advancing === sport.id + '_reset'
@@ -414,7 +414,7 @@ export function AdminSukanPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField label={t('supsas:sport_venue', 'Gelanggang / Venue')}>
-                    <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder="cth: Padang A" className={inputCls()} />
+                    <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder={t('supsas:venue_placeholder', 'cth: Padang A')} className={inputCls()} />
                   </FormField>
                   <FormField label={t('supsas:max_per_team_label', 'Max Pemain / Pasukan (lama)')}>
                     <input type="number" min={1} value={form.max_per_team} onChange={e => setForm(p => ({ ...p, max_per_team: +e.target.value }))} className={inputCls()} />

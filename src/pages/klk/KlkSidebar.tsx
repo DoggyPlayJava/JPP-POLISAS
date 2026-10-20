@@ -26,7 +26,7 @@ export function KlkSidebar() {
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const posLabel = profile?.jpp_unit === 'KLS' ? 'Exco KLK' : isSuperAdmin ? 'Super Admin' : 'JPP';
+  const posLabel = profile?.jpp_unit === 'KLS' ? t('klk:exco_klk_badge', 'Exco KLK') : isSuperAdmin ? 'Super Admin' : 'JPP';
   const isJpp = isSuperAdmin || profile?.role === 'JPP' || profile?.role === 'SUPER_ADMIN_JPP';
 
   // Helper: nav item (ikut pattern KebajikanSidebar)
