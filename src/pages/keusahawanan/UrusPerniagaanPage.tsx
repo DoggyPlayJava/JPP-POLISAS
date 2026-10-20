@@ -53,27 +53,6 @@ export function UrusPerniagaanPage() {
       default: return actionType;
     }
   };
-  const getLogLabel = (actionType: string) => {
-    switch (actionType) {
-      case 'TRANSACTION_CREATE': return t('commerce:log_action_trans_create', 'Transaksi Baharu');
-      case 'TRANSACTION_VOID': return t('commerce:log_action_trans_void', 'Transaksi Dibatalkan');
-      case 'PRODUCT_ADD': return t('commerce:log_action_prod_add', 'Produk Ditambah');
-      case 'PRODUCT_EDIT': return t('commerce:log_action_prod_edit', 'Produk Dikemaskini');
-      case 'PRODUCT_DELETE': return t('commerce:log_action_prod_delete', 'Produk Dipadam');
-      case 'STOCK_EDIT': return t('commerce:log_action_stock_edit', 'Stok Dikemaskini');
-      case 'POS_ASSIGNED': return t('commerce:log_action_pos_assigned', 'Penugasan POS');
-      case 'STAFF_APPROVED': return t('commerce:log_action_staff_approved', 'Ahli Diluluskan');
-      case 'STAFF_REMOVED': return t('commerce:log_action_staff_removed', 'Ahli Dibuang');
-      case 'SETTINGS_UPDATED': return t('commerce:log_action_settings_updated', 'Tetapan Dikemaskini');
-      case 'EXPENSE_ADD': return t('commerce:log_action_expense_add', 'Perbelanjaan Direkodkan');
-      case 'EXPENSE_DELETE': return t('commerce:log_action_expense_delete', 'Perbelanjaan Dipadam');
-      case 'PROMO_CREATE': return t('commerce:log_action_promo_create', 'Promosi Dicipta');
-      case 'PROMO_USED': return t('commerce:log_action_promo_used', 'Kupon Digunakan');
-      case 'PROMO_TOGGLE': return t('commerce:log_action_promo_toggle', 'Promosi Dikemaskini');
-      case 'CASH_CHECKPOINT': return t('commerce:log_action_cash_checkpoint', 'Checkpoint Tunai');
-      default: return actionType;
-    }
-  };
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
