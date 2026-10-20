@@ -10,6 +10,7 @@ import {
   MapPin, KeyRound, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 
 const THEME = '#818CF8';
@@ -28,6 +29,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 // ─── QR Scan Landing (route: /akademik/qr/:token) ────────────
 export function AkademikQrScan() {
+  const { t } = useTranslation(['akademik', 'common']);
   const { token }   = useParams<{ token: string }>();
   const navigate    = useNavigate();
   const { profile } = useAuth();
@@ -66,7 +68,7 @@ export function AkademikQrScan() {
     // If admin set a location and PIN, try GPS first
     if (tokenData.location_lat && tokenData.location_lng && tokenData.verification_pin) {
       if (!navigator.geolocation) {
-        toast.error("GPS tidak disokong pada peranti anda. Sila guna PIN.");
+        toast.error(t('akademik:gps_not_supported', 'GPS tidak disokong pada peranti anda. Sila guna PIN.'));
         setStatus('pin_required');
         return;
       }
@@ -81,7 +83,7 @@ export function AkademikQrScan() {
           const radius = tokenData.radius_meters || 150;
           
           if (dist > radius) {
-            toast.error(`Anda dikesan ${Math.round(dist)}m dari lokasi majlis (Luar radius ${radius}m). Sila masukkan PIN di skrin.`);
+            toast.error(t('akademik:outside_gps_radius', 'Anda dikesan {{dist}}m dari lokasi majlis (Luar radius {{radius}}m). Sila masukkan PIN di skrin.', { dist: Math.round(dist), radius }));
             setStatus('pin_required');
           } else {
             processScan('GPS', coords);
@@ -89,7 +91,7 @@ export function AkademikQrScan() {
         },
         (err) => {
           console.error("GPS Error:", err);
-          toast.error("Gagal mendapatkan lokasi GPS. Sila masukkan kod PIN.");
+          toast.error(t('akademik:gps_failed_enter_pin', 'Gagal mendapatkan lokasi GPS. Sila masukkan kod PIN.'));
           setStatus('pin_required');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -107,7 +109,7 @@ export function AkademikQrScan() {
   const submitPin = () => {
     if (!pinInput || pinInput !== tokenData.verification_pin) {
       setPinError(true);
-      toast.error('PIN tidak tepat!');
+      toast.error(t('akademik:pin_incorrect', 'PIN tidak tepat!'));
       return;
     }
     setPinError(false);
@@ -199,9 +201,9 @@ export function AkademikQrScan() {
 
       setMeritAwarded(tokenData.merit_value);
       setStatus('success');
-      toast.success(`+${tokenData.merit_value} merit berjaya diterima!`);
+      toast.success(t('akademik:merit_received_success', '+{{points}} merit berjaya diterima!', { points: tokenData.merit_value }));
     } catch (e: any) {
-      setErrorMsg(e.message || 'Ralat semasa memproses data.');
+      setErrorMsg(e.message || t('akademik:data_process_error', 'Ralat semasa memproses data.'));
       setStatus('error');
     }
   };
@@ -212,7 +214,7 @@ export function AkademikQrScan() {
         return (
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-white/30" />
-            <p className="text-xs font-black uppercase tracking-widest text-white/30">Memuatkan...</p>
+            <p className="text-xs font-black uppercase tracking-widest text-white/30">{t('common:loading', 'Memuatkan...')}</p>
           </div>
         );
 
@@ -222,8 +224,8 @@ export function AkademikQrScan() {
             <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center">
               <XCircle className="w-8 h-8 text-rose-400" />
             </div>
-            <h2 className="text-xl font-black text-white">QR Tidak Sah</h2>
-            <p className="text-xs text-white/40">Kod QR ini tidak wujud atau sudah ditarik balik.</p>
+            <h2 className="text-xl font-black text-white">{t('akademik:qr_invalid_title', 'QR Tidak Sah')}</h2>
+            <p className="text-xs text-white/40">{t('akademik:qr_invalid_desc', 'Kod QR ini tidak wujud atau sudah ditarik balik.')}</p>
           </div>
         );
 
@@ -233,8 +235,8 @@ export function AkademikQrScan() {
             <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
               <Clock className="w-8 h-8 text-amber-400" />
             </div>
-            <h2 className="text-xl font-black text-white">QR Tamat Tempoh</h2>
-            <p className="text-xs text-white/40">Kod QR ini sudah tamat tempoh atau telah mencapai had scan.</p>
+            <h2 className="text-xl font-black text-white">{t('akademik:qr_expired_title', 'QR Tamat Tempoh')}</h2>
+            <p className="text-xs text-white/40">{t('akademik:qr_expired_desc', 'Kod QR ini sudah tamat tempoh atau telah mencapai had scan.')}</p>
           </div>
         );
 
@@ -244,14 +246,14 @@ export function AkademikQrScan() {
             <div className="w-16 h-16 rounded-2xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
               <Clock className="w-8 h-8 text-violet-400" />
             </div>
-            <h2 className="text-xl font-black text-white">Di Luar Waktu Aktif</h2>
+            <h2 className="text-xl font-black text-white">{t('akademik:outside_active_hours', 'Di Luar Waktu Aktif')}</h2>
             <p className="text-sm font-bold text-violet-300">{windowMsg}</p>
-            <p className="text-xs text-white/40">Sila scan dalam tempoh yang ditetapkan.</p>
+            <p className="text-xs text-white/40">{t('akademik:scan_within_active_hours', 'Sila scan dalam tempoh yang ditetapkan.')}</p>
             <button
               onClick={() => setStatus('ready')}
               className="mt-1 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-white/[0.06] border border-white/[0.1] text-white/50 hover:text-white transition-all"
             >
-              Cuba Semula
+              {t('akademik:try_again', 'Cuba Semula')}
             </button>
           </div>
         );
@@ -262,10 +264,10 @@ export function AkademikQrScan() {
             <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
               <Clock className="w-8 h-8 text-amber-400" />
             </div>
-            <h2 className="text-xl font-black text-white">Cooldown Aktif</h2>
-            <p className="text-sm font-bold text-amber-300">Boleh scan semula dalam: <span className="font-black">{cooldownLeft}</span></p>
+            <h2 className="text-xl font-black text-white">{t('akademik:cooldown_active', 'Cooldown Aktif')}</h2>
+            <p className="text-sm font-bold text-amber-300">{t('akademik:can_rescan_in', 'Boleh scan semula dalam:')} <span className="font-black">{cooldownLeft}</span></p>
             <p className="text-xs text-white/40">
-              Anda perlu tunggu {tokenData?.cooldown_hours || 8} jam sebelum scan semula QR ini.
+              {t('akademik:cooldown_wait_hours', 'Anda perlu tunggu {{hours}} jam sebelum scan semula QR ini.', { hours: tokenData?.cooldown_hours || 8 })}
             </p>
           </div>
         );
@@ -282,11 +284,11 @@ export function AkademikQrScan() {
             >
               <CheckCircle className="w-10 h-10 text-emerald-400" />
             </motion.div>
-            <h2 className="text-2xl font-black text-white">Merit Diterima!</h2>
+            <h2 className="text-2xl font-black text-white">{t('akademik:merit_awarded_title', 'Merit Diterima!')}</h2>
             <div className="flex items-center gap-2">
               <Star className="w-5 h-5 fill-current text-amber-400" />
               <span className="text-3xl font-black text-amber-300">+{meritAwarded}</span>
-              <span className="text-sm font-black text-white/40">merit</span>
+              <span className="text-sm font-black text-white/40">{t('akademik:merit_unit', 'merit')}</span>
             </div>
             <p className="text-xs text-white/40">{tokenData?.title}</p>
             <button
@@ -294,7 +296,7 @@ export function AkademikQrScan() {
               className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-white/[0.06] border border-white/[0.1] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Dashboard Akademik
+              {t('akademik:academic_dashboard_btn', 'Dashboard Akademik')}
             </button>
           </div>
         );
@@ -306,8 +308,8 @@ export function AkademikQrScan() {
               <KeyRound className="w-8 h-8 text-rose-400" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">Pengesahan PIN</h2>
-              <p className="text-xs text-white/40 mt-1">Sila masukkan kod PIN 4 digit yang ditayangkan di skrin dewan.</p>
+              <h2 className="text-xl font-black text-white">{t('akademik:pin_verification_title', 'Pengesahan PIN')}</h2>
+              <p className="text-xs text-white/40 mt-1">{t('akademik:pin_verification_desc', 'Sila masukkan 4 digit PIN yang dipaparkan pada skrin dewan.')}</p>
             </div>
             
             <input 
@@ -326,7 +328,7 @@ export function AkademikQrScan() {
                 onClick={() => setStatus('ready')}
                 className="flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest bg-white/[0.06] border border-white/[0.1] text-white/50 hover:text-white transition-all"
               >
-                Batal
+                {t('common:cancel', 'Batal')}
               </button>
               <button
                 onClick={submitPin}
@@ -334,7 +336,7 @@ export function AkademikQrScan() {
                 className="flex-[2] py-3 rounded-2xl font-black text-xs uppercase tracking-widest disabled:opacity-50 transition-all"
                 style={{ background: THEME, color: '#fff' }}
               >
-                Sahkan
+                {t('akademik:confirm_btn', 'Sahkan')}
               </button>
             </div>
           </motion.div>
@@ -365,12 +367,12 @@ export function AkademikQrScan() {
               {tokenData?.location_lat && (
                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-2xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
                    <MapPin className="w-3.5 h-3.5" />
-                   <span className="text-[10px] font-black uppercase">Dilindungi GPS</span>
+                   <span className="text-[10px] font-black uppercase">{t('akademik:gps_protected', 'GPS Dilindungi')}</span>
                  </div>
               )}
             </div>
             <p className="text-[10px] text-white/25 font-medium">
-              Cooldown {tokenData?.cooldown_hours || 8} jam • Scan sah untuk {profile?.full_name?.split(' ')[0]}
+              {t('akademik:cooldown_profile_note', 'Cooldown {{hours}}h • Valid scan for {{name}}', { hours: tokenData?.cooldown_hours || 8, name: profile?.full_name?.split(' ')[0] })}
             </p>
             <button
               onClick={initiateScan}
@@ -379,7 +381,7 @@ export function AkademikQrScan() {
               style={{ background: THEME, color: '#fff', boxShadow: `0 12px 30px ${hexToRgba(THEME, 0.35)}` }}
             >
               {status === 'scanning' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanLine className="w-4 h-4" />}
-              {status === 'scanning' ? 'Memproses Lokasi...' : 'Claim Merit'}
+              {status === 'scanning' ? t('akademik:processing_location', 'Memproses Lokasi...') : t('akademik:claim_merit', 'Claim Merit')}
             </button>
           </div>
         );
@@ -390,10 +392,10 @@ export function AkademikQrScan() {
             <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-rose-400" />
             </div>
-            <h2 className="text-xl font-black text-white">Ralat</h2>
+            <h2 className="text-xl font-black text-white">{t('akademik:error_title', 'Ralat')}</h2>
             <p className="text-xs text-rose-400/80">{errorMsg}</p>
             <button onClick={() => setStatus('ready')} className="text-[11px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors">
-              Cuba Semula
+              {t('akademik:try_again', 'Cuba Semula')}
             </button>
           </div>
         );
@@ -413,7 +415,7 @@ export function AkademikQrScan() {
         {/* Badge */}
         <div className="flex justify-center">
           <span className="text-[9px] font-black uppercase tracking-[0.25em] px-3 py-1.5 rounded-full border text-white/30 border-white/[0.08] bg-white/[0.03]">
-            JPP POLISAS · Merit QR
+            {t('akademik:merit_qr_badge', 'JPP POLISAS · Merit QR')}
           </span>
         </div>
         {renderContent()}
@@ -424,6 +426,7 @@ export function AkademikQrScan() {
 
 // ─── QR Manager (dalam admin dashboard) ──────────────────────
 export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) {
+  const { t } = useTranslation(['akademik', 'common']);
   const { profile, isSuperAdmin } = useAuth();
   const [tokens, setTokens]     = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -482,7 +485,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
     const newPin = generatePin();
     const { error } = await supabase.from('akademik_qr_tokens').update({ verification_pin: newPin }).eq('id', id);
     if (!error) {
-      toast.success('PIN baharu dijana!');
+      toast.success(t('akademik:new_pin_generated', 'PIN baharu dijana!'));
       setTokens(prev => prev.map(t => t.id === id ? { ...t, verification_pin: newPin } : t));
     }
   };
@@ -501,9 +504,9 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
   }, [tokens]);
 
   const handleCreate = async () => {
-    if (!form.title) { toast.error('Tajuk diperlukan.'); return; }
+    if (!form.title) { toast.error(t('akademik:title_required', 'Tajuk diperlukan.')); return; }
     if (form.use_gps && (!form.location_lat || !form.location_lng)) {
-      toast.error('Sila isi koordinat PolyMaps jika guna perlindungan GPS.');
+      toast.error(t('akademik:gps_coords_required', 'Sila isi koordinat PolyMaps jika guna perlindungan GPS.'));
       return;
     }
     
@@ -529,7 +532,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
         verification_pin: form.verification_pin
       });
       if (error) throw error;
-      toast.success('QR Token berjaya dicipta!');
+      toast.success(t('akademik:qr_token_created', 'QR Token berjaya dicipta!'));
       setShowCreate(false);
       setForm({ 
         title: '', description: '', merit_value: 2, cooldown_hours: 8, expires_at: '', max_scans_total: '', 
@@ -538,7 +541,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
       });
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal cipta token.');
+      toast.error(e.message || t('akademik:create_token_failed', 'Gagal cipta token.'));
     } finally {
       setCreating(false);
     }
@@ -607,7 +610,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 <input
                   value={form.title}
                   onChange={e => field('title', e.target.value)}
-                  placeholder="Tajuk aktiviti *"
+                  placeholder={t('akademik:activity_title_placeholder', 'Tajuk aktiviti *')}
                   className="col-span-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20"
                 />
                 <input
@@ -633,7 +636,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                 </div>
                 <div>
                   <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Had Scan (kosong = ∞)</label>
-                  <input type="number" value={form.max_scans_total} onChange={e => field('max_scans_total', e.target.value)} placeholder="Tiada had"
+                  <input type="number" value={form.max_scans_total} onChange={e => field('max_scans_total', e.target.value)} placeholder={t('akademik:no_limit_placeholder', 'Tiada had')}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20" />
                 </div>
               </div>
@@ -690,7 +693,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
               <div className="col-span-full pt-2 border-t border-white/[0.08] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">Perlindungan PolyMaps (Anti-Cheat)</label>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">{t('akademik:polymaps_anti_cheat_label', 'Perlindungan PolyMaps (Anti-Cheat)')}</label>
                     <p className="text-[10px] text-white/40">Gunakan semakan jarak lokasi & PIN ganti.</p>
                   </div>
                   <button type="button" onClick={() => field('use_gps', !form.use_gps)} 
@@ -818,7 +821,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                            <p className="text-[8px] font-black uppercase tracking-widest text-amber-300">PIN Dewan</p>
                            <p className="text-sm font-black tracking-[0.2em] text-white">{t.verification_pin}</p>
                          </div>
-                         <button onClick={() => regeneratePin(t.id)} title="Tukar PIN sekarang"
+                         <button onClick={() => regeneratePin(t.id)} title={t('akademik:change_pin_now', 'Tukar PIN sekarang')}
                            className="ml-2 p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 transition-colors">
                            <RefreshCw className="w-3.5 h-3.5" />
                          </button>
@@ -833,7 +836,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                           ? 'text-rose-400 border-rose-500/20 hover:bg-rose-500/10'
                           : 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10'
                       }`}>
-                      {t.is_active ? 'Nyahaktif' : 'Aktifkan'}
+                      {t.is_active ? t('akademik:deactivate', 'Nyahaktif') : t('akademik:activate', 'Aktifkan')}
                     </button>
                     <button onClick={() => deleteToken(t.id)}
                       className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-rose-500/10 text-rose-400 hover:bg-rose-500/10 transition-all">
