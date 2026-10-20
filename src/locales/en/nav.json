@@ -36,6 +36,7 @@
   "housing_short": "Housing",
   "join_club": "Join Club",
   "jpp_admin": "JPP Admin",
+  "jpp_administration": "JPP Administration",
   "jpp_hq": "JPP HQ",
   "jpp_portal": "JPP HQ Portal",
   "karnival": "Carnival",
@@ -69,10 +70,13 @@
   "search_placeholder": "Search clubs, EMS events, MAKMP, welfare...",
   "select_club": "— SELECT CLUB —",
   "settings": "Settings",
+  "student_club": "Student Club",
+  "student_dashboard": "Student Dashboard",
   "suggest_uiux": "UI/UX Suggestion",
   "suggest_uiux_desc": "Ideas for visual improvements",
   "supsas": "SUPSAS Sports",
   "switch_language": "Change Language",
+  "system_settings": "System Settings",
   "takwim": "Calendar",
   "whatsapp_support": "WhatsApp JPP Support"
 }

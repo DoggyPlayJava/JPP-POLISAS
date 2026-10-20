@@ -85,34 +85,42 @@ function detectActiveExco(pathname: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 // Konfigurasi nav per exco — TAMBAH di sini bila modul baru dibina
 // ─────────────────────────────────────────────────────────────────────────────
-const EKPP_NAV: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka', labelKey: 'nav:dashboard', href: '/dashboard' },
-  { icon: Flag,            label: 'Kelab & Persatuan', labelKey: 'nav:clubs', href: '/kelab' },
-  { icon: CalendarDays,    label: 'Aktiviti', labelKey: 'nav:activities', href: '/aktiviti' },
-  { icon: Users,           label: 'Ahli Jawatankuasa', labelKey: 'nav:committee', href: '/ahli' },
-  { icon: FileText,        label: 'Laporan Kelab', labelKey: 'nav:reports', href: '/laporan' },
-  { icon: Settings,        label: 'Tetapan', labelKey: 'nav:settings', href: '/tetapan' },
-];
+function getEkppNav(t: any): NavItem[] {
+  return [
+    { icon: LayoutDashboard, label: t('nav:dashboard', 'Papan Pemuka'), href: '/dashboard' },
+    { icon: Flag,            label: t('nav:clubs', 'Kelab & Persatuan'), href: '/kelab' },
+    { icon: CalendarDays,    label: t('nav:activities', 'Aktiviti'), href: '/aktiviti' },
+    { icon: Users,           label: t('nav:committee', 'Ahli Jawatankuasa'), href: '/ahli' },
+    { icon: FileText,        label: t('nav:reports', 'Laporan Kelab'), href: '/laporan' },
+    { icon: Settings,        label: t('nav:settings', 'Tetapan'), href: '/tetapan' },
+  ];
+}
 
-const EKPP_PRESIDENT_NAV: NavItem[] = [
-  { icon: Settings2, label: 'Urus Profil Kelab', labelKey: 'nav:manage_club_profile', href: '/urus-kelab' },
-];
+function getEkppPresidentNav(t: any): NavItem[] {
+  return [
+    { icon: Settings2, label: t('nav:manage_club_profile', 'Urus Profil Kelab'), href: '/urus-kelab' },
+  ];
+}
 
-const EKPP_ADMIN_NAV: NavItem[] = [
-  { icon: ClipboardCheck, label: 'Semakan Laporan', labelKey: 'nav:report_review', href: '/semakan-laporan' },
-  // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
-];
+function getEkppAdminNav(t: any): NavItem[] {
+  return [
+    { icon: ClipboardCheck, label: t('nav:report_review', 'Semakan Laporan'), href: '/semakan-laporan' },
+    // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
+  ];
+}
 
 // EMS Navigation items
-const EMS_NAV: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Hub Acara EMS', labelKey: 'ems:hub_acara', href: '/ems/dashboard' },
-  { icon: PlusCircle,      label: 'Cipta Acara Baharu', labelKey: 'ems:cipta_acara', href: '/ems/event/new' },
-  { icon: QrCode,          label: 'Crew Check-In Scanner', labelKey: 'ems:crew_checkin', href: '/ems/checkin' },
-  { icon: Gavel,           label: 'Portal Juri Luar', labelKey: 'ems:portal_juri', href: '/ems/juri' },
-  { icon: Trophy,          label: 'Live Leaderboard', labelKey: 'ems:live_leaderboard', href: '/ems/leaderboard' },
-  { icon: FileCheck,       label: 'Semakan E-Sijil', labelKey: 'ems:semakan_esijil', href: '/ems/cert/verify' },
-  { icon: ShieldCheck,     label: 'Semakan HQ', labelKey: 'ems:semakan_hq', href: '/ems/approvals' },
-];
+function getEmsNav(t: any): NavItem[] {
+  return [
+    { icon: LayoutDashboard, label: t('ems:hub_acara', 'Hub Acara EMS'), href: '/ems/dashboard' },
+    { icon: PlusCircle,      label: t('ems:cipta_acara', 'Cipta Acara Baharu'), href: '/ems/event/new' },
+    { icon: QrCode,          label: t('ems:crew_checkin', 'Crew Check-In Scanner'), href: '/ems/checkin' },
+    { icon: Gavel,           label: t('ems:portal_juri', 'Portal Juri Luar'), href: '/ems/juri' },
+    { icon: Trophy,          label: t('ems:live_leaderboard', 'Live Leaderboard'), href: '/ems/leaderboard' },
+    { icon: FileCheck,       label: t('ems:semakan_esijil', 'Semakan E-Sijil'), href: '/ems/cert/verify' },
+    { icon: ShieldCheck,     label: t('ems:semakan_hq', 'Semakan HQ'), href: '/ems/approvals' },
+  ];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
@@ -199,12 +207,15 @@ function EkppSidebarContent() {
   const karnivalStatus = useKarnivalStatus();
   const showKarnival = !!karnivalStatus?.isActive;
   const isMemberOnly = !isSuperAdmin && !isPresident;
+  const ekppNav = getEkppNav(t);
+  const ekppPresidentNav = getEkppPresidentNav(t);
+  const ekppAdminNav = getEkppAdminNav(t);
 
   return (
     <nav className="tour-kelab-sidebar flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
       {/* Menu Utama */}
       <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">{t('nav:main_menu', 'Menu Utama')}</p>
-      {EKPP_NAV.map(item => (
+      {ekppNav.map(item => (
         <SidebarNavItem key={item.href} item={item} accentColor="amber" />
       ))}
 
@@ -276,7 +287,7 @@ function EkppSidebarContent() {
           <div className="pt-6 pb-2">
             <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/50">{t('nav:club_admin', 'Pentadbiran Kelab')}</p>
           </div>
-          {EKPP_PRESIDENT_NAV.map(item => (
+          {ekppPresidentNav.map(item => (
             <SidebarNavItem key={item.href} item={item} accentColor="amber" />
           ))}
         </>
@@ -288,7 +299,7 @@ function EkppSidebarContent() {
           <div className="pt-6 pb-2">
             <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">{t('nav:jpp_admin', 'Admin JPP')}</p>
           </div>
-          {EKPP_ADMIN_NAV.filter(item => {
+          {ekppAdminNav.filter(item => {
             if (item.href === '/semakan-laporan') return hasKppAccess;
             return true; // JPP Admin Dashboard logic is handled internally
           }).map(item => (
@@ -357,11 +368,12 @@ function EmsSidebarContent() {
 
   const canManageEvents = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff;
 
-  const mainItem = EMS_NAV.find(i => i.href === '/ems/dashboard')!;
-  const createItem = EMS_NAV.find(i => i.href === '/ems/event/new')!;
-  const opsItems = EMS_NAV.filter(i => ['/ems/checkin', '/ems/juri', '/ems/leaderboard'].includes(i.href));
-  const certVerifyItem = EMS_NAV.find(i => i.href === '/ems/cert/verify')!;
-  const approvalsItem = EMS_NAV.find(i => i.href === '/ems/approvals')!;
+  const emsNav = getEmsNav(t);
+  const mainItem = emsNav.find(i => i.href === '/ems/dashboard')!;
+  const createItem = emsNav.find(i => i.href === '/ems/event/new')!;
+  const opsItems = emsNav.filter(i => ['/ems/checkin', '/ems/juri', '/ems/leaderboard'].includes(i.href));
+  const certVerifyItem = emsNav.find(i => i.href === '/ems/cert/verify')!;
+  const approvalsItem = emsNav.find(i => i.href === '/ems/approvals')!;
 
   return (
     <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
@@ -522,7 +534,7 @@ export function Sidebar() {
     const found = ALL_CLUBS.find(c => c.id === activeClubId);
     if (found?.name) return found.name;
     if (/^[0-9a-fA-F-]{30,}$/.test(activeClubId)) {
-      return isSuperAdmin ? 'Pentadbiran JPP' : 'Kelab Siswa';
+      return isSuperAdmin ? t('nav:jpp_administration', 'Pentadbiran JPP') : t('nav:student_club', 'Kelab Siswa');
     }
     return activeClubId.replace('club_', '').toUpperCase();
   })();

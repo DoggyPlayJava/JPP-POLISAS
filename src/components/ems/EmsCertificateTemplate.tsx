@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Document, Page, Text, View, StyleSheet, Image, PDFDownloadLink } from '@react-pdf/renderer';
 
 export interface EmsCertData {
@@ -229,30 +230,31 @@ const styles = StyleSheet.create({
 });
 
 export const EmsCertificateDocument: React.FC<EmsCertificateDocumentProps> = ({ certData }) => {
+  const { t } = useTranslation(['ems', 'common']);
   const isWinner = certData.cert_type === 'WINNER';
   const isJury = certData.cert_type === 'JURY';
 
   const certTitle = isWinner
-    ? 'SIJIL PENGHARGAAN & ANUGERAH PEMENANG'
+    ? t('ems:cert_title_winner_award', 'SIJIL PENGHARGAAN & ANUGERAH PEMENANG')
     : isJury
-    ? 'SIJIL PENGHARGAAN JURI PENILAI'
-    : 'SIJIL PENYERTAAN';
+    ? t('ems:cert_title_jury_award', 'SIJIL PENGHARGAAN JURI PENILAI')
+    : t('ems:cert_title_participation_award', 'SIJIL PENYERTAAN');
 
   const actionText = isWinner
-    ? 'telah mencapai kejayaan cemerlang dalam program / acara:'
+    ? t('ems:cert_desc_winner', 'telah mencapai kejayaan cemerlang dalam program / acara:')
     : isJury
-    ? 'telah memberikan sumbangan dan khidmat bakti sebagai Juri Penilai bagi program / acara:'
-    : 'telah menyertai dengan jayanya program / acara:';
+    ? t('ems:cert_desc_jury', 'telah memberikan sumbangan dan khidmat bakti sebagai Juri Penilai bagi program / acara:')
+    : t('ems:cert_desc_participation', 'telah menyertai dengan jayanya program / acara:');
 
   return (
-    <Document title={`Sijil_${certData.cert_serial}`} author="JPP POLISAS EMS">
+    <Document title={t('ems:cert_document_name', 'Sijil_{{serial}}', { serial: certData.cert_serial })} author="JPP POLISAS EMS">
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.borderOuter}>
           <View style={styles.borderInner}>
             {/* Header Block */}
             <View style={styles.headerContainer}>
               <Text style={styles.institutionTitle}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
-              <Text style={styles.subHeaderTitle}>Jawatankuasa Perwakilan Pelajar (JPP-POLISAS)</Text>
+              <Text style={styles.subHeaderTitle}>{t('ems:cert_jpp_polisas_council', 'Jawatankuasa Perwakilan Pelajar (JPP-POLISAS)')}</Text>
               <View style={styles.goldDivider} />
             </View>
 
@@ -265,7 +267,7 @@ export const EmsCertificateDocument: React.FC<EmsCertificateDocumentProps> = ({ 
 
             {/* Body */}
             <View style={styles.bodyContainer}>
-              <Text style={styles.certifyText}>Dengan ini disahkan bahawa</Text>
+              <Text style={styles.certifyText}>{t('ems:cert_hereby_certified', 'Dengan ini disahkan bahawa')}</Text>
               <Text style={styles.recipientName}>{certData.recipient_name}</Text>
               
               {certData.recipient_subtext && (
@@ -276,7 +278,7 @@ export const EmsCertificateDocument: React.FC<EmsCertificateDocumentProps> = ({ 
               <Text style={styles.eventTitle}>{certData.event_title}</Text>
 
               {certData.event_date && (
-                <Text style={styles.eventDate}>Tarikh: {certData.event_date}</Text>
+                <Text style={styles.eventDate}>{t('ems:cert_date_prefix', 'Tarikh:')} {certData.event_date}</Text>
               )}
             </View>
 
@@ -284,16 +286,16 @@ export const EmsCertificateDocument: React.FC<EmsCertificateDocumentProps> = ({ 
             <View style={styles.footerRow}>
               {/* Left: Serial & Status */}
               <View style={styles.footerLeft}>
-                <Text style={styles.serialLabel}>NO. SIRI SIJIL</Text>
+                <Text style={styles.serialLabel}>{t('ems:cert_serial_number_label', 'NO. SIRI SIJIL')}</Text>
                 <Text style={styles.serialValue}>{certData.cert_serial}</Text>
-                <Text style={styles.statusBadge}>✓ SAH & BERDAFTAR</Text>
+                <Text style={styles.statusBadge}>{t('ems:cert_verified_badge', '✓ SAH & BERDAFTAR')}</Text>
               </View>
 
               {/* Center: Signatory */}
               <View style={styles.footerCenter}>
                 <View style={styles.signatureLine} />
                 <Text style={styles.signatoryTitle}>PENGERUSI JPP POLISAS</Text>
-                <Text style={styles.signatorySub}>Sistem Pengurusan Acara JPP-POLISAS</Text>
+                <Text style={styles.signatorySub}>{t('ems:cert_event_system_tag', 'Sistem Pengurusan Acara JPP-POLISAS')}</Text>
               </View>
 
               {/* Right: QR Verification */}
@@ -301,7 +303,7 @@ export const EmsCertificateDocument: React.FC<EmsCertificateDocumentProps> = ({ 
                 {certData.qr_code_url ? (
                   <Image src={certData.qr_code_url} style={styles.qrCodeImage} />
                 ) : null}
-                <Text style={styles.verifyText}>Imbas untuk Pengesahan Digital</Text>
+                <Text style={styles.verifyText}>{t('ems:cert_scan_digital_verify', 'Imbas untuk Pengesahan Digital')}</Text>
               </View>
             </View>
           </View>
@@ -326,7 +328,8 @@ export const EmsCertificateDownloadLink: React.FC<EmsCertificateDownloadLinkProp
   style,
   children,
 }) => {
-  const name = fileName || `Sijil_${certData.cert_serial || 'POLISAS'}.pdf`;
+  const { t } = useTranslation(['ems', 'common']);
+  const name = fileName || t('ems:cert_file_name_format', 'Sijil_{{serial}}.pdf', { serial: certData.cert_serial || 'POLISAS' });
 
   return (
     <PDFDownloadLink
@@ -340,8 +343,8 @@ export const EmsCertificateDownloadLink: React.FC<EmsCertificateDownloadLinkProp
         children
           ? children({ loading, error })
           : loading
-          ? 'Menjana PDF...'
-          : 'Muat Turun Sijil (PDF)'
+          ? t('ems:cert_generating_pdf', 'Menjana PDF...')
+          : t('ems:cert_download_pdf_btn', 'Muat Turun Sijil (PDF)')
       }
     </PDFDownloadLink>
   );

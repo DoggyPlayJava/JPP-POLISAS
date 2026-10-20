@@ -137,8 +137,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
 
 // --- 3. KOMPONEN UTAMA DASHBOARD ---
 export function DashboardPage() {
-  const { t } = useTranslation(['kpp', 'common']);
-  const { t: tPortal } = useTranslation(['portal', 'common']);
+  const { t } = useTranslation(['portal', 'kpp', 'common']);
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
@@ -164,17 +163,17 @@ export function DashboardPage() {
   const activities= dashData.activities|| [];
   const members   = dashData.members   || [];
   const programs  = dashData.programs  || [];
-  const announcement = dashData.announcement?.content || 'Tiada pengumuman terkini.';
+  const announcement = dashData.announcement?.content || t('portal:no_latest_announcement', 'Tiada pengumuman terkini.');
 
   const clubStats = {
     taskProgress: [
-      { name: 'Aktif',   value: dashData.task_stats?.active    || 0, color: '#3b82f6' },
-      { name: 'Selesai', value: dashData.task_stats?.completed || 0, color: '#10b981' },
+      { name: t('common:active', 'Aktif'),   value: dashData.task_stats?.active    || 0, color: '#3b82f6' },
+      { name: t('common:completed', 'Selesai'), value: dashData.task_stats?.completed || 0, color: '#10b981' },
     ].filter(d => d.value > 0),
     activityTrends: [
-      { name: 'Perancangan', count: dashData.act_stats?.perancangan || 0 },
-      { name: 'Aktif',       count: dashData.act_stats?.aktif       || 0 },
-      { name: 'Selesai',     count: dashData.act_stats?.selesai     || 0 },
+      { name: t('portal:planning', 'Perancangan'), count: dashData.act_stats?.perancangan || 0 },
+      { name: t('common:active', 'Aktif'),       count: dashData.act_stats?.aktif       || 0 },
+      { name: t('common:completed', 'Selesai'),     count: dashData.act_stats?.selesai     || 0 },
     ],
   };
 
@@ -188,7 +187,7 @@ export function DashboardPage() {
   useEffect(() => {
     if (profile && userClubIds.length === 1 && !localStorage.getItem('has_seen_kelab_offer')) {
       localStorage.setItem('has_seen_kelab_offer', 'true');
-      toast('Sila pilih kelab/persatuan tambahan anda!', { icon: '👋' });
+      toast(t('portal:select_additional_club', 'Sila pilih kelab/persatuan tambahan anda!'));
       navigate('/sertai-kelab');
     }
   }, [profile, userClubIds, navigate]);
@@ -215,7 +214,7 @@ export function DashboardPage() {
 
   const handleApproveTask = async (task: any) => {
     try {
-      if (task.title.startsWith('[MERIT]') && task.approval_status === 'WAITING') {
+      if (/^\[MERIT\]/.test(task.title) && task.approval_status === 'WAITING') {
         const { error } = await supabase.from('club_tasks').update({
           approval_status: 'APPROVED', is_archived: true, approved_by: user?.id
         }).eq('id', task.id);
@@ -312,7 +311,7 @@ export function DashboardPage() {
         club_id: profile?.club_id,
         user_id: user?.id,
         type: 'UNLOCK_REQUEST',
-        content: `MT [${user?.email}] memohon UNLOCK bagi program: ${unlockDialog.program.nama_program}. Sebab: ${reason}`
+        content: t('portal:unlock_request_log', 'MT [{{email}}] memohon UNLOCK bagi program: {{program}}. Sebab: {{reason}}', { email: user?.email, program: unlockDialog.program.nama_program, reason })
       }]);
 
       toast.success(t('kpp:unlock_request_sent_toast', 'Permohonan Unlock dihantar ke JPP'));
@@ -332,27 +331,27 @@ export function DashboardPage() {
   const kelabTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke Dashboard Kelab & Persatuan! Ruang ini membolehkan anda memantau aktiviti, mengurus tugasan ahli, dan melihat statistik kelab anda.',
-      title: 'Modul Kelab 🏛️',
+      content: t('portal:tour_welcome_content', 'Selamat datang ke Dashboard Kelab & Persatuan! Ruang ini membolehkan anda memantau aktiviti, mengurus tugasan ahli, dan melihat statistik kelab anda.'),
+      title: t('portal:tour_welcome_title', 'Modul Kelab'),
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-kelab-sidebar',
-      content: isMobile ? 'Buka menu ini untuk mengakses senarai kelab, jadual aktiviti, dan laporan kelab.' : 'Di ruangan tepi ini, anda boleh menavigasi ke senarai kelab lain, jadual aktiviti, laporan, dan tetapan kelab.',
-      title: 'Menu Navigasi 🧭',
+      content: isMobile ? t('portal:tour_nav_mobile', 'Buka menu ini untuk mengakses senarai kelab, jadual aktiviti, dan laporan kelab.') : t('portal:tour_nav_desktop', 'Di ruangan tepi ini, anda boleh menavigasi ke senarai kelab lain, jadual aktiviti, laporan, dan tetapan kelab.'),
+      title: t('portal:tour_nav_title', 'Menu Navigasi'),
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-kelab-stats',
-      content: 'Ini adalah metrik pantas. Anda boleh lihat jumlah tugasan yang belum selesai, jumlah ahli aktif, dan program kelab semasa.',
-      title: 'Statistik Prestasi 📊',
+      content: t('portal:tour_stats_content', 'Ini adalah metrik pantas. Anda boleh lihat jumlah tugasan yang belum selesai, jumlah ahli aktif, dan program kelab semasa.'),
+      title: t('portal:tour_stats_title', 'Statistik Prestasi'),
       placement: 'bottom' as const,
     },
     {
       target: '.tour-kelab-tasks',
-      content: 'Bahagian ini menunjukkan senarai tugasan ahli (untuk AJK) atau tugasan anda (untuk Ahli Biasa). Anda boleh serah tugasan di sini untuk dapatkan Merit!',
-      title: 'Pengurusan Tugasan ✅',
+      content: t('portal:tour_tasks_content', 'Bahagian ini menunjukkan senarai tugasan ahli (untuk AJK) atau tugasan anda (untuk Ahli Biasa). Anda boleh serah tugasan di sini untuk dapatkan Merit!'),
+      title: t('portal:tour_tasks_title', 'Pengurusan Tugasan'),
       placement: 'top' as const,
     }
   ];
@@ -396,12 +395,12 @@ export function DashboardPage() {
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
             <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
-              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> {tPortal('portal:ai_analysis', 'Analisis AI')}
+              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> {t('portal:ai_analysis', 'Analisis AI')}
             </Button>
           )}
           {isAdvisor && (
             <Button onClick={() => navigate('/logs')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10">
-              <Activity className="w-4 h-4 mr-2" /> {tPortal('portal:system_logs', 'Log Sistem')}
+              <Activity className="w-4 h-4 mr-2" /> {t('portal:system_logs', 'Log Sistem')}
             </Button>
           )}
           {isMT && <AddTaskModal onTaskAdded={fetchData} />}
@@ -421,8 +420,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">{tPortal('portal:task_performance', 'Prestasi Tugasan')}</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{tPortal('portal:task_distribution', 'Taburan Tugasan Dibekalkan')}</p>
+              <h3 className="text-xl font-black italic">{t('portal:task_performance', 'Prestasi Tugasan')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('portal:task_distribution', 'Taburan Tugasan Dibekalkan')}</p>
             </div>
             <Activity className="text-primary" size={24} />
           </div>
@@ -460,8 +459,8 @@ export function DashboardPage() {
         <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 ">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-xl font-black italic">{tPortal('portal:activity_status_lifecycle', 'Status Aktiviti')}</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{tPortal('portal:activity_status_lifecycle', 'Kitaran Hidup Program')}</p>
+              <h3 className="text-xl font-black italic">{t('portal:activity_status', 'Status Aktiviti')}</h3>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{t('portal:program_lifecycle', 'Kitaran Hidup Program')}</p>
             </div>
             <TrendingUp className="text-emerald-500" size={24} />
           </div>
@@ -545,7 +544,7 @@ export function DashboardPage() {
           <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70  overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs') : `${t('kpp:my_clubs')} - ${t('kpp:tasks', 'Tugasan')}`) : t('kpp:task_archive', 'Arkib Tugasan')}
+                {taskView === 'active' ? (isNormalMember ? t('kpp:my_clubs', 'Kelab Saya') : t('portal:my_clubs_tasks', 'Kelab Saya - Tugasan')) : t('kpp:task_archive', 'Arkib Tugasan')}
                 {taskView === 'archive' && <Archive size={20} className="text-muted-foreground" />}
               </CardTitle>
               <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 w-full sm:w-auto">
@@ -560,9 +559,9 @@ export function DashboardPage() {
                     <CheckCircle2 className="w-6 h-6" />
                   </EmptyMedia>
                   <EmptyHeader>
-                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">{tPortal('portal:all_completed', 'Semua Selesai!')}</EmptyTitle>
+                    <EmptyTitle className="text-sm font-black uppercase tracking-widest">{t('portal:all_completed', 'Semua Selesai!')}</EmptyTitle>
                     <EmptyDescription className="text-xs">
-                      {tPortal('portal:no_tasks', 'Tiada tugasan')} {taskView === 'active' ? t('common:active', 'aktif').toLowerCase() : t('kpp:in_archive', 'dalam arkib')} {t('kpp:at_this_moment', 'buat masa ini.')}
+                      {taskView === 'active' ? t('portal:no_active_tasks_desc', 'Tiada tugasan aktif buat masa ini.') : t('portal:no_archived_tasks_desc', 'Tiada tugasan dalam arkib buat masa ini.')}
                     </EmptyDescription>
                   </EmptyHeader>
                   {isMT && taskView === 'active' && <AddTaskModal onTaskAdded={fetchData} />}
@@ -589,7 +588,7 @@ export function DashboardPage() {
                     <Medal size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">{tPortal('portal:advisor_address', 'Amanat Penasihat')}</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-white/60">{t('portal:advisor_address', 'Amanat Penasihat')}</h4>
                     <p className="text-[10px] font-bold text-white/40 uppercase">{t('common:latest', 'Terkini')}</p>
                   </div>
                 </div>
@@ -609,7 +608,7 @@ export function DashboardPage() {
 
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 border border-border/40">
             <CardTitle className="text-xl font-black mb-6 flex items-center gap-2">
-              <Trophy className="text-amber-500" size={20} /> {tPortal('portal:outstanding_members', 'Ahli Cemerlang')}
+              <Trophy className="text-amber-500" size={20} /> {t('portal:outstanding_members', 'Ahli Cemerlang')}
             </CardTitle>
             <div className="space-y-4">
               {members.sort((a, b) => (b.merit || 0) - (a.merit || 0)).slice(0, 3).map((m, i) => (
@@ -623,7 +622,7 @@ export function DashboardPage() {
                   <Badge variant="outline" className="font-black text-primary border-primary/20 bg-background">{m.merit || 0} pts</Badge>
                 </div>
               ))}
-              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">{tPortal('portal:view_all_ranking', 'Lihat Semua Ranking')} <ArrowUpRight size={14} className="ml-2" /></Button>
+              <Button onClick={() => navigate('/leaderboard')} variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2 group">{t('portal:view_all_ranking', 'Lihat Semua Ranking')} <ArrowUpRight size={14} className="ml-2" /></Button>
             </div>
           </Card>
         </div>
@@ -643,7 +642,7 @@ export function DashboardPage() {
         description={t('kpp:reject_task_desc', 'Sila masukkan sebab penolakan tugasan ini supaya ahli kelab dapat membuat pembetulan.')}
         inputLabel={t('kpp:rejection_reason_label', 'Sebab Penolakan')}
         inputType="textarea"
-        placeholder="Contoh: Lampiran minit mesyuarat tidak lengkap..."
+        placeholder={t('portal:reject_task_placeholder', 'Contoh: Lampiran minit mesyuarat tidak lengkap...')}
         confirmLabel={t('kpp:reject_task', 'Tolak Tugasan')}
         variant="destructive"
         isLoading={isProcessingAction}
@@ -657,7 +656,7 @@ export function DashboardPage() {
         description={t('kpp:request_unlock_desc', 'Program yang telah dikunci memerlukan kelulusan JPP untuk dibuka semula bagi sebarang suntingan.')}
         inputLabel={t('kpp:unlock_reason_label', 'Sebab Permohonan')}
         inputType="textarea"
-        placeholder="Contoh: Perlu mengemas kini perincian bajet dan tentatif program..."
+        placeholder={t('portal:unlock_program_placeholder', 'Contoh: Perlu mengemas kini perincian bajet dan tentatif program...')}
         confirmLabel={t('kpp:submit_application', 'Hantar Permohonan')}
         isLoading={isProcessingAction}
         onConfirm={executeRequestUnlock}
@@ -667,7 +666,7 @@ export function DashboardPage() {
       <PromptDialog
         open={lateVerifyDialog.open}
         title={t('kpp:late_task_verification', 'Pengesahan Tugasan Lewat')}
-        description={`Tugasan "${lateVerifyDialog.task?.title || ''}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: ${lateVerifyDialog.task?.merit_points || 0} pts.`}
+        description={t('portal:late_task_verification_desc', 'Tugasan "{{title}}" telah melepasi tarikh akhir. Anda boleh menetapkan merit sebenar (nilai negatif untuk penalti merit, contoh: -5). Merit asal: {{points}} pts.', { title: lateVerifyDialog.task?.title || '', points: lateVerifyDialog.task?.merit_points || 0 })}
         inputLabel={t('kpp:merit_points_awarded', 'Mata Merit Diberikan (Boleh Negatif)')}
         inputType="number"
         initialValue={String(lateVerifyDialog.task?.merit_points || 0)}

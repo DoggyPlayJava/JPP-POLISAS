@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { hexToRgba } from '@/lib/utils';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 export const JPP_THEME_DEFAULT_COLOR = '#2E3A2F';
 export const JPP_MODULE_ID = 'jpp';
@@ -31,7 +34,7 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   KPP: {
     code: 'KPP',
     shortLabel: 'KPP',
-    fullLabel: 'Kelab, Persatuan & Perpaduan',
+    fullLabel: t('jpp:unit_kpp_full', 'Kelab, Persatuan & Perpaduan'),
     icon: Landmark,
     color: '#F87171',
     moduleLink: '/dashboard',
@@ -39,8 +42,8 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   KEUSAHAWANAN: {
     code: 'KEUSAHAWANAN',
-    shortLabel: 'Keusahawanan',
-    fullLabel: 'Keusahawanan & Inovasi',
+    shortLabel: t('jpp:unit_keusahawanan_short', 'Keusahawanan'),
+    fullLabel: t('jpp:unit_keusahawanan_full', 'Keusahawanan & Inovasi'),
     icon: Lightbulb,
     color: '#4ADE80',
     moduleLink: '/jpp/keusahawanan-hub',
@@ -48,9 +51,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   KEBAJIKAN: {
     code: 'KEBAJIKAN',
-    shortLabel: 'Kebajikan',
-    fullLabel: 'Kebajikan & Pengaduan Awam',
-    label: 'Exco Kebajikan',
+    shortLabel: t('jpp:unit_kebajikan_short', 'Kebajikan'),
+    fullLabel: t('jpp:unit_kebajikan_full', 'Kebajikan & Pengaduan Awam'),
+    label: t('jpp:unit_kebajikan_label', 'Exco Kebajikan'),
     icon: HeartHandshake,
     color: '#2DD4BF',
     moduleLink: '/kebajikan',
@@ -58,9 +61,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   SRK: {
     code: 'SRK',
-    shortLabel: 'Sukan & Reka',
-    fullLabel: 'Sukan, Rekreasi & Kebudayaan',
-    label: 'Exco Sukan, Rekreasi & Kebudayaan',
+    shortLabel: t('jpp:unit_srk_short', 'Sukan & Reka'),
+    fullLabel: t('jpp:unit_srk_full', 'Sukan, Rekreasi & Kebudayaan'),
+    label: t('jpp:unit_srk_label', 'Exco Sukan, Rekreasi & Kebudayaan'),
     icon: Trophy,
     color: '#F59E0B',
     moduleLink: '/exco/srk/aktiviti',
@@ -68,9 +71,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   AKADEMIK: {
     code: 'AKADEMIK',
-    shortLabel: 'Akademik',
-    fullLabel: 'Akademik & Pembangunan Mahasiswa',
-    label: 'Exco Akademik',
+    shortLabel: t('jpp:unit_akademik_short', 'Akademik'),
+    fullLabel: t('jpp:unit_akademik_full', 'Akademik & Pembangunan Mahasiswa'),
+    label: t('jpp:unit_akademik_label', 'Exco Akademik'),
     icon: BookOpen,
     color: '#818CF8',
     moduleLink: '/akademik',
@@ -78,9 +81,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   MULTIMEDIA: {
     code: 'MULTIMEDIA',
-    shortLabel: 'Multimedia',
-    fullLabel: 'Multimedia, Informasi & PA',
-    label: 'Exco Multimedia',
+    shortLabel: t('jpp:unit_multimedia_short', 'Multimedia'),
+    fullLabel: t('jpp:unit_multimedia_full', 'Multimedia, Informasi & PA'),
+    label: t('jpp:unit_multimedia_label', 'Exco Multimedia'),
     icon: Radio,
     color: '#FB923C',
     moduleLink: '/exco/multimedia/aktiviti',
@@ -88,9 +91,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   KLS: {
     code: 'KLS',
-    shortLabel: 'Kediaman Luar',
-    fullLabel: 'Kediaman Luar Kampus',
-    label: 'Exco Kediaman Luar Kampus',
+    shortLabel: t('jpp:unit_kls_short', 'Kediaman Luar'),
+    fullLabel: t('jpp:unit_kls_full', 'Kediaman Luar Kampus'),
+    label: t('jpp:unit_kls_label', 'Exco Kediaman Luar Kampus'),
     icon: MapPin,
     color: '#60A5FA',
     moduleLink: '/klk',  // Dashboard khusus KLK (bukan generic exco template)
@@ -98,9 +101,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   KOLAB: {
     code: 'KOLAB',
-    shortLabel: 'Kolaborasi',
-    fullLabel: 'Kolaborasi & Kesukarelawanan',
-    label: 'Exco Kolaborasi',
+    shortLabel: t('jpp:unit_kolab_short', 'Kolaborasi'),
+    fullLabel: t('jpp:unit_kolab_full', 'Kolaborasi & Kesukarelawanan'),
+    label: t('jpp:unit_kolab_label', 'Exco Kolaborasi'),
     icon: Handshake,
     color: '#34D399',
     moduleLink: '/exco/kolab/aktiviti',
@@ -108,9 +111,9 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
   KK: {
     code: 'KK',
-    shortLabel: 'Kediaman & Ker.',
-    fullLabel: 'Kediaman & Kerohanian',
-    label: 'Exco Kediaman & Kerohanian',
+    shortLabel: t('jpp:unit_kk_short', 'Kediaman & Ker.'),
+    fullLabel: t('jpp:unit_kk_full', 'Kediaman & Kerohanian'),
+    label: t('jpp:unit_kk_label', 'Exco Kediaman & Kerohanian'),
     icon: Moon,
     color: '#E879F9',
     moduleLink: '/exco/kk/aktiviti',

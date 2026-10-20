@@ -4,6 +4,9 @@ import {
   TelemetryDiagnostics,
   UnifiedTimelineEvent,
 } from './telemetryTypes';
+import i18n from '@/lib/i18n';
+
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
 export function formatUptime(s: number): string {
   if (!s || s <= 0) return '0s';
@@ -17,7 +20,7 @@ export function formatUptime(s: number): string {
 }
 
 export function extractPageRoute(urlOrEndpoint?: string): { path: string; name: string } {
-  if (!urlOrEndpoint) return { path: 'Latar Belakang', name: 'Background / Server Process' };
+  if (!urlOrEndpoint) return { path: t('jpp:telemetry_route_bg_path', 'Latar Belakang'), name: 'Background / Server Process' };
 
   try {
     let cleanPath = urlOrEndpoint;
@@ -26,20 +29,20 @@ export function extractPageRoute(urlOrEndpoint?: string): { path: string; name: 
       cleanPath = parsed.pathname;
     }
 
-    if (cleanPath.startsWith('/polysuara')) return { path: '/polysuara', name: 'PolySuara Mahasiswa' };
-    if (cleanPath.startsWith('/polymart')) return { path: '/polymart', name: 'PolyMart Pasar Siswa' };
-    if (cleanPath.startsWith('/polyrider')) return { path: '/polyrider', name: 'PolyRider Logistik' };
-    if (cleanPath.startsWith('/kebajikan')) return { path: '/kebajikan', name: 'e-Kebajikan & FoodBank' };
-    if (cleanPath.startsWith('/akademik')) return { path: '/akademik', name: 'e-Akademik Siswa' };
-    if (cleanPath.startsWith('/polymaps')) return { path: '/polymaps', name: 'PolyMaps 360 Kampus' };
-    if (cleanPath.startsWith('/ems')) return { path: '/ems', name: 'EMS Juri & Pertandingan' };
-    if (cleanPath.startsWith('/jpp/asrama') || cleanPath.startsWith('/asrama')) return { path: '/jpp/asrama', name: 'Asrama KAMSIS' };
-    if (cleanPath.startsWith('/jpp/telemetry')) return { path: '/jpp/telemetry', name: 'Telemetri Sistem' };
-    if (cleanPath.startsWith('/jpp')) return { path: '/jpp', name: 'Portal Pentadbiran JPP' };
-    if (cleanPath.startsWith('/portal')) return { path: '/portal', name: 'Hab Pelajar Portal' };
-    if (cleanPath.startsWith('/login')) return { path: '/login', name: 'Daftar Masuk (SSO)' };
+    if (cleanPath.startsWith('/polysuara')) return { path: '/polysuara', name: t('jpp:telemetry_route_polysuara', 'PolySuara Mahasiswa') };
+    if (cleanPath.startsWith('/polymart')) return { path: '/polymart', name: t('jpp:telemetry_route_polymart', 'PolyMart Pasar Siswa') };
+    if (cleanPath.startsWith('/polyrider')) return { path: '/polyrider', name: t('jpp:telemetry_route_polyrider', 'PolyRider Logistik') };
+    if (cleanPath.startsWith('/kebajikan')) return { path: '/kebajikan', name: t('jpp:telemetry_route_kebajikan', 'e-Kebajikan & FoodBank') };
+    if (cleanPath.startsWith('/akademik')) return { path: '/akademik', name: t('jpp:telemetry_route_akademik', 'e-Akademik Siswa') };
+    if (cleanPath.startsWith('/polymaps')) return { path: '/polymaps', name: t('jpp:telemetry_route_polymaps', 'PolyMaps 360 Kampus') };
+    if (cleanPath.startsWith('/ems')) return { path: '/ems', name: t('jpp:telemetry_route_ems', 'EMS Juri & Pertandingan') };
+    if (cleanPath.startsWith('/jpp/asrama') || cleanPath.startsWith('/asrama')) return { path: '/jpp/asrama', name: t('jpp:telemetry_route_asrama', 'Asrama KAMSIS') };
+    if (cleanPath.startsWith('/jpp/telemetry')) return { path: '/jpp/telemetry', name: t('jpp:telemetry_route_telemetry', 'Telemetri Sistem') };
+    if (cleanPath.startsWith('/jpp')) return { path: '/jpp', name: t('jpp:telemetry_route_jpp_portal', 'Portal Pentadbiran JPP') };
+    if (cleanPath.startsWith('/portal')) return { path: '/portal', name: t('jpp:telemetry_route_portal', 'Hab Pelajar Portal') };
+    if (cleanPath.startsWith('/login')) return { path: '/login', name: t('jpp:telemetry_route_login', 'Daftar Masuk (SSO)') };
     if (cleanPath.startsWith('/api/')) return { path: cleanPath, name: `API Route (${cleanPath})` };
-    if (cleanPath === '/') return { path: '/', name: 'Laman Utama (Landing)' };
+    if (cleanPath === '/') return { path: '/', name: t('jpp:telemetry_route_landing', 'Laman Utama (Landing)') };
 
     return { path: cleanPath, name: cleanPath };
   } catch {
@@ -55,8 +58,8 @@ export function getRatingTheme(rating: ResilienceRating) {
         bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
         border: 'border-emerald-500/20 dark:border-emerald-500/30',
         accent: '#10B981',
-        label: 'Cemerlang',
-        sub: 'Sistem stabil pada tahap optimum',
+        label: t('jpp:telemetry_rating_excellent', 'Cemerlang'),
+        sub: t('jpp:telemetry_rating_excellent_sub', 'Sistem stabil pada tahap optimum'),
       };
     case 'Stabil':
       return {
@@ -64,8 +67,8 @@ export function getRatingTheme(rating: ResilienceRating) {
         bg: 'bg-cyan-500/10 dark:bg-cyan-500/15',
         border: 'border-cyan-500/20 dark:border-cyan-500/30',
         accent: '#06B6D4',
-        label: 'Stabil',
-        sub: 'Prestasi terkawal dengan beban normal',
+        label: t('jpp:telemetry_rating_stable', 'Stabil'),
+        sub: t('jpp:telemetry_rating_stable_sub', 'Prestasi terkawal dengan beban normal'),
       };
     case 'Perhatian Diperlukan':
       return {
@@ -73,8 +76,8 @@ export function getRatingTheme(rating: ResilienceRating) {
         bg: 'bg-amber-500/10 dark:bg-amber-500/15',
         border: 'border-amber-500/20 dark:border-amber-500/30',
         accent: '#F59E0B',
-        label: 'Perhatian Diperlukan',
-        sub: 'Terdapat anomali perkhidmatan',
+        label: t('jpp:telemetry_rating_attention', 'Perhatian Diperlukan'),
+        sub: t('jpp:telemetry_rating_attention_sub', 'Terdapat anomali perkhidmatan'),
       };
     case 'Kritikal':
     default:
@@ -83,8 +86,8 @@ export function getRatingTheme(rating: ResilienceRating) {
         bg: 'bg-rose-500/10 dark:bg-rose-500/15',
         border: 'border-rose-500/20 dark:border-rose-500/30',
         accent: '#EF4444',
-        label: 'Kritikal',
-        sub: 'Tindakan mitigasi segera diperlukan',
+        label: t('jpp:telemetry_rating_critical', 'Kritikal'),
+        sub: t('jpp:telemetry_rating_critical_sub', 'Tindakan mitigasi segera diperlukan'),
       };
   }
 }
@@ -106,7 +109,7 @@ export function buildUnifiedTimeline(
     const { path, name } = extractPageRoute(err.endpoint);
 
     // Clean human readable error message
-    let displayTitle = err.message || err.error_type || 'Ralat Runtime dikesan';
+    let displayTitle = err.message || err.error_type || t('jpp:telemetry_err_runtime_detected', 'Ralat Runtime dikesan');
     let source = 'Crash & Error Tracker';
     let badge: string = err.severity;
 
@@ -122,7 +125,7 @@ export function buildUnifiedTimeline(
       badge = 'HTTP ' + (err.status_code || 'ERR');
     } else if (displayTitle === 'Script error.') {
       displayTitle = err.filename
-        ? `Script error pada ${err.filename.split('/').pop()}`
+        ? t('jpp:telemetry_err_script_at', 'Script error pada {{file}}', { file: err.filename.split('/').pop() })
         : 'Script error (Cross-origin bundle)';
     }
 
@@ -157,7 +160,7 @@ export function buildUnifiedTimeline(
 
     (diagnostics.database?.alerts || []).forEach((a) =>
       moduleAlerts.push({
-        source: 'Pangkalan Data',
+        source: t('jpp:telemetry_source_db', 'Pangkalan Data'),
         alert: a,
         critical: a.includes('KRITIKAL') || a.includes('🚨'),
         pagePath: '/jpp/telemetry',
@@ -179,7 +182,7 @@ export function buildUnifiedTimeline(
         alert: a,
         critical: a.includes('tinggi'),
         pagePath: '/polymart',
-        pageTitle: 'PolyMart Siswa',
+        pageTitle: t('jpp:telemetry_page_polymart', 'PolyMart Siswa'),
       })
     );
     (diagnostics.kebajikan?.alerts || []).forEach((a) =>
@@ -208,7 +211,7 @@ export function buildUnifiedTimeline(
         type: 'alert',
         severity: item.critical ? 'CRITICAL' : 'WARNING',
         title: item.alert,
-        subtitle: `Amaran threshold diagnostik subsistem ${item.source}`,
+        subtitle: t('jpp:telemetry_alert_threshold_diagnostic', 'Amaran threshold diagnostik subsistem {{source}}', { source: item.source }),
         timestamp: eventTime,
         badge: item.critical ? 'KRITIKAL' : 'AMARAN',
         source: item.source,
@@ -224,13 +227,13 @@ export function buildUnifiedTimeline(
       id: 'sys-all-clear',
       type: 'system',
       severity: 'INFO',
-      title: 'Semua Subsistem Beroperasi dengan Normal',
-      subtitle: 'Integriti Node.js, PostgreSQL pool, dan perkhidmatan aktif disahkan.',
+      title: t('jpp:telemetry_all_systems_normal_title', 'Semua Subsistem Beroperasi dengan Normal'),
+      subtitle: t('jpp:telemetry_all_systems_normal_subtitle', 'Integriti Node.js, PostgreSQL pool, dan perkhidmatan aktif disahkan.'),
       timestamp: new Date(baseTime).toISOString(),
       badge: 'OPTIMAL',
-      source: 'Watchdog Pemeriksa',
+      source: t('jpp:telemetry_source_watchdog', 'Watchdog Pemeriksa'),
       pagePath: '/jpp/telemetry',
-      pageTitle: 'Pusat Kawalan Sistem',
+      pageTitle: t('jpp:telemetry_page_control_center', 'Pusat Kawalan Sistem'),
     });
   }
 

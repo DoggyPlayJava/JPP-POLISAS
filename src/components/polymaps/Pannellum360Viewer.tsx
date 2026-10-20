@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { 
   Compass, RotateCcw, Play, Pause, Maximize2, Minimize2, 
   Loader2, AlertCircle, RefreshCw, X 
@@ -50,7 +52,7 @@ function ensurePannellumLoaded(): Promise<void> {
           existingScript.addEventListener('load', () => resolve());
           existingScript.addEventListener('error', () => {
             pannellumLoaderPromise = null;
-            reject(new Error('Gagal memuatkan pustaka Pannellum.'));
+            reject(new Error(i18n.t('services:pannellum_lib_load_failed', 'Gagal memuatkan pustaka Pannellum.')));
           });
         }
         return;
@@ -64,7 +66,7 @@ function ensurePannellumLoaded(): Promise<void> {
       script.onload = () => resolve();
       script.onerror = () => {
         pannellumLoaderPromise = null;
-        reject(new Error('Gagal memuatkan pustaka Pannellum.'));
+        reject(new Error(i18n.t('services:pannellum_lib_load_failed', 'Gagal memuatkan pustaka Pannellum.')));
       };
       document.body.appendChild(script);
     });
@@ -84,6 +86,7 @@ export function Pannellum360Viewer({
   onToggleFullscreen,
   isFullscreen = false
 }: Pannellum360ViewerProps) {
+  const { t } = useTranslation(['services', 'common']);
   const rawId = useId();
   const containerId = `pannellum-container-${rawId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,7 +113,7 @@ export function Pannellum360Viewer({
     if (!imageUrl) {
       setIsLoading(false);
       setHasError(true);
-      setErrorMessage('Pautan imej 360 tidak sah atau kosong.');
+      setErrorMessage(t('services:pannellum_invalid_url', 'Pautan imej 360 tidak sah atau kosong.'));
       return;
     }
 
@@ -120,7 +123,7 @@ export function Pannellum360Viewer({
 
         const targetEl = document.getElementById(containerId);
         if (!targetEl || !window.pannellum) {
-          throw new Error('Elemen container Pannellum tidak ditemui.');
+          throw new Error(t('services:pannellum_container_not_found', 'Elemen container Pannellum tidak ditemui.'));
         }
 
         // Clean up previous viewer instance if exists
@@ -154,9 +157,9 @@ export function Pannellum360Viewer({
             pitch: 0,
             yaw: 0,
             strings: {
-              loadingLabel: 'Memuatkan panorama 360°...',
-              loadButtonLabel: 'Klik untuk Muat',
-              genericError: 'Ralat: Gagal memuatkan imej 360°.'
+              loadingLabel: t('services:pannellum_loading_label', 'Memuatkan panorama 360°...'),
+              loadButtonLabel: t('services:pannellum_click_to_load', 'Klik untuk Muat'),
+              genericError: t('services:pannellum_generic_error', 'Ralat: Gagal memuatkan imej 360°.')
             }
           });
 
@@ -173,14 +176,14 @@ export function Pannellum360Viewer({
             if (!isMounted) return;
             setIsLoading(false);
             setHasError(true);
-            setErrorMessage(typeof err === 'string' ? err : 'Gagal memuatkan imej panorama 360°. Sila semak pautan imej.');
+            setErrorMessage(typeof err === 'string' ? err : t('services:pannellum_load_error_check_url', 'Gagal memuatkan imej panorama 360°. Sila semak pautan imej.'));
           });
         } catch (err: any) {
           console.error('Pannellum viewer initialization failed:', err);
           if (!isMounted) return;
           setIsLoading(false);
           setHasError(true);
-          setErrorMessage(err.message || 'Gagal mengaktifkan penonton 360.');
+          setErrorMessage(err.message || t('services:pannellum_activate_failed', 'Gagal mengaktifkan penonton 360.'));
         }
       })
       .catch((err: any) => {
@@ -188,7 +191,7 @@ export function Pannellum360Viewer({
         if (!isMounted) return;
         setIsLoading(false);
         setHasError(true);
-        setErrorMessage(err.message || 'Pustaka pemaparan 360 gagal dimuatkan.');
+        setErrorMessage(err.message || t('services:pannellum_lib_render_failed', 'Pustaka pemaparan 360 gagal dimuatkan.'));
       });
 
     return () => {
@@ -282,7 +285,7 @@ export function Pannellum360Viewer({
         <button
           onClick={onClose}
           className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80  border border-white/15 text-white flex items-center justify-center transition-colors shadow-lg active:scale-95"
-          title="Tutup 360"
+          title={t('services:pannellum_close_360', 'Tutup 360')}
         >
           <X className="w-4 h-4" />
         </button>
@@ -298,7 +301,7 @@ export function Pannellum360Viewer({
               "w-8 h-8 rounded-xl flex items-center justify-center transition-colors text-white",
               isRotating ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "hover:bg-white/20 text-slate-300"
             )}
-            title={isRotating ? "Hentikan Putaran Auto" : "Mulakan Putaran Auto"}
+            title={isRotating ? t('services:pannellum_stop_auto_rotate', 'Hentikan Putaran Auto') : t('services:pannellum_start_auto_rotate', 'Mulakan Putaran Auto')}
           >
             {isRotating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
           </button>
@@ -307,7 +310,7 @@ export function Pannellum360Viewer({
           <button
             onClick={handleResetView}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:bg-white/20 hover:text-white transition-colors"
-            title="Set Semula Sudut Pandangan (Reset)"
+            title={t('services:pannellum_reset_view', 'Set Semula Sudut Pandangan (Reset)')}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -316,7 +319,7 @@ export function Pannellum360Viewer({
           <button
             onClick={handleFullscreenClick}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:bg-white/20 hover:text-white transition-colors"
-            title={isFullscreen ? "Keluar Skrin Penuh" : "Skrin Penuh (Fullscreen)"}
+            title={isFullscreen ? t('services:pannellum_exit_fullscreen', 'Keluar Skrin Penuh') : t('services:pannellum_fullscreen', 'Skrin Penuh (Fullscreen)')}
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
@@ -326,7 +329,7 @@ export function Pannellum360Viewer({
       {/* Touch / Mouse Drag Hint (disappears on interaction) */}
       {!isLoading && !hasError && (
         <div className="absolute bottom-3 left-3 z-10 pointer-events-none hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40  text-[10px] font-bold text-white/70 border border-white/10 opacity-70 group-hover/pano:opacity-100 transition-opacity">
-          <span>Tarik tetikus / sentuh skrin untuk pusing 360°</span>
+          <span>{t('services:pannellum_drag_hint', 'Tarik tetikus / sentuh skrin untuk pusing 360°')}</span>
         </div>
       )}
 
@@ -335,10 +338,10 @@ export function Pannellum360Viewer({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80  text-white">
           <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-3" />
           <p className="text-xs font-black uppercase tracking-wider text-slate-200">
-            Memuatkan Sudut 360°...
+            {t('services:pannellum_loading_view', 'Memuatkan Sudut 360°...')}
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
-            Sentuh atau seret untuk meneroka panorama
+            {t('services:pannellum_touch_explore_hint', 'Sentuh atau seret untuk meneroka panorama')}
           </p>
         </div>
       )}
@@ -350,10 +353,10 @@ export function Pannellum360Viewer({
             <AlertCircle className="w-6 h-6" />
           </div>
           <h4 className="text-sm font-black text-white uppercase tracking-wider mb-1">
-            Panorama 360° Tidak Dapat Dipaparkan
+            {t('services:pannellum_cannot_display', 'Panorama 360° Tidak Dapat Dipaparkan')}
           </h4>
           <p className="text-xs text-slate-400 max-w-sm mb-4">
-            {errorMessage || 'Imej panorama gagal dimuat atau format tidak disokong.'}
+            {errorMessage || t('services:pannellum_unsupported_or_failed', 'Imej panorama gagal dimuat atau format tidak disokong.')}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -361,14 +364,14 @@ export function Pannellum360Viewer({
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-lg shadow-emerald-600/20 active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Cuba Semula
+              {t('services:pannellum_retry', 'Cuba Semula')}
             </button>
             {onClose && (
               <button
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
               >
-                Tutup
+                {t('services:pannellum_close', 'Tutup')}
               </button>
             )}
           </div>

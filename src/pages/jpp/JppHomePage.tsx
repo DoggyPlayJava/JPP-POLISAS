@@ -86,11 +86,11 @@ function UnitCard({
 
   const unitMetric = useMemo(() => {
     if (!stats || !canOpen) return null;
-    if (code === 'KPP') return `${stats.totalClubs} Kelab Berdaftar`;
-    if (code === 'KEUSAHAWANAN') return `${stats.totalBusinesses} Peniaga Kampus`;
-    if (code === 'KEBAJIKAN') return `${stats.totalTickets} Aduan E-Bantu`;
+    if (code === 'KPP') return t('jpp:home_stat_registered_clubs', '{{count}} Kelab Berdaftar', { count: stats.totalClubs });
+    if (code === 'KEUSAHAWANAN') return t('jpp:home_stat_campus_businesses', '{{count}} Peniaga Kampus', { count: stats.totalBusinesses });
+    if (code === 'KEBAJIKAN') return t('jpp:home_stat_ebantu_complaints', '{{count}} Aduan E-Bantu', { count: stats.totalTickets });
     return null;
-  }, [code, stats, canOpen]);
+  }, [code, stats, canOpen, t]);
 
   const unitTitle = useMemo(() => {
     switch (code) {
@@ -148,10 +148,10 @@ function UnitCard({
                 ? 'bg-blue-500/10 border-blue-500/20 dark:border-blue-500/15 text-blue-600 dark:text-blue-400'
                 : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/25'
           )}>
-            {!cfg.isActive ? 'Akan Datang' : isLocked ? 'Pantau' : (
+            {!cfg.isActive ? t('jpp:home_status_coming_soon', 'Akan Datang') : isLocked ? t('jpp:home_status_monitor', 'Pantau') : (
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                Aktif
+                {t('jpp:home_status_active', 'Aktif')}
               </span>
             )}
           </div>
@@ -179,7 +179,7 @@ function UnitCard({
         {canOpen && (
           <div className="mt-auto pt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 group-hover:gap-3"
             style={{ color: cfg.color }}>
-            <span>Buka Modul</span>
+            <span>{t('jpp:home_btn_open_module', 'Buka Modul')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         )}
@@ -252,7 +252,7 @@ export function JppHomePage() {
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Sahabat', [profile]);
   const posLabel    = jppPosition
     ? (positionLabels[jppPosition] ?? jppPosition)
-    : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+    : isSuperAdmin ? 'Super Admin' : t('jpp:home_role_jpp_member', 'Ahli JPP');
 
   // Fetch JPP portal color
   useEffect(() => {
@@ -434,10 +434,10 @@ export function JppHomePage() {
               </>
             ) : (
               <>
-                {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color="#10B981" delay={0.1} subtitle="Aktif Sesi Ini" />}
-                {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle="Berdaftar" />}
-                {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle="Beroperasi" />}
-                {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle="Dipantau" />}
+                {isYDP && <StatCard label={t('jpp:home_stat_jpp_members', 'Ahli JPP')} value={stats.jppMembers} icon={Crown} color="#10B981" delay={0.1} subtitle={t('jpp:home_stat_active_session', 'Aktif Sesi Ini')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label={t('jpp:home_stat_active_clubs', 'Kelab Aktif')} value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} subtitle={t('jpp:home_stat_registered', 'Berdaftar')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label={t('jpp:home_stat_businesses', 'Perniagaan')} value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} subtitle={t('jpp:home_stat_operating', 'Beroperasi')} />}
+                {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label={t('jpp:home_stat_complaints', 'Aduan E-Bantu')} value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} subtitle={t('jpp:home_stat_monitored', 'Dipantau')} />}
               </>
             )}
           </div>
@@ -451,7 +451,7 @@ export function JppHomePage() {
             </h2>
             {(isYDP || isMT) && (
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-                {isYDP ? 'Akses Penuh' : `${assignedUnits.length} unit assigned`}
+                {isYDP ? t('jpp:home_full_access', 'Akses Penuh') : `${assignedUnits.length} unit assigned`}
               </span>
             )}
           </div>
@@ -460,7 +460,7 @@ export function JppHomePage() {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Lock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-3" />
               <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">
-                Tiada unit yang di-assign
+                {t('jpp:home_no_units_assigned', 'Tiada unit yang di-assign')}
               </p>
             </div>
           ) : (
@@ -488,20 +488,20 @@ export function JppHomePage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
-              Aktiviti Akan Datang
+              {t('jpp:home_upcoming_activities', 'Aktiviti Akan Datang')}
             </h2>
             <button
               onClick={() => navigate('/aktiviti')}
               className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 transition-colors flex items-center gap-1"
             >
-              Lihat Semua <ChevronRight className="w-3 h-3" />
+              {t('jpp:home_view_all', 'Lihat Semua')} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
           {takwim.length === 0 ? (
             <div className="flex items-center gap-3 px-4 py-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
               <Clock className="w-4 h-4 text-slate-400 dark:text-white/15" />
-              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada aktiviti dijadualkan</p>
+              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:home_no_activities_scheduled', 'Tiada aktiviti dijadualkan')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -515,12 +515,12 @@ export function JppHomePage() {
         {/* ── Quick Actions (YDP only) ────────────────────────────────── */}
         {(isYDP) && (
           <div className="space-y-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">Tindakan Pantas</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">{t('jpp:home_quick_actions', 'Tindakan Pantas')}</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Ahli JPP',       icon: Users,      href: '/jpp/members',    color: themeColor },
-                { label: 'Gambaran Sistem', icon: BarChart3,  href: '/jpp/overview',   color: '#60A5FA' },
-                { label: 'Pangkalan Pelajar', icon: ShieldCheck, href: '/jpp/users', color: '#F59E0B' },
+                { label: t('jpp:home_action_jpp_members', 'Ahli JPP'), icon: Users, href: '/jpp/members', color: themeColor },
+                { label: t('jpp:home_action_system_overview', 'Gambaran Sistem'), icon: BarChart3, href: '/jpp/overview', color: '#60A5FA' },
+                { label: t('jpp:home_action_student_database', 'Pangkalan Pelajar'), icon: ShieldCheck, href: '/jpp/users', color: '#F59E0B' },
               ].map(({ label, icon: Icon, href, color }) => (
                 <button
                   key={href}

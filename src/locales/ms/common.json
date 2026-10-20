@@ -17,6 +17,7 @@
   "archive": "Arkib",
   "archived": "Diarkibkan",
   "ascending": "Menaik",
+  "attention": "Perhatian:",
   "available": "Tersedia",
   "back": "Kembali",
   "back_to_portal": "Kembali ke Portal",
@@ -64,6 +65,7 @@
   "end_date": "Tarikh Tamat",
   "enter_value": "Masukkan nilai...",
   "error": "Ralat",
+  "error_with_message": "Ralat: {{message}}",
   "expired": "Tamat Tempoh",
   "export": "Eksport",
   "export_csv": "Eksport CSV",
@@ -92,6 +94,7 @@
   "matric_no": "No. Matrik",
   "module_under_development": "Modul ini sedang dalam pembangunan.",
   "name": "Nama",
+  "navigation": "Navigasi",
   "network_error": "Ralat rangkaian. Sila semak sambungan internet anda.",
   "new": "Baharu",
   "next": "Seterusnya",
@@ -191,6 +194,5 @@
   "view_all": "Lihat Semua",
   "warning": "Amaran",
   "yes": "Ya",
-  "you": "Anda",
-  "attention": "Perhatian:"
+  "you": "Anda"
 }
