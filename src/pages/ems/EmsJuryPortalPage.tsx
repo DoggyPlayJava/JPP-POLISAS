@@ -927,7 +927,7 @@ export function EmsJuryPortalPage() {
                   onClick={() => setPendingJuryCode(null)}
                   className="w-1/3 py-3 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-all"
                 >
-                  Kembali
+                  {t('ems:back', 'Kembali')}
                 </button>
                 <button
                   type="submit"
@@ -938,7 +938,7 @@ export function EmsJuryPortalPage() {
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>Masuk Portal</span>
+                      <span>{t('ems:enter_portal', 'Masuk Portal')}</span>
                       <ChevronRight className="w-4 h-4" />
                     </>
                   )}
@@ -949,7 +949,7 @@ export function EmsJuryPortalPage() {
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 text-center">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Hak Cipta Terpelihara &copy; {new Date().getFullYear()} POLISAS EMS
+              {t('ems:copyright_notice', { year: new Date().getFullYear(), defaultValue: `Hak Cipta Terpelihara © ${new Date().getFullYear()} POLISAS EMS` })}
             </p>
           </div>
         </div>
@@ -1050,7 +1050,7 @@ export function EmsJuryPortalPage() {
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              <span>Semua Kategori ({totalAssignedCount})</span>
+              <span>{t('ems:all_categories_with_count', { count: totalAssignedCount, defaultValue: `Semua Kategori (${totalAssignedCount})` })}</span>
               {totalScoredCount >= totalAssignedCount && totalAssignedCount > 0 && (
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
               )}
@@ -1167,16 +1167,16 @@ export function EmsJuryPortalPage() {
         {isLoadingDashboard ? (
           <div className="py-16 text-center text-slate-500 dark:text-slate-400 space-y-3">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-slate-400 dark:text-slate-500" />
-            <p>Memuatkan senarai peserta & pemarkahan...</p>
+            <p>{t('ems:loading_participants_scoring', 'Memuatkan senarai peserta & pemarkahan...')}</p>
           </div>
         ) : filteredParticipants.length === 0 ? (
           <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-12 text-center space-y-3 shadow-sm">
             <UserCheck className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto" />
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-300">Tiada Peserta Ditemui</h3>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-300">{t('ems:no_participants_found', 'Tiada Peserta Ditemui')}</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               {searchQuery || statusFilter !== 'ALL' || selectedCategory !== 'ALL'
-                ? 'Tiada peserta yang sepadan dengan tapisan atau kata kunci carian anda.'
-                : 'Tiada peserta yang diagihkan di bawah kategori / booth kod juri anda.'}
+                ? t('ems:no_participants_filter_desc', 'Tiada peserta yang sepadan dengan tapisan atau kata kunci carian anda.')
+                : t('ems:no_participants_allocated_desc', 'Tiada peserta yang diagihkan di bawah kategori / booth kod juri anda.')}
             </p>
           </div>
         ) : (
@@ -1409,7 +1409,7 @@ export function EmsJuryPortalPage() {
                             ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 shadow-xs'
                             : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
-                        title="Maklumat Calon & Lampiran"
+                        title={t('ems:candidate_info_and_attachments', 'Maklumat Calon & Lampiran')}
                       >
                         <Info className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                         <span className="hidden sm:inline">Info Calon</span>
@@ -1442,7 +1442,7 @@ export function EmsJuryPortalPage() {
                         <div className="space-y-3 flex-1 min-w-0">
                           <div>
                             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">
-                              Maklumat Calon & Produk
+                              {t('ems:candidate_and_product_info', 'Maklumat Calon & Produk')}
                             </span>
                             <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-0.5">
                               {productTitle}
@@ -1451,13 +1451,13 @@ export function EmsJuryPortalPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                             <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-                              <span className="text-slate-400 dark:text-slate-500 text-[11px] block">Kategori</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-[11px] block">{t('ems:category_selector_label', 'Kategori')}</span>
                               <span className="font-semibold text-slate-800 dark:text-slate-200">
                                 {getParticipantCategory(evalParticipant) || 'Umum'}
                               </span>
                             </div>
                             <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-                              <span className="text-slate-400 dark:text-slate-500 text-[11px] block">Ketua & Pasukan</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-[11px] block">{t('ems:leader_and_team', 'Ketua & Pasukan')}</span>
                               <span className="font-semibold text-slate-800 dark:text-slate-200">
                                 {evalParticipant.leader_name}
                                 {evalParticipant.team_name && ` (${evalParticipant.team_name})`}
@@ -1513,7 +1513,7 @@ export function EmsJuryPortalPage() {
                           type="button"
                           onClick={() => setShowCandidateInfo(false)}
                           className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
-                          title="Tutup Maklumat Calon"
+                          title={t('ems:close_candidate_info', 'Tutup Maklumat Calon')}
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1546,12 +1546,12 @@ export function EmsJuryPortalPage() {
                               {sec.name}
                             </h4>
                             <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                              {sec.rubrics.length} Kriteria Penilaian
+                              {sec.rubrics.length} {t('ems:criteria_evaluation', 'Kriteria Penilaian')}
                             </span>
                           </div>
                         </div>
                         <span className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold font-mono rounded-lg shrink-0">
-                          Wajaran: {sec.weight}%
+                          {t('ems:criteria_weight_label', { weight: sec.weight, defaultValue: `Wajaran: ${sec.weight}%` })}
                         </span>
                       </div>
 
@@ -1568,7 +1568,7 @@ export function EmsJuryPortalPage() {
                           const activeDescriptorText =
                             (activeDisplayVal > 0 && r.descriptors?.[String(activeDisplayVal)]) ||
                             activeOption?.defaultDescriptor ||
-                            'Sila pilih salah satu skor di atas.';
+                            t('ems:select_score_fallback', 'Sila pilih salah satu skor di atas.');
 
                           return (
                             <div
@@ -1587,7 +1587,7 @@ export function EmsJuryPortalPage() {
                                     </h4>
                                     {r.category_name && (
                                       <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">
-                                        Sub-Kategori: {r.category_name}
+                                        {t('ems:sub_category_label', 'Sub-Kategori:')} {r.category_name}
                                       </span>
                                     )}
                                   </div>
@@ -1595,7 +1595,7 @@ export function EmsJuryPortalPage() {
 
                                 <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                   <span className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg font-mono">
-                                    Wajaran: {weight}%
+                                    {t('ems:criteria_weight_label', { weight, defaultValue: `Wajaran: ${weight}%` })}
                                   </span>
                                   {selectedVal > 0 && (
                                     <span className="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 text-xs font-bold rounded-lg font-mono flex items-center gap-1">
@@ -1611,7 +1611,7 @@ export function EmsJuryPortalPage() {
                               {/* Ergonomic 1-5 Likert Buttons */}
                               <div className="space-y-3">
                                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                  Pilih Skor Likert (1 - 5):
+                                  {t('ems:select_likert_score', 'Pilih Skor Likert (1 - 5):')}
                                 </label>
                                 <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5">
                                   {[...LIKERT_OPTIONS]
@@ -1653,16 +1653,16 @@ export function EmsJuryPortalPage() {
                                     <div className="flex items-center justify-between">
                                       <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                                         <HelpCircle className="w-3.5 h-3.5" />
-                                        <span>Deskriptor Skor {activeDisplayVal}: {activeOption?.shortText}</span>
+                                        <span>{t('ems:score_descriptor_title', { score: activeDisplayVal, defaultValue: `Deskriptor Skor ${activeDisplayVal}:` })} {activeOption?.shortText}</span>
                                       </span>
                                       {hoveredVal && hoveredVal !== selectedVal && (
                                         <span className="text-[10px] text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-500/20 font-medium">
-                                          Pratonton
+                                          {t('ems:score_preview', 'Pratonton')}
                                         </span>
                                       )}
                                       {selectedVal === activeDisplayVal && !hoveredVal && (
                                         <span className="text-[10px] text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-500/20 font-medium">
-                                          Pilihan Semasa
+                                          {t('ems:current_selection', 'Pilihan Semasa')}
                                         </span>
                                       )}
                                     </div>
@@ -1672,7 +1672,7 @@ export function EmsJuryPortalPage() {
                                   </div>
                                 ) : (
                                   <p className="text-xs text-slate-500 dark:text-slate-400 italic pt-1">
-                                    Sila klik salah satu butang di atas untuk memberikan pemarkahan.
+                                    {t('ems:click_to_score_hint', 'Sila klik salah satu butang di atas untuk memberikan pemarkahan.')}
                                   </p>
                                 )}
                               </div>
@@ -1687,13 +1687,13 @@ export function EmsJuryPortalPage() {
                   <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-2">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                      <span>Ulasan & Cadangan Penambahbaikan (Pilihan Juri)</span>
+                      <span>{t('ems:jury_feedback_comment', 'Ulasan & Cadangan Penambahbaikan (Pilihan Juri)')}</span>
                     </label>
                     <textarea
                       rows={3}
                       value={generalComments}
                       onChange={(e) => handleCommentsChange(e.target.value)}
-                      placeholder="Masukkan ulasan keseluruhan, pujian, atau cadangan penambahbaikan untuk calon ini..."
+                      placeholder={t('ems:jury_feedback_placeholder', 'Masukkan ulasan keseluruhan, pujian, atau cadangan penambahbaikan untuk calon ini...')}
                       className="w-full p-3.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     />
                   </div>
@@ -1709,7 +1709,7 @@ export function EmsJuryPortalPage() {
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {completedCriteriaCount}/{totalCriteriaCount} Kriteria Dilengkapkan
+                        {completedCriteriaCount}/{totalCriteriaCount} {t('ems:criteria_completed', 'Kriteria Dilengkapkan')}
                       </span>
                       <span className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                         ({progressPercentage}%)
@@ -1725,7 +1725,7 @@ export function EmsJuryPortalPage() {
 
                   <div className="text-right sm:text-left pl-3 border-l border-slate-200 dark:border-slate-800">
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold leading-none mb-0.5">
-                      Skor Wajaran
+                      {t('ems:weighted_score', 'Skor Wajaran')}
                     </span>
                     <span className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 leading-tight">
                       {liveTotalWeightedScore.toFixed(1)}%
@@ -1743,7 +1743,7 @@ export function EmsJuryPortalPage() {
                     }}
                     className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all shrink-0"
                   >
-                    Batal / Tutup
+                    {t('ems:cancel_close', 'Batal / Tutup')}
                   </button>
 
                   <button
@@ -1784,10 +1784,10 @@ export function EmsJuryPortalPage() {
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 rounded-full text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Pemarkahan Berjaya Disimpan</span>
+                <span>{t('ems:scoring_saved_successfully', 'Pemarkahan Berjaya Disimpan')}</span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white pt-1">
-                Tahniah & Terima Kasih!
+                {t('ems:congrats_and_thank_you', 'Tahniah & Terima Kasih!')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Markah untuk booth ini telah direkodkan ke pangkalan data.
@@ -1803,7 +1803,7 @@ export function EmsJuryPortalPage() {
                     BOOTH #{celebrationModal.participant.booth_no}
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-600 dark:text-slate-400">Tiada Booth</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400">{t('ems:no_booth', 'Tiada Booth')}</span>
                 )}
               </div>
               <div className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">
@@ -1814,7 +1814,7 @@ export function EmsJuryPortalPage() {
                   celebrationModal.participant.leader_name}
               </div>
               <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800/80">
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Skor Wajaran:</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('ems:weighted_score', 'Skor Wajaran')}:</span>
                 <span className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
                   {celebrationModal.weightedScore.toFixed(1)}%
                 </span>
@@ -1826,7 +1826,7 @@ export function EmsJuryPortalPage() {
               <div className="space-y-3 pt-1">
                 <div className="p-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-left text-xs">
                   <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block uppercase tracking-wide">
-                    Booth Seterusnya Tersedia:
+                    {t('ems:next_booth_available', 'Booth Seterusnya Tersedia:')}
                   </span>
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mt-0.5">
                     <span className="px-1.5 py-0.5 bg-slate-900 dark:bg-slate-700 text-white rounded font-mono text-[11px]">
@@ -1843,7 +1843,7 @@ export function EmsJuryPortalPage() {
                   onClick={handleStartNextBooth}
                   className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
                 >
-                  <span>Nilai Booth Seterusnya: #{celebrationModal.nextParticipant.booth_no || ''}</span>
+                  <span>{t('ems:rate_next_booth', { booth: celebrationModal.nextParticipant.booth_no || '', defaultValue: `Nilai Booth Seterusnya: #${celebrationModal.nextParticipant.booth_no || ''}` })}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -1852,14 +1852,14 @@ export function EmsJuryPortalPage() {
                   onClick={() => setCelebrationModal(null)}
                   className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-all"
                 >
-                  Kembali ke Senarai Booth
+                  {t('ems:back_to_booth_list', 'Kembali ke Senarai Booth')}
                 </button>
               </div>
             ) : (
               <div className="space-y-4 pt-1">
                 <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 text-left">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Tahniah! Semua booth dalam kategori ini telah selesai dinilai.</span>
+                  <span>{t('ems:all_booths_evaluated_congrats', 'Tahniah! Semua booth dalam kategori ini telah selesai dinilai.')}</span>
                 </div>
 
                 <button
@@ -1867,7 +1867,7 @@ export function EmsJuryPortalPage() {
                   onClick={() => setCelebrationModal(null)}
                   className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-slate-900/20 active:scale-[0.98] transition-all"
                 >
-                  Kembali ke Senarai
+                  {t('ems:back_to_list', 'Kembali ke Senarai')}
                 </button>
               </div>
             )}

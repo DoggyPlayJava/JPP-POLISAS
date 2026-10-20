@@ -689,7 +689,7 @@ export function EmsEventFormPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Kategori Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('ems:category_selector_label', 'Kategori Acara')}</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -782,7 +782,7 @@ export function EmsEventFormPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Tarikh & Masa Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('ems:event_schedule_title', 'Tarikh & Masa Acara')}</label>
               <input
                 type="datetime-local"
                 value={eventDate}
@@ -792,7 +792,7 @@ export function EmsEventFormPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Lokasi Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('ems:event_form_location', 'Lokasi Acara')}</label>
               <input
                 type="text"
                 value={location}
@@ -992,7 +992,7 @@ export function EmsEventFormPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Seksyen 3: Rubrik Pemarkahan Juri & Hierarki
+                  {t('ems:sec3_rubric_hierarchy_title', 'Seksyen 3: Rubrik Pemarkahan Juri & Hierarki')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Tetapkan kriteria pemarkahan, markah maksimum & pemberat (weightage) untuk juri.
@@ -1007,7 +1007,7 @@ export function EmsEventFormPage() {
                 className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs transition-all shadow-md active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
-                <span>Tambah Kategori Baharu</span>
+                <span>{t('ems:btn_add_new_category', 'Tambah Kategori Baharu')}</span>
               </button>
               <button
                 type="button"
@@ -1078,16 +1078,16 @@ export function EmsEventFormPage() {
               <div className="bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                   <div>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ringkasan Pemberat Kriteria:</span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('ems:rubric_weight_total', 'Ringkasan Pemberat Kriteria:')}</span>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-base font-bold text-slate-900 dark:text-white">Status Nisbah Kategori:</span>
+                      <span className="text-base font-bold text-slate-900 dark:text-white">{t('ems:category_ratio_status', 'Status Nisbah Kategori:')}</span>
                       {allCategoriesBalanced ? (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Semua Kategori 100% Seimbang
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {t('ems:all_categories_balanced', 'Semua Kategori 100% Seimbang')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Kategori Tidak Seimbang
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> {t('ems:category_unbalanced', 'Kategori Tidak Seimbang')}
                         </span>
                       )}
                     </div>
@@ -1130,7 +1130,7 @@ export function EmsEventFormPage() {
                       >
                         <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                         <span>
-                          Amaran: Pemberat Kategori &quot;{cat.categoryName}&quot; ialah {cat.catTotalWeight}%. Disyorkan 100%.
+                          {t('ems:category_weight_warning', { category: cat.categoryName, weight: cat.catTotalWeight, defaultValue: `Amaran: Pemberat Kategori "${cat.categoryName}" ialah ${cat.catTotalWeight}%. Disyorkan 100%.` })}
                         </span>
                       </div>
                     ))}
@@ -1171,7 +1171,7 @@ export function EmsEventFormPage() {
                         </div>
                         <div>
                           <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            Kategori Rubrik
+                            {t('ems:rubric_category_label', 'Kategori Rubrik')}
                           </span>
                           <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                             {group.categoryName}
@@ -1275,7 +1275,7 @@ export function EmsEventFormPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                                  Kategori (Category)
+                                  {t('ems:category_field_label', 'Kategori (Category)')}
                                 </label>
                                 <input
                                   type="text"
@@ -1357,7 +1357,7 @@ export function EmsEventFormPage() {
                                 ) : (
                                   <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                                 )}
-                                <span>Deskriptor Pemarkahan 5-Skala (Skor 1 - 5)</span>
+                                <span>{t('ems:five_scale_descriptor_title', 'Deskriptor Pemarkahan 5-Skala (Skor 1 - 5)')}</span>
                                 <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400">
                                   {isExpanded ? 'Tutup' : 'Buka & Sunting'}
                                 </span>
@@ -1366,7 +1366,7 @@ export function EmsEventFormPage() {
                               {isExpanded && (
                                 <div className="mt-3 p-4 bg-slate-100/70 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
                                   <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">
-                                    Deskriptor Pemarkahan (5-Point Descriptors):
+                                    {t('ems:five_scale_descriptors_label', 'Deskriptor Pemarkahan (5-Point Descriptors):')}
                                   </div>
                                   <div className="grid grid-cols-1 gap-2.5">
                                     {[
@@ -1448,13 +1448,9 @@ export function EmsEventFormPage() {
 
             <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
               {presetPrompt.hasDifferentCategory ? (
-                <p>
-                  Kategori rubrik lain dikesan dalam senarai anda. Adakah anda mahu <strong>menambah</strong> templat ini sebagai kategori baharu (cth: berbilang anugerah), atau <strong>menggantikan semua</strong> rubrik sedia ada?
-                </p>
+                <p>{t('ems:preset_prompt_diff_cat', 'Kategori rubrik lain dikesan dalam senarai anda. Adakah anda mahu menambah templat ini sebagai kategori baharu (cth: berbilang anugerah), atau menggantikan semua rubrik sedia ada?')}</p>
               ) : (
-                <p>
-                  Rubrik sedia ada dikesan. Adakah anda mahu <strong>menambah</strong> templat ini atau <strong>menggantikan semua</strong> kriteria sedia ada?
-                </p>
+                <p>{t('ems:preset_prompt_same_cat', 'Rubrik sedia ada dikesan. Adakah anda mahu menambah templat ini atau menggantikan semua kriteria sedia ada?')}</p>
               )}
             </div>
 
@@ -1464,14 +1460,14 @@ export function EmsEventFormPage() {
                 onClick={() => setPresetPrompt(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
               >
-                Batal
+                {t('ems:cancel', 'Batal')}
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('replace')}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800/60 transition"
               >
-                Ganti Semua
+                {t('ems:replace_all', 'Ganti Semua')}
               </button>
               <button
                 type="button"
