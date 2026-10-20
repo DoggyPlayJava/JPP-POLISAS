@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserPlus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { createEmsParticipantManual } from '@/lib/ems';
 import type { EmsEvent } from '@/types';
 
@@ -11,6 +12,7 @@ export interface EmsManualRegModalProps {
 }
 
 export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualRegModalProps) {
+  const { t } = useTranslation(['ems', 'common']);
   const [form, setForm] = useState({
     leader_name: '',
     matrix_no: '',
@@ -43,7 +45,7 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.leader_name.trim()) {
-      toast.error('Sila masukkan Nama Ketua / Peserta.');
+      toast.error(t('ems:manual_reg_toast_name_required', 'Sila masukkan Nama Ketua / Peserta.'));
       return;
     }
 
@@ -62,11 +64,11 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
         category_name: form.category_name.trim() || undefined,
       });
 
-      toast.success('Peserta berjaya didaftarkan secara manual!');
+      toast.success(t('ems:manual_reg_toast_success', 'Peserta berjaya didaftarkan secara manual!'));
       onRegistered?.();
       onClose();
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal mendaftar peserta');
+      toast.error(err?.message || t('ems:manual_reg_toast_error', 'Gagal mendaftar peserta: {{error}}', { error: err?.message || '' }));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +80,7 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-          aria-label="Tutup Modal"
+          aria-label={t('ems:manual_reg_close', 'Tutup Modal')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -87,46 +89,52 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
           <div className="flex items-center gap-2 text-primary dark:text-amber-400 mb-1">
             <UserPlus className="w-5 h-5" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Pendaftaran Manual Peserta
+              {t('ems:manual_reg_title', 'Pendaftaran Manual Peserta')}
             </h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Acara: {event.title}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            {t('ems:manual_reg_event', 'Acara:')} {event.title}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Nama Ketua / Peserta <span className="text-rose-500">*</span>
+              {t('ems:manual_reg_leader_name', 'Nama Ketua / Peserta')} <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={form.leader_name}
               onChange={(e) => setForm({ ...form, leader_name: e.target.value })}
-              placeholder="Contoh: Muhammad Ali bin Ahmad"
+              placeholder={t('ems:manual_reg_leader_name_placeholder', 'Contoh: Muhammad Ali bin Ahmad')}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Matrik (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_matric_no', 'No. Matrik (Pilihan)')}
+              </label>
               <input
                 type="text"
                 value={form.matrix_no}
                 onChange={(e) => setForm({ ...form, matrix_no: e.target.value })}
-                placeholder="Contoh: 15DKA21F1001"
+                placeholder={t('ems:manual_reg_matric_no_placeholder', 'Contoh: 15DKA21F1001')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">E-Mel (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_email', 'E-Mel (Pilihan)')}
+              </label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="Contoh: peserta@polisas.edu.my"
+                placeholder={t('ems:manual_reg_email_placeholder', 'Contoh: peserta@polisas.edu.my')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
@@ -134,23 +142,27 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Telefon (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_phone', 'No. Telefon (Pilihan)')}
+              </label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="Contoh: 0123456789"
+                placeholder={t('ems:manual_reg_phone_placeholder', 'Contoh: 0123456789')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_category', 'Kategori (Pilihan)')}
+              </label>
               <input
                 type="text"
                 value={form.category_name}
                 onChange={(e) => setForm({ ...form, category_name: e.target.value })}
-                placeholder="Contoh: Inovasi / Sukan"
+                placeholder={t('ems:manual_reg_category_placeholder', 'Contoh: Inovasi / Sukan')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
@@ -158,23 +170,27 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Pasukan (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_team_name', 'Nama Pasukan (Pilihan)')}
+              </label>
               <input
                 type="text"
                 value={form.team_name}
                 onChange={(e) => setForm({ ...form, team_name: e.target.value })}
-                placeholder="Contoh: Team TechSquad"
+                placeholder={t('ems:manual_reg_team_name_placeholder', 'Contoh: Team TechSquad')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No. Booth (Pilihan)</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {t('ems:manual_reg_booth_no', 'No. Booth (Pilihan)')}
+              </label>
               <input
                 type="text"
                 value={form.booth_no}
                 onChange={(e) => setForm({ ...form, booth_no: e.target.value })}
-                placeholder="Contoh: Booth 12"
+                placeholder={t('ems:manual_reg_booth_no_placeholder', 'Contoh: Booth 12')}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-400"
               />
             </div>
@@ -186,14 +202,14 @@ export function EmsManualRegModal({ event, onClose, onRegistered }: EmsManualReg
               onClick={onClose}
               className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all"
             >
-              Batal
+              {t('ems:manual_reg_btn_cancel', 'Batal')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-sm disabled:opacity-50 active:scale-98"
             >
-              {isSubmitting ? 'Mendaftarkan...' : 'Daftar Peserta'}
+              {isSubmitting ? t('ems:manual_reg_submitting', 'Mendaftarkan...') : t('ems:manual_reg_btn_submit', 'Daftar Peserta')}
             </button>
           </div>
         </form>

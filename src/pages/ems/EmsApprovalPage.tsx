@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { format, isValid } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { fetchEmsEvents, approveEmsEvent } from '@/lib/ems';
@@ -29,6 +30,7 @@ type EventWithDetails = EmsEvent & {
 };
 
 export function EmsApprovalPage() {
+  const { t } = useTranslation(['ems', 'common']);
   const navigate = useNavigate();
   const { isSuperAdmin } = useAuth();
 
@@ -47,7 +49,7 @@ export function EmsApprovalPage() {
       const data = await fetchEmsEvents('PENDING_APPROVAL');
       setPendingEvents(data as EventWithDetails[]);
     } catch (err: any) {
-      toast.error(`Gagal memuatkan acara pending: ${err.message}`);
+      toast.error(t('ems:approval_toast_fail_load', 'Gagal memuatkan acara pending: {{error}}', { error: err.message }));
     } finally {
       setLoading(false);
     }
@@ -66,15 +68,17 @@ export function EmsApprovalPage() {
         <div className="p-4 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
           <XCircle className="w-12 h-12" />
         </div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Akses Diperlukan</h1>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          {t('ems:approval_access_required', 'Akses Diperlukan')}
+        </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
-          Halaman Semakan Kelulusan Acara EMS hanya boleh dicapai oleh Pentadbir Mutlak (SUPER_ADMIN_JPP).
+          {t('ems:approval_access_desc', 'Halaman Semakan Kelulusan Acara EMS hanya boleh dicapai oleh Pentadbir Mutlak (SUPER_ADMIN_JPP).')}
         </p>
         <button
           onClick={() => navigate('/ems/dashboard')}
           className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 active:scale-[0.98]"
         >
-          Kembali ke Papan Pemuka EMS
+          {t('ems:approval_back_dashboard', 'Kembali ke Papan Pemuka EMS')}
         </button>
       </div>
     );
@@ -84,11 +88,11 @@ export function EmsApprovalPage() {
     try {
       setIsSubmitting(true);
       await approveEmsEvent(eventId, 'APPROVED');
-      toast.success(`Acara "${title}" telah berjaya DILULUSKAN!`);
+      toast.success(t('ems:approval_toast_approved', 'Acara "{{title}}" telah berjaya DILULUSKAN!', { title }));
       if (selectedEvent?.id === eventId) setSelectedEvent(null);
       loadPendingEvents();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal meluluskan acara.');
+      toast.error(err.message || t('ems:approval_toast_fail_approve', 'Gagal meluluskan acara: {{error}}', { error: err.message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -97,19 +101,19 @@ export function EmsApprovalPage() {
   const handleConfirmReject = async () => {
     if (!rejectingEvent) return;
     if (!rejectNote.trim()) {
-      toast.error('Sila nyatakan sebab penolakan permohonan acara.');
+      toast.error(t('ems:approval_toast_reject_reason_required', 'Sila nyatakan sebab penolakan permohonan acara.'));
       return;
     }
     try {
       setIsSubmitting(true);
       await approveEmsEvent(rejectingEvent.id, 'REJECTED', rejectNote.trim());
-      toast.success(`Acara "${rejectingEvent.title}" telah DITOLAK.`);
+      toast.success(t('ems:approval_toast_rejected', 'Acara "{{title}}" telah DITOLAK.', { title: rejectingEvent.title }));
       setRejectingEvent(null);
       setRejectNote('');
       if (selectedEvent?.id === rejectingEvent.id) setSelectedEvent(null);
       loadPendingEvents();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menolak acara.');
+      toast.error(err.message || t('ems:approval_toast_fail_reject', 'Gagal menolak acara: {{error}}', { error: err.message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -130,11 +134,11 @@ export function EmsApprovalPage() {
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-slate-700 dark:text-slate-300" />
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                Semakan & Kelulusan Acara EMS
+                {t('ems:approval_title', 'Semakan & Kelulusan Acara EMS')}
               </h1>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Modul pengesahan khas Pentadbir Mutlak (Super Admin JPP).
+              {t('ems:approval_subtitle', 'Modul pengesahan khas Pentadbir Mutlak (Super Admin JPP).')}
             </p>
           </div>
         </div>
@@ -145,7 +149,7 @@ export function EmsApprovalPage() {
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-all border border-slate-200 dark:border-slate-800 shadow-sm"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Muat Semula</span>
+            <span>{t('ems:approval_refresh', 'Muat Semula')}</span>
           </button>
         </div>
       </div>
@@ -154,29 +158,31 @@ export function EmsApprovalPage() {
       {loading ? (
         <div className="py-20 text-center text-slate-500 dark:text-slate-400 space-y-2">
           <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
-          <p className="text-sm font-semibold">Memuatkan senarai permohonan acara...</p>
+          <p className="text-sm font-semibold">{t('ems:approval_loading_list', 'Memuatkan senarai permohonan acara...')}</p>
         </div>
       ) : pendingEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-6 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center shadow-sm max-w-2xl mx-auto">
           <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 mb-4">
             <CheckCircle2 className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">Tiada Permohonan Menunggu</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">
+            {t('ems:approval_no_pending', 'Tiada Permohonan Menunggu')}
+          </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-6">
-            Semua permohonan penganjuran acara pertandingan EMS telah disemak dan diluluskan sepenuhnya.
+            {t('ems:approval_no_pending_desc', 'Semua permohonan penganjuran acara pertandingan EMS telah disemak dan diluluskan sepenuhnya.')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => navigate('/ems/dashboard')}
               className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all shadow-sm"
             >
-              Kembali ke Hub Acara
+              {t('ems:approval_back_hub', 'Kembali ke Hub Acara')}
             </button>
             <button
               onClick={() => navigate('/ems/event/new')}
               className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
             >
-              + Cipta Acara Baharu
+              {t('ems:approval_create_new', '+ Cipta Acara Baharu')}
             </button>
           </div>
         </div>
@@ -185,7 +191,7 @@ export function EmsApprovalPage() {
           {/* Left Column: Event List */}
           <div className="lg:col-span-1 space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Permohonan Menunggu Kelulusan ({pendingEvents.length})
+              {t('ems:approval_pending_header', 'Permohonan Menunggu Kelulusan ({{count}})', { count: pendingEvents.length })}
             </h2>
 
             <div className="space-y-3">
@@ -203,7 +209,7 @@ export function EmsApprovalPage() {
                   >
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                        PENDING
+                        {t('ems:approval_pending_badge', 'PENDING')}
                       </span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                         {new Date(ev.created_at).toLocaleDateString('ms-MY')}
@@ -213,11 +219,13 @@ export function EmsApprovalPage() {
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 mb-1">{ev.title}</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">
                       {ev.category || 'Keusahawanan'} •{' '}
-                      {ev.event_mode === 'TEAM' ? 'Pasukan' : 'Individu'}
+                      {ev.event_mode === 'TEAM' ? t('ems:event_form_mode_team', 'Pasukan') : t('ems:event_form_mode_indiv', 'Individu')}
                     </p>
 
                     {ev.creator?.full_name && (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Penganjur: {ev.creator.full_name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {t('ems:approval_organizer_label', 'Penganjur:')} {ev.creator.full_name}
+                      </p>
                     )}
                   </div>
                 );
@@ -233,10 +241,10 @@ export function EmsApprovalPage() {
                 <div className="border-b border-slate-200 dark:border-slate-800 pb-4 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      Menunggu Kelulusan HQ
+                      {t('ems:approval_pending_hq', 'Menunggu Kelulusan HQ')}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
-                      Mod: <strong className="text-slate-900 dark:text-white">{selectedEvent.event_mode}</strong>
+                      {t('ems:approval_mode_label', 'Mod:')} <strong className="text-slate-900 dark:text-white">{selectedEvent.event_mode}</strong>
                     </span>
                   </div>
 
@@ -244,7 +252,7 @@ export function EmsApprovalPage() {
                     {selectedEvent.title}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                    Kategori: {selectedEvent.category || 'Keusahawanan'}
+                    {t('ems:approval_category_label', 'Kategori:')} {selectedEvent.category || 'Keusahawanan'}
                   </p>
                 </div>
 
@@ -252,10 +260,10 @@ export function EmsApprovalPage() {
                 <div className="space-y-4 text-xs">
                   <div>
                     <h4 className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Penerangan Acara
+                      {t('ems:event_form_desc_label', 'Penerangan Acara')}
                     </h4>
                     <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                      {selectedEvent.description || 'Tiada penerangan disediakan.'}
+                      {selectedEvent.description || t('ems:approval_unspecified', 'Tiada penerangan disediakan.')}
                     </p>
                   </div>
 
@@ -263,9 +271,9 @@ export function EmsApprovalPage() {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span>
-                        Tarikh:{' '}
+                        {t('ems:approval_date', 'Tarikh:')}{' '}
                         {(() => {
-                          if (!selectedEvent.event_date) return 'Belum ditetapkan';
+                          if (!selectedEvent.event_date) return t('ems:approval_unspecified', 'Belum ditetapkan');
                           try {
                             const d = new Date(selectedEvent.event_date);
                             return isValid(d) ? format(d, 'd MMM yyyy, h:mm a', { locale: ms }) : selectedEvent.event_date;
@@ -278,13 +286,13 @@ export function EmsApprovalPage() {
 
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-                      <span>Lokasi: {selectedEvent.location || 'Belum ditetapkan'}</span>
+                      <span>{t('ems:approval_venue', 'Lokasi:')} {selectedEvent.location || t('ems:approval_unspecified', 'Belum ditetapkan')}</span>
                     </div>
 
                     <div className="flex items-center gap-2 sm:col-span-2">
                       <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span>
-                        Dicipta oleh:{' '}
+                        {t('ems:approval_organizer_label', 'Dicipta oleh:')}{' '}
                         {selectedEvent.creator?.full_name || 'Pentadbir'}{' '}
                         {selectedEvent.creator?.email ? `(${selectedEvent.creator.email})` : ''}
                       </span>
@@ -296,7 +304,7 @@ export function EmsApprovalPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
                     <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span>Borang Pendaftaran Custom ({selectedEvent.form_fields?.length || 0})</span>
+                    <span>{t('ems:approval_tab_fields', 'Medan Pendaftaran ({{count}})', { count: selectedEvent.form_fields?.length || 0 })}</span>
                   </div>
 
                   {selectedEvent.form_fields && selectedEvent.form_fields.length > 0 ? (
@@ -309,17 +317,17 @@ export function EmsApprovalPage() {
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-900 dark:text-white">{f.field_label}</span>
                             {f.is_required && (
-                              <span className="text-[10px] text-rose-500 font-bold">Wajib</span>
+                              <span className="text-[10px] text-rose-500 font-bold">{t('ems:approval_required_field', 'Wajib')}</span>
                             )}
                           </div>
                           <span className="text-[10px] text-slate-500 uppercase font-mono block">
-                            Jenis: {f.field_type}
+                            {t('ems:event_form_field_type', 'Jenis:')} {f.field_type}
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 italic">Tiada medan borang tambahan.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 italic">{t('ems:approval_unspecified', 'Tiada medan borang tambahan.')}</p>
                   )}
                 </div>
 
@@ -327,7 +335,7 @@ export function EmsApprovalPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
                     <Award className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                    <span>Rubrik Pemarkahan Juri ({selectedEvent.rubrics?.length || 0})</span>
+                    <span>{t('ems:approval_tab_rubrics', 'Rubrik Pemarkahan ({{count}})', { count: selectedEvent.rubrics?.length || 0 })}</span>
                   </div>
 
                   {selectedEvent.rubrics && selectedEvent.rubrics.length > 0 ? (
@@ -339,13 +347,13 @@ export function EmsApprovalPage() {
                         >
                           <span className="font-bold text-slate-900 dark:text-white">{r.criteria_name}</span>
                           <span className="text-xs text-slate-600 dark:text-slate-300 font-mono font-bold">
-                            Max: {r.max_score} markah (Weight: {r.weight}x)
+                            {t('ems:approval_max_score', 'Max Score')}: {r.max_score} ({t('ems:approval_weight', 'Weight')}: {r.weight}x)
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 italic">Tiada rubrik pemarkahan.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 italic">{t('ems:approval_unspecified', 'Tiada rubrik pemarkahan.')}</p>
                   )}
                 </div>
 
@@ -357,7 +365,7 @@ export function EmsApprovalPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs border border-rose-500/30 transition-all disabled:opacity-50"
                   >
                     <XCircle className="w-4 h-4" />
-                    <span>Tolak Permohonan</span>
+                    <span>{t('ems:approval_reject_btn', 'Tolak Permohonan')}</span>
                   </button>
 
                   <button
@@ -366,16 +374,18 @@ export function EmsApprovalPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-xl shadow-emerald-600/20 disabled:opacity-50 active:scale-95"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Luluskan Acara</span>
+                    <span>{t('ems:approval_approve_btn', 'Luluskan Acara')}</span>
                   </button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl text-center p-6 shadow-sm">
                 <Eye className="w-12 h-12 text-slate-400 dark:text-slate-600 mb-3" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Pilih Acara Untuk Disemak</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                  {t('ems:current_selection', 'Pilih Acara Untuk Disemak')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-                  Sila klik mana-mana permohonan acara dari senarai di sebelah kiri untuk melihat butiran lengkap.
+                  {t('ems:approval_no_pending_desc', 'Sila klik mana-mana permohonan acara dari senarai di sebelah kiri untuk melihat butiran lengkap.')}
                 </p>
               </div>
             )}
@@ -385,7 +395,7 @@ export function EmsApprovalPage() {
 
       {/* Reject Reason Modal */}
       {rejectingEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70  p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-6 shadow-2xl relative">
             <button
               onClick={() => {
@@ -398,20 +408,22 @@ export function EmsApprovalPage() {
             </button>
 
             <div>
-              <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400">Tolak Permohonan Acara</h3>
+              <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                {t('ems:approval_reject_modal_title', 'Tolak Permohonan Acara')}
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{rejectingEvent.title}</p>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Sebab Penolakan / Catatan Pembetulan <span className="text-rose-500">*</span>
+                {t('ems:approval_reject_reason_label', 'Sebab Penolakan / Catatan')} <span className="text-rose-500">*</span>
               </label>
               <textarea
                 rows={3}
                 required
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
-                placeholder="Contoh: Maklumat lokasi belum lengkap / tarikh bertembung acara rasmi. Sila lengkapkan..."
+                placeholder={t('ems:approval_reject_reason_placeholder', 'Contoh: Maklumat lokasi belum lengkap / tarikh bertembung acara rasmi. Sila lengkapkan...')}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-rose-500 resize-none"
               />
             </div>
@@ -425,7 +437,7 @@ export function EmsApprovalPage() {
                 }}
                 className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs"
               >
-                Batal
+                {t('ems:approval_cancel', 'Batal')}
               </button>
               <button
                 type="button"
@@ -433,7 +445,7 @@ export function EmsApprovalPage() {
                 onClick={handleConfirmReject}
                 className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md shadow-rose-600/20 disabled:opacity-50"
               >
-                {isSubmitting ? 'Memproses...' : 'Sahkan Penolakan'}
+                {isSubmitting ? t('ems:approval_approving', 'Memproses...') : t('ems:approval_confirm_reject', 'Sahkan Penolakan')}
               </button>
             </div>
           </div>

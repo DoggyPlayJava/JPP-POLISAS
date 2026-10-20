@@ -4839,3 +4839,35 @@ Domain 6 merangkumi pengurusan kehidupan kampus holistik mahasiswa politeknik: p
    - `src/__tests__/Domain6CampusLifeCompleteI18n.test.tsx` (16 ujian menyeluruh merangkumi 100% integriti kamus 3 modul, ujian render dwi-bahasa EN/BM bagi kesemua 10 komponen target dengan assertion rentetan teks sebenar, dan ujian pertukaran bahasa dinamik).
    - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan master kamus).
    - **Keputusan:** 36/36 ujian lulus dengan cemerlang tanpa sebarang kegagalan.
+
+### 36.16 Penyetempatan Menyeluruh Domain 4 (Events & Honors: EMS & MAKMP)
+Domain 4 merangkumi dua modul teras acara dan anugerah kecemerlangan mahasiswa POLISAS: Event Management System (EMS) — pembinaan acara, pendaftaran awam/pelajar, semakan kelulusan acara, imbasan kehadiran QR krew/pengunjung awam, papan pendahulu langsung (leaderboard) berserta mod pentas & cabutan bertuah, modal pendaftaran manual peserta, serta modal penjanaan kod akses juri; dan Majlis Anugerah Kecemerlangan Mahasiswa POLISAS (MAKMP) — wisard borang pencalonan anugerah pelbagai kategori beserta pemilih sijil e-Akademik dan semakan status pencalonan rujukan unik berbilang peringkat.
+
+1. **Senarai Fail Terlibat (10 Fail Lengkap 100% Diterjemahkan Baris-demi-Baris):**
+   - `src/pages/ems/EmsCheckinPage.tsx` (Pengimbas Kehadiran & Kemasukan QR: penukaran kamera hadapan/belakang, input manual kod siri, kad profil peserta terimbas, mod auto-imbas pantas, maklum balas audio chime & lencana status kemasukan)
+   - `src/pages/ems/EmsEventFormPage.tsx` (Borang Cipta & Sunting Acara EMS: pembina medan borang pendaftaran dinamik, konfigurasi jenis acara & mod penganjuran, penetapan milestone pengunjung, rubrik pemarkahan juri, serta panduan pengesahan kelulusan)
+   - `src/pages/ems/EmsPublicRegisterPage.tsx` (Portal Wisard Pendaftaran Peserta Awam/Pelajar: langkah pemilihan kategori & maklumat asas, input dinamik tersuai, muat naik fail bukti/poster ke Google Drive via `driveUpload.ts`, penjanaan tiket/pas digital QR serta integrasi Siswapreneur)
+   - `src/pages/ems/EmsLeaderboardPage.tsx` (Papan Pendahulu & Bilik Kawalan Pentas Acara: paparan markah juri secara langsung, tab audit pemarkahan, mod pentas animasi podium beranimasi, sistem cabutan bertuah / lucky draw berasaskan pengunjung terdaftar & pemenang milestone)
+   - `src/pages/ems/EmsApprovalPage.tsx` (Portal Semakan & Kelulusan Acara Pentadbir JPP: jadual acara menunggu kelulusan, modal semakan perincian acara, borang maklum balas/catatan kelulusan serta pengemaskinian status acara `APPROVED` / `REJECTED`)
+   - `src/pages/ems/EmsAudienceScanPage.tsx` (Portal Imbasan Kehadiran Pengunjung Awam: imbasan QR pengunjung pantas, auto-isi profil pengguna berdaftar, pengesanan automatik pemenang peristiwa (milestone winners) beserta animasi letupan confetti & sokongan prop SSR `initialEvent`)
+   - `src/components/ems/modals/EmsManualRegModal.tsx` (Modal Pendaftaran Manual Peserta Krew: carian pelajar pantas StudentSearchCombobox, pendaftaran kategori individu/kumpulan, penetapan nombor booth/meja dan maklum balas segera)
+   - `src/components/ems/modals/EmsJuryCodeModal.tsx` (Modal Penjanaan Kod Akses Juri Luar/Dalaman: penetapan nama juri & organisasi, penetapan agihan booth & kategori pemarkahan, penjanaan kod laluan unik beserta fungsi salin satu-klik)
+   - `src/pages/makmp/MakmpPublicFormPage.tsx` (Wisard Pencalonan Awam MAKMP: aliran 4-langkah pendaftaran biodata, pemilihan anugerah berbilang kategori, import sijil 1-klik dari e-Akademik, muat naik fail laporan projek PDF, amaran tempoh edisi & sokongan prop SSR `initialEdition`)
+   - `src/pages/makmp/MakmpStatusTrackingPage.tsx` (Portal Semakan Status Pencalonan MAKMP: carian kod rujukan rasmi berformat `MAKMP-YYYY-XXXXX`, penunjuk status berperingkat [Menunggu, Layak, Tidak Layak, Dijemput Pemenang], sejarah buka semula audit, pautan akaun pelajar, serta portal muat naik dokumen pemenang jemputan majlis)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/ems.json`: **471 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/makmp.json`: **196 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Pematuhan Pariti:** Disahkan secara menyeluruh melalui suite ujian automatik `src/locales/__tests__/masterLocales.test.ts` (20 ujian lulus).
+
+3. **Piawaian Salinan & Fallback Mandatori:**
+   - Setiap rentetan menggunakan struktur sintaksis AST mandatori: `t('namespace:key', 'Literal BM Asal', { params })`.
+   - Pencegahan Ralat Skop Sub-komponen: Semua sub-komponen bersarang (seperti tab audit, modal pendaftaran, pemilih sijil, bar navigasi langkah) mengisytiharkan cangkuk penterjemahan `const { t } = useTranslation(['ems', 'common'])` atau `useTranslation(['makmp', 'common'])` dalam skop fungsi masing-masing.
+   - Pengekalan Singleton Pangkalan Data: Semua fail mematuhi peraturan `import { supabase } from '@/lib/supabase'` tanpa sebarang instansiasi baharu client.
+   - Pematuhan Tanpa Gangguan Skema Pangkalan Data: Sifar (`0`) fail migrasi pangkalan data diusik, dipinda, atau ditambah. Keseluruhan lapisan data dan polisi RLS kekal mampan.
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain4EmsMakmpCompleteI18n.test.tsx` (20 ujian menyeluruh merangkumi pariti kamus 100%, render SSR dalam Bahasa Inggeris bagi kesemua 10 halaman/modal teras, render SSR dalam Bahasa Melayu, dan pertukaran bahasa dinamik masa nyata).
+   - `src/__tests__/Domain4EmsMakmpI18n.test.tsx` (30 ujian integrasi Domain 4 sedia ada).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan integriti kamus).
+   - **Keputusan:** 70/70 ujian berkaitan Domain 4 lulus sepenuhnya (100% pass rate).

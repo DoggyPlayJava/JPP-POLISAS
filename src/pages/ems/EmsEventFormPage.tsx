@@ -75,7 +75,7 @@ export function EmsEventFormPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!canCreateEvent) {
-      toast.error('Akses Terhad: Hanya Pengarah Program, AJK, atau Pensyarah dibenarkan mencipta acara.');
+      toast.error(t('ems:event_form_toast_access_denied', 'Akses Terhad: Hanya Pengarah Program, AJK, atau Pensyarah dibenarkan mencipta acara.'));
       navigate('/ems/dashboard');
     }
   }, [authLoading, canCreateEvent, navigate]);
@@ -171,7 +171,7 @@ export function EmsEventFormPage() {
         const isOwner = Boolean(user?.id && data.created_by === user.id);
         const canEditThisEvent = isSuperAdmin || isJppMember || isOwner;
         if (!canEditThisEvent) {
-          toast.error('Akses Terhad: Anda tidak mempunyai kebenaran untuk menyunting acara ini.');
+          toast.error(t('ems:event_form_toast_edit_denied', 'Akses Terhad: Anda tidak mempunyai kebenaran untuk menyunting acara ini.'));
           navigate('/ems/dashboard');
           return;
         }
@@ -456,14 +456,14 @@ export function EmsEventFormPage() {
   // Save / Submit Handler
   const handleSubmit = async (targetStatus: 'DRAFT' | 'PENDING_APPROVAL') => {
     if (!title.trim()) {
-      toast.error('Sila masukkan tajuk acara.');
+      toast.error(t('ems:event_form_toast_title_required', 'Sila masukkan tajuk acara.'));
       return;
     }
 
     if (rubrics.length > 0) {
       const emptyCriteria = rubrics.some((r) => !r.criteria_name.trim());
       if (emptyCriteria) {
-        toast.error('Sila lengkapkan nama kriteria bagi semua rubrik pemarkahan.');
+        toast.error(t('ems:event_form_toast_criteria_required', 'Sila lengkapkan nama kriteria bagi semua rubrik pemarkahan.'));
         return;
       }
     }
@@ -748,7 +748,7 @@ export function EmsEventFormPage() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Pautan E-Keusahawanan (Program Siswapreneur)
+                        <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {t('ems:event_form_siswapreneur_title', 'Pautan E-Keusahawanan (Program Siswapreneur)')}
                       </h3>
                       {isSiswapreneur && (
                         <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
@@ -757,7 +757,7 @@ export function EmsEventFormPage() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-                      Apabila diaktifkan, pendaftaran peserta dalam acara ini akan mendaftarkan profil perniagaan Siswapreneur automatik di bawah e-Keusahawanan (No. Pendaftaran EMS-YYYY-XXXXX, Auto-Lulus tanpa temuduga PUSKEP).
+                      {t('ems:event_form_siswapreneur_desc', 'Apabila diaktifkan, pendaftaran peserta dalam acara ini akan mendaftarkan profil perniagaan Siswapreneur automatik di bawah e-Keusahawanan (No. Pendaftaran EMS-YYYY-XXXXX, Auto-Lulus tanpa temuduga PUSKEP).')}
                     </p>
                   </div>
                 </div>
@@ -804,10 +804,10 @@ export function EmsEventFormPage() {
 
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Tetapan Pemenang Milestone (Milestone Winner Config)
+                {t('ems:event_form_milestone_title', 'Tetapan Pemenang Milestone (Milestone Winner Config)')}
               </label>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
-                Masukkan nombor kedatangan pengunjung bertuah yang akan memenangi hadiah cabutan (dipisahkan dengan koma).
+                {t('ems:event_form_milestone_desc', 'Masukkan nombor kedatangan pengunjung bertuah yang akan memenangi hadiah cabutan (dipisahkan dengan koma).')}
               </p>
               <input
                 type="text"
@@ -827,7 +827,7 @@ export function EmsEventFormPage() {
                   className="w-5 h-5 rounded border-slate-300 dark:border-slate-800 text-slate-900 dark:text-amber-400 focus:ring-0 bg-slate-100 dark:bg-slate-950 cursor-pointer"
                 />
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Benarkan Papan Kedudukan (Leaderboard) dilihat secara awam.
+                  {t('ems:event_form_leaderboard_public', 'Benarkan Papan Kedudukan (Leaderboard) dilihat secara awam.')}
                 </span>
               </label>
             </div>
@@ -859,7 +859,7 @@ export function EmsEventFormPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs transition-all shadow-md active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
-              <span>Tambah Medan</span>
+              <span>{t('ems:event_form_add_field_btn', 'Tambah Medan')}</span>
             </button>
           </div>
 
@@ -932,12 +932,12 @@ export function EmsEventFormPage() {
                       }}
                       className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                     >
-                      <option value="text">Teks Ringkas (Text)</option>
-                      <option value="textarea">Teks Panjang (Textarea)</option>
-                      <option value="select">Pilihan Dropdown (Select)</option>
-                      <option value="checkbox">Pengesahan Checkbox</option>
-                      <option value="image_upload">Muat Naik Gambar / Foto</option>
-                      <option value="document_upload">Muat Naik Dokumen / PDF</option>
+                      <option value="text">{t('ems:event_form_field_type_text', 'Teks Ringkas (Text)')}</option>
+                      <option value="textarea">{t('ems:event_form_field_type_textarea', 'Teks Panjang (Textarea)')}</option>
+                      <option value="select">{t('ems:event_form_field_type_select', 'Pilihan Dropdown (Select)')}</option>
+                      <option value="checkbox">{t('ems:event_form_field_type_checkbox', 'Pengesahan Checkbox')}</option>
+                      <option value="image_upload">{t('ems:event_form_field_type_image', 'Muat Naik Gambar / Foto')}</option>
+                      <option value="document_upload">{t('ems:event_form_field_type_document', 'Muat Naik Dokumen / PDF')}</option>
                     </select>
                   </div>
 
@@ -972,7 +972,7 @@ export function EmsEventFormPage() {
                         }}
                         className="w-4 h-4 rounded border-slate-300 dark:border-slate-800 text-slate-900 dark:text-amber-400 focus:ring-0 bg-white dark:bg-slate-900 cursor-pointer"
                       />
-                      <span className="text-xs text-slate-700 dark:text-slate-300">Wajib Diisi</span>
+                      <span className="text-xs text-slate-700 dark:text-slate-300">{t('ems:event_form_required_check', 'Wajib Diisi')}</span>
                     </label>
                   </div>
                 </div>

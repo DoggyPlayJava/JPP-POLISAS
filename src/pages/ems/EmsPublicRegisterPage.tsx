@@ -215,7 +215,7 @@ export function EmsPublicRegisterPage({
 
       if (url) {
         setCustomResponses((prev) => ({ ...prev, [fieldKey]: url }));
-        toast.success('Fail berjaya dimuat naik!', { id: toastId });
+        toast.success(t('ems:file_upload_success', 'Fail berjaya dimuat naik!'), { id: toastId });
       }
     } catch (err: any) {
       toast.error(`Gagal memuat naik fail: ${err.message || 'Ralat pelayan'}`, { id: toastId });
@@ -369,28 +369,28 @@ export function EmsPublicRegisterPage({
   // Step Navigations & Validation
   const validateStep1 = (): boolean => {
     if (isQuotaFull) {
-      toast.error('Pendaftaran bagi acara ini telah penuh.');
+      toast.error(t('ems:reg_quota_full_desc', 'Pendaftaran bagi acara ini telah penuh.'));
       return false;
     }
     if (!leaderName.trim()) {
-      toast.error('Sila masukkan Nama Ketua / Peserta.');
+      toast.error(t('ems:manual_reg_toast_name_required', 'Sila masukkan Nama Ketua / Peserta.'));
       return false;
     }
     if (participantCategory === 'STUDENT' && !matrixNo.trim()) {
-      toast.error('Sila masukkan No. Matrik.');
+      toast.error(t('ems:nom_matric_required_toast', 'Sila masukkan No. Matrik.'));
       return false;
     }
     if (!email.trim() || !email.includes('@')) {
-      toast.error('Sila masukkan alamat Emel yang sah.');
+      toast.error(t('ems:enter_valid_email', 'Sila masukkan alamat Emel yang sah.'));
       return false;
     }
     if (!phone.trim()) {
-      toast.error('Sila masukkan Nombor Telefon.');
+      toast.error(t('ems:enter_phone', 'Sila masukkan Nombor Telefon.'));
       return false;
     }
     if (entityMode === 'TEAM') {
       if (!teamName.trim()) {
-        toast.error('Sila masukkan Nama Pasukan / Gerai.');
+        toast.error(t('ems:enter_team_name', 'Sila masukkan Nama Pasukan / Gerai.'));
         return false;
       }
     }
@@ -504,7 +504,7 @@ export function EmsPublicRegisterPage({
         }
       }
 
-      toast.success('Pendaftaran Berjaya!', { id: toastId });
+      toast.success(t('ems:reg_success_title', 'Pendaftaran Berjaya!'), { id: toastId });
       setCurrentStep(4);
     } catch (err: any) {
       toast.error(err.message || 'Gagal melakukan pendaftaran. Sila cuba lagi.', { id: toastId });
@@ -1560,7 +1560,7 @@ export function EmsPublicRegisterPage({
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(registeredParticipant.id);
-                    toast.success('ID Pendaftaran disalin!');
+                    toast.success(t('ems:reg_id_copied', 'ID Pendaftaran disalin!'));
                   }}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition border border-slate-200 dark:border-transparent"
                 >

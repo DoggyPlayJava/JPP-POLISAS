@@ -353,7 +353,7 @@ export default function MakmpStatusTrackingPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Search className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-              {t('verification_status')}
+              {t('track_title', 'Semakan Status Pencalonan MAKMP')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Masukkan kod rujukan rasmi (contoh: <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">MAKMP-2026-XXXXX</span>) yang diberikan semasa anda menghantar borang.
@@ -380,7 +380,7 @@ export default function MakmpStatusTrackingPage() {
               className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center gap-2 disabled:opacity-50 shadow-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              <span>{t('common:search', 'Cari')}</span>
+              <span>{t('track_search_btn', 'Semak Status')}</span>
             </button>
           </form>
 
