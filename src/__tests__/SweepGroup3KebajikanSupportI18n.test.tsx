@@ -676,7 +676,7 @@ describe('Sweep Group 3: Kebajikan, FoodBank & Support Chat Deep-Localization', 
       expect(msHtml).toContain('SLA: 24-48 Jam Bekerja');
       expect(msHtml).toContain('Dihantar');
       expect(msHtml).toContain('Disemak JPP');
-      expect(msHtml).toContain('Buka Chat Aduan');
+      expect(msHtml).toContain('Buka Sembang Aduan');
 
       const enHtml = renderWithI18n(
         <KebajikanLiveTrackerCard ticket={sampleTicket} foodbankApp={sampleFoodbank} />,

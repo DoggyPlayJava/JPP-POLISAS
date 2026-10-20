@@ -154,7 +154,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
         })}
       </div>
       <div className="mt-3 text-right text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-        {t('portal:total_votes_label', 'JUMLAH UNDIAN: {{count}}', { count: totalVotes })}
+        {t('portal:total_votes_label', `JUMLAH UNDIAN: ${totalVotes}`, { count: totalVotes })}
       </div>
     </div>
   );

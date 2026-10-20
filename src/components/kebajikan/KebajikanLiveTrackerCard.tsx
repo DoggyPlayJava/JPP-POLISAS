@@ -108,7 +108,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
             {t('kebajikan:tracker_live_badge', 'Penjejak Aduan Langsung')}
           </div>
           <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-            {t('kebajikan:tracker_facility_title', 'Aduan Fasiliti: {{title}}', { title })}
+            {t('kebajikan:tracker_facility_title', `Aduan Fasiliti: ${title}`, { title })}
           </h3>
           <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
             {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{ticketNo}</span>
@@ -202,7 +202,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800/50 transition-colors shadow-2xs"
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>{t('kebajikan:tracker_btn_view_chat', 'Buka Chat Aduan')}</span>
+          <span>{t('kebajikan:tracker_btn_view_chat', 'Buka Sembang Aduan')}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -249,7 +249,7 @@ function FoodBankTrackerItem({
             {t('kebajikan:tracker_foodbank_badge', 'Food Bank JPP • Pas Pengambilan')}
           </div>
           <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-            {t('kebajikan:tracker_foodbank_app_title', 'Permohonan Food Bank: {{appNo}}', { appNo })}
+            {t('kebajikan:tracker_foodbank_app_title', 'Permohonan Food Bank JPP')}
           </h3>
           <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
             {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{appNo}</span>
@@ -278,7 +278,7 @@ function FoodBankTrackerItem({
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
-              {t('kebajikan:tracker_step_submitted', 'Dihantar')}
+              {t('kebajikan:tracker_fb_step_received', 'Permohonan Diterima')}
             </span>
           </div>
 
@@ -304,7 +304,7 @@ function FoodBankTrackerItem({
                 ? 'text-slate-900 dark:text-white'
                 : 'text-slate-500 dark:text-slate-400'
             )}>
-              {t('kebajikan:tracker_step_action', 'Tindakan Unit Fasiliti')}
+              {t('kebajikan:tracker_fb_step_prepared', 'Pakej Disediakan')}
             </span>
           </div>
 
@@ -327,7 +327,7 @@ function FoodBankTrackerItem({
                   ? 'text-emerald-700 dark:text-emerald-300'
                   : 'text-slate-400 dark:text-slate-500'
               )}>
-                {t('kebajikan:tracker_step_completed', 'Selesai')}
+                {t(isApproved ? 'kebajikan:tracker_fb_step_ready' : 'kebajikan:tracker_fb_step_ready_counter', isApproved ? 'Sedia Diambil' : 'Sedia Diambil di Kaunter')}
               </span>
             </div>
           </div>
@@ -356,7 +356,7 @@ function FoodBankTrackerItem({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50 transition-colors shadow-2xs"
         >
           <QrCode className="w-3.5 h-3.5" />
-          <span>{t('kebajikan:tracker_btn_view_pass', 'Buka Pas QR')}</span>
+          <span>{t('kebajikan:tracker_btn_view_pass', 'Tunjuk Pas QR')}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
