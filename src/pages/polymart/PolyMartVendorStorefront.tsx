@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, CATEGORY_ICON_MAP, PM_ACCENT } from './PolyMartLayout';
@@ -59,15 +60,24 @@ interface VendorProduct {
   polymart_location?: string | null;
 }
 
-export function PolyMartVendorStorefront() {
+export function PolyMartVendorStorefront({
+  initialLoading = false,
+  initialBusiness = null,
+  initialProducts = [],
+}: {
+  initialLoading?: boolean;
+  initialBusiness?: VendorBusiness | null;
+  initialProducts?: VendorProduct[];
+} = {}) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { refetchCounts } = usePolymart();
 
-  const [business, setBusiness] = useState<VendorBusiness | null>(null);
-  const [products, setProducts] = useState<VendorProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [business, setBusiness] = useState<VendorBusiness | null>(initialBusiness);
+  const [products, setProducts] = useState<VendorProduct[]>(initialProducts);
+  const [loading, setLoading] = useState(initialLoading);
   const [activeTab, setActiveTab] = useState<'all' | 'popular' | 'info'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -90,7 +100,7 @@ export function PolyMartVendorStorefront() {
           .single();
 
         if (bizErr || !bizData) {
-          toast.error('Kedai tidak dijumpai');
+          toast.error(t('commerce:storefront_not_found', 'Kedai tidak dijumpai'));
           setLoading(false);
           return;
         }
@@ -182,12 +192,12 @@ export function PolyMartVendorStorefront() {
     };
 
     fetchStoreData();
-  }, [id, user]);
+  }, [id, user, t]);
 
   // Wishlist toggle handler
   const toggleWishlist = async (productId: string) => {
     if (!user) {
-      toast.error('Sila log masuk untuk simpan ke senarai hajat');
+      toast.error(t('commerce:storefront_wishlist_login_prompt', 'Sila log masuk untuk simpan ke senarai hajat'));
       return;
     }
     const isCurrently = wishlistIds.has(productId);
@@ -205,7 +215,7 @@ export function PolyMartVendorStorefront() {
         .eq('product_id', productId);
       if (error) {
         setWishlistIds(prev => new Set(prev).add(productId));
-        toast.error('Gagal mengalih keluar dari senarai hajat');
+        toast.error(t('commerce:storefront_wishlist_remove_failed', 'Gagal mengalih keluar dari senarai hajat'));
       }
     } else {
       const { error } = await supabase
@@ -218,10 +228,10 @@ export function PolyMartVendorStorefront() {
           return n;
         });
         if (!error.message.includes('duplicate')) {
-          toast.error('Gagal menyimpan ke senarai hajat');
+          toast.error(t('commerce:storefront_wishlist_add_failed', 'Gagal menyimpan ke senarai hajat'));
         }
       } else {
-        toast.success('Disimpan ke senarai hajat');
+        toast.success(t('commerce:storefront_wishlist_saved', 'Disimpan ke senarai hajat'));
       }
     }
   };
@@ -247,7 +257,7 @@ export function PolyMartVendorStorefront() {
   const handleShareClick = async () => {
     const shareData = {
       title: `${business?.name ?? 'Kedai'} - PolyMart POLISAS`,
-      text: `Jom sokong perniagaan siswa ${business?.name ?? 'ini'} di PolyMart POLISAS!`,
+      text: t('commerce:storefront_share_text', 'Jom sokong perniagaan siswa {{name}} di PolyMart POLISAS!', { name: business?.name ?? '' }),
       url: window.location.href
     };
     if (navigator.share) {
@@ -258,7 +268,7 @@ export function PolyMartVendorStorefront() {
       }
     } else {
       await navigator.clipboard.writeText(window.location.href);
-      toast.success('Pautan kedai disalin ke papan keratan');
+      toast.success(t('commerce:storefront_link_copied', 'Pautan kedai disalin ke papan keratan'));
     }
   };
 
@@ -302,9 +312,10 @@ export function PolyMartVendorStorefront() {
 
     // Search query filter
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q))
+      const q = searchQuery.toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.description && p.description.toLowerCase().includes(q))
       );
     }
 
@@ -313,43 +324,12 @@ export function PolyMartVendorStorefront() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6 animate-pulse">
-        {/* Hero Card Skeleton */}
-        <div className="rounded-3xl border border-border/50 bg-card p-6 space-y-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-20 h-20 rounded-2xl bg-muted/60" />
-            <div className="space-y-2 text-center sm:text-left flex-1">
-              <div className="h-6 w-48 bg-muted/60 rounded-md mx-auto sm:mx-0" />
-              <div className="h-4 w-64 bg-muted/40 rounded mx-auto sm:mx-0" />
-              <div className="flex gap-2 justify-center sm:justify-start pt-1">
-                <div className="h-5 w-24 bg-muted/40 rounded-full" />
-                <div className="h-5 w-20 bg-muted/40 rounded-full" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <div className="h-10 w-24 bg-muted/50 rounded-xl" />
-              <div className="h-10 w-24 bg-muted/50 rounded-xl" />
-            </div>
-          </div>
-        </div>
-
-        {/* Tab & Filter Bar Skeleton */}
-        <div className="flex justify-between items-center">
-          <div className="h-9 w-48 bg-muted/50 rounded-xl" />
-          <div className="h-9 w-32 bg-muted/40 rounded-full" />
-        </div>
-
-        {/* Product Grid Skeleton */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-            <div key={i} className="rounded-2xl border border-border/40 bg-card p-2.5 space-y-3 shadow-xs">
-              <div className="aspect-square rounded-xl bg-muted/40" />
-              <div className="h-3 w-3/4 bg-muted/50 rounded" />
-              <div className="flex justify-between items-center pt-1">
-                <div className="h-4 w-16 bg-muted/60 rounded" />
-                <div className="h-3 w-8 bg-muted/40 rounded" />
-              </div>
-            </div>
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-4 animate-pulse">
+        <div className="h-44 sm:h-56 bg-muted/40 rounded-3xl" />
+        <div className="h-28 bg-muted/40 rounded-3xl" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="aspect-square bg-muted/30 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -358,45 +338,45 @@ export function PolyMartVendorStorefront() {
 
   if (!business) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
-          <PackageSearch className="w-7 h-7" />
-        </div>
-        <div>
-          <h2 className="text-base font-black text-foreground">Kedai Tidak Ditemui</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Peniaga ini mungkin belum mengaktifkan akaun etalase PolyMart mereka.
-          </p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
+        <Store className="w-12 h-12 text-muted-foreground mx-auto" />
+        <h2 className="text-lg font-bold text-foreground">
+          {t('commerce:storefront_not_found', 'Kedai tidak dijumpai')}
+        </h2>
         <button
           onClick={() => navigate('/polymart')}
-          className="px-4 py-2 rounded-xl text-xs font-black text-white bg-amber-500 hover:bg-amber-600 transition-colors"
+          className="px-4 py-2 rounded-xl bg-amber-500 text-white font-bold text-xs"
         >
-          Kembali ke PolyMart
+          {t('common:back', 'Kembali')}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto -mx-3 sm:mx-auto">
-      {/* ── Cover Area: Real Image or Smart Preset Ambient Mesh ── */}
+    <div className="max-w-4xl mx-auto pb-12 space-y-5">
+      {/* ── Store Cover Banner ── */}
       {business.cover_url ? (
-        <div className="relative h-40 sm:h-52 w-full overflow-hidden bg-slate-900 border-b border-border/40">
-          <img src={business.cover_url} alt={business.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+        <div className="relative h-44 sm:h-56 w-full rounded-b-3xl sm:rounded-3xl overflow-hidden shadow-md">
+          <img
+            src={business.cover_url}
+            alt={business.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           {/* Back button */}
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60  border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
-            aria-label="Kembali"
+            aria-label={t('common:back', 'Kembali')}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <div className="relative h-40 sm:h-52 w-full bg-gradient-to-br from-amber-950 via-slate-900 to-stone-950 border-b border-amber-500/20 overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-500/15  opacity-20 pointer-events-none" />
+        /* Gradient fallback with dynamic watermark */
+        <div className="relative h-44 sm:h-56 w-full rounded-b-3xl sm:rounded-3xl overflow-hidden shadow-md bg-gradient-to-br from-amber-600 via-amber-700 to-slate-900 flex items-center justify-center">
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-400/20  opacity-20 pointer-events-none" />
           <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-orange-500/15  opacity-15 pointer-events-none" />
           <div className="absolute right-4 bottom-2 text-white/[0.07] pointer-events-none">
             <CategoryWatermark className="w-28 h-28 sm:w-36 sm:h-36" />
@@ -405,7 +385,7 @@ export function PolyMartVendorStorefront() {
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60  border border-white/15 flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
-            aria-label="Kembali"
+            aria-label={t('common:back', 'Kembali')}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -430,12 +410,12 @@ export function PolyMartVendorStorefront() {
               <div className="flex flex-wrap items-center gap-1.5 mb-1">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
                   <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                  <span>Peniaga Siswa Sah POLISAS</span>
+                  <span>{t('commerce:storefront_verified_student', 'Peniaga Siswa Sah POLISAS')}</span>
                 </span>
                 {business.is_ems_siswapreneur && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider">
                     <Award className="w-3 h-3 text-indigo-500" />
-                    <span>Siswapreneur EMS</span>
+                    <span>{t('commerce:storefront_siswapreneur_ems', 'Siswapreneur EMS')}</span>
                   </span>
                 )}
               </div>
@@ -459,7 +439,7 @@ export function PolyMartVendorStorefront() {
               className="flex-1 h-9 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>Sembang Peniaga</span>
+              <span>{t('commerce:storefront_chat_seller', 'Sembang Peniaga')}</span>
             </button>
 
             {formattedPhone && (
@@ -477,8 +457,8 @@ export function PolyMartVendorStorefront() {
             <button
               onClick={handleShareClick}
               className="w-9 h-9 rounded-xl bg-muted/60 hover:bg-muted border border-border/60 text-muted-foreground hover:text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-              title="Kongsi Kedai"
-              aria-label="Kongsi"
+              title={t('commerce:storefront_share_store', 'Kongsi Kedai')}
+              aria-label={t('commerce:storefront_share_store', 'Kongsi Kedai')}
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -492,7 +472,7 @@ export function PolyMartVendorStorefront() {
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
               <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span>Penilaian</span>
+              <span>{t('commerce:storefront_rating', 'Penilaian')}</span>
             </p>
             <p className="text-xs sm:text-sm font-black text-foreground mt-0.5">
               {avgRating > 0 ? (
@@ -500,10 +480,10 @@ export function PolyMartVendorStorefront() {
                   {avgRating.toFixed(1)} <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500 inline -mt-0.5" />
                 </>
               ) : (
-                'Baru'
+                t('commerce:storefront_new', 'Baru')
               )}
               <span className="text-[10px] font-normal text-muted-foreground ml-1">
-                ({totalReviews} ulasan)
+                {t('commerce:storefront_reviews_count', '({{count}} ulasan)', { count: totalReviews })}
               </span>
             </p>
           </div>
@@ -511,17 +491,17 @@ export function PolyMartVendorStorefront() {
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
               <Package className="w-3 h-3 text-amber-500" />
-              <span>Produk Aktif</span>
+              <span>{t('commerce:storefront_active_products', 'Produk Aktif')}</span>
             </p>
             <p className="text-xs sm:text-sm font-black text-foreground mt-0.5">
-              {products.length} Barangan
+              {t('commerce:storefront_items_count', '{{count}} Barangan', { count: products.length })}
             </p>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
               <CreditCard className="w-3 h-3 text-amber-500" />
-              <span>Pembayaran</span>
+              <span>{t('commerce:storefront_payment', 'Pembayaran')}</span>
             </p>
             <div className="flex flex-wrap items-center justify-center gap-1 mt-0.5">
               {business.online_payment_enabled && (
@@ -531,11 +511,13 @@ export function PolyMartVendorStorefront() {
               )}
               {business.cod_enabled !== false && (
                 <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                  Tunai (COD)
+                  {t('commerce:storefront_cash_cod', 'Tunai (COD)')}
                 </span>
               )}
               {!business.online_payment_enabled && business.cod_enabled === false && (
-                <span className="text-[9px] text-muted-foreground">Khas</span>
+                <span className="text-[9px] text-muted-foreground">
+                  {t('commerce:storefront_custom_payment', 'Khas')}
+                </span>
               )}
             </div>
           </div>
@@ -546,9 +528,9 @@ export function PolyMartVendorStorefront() {
       <div className="px-3 sm:px-0">
         <div className="flex items-center gap-1.5 border-b border-border/40 pb-2">
           {[
-            { id: 'all', label: 'Semua Produk', count: products.length },
-            { id: 'popular', label: 'Paling Laris' },
-            { id: 'info', label: 'Info & Lokasi Ambil' }
+            { id: 'all', label: t('commerce:storefront_tab_all_products', 'Semua Produk'), count: products.length },
+            { id: 'popular', label: t('commerce:storefront_tab_popular', 'Paling Laris') },
+            { id: 'info', label: t('commerce:storefront_tab_info_pickup', 'Info & Lokasi Ambil') }
           ].map(tab => (
             <button
               key={tab.id}
@@ -580,15 +562,15 @@ export function PolyMartVendorStorefront() {
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
                 <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                <span>Lokasi & Panduan Ambil Pesanan</span>
+                <span>{t('commerce:storefront_pickup_title', 'Lokasi & Panduan Ambil Pesanan')}</span>
               </h3>
               <div className="p-3 rounded-2xl bg-muted/40 border border-border/50 text-xs space-y-1">
                 <p className="font-bold text-foreground">
-                  {business.polymart_location || 'Kampus POLISAS'}
+                  {business.polymart_location || t('commerce:storefront_campus_default', 'Kampus POLISAS')}
                 </p>
                 <p className="text-muted-foreground text-[11px] leading-relaxed">
                   {business.polymart_pickup_info ||
-                    'Sila rujuk masa yang dipersetujui semasa checkout. Tunjukkan kod QR pesanan apabila berjumpa dengan peniaga.'}
+                    t('commerce:storefront_pickup_default_hint', 'Sila rujuk masa yang dipersetujui semasa checkout. Tunjukkan kod QR pesanan apabila berjumpa dengan peniaga.')}
                 </p>
               </div>
             </div>
@@ -596,18 +578,18 @@ export function PolyMartVendorStorefront() {
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
                 <CreditCard className="w-3.5 h-3.5 text-amber-500" />
-                <span>Syarat & Kaedah Pembayaran</span>
+                <span>{t('commerce:storefront_payment_methods_title', 'Syarat & Kaedah Pembayaran')}</span>
               </h3>
               <div className="p-3 rounded-2xl bg-muted/40 border border-border/50 text-xs space-y-2">
                 <div className="flex items-center gap-2">
                   {business.online_payment_enabled && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-black border border-blue-500/20">
-                      <CreditCard className="w-3 h-3" /> DuitNow QR Disokong
+                      <CreditCard className="w-3 h-3" /> {t('commerce:storefront_duitnow_supported', 'DuitNow QR Disokong')}
                     </span>
                   )}
                   {business.cod_enabled !== false && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black border border-amber-500/20">
-                      <Banknote className="w-3 h-3" /> Tunai / COD Diterima
+                      <Banknote className="w-3 h-3" /> {t('commerce:storefront_cash_accepted', 'Tunai / COD Diterima')}
                     </span>
                   )}
                 </div>
@@ -622,25 +604,25 @@ export function PolyMartVendorStorefront() {
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
                 <Store className="w-3.5 h-3.5 text-amber-500" />
-                <span>Maklumat Pendaftaran Peniaga</span>
+                <span>{t('commerce:storefront_reg_info_title', 'Maklumat Pendaftaran Peniaga')}</span>
               </h3>
               <div className="p-3 rounded-2xl bg-muted/40 border border-border/50 text-xs space-y-1.5">
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-muted-foreground">Pendaftaran SSM / Pelajar:</span>
+                  <span className="text-muted-foreground">{t('commerce:storefront_ssm_student_label', 'Pendaftaran SSM / Pelajar:')}</span>
                   <span className="font-mono font-bold text-foreground">
-                    {business.ssm_registration_number || business.registration_no || 'Disahkan Unit Keusahawanan'}
+                    {business.ssm_registration_number || business.registration_no || t('commerce:storefront_verified_by_unit', 'Disahkan Unit Keusahawanan')}
                   </span>
                 </div>
                 {business.business_phone && (
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-muted-foreground">No. Hubungan Rasmi:</span>
+                    <span className="text-muted-foreground">{t('commerce:storefront_official_contact', 'No. Hubungan Rasmi:')}</span>
                     <span className="font-mono font-bold text-foreground">{business.business_phone}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-muted-foreground">Status Peniaga:</span>
+                  <span className="text-muted-foreground">{t('commerce:storefront_vendor_status', 'Status Peniaga:')}</span>
                   <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="w-3 h-3" /> Disahkan POLISAS
+                    <CheckCircle2 className="w-3 h-3" /> {t('commerce:storefront_polisas_verified', 'Disahkan POLISAS')}
                   </span>
                 </div>
               </div>
@@ -656,7 +638,7 @@ export function PolyMartVendorStorefront() {
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Cari dalam kedai ini..."
+                  placeholder={t('commerce:storefront_search_placeholder', 'Cari dalam kedai ini...')}
                   className="flex-1 text-xs bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60"
                 />
                 {searchQuery && (
@@ -679,7 +661,7 @@ export function PolyMartVendorStorefront() {
                           : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50'
                       }`}
                     >
-                      {cat === 'all' ? 'Semua' : cat}
+                      {cat === 'all' ? t('commerce:storefront_cat_all', 'Semua') : cat}
                     </button>
                   ))}
                 </div>
@@ -693,9 +675,13 @@ export function PolyMartVendorStorefront() {
                   <PackageSearch className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-foreground">Kedai ini belum memuat naik produk aktif.</p>
+                  <p className="text-xs font-black text-foreground">
+                    {t('commerce:storefront_empty_products', 'Kedai ini belum memuat naik produk aktif.')}
+                  </p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {searchQuery ? 'Tiada padanan carian dijumpai.' : 'Sila kembali semula sebentar lagi.'}
+                    {searchQuery 
+                      ? t('commerce:storefront_no_search_matches', 'Tiada padanan carian dijumpai.') 
+                      : t('commerce:storefront_check_back_later', 'Sila kembali semula sebentar lagi.')}
                   </p>
                 </div>
               </div>
@@ -742,14 +728,14 @@ export function PolyMartVendorStorefront() {
                         {isOut && (
                           <div className="absolute inset-0 bg-black/60 -[1px] flex items-center justify-center z-10">
                             <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
-                              Habis
+                              {t('commerce:storefront_sold_out', 'Habis')}
                             </span>
                           </div>
                         )}
                         {isLowStock && !isOut && (
                           <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full z-10 shadow-xs">
                             <Clock className="w-2.5 h-2.5" />
-                            <span>Hampir habis</span>
+                            <span>{t('commerce:storefront_low_stock', 'Hampir habis')}</span>
                           </div>
                         )}
 
@@ -770,7 +756,7 @@ export function PolyMartVendorStorefront() {
                         {p.is_preorder && (
                           <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
                             <Package className="w-2.5 h-2.5" />
-                            <span>PRA-TEMPAH</span>
+                            <span>{t('commerce:storefront_preorder', 'PRA-TEMPAH')}</span>
                           </div>
                         )}
 
@@ -781,7 +767,7 @@ export function PolyMartVendorStorefront() {
                             toggleWishlist(p.id);
                           }}
                           className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80  border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
-                          aria-label="Senarai Hajat"
+                          aria-label={t('commerce:wishlist_my_title', 'Senarai Hajat')}
                         >
                           <Heart
                             className={`w-3.5 h-3.5 transition-all ${
@@ -818,7 +804,7 @@ export function PolyMartVendorStorefront() {
                             {p.sales_count && p.sales_count > 0 ? (
                               <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1 font-mono tabular-nums">
                                 <TrendingUp className="w-2.5 h-2.5" />
-                                {p.sales_count} terjual
+                                {t('commerce:storefront_sold_count', '{{count}} terjual', { count: p.sales_count })}
                               </span>
                             ) : null}
                             {p.avg_rating && p.avg_rating > 0 ? (

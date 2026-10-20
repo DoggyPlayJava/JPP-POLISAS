@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
@@ -17,15 +18,11 @@ const EInvoiceModal = React.lazy(() =>
 );
 
 const fmtRM = (v: number | null | undefined) => v != null ? `RM ${v.toFixed(2)}` : '—';
-const fmtDT = (iso: string) => {
-  const d = new Date(iso);
-  return d.toLocaleString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
 
 const PAYMENT_ICONS: Record<string, React.ElementType> = { CASH: Banknote, QR: QrCode, TRANSFER: CreditCard };
-const PAYMENT_LABELS: Record<string, string> = { CASH: 'Tunai', QR: 'QR', TRANSFER: 'Transfer' };
 
 export function PosHistoryPage() {
+  const { t, i18n } = useTranslation(['keusahawanan', 'common']);
   const { color } = useExcoTheme();
   const { profile } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
@@ -36,25 +33,45 @@ export function PosHistoryPage() {
 
   const pos = usePosData(businessId);
 
-  const [search, setSearch]       = useState('');
+  const [search, setSearch]             = useState('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'COMPLETED' | 'VOIDED'>('ALL');
-  const [selected, setSelected]   = useState<BusinessTransaction | null>(null);
-  const [showInvoice, setShowInvoice] = useState(false);
-  const [voiding, setVoiding]     = useState(false);
+  const [selected, setSelected]         = useState<BusinessTransaction | null>(null);
+  const [showInvoice, setShowInvoice]   = useState(false);
+  const [voiding, setVoiding]           = useState(false);
 
   useEffect(() => {
     if (businessId) pos.fetchTransactions(businessId);
   }, [businessId]);
 
-  const filtered = pos.transactions.filter(t => {
-    const matchSearch = t.invoice_number.toLowerCase().includes(search.toLowerCase())
-      || (t.customer_name || '').toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
+  const fmtDT = (iso: string) => {
+    const d = new Date(iso);
+    const localeStr = i18n.language === 'en' ? 'en-MY' : 'ms-MY';
+    return d.toLocaleString(localeStr, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getPaymentLabel = (method: string) => {
+    switch (method) {
+      case 'CASH': return t('keusahawanan:pos_pay_cash', 'Tunai');
+      case 'QR': return t('keusahawanan:pos_pay_qr', 'QR');
+      case 'TRANSFER': return t('keusahawanan:pos_pay_transfer', 'Transfer');
+      default: return method;
+    }
+  };
+
+  const filtered = pos.transactions.filter(tx => {
+    const matchSearch = tx.invoice_number.toLowerCase().includes(search.toLowerCase())
+      || (tx.customer_name || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'ALL' || tx.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   const handleVoid = async () => {
-    if (!selected || !businessId || !window.confirm(`Batalkan transaksi ${selected.invoice_number}? Stok akan dikembalikan.`)) return;
+    if (!selected || !businessId) return;
+    const confirmMsg = t('keusahawanan:pos_void_confirm', 'Batalkan transaksi {{invoice}}? Stok akan dikembalikan.', {
+      invoice: selected.invoice_number
+    });
+    if (!window.confirm(confirmMsg)) return;
+
     setVoiding(true);
     await pos.voidTransaction(selected.id, businessId);
     setVoiding(false);
@@ -79,22 +96,32 @@ export function PosHistoryPage() {
           <div className="w-1 h-5 rounded-full" style={{ background: color }} />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">POS</p>
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-foreground">Sejarah Transaksi</h1>
+        <h1 className="text-3xl font-black tracking-tight text-foreground">
+          {t('keusahawanan:pos_history_title', 'Sejarah Transaksi')}
+        </h1>
       </motion.div>
 
       {/* Search + status filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari no. invois atau pelanggan..."
-            className="w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder={t('keusahawanan:pos_search_ph', 'Cari no. invois atau pelanggan...')}
+            className="w-full h-11 pl-11 pr-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" 
+          />
         </div>
         <div className="flex gap-2 bg-muted/30 p-1 rounded-2xl">
           {(['ALL', 'COMPLETED', 'VOIDED'] as const).map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               style={filterStatus === s ? { background: color, color: '#fff' } : { color: 'hsl(var(--muted-foreground)/0.6)' }}>
-              {s === 'ALL' ? 'Semua' : s === 'COMPLETED' ? 'Selesai' : 'Dibatal'}
+              {s === 'ALL'
+                ? t('keusahawanan:pos_filter_all', 'Semua')
+                : s === 'COMPLETED'
+                  ? t('keusahawanan:pos_filter_completed', 'Selesai')
+                  : t('keusahawanan:pos_filter_voided', 'Dibatal')}
             </button>
           ))}
         </div>
@@ -108,20 +135,22 @@ export function PosHistoryPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <History className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="text-sm font-black text-muted-foreground/40">Tiada rekod transaksi</p>
+          <p className="text-sm font-black text-muted-foreground/40">
+            {t('keusahawanan:pos_no_transactions', 'Tiada rekod transaksi')}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((t, i) => {
-            const PayIcon = PAYMENT_ICONS[t.payment_method] || Banknote;
+          {filtered.map((tx, idx) => {
+            const PayIcon = PAYMENT_ICONS[tx.payment_method] || Banknote;
             return (
-              <motion.button key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 * i }}
-                onClick={() => setSelected(t)}
+              <motion.button key={tx.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 * idx }}
+                onClick={() => setSelected(tx)}
                 className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:shadow-md hover:border-border/80 transition-all text-left group">
                 {/* Status icon */}
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${t.status === 'COMPLETED' ? '' : 'bg-rose-500/10'}`}
-                  style={t.status === 'COMPLETED' ? { background: hexToRgba(color, 0.1) } : {}}>
-                  {t.status === 'COMPLETED'
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${tx.status === 'COMPLETED' ? '' : 'bg-rose-500/10'}`}
+                  style={tx.status === 'COMPLETED' ? { background: hexToRgba(color, 0.1) } : {}}>
+                  {tx.status === 'COMPLETED'
                     ? <CheckCircle2 className="w-5 h-5" style={{ color }} />
                     : <XCircle className="w-5 h-5 text-rose-500" />
                   }
@@ -129,21 +158,29 @@ export function PosHistoryPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-black text-foreground">{t.invoice_number}</p>
-                    {t.status === 'VOIDED' && <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 text-[9px] font-black uppercase">Dibatal</span>}
+                    <p className="text-sm font-black text-foreground">{tx.invoice_number}</p>
+                    {tx.status === 'VOIDED' && (
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 text-[9px] font-black uppercase">
+                        {t('keusahawanan:pos_filter_voided', 'Dibatal')}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDT(t.created_at)} · {t.customer_name || 'Tanpa nama'}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {fmtDT(tx.created_at)} · {tx.customer_name || t('keusahawanan:pos_unnamed_customer', 'Tanpa nama')}
+                  </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <PayIcon className="w-3 h-3 text-muted-foreground/50" />
-                    <p className="text-[10px] text-muted-foreground/50">{PAYMENT_LABELS[t.payment_method]}</p>
+                    <p className="text-[10px] text-muted-foreground/50">{getPaymentLabel(tx.payment_method)}</p>
                     <span className="text-muted-foreground/30">·</span>
-                    <p className="text-[10px] text-muted-foreground/50">{(t.items as any[]).length} item</p>
+                    <p className="text-[10px] text-muted-foreground/50">
+                      {t('keusahawanan:pos_items_count', '{{count}} item', { count: (tx.items as any[]).length })}
+                    </p>
                   </div>
                 </div>
                 {/* Amount */}
                 <div className="text-right flex-shrink-0">
-                  <p className="text-base font-black" style={{ color: t.status === 'VOIDED' ? 'hsl(var(--muted-foreground)/0.4)' : color }}>
-                    {fmtRM(t.total_amount)}
+                  <p className="text-base font-black" style={{ color: tx.status === 'VOIDED' ? 'hsl(var(--muted-foreground)/0.4)' : color }}>
+                    {fmtRM(tx.total_amount)}
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
@@ -166,7 +203,9 @@ export function PosHistoryPage() {
                 {/* Drawer header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-border">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Detail Transaksi</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                      {t('keusahawanan:pos_tx_detail', 'Detail Transaksi')}
+                    </p>
                     <p className="text-lg font-black text-foreground">{selected.invoice_number}</p>
                   </div>
                   <button onClick={() => setSelected(null)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center"><X className="w-4 h-4" /></button>
@@ -177,10 +216,10 @@ export function PosHistoryPage() {
                   {/* Meta */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     {[
-                      { label: 'Tarikh', value: fmtDT(selected.created_at) },
-                      { label: 'Status', value: selected.status === 'COMPLETED' ? 'Selesai' : 'Dibatal' },
-                      { label: 'Pelanggan', value: selected.customer_name || 'Tanpa nama' },
-                      { label: 'Kaedah Bayar', value: PAYMENT_LABELS[selected.payment_method] || selected.payment_method },
+                      { label: t('keusahawanan:pos_label_date', 'Tarikh'), value: fmtDT(selected.created_at) },
+                      { label: t('keusahawanan:pos_label_status', 'Status'), value: selected.status === 'COMPLETED' ? t('keusahawanan:pos_filter_completed', 'Selesai') : t('keusahawanan:pos_filter_voided', 'Dibatal') },
+                      { label: t('keusahawanan:pos_label_customer', 'Pelanggan'), value: selected.customer_name || t('keusahawanan:pos_unnamed_customer', 'Tanpa nama') },
+                      { label: t('keusahawanan:pos_label_payment_method', 'Kaedah Bayar'), value: getPaymentLabel(selected.payment_method) },
                     ].map(({ label, value }) => (
                       <div key={label}>
                         <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 mb-0.5">{label}</p>
@@ -191,7 +230,9 @@ export function PosHistoryPage() {
 
                   {/* Items */}
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-3">Item Pesanan</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-3">
+                      {t('keusahawanan:pos_order_items', 'Item Pesanan')}
+                    </p>
                     <div className="space-y-2">
                       {(selected.items as any[]).map((item, i) => (
                         <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
@@ -208,25 +249,25 @@ export function PosHistoryPage() {
                   {/* Totals */}
                   <div className="space-y-2 p-4 rounded-2xl border border-border/50">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Subtotal</span><span className="font-black">{fmtRM(selected.subtotal)}</span>
+                      <span>{t('keusahawanan:pos_subtotal', 'Subtotal')}</span><span className="font-black">{fmtRM(selected.subtotal)}</span>
                     </div>
                     {selected.discount_amount > 0 && (
                       <div className="flex justify-between text-xs text-emerald-600">
-                        <span>Diskaun</span><span className="font-black">-{fmtRM(selected.discount_amount)}</span>
+                        <span>{t('keusahawanan:pos_discount', 'Diskaun')}</span><span className="font-black">-{fmtRM(selected.discount_amount)}</span>
                       </div>
                     )}
                     <div className="h-px bg-border/50" />
                     <div className="flex justify-between">
-                      <span className="text-sm font-black text-foreground">Jumlah</span>
+                      <span className="text-sm font-black text-foreground">{t('keusahawanan:pos_total', 'Jumlah')}</span>
                       <span className="text-lg font-black" style={{ color }}>{fmtRM(selected.total_amount)}</span>
                     </div>
                     {selected.payment_method === 'CASH' && (
                       <>
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Diterima</span><span className="font-black">{fmtRM(selected.received_amount)}</span>
+                          <span>{t('keusahawanan:pos_received', 'Diterima')}</span><span className="font-black">{fmtRM(selected.received_amount)}</span>
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Baki</span><span className="font-black">{fmtRM(selected.change_amount)}</span>
+                          <span>{t('keusahawanan:pos_change', 'Baki')}</span><span className="font-black">{fmtRM(selected.change_amount)}</span>
                         </div>
                       </>
                     )}
@@ -234,7 +275,9 @@ export function PosHistoryPage() {
 
                   {selected.customer_note && (
                     <div className="p-3 rounded-xl bg-muted/30 border border-border/40">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 mb-1">Catatan</p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 mb-1">
+                        {t('keusahawanan:pos_note', 'Catatan')}
+                      </p>
                       <p className="text-xs text-foreground">{selected.customer_note}</p>
                     </div>
                   )}
@@ -244,12 +287,12 @@ export function PosHistoryPage() {
                 <div className="flex gap-3 p-5 border-t border-border">
                   <button onClick={() => setShowInvoice(true)}
                     className="flex-1 h-12 rounded-2xl border border-border text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-muted/50 transition-colors">
-                    <FileText className="w-4 h-4" /> Jana Invois
+                    <FileText className="w-4 h-4" /> {t('keusahawanan:pos_generate_invoice', 'Jana Invois')}
                   </button>
                   {isOwner && selected.status === 'COMPLETED' && (
                     <button onClick={handleVoid} disabled={voiding}
                       className="flex-1 h-12 rounded-2xl bg-rose-500/10 text-rose-600 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-colors disabled:opacity-50">
-                      <Ban className="w-4 h-4" /> {voiding ? 'Membatal...' : 'Void'}
+                      <Ban className="w-4 h-4" /> {voiding ? t('keusahawanan:pos_voiding', 'Membatal...') : t('keusahawanan:pos_void', 'Void')}
                     </button>
                   )}
                 </div>

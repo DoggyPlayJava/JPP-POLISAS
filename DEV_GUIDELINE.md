@@ -4997,5 +4997,27 @@ Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localiz
    - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
    - Binaan produksi PWA (`npm run build`) melepasi semua semakan dalam 24.7s tanpa sebarang ralat.
 
+### 36.22 Penyetempatan Mendalam Task 4: Kumpulan 4 (Keusahawanan Pelajar, Kaunter POS & Pasaran PolyMart)
+Sesi ini melengkapkan penyetempatan mendalam (exhaustive row-by-row i18n localization sweep) bagi Task 4 merentasi 11 fail komponen dan halaman yang meliputi ekosistem Keusahawanan Siswa, pendaftaran bisnes, poster hebahan, kaunter juruwang POS, pengimbas QR, analitik jualan/perbelanjaan, dan pasaran vendor PolyMart:
+
+1. **11 Fail Komponen & Halaman Sasaran:**
+   - **Hab & Onboarding Keusahawanan:** `src/pages/keusahawanan/KeusahawananOnboarding.tsx`, `src/pages/keusahawanan/KeusahawananPoster.tsx`, `src/pages/keusahawanan/KeusahawananPlaceholders.tsx`, `src/pages/jpp/KeusahawananHubLanding.tsx`.
+   - **Subsistem POS Kaunter & Juruwang:** `src/pages/keusahawanan/pos/PosHistoryPage.tsx`, `src/pages/keusahawanan/pos/PosScannerModal.tsx`, `src/pages/keusahawanan/pos/PosStatsPage.tsx`.
+   - **Pasaran Vendor & Pengguna PolyMart:** `src/pages/polymart/PolyMartVendorDashboard.tsx`, `src/pages/polymart/PolyMartVendorStorefront.tsx`, `src/pages/polymart/PolyMartWishlist.tsx`, `src/pages/polymart/PolyMartChat.tsx`.
+
+2. **Piawaian & Pariti Kamus:**
+   - Kamus `keusahawanan.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (612 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `commerce.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (547 entri terjemahan, 100% pariti kunci, 0 kunci kosong).
+   - Kamus `common.json` disegerakkan sepenuhnya antara `src/locales/ms/` dan `src/locales/en/` (191 entri terjemahan).
+   - Penggunaan fallback literal Bahasa Melayu mandatori pada setiap panggilan `t('namespace:key', 'Literal BM Asal', { ... })`.
+   - Tiada pembayangan pembolehubah (`t` dalam gelung `PosHistoryPage` dinamakan semula kepada `tx`).
+   - Pengekalan nilai status domain pangkalan data ('APPROVED', 'PENDING', 'PAID', 'COMPLETED', dll.) dengan pemetaan paparan dwibahasa.
+   - Kata nama khas institusi (POLISAS, JPP, PUSKEP-POLISAS, EMS) dan format mata wang rasmi ('RM') dikekalkan.
+
+3. **Integriti & Ujian:**
+   - Suite ujian pengesahan khusus: `src/__tests__/SweepGroup4CommerceAndPosI18n.test.tsx` (25/25 lulus 100%).
+   - Suite ujian integriti kamus utama: `src/locales/__tests__/masterLocales.test.ts` (20/20 lulus 100%).
+   - Zero ralat TypeScript merentasi semua fail yang diubah suai.
+
 
 

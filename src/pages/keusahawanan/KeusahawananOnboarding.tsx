@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Store, Lightbulb, Users, Plus, Building2, CheckCircle2, Factory } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { ms } from 'date-fns/locale';
 const color = '#1B5E20'; // Base Keusahawanan theme
 
 export function KeusahawananOnboarding() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const navigate = useNavigate();
   const { categories, businesses, myMemberships, isLoading, createBusiness, joinBusiness, refresh } = useBusinessData();
   const [view, setView] = useState<'SELECT' | 'JOIN' | 'CREATE'>('SELECT');
@@ -47,8 +49,8 @@ export function KeusahawananOnboarding() {
       try {
         const { sendNotificationToKeusahawananExco } = await import('@/lib/notifications');
         await sendNotificationToKeusahawananExco({
-          title: 'Permohonan Perniagaan Baru',
-          message: `Satu permohonan perniagaan baru (${bName}) telah didaftarkan. Sila semak dan jadualkan temuduga.`,
+          title: t('keusahawanan:onboarding_notif_title', 'Permohonan Perniagaan Baru'),
+          message: t('keusahawanan:onboarding_notif_msg', 'Satu permohonan perniagaan baru ({{name}}) telah didaftarkan. Sila semak dan jadualkan temuduga.', { name: bName }),
           type: 'INFO',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard'
@@ -72,8 +74,6 @@ export function KeusahawananOnboarding() {
     );
   }
 
-  // If there are pending memberships, show them the status screen, BUT only if they don't want to use their 2nd slot.
-  // Actually, we can show a combined view or just let them click 'Kembali' or we can add a 'Daftar Perniagaan Lain' button on the pending screen.
   const pendingMemberships = myMemberships.filter(m => m.status === 'PENDING');
   const isWaiting = pendingMemberships.length > 0;
 
@@ -91,7 +91,7 @@ export function KeusahawananOnboarding() {
           <div className="bg-white/10 p-2 rounded-full group-hover:-translate-x-1 transition-transform">
             <ChevronLeft className="w-4 h-4" />
           </div>
-          <span className="text-sm font-black uppercase tracking-widest">Kembali ke Portal</span>
+          <span className="text-sm font-black uppercase tracking-widest">{t('common:back_to_portal', 'Kembali ke Portal')}</span>
         </button>
 
         {isWaiting && view === 'SELECT' ? (
@@ -100,11 +100,14 @@ export function KeusahawananOnboarding() {
               <Lightbulb className="w-10 h-10 animate-pulse" />
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-200">
-              Permohonan Sedang Diproses
+              {t('keusahawanan:onboarding_processing_title', 'Permohonan Sedang Diproses')}
             </h1>
             <p className="text-white/60 mb-8 max-w-lg mx-auto">
-              Anda mempunyai permohonan keusahawanan yang sedang didalam pertimbangan. 
-              {pendingMemberships[0].role === 'OWNER' ? ' Pihak Unit Keusahawanan akan menetapkan tarikh temu duga bersama anda sebelum meluluskan penubuhan perniagaan ini.' : ' Presiden perniagaan sedang menyemak permohonan penyertaan anda.'}
+              {t('keusahawanan:onboarding_processing_desc', 'Anda mempunyai permohonan keusahawanan yang sedang didalam pertimbangan.')}
+              {' '}
+              {pendingMemberships[0].role === 'OWNER'
+                ? t('keusahawanan:onboarding_owner_notice', 'Pihak Unit Keusahawanan akan menetapkan tarikh temu duga bersama anda sebelum meluluskan penubuhan perniagaan ini.')
+                : t('keusahawanan:onboarding_member_notice', 'Presiden perniagaan sedang menyemak permohonan penyertaan anda.')}
             </p>
 
             <div className="space-y-4 max-w-sm mx-auto text-left">
@@ -117,12 +120,18 @@ export function KeusahawananOnboarding() {
                      </Avatar>
                      <div>
                        <p className="font-bold text-sm">{pm.business?.name}</p>
-                       <p className="text-[10px] text-white/50 uppercase tracking-widest">{pm.role === 'OWNER' ? 'Penubuhan Perniagaan' : 'Ahli Biasa'}</p>
+                       <p className="text-[10px] text-white/50 uppercase tracking-widest">
+                         {pm.role === 'OWNER'
+                           ? t('keusahawanan:onboarding_role_owner', 'Penubuhan Perniagaan')
+                           : t('keusahawanan:onboarding_role_member', 'Ahli Biasa')}
+                       </p>
                      </div>
                   </div>
                   {pm.role === 'OWNER' && pm.business?.interview_date && (
                      <div className="mt-2 text-xs text-amber-400 font-semibold bg-amber-400/10 px-3 py-1.5 rounded-lg text-center">
-                       Temuduga: {format(new Date(pm.business.interview_date), 'dd MMM yyyy, hh:mm a', { locale: ms })}
+                       {t('keusahawanan:onboarding_interview_label', 'Temuduga: {{date}}', {
+                         date: format(new Date(pm.business.interview_date), 'dd MMM yyyy, hh:mm a', { locale: ms })
+                       })}
                      </div>
                   )}
                 </div>
@@ -132,11 +141,11 @@ export function KeusahawananOnboarding() {
             <div className="flex flex-col gap-3 mt-10">
               {myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING').length < 2 && (
                 <Button onClick={() => setView('SELECT')} className="uppercase tracking-widest text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-12 w-full max-w-sm mx-auto shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all">
-                  Daftar/Sertai Perniagaan Lain (Slot ke-2)
+                  {t('keusahawanan:onboarding_slot2_btn', 'Daftar/Sertai Perniagaan Lain (Slot ke-2)')}
                 </Button>
               )}
               <Button onClick={refresh} variant="ghost" className="uppercase tracking-widest text-[10px] font-black opacity-50 hover:opacity-100 max-w-sm mx-auto w-full">
-                Semak Semula Status
+                {t('keusahawanan:onboarding_recheck_status', 'Semak Semula Status')}
               </Button>
             </div>
           </motion.div>
@@ -146,9 +155,11 @@ export function KeusahawananOnboarding() {
               <motion.div key="SELECT" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
                 <div className="text-center mb-12">
                   <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">
-                    Sistem Keusahawanan
+                    {t('keusahawanan:onboarding_system_title', 'Sistem Keusahawanan')}
                   </h1>
-                  <p className="text-white/50 text-lg">Platform rasmi pengurusan perniagaan pelajar Polisas.</p>
+                  <p className="text-white/50 text-lg">
+                    {t('keusahawanan:onboarding_system_tagline', 'Platform rasmi pengurusan perniagaan pelajar Polisas.')}
+                  </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto">
@@ -161,8 +172,12 @@ export function KeusahawananOnboarding() {
                     <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-emerald-500/30">
                       <Users className="w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-black mb-2 text-emerald-400">Sertai Perniagaan</h2>
-                    <p className="text-white/70 tracking-tight leading-relaxed">Mohon untuk menjadi ahli dalam perniagaan sedia ada yang telah didaftarkan dan aktif di kampus.</p>
+                    <h2 className="text-2xl font-black mb-2 text-emerald-400">
+                      {t('keusahawanan:onboarding_join_title', 'Sertai Perniagaan')}
+                    </h2>
+                    <p className="text-white/70 tracking-tight leading-relaxed">
+                      {t('keusahawanan:onboarding_join_desc', 'Mohon untuk menjadi ahli dalam perniagaan sedia ada yang telah didaftarkan dan aktif di kampus.')}
+                    </p>
                   </div>
 
                   {/* Create New */}
@@ -174,8 +189,12 @@ export function KeusahawananOnboarding() {
                     <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-amber-500/30">
                       <Building2 className="w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-black mb-2 text-amber-400">Cipta Perniagaan</h2>
-                    <p className="text-white/70 tracking-tight leading-relaxed">Daftarkan profil perniagaan anda, jadual temu duga bersama Unit Keusahawanan, dan mulakan empayar.</p>
+                    <h2 className="text-2xl font-black mb-2 text-amber-400">
+                      {t('keusahawanan:onboarding_create_title', 'Cipta Perniagaan')}
+                    </h2>
+                    <p className="text-white/70 tracking-tight leading-relaxed">
+                      {t('keusahawanan:onboarding_create_desc', 'Daftarkan profil perniagaan anda, jadual temu duga bersama Unit Keusahawanan, dan mulakan empayar.')}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -188,8 +207,12 @@ export function KeusahawananOnboarding() {
                       <ChevronLeft className="w-5 h-5" />
                    </button>
                    <div>
-                      <h2 className="text-3xl font-black text-white">Senarai Perniagaan</h2>
-                      <p className="text-white/50">Pilih perniagaan yang anda ingin sertai.</p>
+                      <h2 className="text-3xl font-black text-white">
+                        {t('keusahawanan:onboarding_list_title', 'Senarai Perniagaan')}
+                      </h2>
+                      <p className="text-white/50">
+                        {t('keusahawanan:onboarding_list_desc', 'Pilih perniagaan yang anda ingin sertai.')}
+                      </p>
                    </div>
                 </div>
 
@@ -197,7 +220,9 @@ export function KeusahawananOnboarding() {
                   {businesses.length === 0 && (
                     <div className="col-span-full p-12 text-center border border-white/10 rounded-3xl bg-white/5 ">
                        <Store className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                       <p className="text-white/50">Tiada perniagaan aktif berdaftar buat masa ini.</p>
+                       <p className="text-white/50">
+                         {t('keusahawanan:onboarding_empty_businesses', 'Tiada perniagaan aktif berdaftar buat masa ini.')}
+                       </p>
                     </div>
                   )}
                   {businesses.map(b => {
@@ -206,12 +231,12 @@ export function KeusahawananOnboarding() {
                     const isActive = membership?.status === 'ACTIVE';
                     const isRejected = membership?.status === 'REJECTED';
                     
-                    let btnText = 'Mohon Sertai';
+                    let btnText = t('keusahawanan:onboarding_apply_join', 'Mohon Sertai');
                     let btnDisabled = false;
                     
-                    if (isPending) { btnText = 'Sedang Diproses'; btnDisabled = true; }
-                    else if (isActive) { btnText = 'Telah Disertai'; btnDisabled = true; }
-                    else if (isRejected) { btnText = 'Buat Rayuan (Appeal)'; btnDisabled = false; }
+                    if (isPending) { btnText = t('keusahawanan:onboarding_btn_pending', 'Sedang Diproses'); btnDisabled = true; }
+                    else if (isActive) { btnText = t('keusahawanan:onboarding_btn_joined', 'Telah Disertai'); btnDisabled = true; }
+                    else if (isRejected) { btnText = t('keusahawanan:onboarding_btn_appeal', 'Buat Rayuan (Appeal)'); btnDisabled = false; }
                     
                     return (
                     <div key={b.id} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-white/10 transition-colors">
@@ -222,11 +247,13 @@ export function KeusahawananOnboarding() {
                              <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-black">{b.name.slice(0,2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-md">
-                            {b.category?.name || 'UMUM'}
+                            {b.category?.name || t('keusahawanan:onboarding_cat_general', 'UMUM')}
                           </span>
                         </div>
                         <h3 className="font-black text-xl mb-1 text-white">{b.name}</h3>
-                        <p className="text-white/50 text-sm line-clamp-2 mb-4 leading-relaxed">{b.description || 'Tiada deskripsi disediakan.'}</p>
+                        <p className="text-white/50 text-sm line-clamp-2 mb-4 leading-relaxed">
+                          {b.description || t('keusahawanan:onboarding_no_desc', 'Tiada deskripsi disediakan.')}
+                        </p>
                       </div>
                       
                       <div className="flex flex-col gap-3">
@@ -263,25 +290,33 @@ export function KeusahawananOnboarding() {
                       <ChevronLeft className="w-5 h-5" />
                    </button>
                    <div>
-                      <h2 className="text-3xl font-black text-white">Pendaftaran Profil Perniagaan</h2>
-                      <p className="text-white/50">Lengkapkan maklumat, dan sediakan diri untuk sesi temuduga.</p>
+                      <h2 className="text-3xl font-black text-white">
+                        {t('keusahawanan:onboarding_reg_title', 'Pendaftaran Profil Perniagaan')}
+                      </h2>
+                      <p className="text-white/50">
+                        {t('keusahawanan:onboarding_reg_desc', 'Lengkapkan maklumat, dan sediakan diri untuk sesi temuduga.')}
+                      </p>
                    </div>
                 </div>
 
                 <form onSubmit={handleCreate} className="bg-white/5 border border-white/10 rounded-3xl  p-6 md:p-10 shadow-2xl space-y-6">
                   
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-white/60">Nama Perniagaan / Syarikat</label>
-                    <Input required placeholder="Contoh: Koperasi Mahasiswa Polisas" 
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">
+                      {t('keusahawanan:onboarding_biz_name_label', 'Nama Perniagaan / Syarikat')}
+                    </label>
+                    <Input required placeholder={t('keusahawanan:onboarding_biz_name_placeholder', 'Contoh: Koperasi Mahasiswa Polisas')} 
                       value={bName} onChange={e => setBName(e.target.value)}
                       className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-12 rounded-xl" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-white/60">Kategori</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">
+                      {t('keusahawanan:onboarding_cat_label', 'Kategori')}
+                    </label>
                     <Select required value={bCat} onValueChange={setBCat}>
                       <SelectTrigger className="bg-white/5 border-white/10 focus:ring-amber-500 text-white h-12 rounded-xl">
-                        <SelectValue placeholder="Pilih Kategori..." />
+                        <SelectValue placeholder={t('keusahawanan:onboarding_select_cat', 'Pilih Kategori...')} />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
                         {categories.map(c => (
@@ -292,27 +327,35 @@ export function KeusahawananOnboarding() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-white/60">Penerangan Bisnes</label>
-                    <Textarea required placeholder="Apakah produk/servis yang anda tawarkan? Apakah keunikan perniagaan ini?" 
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">
+                      {t('keusahawanan:onboarding_desc_label', 'Penerangan Bisnes')}
+                    </label>
+                    <Textarea required placeholder={t('keusahawanan:onboarding_desc_placeholder', 'Apakah produk/servis yang anda tawarkan? Apakah keunikan perniagaan ini?')} 
                       value={bDesc} onChange={e => setBDesc(e.target.value)}
                       className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 rounded-xl min-h-[120px] resize-none" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-white/60">No. Pendaftaran SSM (Optional)</label>
-                    <Input placeholder="Contoh: 202101000001 / '-' jika tiada" 
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">
+                      {t('keusahawanan:onboarding_ssm_label', 'No. Pendaftaran SSM (Optional)')}
+                    </label>
+                    <Input placeholder={t('keusahawanan:onboarding_ssm_placeholder', "Contoh: 202101000001 / '-' jika tiada")} 
                       value={bSsm} onChange={e => setBSsm(e.target.value)}
                       className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-12 rounded-xl" />
-                    <p className="text-[10px] text-white/40">Biarkan kosong untuk daftar di bawah PUSKEP-POLISAS.</p>
+                    <p className="text-[10px] text-white/40">
+                      {t('keusahawanan:onboarding_ssm_hint', 'Biarkan kosong untuk daftar di bawah PUSKEP-POLISAS.')}
+                    </p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-black uppercase tracking-widest text-white/60">Mentor Penasihat (Maks 5)</label>
+                      <label className="text-xs font-black uppercase tracking-widest text-white/60">
+                        {t('keusahawanan:onboarding_mentors_label', 'Mentor Penasihat (Maks 5)')}
+                      </label>
                       {bMentors.length < 5 && (
                         <button type="button" onClick={() => setBMentors([...bMentors, { name: '', department: '' }])}
                           className="text-xs text-amber-400 font-bold hover:text-amber-300 flex items-center gap-1">
-                          <Plus className="w-3 h-3" /> Tambah Mentor
+                          <Plus className="w-3 h-3" /> {t('keusahawanan:onboarding_add_mentor', 'Tambah Mentor')}
                         </button>
                       )}
                     </div>
@@ -320,16 +363,16 @@ export function KeusahawananOnboarding() {
                       <div key={i} className="flex flex-col gap-2 p-4 bg-white/5 border border-white/10 rounded-2xl relative group">
                         <button type="button" onClick={() => setBMentors(bMentors.filter((_, idx) => idx !== i))}
                           className="absolute top-2 right-2 text-white/30 hover:text-rose-400">
-                          Tutup
+                          {t('keusahawanan:onboarding_close', 'Tutup')}
                         </button>
-                        <Input placeholder="Contoh: Dr. Ahmad Ali" 
+                        <Input placeholder={t('keusahawanan:onboarding_mentor_name_ph', 'Contoh: Dr. Ahmad Ali')} 
                           value={m.name} onChange={e => {
                             const newMentors = [...bMentors];
                             newMentors[i].name = e.target.value;
                             setBMentors(newMentors);
                           }}
                           className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-11 rounded-xl" />
-                        <Input placeholder="Contoh: Jabatan Teknologi Maklumat" 
+                        <Input placeholder={t('keusahawanan:onboarding_mentor_dept_ph', 'Contoh: Jabatan Teknologi Maklumat')} 
                           value={m.department} onChange={e => {
                             const newMentors = [...bMentors];
                             newMentors[i].department = e.target.value;
@@ -343,7 +386,9 @@ export function KeusahawananOnboarding() {
                   <div className="pt-4">
                     <Button type="submit" disabled={submitting} 
                       className="w-full h-auto py-4 px-4 whitespace-normal leading-relaxed text-center bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs sm:text-sm uppercase tracking-wider sm:tracking-widest rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all">
-                      {submitting ? 'Sedang Diproses...' : 'Hantar Permohonan & Jadual Temuduga'}
+                      {submitting
+                        ? t('keusahawanan:onboarding_submitting', 'Sedang Diproses...')
+                        : t('keusahawanan:onboarding_submit_btn', 'Hantar Permohonan & Jadual Temuduga')}
                     </Button>
                   </div>
                 </form>

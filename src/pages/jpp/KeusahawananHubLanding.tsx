@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ShoppingBag, Briefcase, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function KeusahawananHubLanding() {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const navigate = useNavigate();
 
   return (
@@ -15,7 +17,7 @@ export function KeusahawananHubLanding() {
           className="mb-8 text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
           onClick={() => navigate('/jpp')}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Kembali ke Induk
+          <ArrowLeft className="w-4 h-4 mr-2" /> {t('keusahawanan:hub_back_to_parent', 'Kembali ke Induk')}
         </Button>
         
         <motion.div
@@ -24,10 +26,10 @@ export function KeusahawananHubLanding() {
           className="mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
-            Hab <span className="text-emerald-600 dark:text-emerald-400">Keusahawanan</span>
+            {t('keusahawanan:hub_title_prefix', 'Hab')} <span className="text-emerald-600 dark:text-emerald-400">{t('keusahawanan:hub_title_highlight', 'Keusahawanan')}</span>
           </h1>
           <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl">
-            Pilih modul kawalan utama untuk pemantauan aktiviti perniagaan pelajar dan tugasan bebas (Ekonomi Gig).
+            {t('keusahawanan:hub_subtitle', 'Pilih modul kawalan utama untuk pemantauan aktiviti perniagaan pelajar dan tugasan bebas (Ekonomi Gig).')}
           </p>
         </motion.div>
 
@@ -45,12 +47,14 @@ export function KeusahawananHubLanding() {
               <div className="w-14 h-14 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                 <ShoppingBag className="w-7 h-7" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">e-Keusahawanan</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                {t('keusahawanan:hub_card_keusahawanan_title', 'e-Keusahawanan')}
+              </h2>
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                Urus platform perniagaan, kedai rasmi PolyMart, pengesahan vendor, dan program keusahawanan pelajar.
+                {t('keusahawanan:hub_card_keusahawanan_desc', 'Urus platform perniagaan, kedai rasmi PolyMart, pengesahan vendor, dan program keusahawanan pelajar.')}
               </p>
               <div className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
-                Buka Modul <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                {t('keusahawanan:hub_open_module', 'Buka Modul')} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </motion.div>
@@ -68,12 +72,14 @@ export function KeusahawananHubLanding() {
               <div className="w-14 h-14 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                 <Briefcase className="w-7 h-7" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">PolyTask (Ekonomi Gig)</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                {t('keusahawanan:hub_card_polytask_title', 'PolyTask (Ekonomi Gig)')}
+              </h2>
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                Pantau senarai tugasan bebas, selesaikan pertikaian bidaan, dan urus keselamatan transaksi Tasker.
+                {t('keusahawanan:hub_card_polytask_desc', 'Pantau senarai tugasan bebas, selesaikan pertikaian bidaan, dan urus keselamatan transaksi Tasker.')}
               </p>
               <div className="flex items-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
-                Buka Modul <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                {t('keusahawanan:hub_open_module', 'Buka Modul')} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </motion.div>

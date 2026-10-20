@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +24,6 @@ import { type BusinessExpense, type ExpenseCategory } from '@/types';
 import toast from 'react-hot-toast';
 
 type Range = '1d' | '7d' | '1m';
-const RANGE_LABELS: Record<Range, string> = { '1d': '1 Hari', '7d': '7 Hari', '1m': 'Bulan Ini' };
 const PIE_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626'];
 const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Sewa', 'Bekalan', 'Pengangkutan', 'Pemasaran', 'Lain-lain'];
 const EXPENSE_CAT_COLORS: Record<ExpenseCategory, string> = {
@@ -49,6 +49,7 @@ function KPICard({ icon: Icon, label, value, sub, color, delay }: any) {
 
 // ── Ads Marketing Upsell Widget ───────────────────────────────────────────────
 function AdsMarketingWidget({ stats }: { stats: StatsData }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const [adsPhone, setAdsPhone] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,26 +65,27 @@ function AdsMarketingWidget({ stats }: { stats: StatsData }) {
       className="relative overflow-hidden rounded-3xl p-5 border border-amber-500/30 bg-amber-500/10 shadow-lg mt-2 mb-4 group cursor-pointer"
       onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya dari tab analisis jualan POS dan berminat untuk langgan slot iklan PolyMart!`, '_blank')}
     >
-      
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-inner">
             <Rocket className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">Peluang Pemasaran Cerdas</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">
+              {t('keusahawanan:pos_ads_kicker', 'Peluang Pemasaran Cerdas')}
+            </p>
             <h3 className="text-base sm:text-lg font-black text-amber-700 dark:text-amber-300 leading-tight">
-              Gandakan Pendedahan Produk ke Ribuan Pelajar
+              {t('keusahawanan:pos_ads_headline', 'Gandakan Pendedahan Produk ke Ribuan Pelajar')}
             </h3>
             <p className="text-xs text-amber-700/70 dark:text-amber-400/80 mt-1 max-w-lg font-medium leading-relaxed">
-              Letakkan produk kedai anda di **Banner Hadapan** PolyMart untuk melonjakkan jumlah pesanan. Slot adalah terhad!
+              {t('keusahawanan:pos_ads_body', 'Letakkan produk kedai anda di **Banner Hadapan** PolyMart untuk melonjakkan jumlah pesanan. Slot adalah terhad!')}
             </p>
           </div>
         </div>
         
         <button className="whitespace-nowrap h-11 px-6 rounded-2xl text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0"
           style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-          Letak Iklan Sekarang
+          {t('keusahawanan:pos_ads_btn', 'Letak Iklan Sekarang')}
         </button>
       </div>
     </motion.div>
@@ -93,6 +95,7 @@ function AdsMarketingWidget({ stats }: { stats: StatsData }) {
 type Tab = 'jualan' | 'produk' | 'perbelanjaan';
 
 export function PosStatsPage() {
+  const { t, i18n } = useTranslation(['keusahawanan', 'common']);
   const { color } = useExcoTheme();
   const { selectedBusiness, isLoading: isBusinessLoading } = useBusinessSwitcher();
   const { profile } = useAuth();
@@ -106,11 +109,27 @@ export function PosStatsPage() {
   const [loading, setLoading] = useState(true);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
 
-  // Ciri 2: Expense state
+  // Expense state
   const [expenses, setExpenses] = useState<BusinessExpense[]>([]);
   const [expLoading, setExpLoading] = useState(false);
   const [expSaving, setExpSaving] = useState(false);
   const [expForm, setExpForm] = useState({ ...EMPTY_EXPENSE_FORM });
+
+  const RANGE_LABELS: Record<Range, string> = {
+    '1d': t('keusahawanan:pos_range_1d', '1 Hari'),
+    '7d': t('keusahawanan:pos_range_7d', '7 Hari'),
+    '1m': t('keusahawanan:pos_range_1m', 'Bulan Ini'),
+  };
+
+  const getExpenseCategoryLabel = (cat: ExpenseCategory) => {
+    switch (cat) {
+      case 'Sewa': return t('keusahawanan:pos_cat_rent', 'Sewa');
+      case 'Bekalan': return t('keusahawanan:pos_cat_supplies', 'Bekalan');
+      case 'Pengangkutan': return t('keusahawanan:pos_cat_transport', 'Pengangkutan');
+      case 'Pemasaran': return t('keusahawanan:pos_cat_marketing', 'Pemasaran');
+      default: return t('keusahawanan:pos_cat_other', 'Lain-lain');
+    }
+  };
 
   useEffect(() => {
     if (isBusinessLoading) return;
@@ -145,14 +164,21 @@ export function PosStatsPage() {
     if (range === '7d') from.setDate(now.getDate() - 6);
     if (range === '1m') from.setDate(1); // 1st day of current month
     
+    const localeStr = i18n.language === 'en' ? 'en-MY' : 'ms-MY';
     const opt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-    return `${from.toLocaleDateString('ms-MY', opt)} - ${now.toLocaleDateString('ms-MY', opt)}`;
+    return `${from.toLocaleDateString(localeStr, opt)} - ${now.toLocaleDateString(localeStr, opt)}`;
   };
 
   const handleAddExpense = async () => {
     if (!businessId) return;
-    if (!expForm.amount || parseFloat(expForm.amount) <= 0) { toast.error('Masukkan jumlah yang sah.'); return; }
-    if (!expForm.description.trim()) { toast.error('Keterangan perbelanjaan wajib diisi.'); return; }
+    if (!expForm.amount || parseFloat(expForm.amount) <= 0) {
+      toast.error(t('keusahawanan:pos_toast_valid_amount', 'Masukkan jumlah yang sah.'));
+      return;
+    }
+    if (!expForm.description.trim()) {
+      toast.error(t('keusahawanan:pos_toast_desc_required', 'Keterangan perbelanjaan wajib diisi.'));
+      return;
+    }
     setExpSaving(true);
     const ok = await pos.addExpense(businessId, {
       amount:       parseFloat(expForm.amount),
@@ -170,7 +196,7 @@ export function PosStatsPage() {
   };
 
   const handleDeleteExpense = async (id: string) => {
-    if (!businessId || !window.confirm('Padam rekod perbelanjaan ini?')) return;
+    if (!businessId || !window.confirm(t('keusahawanan:pos_confirm_delete_expense', 'Padam rekod perbelanjaan ini?'))) return;
     await pos.deleteExpense(id, businessId);
     await loadExpenses();
     pos.fetchStats(businessId, range).then(s => setStats(s));
@@ -194,8 +220,6 @@ export function PosStatsPage() {
 
   const totalInventoryValue = productAnalysis.reduce((s, p) => s + (p.inventoryValue ?? 0), 0);
 
-  // Purata margin berwajaran — produk dengan stok & harga lebih tinggi diberi berat lebih
-  // Ini lebih tepat berbanding purata biasa yang boleh menyembunyikan produk berisiko tinggi
   const avgMargin = (() => {
     const withCost = productAnalysis.filter(p => p.margin !== null && p.price > 0);
     if (withCost.length === 0) return null;
@@ -222,12 +246,18 @@ export function PosStatsPage() {
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">POS</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Statistik & Analisis</h1>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">
+            {t('keusahawanan:pos_stats_title', 'Statistik & Analisis')}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           {/* Tab */}
           <div className="flex gap-1 bg-muted/30 p-1 rounded-2xl">
-            {([['jualan', 'Jualan'], ['produk', 'Produk'], ['perbelanjaan', 'Belanja']] as [Tab, string][]).map(([key, label]) => (
+            {([
+              ['jualan', t('keusahawanan:pos_tab_sales', 'Jualan')],
+              ['produk', t('keusahawanan:pos_tab_products', 'Produk')],
+              ['perbelanjaan', t('keusahawanan:pos_tab_expenses', 'Belanja')]
+            ] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
                 className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                 style={tab === key
@@ -259,7 +289,7 @@ export function PosStatsPage() {
                 >
                   <FileText className="w-4 h-4" />
                   <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">
-                    Preview PDF
+                    {t('keusahawanan:pos_preview_pdf', 'Preview PDF')}
                   </span>
                 </button>
               )}
@@ -275,20 +305,29 @@ export function PosStatsPage() {
           </div>
         ) : stats ? (
           <>
-            {/* KPI cards — 5 items: tambah Untung Bersih */}
+            {/* KPI cards — 5 items */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <KPICard icon={DollarSign} label="Tunai Kasar (Tunai+Bank)" value={fmtRM(stats.totalCashCollected)}
-                sub={`Selesai: ${fmtRM(stats.totalRevenue)} · Pending QR: ${fmtRM(stats.onlinePendingRevenue)}`}
+              <KPICard icon={DollarSign} 
+                label={t('keusahawanan:pos_kpi_gross_cash', 'Tunai Kasar (Tunai+Bank)')} 
+                value={fmtRM(stats.totalCashCollected)}
+                sub={t('keusahawanan:pos_kpi_gross_sub', 'Selesai: {{rev}} · Pending QR: {{pending}}', { rev: fmtRM(stats.totalRevenue), pending: fmtRM(stats.onlinePendingRevenue) })}
                 color={color} delay={0.05} />
-              <KPICard icon={Receipt} label="Transaksi" value={stats.transactionCount} color={color} delay={0.1} />
-              <KPICard icon={Package} label="Unit Terjual" value={stats.unitsSold} color={color} delay={0.15} />
-              <KPICard icon={TrendingUp} label="Purata Order (AOV)" value={fmtRM(stats.averageOrderValue)} color={color} delay={0.2} />
-              {/* Ciri 2: Untung Bersih */}
+              <KPICard icon={Receipt} 
+                label={t('keusahawanan:pos_kpi_transactions', 'Transaksi')} 
+                value={stats.transactionCount} color={color} delay={0.1} />
+              <KPICard icon={Package} 
+                label={t('keusahawanan:pos_kpi_units_sold', 'Unit Terjual')} 
+                value={stats.unitsSold} color={color} delay={0.15} />
+              <KPICard icon={TrendingUp} 
+                label={t('keusahawanan:pos_kpi_aov', 'Purata Order (AOV)')} 
+                value={fmtRM(stats.averageOrderValue)} color={color} delay={0.2} />
               <KPICard
                 icon={stats.netProfit >= 0 ? TrendingUp : TrendingDown}
-                label="Untung Bersih (Anggaran)"
+                label={t('keusahawanan:pos_kpi_net_profit', 'Untung Bersih (Anggaran)')}
                 value={fmtRM(stats.netProfit)}
-                sub={stats.totalExpenses > 0 ? `Tolak belanja: ${fmtRM(stats.totalExpenses)}` : 'Tiada belanja direkodkan'}
+                sub={stats.totalExpenses > 0 
+                  ? t('keusahawanan:pos_kpi_deduct_exp', 'Tolak belanja: {{exp}}', { exp: fmtRM(stats.totalExpenses) })
+                  : t('keusahawanan:pos_kpi_no_exp', 'Tiada belanja direkodkan')}
                 color={stats.netProfit >= 0 ? '#22c55e' : '#ef4444'}
                 delay={0.25}
               />
@@ -304,7 +343,9 @@ export function PosStatsPage() {
                       <ShoppingBag className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">PolyMart (Online)</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        {t('keusahawanan:pos_channel_online', 'PolyMart (Online)')}
+                      </p>
                       <p className="text-lg font-black text-foreground">{fmtRM(stats.onlineRevenue)}</p>
                     </div>
                   </div>
@@ -320,7 +361,9 @@ export function PosStatsPage() {
                       <Wallet className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">POS (Fizikal)</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        {t('keusahawanan:pos_channel_pos', 'POS (Fizikal)')}
+                      </p>
                       <p className="text-lg font-black text-foreground">{fmtRM(stats.physicalRevenue)}</p>
                     </div>
                   </div>
@@ -335,14 +378,14 @@ export function PosStatsPage() {
 
             <AdsMarketingWidget stats={stats} />
 
-            {/* Discount alert — tunjuk jika ada diskaun diberi */}
+            {/* Discount alert */}
             {stats.totalDiscounts > 0 && (
               <div className="flex items-center justify-between px-5 py-3 rounded-2xl"
                 style={{ background: 'hsl(var(--muted)/0.4)', border: '1px solid hsl(var(--border)/0.4)' }}>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px]">🏷️</span>
                   <p className="text-[10px] font-black text-muted-foreground/70">
-                    Jumlah Diskaun Diberi dalam Tempoh Ini
+                    {t('keusahawanan:pos_total_discounts_label', 'Jumlah Diskaun Diberi dalam Tempoh Ini')}
                   </p>
                 </div>
                 <p className="text-sm font-black text-rose-500">- {fmtRM(stats.totalDiscounts)}</p>
@@ -356,10 +399,14 @@ export function PosStatsPage() {
                 className="lg:col-span-3 rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-6">
                   <CalendarDays className="w-4 h-4 opacity-40" style={{ color }} />
-                  <p className="text-xs font-black uppercase tracking-widest text-foreground">Jualan Harian</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-foreground">
+                    {t('keusahawanan:pos_chart_daily_sales', 'Jualan Harian')}
+                  </p>
                 </div>
                 {stats.dailySales.length === 0 ? (
-                  <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">Tiada data.</div>
+                  <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">
+                    {t('keusahawanan:pos_chart_no_data', 'Tiada data.')}
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={stats.dailySales} barSize={12}>
@@ -373,9 +420,11 @@ export function PosStatsPage() {
                         contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 12, fontSize: 11 }}
                         formatter={(v: number, name) => [
                           `RM ${v.toFixed(2)}`,
-                          name === 'revenue' ? 'Jualan Selesai' : 'Kutipan Online (Bank)'
+                          name === 'revenue' 
+                            ? t('keusahawanan:pos_chart_completed_sales', 'Jualan Selesai') 
+                            : t('keusahawanan:pos_chart_online_collection', 'Kutipan Online (Bank)')
                         ]}
-                        labelFormatter={d => new Date(d).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}
+                        labelFormatter={d => new Date(d).toLocaleDateString(i18n.language === 'en' ? 'en-MY' : 'ms-MY', { day: 'numeric', month: 'short' })}
                       />
                       <Bar dataKey="revenue" fill={color} name="revenue" radius={[3, 3, 0, 0]} />
                       <Bar dataKey="onlineCash" fill="#3b82f6" name="onlineCash" radius={[3, 3, 0, 0]} />
@@ -387,13 +436,17 @@ export function PosStatsPage() {
               {/* Pie chart */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                 className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
-                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-6">Prestasi Produk</p>
+                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-6">
+                  {t('keusahawanan:pos_product_perf', 'Prestasi Produk')}
+                </p>
                 {stats.topProducts.length === 0 ? (
-                  <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">Tiada data.</div>
+                  <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">
+                    {t('keusahawanan:pos_chart_no_data', 'Tiada data.')}
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
-                      <Pie data={stats.topProducts} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      <Pie data={stats.topProducts} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                         {stats.topProducts.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                       </Pie>
                       <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10 }} />
@@ -408,7 +461,9 @@ export function PosStatsPage() {
             {stats.topProducts.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
                 className="rounded-[2rem] p-6 bg-card border border-border/50">
-                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">Ranking Produk Terlaris</p>
+                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">
+                  {t('keusahawanan:pos_top_products_ranking', 'Ranking Produk Terlaris')}
+                </p>
                 <div className="space-y-2">
                   {stats.topProducts.map((p, i) => (
                     <div key={p.name} className="flex items-center gap-4 p-3 rounded-2xl bg-muted/20">
@@ -419,7 +474,9 @@ export function PosStatsPage() {
                       <p className="flex-1 text-sm font-black text-foreground">{p.name}</p>
                       <div className="text-right">
                         <p className="text-xs font-black" style={{ color }}>{fmtRM(p.revenue)}</p>
-                        <p className="text-[10px] text-muted-foreground">{p.units} unit</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {p.units} {t('keusahawanan:pos_units_suffix', 'unit')}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -428,24 +485,31 @@ export function PosStatsPage() {
             )}
           </>
         ) : (
-          <div className="h-40 flex items-center justify-center text-muted-foreground/40 font-black text-sm">Gagal memuatkan statistik.</div>
+          <div className="h-40 flex items-center justify-center text-muted-foreground/40 font-black text-sm">
+            {t('keusahawanan:pos_stats_load_failed', 'Gagal memuatkan statistik.')}
+          </div>
         )
       ) : tab === 'produk' ? (
         /* ── Tab: Analisis Produk ──────────────────────────────────────────── */
         <div className="space-y-6">
           {/* KPI: Inventory Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <KPICard icon={Layers} label="Nilai Inventori"
+            <KPICard icon={Layers} 
+              label={t('keusahawanan:pos_kpi_inventory_val', 'Nilai Inventori')}
               value={fmtRM(totalInventoryValue)}
-              sub={totalInventoryValue > 0 ? 'Kos per unit × stok semasa' : 'Tiada kos ditetapkan'}
+              sub={totalInventoryValue > 0 ? t('keusahawanan:pos_kpi_inventory_val_sub', 'Kos per unit × stok semasa') : t('keusahawanan:pos_kpi_no_cost_set', 'Tiada kos ditetapkan')}
               color={color} delay={0.05} />
-            <KPICard icon={BarChart3} label="Margin Purata (Berwajaran)"
+            <KPICard icon={BarChart3} 
+              label={t('keusahawanan:pos_kpi_avg_margin', 'Margin Purata (Berwajaran)')}
               value={avgMargin !== null ? `${avgMargin.toFixed(1)}%` : 'N/A'}
-              sub={avgMargin !== null ? (avgMargin >= 30 ? '✅ Sihat' : avgMargin >= 15 ? '⚠️ Perlu semak' : '🔴 Berisiko') : 'Belum ada kos'}
+              sub={avgMargin !== null 
+                ? (avgMargin >= 30 ? t('keusahawanan:pos_margin_healthy', '✅ Sihat') : avgMargin >= 15 ? t('keusahawanan:pos_margin_check', '⚠️ Perlu semak') : t('keusahawanan:pos_margin_risk', '🔴 Berisiko')) 
+                : t('keusahawanan:pos_margin_no_cost', 'Belum ada kos')}
               color={avgMargin !== null ? (avgMargin >= 30 ? '#22c55e' : avgMargin >= 15 ? '#f59e0b' : '#ef4444') : color} delay={0.1} />
-            <KPICard icon={AlertTriangle} label="Produk Berisiko"
+            <KPICard icon={AlertTriangle} 
+              label={t('keusahawanan:pos_kpi_at_risk_products', 'Produk Berisiko')}
               value={lowMarginCount}
-              sub={lowMarginCount > 0 ? 'Margin < 20%' : 'Semua margin OK'}
+              sub={lowMarginCount > 0 ? t('keusahawanan:pos_margin_sub_low', 'Margin < 20%') : t('keusahawanan:pos_margin_sub_ok', 'Semua margin OK')}
               color={lowMarginCount > 0 ? '#ef4444' : '#22c55e'} delay={0.15} />
           </div>
 
@@ -454,10 +518,14 @@ export function PosStatsPage() {
             className="rounded-[2rem] p-6 bg-card border border-border/50">
             <div className="flex items-center gap-2 mb-4">
               <ShoppingBag className="w-4 h-4 opacity-40" style={{ color }} />
-              <p className="text-xs font-black uppercase tracking-widest text-foreground">Senarai Produk — Analisis Margin</p>
+              <p className="text-xs font-black uppercase tracking-widest text-foreground">
+                {t('keusahawanan:pos_product_margin_analysis', 'Senarai Produk — Analisis Margin')}
+              </p>
             </div>
             {productAnalysis.length === 0 ? (
-              <p className="text-sm text-muted-foreground/40 text-center py-8 font-black">Tiada produk dalam katalog.</p>
+              <p className="text-sm text-muted-foreground/40 text-center py-8 font-black">
+                {t('keusahawanan:pos_no_products_catalog', 'Tiada produk dalam katalog.')}
+              </p>
             ) : (
               <div className="space-y-2">
                 {productAnalysis.map(p => {
@@ -478,10 +546,14 @@ export function PosStatsPage() {
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-black text-foreground truncate">{p.name}</p>
                           {mi !== null && mi < 20 && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black text-white bg-rose-500 shrink-0">RISIKO</span>
+                            <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black text-white bg-rose-500 shrink-0">
+                              {t('keusahawanan:pos_risk_badge', 'RISIKO')}
+                            </span>
                           )}
                         </div>
-                        <p className="text-[9px] text-muted-foreground/50">{p.category} · Stok: {p.stock_quantity}</p>
+                        <p className="text-[9px] text-muted-foreground/50">
+                          {p.category} · {t('keusahawanan:pos_stock_qty', 'Stok: {{count}}', { count: p.stock_quantity })}
+                        </p>
                         <div className="mt-1 h-1 rounded-full bg-muted/50 overflow-hidden w-32">
                           <div className="h-full rounded-full" style={{ width: `${mi !== null ? Math.min(mi, 100) : 0}%`, background: mc }} />
                         </div>
@@ -489,21 +561,29 @@ export function PosStatsPage() {
                       <div className="text-right shrink-0 space-y-0.5">
                         <p className="text-xs font-black" style={{ color }}>{fmtRM(p.price)}</p>
                         {mi !== null ? (
-                          <p className="text-[10px] font-black" style={{ color: mc }}>{mi.toFixed(1)}% margin</p>
+                          <p className="text-[10px] font-black" style={{ color: mc }}>
+                            {t('keusahawanan:pos_margin_label', '{{margin}}% margin', { margin: mi.toFixed(1) })}
+                          </p>
                         ) : (
-                          <p className="text-[9px] text-muted-foreground/30">Kos N/A</p>
+                          <p className="text-[9px] text-muted-foreground/30">
+                            {t('keusahawanan:pos_cost_na', 'Kos N/A')}
+                          </p>
                         )}
                         {daysLeft !== null ? (
                           <p className="text-[9px]" style={{ color: daysLeft <= 3 ? '#ef4444' : 'hsl(var(--muted-foreground)/0.5)' }}>
-                            ~{daysLeft} hari lagi
+                            {t('keusahawanan:pos_days_left', '~{{days}} hari lagi', { days: daysLeft })}
                           </p>
                         ) : null}
                       </div>
                       {p.inventoryValue !== null && (
                         <div className="text-right shrink-0 pl-2 border-l border-border/30">
-                          <p className="text-[8px] text-muted-foreground/40 uppercase font-black">Modal Stok</p>
+                          <p className="text-[8px] text-muted-foreground/40 uppercase font-black">
+                            {t('keusahawanan:pos_stock_capital', 'Modal Stok')}
+                          </p>
                           <p className="text-[10px] font-black text-muted-foreground">{fmtRM(p.inventoryValue)}</p>
-                          <p className="text-[8px] text-muted-foreground/30">kos×stok</p>
+                          <p className="text-[8px] text-muted-foreground/30">
+                            {t('keusahawanan:pos_cost_x_stock', 'kos×stok')}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -514,18 +594,22 @@ export function PosStatsPage() {
           </motion.div>
         </div>
       ) : (
-        /* ── Tab: Perbelanjaan Operasi (Ciri 2) ──────────────────────────── */
+        /* ── Tab: Perbelanjaan Operasi ──────────────────────────── */
         <div className="space-y-6">
           {/* KPI: P&L Summary */}
           {stats && (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              <KPICard icon={DollarSign} label="Jualan Bersih" value={fmtRM(stats.totalRevenue)} color={color} delay={0.05} />
-              <KPICard icon={MinusCircle} label="Jumlah Perbelanjaan" value={fmtRM(stats.totalExpenses)} color="#ef4444" delay={0.1} />
+              <KPICard icon={DollarSign} 
+                label={t('keusahawanan:pos_kpi_net_sales', 'Jualan Bersih')} 
+                value={fmtRM(stats.totalRevenue)} color={color} delay={0.05} />
+              <KPICard icon={MinusCircle} 
+                label={t('keusahawanan:pos_kpi_total_expenses', 'Jumlah Perbelanjaan')} 
+                value={fmtRM(stats.totalExpenses)} color="#ef4444" delay={0.1} />
               <KPICard
                 icon={stats.netProfit >= 0 ? TrendingUp : TrendingDown}
-                label="Untung Bersih (Anggaran)"
+                label={t('keusahawanan:pos_kpi_net_profit', 'Untung Bersih (Anggaran)')}
                 value={fmtRM(stats.netProfit)}
-                sub={stats.netProfit >= 0 ? '✅ Untung' : '🔴 Rugi'}
+                sub={stats.netProfit >= 0 ? t('keusahawanan:pos_status_profitable', '✅ Untung') : t('keusahawanan:pos_status_loss', '🔴 Rugi')}
                 color={stats.netProfit >= 0 ? '#22c55e' : '#ef4444'}
                 delay={0.15}
               />
@@ -538,11 +622,15 @@ export function PosStatsPage() {
               className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50 space-y-4">
               <div className="flex items-center gap-2">
                 <Plus className="w-4 h-4" style={{ color }} />
-                <p className="text-xs font-black uppercase tracking-widest text-foreground">Rekod Perbelanjaan</p>
+                <p className="text-xs font-black uppercase tracking-widest text-foreground">
+                  {t('keusahawanan:pos_record_expense', 'Rekod Perbelanjaan')}
+                </p>
               </div>
 
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Jumlah (RM)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+                  {t('keusahawanan:pos_amount_rm', 'Jumlah (RM)')}
+                </p>
                 <input type="number" min="0" step="0.01" value={expForm.amount}
                   onChange={e => setExpForm(f => ({ ...f, amount: e.target.value }))}
                   placeholder="0.00"
@@ -550,23 +638,31 @@ export function PosStatsPage() {
               </div>
 
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kategori</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+                  {t('keusahawanan:pos_expense_cat', 'Kategori')}
+                </p>
                 <select value={expForm.category} onChange={e => setExpForm(f => ({ ...f, category: e.target.value as ExpenseCategory }))}
                   className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
-                  {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {EXPENSE_CATEGORIES.map(c => (
+                    <option key={c} value={c}>{getExpenseCategoryLabel(c)}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Keterangan</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+                  {t('keusahawanan:pos_expense_desc', 'Keterangan')}
+                </p>
                 <input type="text" value={expForm.description}
                   onChange={e => setExpForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="cth: Sewa tapak, Beg plastik..."
+                  placeholder={t('keusahawanan:pos_expense_desc_ph', 'cth: Sewa tapak, Beg plastik...')}
                   className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
               </div>
 
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Tarikh (kosong = hari ini)</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+                  {t('keusahawanan:pos_expense_date', 'Tarikh (kosong = hari ini)')}
+                </p>
                 <input type="date" value={expForm.expense_date}
                   onChange={e => setExpForm(f => ({ ...f, expense_date: e.target.value }))}
                   className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
@@ -575,7 +671,9 @@ export function PosStatsPage() {
               <button onClick={handleAddExpense} disabled={expSaving}
                 className="w-full h-10 rounded-xl text-xs font-black transition-all hover:opacity-90 disabled:opacity-50"
                 style={{ background: color, color: '#fff' }}>
-                {expSaving ? 'Menyimpan...' : '+ Tambah Perbelanjaan'}
+                {expSaving 
+                  ? t('keusahawanan:pos_saving_expense', 'Menyimpan...') 
+                  : t('keusahawanan:pos_add_expense_btn', '+ Tambah Perbelanjaan')}
               </button>
             </motion.div>
 
@@ -586,12 +684,14 @@ export function PosStatsPage() {
               {/* Donut chart pecahan kategori */}
               {stats && stats.expensesByCategory.length > 0 && (
                 <div className="rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
-                  <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">Pecahan Perbelanjaan</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">
+                    {t('keusahawanan:pos_expense_breakdown', 'Pecahan Perbelanjaan')}
+                  </p>
                   <ResponsiveContainer width="100%" height={180}>
                     <PieChart>
                       <Pie data={stats.expensesByCategory} dataKey="amount" nameKey="category"
                         cx="50%" cy="50%" outerRadius={70} innerRadius={40}
-                        label={({ category, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                         {stats.expensesByCategory.map((e, i) => (
                           <Cell key={i} fill={EXPENSE_CAT_COLORS[e.category as ExpenseCategory] ?? PIE_COLORS[i % PIE_COLORS.length]} />
                         ))}
@@ -607,7 +707,9 @@ export function PosStatsPage() {
               <div className="rounded-[2rem] p-6 bg-card border border-border/50">
                 <div className="flex items-center gap-2 mb-4">
                   <Wallet className="w-4 h-4 opacity-40" style={{ color }} />
-                  <p className="text-xs font-black uppercase tracking-widest text-foreground">Rekod Perbelanjaan</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-foreground">
+                    {t('keusahawanan:pos_expense_records', 'Rekod Perbelanjaan')}
+                  </p>
                 </div>
 
                 {expLoading ? (
@@ -615,7 +717,9 @@ export function PosStatsPage() {
                     <div className="w-6 h-6 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
                   </div>
                 ) : expenses.length === 0 ? (
-                  <p className="text-sm text-muted-foreground/40 text-center py-6 font-black">Tiada rekod dalam tempoh ini.</p>
+                  <p className="text-sm text-muted-foreground/40 text-center py-6 font-black">
+                    {t('keusahawanan:pos_no_records_period', 'Tiada rekod dalam tempoh ini.')}
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hide">
                     {expenses.map(e => (
@@ -623,7 +727,9 @@ export function PosStatsPage() {
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: EXPENSE_CAT_COLORS[e.category] ?? '#888' }} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-black text-foreground truncate">{e.description}</p>
-                          <p className="text-[9px] text-muted-foreground/50">{e.category} · {new Date(e.expense_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                          <p className="text-[9px] text-muted-foreground/50">
+                            {getExpenseCategoryLabel(e.category)} · {new Date(e.expense_date).toLocaleDateString(i18n.language === 'en' ? 'en-MY' : 'ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
                         </div>
                         <p className="text-sm font-black text-rose-500 shrink-0">- {fmtRM(e.amount)}</p>
                         <button onClick={() => handleDeleteExpense(e.id)}
@@ -651,7 +757,7 @@ export function PosStatsPage() {
             rangeLabel={RANGE_LABELS[range]}
             dateRangeString={getExactDateRange()}
             themeColor={color}
-            generatedBy={profile?.full_name || 'Pengurus Perniagaan'}
+            generatedBy={profile?.full_name || t('keusahawanan:pos_manager_default', 'Pengurus Perniagaan')}
           />
         </React.Suspense>
       )}

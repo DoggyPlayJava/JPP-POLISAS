@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Construction } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { hexToRgba } from '@/lib/utils';
 
-
 function ComingSoonPage({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   const { color } = useExcoTheme();
+  const { t } = useTranslation(['keusahawanan', 'common']);
   return (
     <div className="min-h-full flex items-center justify-center p-8 bg-background pb-28 md:pb-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
@@ -32,7 +33,7 @@ function ComingSoonPage({ icon, title, description }: { icon: React.ReactNode; t
 
         <div className="mt-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
           <Construction className="w-3.5 h-3.5" />
-          <span>Sedang dalam pembangunan</span>
+          <span>{t('keusahawanan:placeholder_under_construction', 'Sedang dalam pembangunan')}</span>
         </div>
       </motion.div>
     </div>
@@ -40,13 +41,34 @@ function ComingSoonPage({ icon, title, description }: { icon: React.ReactNode; t
 }
 
 export function KeusahawananIdea() {
-  return <ComingSoonPage icon="💡" title="Cadangan Idea" description="Modul penghantaran dan semakan cadangan idea perniagaan pelajar akan dibina tidak lama lagi." />;
+  const { t } = useTranslation(['keusahawanan', 'common']);
+  return (
+    <ComingSoonPage
+      icon="💡"
+      title={t('keusahawanan:placeholder_idea_title', 'Cadangan Idea')}
+      description={t('keusahawanan:placeholder_idea_desc', 'Modul penghantaran dan semakan cadangan idea perniagaan pelajar akan dibina tidak lama lagi.')}
+    />
+  );
 }
 
 export function KeusahawananGeran() {
-  return <ComingSoonPage icon="🏆" title="Geran & Hadiah" description="Modul pengurusan permohonan geran dan hadiah untuk program keusahawanan akan tersedia tidak lama lagi." />;
+  const { t } = useTranslation(['keusahawanan', 'common']);
+  return (
+    <ComingSoonPage
+      icon="🏆"
+      title={t('keusahawanan:placeholder_grant_title', 'Geran & Hadiah')}
+      description={t('keusahawanan:placeholder_grant_desc', 'Modul pengurusan permohonan geran dan hadiah untuk program keusahawanan akan tersedia tidak lama lagi.')}
+    />
+  );
 }
 
 export function KeusahawananLaporan() {
-  return <ComingSoonPage icon="📊" title="Laporan" description="Sistem jana laporan program dan impak keusahawanan akan tersedia tidak lama lagi." />;
+  const { t } = useTranslation(['keusahawanan', 'common']);
+  return (
+    <ComingSoonPage
+      icon="📊"
+      title={t('keusahawanan:placeholder_report_title', 'Laporan')}
+      description={t('keusahawanan:placeholder_report_desc', 'Sistem jana laporan program dan impak keusahawanan akan tersedia tidak lama lagi.')}
+    />
+  );
 }
