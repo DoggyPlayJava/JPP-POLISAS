@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KebajikanStaffAssignment, KEBAJIKAN_THEME_COLOR } from '@/types';
@@ -7,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Users, UserPlus, Trash2, Shield, ShieldCheck, Search, X, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
@@ -20,12 +21,20 @@ interface ProfileResult {
   role: string;
 }
 
-export function KebajikanStaffPage() {
+export function KebajikanStaffPage({
+  initialStaff = [],
+  initialLoading = false,
+}: {
+  initialStaff?: KebajikanStaffAssignment[];
+  initialLoading?: boolean;
+} = {}) {
+  const { t, i18n } = useTranslation(['kebajikan', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { user, isSuperAdmin, isKebajikanExco } = useAuth();
   const isAllowed = isSuperAdmin || isKebajikanExco;
 
-  const [staff, setStaff]         = useState<KebajikanStaffAssignment[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [staff, setStaff]         = useState<KebajikanStaffAssignment[]>(initialStaff);
+  const [loading, setLoading]     = useState(initialLoading);
   const [searching, setSearching] = useState(false);
   const [query, setQuery]         = useState('');
   const [results, setResults]     = useState<ProfileResult[]>([]);
@@ -72,9 +81,9 @@ export function KebajikanStaffPage() {
       is_active:    true,
     });
     if (error) {
-      toast.error('Gagal tambah staff: ' + error.message);
+      toast.error(t('kebajikan:staff_toast_add_failed', 'Gagal tambah staff: {{msg}}', { msg: error.message }));
     } else {
-      toast.success(`${person.full_name} ditambah sebagai Unit Kebajikan Staff.`);
+      toast.success(t('kebajikan:staff_toast_added', '{{name}} ditambah sebagai Unit Kebajikan Staff.', { name: person.full_name }));
       setResults(prev => prev.filter(p => p.id !== person.id));
       await fetchStaff();
     }
@@ -88,9 +97,9 @@ export function KebajikanStaffPage() {
       .update({ is_active: false })
       .eq('id', assignment.id);
     if (error) {
-      toast.error('Gagal buang staff.');
+      toast.error(t('kebajikan:staff_toast_remove_failed', 'Gagal buang staff.'));
     } else {
-      toast.success(`${assignment.staff?.full_name || 'Staff'} telah dibuang.`);
+      toast.success(t('kebajikan:staff_toast_removed', '{{name}} telah dibuang.', { name: assignment.staff?.full_name || 'Staff' }));
       setStaff(prev => prev.filter(s => s.id !== assignment.id));
     }
   };
@@ -103,10 +112,10 @@ export function KebajikanStaffPage() {
       .update({ role: newRole })
       .eq('id', assignment.id);
     if (error) {
-      toast.error('Gagal kemaskini peranan.');
+      toast.error(t('kebajikan:staff_toast_role_update_failed', 'Gagal kemaskini peranan.'));
     } else {
       setStaff(prev => prev.map(s => s.id === assignment.id ? { ...s, role: newRole } : s));
-      toast.success(`Peranan dikemaskini kepada ${newRole === 'SENIOR_STAFF' ? 'Senior Staff' : 'Staff'}.`);
+      toast.success(t('kebajikan:staff_toast_role_updated', 'Peranan dikemaskini kepada {{role}}.', { role: newRole === 'SENIOR_STAFF' ? t('kebajikan:staff_role_senior', 'Senior Staff') : t('kebajikan:staff_role_staff', 'Staff') }));
     }
   };
 
@@ -121,24 +130,24 @@ export function KebajikanStaffPage() {
             <Users className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">Unit Kebajikan Staff</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Urus pegawai yang membantu mengendalikan tiket aduan pelajar</p>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">{t('kebajikan:staff_page_title', 'Unit Kebajikan Staff')}</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('kebajikan:staff_page_subtitle', 'Urus pegawai yang membantu mengendalikan tiket aduan pelajar')}</p>
           </div>
         </div>
       </div>
 
       {/* Add Staff Panel */}
       {isAllowed && (
-        <div className="mb-8 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl p-5 sm:p-6">
+        <div className="mb-8 rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl p-5 sm:p-6">
           <p className="text-sm font-black text-slate-900 dark:text-slate-200 mb-4 flex items-center gap-2">
-            <UserPlus className="w-4 h-4 text-teal-600 dark:text-teal-400" /> Tambah Staff Baharu
+            <UserPlus className="w-4 h-4 text-teal-600 dark:text-teal-400" /> {t('kebajikan:staff_add_new', 'Tambah Staff Baharu')}
           </p>
           <div className="flex gap-2 sm:gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari nama pengguna..."
+                placeholder={t('kebajikan:staff_search_placeholder', 'Cari nama pengguna...')}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -150,7 +159,7 @@ export function KebajikanStaffPage() {
               disabled={searching}
               className="px-5 sm:px-6 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/20 shadow-sm"
             >
-              {searching ? '...' : 'Cari'}
+              {searching ? '...' : t('common:search', 'Cari')}
             </button>
             {query && (
               <button onClick={() => { setQuery(''); setResults([]); }} className="px-3 py-3 rounded-2xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
@@ -178,7 +187,7 @@ export function KebajikanStaffPage() {
                       disabled={addingId === person.id}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/20 shadow-sm"
                     >
-                      <Check className="w-3 h-3" /> Tambah
+                      <Check className="w-3 h-3" /> {t('kebajikan:staff_btn_add', 'Tambah')}
                     </button>
                   </div>
                 ))}
@@ -186,7 +195,7 @@ export function KebajikanStaffPage() {
             )}
             {results.length === 0 && query && !searching && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-sm text-slate-500 dark:text-slate-400 text-center py-4">
-                Tiada pengguna ditemui untuk "{query}"
+                {t('kebajikan:staff_not_found', 'Tiada pengguna ditemui untuk "{{query}}"', { query })}
               </motion.p>
             )}
           </AnimatePresence>
@@ -194,9 +203,9 @@ export function KebajikanStaffPage() {
       )}
 
       {/* Staff List */}
-      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80  shadow-sm dark:shadow-2xl p-5 sm:p-6">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm font-black text-slate-900 dark:text-slate-200">Senarai Aktif <span className="text-teal-600 dark:text-teal-400 ml-2 font-bold">{staff.length}</span></p>
+          <p className="text-sm font-black text-slate-900 dark:text-slate-200">{t('kebajikan:staff_active_list', 'Senarai Aktif')} <span className="text-teal-600 dark:text-teal-400 ml-2 font-bold">{staff.length}</span></p>
         </div>
 
         {loading ? (
@@ -206,7 +215,7 @@ export function KebajikanStaffPage() {
         ) : staff.length === 0 ? (
           <div className="text-center py-16">
             <Users className="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-white/10" />
-            <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada Unit Kebajikan Staff ditambah</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('kebajikan:staff_empty_list', 'Belum ada Unit Kebajikan Staff ditambah')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -226,20 +235,21 @@ export function KebajikanStaffPage() {
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <p className="text-sm font-black text-slate-900 dark:text-slate-200">{s.staff?.full_name}</p>
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${s.role === 'SENIOR_STAFF' ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-transparent' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-transparent'}`}>
-                      {s.role === 'SENIOR_STAFF' ? 'Senior Staff' : 'Staff'}
+                      {s.role === 'SENIOR_STAFF' ? t('kebajikan:staff_role_senior', 'Senior Staff') : t('kebajikan:staff_role_staff', 'Staff')}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.staff?.email}</p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    Ditambah {format(new Date(s.assigned_at), 'd MMM yyyy', { locale: ms })}
-                    {s.assigner && ` oleh ${s.assigner.full_name}`}
+                    {s.assigner
+                      ? t('kebajikan:staff_added_by', 'Ditambah {{date}} oleh {{assigner}}', { date: format(new Date(s.assigned_at), 'd MMM yyyy', { locale: dateLocale }), assigner: s.assigner.full_name })
+                      : t('kebajikan:staff_added_on', 'Ditambah {{date}}', { date: format(new Date(s.assigned_at), 'd MMM yyyy', { locale: dateLocale }) })}
                   </p>
                 </div>
                 {isAllowed && (
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleToggleRole(s)}
-                      title={s.role === 'SENIOR_STAFF' ? 'Turunkan ke Staff' : 'Naikkan ke Senior Staff'}
+                      title={s.role === 'SENIOR_STAFF' ? t('kebajikan:staff_demote_title', 'Turunkan ke Staff') : t('kebajikan:staff_promote_title', 'Naikkan ke Senior Staff')}
                       className="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-amber-50 dark:hover:bg-amber-500/15 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 shadow-sm transition-colors"
                     >
                       {s.role === 'SENIOR_STAFF' ? <Shield className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
@@ -262,7 +272,7 @@ export function KebajikanStaffPage() {
       <div className="mt-6 flex items-start gap-3 p-4 rounded-2xl bg-slate-100/60 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5">
         <AlertCircle className="w-4 h-4 text-slate-500 dark:text-slate-400 flex-shrink-0 mt-0.5" />
         <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-          Staff Unit Kebajikan hanya boleh melihat tiket yang didelegasikan kepada mereka. Mereka boleh mengemaskini status dan menambah komen ke tiket tersebut.
+          {t('kebajikan:staff_info_notice', 'Staff Unit Kebajikan hanya boleh melihat tiket yang didelegasikan kepada mereka. Mereka boleh mengemaskini status dan menambah komen ke tiket tersebut.')}
         </p>
       </div>
     </div>

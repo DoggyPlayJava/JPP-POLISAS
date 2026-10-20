@@ -6,13 +6,14 @@
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft, HeartHandshake, Send, CheckCircle2, Clock,
   AlertTriangle, XCircle, Star, RefreshCw, Loader2,
   ShieldCheck, MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { sendNotificationToKebajikanExco, sendNotificationToKKExco } from '@/lib/notifications';
@@ -47,14 +48,24 @@ function statusMeta(s: KebajikanTicketStatus) {
 }
 
 /* ─── component ──────────────────────────────────────────────── */
-export function KebajikanStudentChat() {
+export function KebajikanStudentChat({
+  initialTicket = null,
+  initialComments = [],
+  initialLoading = !initialTicket,
+}: {
+  initialTicket?: KebajikanTicket | null;
+  initialComments?: KebajikanTicketComment[];
+  initialLoading?: boolean;
+} = {}) {
+  const { t, i18n } = useTranslation(['kebajikan', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  const [ticket,   setTicket]   = useState<KebajikanTicket | null>(null);
-  const [comments, setComments] = useState<KebajikanTicketComment[]>([]);
-  const [loading,  setLoading]  = useState(true);
+  const [ticket,   setTicket]   = useState<KebajikanTicket | null>(initialTicket);
+  const [comments, setComments] = useState<KebajikanTicketComment[]>(initialComments);
+  const [loading,  setLoading]  = useState(initialLoading);
   const [message,  setMessage]  = useState('');
   const [sending,  setSending]  = useState(false);
 
@@ -160,6 +171,7 @@ export function KebajikanStudentChat() {
       is_internal:        false,
       is_delegation_note: false,
       content,
+      attachments:        [],
       created_at:         new Date().toISOString(),
     };
     setComments(prev => [...prev, optimistic]);
@@ -178,7 +190,7 @@ export function KebajikanStudentChat() {
       .single();
 
     if (error) {
-      toast.error('Gagal menghantar mesej.');
+      toast.error(t('kebajikan:chat_toast_send_failed', 'Gagal menghantar mesej.'));
       setComments(prev => prev.filter(c => c.id !== tempId));
       setMessage(content);
     } else if (data) {
@@ -218,7 +230,7 @@ export function KebajikanStudentChat() {
     });
     setRatingBusy(false);
     setShowRating(false);
-    toast.success('Terima kasih atas penilaian anda!');
+    toast.success(t('kebajikan:chat_toast_rating_success', 'Terima kasih atas penilaian anda!'));
     await fetchAll();
   };
 
@@ -246,7 +258,7 @@ export function KebajikanStudentChat() {
     setReopenBusy(false);
     setShowReopen(false);
     setReopenNote('');
-    toast.success('Permintaan buka semula telah dihantar.');
+    toast.success(t('kebajikan:chat_toast_reopen_success', 'Permintaan buka semula telah dihantar.'));
     await fetchAll();
   };
 
@@ -271,7 +283,7 @@ export function KebajikanStudentChat() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06]  bg-white/80 dark:bg-slate-950/80 transition-colors">
+      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 transition-colors">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate('/kebajikan/aduan-saya')}
@@ -288,13 +300,13 @@ export function KebajikanStudentChat() {
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 truncate leading-tight">{ticket.title}</p>
             <p className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400">
-              {ticket.ticket_no} · {KEBAJIKAN_STATUS_LABELS[ticket.status]}
+              {ticket.ticket_no} · {t(`kebajikan:status_${ticket.status.toLowerCase()}`, KEBAJIKAN_STATUS_LABELS[ticket.status])}
             </p>
           </div>
 
           <Link to="/kebajikan/buat-aduan">
             <button className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-400 hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 bg-white dark:bg-transparent shadow-sm transition-all">
-              + Baru
+              {t('kebajikan:chat_btn_new', '+ Baru')}
             </button>
           </Link>
         </div>
@@ -319,11 +331,13 @@ export function KebajikanStudentChat() {
                 <p className="font-black text-slate-900 dark:text-slate-50 text-[15px] leading-tight mb-1">{ticket.title}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-sm', KEBAJIKAN_STATUS_COLORS[ticket.status])}>
-                    {KEBAJIKAN_STATUS_LABELS[ticket.status]}
+                    {t(`kebajikan:status_${ticket.status.toLowerCase()}`, KEBAJIKAN_STATUS_LABELS[ticket.status])}
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{KEBAJIKAN_CATEGORY_LABELS[ticket.category]}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    {t(`kebajikan:cat_${ticket.category.toLowerCase()}`, KEBAJIKAN_CATEGORY_LABELS[ticket.category])}
+                  </span>
                   <span className="text-[10px] text-slate-400">·</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: dateLocale })}</span>
                 </div>
               </div>
             </div>
@@ -334,7 +348,7 @@ export function KebajikanStudentChat() {
             {ticket.resolution_note && (
               <div className="rounded-2xl p-4 mb-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20">
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-1.5 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" /> Nota Resolusi Exco
+                  <CheckCircle2 className="w-3 h-3" /> {t('kebajikan:chat_resolution_note_title', 'Nota Resolusi Exco')}
                 </p>
                 <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed">{ticket.resolution_note}</p>
               </div>
@@ -343,7 +357,7 @@ export function KebajikanStudentChat() {
             {/* Star rating display */}
             {ticket.rating && (
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Penilaian Anda</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t('kebajikan:chat_your_rating', 'Penilaian Anda')}</p>
                 <div className="flex gap-1">
                   {[1,2,3,4,5].map(s => (
                     <Star key={s} className="w-3.5 h-3.5" fill={s <= ticket.rating! ? '#F59E0B' : 'transparent'} style={{ color: s <= ticket.rating! ? '#F59E0B' : 'rgba(156,163,175,0.4)' }} />
@@ -360,7 +374,7 @@ export function KebajikanStudentChat() {
                     onClick={() => setShowRating(true)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 shadow-sm"
                   >
-                    <Star className="w-3 h-3" /> Beri Penilaian
+                    <Star className="w-3 h-3" /> {t('kebajikan:chat_btn_give_rating', 'Beri Penilaian')}
                   </button>
                 )}
                 {isResolved && (
@@ -368,13 +382,13 @@ export function KebajikanStudentChat() {
                     onClick={() => setShowReopen(true)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 bg-white dark:bg-transparent shadow-sm transition-all"
                   >
-                    <RefreshCw className="w-3 h-3" /> Buka Semula
+                    <RefreshCw className="w-3 h-3" /> {t('kebajikan:chat_btn_reopen', 'Buka Semula')}
                   </button>
                 )}
                 {isTerminal && (
                   <Link to="/kebajikan/buat-aduan">
                     <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 shadow-sm">
-                      <HeartHandshake className="w-3 h-3" /> Aduan Baru
+                      <HeartHandshake className="w-3 h-3" /> {t('kebajikan:chat_btn_new_ticket', 'Aduan Baru')}
                     </button>
                   </Link>
                 )}
@@ -386,7 +400,7 @@ export function KebajikanStudentChat() {
           <div className="flex items-center gap-3 px-1">
             <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
             <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <MessageSquare className="w-3 h-3" /> Thread Komunikasi
+              <MessageSquare className="w-3 h-3" /> {t('kebajikan:communication_thread_title', 'Thread Komunikasi')}
             </p>
             <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
           </div>
@@ -395,8 +409,8 @@ export function KebajikanStudentChat() {
           {comments.length === 0 ? (
             <div className="text-center py-10 bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-white/5 p-6 shadow-sm">
               <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-teal-500/30" />
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Belum ada mesej</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">Hantar mesej di bawah untuk berkomunikasi dengan Exco Kebajikan</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">{t('kebajikan:chat_empty_messages', 'Belum ada mesej')}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">{t('kebajikan:chat_empty_prompt', 'Hantar mesej di bawah untuk berkomunikasi dengan Exco Kebajikan')}</p>
             </div>
           ) : (
             <div className="space-y-3 pb-2">
@@ -412,7 +426,7 @@ export function KebajikanStudentChat() {
                       <div className="flex items-center gap-2 py-1">
                         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.04]" />
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 px-2">
-                          {format(new Date(c.created_at), 'dd MMMM yyyy', { locale: ms })}
+                          {format(new Date(c.created_at), 'dd MMMM yyyy', { locale: dateLocale })}
                         </p>
                         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.04]" />
                       </div>
@@ -473,8 +487,8 @@ export function KebajikanStudentChat() {
             <div className="rounded-2xl p-4 text-center border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.01] shadow-sm">
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isResolved
-                  ? 'Aduan ini telah diselesaikan. Gunakan butang "Buka Semula" jika masalah masih berterusan.'
-                  : 'Aduan ini telah ditutup. Sila kemukakan aduan baru jika memerlukan bantuan lanjut.'
+                  ? t('kebajikan:chat_notice_resolved', 'Aduan ini telah diselesaikan. Gunakan butang "Buka Semula" jika masalah masih berterusan.')
+                  : t('kebajikan:chat_notice_closed', 'Aduan ini telah ditutup. Sila kemukakan aduan baru jika memerlukan bantuan lanjut.')
                 }
               </p>
             </div>
@@ -486,7 +500,7 @@ export function KebajikanStudentChat() {
 
       {/* ── Sticky input bar (only when can chat) ── */}
       {canChat && (
-        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-slate-200 dark:border-white/[0.06]  bg-white/90 dark:bg-slate-950/90 transition-colors">
+        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-slate-200 dark:border-white/[0.06] bg-white/90 dark:bg-slate-950/90 transition-colors">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-end gap-3">
             <div className="flex-1 relative">
               <Textarea
@@ -498,7 +512,7 @@ export function KebajikanStudentChat() {
                     sendMessage();
                   }
                 }}
-                placeholder="Tulis mesej kepada Exco Kebajikan..."
+                placeholder={t('kebajikan:chat_input_placeholder', 'Tulis mesej kepada Exco Kebajikan...')}
                 rows={1}
                 className="w-full resize-none rounded-2xl text-sm border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors p-3 pr-4 leading-relaxed shadow-inner"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -515,7 +529,7 @@ export function KebajikanStudentChat() {
               }
             </button>
           </div>
-          <p className="text-center text-[9px] text-slate-400 dark:text-slate-600 pb-2">Enter untuk hantar · Shift+Enter untuk baris baru</p>
+          <p className="text-center text-[9px] text-slate-400 dark:text-slate-600 pb-2">{t('kebajikan:chat_input_hint', 'Enter untuk hantar · Shift+Enter untuk baris baru')}</p>
         </div>
       )}
 
@@ -526,7 +540,7 @@ export function KebajikanStudentChat() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-slate-950/70 "
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-slate-950/70"
             onClick={() => setShowRating(false)}
           >
             <motion.div
@@ -538,8 +552,8 @@ export function KebajikanStudentChat() {
             >
               <div className="absolute top-0 inset-x-0 h-24 opacity-30 rounded-full -translate-y-1/2 bg-amber-500/20" />
               <div className="relative z-10">
-                <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">Beri Penilaian</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-6">{ticket.ticket_no} · Bagaimana layanan Exco Kebajikan?</p>
+                <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">{t('kebajikan:chat_rating_title', 'Beri Penilaian')}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-6">{t('kebajikan:chat_rating_subtitle', '{{ticket_no}} · Bagaimana layanan Exco Kebajikan?', { ticket_no: ticket.ticket_no })}</p>
 
                 <div className="flex gap-2 justify-center mb-6">
                   {[1,2,3,4,5].map(s => (
@@ -552,21 +566,21 @@ export function KebajikanStudentChat() {
                 <Textarea
                   value={ratingNote}
                   onChange={e => setRatingNote(e.target.value)}
-                  placeholder="Ulasan anda kepada Exco (opsional)..."
+                  placeholder={t('kebajikan:chat_rating_placeholder', 'Ulasan anda kepada Exco (opsional)...')}
                   rows={3}
                   className="bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl resize-none mb-5 text-sm"
                 />
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setShowRating(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50">
-                    Batal
+                    {t('common:cancel', 'Batal')}
                   </Button>
                   <Button
                     disabled={rating === 0 || ratingBusy}
                     onClick={submitRating}
                     className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-950 shadow-md bg-amber-400 hover:bg-amber-300"
                   >
-                    {ratingBusy ? 'Menghantar...' : '⭐ Hantar Rating'}
+                    {ratingBusy ? t('common:submitting', 'Menghantar...') : t('kebajikan:chat_btn_send_rating', '⭐ Hantar Rating')}
                   </Button>
                 </div>
               </div>
@@ -582,7 +596,7 @@ export function KebajikanStudentChat() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-slate-950/70 "
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-slate-950/70"
             onClick={() => setShowReopen(false)}
           >
             <motion.div
@@ -592,25 +606,25 @@ export function KebajikanStudentChat() {
               className="w-full max-w-sm rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
-              <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">Buka Semula Aduan</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-5">Nyatakan sebab anda memerlukan aduan ini dibuka semula. Exco akan menilai permintaan anda.</p>
+              <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">{t('kebajikan:chat_reopen_title', 'Buka Semula Aduan')}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-5">{t('kebajikan:chat_reopen_desc', 'Nyatakan sebab anda memerlukan aduan ini dibuka semula. Exco akan menilai permintaan anda.')}</p>
               <Textarea
                 value={reopenNote}
                 onChange={e => setReopenNote(e.target.value)}
-                placeholder="Contoh: Masalah ini berlaku lagi selepas 2 hari..."
+                placeholder={t('kebajikan:chat_reopen_placeholder', 'Contoh: Masalah ini berlaku lagi selepas 2 hari...')}
                 rows={4}
                 className="bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl resize-none mb-5 text-sm"
               />
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setShowReopen(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50">
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </Button>
                 <Button
                   disabled={!reopenNote.trim() || reopenBusy}
                   onClick={submitReopen}
                   className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md"
                 >
-                  {reopenBusy ? 'Menghantar...' : 'Hantar Permintaan'}
+                  {reopenBusy ? t('common:submitting', 'Menghantar...') : t('kebajikan:chat_btn_send_reopen', 'Hantar Permintaan')}
                 </Button>
               </div>
             </motion.div>
