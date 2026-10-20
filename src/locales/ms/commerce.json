@@ -454,5 +454,10 @@
   "wishlist": "Senarai Hajat",
   "write_review_title": "Beri Ulasan",
   "zoom_in_aria": "Zum Masuk",
-  "zoom_out_aria": "Zum Keluar"
+  "zoom_out_aria": "Zum Keluar",
+  "payment_qr_online": "QR DuitNow (Online)",
+  "payment_cod": "Bayar Semasa Ambil (Tunai/COD)",
+  "access_denied": "Akses Ditolak",
+  "access_denied_desc": "Anda bukan ahli perniagaan ini.",
+  "share_phone_desc": "Membolehkan peniaga hubungi pesanan anda"
 }

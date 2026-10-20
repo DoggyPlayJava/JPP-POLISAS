@@ -239,7 +239,7 @@ export function PolyRentPage() {
         {/* Top Left Price Insight (Airbnb "Guest Favorite" style) */}
         {isCheaper && (
           <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-white shadow-lg text-slate-900 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-             Pilihan Berbaloi
+             {t('housing:great_deals_heading', 'Pilihan Berbaloi')}
           </div>
         )}
 
@@ -253,7 +253,7 @@ export function PolyRentPage() {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 animate-pulse">
               <Home className="w-10 h-10 mb-2 text-teal-500/30" />
-              <span className="text-[10px] font-bold text-teal-600/50 uppercase">Tiada Gambar</span>
+              <span className="text-[10px] font-bold text-teal-600/50 uppercase">{t('housing:no_image', 'Tiada Gambar')}</span>
             </div>
           )}
         </div>
@@ -264,10 +264,10 @@ export function PolyRentPage() {
             <h4 className="font-semibold text-slate-900 dark:text-white text-sm truncate">{listing.lokasi}</h4>
             {listing.is_verified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Disahkan KLK" />}
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-xs truncate mb-1">{listing.kekosongan} Kekosongan • {listing.jantina_prefer}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs truncate mb-1">{t('housing:vacancies_summary', '{{count}} Kekosongan • {{gender}}', { count: listing.kekosongan, gender: listing.jantina_prefer })}</p>
           <div className="flex items-center gap-1">
              <span className="font-bold text-slate-900 dark:text-white text-sm">RM{listing.sewa_bulanan}</span>
-             <span className="text-slate-500 text-xs font-medium">/ bulan</span>
+             <span className="text-slate-500 text-xs font-medium">{t('housing:per_month', '/ bulan')}</span>
           </div>
         </div>
       </motion.div>
@@ -436,8 +436,8 @@ export function PolyRentPage() {
                 <div className="w-20 h-20 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
                   <Users className="w-8 h-8 text-teal-500" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Tiada Permintaan Semasa</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">Jadilah yang pertama untuk mengiklankan pencarian rumah/bilik sewa.</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{t('housing:no_current_requests_title', 'Tiada Permintaan Semasa')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">{t('housing:no_current_requests_desc', 'Jadilah yang pertama untuk mengiklankan pencarian rumah/bilik sewa.')}</p>
                 <button onClick={() => setIsReverseFormOpen(true)} className="px-6 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:scale-105 transition-transform shadow-lg text-sm">
                   {t('housing:i_need_house_btn', 'Saya Cari Rumah')}
                 </button>
@@ -547,7 +547,7 @@ export function PolyRentPage() {
               <div className="mb-10 -mx-4 sm:mx-0">
                 <div className="px-4 sm:px-0 mb-4">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('housing:great_deals_heading', 'Pilihan Berbaloi')}</h2>
-                  <p className="text-slate-500 text-xs">Harga lebih rendah dari purata pasaran</p>
+                  <p className="text-slate-500 text-xs">{t('housing:below_market_rate_desc', 'Harga lebih rendah dari purata pasaran')}</p>
                 </div>
                 <div className="flex overflow-x-auto gap-4 px-4 sm:px-0 pb-6 snap-x snap-mandatory no-scrollbar">
                   {berbaloiListings.map(l => renderCard(l, true))}
