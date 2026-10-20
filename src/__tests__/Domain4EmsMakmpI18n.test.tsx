@@ -234,6 +234,9 @@ import { EmsCheckinPage } from '@/pages/ems/EmsCheckinPage';
 import MakmpPublicFormPage from '@/pages/makmp/MakmpPublicFormPage';
 import MakmpStatusTrackingPage from '@/pages/makmp/MakmpStatusTrackingPage';
 import MakmpJuryPortalPage from '@/pages/makmp/MakmpJuryPortalPage';
+import { EmsPublicRegisterPage } from '@/pages/ems/EmsPublicRegisterPage';
+import { EmsEventFormPage } from '@/pages/ems/EmsEventFormPage';
+import { EmsJuryAuditMatrix } from '@/components/ems/EmsJuryAuditMatrix';
 
 function renderPage(ui: React.ReactElement): string {
   return renderToString(
@@ -384,6 +387,67 @@ describe('Task 6: Domain 4 Integration — Events & Honors (EMS & MAKMP) i18n', 
       expect(html).toContain('Certified Supporting Documents');
     });
 
+    it('renders localized document attachment notices in MakmpPublicFormPage in English', async () => {
+      await changeLanguage('en');
+      const mockEdition = { id: 'test-2026', year: 2026, title: 'MAKMP 2026', is_active: true, created_at: '' };
+      const html = renderPage(<MakmpPublicFormPage initialEdition={mockEdition} />);
+      expect(html).toContain('Candidate Information');
+      expect(html).toContain('Attachments &amp; Certs');
+      expect(html).toContain('In Progress');
+      expect(html).toContain('Step 2');
+      expect(html).not.toContain('Sedang diisi');
+      expect(html).not.toContain('Langkah 2');
+    });
+
+    it('renders localized document attachment notices in MakmpPublicFormPage Step 3 in English', async () => {
+      await changeLanguage('en');
+      const mockEdition = { id: 'test-2026', year: 2026, title: 'MAKMP 2026', is_active: true, created_at: '' };
+      const mockAward = {
+        id: 'aw-1',
+        edition_id: 'test-2026',
+        category_group: 'ANUGERAH KEUSAHAWANAN',
+        name: 'Inkubator Terbaik',
+        target_type: 'ENTITY' as const,
+        doc_requirement_type: 'REPORT_AND_EVIDENCE' as const,
+        template_name: 'Templat Laporan Inkubator Keusahawanan',
+        template_url: 'https://example.com/template',
+        doc_instructions: 'Sila muat naik laporan.',
+        max_certificates: 5,
+        max_merit: 50,
+        sort_order: 1,
+        is_active: true,
+        created_at: '',
+      };
+      const html = renderPage(
+        <MakmpPublicFormPage
+          initialEdition={mockEdition}
+          initialStep={3}
+          initialAwards={[mockAward]}
+          initialSelectedAwardIds={['aw-1']}
+          initialActiveAwardTabId="aw-1"
+          initialAwardDocuments={{
+            'aw-1': [
+              {
+                id: 'doc-1',
+                nama_pencapaian: 'Laporan Inkubator',
+                document_type: 'LAPORAN' as const,
+                peringkat: 'POLITEKNIK' as const,
+                pencapaian_type: 'PESERTA' as const,
+                penganjur: 'Unit Keusahawanan',
+                tarikh: '2026-01-01',
+                file: null,
+                merit_suggested: 50,
+              },
+            ],
+          }}
+        />
+      );
+      expect(html).toContain('Report Attachment Box');
+      expect(html).toContain('Official Report Template Provided');
+      expect(html).toContain('Download Template');
+      expect(html).toContain('What needs to be uploaded?');
+    });
+
     it('renders MakmpStatusTrackingPage in English with verification_status, verdict_qualified, verdict_pending, verdict_ineligible', () => {
       const html = renderPage(<MakmpStatusTrackingPage />);
       expect(html).toContain('Verification &amp; Audit Status');
@@ -399,8 +463,35 @@ describe('Task 6: Domain 4 Integration — Events & Honors (EMS & MAKMP) i18n', 
       expect(html).toContain('Nomination Under Review');
       expect(html).toContain('Requirements Not Satisfied');
     });
-  });
 
+    it('renders EmsJuryAuditMatrix in English with audit_matrix_title, jury_performance_cards, anomaly metrics', () => {
+      const html = renderPage(
+        <EmsJuryAuditMatrix
+          eventId="event-123"
+          rubrics={[]}
+          participants={[]}
+          juryCodes={[]}
+          scores={[]}
+        />
+      );
+      expect(html).toContain('Audit Judging Status Matrix');
+      expect(html).toContain('Jury Performance Cards');
+      expect(html).toContain('Target Average:');
+    });
+
+    it('renders EmsPublicRegisterPage in English with localized fallback when no event', () => {
+      const html = renderPage(<EmsPublicRegisterPage initialLoading={false} initialEventError="No event found" />);
+      expect(html).toContain('Registration Unavailable');
+      expect(html).toContain('Back to Home');
+    });
+
+    it('renders EmsEventFormPage in English with create title and form fields', () => {
+      const html = renderPage(<EmsEventFormPage />);
+      expect(html).toContain('Create New EMS Event &amp; Form');
+      expect(html).toContain('Event Title');
+    });
+
+  });
   describe('Bahasa Melayu (ms) DOM Rendering Tests', () => {
     beforeEach(async () => {
       await changeLanguage('ms');
@@ -468,8 +559,35 @@ describe('Task 6: Domain 4 Integration — Events & Honors (EMS & MAKMP) i18n', 
       expect(html).toContain('Pencalonan Dalam Semakan');
       expect(html).toContain('Syarat Tidak Dipenuhi');
     });
-  });
 
+    it('renders EmsJuryAuditMatrix in Bahasa Melayu with audit_matrix_title, jury_performance_cards, anomaly metrics', () => {
+      const html = renderPage(
+        <EmsJuryAuditMatrix
+          eventId="event-123"
+          rubrics={[]}
+          participants={[]}
+          juryCodes={[]}
+          scores={[]}
+        />
+      );
+      expect(html).toContain('Matriks Status Penjurian Audit');
+      expect(html).toContain('Kad Prestasi Juri');
+      expect(html).toContain('Purata Sasaran:');
+    });
+
+    it('renders EmsPublicRegisterPage in Bahasa Melayu with localized fallback when no event', () => {
+      const html = renderPage(<EmsPublicRegisterPage initialLoading={false} initialEventError="Tiada acara" />);
+      expect(html).toContain('Pendaftaran Tidak Tersedia');
+      expect(html).toContain('Kembali ke Halaman Utama');
+    });
+
+    it('renders EmsEventFormPage in Bahasa Melayu with create title and form fields', () => {
+      const html = renderPage(<EmsEventFormPage />);
+      expect(html).toContain('Cipta Acara &amp; Borang EMS Baharu');
+      expect(html).toContain('Nama Acara');
+    });
+
+  });
   describe('Live Dynamic Language Switching Verification', () => {
     it('seamlessly transitions EmsDashboardPage between en and ms dynamically', async () => {
       await changeLanguage('en');

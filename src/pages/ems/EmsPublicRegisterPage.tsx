@@ -51,16 +51,26 @@ interface MemberStatus {
   hasAccount: boolean;
 }
 
-export function EmsPublicRegisterPage() {
+export interface EmsPublicRegisterPageProps {
+  initialLoading?: boolean;
+  initialEventDetail?: EmsEventDetail | null;
+  initialEventError?: string | null;
+}
+
+export function EmsPublicRegisterPage({
+  initialLoading = true,
+  initialEventDetail = null,
+  initialEventError = null,
+}: EmsPublicRegisterPageProps = {}) {
   const { t } = useTranslation(['ems', 'common']);
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user, profile, isAuthenticated } = useAuth();
 
   // Loading & Event state
-  const [eventDetail, setEventDetail] = useState<EmsEventDetail | null>(null);
-  const [loadingEvent, setLoadingEvent] = useState(true);
-  const [eventError, setEventError] = useState<string | null>(null);
+  const [eventDetail, setEventDetail] = useState<EmsEventDetail | null>(initialEventDetail);
+  const [loadingEvent, setLoadingEvent] = useState(initialLoading);
+  const [eventError, setEventError] = useState<string | null>(initialEventError);
 
   // Multi-step state (1: Info, 2: Dynamic Fields, 3: Media, 4: Pass)
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -508,7 +518,7 @@ export function EmsPublicRegisterPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
         <RefreshCw className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">Memuatkan borang pendaftaran acara...</p>
+        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">{t('reg_loading_form', 'Memuatkan borang pendaftaran acara...')}</p>
       </div>
     );
   }
@@ -520,13 +530,13 @@ export function EmsPublicRegisterPage() {
         <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-500">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Pendaftaran Tidak Tersedia</h1>
-        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || 'Maklumat acara tidak dapat dijumpai.'}</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('reg_unavailable_title', 'Pendaftaran Tidak Tersedia')}</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || t('reg_event_not_found', 'Maklumat acara tidak dapat dijumpai.')}</p>
         <button
           onClick={() => navigate('/')}
           className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium transition text-sm"
         >
-          Kembali ke Halaman Utama
+          {t('reg_back_home', 'Kembali ke Halaman Utama')}
         </button>
       </div>
     );
@@ -624,7 +634,7 @@ export function EmsPublicRegisterPage() {
               >
                 <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>
-                  Peserta: {totalParticipants} / {maxParticipants}
+                  {t('reg_participants_count', { count: totalParticipants, max: maxParticipants, defaultValue: `Peserta: ${totalParticipants} / ${maxParticipants}` })}
                 </span>
                 {isQuotaFull && (
                   <span className="ml-1.5 px-2 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wide shadow-sm">
@@ -696,7 +706,7 @@ export function EmsPublicRegisterPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-rose-200 text-sm">{t('reg_quota_full', 'Pendaftaran Penuh')}</span>
                   <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">
-                    {totalParticipants} / {maxParticipants} Peserta
+                    {totalParticipants} / {maxParticipants} {t('reg_participants_label', 'Peserta')}
                   </span>
                 </div>
                 <p className="text-slate-300">
@@ -1004,9 +1014,9 @@ export function EmsPublicRegisterPage() {
             <div className="space-y-6 animate-fadeIn">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Step 2: Maklumat Tambahan Acara
+                  <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" /> {t('reg_step2_extra_info', 'Step 2: Maklumat Tambahan Acara')}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Sila isi borang soalan khas yang ditetapkan oleh penganjur.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">{t('reg_step2_fill_instructions', 'Sila isi borang soalan khas yang ditetapkan oleh penganjur.')}</p>
               </div>
 
               {(() => {
@@ -1065,7 +1075,7 @@ export function EmsPublicRegisterPage() {
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
                             >
-                              <option value="">-- Pilih Opsi --</option>
+                              <option value="">{t('ems:reg_select_option', '-- Pilih Opsi --')}</option>
                               {options.map((opt, i) => (
                                 <option key={i} value={opt}>
                                   {opt}
@@ -1082,7 +1092,7 @@ export function EmsPublicRegisterPage() {
                                 className="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-amber-600 focus:ring-amber-500"
                               />
                               <label htmlFor={`check_${field.id}`} className="text-xs text-slate-700 dark:text-slate-300 font-medium">
-                                Ya, saya bersetuju / mengesahkan
+                                {t('ems:reg_declaration_agree', 'Ya, saya bersetuju / mengesahkan')}
                               </label>
                             </div>
                           ) : field.field_type === 'image_upload' ? (
@@ -1102,7 +1112,7 @@ export function EmsPublicRegisterPage() {
                                       setCustomResponses(updated);
                                     }}
                                     className="absolute top-2 right-2 bg-rose-600/90 text-white p-2 rounded-xl hover:bg-rose-500 transition shadow"
-                                    title="Padam Gambar"
+                                    title={t('ems:reg_delete_image', 'Padam Gambar')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1173,7 +1183,7 @@ export function EmsPublicRegisterPage() {
                                       setCustomResponses(updated);
                                     }}
                                     className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
-                                    title="Padam Dokumen"
+                                    title={t('ems:reg_delete_file', 'Padam Dokumen')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1460,10 +1470,10 @@ export function EmsPublicRegisterPage() {
                     <div>
                       <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                        Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan
+                        {t('ems:reg_team_access_title', 'Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan')}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.
+                        {t('ems:reg_team_access_desc', 'Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.')}
                       </p>
                     </div>
 
@@ -1562,7 +1572,7 @@ export function EmsPublicRegisterPage() {
                     onClick={() => navigate('/keusahawanan')}
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-amber-500/20"
                   >
-                    <Store className="w-4 h-4" /> Buka e-Keusahawanan
+                    <Store className="w-4 h-4" /> {t('reg_open_entrepreneurship', 'Buka e-Keusahawanan')}
                   </button>
                 )}
                 <button
@@ -1573,7 +1583,7 @@ export function EmsPublicRegisterPage() {
                   }}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition"
                 >
-                  Daftar Peserta Lain
+                  {t('reg_register_another_participant', 'Daftar Peserta Lain')}
                 </button>
               </div>
 

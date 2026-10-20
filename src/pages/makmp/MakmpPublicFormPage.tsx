@@ -99,7 +99,23 @@ interface CertFormItem {
   source?: 'MANUAL_UPLOAD' | 'E_AKADEMIK';
 }
 
-export default function MakmpPublicFormPage() {
+export interface MakmpPublicFormPageProps {
+  initialEdition?: MakmpEdition | null;
+  initialStep?: 1 | 2 | 3 | 4;
+  initialAwards?: MakmpAwardDefinition[];
+  initialSelectedAwardIds?: string[];
+  initialActiveAwardTabId?: string;
+  initialAwardDocuments?: Record<string, CertFormItem[]>;
+}
+
+export default function MakmpPublicFormPage({
+  initialEdition,
+  initialStep,
+  initialAwards,
+  initialSelectedAwardIds,
+  initialActiveAwardTabId,
+  initialAwardDocuments,
+}: MakmpPublicFormPageProps = {}) {
   const { t } = useTranslation(['makmp', 'common']);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -138,12 +154,12 @@ export default function MakmpPublicFormPage() {
 
   // Data Edisi, Kategori & Definisi Anugerah
   const [loadingInitial, setLoadingInitial] = useState(false);
-  const [edition, setEdition] = useState<MakmpEdition | null>(null);
+  const [edition, setEdition] = useState<MakmpEdition | null>(() => initialEdition ?? null);
   const [categories, setCategories] = useState<MakmpCategory[]>([]);
-  const [awards, setAwards] = useState<MakmpAwardDefinition[]>([]);
+  const [awards, setAwards] = useState<MakmpAwardDefinition[]>(() => initialAwards ?? []);
 
   // Wizard Step: 1 = Akaun/Biodata, 2 = Pilihan Anugerah, 3 = Muat Naik Dokumen, 4 = Resit Selesai
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(() => initialStep ?? 1);
 
   // Step 1: Pilihan Akaun & Biodata
   const [accountType, setAccountType] = useState<'PORTAL' | 'MANUAL'>('PORTAL');
@@ -160,15 +176,15 @@ export default function MakmpPublicFormPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Step 2: Multi-Award Selection
-  const [selectedAwardIds, setSelectedAwardIds] = useState<string[]>([]);
+  const [selectedAwardIds, setSelectedAwardIds] = useState<string[]>(() => initialSelectedAwardIds ?? []);
   const [awardEntityData, setAwardEntityData] = useState<
     Record<string, { entity_name: string; applicant_role: string }>
   >({});
 
   // Step 3: Documents per Award
-  const [awardDocuments, setAwardDocuments] = useState<Record<string, CertFormItem[]>>({});
+  const [awardDocuments, setAwardDocuments] = useState<Record<string, CertFormItem[]>>(() => initialAwardDocuments ?? {});
   const [submissionAwardIdMap, setSubmissionAwardIdMap] = useState<Record<string, string>>({});
-  const [activeAwardTabId, setActiveAwardTabId] = useState<string>('');
+  const [activeAwardTabId, setActiveAwardTabId] = useState<string>(() => initialActiveAwardTabId ?? '');
 
   // Step 1: Inline Login State
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -1218,7 +1234,7 @@ export default function MakmpPublicFormPage() {
           to="/"
           className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
         >
-          Kembali ke Laman Utama
+          {t('makmp:back_to_home', 'Kembali ke Laman Utama')}
         </Link>
       </div>
     );
@@ -1241,9 +1257,9 @@ export default function MakmpPublicFormPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 text-center transition-colors">
         <CalendarX className="w-12 h-12 text-rose-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Tempoh Permohonan Telah Tamat</h1>
+        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('makmp:app_period_ended', 'Tempoh Permohonan Telah Tamat')}</h1>
         <p className="text-slate-600 dark:text-slate-400 max-w-md mb-2">
-          Tempoh menghantar permohonan baharu bagi edisi MAKMP ini telah ditutup.
+          {t('makmp:app_period_ended_desc', 'Tempoh menghantar permohonan baharu bagi edisi MAKMP ini telah ditutup.')}
         </p>
         {edition?.submission_deadline && (
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
@@ -1258,13 +1274,13 @@ export default function MakmpPublicFormPage() {
             to="/makmp/status"
             className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
           >
-            Semak Status Permohonan
+            {t('makmp:check_app_status', 'Semak Status Permohonan')}
           </Link>
           <Link
             to="/"
             className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
           >
-            Kembali ke Laman Utama
+            {t('makmp:back_to_home', 'Kembali ke Laman Utama')}
           </Link>
         </div>
       </div>
@@ -1299,7 +1315,7 @@ export default function MakmpPublicFormPage() {
               className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700/60 shadow-sm"
             >
               <Search className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              <span>Semak Status</span>
+              <span>{t('makmp:check_app_status', 'Semak Status')}</span>
             </Link>
           </div>
         </div>
@@ -1415,7 +1431,7 @@ export default function MakmpPublicFormPage() {
                             <span className="hidden sm:inline">{s.fullLabel}</span>
                           </span>
                           <span className="hidden md:block text-[10px] text-slate-400 dark:text-slate-500">
-                            {isCompleted ? 'Selesai' : isCurrent ? 'Sedang diisi' : `Langkah ${s.num}`}
+                            {isCompleted ? t('makmp:step_status_completed', 'Selesai') : isCurrent ? t('makmp:step_status_in_progress', 'Sedang diisi') : `${t('makmp:step_number', 'Langkah')} ${s.num}`}
                           </span>
                         </div>
                       </div>
@@ -1452,10 +1468,10 @@ export default function MakmpPublicFormPage() {
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <UserCheck className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                  Status Akaun JPP Portal Anda
+                  {t('makmp:portal_account_status', 'Status Akaun JPP Portal Anda')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Pilih sama ada anda mempunyai akaun berdaftar dalam portal atau mengisi borang secara terus.
+                  {t('makmp:portal_account_status_desc', 'Pilih sama ada anda mempunyai akaun berdaftar dalam portal atau mengisi borang secara terus.')}
                 </p>
               </div>
 
@@ -1481,10 +1497,10 @@ export default function MakmpPublicFormPage() {
                     )}
                   </div>
                   <div className="font-semibold text-sm text-slate-900 dark:text-white">
-                    Saya Ada Akaun JPP Portal
+                    {t('makmp:have_portal_account', 'Saya Ada Akaun JPP Portal')}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Cari profil anda secara pantas atau guna akaun sedia ada untuk auto-fill.
+                    {t('makmp:have_portal_account_desc', 'Cari profil anda secara pantas atau guna akaun sedia ada untuk auto-fill.')}
                   </div>
                 </button>
 
@@ -1512,10 +1528,10 @@ export default function MakmpPublicFormPage() {
                     )}
                   </div>
                   <div className="font-semibold text-sm text-slate-900 dark:text-white">
-                    Saya Belum Ada Akaun
+                    {t('makmp:no_portal_account', 'Saya Belum Ada Akaun')}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Isi butiran secara manual. Sijil & merit akan auto-link bila anda mendaftar nanti.
+                    {t('makmp:no_portal_account_desc', 'Isi butiran secara manual. Sijil & merit akan auto-link bila anda mendaftar nanti.')}
                   </div>
                 </button>
               </div>
@@ -1565,7 +1581,7 @@ export default function MakmpPublicFormPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.full_name}</span>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
-                          Akaun Disahkan
+                          {t('makmp:account_verified', 'Akaun Disahkan')}
                         </span>
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
@@ -1595,7 +1611,7 @@ export default function MakmpPublicFormPage() {
                       className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 shadow-xs"
                     >
                       <LogOut className="w-3.5 h-3.5" />
-                      <span>Tukar Akaun</span>
+                      <span>{t('makmp:change_account', 'Tukar Akaun')}</span>
                     </button>
                   </div>
                 </div>
@@ -1607,10 +1623,10 @@ export default function MakmpPublicFormPage() {
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <Lock className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                      Log Masuk Akaun JPP Portal
+                      {t('makmp:login_portal_account', 'Log Masuk Akaun JPP Portal')}
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                      Log masuk untuk auto-fill biodata dan buka akses 1-klik import sijil daripada rekod e-Akademik anda.
+                      {t('makmp:login_portal_account_desc', 'Log masuk untuk auto-fill biodata dan buka akses 1-klik import sijil daripada rekod e-Akademik anda.')}
                     </p>
                   </div>
 
@@ -1618,7 +1634,7 @@ export default function MakmpPublicFormPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          No. Matrik atau Emel POLISAS
+                          {t('makmp:login_identifier_label', 'No. Matrik atau Emel POLISAS')}
                         </label>
                         <input
                           type="text"
@@ -1631,7 +1647,7 @@ export default function MakmpPublicFormPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Kata Laluan Portal
+                          {t('makmp:login_password_label', 'Kata Laluan Portal')}
                         </label>
                         <div className="relative">
                           <input
@@ -1669,12 +1685,12 @@ export default function MakmpPublicFormPage() {
                         {isLoggingIn ? (
                           <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Mengesahkan Akaun...</span>
+                            <span>{t('makmp:login_authenticating', 'Mengesahkan Akaun...')}</span>
                           </>
                         ) : (
                           <>
                             <LogIn className="w-3.5 h-3.5" />
-                            <span>Log Masuk & Buka Rekod Sijil</span>
+                            <span>{t('makmp:login_submit_btn', 'Log Masuk & Buka Rekod Sijil')}</span>
                           </>
                         )}
                       </button>
@@ -1696,7 +1712,7 @@ export default function MakmpPublicFormPage() {
                     {isGoogleLinking ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Menyambung ke Google...</span>
+                        <span>{t('makmp:login_connecting_google', 'Menyambung ke Google...')}</span>
                       </>
                     ) : (
                       <>
@@ -1706,7 +1722,7 @@ export default function MakmpPublicFormPage() {
                           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
-                        <span>Daftar / Log Masuk dengan Google</span>
+                        <span>{t('makmp:login_google_btn', 'Daftar / Log Masuk dengan Google')}</span>
                       </>
                     )}
                   </button>
@@ -1717,7 +1733,7 @@ export default function MakmpPublicFormPage() {
                   <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-2">
                       <Search className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                      Atau cari profil secara pantas tanpa log masuk (Mod Carian Sahaja):
+                      {t('makmp:search_profile_mode', 'Atau cari profil secara pantas tanpa log masuk (Mod Carian Sahaja):')}
                     </label>
                     <StudentSearchCombobox
                       onSelectStudent={handleSelectStudent}
@@ -1888,7 +1904,7 @@ export default function MakmpPublicFormPage() {
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
-                <span>Seterusnya: Pilih Anugerah</span>
+                <span>{t('makmp:next_step_select_awards', 'Seterusnya: Pilih Anugerah')}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -2082,7 +2098,7 @@ export default function MakmpPublicFormPage() {
                 className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition flex items-center gap-2 border border-slate-200 dark:border-transparent"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Kembali</span>
+                <span>{t('makmp:back_btn', 'Kembali')}</span>
               </button>
 
               <button
@@ -2103,7 +2119,7 @@ export default function MakmpPublicFormPage() {
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
-                <span>Seterusnya: Muat Naik Dokumen ({selectedAwardIds.length} Anugerah)</span>
+                <span>{t('makmp:next_step_documents', 'Seterusnya: Muat Naik Dokumen')} ({selectedAwardIds.length} {t('makmp:nom_step_awards', 'Anugerah')})</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -2122,7 +2138,7 @@ export default function MakmpPublicFormPage() {
                   {t('submit_portfolio')} • {t('supporting_documents')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Pilih tab anugerah di bawah untuk memuat naik dokumen yang diperlukan bagi setiap anugerah yang anda mohon.
+                  {t('makmp:select_award_tab_hint', 'Pilih tab anugerah di bawah untuk memuat naik dokumen yang diperlukan bagi setiap anugerah yang anda mohon.')}
                 </p>
               </div>
 
@@ -2182,7 +2198,7 @@ export default function MakmpPublicFormPage() {
 
                     <div className="flex items-center gap-2">
                       <span className="text-xs px-3 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold shadow-xs">
-                        Had: {maxDocsAllowed} Dokumen
+                        {t('makmp:limit_docs', { count: maxDocsAllowed, defaultValue: `Had: ${maxDocsAllowed} Dokumen` })}
                       </span>
                     </div>
                   </div>
@@ -2193,7 +2209,7 @@ export default function MakmpPublicFormPage() {
                       <div className="space-y-1">
                         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
                           <FileDown className="w-4 h-4" />
-                          <span>Templat Laporan Rasmi Disediakan</span>
+                          <span>{t('makmp:official_template_provided', 'Templat Laporan Rasmi Disediakan')}</span>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-300">
                           Unit penganjur menyediakan templat format laporan rasmi ({currentAward.template_name || 'Format Laporan'}). Sila muat turun dan lengkapkan laporan sebelum memuat naik sebagai fail PDF di bawah.
@@ -2207,7 +2223,7 @@ export default function MakmpPublicFormPage() {
                         className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center gap-2 shrink-0 shadow-md"
                       >
                         <FileDown className="w-4 h-4" />
-                        <span>Muat Turun Templat</span>
+                        <span>{t('makmp:download_template_btn', 'Muat Turun Templat')}</span>
                       </a>
                     </div>
                   )}
@@ -2221,15 +2237,15 @@ export default function MakmpPublicFormPage() {
                         </div>
                         <div>
                           <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>Pernah muat naik sijil ke e-Akademik?</span>
+                            <span>{t('makmp:import_akademik_prompt', 'Pernah muat naik sijil ke e-Akademik?')}</span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 font-semibold">
-                              1-Klik Import
+                              {t('makmp:import_1click', '1-Klik Import')}
                             </span>
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {studentAkademikCerts.length > 0
                               ? `${studentAkademikCerts.length} sijil e-Akademik dikesan untuk profil ini.`
-                              : 'Pilih terus sijil sedia ada daripada portal tanpa perlu muat naik semula fail.'}
+                              : t('makmp:import_akademik_desc', 'Pilih terus sijil sedia ada daripada portal tanpa perlu muat naik semula fail.')}
                           </div>
                         </div>
                       </div>
@@ -2243,7 +2259,7 @@ export default function MakmpPublicFormPage() {
                         className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Pilih Dari e-Akademik ({studentAkademikCerts.length})</span>
+                        <span>{t('makmp:choose_from_akademik', 'Pilih Dari e-Akademik')} ({studentAkademikCerts.length})</span>
                       </button>
                     </div>
                   )}
@@ -2264,7 +2280,7 @@ export default function MakmpPublicFormPage() {
                         >
                           {isReportFile && (
                             <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-bold uppercase tracking-wide shadow">
-                              Kotak Lampiran Laporan
+                              {t('makmp:report_box_badge', 'Kotak Lampiran Laporan')}
                             </div>
                           )}
                           <div className="flex items-center justify-between">
@@ -2279,11 +2295,11 @@ export default function MakmpPublicFormPage() {
                                 {index + 1}
                               </span>
                               <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                                {isReportFile ? 'Dokumen Laporan Utama (PDF) *' : `Dokumen / Sijil #${index + 1}`}
+                                {isReportFile ? t('makmp:main_report_doc', 'Dokumen Laporan Utama (PDF) *') : t('makmp:doc_cert_item', { num: index + 1, defaultValue: `Dokumen / Sijil #${index + 1}` })}
                               </h4>
                               {isReportFile && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/40">
-                                  Wajib
+                                  {t('makmp:required_badge', 'Wajib')}
                                 </span>
                               )}
                             </div>
@@ -2295,7 +2311,7 @@ export default function MakmpPublicFormPage() {
                                 className="text-xs text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10 transition flex items-center gap-1"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                <span>Buang</span>
+                                <span>{t('makmp:delete_btn', 'Buang')}</span>
                               </button>
                             )}
                           </div>
@@ -2303,10 +2319,10 @@ export default function MakmpPublicFormPage() {
                           {isReportFile && (
                             <div className="p-3 rounded-lg bg-sky-100/60 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 text-xs text-sky-900 dark:text-sky-100/90 leading-relaxed space-y-1">
                               <p className="font-semibold text-sky-900 dark:text-sky-200">
-                                📄 Apa yang perlu dimuat naik?
+                                📄 {t('makmp:what_to_upload_title', 'Apa yang perlu dimuat naik?')}
                               </p>
                               <p>
-                                Muat naik <strong>laporan lengkap dalam format PDF</strong>{' '}
+                                {t('makmp:what_to_upload_desc', 'Muat naik laporan lengkap dalam format PDF')}{' '}
                                 {currentAward?.template_url
                                   ? <>mengikut templat rasmi ({currentAward?.template_name || 'Format Laporan'}).{' '}</>
                                   : <><strong>tiada templat khusus</strong> - gunakan format laporan anda sendiri.{' '}</>}
@@ -2324,8 +2340,8 @@ export default function MakmpPublicFormPage() {
                             <div className="sm:col-span-2">
                               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 {isReportFile
-                                  ? 'Tajuk Laporan Projek / Perusahaan / Kelab'
-                                  : 'Nama Aktiviti / Pertandingan / Anugerah'}{' '}
+                                  ? t('makmp:project_report_title', 'Tajuk Laporan Projek / Perusahaan / Kelab')
+                                  : t('makmp:activity_name_title', 'Nama Aktiviti / Pertandingan / Anugerah')}{' '}
                                 <span className="text-rose-500 dark:text-rose-400">*</span>
                               </label>
                               <input
@@ -2407,8 +2423,8 @@ export default function MakmpPublicFormPage() {
                               <div className="flex items-center justify-between mb-1.5">
                                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                                   {isReportFile
-                                    ? 'Muat Naik Laporan Lengkap (PDF sahaja) *'
-                                    : 'Muat Naik Sijil / Dokumen Bukti (PDF / Gambar) *'}
+                                    ? t('makmp:upload_report_pdf', 'Muat Naik Laporan Lengkap (PDF sahaja) *')
+                                    : t('makmp:upload_cert_doc', 'Muat Naik Sijil / Dokumen Bukti (PDF / Gambar) *')}
                                 </label>
                                 <span className="text-[10px] text-slate-500 dark:text-slate-400">
                                   {doc.source === 'E_AKADEMIK' ? 'Sumber: e-Akademik' : 'Maksimum 100MB'}
@@ -2465,7 +2481,7 @@ export default function MakmpPublicFormPage() {
                                       }}
                                       className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 shadow-xs"
                                     >
-                                      Tukar Sijil
+                                      {t('makmp:change_cert_btn', 'Tukar Sijil')}
                                     </button>
                                   </div>
                                 </div>
@@ -2481,8 +2497,8 @@ export default function MakmpPublicFormPage() {
                                         : doc.uploadedUrl
                                         ? 'Sijil sedia ada - klik untuk tukar fail baharu'
                                         : isReportFile
-                                        ? 'Pilih Fail Laporan Projek (PDF mengikut templat)...'
-                                        : 'Pilih Fail Sijil / Bukti (PDF / Gambar)...'}
+                                        ? t('makmp:select_report_file', 'Pilih Fail Laporan Projek (PDF mengikut templat)...')
+                                        : t('makmp:select_cert_file', 'Pilih Fail Sijil / Bukti (PDF / Gambar)...')}
                                     </span>
                                     {doc.uploadedUrl && (
                                       <a
@@ -2570,7 +2586,7 @@ export default function MakmpPublicFormPage() {
                     >
                       <Plus className="w-4 h-4" />
                       <span>
-                        Tambah Dokumen / Bukti Sokongan ({currentDocs.length}/{maxDocsAllowed})
+                        {t('makmp:add_doc_btn', 'Tambah Dokumen / Bukti Sokongan')} ({currentDocs.length}/{maxDocsAllowed})
                       </span>
                     </button>
                   )}
@@ -2587,7 +2603,7 @@ export default function MakmpPublicFormPage() {
                 className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition flex items-center gap-2 disabled:opacity-50 border border-slate-200 dark:border-transparent"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Kembali</span>
+                <span>{t('makmp:back_btn', 'Kembali')}</span>
               </button>
 
               <button
@@ -2607,7 +2623,7 @@ export default function MakmpPublicFormPage() {
                 ) : (
                   <>
                     {isEditMode ? <Save className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isEditMode ? 'Kemaskini Permohonan' : `Hantar Permohonan (${selectedAwardIds.length} Anugerah)`}</span>
+                    <span>{isEditMode ? t('makmp:update_nomination_btn', 'Kemaskini Permohonan') : `${t('makmp:submit_nomination_btn', 'Hantar Permohonan')} (${selectedAwardIds.length} ${t('makmp:nom_step_awards', 'Anugerah')})`}</span>
                   </>
                 )}
               </button>
@@ -2627,13 +2643,13 @@ export default function MakmpPublicFormPage() {
 
               <div>
                 <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                  Permohonan Berjaya Dihantar
+                  {t('makmp:receipt_success_badge', 'Permohonan Berjaya Dihantar')}
                 </span>
                 <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-3">
-                  Resit Penyerahan Rasmi MAKMP
+                  {t('makmp:receipt_title', 'Resit Penyerahan Rasmi MAKMP')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Sila simpan kod rujukan anda untuk semakan keputusan dan status penilai.
+                  {t('makmp:receipt_desc', 'Sila simpan kod rujukan anda untuk semakan keputusan dan status penilai.')}
                 </p>
               </div>
 
@@ -2641,7 +2657,7 @@ export default function MakmpPublicFormPage() {
               <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
                 <div className="text-left">
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">
-                    Kod Rujukan Rasmi
+                    {t('makmp:official_ref_code', 'Kod Rujukan Rasmi')}
                   </div>
                   <div className="text-xl font-mono font-extrabold text-amber-700 dark:text-amber-400 tracking-wider">
                     {submissionResult.tracking_code}
@@ -2758,7 +2774,7 @@ export default function MakmpPublicFormPage() {
                     {isGoogleLinking ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Menyambung ke Google...</span>
+                        <span>{t('makmp:login_connecting_google', 'Menyambung ke Google...')}</span>
                       </>
                     ) : (
                       <>
@@ -2768,7 +2784,7 @@ export default function MakmpPublicFormPage() {
                           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
-                        <span>Daftar / Log Masuk dengan Google</span>
+                        <span>{t('makmp:login_google_btn', 'Daftar / Log Masuk dengan Google')}</span>
                       </>
                     )}
                   </button>
@@ -2787,7 +2803,7 @@ export default function MakmpPublicFormPage() {
                   className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span>Simpan Resit ke WhatsApp</span>
+                  <span>{t('makmp:save_receipt_whatsapp', 'Simpan Resit ke WhatsApp')}</span>
                 </a>
 
                 <Link
@@ -2795,13 +2811,13 @@ export default function MakmpPublicFormPage() {
                   className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm transition flex items-center justify-center gap-2 border border-slate-200 dark:border-transparent shadow-sm"
                 >
                   <Search className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  <span>Semak Status Sekarang</span>
+                  <span>{t('makmp:check_status_now', 'Semak Status Sekarang')}</span>
                 </Link>
               </div>
 
               {/* Note */}
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
-                💡 <span className="text-slate-700 dark:text-slate-300 font-medium">Nota Penting:</span> Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.
+                💡 <span className="text-slate-700 dark:text-slate-300 font-medium">{t('makmp:important_note', 'Nota Penting:')}</span> {t('makmp:important_note_desc', 'Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.')}
               </p>
             </div>
           </div>
