@@ -27,34 +27,34 @@ import { useTranslation } from 'react-i18next';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
-const JABATAN_LIST = [
-  'Jabatan Perdagangan (JP)',
-  'Jabatan Kejuruteraan Mekanikal (JKM)',
-  'Jabatan Teknologi Makanan (JTM)',
-  'Jabatan Kejuruteraan Elektrik (JKE)',
-  'Jabatan Kejuruteraan Awam (JKA)',
-  'Asasi Teknologi Kejuruteraan (FTV)',
-  'Lain-Lain',
+const getJabatanList = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:dept_jp', 'Jabatan Perdagangan (JP)'),
+  t('kebajikan:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)'),
+  t('kebajikan:dept_jtm', 'Jabatan Teknologi Makanan (JTM)'),
+  t('kebajikan:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)'),
+  t('kebajikan:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)'),
+  t('kebajikan:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
-const SUKAN_LIST = [
-  'Padang Football / Futsal',
-  'Gelanggang Badminton',
-  'Gelanggang Bola Tampar',
-  'Gimnasium',
-  'Dewan Sukan',
-  'Lain-Lain',
+const getSukanList = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:sport_football_futsal', 'Padang Football / Futsal'),
+  t('kebajikan:sport_badminton', 'Gelanggang Badminton'),
+  t('kebajikan:sport_volleyball', 'Gelanggang Bola Tampar'),
+  t('kebajikan:sport_gym', 'Gimnasium'),
+  t('kebajikan:sport_sports_hall', 'Dewan Sukan'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
 const KAFETERIA_LIST = ['Al-Biruni', 'Al-Ghazali', 'Ibn Sina', 'Lain-Lain'];
 
-const KAFETERIA_TYPES = [
-  'Kebersihan & Sanitasi',
-  'Kualiti / Rasa Makanan',
-  'Harga Tidak Berpatutan',
-  'Perkhidmatan Tidak Memuaskan',
-  'Kehabisan Stok / Menu',
-  'Lain-Lain',
+const getKafeteriaTypes = (t: (key: string, fallback: string) => string) => [
+  t('kebajikan:cafe_cleanliness', 'Kebersihan & Sanitasi'),
+  t('kebajikan:cafe_food_quality', 'Kualiti / Rasa Makanan'),
+  t('kebajikan:cafe_unfair_price', 'Harga Tidak Berpatutan'),
+  t('kebajikan:cafe_poor_service', 'Perkhidmatan Tidak Memuaskan'),
+  t('kebajikan:cafe_out_of_stock', 'Kehabisan Stok / Menu'),
+  t('kebajikan:other', 'Lain-Lain'),
 ];
 
 type Step = 'STATS' | 'CATEGORY' | 'FORM' | 'PREVIEW' | 'SUCCESS';
@@ -95,7 +95,7 @@ const CATEGORIES: { key: KebajikanTicketCategory; icon: React.ElementType; color
 ];
 
 /** Auto-resolve and map student details from Auth & Profile */
-const getInitialProfileData = (profile: any, user: any) => {
+const getInitialProfileData = (profile: any, user: any, t: any) => {
   const full_name = profile?.name || profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
   const matric_no = profile?.student_id || profile?.matric_no || profile?.matrix_no || user?.user_metadata?.matric_no || user?.user_metadata?.student_id || '';
   const phone = profile?.phone || user?.user_metadata?.phone || '';
@@ -105,21 +105,22 @@ const getInitialProfileData = (profile: any, user: any) => {
   const rawDept = profile?.department || profile?.jabatan || user?.user_metadata?.department || '';
   let jabatan = '';
   if (rawDept) {
-    const matched = JABATAN_LIST.find(j => j.toLowerCase().includes(rawDept.toLowerCase()) || rawDept.toLowerCase().includes(j.toLowerCase()));
+    const list = getJabatanList(t);
+    const matched = list.find(j => j.toLowerCase().includes(rawDept.toLowerCase()) || rawDept.toLowerCase().includes(j.toLowerCase()));
     if (matched) {
       jabatan = matched;
     } else if (/jp|perdagangan/i.test(rawDept)) {
-      jabatan = 'Jabatan Perdagangan (JP)';
+      jabatan = t('kebajikan:dept_jp', 'Jabatan Perdagangan (JP)');
     } else if (/jkm|mekanikal/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Mekanikal (JKM)';
+      jabatan = t('kebajikan:dept_jkm', 'Jabatan Kejuruteraan Mekanikal (JKM)');
     } else if (/jtm|makanan/i.test(rawDept)) {
-      jabatan = 'Jabatan Teknologi Makanan (JTM)';
+      jabatan = t('kebajikan:dept_jtm', 'Jabatan Teknologi Makanan (JTM)');
     } else if (/jke|elektrik/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Elektrik (JKE)';
+      jabatan = t('kebajikan:dept_jke', 'Jabatan Kejuruteraan Elektrik (JKE)');
     } else if (/jka|awam/i.test(rawDept)) {
-      jabatan = 'Jabatan Kejuruteraan Awam (JKA)';
+      jabatan = t('kebajikan:dept_jka', 'Jabatan Kejuruteraan Awam (JKA)');
     } else if (/ftv|asasi/i.test(rawDept)) {
-      jabatan = 'Asasi Teknologi Kejuruteraan (FTV)';
+      jabatan = t('kebajikan:dept_ftv', 'Asasi Teknologi Kejuruteraan (FTV)');
     } else {
       jabatan = rawDept;
     }
@@ -154,7 +155,7 @@ export function KebajikanSubmitPage() {
 
   // Form State initialized from Profile / Auth metadata
   const [form, setForm] = useState<FormData>(() => {
-    const initial = getInitialProfileData(profile, user);
+    const initial = getInitialProfileData(profile, user, t);
     return {
       full_name:    initial.full_name,
       gender:       initial.gender,
@@ -171,7 +172,7 @@ export function KebajikanSubmitPage() {
   // Re-sync form state once profile / user asynchronously finishes loading
   useEffect(() => {
     if (profile || user) {
-      const pData = getInitialProfileData(profile, user);
+      const pData = getInitialProfileData(profile, user, t);
       setForm(prev => ({
         ...prev,
         full_name: prev.full_name || pData.full_name,
@@ -182,7 +183,7 @@ export function KebajikanSubmitPage() {
         jabatan:   prev.jabatan || pData.jabatan,
       }));
     }
-  }, [profile, user]);
+  }, [profile, user, t]);
 
   // Load public stats for hero
   useEffect(() => {
@@ -203,7 +204,7 @@ export function KebajikanSubmitPage() {
     if (!file) return;
 
     if (images.length >= 3) {
-      alert('Maksimum 3 keping gambar sahaja dibenarkan.');
+      alert(t('kebajikan:submit_max_images_alert', 'Maksimum 3 keping gambar sahaja dibenarkan.'));
       return;
     }
 
@@ -251,11 +252,24 @@ export function KebajikanSubmitPage() {
   const buildTitle = (): string => {
     if (form.title) return form.title;
     switch (form.category) {
-      case 'FASILITI_JABATAN': return `Aduan Fasiliti — ${form.jabatan === 'Lain-Lain' ? form.jabatan_custom : form.jabatan || 'Jabatan'}`;
-      case 'FASILITI_SUKAN':   return `Aduan Sukan — ${form.sukan === 'Lain-Lain' ? form.sukan_custom : form.sukan || 'Fasiliti Sukan'}`;
-      case 'KAFETERIA':        return `Aduan Kafeteria ${form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom : form.kafeteria || ''}`;
-      case 'WIFI_KAMSIS':      return `Aduan WiFi Blok ${form.wifi_blok || '(Tidak dinyatakan)'}`;
-      default: return form.title || 'Aduan Umum';
+      case 'FASILITI_JABATAN':
+        return t('kebajikan:title_facility_complaint', 'Aduan Fasiliti — {{dept}}', {
+          dept: form.jabatan === 'Lain-Lain' ? form.jabatan_custom : form.jabatan || t('kebajikan:dept_default', 'Jabatan')
+        });
+      case 'FASILITI_SUKAN':
+        return t('kebajikan:title_sport_complaint', 'Aduan Sukan — {{facility}}', {
+          facility: form.sukan === 'Lain-Lain' ? form.sukan_custom : form.sukan || t('kebajikan:sport_facility_default', 'Fasiliti Sukan')
+        });
+      case 'KAFETERIA':
+        return t('kebajikan:title_cafe_complaint', 'Aduan Kafeteria {{cafe}}', {
+          cafe: form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom : form.kafeteria || ''
+        });
+      case 'WIFI_KAMSIS':
+        return t('kebajikan:title_wifi_complaint', 'Aduan WiFi Blok {{block}}', {
+          block: form.wifi_blok || t('kebajikan:not_specified', '(Tidak dinyatakan)')
+        });
+      default:
+        return form.title || t('kebajikan:title_general_complaint', 'Aduan Umum');
     }
   };
 
@@ -268,7 +282,10 @@ export function KebajikanSubmitPage() {
       case 'KAFETERIA':
         return form.kafeteria === 'Lain-Lain' ? form.kafeteria_custom || '' : form.kafeteria || '';
       case 'WIFI_KAMSIS':
-        return [`Blok ${form.wifi_blok || '-'}`, form.wifi_bilik ? `Bilik ${form.wifi_bilik}` : ''].filter(Boolean).join(', ');
+        return [
+          t('kebajikan:summary_block', 'Blok {{block}}', { block: form.wifi_blok || '-' }),
+          form.wifi_bilik ? t('kebajikan:summary_room', 'Bilik {{room}}', { room: form.wifi_bilik }) : ''
+        ].filter(Boolean).join(', ');
       default:
         return form.lokasi || '';
     }
@@ -303,7 +320,7 @@ export function KebajikanSubmitPage() {
   const handleSubmit = async () => {
     if (!user || !form.category) return;
     if (images.length === 0) {
-      alert("Sila muat naik sekurang-kurangnya 1 gambar sokongan.");
+      alert(t('kebajikan:submit_min_image_alert', 'Sila muat naik sekurang-kurangnya 1 gambar sokongan.'));
       return;
     }
     setSubmitting(true);
@@ -353,7 +370,7 @@ export function KebajikanSubmitPage() {
 
       // Fetch auto-reply settings
       const { data: settings } = await supabase.from('kebajikan_settings').select('auto_reply_message').limit(1).single();
-      const rawAutoReply = settings?.auto_reply_message || 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.';
+      const rawAutoReply = settings?.auto_reply_message || t('kebajikan:auto_reply_default_message', 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.');
       const personalizedAutoReply = rawAutoReply.replace('{ticket_no}', data.ticket_no);
 
       // Insert auto-reply as the first comment
@@ -368,11 +385,11 @@ export function KebajikanSubmitPage() {
 
       // Notify the user about the auto-reply
       await sendNotificationToUser(user.id, {
-        title: `Aduan Diterima: ${data.ticket_no}`,
+        title: t('kebajikan:notif_complaint_received', 'Aduan Diterima: {{ticketNo}}', { ticketNo: data.ticket_no }),
         message: personalizedAutoReply.slice(0, 80) + (personalizedAutoReply.length > 80 ? '...' : ''),
         type: 'AUTO_REPLY',
         module: 'KEBAJIKAN',
-        link: `/kebajikan/aduan/${data.id}`,
+        link: '/kebajikan/aduan/' + data.id,
         reference_id: data.ticket_no,
         actor_name: 'Sistem E-Kebajikan',
       });
@@ -380,13 +397,13 @@ export function KebajikanSubmitPage() {
       // Notify unit Exco yang betul tentang tiket baru
       const ticketTitle = buildTitle();
       const newTicketPayload = {
-        title:       `Aduan Baru: ${data.ticket_no}`,
-        message:     `${form.full_name || 'Pelajar'} telah menghantar aduan baharu — "${ticketTitle}" (${KEBAJIKAN_CATEGORY_LABELS[form.category!]})`,
+        title:       t('kebajikan:notif_complaint_new', 'Aduan Baru: {{ticketNo}}', { ticketNo: data.ticket_no }),
+        message:     t('kebajikan:notif_complaint_new_msg', '{{name}} telah menghantar aduan baharu — "{{title}}" ({{category}})', { name: form.full_name || t('kebajikan:student_fallback', 'Pelajar'), title: ticketTitle, category: KEBAJIKAN_CATEGORY_LABELS[form.category!] }),
         type:        'NEW_TICKET',
         module:      'KEBAJIKAN' as const,
-        link:        `/kebajikan/tiket/${data.id}`,
+        link:        '/kebajikan/tiket/' + data.id,
         reference_id: data.ticket_no,
-        actor_name:  form.full_name || profile?.full_name || 'Pelajar',
+        actor_name:  form.full_name || profile?.full_name || t('kebajikan:student_fallback', 'Pelajar'),
       };
 
       if (handled_by_unit === 'KK') {
@@ -417,13 +434,13 @@ export function KebajikanSubmitPage() {
                 'NEW',
                 data.ticket_no,
                 ticketTitle,
-                form.full_name || profile?.full_name || 'Pelajar',
-                `/kebajikan/tiket/${data.id}`
+                form.full_name || profile?.full_name || t('kebajikan:student_fallback', 'Pelajar'),
+                '/kebajikan/tiket/' + data.id
               );
 
               await sendEmail({
                 to: emails,
-                subject: `Aduan Baharu: ${data.ticket_no}`,
+                subject: t('kebajikan:email_subject_new_complaint', 'Aduan Baharu: {{ticketNo}}', { ticketNo: data.ticket_no }),
                 html: emailHtml,
               });
             }
@@ -437,7 +454,7 @@ export function KebajikanSubmitPage() {
       setShowReviewModal(false);
       setStep('SUCCESS');
     } catch (err: any) {
-      alert(`Gagal hantar: ${err.message}`);
+      alert(t('kebajikan:submit_failed_error', 'Gagal hantar: {{message}}', { message: err.message }));
     } finally {
       setSubmitting(false);
     }
@@ -544,7 +561,7 @@ export function KebajikanSubmitPage() {
             </div>
 
             {/* Tactile 1-Touch High-Contrast Category Grid */}
-            <div className="tour-aduan-kategori grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className={cn('tour-aduan-kategori', 'grid grid-cols-1 sm:grid-cols-2 gap-3.5')}>
               {CATEGORIES.map(cat => {
                 const isSelected = form.category === cat.key;
                 return (
@@ -640,7 +657,7 @@ export function KebajikanSubmitPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_full_name_label')}</label>
-                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder="Nama seperti dalam rekod" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder={t('kebajikan:submit_placeholder_fullname', 'Nama seperti dalam rekod')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('submit_matric_label')}</label>
@@ -817,7 +834,7 @@ export function KebajikanSubmitPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
-                    {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : 'Pilih Kategori'}
+                    {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : t('kebajikan:select_category', 'Pilih Kategori')}
                   </p>
                   <div className="flex items-center gap-1.5 text-xs font-black text-white truncate">
                     {isFormReady ? (
@@ -913,7 +930,7 @@ export function KebajikanSubmitPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <a
-                    href={`/kebajikan/aduan/${duplicateWarning.id}`}
+                    href={'/kebajikan/aduan/' + duplicateWarning.id}
                     className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                   >
                     {t('submit_view_existing_ticket')}
@@ -1087,7 +1104,7 @@ export function KebajikanSubmitPage() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <a
-                        href={`/kebajikan/aduan/${duplicateWarning.id}`}
+                        href={'/kebajikan/aduan/' + duplicateWarning.id}
                         className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                       >
                         {t('submit_view_existing_ticket')}
@@ -1149,22 +1166,23 @@ export function KebajikanSubmitPage() {
 
 function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
   const { t } = useTranslation(['kebajikan', 'common']);
+  const jabatanList = getJabatanList(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Jabatan</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_fasiliti_jabatan', 'Fasiliti Jabatan')}</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jabatan *</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:submit_dept_label', 'Jabatan *')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {JABATAN_LIST.map(j => (
+          {jabatanList.map(j => (
             <button key={j} type="button" onClick={() => upd('jabatan', j)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.jabatan === j ? 'text-indigo-900 dark:text-white border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
               {j}
             </button>
           ))}
         </div>
-        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder="Nama jabatan..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder={t('kebajikan:submit_dept_custom_placeholder', 'Nama jabatan...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Lokasi Spesifik</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:specific_location', 'Lokasi Spesifik')}</label>
         <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder={t('kebajikan:location_placeholder', 'Bilik Kuliah JKE-02, dsb.')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
       </div>
     </fieldset>
@@ -1172,26 +1190,29 @@ function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
 }
 
 function CategorySukan({ form, upd }: { form: FormData; upd: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
+  const sukanList = getSukanList(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Sukan</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_fasiliti_sukan', 'Fasiliti Sukan')}</legend>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {SUKAN_LIST.map(s => (
+        {sukanList.map(s => (
           <button key={s} type="button" onClick={() => upd('sukan', s)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.sukan === s ? 'text-amber-900 dark:text-white border-amber-500 bg-amber-50 dark:bg-amber-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
             {s}
           </button>
         ))}
       </div>
-      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder="Nama fasiliti..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder={t('kebajikan:submit_sport_custom_placeholder', 'Nama fasiliti...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
     </fieldset>
   );
 }
 
 function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
   const { t } = useTranslation(['kebajikan', 'common']);
+  const kafeteriaTypes = getKafeteriaTypes(t);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Kafeteria</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_kafeteria', 'Kafeteria')}</legend>
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:select_cafeteria_label', 'Pilih Kafeteria *')}</label>
         <div className="flex gap-2 flex-wrap">
@@ -1201,16 +1222,16 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
             </button>
           ))}
         </div>
-        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder="Nama kafeteria..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
+        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder={t('kebajikan:submit_cafe_custom_placeholder', 'Nama kafeteria...')} className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_type_multiple', 'Jenis Aduan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {KAFETERIA_TYPES.map(typeItem => {
+          {kafeteriaTypes.map(typeItem => {
             const checked = (form.kafeteria_types as string[] || []).includes(typeItem);
             return (
               <button key={typeItem} type="button" onClick={() => toggleArr('kafeteria_types', typeItem)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
-                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{t}
+                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{typeItem}
               </button>
             );
           })}
@@ -1222,26 +1243,49 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
 
 function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
   const { t } = useTranslation(['kebajikan', 'common']);
-  const speeds = ['Sangat Perlahan (<1 Mbps)', 'Perlahan (1–5 Mbps)', 'Sederhana (5–10 Mbps)', 'Masih OK (10–20 Mbps)'];
-  const freqs  = ['Hampir Setiap Hari', 'Beberapa Kali/Minggu', 'Sekali/Minggu', 'Kadang-Kadang'];
-  const times  = ['Pagi (6am–12pm)', 'Tengah Hari (12pm–6pm)', 'Malam (6pm–12am)', 'Lewat Malam (12am–6am)'];
-  const acts   = ['Google Classroom/Teams', 'Zoom/Video Call', 'Download/Upload tugasan', 'Streaming', 'Media Sosial', 'Gaming', 'Lain-Lain'];
+  const speeds = [
+    t('kebajikan:wifi_speed_very_slow', 'Sangat Perlahan (<1 Mbps)'),
+    t('kebajikan:wifi_speed_slow', 'Perlahan (1–5 Mbps)'),
+    t('kebajikan:wifi_speed_medium', 'Sederhana (5–10 Mbps)'),
+    t('kebajikan:wifi_speed_ok', 'Masih OK (10–20 Mbps)')
+  ];
+  const freqs  = [
+    t('kebajikan:wifi_freq_daily', 'Hampir Setiap Hari'),
+    t('kebajikan:wifi_freq_several_week', 'Beberapa Kali/Minggu'),
+    t('kebajikan:wifi_freq_once_week', 'Sekali/Minggu'),
+    t('kebajikan:wifi_freq_sometimes', 'Kadang-Kadang')
+  ];
+  const times  = [
+    t('kebajikan:wifi_time_morning', 'Pagi (6am–12pm)'),
+    t('kebajikan:wifi_time_afternoon', 'Tengah Hari (12pm–6pm)'),
+    t('kebajikan:wifi_time_evening', 'Malam (6pm–12am)'),
+    t('kebajikan:wifi_time_late_night', 'Lewat Malam (12am–6am)')
+  ];
+  const acts   = [
+    t('kebajikan:wifi_act_classroom', 'Google Classroom/Teams'),
+    t('kebajikan:wifi_act_zoom', 'Zoom/Video Call'),
+    t('kebajikan:wifi_act_assignments', 'Download/Upload tugasan'),
+    t('kebajikan:wifi_act_streaming', 'Streaming'),
+    t('kebajikan:wifi_act_social', 'Media Sosial'),
+    t('kebajikan:wifi_act_gaming', 'Gaming'),
+    t('kebajikan:other', 'Lain-Lain')
+  ];
 
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">WiFi Kamsis</legend>
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">{t('kebajikan:cat_wifi_kamsis', 'WiFi Kamsis')}</legend>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_block_label', 'Blok Asrama *')}</label>
-          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder="Blok A, B, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
+          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder={t('kebajikan:submit_wifi_block_placeholder', 'Blok A, B, dsb.')} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
         <div>
           <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:hostel_room_optional', 'Bilik (Opsional)')}</label>
           <Input value={form.wifi_bilik || ''} onChange={e => upd('wifi_bilik', e.target.value)} placeholder="A-214" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
       </div>
-      <OptionGrid label="Tahap Kelajuan" options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} />
-      <OptionGrid label="Kekerapan Gangguan" options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} />
+      <OptionGrid label={t('kebajikan:wifi_speed_label', 'Tahap Kelajuan')} options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} />
+      <OptionGrid label={t('kebajikan:wifi_freq_label', 'Kekerapan Gangguan')} options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} />
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disruption_time_multiple', 'Masa Gangguan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1255,8 +1299,8 @@ function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function;
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Cadangan / Harapan Anda</label>
-        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder="Cadangan penambahbaikan..." rows={2} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none" />
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:wifi_suggestion_label', 'Cadangan / Harapan Anda')}</label>
+        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder={t('kebajikan:wifi_suggestion_placeholder', 'Cadangan penambahbaikan...')} rows={2} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none" />
       </div>
     </fieldset>
   );
