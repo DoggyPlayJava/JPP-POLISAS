@@ -211,5 +211,6 @@
   "submit_missing_fields_alert": "Sila lengkapkan maklumat yang bertanda bintang (*) sebelum menyemak.",
   "ticket_category": "Kategori",
   "ticket_title": "Tajuk Aduan",
-  "location": "Lokasi"
+  "location": "Lokasi",
+  "smart_pantry_basket_link": "Mahu pilih item satu-persatu mengikut citarasa? Buka Smart Pantry Basket"
 }

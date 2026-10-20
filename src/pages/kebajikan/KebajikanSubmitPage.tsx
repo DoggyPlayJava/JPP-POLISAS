@@ -1028,13 +1028,13 @@ export function KebajikanSubmitPage() {
                 {/* Clean Summary Card */}
                 <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-5 space-y-3.5 bg-slate-50 dark:bg-slate-950/60">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Kategori</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('kebajikan:ticket_category', 'Kategori')}</span>
                     <span className="text-xs font-black px-2.5 py-1 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/20">
                       {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'}
                     </span>
                   </div>
 
-                  <Row label="Tajuk Aduan" value={buildTitle()} highlight />
+                  <Row label={t('kebajikan:ticket_title', 'Tajuk Aduan')} value={buildTitle()} highlight />
                   {getLocationSummary() && <Row label={t('kebajikan:location', 'Lokasi')} value={getLocationSummary()} />}
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3">

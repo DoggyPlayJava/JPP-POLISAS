@@ -191,5 +191,6 @@
   "log_promo_used": "Coupon Redeemed",
   "log_promo_toggle": "Promotion Updated",
   "log_cash_checkpoint": "Cash Checkpoint",
-  "pos_cost_not_set": "Cost not yet configured"
+  "pos_cost_not_set": "Cost not yet configured",
+  "program_already_registered": "Interest Registered"
 }

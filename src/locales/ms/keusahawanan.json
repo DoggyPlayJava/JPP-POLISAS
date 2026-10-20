@@ -191,5 +191,6 @@
   "log_promo_used": "Kupon Digunakan",
   "log_promo_toggle": "Promosi Dikemaskini",
   "log_cash_checkpoint": "Checkpoint Tunai",
-  "pos_cost_not_set": "Kos belum ditetapkan"
+  "pos_cost_not_set": "Kos belum ditetapkan",
+  "program_already_registered": "Sudah Daftar Minat"
 }
