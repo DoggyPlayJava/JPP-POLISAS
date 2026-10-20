@@ -1148,6 +1148,7 @@ export function KebajikanSubmitPage() {
 // ── Category sub-forms ──────────────────────────────────────────────────────
 
 function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
       <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Jabatan</legend>
@@ -1187,6 +1188,7 @@ function CategorySukan({ form, upd }: { form: FormData; upd: Function }) {
 }
 
 function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   return (
     <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
       <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Kafeteria</legend>
@@ -1204,10 +1206,10 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:complaint_type_multiple', 'Jenis Aduan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {KAFETERIA_TYPES.map(t => {
-            const checked = (form.kafeteria_types as string[] || []).includes(t);
+          {KAFETERIA_TYPES.map(typeItem => {
+            const checked = (form.kafeteria_types as string[] || []).includes(typeItem);
             return (
-              <button key={t} type="button" onClick={() => toggleArr('kafeteria_types', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
+              <button key={typeItem} type="button" onClick={() => toggleArr('kafeteria_types', typeItem)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
                 <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{t}
               </button>
             );
@@ -1219,6 +1221,7 @@ function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Func
 }
 
 function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const speeds = ['Sangat Perlahan (<1 Mbps)', 'Perlahan (1–5 Mbps)', 'Sederhana (5–10 Mbps)', 'Masih OK (10–20 Mbps)'];
   const freqs  = ['Hampir Setiap Hari', 'Beberapa Kali/Minggu', 'Sekali/Minggu', 'Kadang-Kadang'];
   const times  = ['Pagi (6am–12pm)', 'Tengah Hari (12pm–6pm)', 'Malam (6pm–12am)', 'Lewat Malam (12am–6am)'];
@@ -1242,7 +1245,7 @@ function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function;
       <div>
         <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{t('kebajikan:disruption_time_multiple', 'Masa Gangguan (boleh pilih lebih 1)')}</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {times.map(t => { const c = (form.wifi_times as string[] || []).includes(t); return (<button key={t} type="button" onClick={() => toggleArr('wifi_times', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{t}</button>); })}
+          {times.map(timeItem => { const c = (form.wifi_times as string[] || []).includes(timeItem); return (<button key={timeItem} type="button" onClick={() => toggleArr('wifi_times', timeItem)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{timeItem}</button>); })}
         </div>
       </div>
       <div>
