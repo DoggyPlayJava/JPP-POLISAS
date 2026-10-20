@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ALL_CLUBS } from '@/types';
@@ -29,7 +30,7 @@ const SESSION_OPTIONS = [
 async function toBase64(url: string): Promise<string> {
   try {
     const res = await fetch(url, { cache: 'force-cache' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const blob = await res.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -45,6 +46,7 @@ async function toBase64(url: string): Promise<string> {
 
 // ══════════════════════════════════════════════════════════════
 export default function PemantauanTakwimTab() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user } = useAuth();
 
   const [programs, setPrograms]     = useState<any[]>([]);
@@ -133,7 +135,7 @@ export default function PemantauanTakwimTab() {
   // ── Save theme color ──
   const handleSaveColor = async () => {
     if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) {
-      toast.error('Format warna tidak sah. Gunakan hex, cth: #6B1D2A');
+      toast.error(t('jpp:takwim_color_invalid_format', 'Format warna tidak sah. Gunakan hex, cth: #6B1D2A'));
       return;
     }
     setSavingColor(true);
@@ -149,9 +151,9 @@ export default function PemantauanTakwimTab() {
         });
       }
       setThemeColor(colorInput);
-      toast.success('Warna rasmi berjaya dikemaskini!');
+      toast.success(t('jpp:takwim_color_updated_success', 'Warna rasmi berjaya dikemaskini!'));
     } catch {
-      toast.error('Gagal menyimpan warna.');
+      toast.error(t('jpp:takwim_save_color_fail', 'Gagal menyimpan warna.'));
     } finally {
       setSavingColor(false);
     }
@@ -160,7 +162,7 @@ export default function PemantauanTakwimTab() {
   // ── Add holiday ──
   const handleAddHoliday = async () => {
     if (!newName.trim() || !newDate) {
-      toast.error('Sila lengkapkan nama cuti dan tarikh.');
+      toast.error(t('jpp:takwim_holiday_fill_required', 'Sila lengkapkan nama cuti dan tarikh.'));
       return;
     }
     setSavingH(true);
@@ -171,13 +173,13 @@ export default function PemantauanTakwimTab() {
         created_by: user?.id,
       });
       if (error) throw error;
-      toast.success('Cuti ditambah!');
+      toast.success(t('jpp:takwim_holiday_added_success', 'Cuti ditambah!'));
       setHolidayDialog(false);
       setNewName('');
       setNewDate('');
       loadData();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal menambah cuti.');
+      toast.error(e.message || t('jpp:takwim_holiday_add_fail', 'Gagal menambah cuti.'));
     } finally {
       setSavingH(false);
     }
@@ -185,10 +187,10 @@ export default function PemantauanTakwimTab() {
 
   // ── Delete holiday ──
   const handleDeleteHoliday = async (id: string, name: string) => {
-    if (!confirm(`Padam cuti "${name}"?`)) return;
+    if (!confirm(t('jpp:takwim_confirm_delete_holiday', 'Padam cuti "{{name}}"?', { name }))) return;
     const { error } = await supabase.from('takwim_holidays').delete().eq('id', id);
-    if (error) toast.error('Gagal memadam.');
-    else { toast.success('Cuti dipadam.'); loadData(); }
+    if (error) toast.error(t('jpp:takwim_delete_fail', 'Gagal memadam.'));
+    else { toast.success(t('jpp:takwim_holiday_deleted_success', 'Cuti dipadam.')); loadData(); }
   };
 
   const textOnTheme = getContrastColor(themeColor);
@@ -198,7 +200,7 @@ export default function PemantauanTakwimTab() {
   const handleDownloadPdf = async () => {
     if (!pdfReady || generatingPdf) return;
     setGeneratingPdf(true);
-    const toastId = toast.loading('Menjana PDF rasmi...');
+    const toastId = toast.loading(t('jpp:takwim_generating_pdf_toast', 'Menjana PDF rasmi...'));
     try {
       const [{ pdf }, { default: TakwimJPPPDFTemplate }] = await Promise.all([
         import('@react-pdf/renderer'),
@@ -215,15 +217,15 @@ export default function PemantauanTakwimTab() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Takwim_Rasmi_JPP_POLISAS_${session.replace('/', '-')}.pdf`;
+      a.download = ['Takwim_Rasmi_JPP_POLISAS', session.replace('/', '-')].join('_') + '.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+      toast.success(t('jpp:takwim_pdf_downloaded_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('PDF generation error:', err);
-      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('jpp:takwim_pdf_gen_error', 'Gagal menjana PDF: {{message}}', { message: err?.message || t('jpp:takwim_unknown_error', 'Ralat tidak diketahui') }), { id: toastId });
     } finally {
       setGeneratingPdf(false);
     }
@@ -233,7 +235,7 @@ export default function PemantauanTakwimTab() {
     return (
       <div className="py-24 text-center flex flex-col items-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground font-bold">Memuat turun data takwim...</p>
+        <p className="text-sm text-muted-foreground font-bold">{t('jpp:takwim_loading_data', 'Memuat turun data takwim...')}</p>
       </div>
     );
   }
@@ -246,9 +248,9 @@ export default function PemantauanTakwimTab() {
       {/* ═══ HEADER ═══ */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card p-6 rounded-[2rem] border border-border shadow-sm">
         <div>
-          <h2 className="text-xl font-black tracking-tighter">Pemantauan Takwim Berpusat</h2>
+          <h2 className="text-xl font-black tracking-tighter">{t('jpp:takwim_monitoring_title', 'Pemantauan Takwim Berpusat')}</h2>
           <p className="text-sm text-muted-foreground font-medium">
-            Jadual perancangan aktiviti keseluruhan. JPP boleh urus cuti umum, warna rasmi dan sesi di sini.
+            {t('jpp:takwim_monitoring_desc', 'Jadual perancangan aktiviti keseluruhan. JPP boleh urus cuti umum, warna rasmi dan sesi di sini.')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -257,7 +259,7 @@ export default function PemantauanTakwimTab() {
             variant="outline"
             className="rounded-2xl h-12 px-5 font-black text-xs uppercase tracking-widest border-border"
           >
-            <Plus className="w-4 h-4 mr-2" /> Tambah Cuti
+            <Plus className="w-4 h-4 mr-2" /> {t('jpp:takwim_add_holiday_btn', 'Tambah Cuti')}
           </Button>
           <Button
             disabled={!pdfReady || generatingPdf}
@@ -268,17 +270,17 @@ export default function PemantauanTakwimTab() {
             {generatingPdf ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                <span className="animate-pulse">Menjana PDF...</span>
+                <span className="animate-pulse">{t('jpp:takwim_generating_pdf_btn', 'Menjana PDF...')}</span>
               </>
             ) : !pdfReady ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Memuatkan Logo...
+                {t('jpp:takwim_loading_logo_btn', 'Memuatkan Logo...')}
               </>
             ) : (
               <>
                 <DownloadCloud className="w-4 h-4 mr-2" />
-                Muat Turun PDF
+                {t('jpp:takwim_download_pdf_btn', 'Muat Turun PDF')}
               </>
             )}
           </Button>
@@ -292,8 +294,8 @@ export default function PemantauanTakwimTab() {
         <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
           <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Warna Rasmi JPP</p>
-            <p className="text-[10px] text-muted-foreground">Digunakan pada header jadual, baris cuti & PDF.</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_official_jpp_color', 'Warna Rasmi JPP')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('jpp:takwim_official_color_used_desc', 'Digunakan pada header jadual, baris cuti & PDF.')}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <input
@@ -315,7 +317,7 @@ export default function PemantauanTakwimTab() {
               size="sm"
               className="rounded-xl h-11 px-4 font-black text-xs"
             >
-              {savingColor ? '...' : 'Simpan'}
+              {savingColor ? '...' : t('common:save', 'Simpan')}
             </Button>
           </div>
         </div>
@@ -324,12 +326,12 @@ export default function PemantauanTakwimTab() {
         <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
           <CalendarDays className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sesi Akademik</p>
-            <p className="text-[10px] text-muted-foreground">Sesi yang dipaparkan dalam jadual PDF.</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_academic_session_label', 'Sesi Akademik')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('jpp:takwim_session_pdf_desc', 'Sesi yang dipaparkan dalam jadual PDF.')}</p>
           </div>
           <Select value={session} onValueChange={setSession}>
             <SelectTrigger className="w-40 rounded-xl h-11 font-bold text-sm border-border">
-              <SelectValue placeholder="Pilih sesi" />
+              <SelectValue placeholder={t('jpp:takwim_select_session_ph', 'Pilih sesi')} />
             </SelectTrigger>
             <SelectContent>
               {SESSION_OPTIONS.map(s => (
@@ -345,7 +347,7 @@ export default function PemantauanTakwimTab() {
         <div className="bg-card p-5 rounded-[2rem] border border-border shadow-sm space-y-3">
           <p className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">
             <CalendarDays className="w-3.5 h-3.5 inline mr-1.5" />
-            Senarai Cuti Umum ({holidays.length})
+            {t('jpp:takwim_holidays_list_label', 'Senarai Cuti Umum ({{count}})', { count: holidays.length })}
           </p>
           <div className="flex flex-wrap gap-2">
             {holidays.map(h => (
@@ -375,13 +377,13 @@ export default function PemantauanTakwimTab() {
             <thead>
               <tr style={{ backgroundColor: themeColor }}>
                 {[
-                  ['text-center', 'Bil'],
-                  ['', 'Program'],
-                  ['text-center', 'Tarikh Cadangan'],
-                  ['text-center', 'Tarikh Pelaksanaan'],
-                  ['', 'Pengarah Program'],
-                  ['text-center', 'Kelab'],
-                  ['text-center', 'Kos (RM)'],
+                  ['text-center', t('jpp:takwim_col_no', 'Bil')],
+                  ['', t('jpp:takwim_col_program', 'Program')],
+                  ['text-center', t('jpp:takwim_col_proposed_date', 'Tarikh Cadangan')],
+                  ['text-center', t('jpp:takwim_col_actual_date', 'Tarikh Pelaksanaan')],
+                  ['', t('jpp:takwim_col_director', 'Pengarah Program')],
+                  ['text-center', t('jpp:takwim_col_club', 'Kelab')],
+                  ['text-center', t('jpp:takwim_col_cost', 'Kos (RM)')],
                 ].map(([align, label], i, arr) => (
                   <th
                     key={label}
@@ -439,26 +441,26 @@ export default function PemantauanTakwimTab() {
         <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-0 border-none bg-card overflow-hidden">
           <div className="p-8 space-y-6">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tighter">Tambah Cuti Umum</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tighter">{t('jpp:takwim_add_holiday_title', 'Tambah Cuti Umum')}</DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">
-                Cuti akan dipaparkan sebagai baris berwarna dalam jadual dan PDF.
+                {t('jpp:takwim_add_holiday_subtitle', 'Cuti akan dipaparkan sebagai baris berwarna dalam jadual dan PDF.')}
               </p>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 tracking-widest">
-                  Nama Cuti *
+                  {t('jpp:takwim_holiday_name_label', 'Nama Cuti *')}
                 </Label>
                 <Input
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  placeholder="cth: SAMBUTAN HARI KEMERDEKAAN MALAYSIA"
+                  placeholder={t('jpp:takwim_holiday_name_ph', 'cth: SAMBUTAN HARI KEMERDEKAAN MALAYSIA')}
                   className="rounded-2xl border-none bg-muted/30 h-14 font-bold px-5"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 tracking-widest">
-                  Tarikh *
+                  {t('jpp:takwim_holiday_date_label', 'Tarikh *')}
                 </Label>
                 <Input
                   type="date"
@@ -484,7 +486,7 @@ export default function PemantauanTakwimTab() {
               className="w-full rounded-2xl h-14 font-black text-sm uppercase tracking-widest"
               style={{ backgroundColor: themeColor, color: textOnTheme }}
             >
-              {savingH ? 'Menambah...' : 'Tambah Cuti'}
+              {savingH ? t('jpp:takwim_adding_holiday_progress', 'Menambah...') : t('jpp:takwim_add_holiday_btn', 'Tambah Cuti')}
             </Button>
           </DialogFooter>
         </DialogContent>

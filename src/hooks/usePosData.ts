@@ -8,6 +8,7 @@ import {
   PosPaymentMethod, PosDiscountType, PosLogAction, ExpenseCategory,
 } from '@/types';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ export interface StatsData {
 // ── Main Hook ─────────────────────────────────────────────────────────────────
 
 export function usePosData(businessId?: string, parentLoading = false) {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
 
   const [products, setProducts]       = useState<BusinessProduct[]>([]);
@@ -263,7 +265,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
   // ── Process Transaction ───────────────────────────────────────────────────
 
   const processTransaction = async (payload: ProcessTransactionPayload) => {
-    if (!user) return { error: 'Tiada sesi' };
+    if (!user) return { error: t('commerce:no_session', 'Tiada sesi') };
 
     const {
       businessId: bid, items, paymentMethod,
@@ -334,7 +336,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
             }
           });
       }
-      await writeLog(bid, 'PROMO_USED', `Kupon ${promotionCode ?? promotionId} digunakan dalam transaksi ${invoiceNumber}.`, { promotion_id: promotionId, invoice_number: invoiceNumber }, txn.id);
+      await writeLog(bid, 'PROMO_USED', t('commerce:coupon_used_in_txn', 'Kupon {{code}} digunakan dalam transaksi {{invoice}}.', { code: promotionCode ?? promotionId, invoice: invoiceNumber }), { promotion_id: promotionId, invoice_number: invoiceNumber }, txn.id);
     }
 
     // Ciri 6: Claim kupon acara (voucher organisasi, contoh MAHRAJAN)
@@ -347,11 +349,11 @@ export function usePosData(businessId?: string, parentLoading = false) {
         p_discount_amount: actualDiscount,
       });
       if (res.error) {
-        await writeLog(bid, 'PROMO_USED', `Gagal claim kupon acara ${eventCouponCode ?? eventCouponId}: ${res.error.message}`, { event_coupon_id: eventCouponId }, txn.id);
+        await writeLog(bid, 'PROMO_USED', t('commerce:claim_coupon_failed', 'Gagal claim kupon acara {{coupon}}: {{error}}', { coupon: eventCouponCode ?? eventCouponId, error: res.error.message }), { event_coupon_id: eventCouponId }, txn.id);
       } else if (res.data && !res.data.success) {
-        await writeLog(bid, 'PROMO_USED', `Gagal claim kupon acara ${eventCouponCode ?? eventCouponId}: ${res.data.error}`, { event_coupon_id: eventCouponId }, txn.id);
+        await writeLog(bid, 'PROMO_USED', t('commerce:claim_coupon_failed', 'Gagal claim kupon acara {{coupon}}: {{error}}', { coupon: eventCouponCode ?? eventCouponId, error: res.data.error }), { event_coupon_id: eventCouponId }, txn.id);
       } else {
-        await writeLog(bid, 'PROMO_USED', `Kupon acara ${eventCouponCode ?? eventCouponId} di-claim dalam transaksi ${invoiceNumber}.`, { event_coupon_id: eventCouponId, invoice_number: invoiceNumber }, txn.id);
+        await writeLog(bid, 'PROMO_USED', t('commerce:claim_coupon_success', 'Kupon acara {{coupon}} di-claim dalam transaksi {{invoice}}.', { coupon: eventCouponCode ?? eventCouponId, invoice: invoiceNumber }), { event_coupon_id: eventCouponId, invoice_number: invoiceNumber }, txn.id);
       }
     }
 
@@ -390,7 +392,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
       .update({ status: 'VOIDED', voided_by: user.id, voided_at: new Date().toISOString() })
       .eq('id', txnId);
 
-    if (error) { toast.error('Gagal void: ' + error.message); return; }
+    if (error) { toast.error(t('commerce:void_failed', 'Gagal void: {{error}}', { error: error.message })); return; }
 
     // Restore stock — panggil rpc secara berasingan, bukan inject dalam .update()
     const txn = transactions.find(t => t.id === txnId);
@@ -409,12 +411,12 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
     await writeLog(
       businessId_, 'TRANSACTION_VOID',
-      `Transaksi ${txn?.invoice_number ?? txnId} telah dibatalkan.`,
+      t('commerce:txn_voided_log', 'Transaksi {{invoice}} telah dibatalkan.', { invoice: txn?.invoice_number ?? txnId }),
       { transaction_id: txnId },
       txnId
     );
 
-    toast.success('Transaksi dibatalkan.');
+    toast.success(t('commerce:txn_voided_toast', 'Transaksi dibatalkan.'));
     await fetchTransactions(businessId_);
   };
 
@@ -567,28 +569,28 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
   const addProduct = async (bId: string, data: Omit<BusinessProduct, 'id' | 'business_id' | 'created_at'>) => {
     const { error } = await supabase.from('business_products').insert({ ...data, business_id: bId });
-    if (error) { toast.error('Gagal tambah produk: ' + error.message); return; }
-    await writeLog(bId, 'PRODUCT_ADD', `Produk baharu ditambah: ${data.name}`, { name: data.name, price: data.price });
-    toast.success('Produk ditambah!');
+    if (error) { toast.error(t('commerce:add_product_failed', 'Gagal tambah produk: {{error}}', { error: error.message })); return; }
+    await writeLog(bId, 'PRODUCT_ADD', t('commerce:new_product_added_log', 'Produk baharu ditambah: {{name}}', { name: data.name }), { name: data.name, price: data.price });
+    toast.success(t('commerce:product_added_toast', 'Produk ditambah!'));
     await fetchProducts(bId);
   };
 
   const updateProduct = async (productId: string, bId: string, data: Partial<BusinessProduct>) => {
     const { error } = await supabase.from('business_products').update(data).eq('id', productId);
-    if (error) { toast.error('Gagal kemaskini: ' + error.message); return; }
+    if (error) { toast.error(t('commerce:update_failed', 'Gagal kemaskini: {{error}}', { error: error.message })); return; }
     if ('stock_quantity' in data) {
-      await writeLog(bId, 'STOCK_EDIT', `Stok produk dikemaskini.`, { product_id: productId, new_stock: data.stock_quantity });
+      await writeLog(bId, 'STOCK_EDIT', t('commerce:stock_updated_log', 'Stok produk dikemaskini.'), { product_id: productId, new_stock: data.stock_quantity });
     } else {
-      await writeLog(bId, 'PRODUCT_EDIT', `Produk dikemaskini.`, { product_id: productId });
+      await writeLog(bId, 'PRODUCT_EDIT', t('commerce:product_updated_log', 'Produk dikemaskini.'), { product_id: productId });
     }
     await fetchProducts(bId);
   };
 
   const deleteProduct = async (productId: string, bId: string, productName: string) => {
     const { error } = await supabase.from('business_products').delete().eq('id', productId);
-    if (error) { toast.error('Gagal padam: ' + error.message); return; }
-    await writeLog(bId, 'PRODUCT_DELETE', `Produk dipadam: ${productName}`, { product_id: productId });
-    toast.success('Produk dipadamkan.');
+    if (error) { toast.error(t('commerce:delete_failed', 'Gagal padam: {{error}}', { error: error.message })); return; }
+    await writeLog(bId, 'PRODUCT_DELETE', t('commerce:product_deleted_log', 'Produk dipadam: {{name}}', { name: productName }), { product_id: productId });
+    toast.success(t('commerce:product_deleted_toast', 'Produk dipadamkan.'));
     await fetchProducts(bId);
   };
 
@@ -603,9 +605,9 @@ export function usePosData(businessId?: string, parentLoading = false) {
       expense_date: data.expense_date ?? new Date().toISOString().split('T')[0],
       recorded_by:  user?.id,
     });
-    if (error) { toast.error('Gagal tambah perbelanjaan: ' + error.message); return false; }
-    await writeLog(bId, 'EXPENSE_ADD', `Perbelanjaan RM${data.amount.toFixed(2)} (${data.category}): ${data.description}`, { amount: data.amount, category: data.category });
-    toast.success('Perbelanjaan direkodkan!');
+    if (error) { toast.error(t('commerce:add_expense_failed', 'Gagal tambah perbelanjaan: {{error}}', { error: error.message })); return false; }
+    await writeLog(bId, 'EXPENSE_ADD', t('commerce:expense_recorded_log', 'Perbelanjaan RM{{amount}} ({{category}}): {{description}}', { amount: data.amount.toFixed(2), category: data.category, description: data.description }), { amount: data.amount, category: data.category });
+    toast.success(t('commerce:expense_recorded_toast', 'Perbelanjaan direkodkan!'));
     return true;
   };
 
@@ -620,9 +622,9 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
   const deleteExpense = async (expenseId: string, bId: string) => {
     const { error } = await supabase.from('business_expenses').delete().eq('id', expenseId);
-    if (error) { toast.error('Gagal padam: ' + error.message); return; }
-    await writeLog(bId, 'EXPENSE_DELETE', 'Rekod perbelanjaan dipadam.', { expense_id: expenseId });
-    toast.success('Rekod dipadam.');
+    if (error) { toast.error(t('commerce:delete_failed', 'Gagal padam: {{error}}', { error: error.message })); return; }
+    await writeLog(bId, 'EXPENSE_DELETE', t('commerce:expense_deleted_log', 'Rekod perbelanjaan dipadam.'), { expense_id: expenseId });
+    toast.success(t('commerce:record_deleted_toast', 'Rekod dipadam.'));
   };
 
   // ── Ciri 5: Promosi & Kupon ───────────────────────────────────────────────
@@ -648,16 +650,16 @@ export function usePosData(businessId?: string, parentLoading = false) {
       .ilike('code', code.trim())  // case-insensitive
       .single();
 
-    if (error || !data) return { valid: false, error: 'Kod promosi tidak sah.' };
+    if (error || !data) return { valid: false, error: t('commerce:promo_invalid', 'Kod promosi tidak sah.') };
     const p = data as BusinessPromotion;
 
-    if (!p.is_active) return { valid: false, error: 'Kod promosi ini tidak aktif.' };
+    if (!p.is_active) return { valid: false, error: t('commerce:promo_inactive', 'Kod promosi ini tidak aktif.') };
 
     const todayStr = new Date().toISOString().split('T')[0];
-    if (p.valid_from && todayStr < p.valid_from) return { valid: false, error: 'Promosi ini belum bermula.' };
-    if (p.valid_until && todayStr > p.valid_until) return { valid: false, error: 'Promosi ini telah tamat tempoh.' };
-    if (p.max_uses !== null && p.uses_count >= p.max_uses) return { valid: false, error: 'Had penggunaan kupon ini telah dicapai.' };
-    if (subtotal < p.min_purchase) return { valid: false, error: `Minimum pembelian RM${p.min_purchase.toFixed(2)} diperlukan.` };
+    if (p.valid_from && todayStr < p.valid_from) return { valid: false, error: t('commerce:promo_not_started', 'Promosi ini belum bermula.') };
+    if (p.valid_until && todayStr > p.valid_until) return { valid: false, error: t('commerce:promo_expired', 'Promosi ini telah tamat tempoh.') };
+    if (p.max_uses !== null && p.uses_count >= p.max_uses) return { valid: false, error: t('commerce:promo_usage_limit_reached', 'Had penggunaan kupon ini telah dicapai.') };
+    if (subtotal < p.min_purchase) return { valid: false, error: t('commerce:promo_min_purchase_req', 'Minimum pembelian RM{{min}} diperlukan.', { min: p.min_purchase.toFixed(2) }) };
 
     return { valid: true, promotion: p };
   };
@@ -669,26 +671,26 @@ export function usePosData(businessId?: string, parentLoading = false) {
       created_by:  user?.id,
     });
     if (error) {
-      if (error.code === '23505') toast.error('Kod promosi sudah wujud untuk perniagaan ini.');
-      else toast.error('Gagal cipta promosi: ' + error.message);
+      if (error.code === '23505') toast.error(t('commerce:promo_code_exists', 'Kod promosi sudah wujud untuk perniagaan ini.'));
+      else toast.error(t('commerce:create_promo_failed', 'Gagal cipta promosi: {{error}}', { error: error.message }));
       return false;
     }
-    await writeLog(bId, 'PROMO_CREATE', `Promosi baharu: ${data.code} — ${data.name}`, { code: data.code });
-    toast.success('Promosi dicipta!');
+    await writeLog(bId, 'PROMO_CREATE', t('commerce:new_promo_log', 'Promosi baharu: {{code}} — {{name}}', { code: data.code, name: data.name }), { code: data.code });
+    toast.success(t('commerce:promo_created_toast', 'Promosi dicipta!'));
     return true;
   };
 
   const togglePromotion = async (promotionId: string, bId: string, isActive: boolean): Promise<void> => {
     const { error } = await supabase.from('business_promotions').update({ is_active: isActive }).eq('id', promotionId);
-    if (error) { toast.error('Gagal kemaskini promosi.'); return; }
-    await writeLog(bId, 'PROMO_TOGGLE', `Promosi ${isActive ? 'diaktifkan' : 'dinyahaktifkan'}.`, { promotion_id: promotionId, is_active: isActive });
-    toast.success(isActive ? 'Promosi diaktifkan.' : 'Promosi dinyahaktifkan.');
+    if (error) { toast.error(t('commerce:update_promo_failed', 'Gagal kemaskini promosi.')); return; }
+    await writeLog(bId, 'PROMO_TOGGLE', t('commerce:promo_toggled_log', 'Promosi {{status}}.', { status: isActive ? t('commerce:promo_activated', 'diaktifkan') : t('commerce:promo_deactivated', 'dinyahaktifkan') }), { promotion_id: promotionId, is_active: isActive });
+    toast.success(isActive ? t('commerce:promo_activated_toast', 'Promosi diaktifkan.') : t('commerce:promo_deactivated_toast', 'Promosi dinyahaktifkan.'));
   };
 
   const deletePromotion = async (promotionId: string, bId: string, code: string): Promise<void> => {
     const { error } = await supabase.from('business_promotions').delete().eq('id', promotionId);
-    if (error) { toast.error('Gagal padam promosi.'); return; }
-    toast.success(`Promosi ${code} dipadam.`);
+    if (error) { toast.error(t('commerce:delete_promo_failed', 'Gagal padam promosi.')); return; }
+    toast.success(t('commerce:promo_deleted_toast', 'Promosi {{code}} dipadam.', { code }));
   };
 
   // ── Ciri 1: Cash Checkpoint ───────────────────────────────────────────────
@@ -701,9 +703,9 @@ export function usePosData(businessId?: string, parentLoading = false) {
       note:         data.note ?? null,
       recorded_by:  user?.id,
     });
-    if (error) { toast.error('Gagal rekod checkpoint: ' + error.message); return false; }
-    await writeLog(bId, 'CASH_CHECKPOINT', `Checkpoint baldi: ${data.label} — RM${data.cash_amount.toFixed(2)}`, { label: data.label, amount: data.cash_amount });
-    toast.success('Checkpoint direkodkan!');
+    if (error) { toast.error(t('commerce:record_checkpoint_failed', 'Gagal rekod checkpoint: {{error}}', { error: error.message })); return false; }
+    await writeLog(bId, 'CASH_CHECKPOINT', t('commerce:cash_checkpoint_log', 'Checkpoint baldi: {{label}} — RM{{amount}}', { label: data.label, amount: data.cash_amount.toFixed(2) }), { label: data.label, amount: data.cash_amount });
+    toast.success(t('commerce:checkpoint_recorded_toast', 'Checkpoint direkodkan!'));
     return true;
   };
 
@@ -721,8 +723,8 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
   const deleteCashCheckpoint = async (checkpointId: string): Promise<void> => {
     const { error } = await supabase.from('business_cash_checkpoints').delete().eq('id', checkpointId);
-    if (error) { toast.error('Gagal padam checkpoint.'); return; }
-    toast.success('Checkpoint dipadam.');
+    if (error) { toast.error(t('commerce:delete_checkpoint_failed', 'Gagal padam checkpoint.')); return; }
+    toast.success(t('commerce:checkpoint_deleted_toast', 'Checkpoint dipadam.'));
   };
 
   // ── POS Assignment (manual) ───────────────────────────────────────────────
@@ -731,16 +733,16 @@ export function usePosData(businessId?: string, parentLoading = false) {
     const { error } = await supabase.from('business_pos_assignments').upsert({
       business_id: bId, user_id: userId, assigned_by: user?.id, valid_date: today(),
     }, { onConflict: 'business_id,user_id,valid_date' });
-    if (error) { toast.error('Gagal assign: ' + error.message); return; }
-    await writeLog(bId, 'POS_ASSIGNED', `${userName} ditetapkan sebagai Staff POS hari ini.`, { user_id: userId, user_name: userName });
-    toast.success(`${userName} ditetapkan untuk POS hari ini.`);
+    if (error) { toast.error(t('commerce:assign_failed', 'Gagal assign: {{error}}', { error: error.message })); return; }
+    await writeLog(bId, 'POS_ASSIGNED', t('commerce:pos_staff_assigned_log', '{{name}} ditetapkan sebagai Staff POS hari ini.', { name: userName }), { user_id: userId, user_name: userName });
+    toast.success(t('commerce:pos_staff_assigned_toast', '{{name}} ditetapkan untuk POS hari ini.', { name: userName }));
     await fetchAssignments(bId);
   };
 
   const removePosAssignment = async (assignmentId: string, bId: string) => {
     const a = assignments.find(x => x.id === assignmentId);
     await supabase.from('business_pos_assignments').delete().eq('id', assignmentId);
-    if (a) await writeLog(bId, 'POS_ASSIGNED', `Tugasan POS ${a.user?.full_name ?? ''} dibuang.`, { user_id: a.user_id });
+    if (a) await writeLog(bId, 'POS_ASSIGNED', t('commerce:pos_assignment_removed_log', 'Tugasan POS {{name}} dibuang.', { name: a.user?.full_name ?? '' }), { user_id: a.user_id });
     await fetchAssignments(bId);
   };
 
@@ -754,11 +756,11 @@ export function usePosData(businessId?: string, parentLoading = false) {
       });
       if (error) throw error;
       
-      await writeLog(bId, 'SETTINGS_UPDATED', `Pemilikan perniagaan telah dipindahkan sepenuhnya kepada ${newOwnerName}.`);
-      toast.success('Pemilikan perniagaan berjaya dipindahkan!');
+      await writeLog(bId, 'SETTINGS_UPDATED', t('commerce:ownership_transferred_log', 'Pemilikan perniagaan telah dipindahkan sepenuhnya kepada {{name}}.', { name: newOwnerName }));
+      toast.success(t('commerce:ownership_transferred_toast', 'Pemilikan perniagaan berjaya dipindahkan!'));
       return true;
     } catch (err: any) {
-      toast.error('Gagal pindah milik: ' + (err.message || 'Ralat tidak diketahui'));
+      toast.error(t('commerce:transfer_ownership_failed', 'Gagal pindah milik: {{error}}', { error: err.message || t('commerce:unknown_error', 'Ralat tidak diketahui') }));
       return false;
     }
   };

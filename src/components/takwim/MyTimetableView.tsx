@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -77,6 +78,7 @@ function formatDisplayTime(timeStr: string): string {
 }
 
 export function MyTimetableView() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile, user } = useAuth();
   const userId = profile?.id || user?.id;
 
@@ -160,7 +162,7 @@ export function MyTimetableView() {
       setMetadata((metaRes.data as StudentTimetableMetadata) || null);
     } catch (err: any) {
       console.error('Error fetching student timetable:', err);
-      toast.error('Ralat memuatkan jadual waktu kuliah.');
+      toast.error(t('jpp:timetable_fetch_error', 'Ralat memuatkan jadual waktu kuliah.'));
     } finally {
       setLoading(false);
     }
@@ -198,19 +200,19 @@ export function MyTimetableView() {
       if (error) throw error;
       toast.success(
         newEnabled
-          ? 'Peringatan kelas diaktifkan (30 minit sebelum kelas).'
-          : 'Peringatan kelas dinyahaktifkan.'
+          ? t('jpp:timetable_reminder_enabled', 'Peringatan kelas diaktifkan (30 minit sebelum kelas).')
+          : t('jpp:timetable_reminder_disabled', 'Peringatan kelas dinyahaktifkan.')
       );
     } catch (err) {
       console.error('Error updating notification settings:', err);
       setSettings(prev => (prev ? { ...prev, notifications_enabled: currentEnabled } : null));
-      toast.error('Gagal mengemas kini tetapan pemberitahuan.');
+      toast.error(t('jpp:timetable_notification_update_error', 'Gagal mengemas kini tetapan pemberitahuan.'));
     }
   };
 
   // Delete single slot
   const handleDeleteSlot = async (slotId: string) => {
-    if (!confirm('Adakah anda pasti ingin memadam slot kelas ini?')) return;
+    if (!confirm(t('jpp:timetable_confirm_delete_slot', 'Adakah anda pasti ingin memadam slot kelas ini?'))) return;
     try {
       const { error } = await supabase
         .from('student_timetables')
@@ -219,10 +221,10 @@ export function MyTimetableView() {
 
       if (error) throw error;
       setEntries(prev => prev.filter(e => e.id !== slotId));
-      toast.success('Slot kelas berjaya dipadam.');
+      toast.success(t('jpp:timetable_slot_deleted_success', 'Slot kelas berjaya dipadam.'));
     } catch (err) {
       console.error('Error deleting slot:', err);
-      toast.error('Gagal memadam slot.');
+      toast.error(t('jpp:timetable_delete_slot_error', 'Gagal memadam slot.'));
     }
   };
 
@@ -230,7 +232,7 @@ export function MyTimetableView() {
   const handleClearAllTimetable = async () => {
     if (!userId) return;
     if (
-      !confirm('Adakah anda pasti ingin memadam dan mengosongkan keseluruhan jadual kuliah ini?')
+      !confirm(t('jpp:timetable_confirm_clear_all', 'Adakah anda pasti ingin memadam dan mengosongkan keseluruhan jadual kuliah ini?'))
     ) {
       return;
     }
@@ -245,10 +247,10 @@ export function MyTimetableView() {
 
       if (error) throw error;
       setEntries([]);
-      toast.success('Jadual kuliah berjaya dikosongkan.');
+      toast.success(t('jpp:timetable_cleared_success', 'Jadual kuliah berjaya dikosongkan.'));
     } catch (err) {
       console.error('Error clearing timetable:', err);
-      toast.error('Gagal mengosongkan jadual.');
+      toast.error(t('jpp:timetable_clear_error', 'Gagal mengosongkan jadual.'));
     } finally {
       setIsDeleting(false);
     }
@@ -284,7 +286,7 @@ export function MyTimetableView() {
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
-              Jadual Kuliah Saya
+              {t('jpp:timetable_my_schedule_title', 'Jadual Kuliah Saya')}
             </h2>
             {activeClassName && (
               <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider px-2 py-0.5">
@@ -299,8 +301,8 @@ export function MyTimetableView() {
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40">
             {totalSlots > 0
-              ? `${totalSlots} slot kelas · ${uniqueCourses} kursus berdaftar · ${activeClassDays} hari berjadual`
-              : 'Susun jadual kelas mengikut PDF rasmi SPMP POLISAS.'}
+              ? t('jpp:timetable_slots_summary', '{{totalSlots}} slot kelas · {{uniqueCourses}} kursus berdaftar · {{activeClassDays}} hari berjadual', { totalSlots, uniqueCourses, activeClassDays })
+              : t('jpp:timetable_arrange_instruction', 'Susun jadual kelas mengikut PDF rasmi SPMP POLISAS.')}
           </p>
         </div>
 
@@ -314,7 +316,7 @@ export function MyTimetableView() {
             className="w-full md:w-auto h-10 px-4 rounded-xl text-xs font-black uppercase tracking-wider gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs order-1 md:order-2 shrink-0"
           >
             <Upload className="w-4 h-4" />
-            <span>MUAT NAIK JADUAL</span>
+            <span>{t('jpp:timetable_upload_btn', 'MUAT NAIK JADUAL')}</span>
           </Button>
 
           {/* Tier 2 on Mobile: Balanced Utility Bar */}
@@ -330,7 +332,7 @@ export function MyTimetableView() {
                     ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
                 )}
-                title="Paparan Grid Mingguan"
+                title={t('jpp:timetable_weekly_grid_view', 'Paparan Grid Mingguan')}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -343,7 +345,7 @@ export function MyTimetableView() {
                     ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
                 )}
-                title="Paparan Agenda Harian"
+                title={t('jpp:timetable_daily_agenda_view', 'Paparan Agenda Harian')}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -358,10 +360,10 @@ export function MyTimetableView() {
                 size="sm"
                 onClick={() => setIsPreviewModalOpen(true)}
                 className="h-9 px-2.5 sm:px-3 rounded-xl text-xs font-bold gap-1.5 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 shadow-xs"
-                title="Tambah Slot Manual"
+                title={t('jpp:timetable_add_slot_manual_tooltip', 'Tambah Slot Manual')}
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tambah Slot</span>
+                <span className="hidden sm:inline">{t('jpp:timetable_add_slot_btn', 'Tambah Slot')}</span>
               </Button>
 
               {/* Notification bell toggle */}
@@ -378,19 +380,19 @@ export function MyTimetableView() {
                 )}
                 title={
                   settings?.notifications_enabled
-                    ? 'Peringatan kelas aktif (30 minit sebelum)'
-                    : 'Peringatan kelas dinyahaktifkan'
+                    ? t('jpp:timetable_reminder_active_tooltip', 'Peringatan kelas aktif (30 minit sebelum)')
+                    : t('jpp:timetable_reminder_inactive_tooltip', 'Peringatan kelas dinyahaktifkan')
                 }
               >
                 {settings?.notifications_enabled ? (
                   <>
                     <Bell className="w-3.5 h-3.5 fill-current text-amber-500" />
-                    <span className="hidden sm:inline">Peringatan</span>
+                    <span className="hidden sm:inline">{t('jpp:timetable_reminder_btn', 'Peringatan')}</span>
                   </>
                 ) : (
                   <>
                     <BellOff className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Peringatan</span>
+                    <span className="hidden sm:inline">{t('jpp:timetable_reminder_btn', 'Peringatan')}</span>
                   </>
                 )}
               </Button>
@@ -404,7 +406,7 @@ export function MyTimetableView() {
                   onClick={handleClearAllTimetable}
                   disabled={isDeleting}
                   className="h-9 px-2.5 rounded-xl text-xs font-bold gap-1 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-500/10 shadow-xs"
-                  title="Padam Semua Jadual"
+                  title={t('jpp:timetable_delete_all_tooltip', 'Padam Semua Jadual')}
                 >
                   {isDeleting ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -423,7 +425,7 @@ export function MyTimetableView() {
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
           <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
-            Memuatkan jadual kuliah...
+            {t('jpp:timetable_loading_text', 'Memuatkan jadual kuliah...')}
           </p>
         </div>
       ) : entries.length === 0 ? (
@@ -437,11 +439,10 @@ export function MyTimetableView() {
             <Calendar className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-2">
-            Belum Ada Jadual Kuliah
+            {t('jpp:timetable_empty_title', 'Belum Ada Jadual Kuliah')}
           </h3>
           <p className="text-xs text-slate-500 dark:text-white/50 max-w-md leading-relaxed mb-6">
-            Muat naik fail PDF jadual waktu kelas dari portal SPMP POLISAS untuk penjanaan automatik,
-            atau masukkan slot kelas anda secara manual.
+            {t('jpp:timetable_empty_desc', 'Muat naik fail PDF jadual waktu kelas dari portal SPMP POLISAS untuk penjanaan automatik, atau masukkan slot kelas anda secara manual.')}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -451,7 +452,7 @@ export function MyTimetableView() {
               className="rounded-xl text-xs font-black uppercase tracking-wider gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
             >
               <Upload className="w-4 h-4" />
-              MUAT NAIK JADUAL
+              {t('jpp:timetable_upload_btn', 'MUAT NAIK JADUAL')}
             </Button>
             <Button
               type="button"
@@ -460,7 +461,7 @@ export function MyTimetableView() {
               className="rounded-xl text-xs font-bold gap-2 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white shadow-xs"
             >
               <Plus className="w-4 h-4" />
-              Isi Jadual Manual
+              {t('jpp:timetable_fill_manual_btn', 'Isi Jadual Manual')}
             </Button>
           </div>
         </motion.div>
@@ -487,7 +488,7 @@ export function MyTimetableView() {
                   : 'bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/10'
               )}
             >
-              <span>Semua</span>
+              <span>{t('jpp:timetable_all_days', 'Semua')}</span>
               <span
                 className={cn(
                   'text-[10px] font-black px-1.5 py-0.2 rounded-md',
@@ -515,7 +516,7 @@ export function MyTimetableView() {
                       : 'bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/10'
                   )}
                 >
-                  <span>{day.label}</span>
+                  <span>{t('jpp:day_' + day.label.toLowerCase(), day.label)}</span>
                   {isToday && (
                     <span
                       className={cn(
@@ -545,7 +546,7 @@ export function MyTimetableView() {
                 <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]">
                   <Clock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-2" />
                   <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
-                    Tiada kelas berjadual
+                    {t('jpp:timetable_no_scheduled_classes', 'Tiada kelas berjadual')}
                   </p>
                 </div>
               ) : (
@@ -558,15 +559,15 @@ export function MyTimetableView() {
                     <div key={day.value} className="space-y-2">
                       <div className="flex items-center gap-2 px-1 pt-2">
                         <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                          {day.label}
+                          {t('jpp:day_' + day.label.toLowerCase(), day.label)}
                         </span>
                         {isToday && (
                           <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 text-[9px] font-black px-1.5 py-0.2">
-                            Hari Ini
+                            {t('jpp:timetable_today_badge', 'Hari Ini')}
                           </Badge>
                         )}
                         <span className="text-[10px] text-slate-400 dark:text-white/30">
-                          ({daySlots.length} slot)
+                          {t('jpp:timetable_slot_count_bracket', '({{count}} slot)', { count: daySlots.length })}
                         </span>
                       </div>
                       <div className="space-y-2.5">
@@ -590,7 +591,7 @@ export function MyTimetableView() {
                 <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.02]">
                   <Clock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-2" />
                   <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
-                    Tiada kelas dijadualkan pada hari ini
+                    {t('jpp:timetable_no_classes_today', 'Tiada kelas dijadualkan pada hari ini')}
                   </p>
                 </div>
               ) : (
@@ -690,6 +691,7 @@ function ClassCard({
   onEdit?: () => void;
   extended?: boolean;
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const badgeCfg = CLASS_TYPE_BADGES[entry.class_type] || CLASS_TYPE_BADGES.KULIAH;
   const timeFormatted = `${formatDisplayTime(entry.start_time)} - ${formatDisplayTime(entry.end_time)}`;
 
@@ -707,7 +709,7 @@ function ClassCard({
             variant="outline"
             className={cn('text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2', badgeCfg.bg)}
           >
-            {badgeCfg.label}
+            {t('jpp:class_type_' + entry.class_type.toLowerCase(), badgeCfg.label)}
           </Badge>
           {entry.is_online && (
             <Badge
@@ -715,7 +717,7 @@ function ClassCard({
               className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20 text-[9px] font-bold px-1.5 py-0.2 gap-1"
             >
               <Globe className="w-2.5 h-2.5" />
-              Atas Talian
+              {t('jpp:timetable_online_badge', 'Atas Talian')}
             </Badge>
           )}
         </div>
@@ -729,8 +731,8 @@ function ClassCard({
               onEdit?.();
             }}
             className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all"
-            title="Kemaskini Slot"
-            aria-label="Kemaskini Slot"
+            title={t('jpp:timetable_edit_slot_btn', 'Kemaskini Slot')}
+            aria-label={t('jpp:timetable_edit_slot_btn', 'Kemaskini Slot')}
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -741,8 +743,8 @@ function ClassCard({
               onDelete();
             }}
             className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
-            title="Padam Slot"
-            aria-label="Padam Slot"
+            title={t('jpp:timetable_delete_slot_btn', 'Padam Slot')}
+            aria-label={t('jpp:timetable_delete_slot_btn', 'Padam Slot')}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -775,7 +777,7 @@ function ClassCard({
           ) : (
             <div className="flex items-center gap-1.5 text-slate-400">
               <Building className="w-3 h-3 shrink-0" />
-              <span>Bilik TBA</span>
+              <span>{t('jpp:timetable_room_tba', 'Bilik TBA')}</span>
             </div>
           )}
 

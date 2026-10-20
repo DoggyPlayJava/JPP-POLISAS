@@ -1,6 +1,6 @@
 /**
  * FoodBankQrPassModal.tsx
- * Modal Pas Pengambilan Digital (Digital Boarding Pass Style) Food Bank JPP
+ * Modal {t('kebajikan:qr_pass_header_badge', 'Pas Pengambilan Digital')} (Digital Boarding Pass Style) Food Bank JPP
  * Memaparkan kod QR, status langsung, maklumat temujanji, senarai barangan & pautan PolyMaps.
  */
 
@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { FoodBankApplication, FoodBankApplicationStatus } from '@/types';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 interface FoodBankQrPassModalProps {
@@ -55,6 +56,7 @@ export function FoodBankQrPassModal({
   studentProgramme,
   roomOrResidence,
 }: FoodBankQrPassModalProps) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   const passRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -69,15 +71,15 @@ export function FoodBankQrPassModal({
   const status: FoodBankApplicationStatus = application.status;
 
   const displayName =
-    application.applicant?.full_name || studentName || 'Mahasiswa POLISAS';
+    application.applicant?.full_name || studentName || t('kebajikan:foodbank_student_polisas', 'Mahasiswa POLISAS');
   const displayMatric =
-    application.applicant?.matric_no || studentMatric || 'Matrik Tidak Dinyatakan';
+    application.applicant?.matric_no || studentMatric || t('kebajikan:qr_pass_matric_unspecified', 'Matrik Tidak Dinyatakan');
   const displayProgramme = studentProgramme || 'POLISAS';
   const displayResidence =
     roomOrResidence ||
     (application.housing_type
-      ? `${application.housing_type === 'KAMSIS' ? 'Kolej Kediaman (Kamsis)' : 'Rumah Sewa Luar Kampus'}`
-      : 'Kolej Kediaman POLISAS');
+      ? (application.housing_type === 'KAMSIS' ? t('kebajikan:qr_pass_residence_kamsis', 'Kolej Kediaman (Kamsis)') : t('kebajikan:qr_pass_residence_offcampus', 'Rumah Sewa Luar Kampus'))
+      : t('kebajikan:qr_pass_residence_default', 'Kolej Kediaman POLISAS'));
 
   const polymapsBuildingId = application.location?.polymaps_building_id;
   const polymapsUrl = polymapsBuildingId
@@ -89,8 +91,8 @@ export function FoodBankQrPassModal({
     switch (status) {
       case 'MENUNGGU':
         return {
-          label: 'Menunggu Semakan',
-          subLabel: 'Permohonan diterima & menunggu giliran semakan.',
+          label: t('kebajikan:qr_pass_status_pending_label', 'Menunggu Semakan'),
+          subLabel: t('kebajikan:qr_pass_status_pending_desc', 'Permohonan diterima & menunggu giliran semakan.'),
           bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
           dot: 'bg-amber-500',
           icon: Clock3,
@@ -98,8 +100,8 @@ export function FoodBankQrPassModal({
         };
       case 'DALAM_SEMAKAN':
         return {
-          label: 'Dalam Semakan',
-          subLabel: 'Exco Kebajikan sedang menilai kuota & dokumen.',
+          label: t('kebajikan:qr_pass_status_review_label', 'Dalam Semakan'),
+          subLabel: t('kebajikan:qr_pass_status_review_desc', 'Exco Kebajikan sedang menilai kuota & dokumen.'),
           bg: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30',
           dot: 'bg-sky-500 animate-pulse',
           icon: ShieldCheck,
@@ -107,8 +109,8 @@ export function FoodBankQrPassModal({
         };
       case 'LULUS':
         return {
-          label: 'Lulus • Sedia Diambil',
-          subLabel: 'Sedia untuk diambil di kaunter agihan.',
+          label: t('kebajikan:qr_pass_status_approved_label', 'Lulus • Sedia Diambil'),
+          subLabel: t('kebajikan:qr_pass_status_approved_desc', 'Sedia untuk diambil di kaunter agihan.'),
           bg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40',
           dot: 'bg-emerald-400 animate-ping',
           icon: CheckCircle2,
@@ -116,8 +118,8 @@ export function FoodBankQrPassModal({
         };
       case 'SELESAI':
         return {
-          label: 'Selesai Ditebus',
-          subLabel: 'Bantuan telah berjaya diagihkan sepenuhnya.',
+          label: t('kebajikan:qr_pass_status_redeemed_label', 'Selesai Ditebus'),
+          subLabel: t('kebajikan:qr_pass_status_redeemed_desc', 'Bantuan telah berjaya diagihkan sepenuhnya.'),
           bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
           dot: 'bg-emerald-600',
           icon: CheckCircle2,
@@ -125,8 +127,8 @@ export function FoodBankQrPassModal({
         };
       case 'DITOLAK':
         return {
-          label: 'Permohonan Ditolak',
-          subLabel: application.rejection_reason || 'Tidak memenuhi kriteria permohonan semasa.',
+          label: t('kebajikan:qr_pass_status_rejected_label', 'Permohonan Ditolak'),
+          subLabel: application.rejection_reason || t('kebajikan:qr_pass_status_rejected_desc', 'Tidak memenuhi kriteria permohonan semasa.'),
           bg: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30',
           dot: 'bg-rose-500',
           icon: AlertCircle,
@@ -135,8 +137,8 @@ export function FoodBankQrPassModal({
       case 'BATAL':
       default:
         return {
-          label: 'Dibatalkan',
-          subLabel: 'Permohonan telah dibatalkan oleh pelajar.',
+          label: t('kebajikan:qr_pass_status_cancelled_label', 'Dibatalkan'),
+          subLabel: t('kebajikan:qr_pass_status_cancelled_desc', 'Permohonan telah dibatalkan oleh pelajar.'),
           bg: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30',
           dot: 'bg-slate-400',
           icon: AlertCircle,
@@ -151,7 +153,7 @@ export function FoodBankQrPassModal({
   const handleCopyToken = () => {
     navigator.clipboard.writeText(qrCodeToken);
     setCopied(true);
-    toast.success('Kod token pas disalin!');
+    toast.success(t('kebajikan:qr_pass_token_copied_toast', 'Kod token pas disalin!'));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -196,7 +198,7 @@ export function FoodBankQrPassModal({
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
           await nav.share({ files: [file], title: `Pas Food Bank ${appNo}` });
-          toast.success('Pas PDF berjaya disimpan!');
+          toast.success(t('kebajikan:qr_pass_pdf_saved_toast', 'Pas PDF berjaya disimpan!'));
           return;
         } catch (shareErr: any) {
           if (shareErr?.name !== 'AbortError') {
@@ -214,10 +216,10 @@ export function FoodBankQrPassModal({
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      toast.success('Pas PDF berjaya dimuat turun!');
+      toast.success(t('kebajikan:qr_pass_pdf_downloaded_toast', 'Pas PDF berjaya dimuat turun!'));
     } catch (err) {
       console.error('Error generating pass PDF:', err);
-      toast.error('Gagal menjana PDF pas.');
+      toast.error(t('kebajikan:qr_pass_pdf_error_toast', 'Gagal menjana PDF pas.'));
     } finally {
       setIsDownloading(false);
     }
@@ -288,7 +290,7 @@ export function FoodBankQrPassModal({
                     Pas Pengambilan Digital
                   </h3>
                   <p className="text-[10px] text-slate-300 font-medium">
-                    Food Bank JPP POLISAS
+                    {t('kebajikan:qr_pass_header_sub', 'Food Bank JPP POLISAS')}
                   </p>
                 </div>
               </div>
@@ -299,10 +301,10 @@ export function FoodBankQrPassModal({
                   variant="outline"
                   onClick={handlePrint}
                   className="h-8 px-2.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-lg gap-1.5"
-                  title="Cetak Pas"
+                  title={t('kebajikan:qr_pass_btn_print_title', 'Cetak Pas')}
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Cetak</span>
+                  <span className="hidden sm:inline">{t('kebajikan:qr_pass_btn_print', 'Cetak')}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -310,17 +312,17 @@ export function FoodBankQrPassModal({
                   disabled={isDownloading}
                   onClick={handleDownloadPdf}
                   className="h-8 px-2.5 text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/30 rounded-lg gap-1.5"
-                  title="Simpan Pas PDF (A4)"
+                  title={t('kebajikan:qr_pass_btn_pdf_title', 'Simpan Pas PDF (A4)')}
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">
-                    {isDownloading ? 'Menjana...' : 'PDF'}
+                    {isDownloading ? t('kebajikan:qr_pass_btn_pdf_generating', 'Menjana...') : 'PDF'}
                   </span>
                 </Button>
                 <button
                   onClick={onClose}
                   className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors ml-1"
-                  aria-label="Tutup modal"
+                  aria-label={t('kebajikan:qr_pass_aria_close', 'Tutup modal')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -348,19 +350,19 @@ export function FoodBankQrPassModal({
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 text-[10px] font-black uppercase tracking-widest text-amber-100 mb-2">
                       <Sparkles className="w-3 h-3 text-amber-200" />
-                      E-Bantuan Siswa Prihatin
+                      {t('kebajikan:qr_pass_card_badge', 'E-Bantuan Siswa Prihatin')}
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">
-                      Pas Pengambilan Bantuan
+                      {t('kebajikan:qr_pass_card_title', 'Pas Pengambilan Bantuan')}
                     </h2>
                     <p className="text-xs text-amber-100/90 font-medium mt-0.5">
-                      Jawatankuasa Perwakilan Pelajar (JPP) POLISAS
+                      {t('kebajikan:qr_pass_card_org', 'Jawatankuasa Perwakilan Pelajar (JPP) POLISAS')}
                     </p>
                   </div>
 
                   <div className="text-right flex-shrink-0">
                     <span className="block text-[9px] uppercase tracking-wider text-amber-200/80 font-mono">
-                      No. Permohonan
+                      {t('kebajikan:qr_pass_lbl_app_no', 'No. Permohonan')}
                     </span>
                     <span className="text-xs sm:text-sm font-black font-mono tracking-wider bg-black/20 px-2.5 py-1 rounded-lg border border-white/20 inline-block mt-0.5">
                       {appNo}
@@ -393,7 +395,7 @@ export function FoodBankQrPassModal({
                 <div className="grid grid-cols-2 gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/80 text-xs">
                   <div>
                     <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                      Nama Mahasiswa
+                      {t('kebajikan:qr_pass_lbl_student_name', 'Nama Mahasiswa')}
                     </span>
                     <p className="font-extrabold text-slate-900 dark:text-white truncate mt-0.5">
                       {displayName}
@@ -401,7 +403,7 @@ export function FoodBankQrPassModal({
                   </div>
                   <div>
                     <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                      No. Matrik
+                      {t('kebajikan:qr_pass_lbl_matric_no', 'No. Matrik')}
                     </span>
                     <p className="font-extrabold font-mono text-slate-900 dark:text-white mt-0.5">
                       {displayMatric}
@@ -409,7 +411,7 @@ export function FoodBankQrPassModal({
                   </div>
                   <div>
                     <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                      Program / Jabatan
+                      {t('kebajikan:qr_pass_lbl_program_dept', 'Program / Jabatan')}
                     </span>
                     <p className="font-semibold text-slate-700 dark:text-slate-200 truncate mt-0.5">
                       {displayProgramme}
@@ -417,7 +419,7 @@ export function FoodBankQrPassModal({
                   </div>
                   <div>
                     <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                      Penginapan / Bilik
+                      {t('kebajikan:qr_pass_lbl_housing_room', 'Penginapan / Bilik')}
                     </span>
                     <p className="font-semibold text-slate-700 dark:text-slate-200 truncate mt-0.5">
                       {displayResidence}
@@ -434,13 +436,13 @@ export function FoodBankQrPassModal({
                       </div>
                       <div>
                         <span className="block text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400">
-                          Pusat Agihan
+                          {t('kebajikan:qr_pass_lbl_dist_center', 'Pusat Agihan')}
                         </span>
                         <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                          {application.location?.name || 'Pusat Edaran Kaunter JHEP (Pentadbiran)'}
+                          {application.location?.name || t('kebajikan:qr_pass_default_loc_name', 'Pusat Edaran Kaunter JHEP (Pentadbiran)')}
                         </h4>
                         <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
-                          {application.location?.room_detail || 'Bilik Gerakan JPP, Kaunter Aras Bawah'}
+                          {application.location?.room_detail || t('kebajikan:qr_pass_default_room_detail', 'Bilik Gerakan JPP, Kaunter Aras Bawah')}
                         </p>
                       </div>
                     </div>
@@ -467,7 +469,7 @@ export function FoodBankQrPassModal({
                       <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                       <div>
                         <span className="block text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                          Tarikh Temujanji
+                          {t('kebajikan:qr_pass_lbl_appt_date', 'Tarikh Temujanji')}
                         </span>
                         <span className="font-bold text-slate-800 dark:text-slate-100">
                           {application.pickup_date
@@ -477,7 +479,7 @@ export function FoodBankQrPassModal({
                                 month: 'short',
                                 year: 'numeric',
                               })
-                            : 'Akan Diselaraskan'}
+                            : t('kebajikan:qr_pass_date_tbd', 'Akan Diselaraskan')}
                         </span>
                       </div>
                     </div>
@@ -486,7 +488,7 @@ export function FoodBankQrPassModal({
                       <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                       <div>
                         <span className="block text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                          Slot Masa
+                          {t('kebajikan:qr_pass_lbl_time_slot', 'Slot Masa')}
                         </span>
                         <span className="font-bold text-slate-800 dark:text-slate-100">
                           {application.pickup_time_slot || '10:00 AM - 4:00 PM'}
@@ -501,7 +503,7 @@ export function FoodBankQrPassModal({
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                      Manifest Barangan ({totalItemCount} Unit)
+                      {t('kebajikan:qr_pass_manifest_title', 'Manifest Barangan ({{count}} Unit)', { count: totalItemCount })}
                     </span>
                   </div>
 
@@ -522,7 +524,7 @@ export function FoodBankQrPassModal({
                       ))
                     ) : (
                       <div className="p-3 text-center text-slate-500 text-xs">
-                        Pakej Makanan Asas Standard JPP
+                        {t('kebajikan:qr_pass_default_package_label', 'Pakej Makanan Asas Standard JPP')}
                       </div>
                     )}
                   </div>
@@ -559,7 +561,7 @@ export function FoodBankQrPassModal({
                   <button
                     onClick={handleCopyToken}
                     className="p-1.5 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-amber-500 border border-slate-200 dark:border-slate-700 transition-colors"
-                    title="Salin Kod Token"
+                    title={t('kebajikan:qr_pass_btn_copy_token_title', 'Salin Kod Token')}
                   >
                     {copied ? (
                       <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -570,12 +572,12 @@ export function FoodBankQrPassModal({
                 </div>
 
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 max-w-xs font-normal">
-                  Sila imbas atau tunjukkan pas digital ini di kaunter semasa sesi serahan bantuan.
+                  {t('kebajikan:qr_pass_footer_instruction', 'Sila imbas atau tunjukkan pas digital ini di kaunter semasa sesi serahan bantuan.')}
                 </p>
 
                 {/* Instructions Reminder */}
                 <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-400 font-mono">
-                  SISTEM E-KEBAJIKAN & FOOD BANK JPP POLISAS • VERIFIKASI DIGITAL KAMPUS
+                  {t('kebajikan:qr_pass_footer_system_label', 'SISTEM E-KEBAJIKAN & FOOD BANK JPP POLISAS • VERIFIKASI DIGITAL KAMPUS')}
                 </div>
               </div>
             </div>
@@ -587,7 +589,7 @@ export function FoodBankQrPassModal({
                 onClick={onClose}
                 className="text-xs text-slate-400 hover:text-white"
               >
-                Tutup Tingkap Pas
+                {t('kebajikan:qr_pass_btn_dismiss_window', 'Tutup Tingkap Pas')}
               </Button>
             </div>
           </motion.div>
