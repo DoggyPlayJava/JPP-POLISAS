@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { KeyRound, ShieldAlert, Play, Pause, RotateCcw, Plus, Minus, Trophy, CheckCircle, AlertTriangle, ArrowLeft, Clock, Activity, Flag, Sun, Moon, Wifi, WifiOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -7,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
 export function SupsasScorekeeperPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const [pinInput, setPinInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [fixture, setFixture] = useState<SupsasFixture | null>(null);
@@ -102,7 +104,7 @@ export function SupsasScorekeeperPage() {
   const syncToDatabase = async (overrideStatus?: string) => {
     if (!fixture || !pinInput) return;
     if (!isOnline) {
-      toast('Luar talian: Data disimpan di peranti', { icon: '🟡' });
+      toast(t('supsas:offline_toast', 'Luar talian: Data disimpan di peranti'), { icon: '🟡' });
       return;
     }
     setSaving(true);
@@ -150,16 +152,16 @@ export function SupsasScorekeeperPage() {
 
     setSaving(false);
     if (error) {
-      toast.error('Gagal kemaskini: ' + error.message);
+      toast.error(t('supsas:update_failed_prefix', 'Gagal kemaskini: ') + error.message);
     } else if (data && !data.success) {
-      toast.error(data.error || 'Gagal kemaskini skor');
+      toast.error(data.error || t('supsas:update_score_failed', 'Gagal kemaskini skor'));
     }
   };
 
   const verifyAndLoadFixture = async (fixtureId?: string, pinToUse?: string) => {
     const pin = pinToUse || pinInput.trim();
     if (!pin) {
-      toast.error('Sila masukkan Kod PIN');
+      toast.error(t('supsas:enter_pin_prompt', 'Sila masukkan Kod PIN'));
       return;
     }
     setLoading(true);
@@ -173,7 +175,7 @@ export function SupsasScorekeeperPage() {
 
     if (error || !data) {
       setLoading(false);
-      toast.error('Kod PIN tidak sah atau perlawanan tidak dijumpai!');
+      toast.error(t('supsas:invalid_pin_or_match_not_found', 'Kod PIN tidak sah atau perlawanan tidak dijumpai!'));
       localStorage.removeItem('supsas_referee_pin');
       localStorage.removeItem('supsas_fixture_id');
       return;
@@ -201,7 +203,7 @@ export function SupsasScorekeeperPage() {
     setPinInput(pin);
     setTeamA(teamARes.data);
     setTeamB(teamBRes.data);
-    setSportName(sportRes.data?.name || 'Perlawanan Sukan');
+    setSportName(sportRes.data?.name || t('supsas:match_title_fallback', 'Perlawanan Sukan'));
     setScoreA(parseInt(data.score_a || '0') || 0);
     setScoreB(parseInt(data.score_b || '0') || 0);
     setElapsedSeconds(data.elapsed_seconds || 0);
@@ -216,7 +218,7 @@ export function SupsasScorekeeperPage() {
     localStorage.setItem('supsas_referee_pin', pin);
     localStorage.setItem('supsas_fixture_id', data.id);
     setLoading(false);
-    toast.success('Pengesahan PIN berjaya! Selamat bertugas.');
+    toast.success(t('supsas:pin_success_msg', 'Pengesahan PIN berjaya! Selamat bertugas.'));
   };
 
   const handleLogout = () => {
@@ -271,14 +273,14 @@ export function SupsasScorekeeperPage() {
       player_name: playerNameInput.trim() || undefined,
       description:
         eventType === 'goal'
-          ? `Gol disumbangkan oleh ${playerNameInput || targetKontingen?.short_code}`
+          ? t('supsas:goal_contributed_by', 'Gol disumbangkan oleh {{name}}', { name: playerNameInput || targetKontingen?.short_code })
           : eventType === 'yellow_card'
-          ? `Kad Kuning: ${playerNameInput || targetKontingen?.short_code}`
+          ? t('supsas:yellow_card_for', 'Kad Kuning: {{name}}', { name: playerNameInput || targetKontingen?.short_code })
           : eventType === 'red_card'
-          ? `Kad Merah: ${playerNameInput || targetKontingen?.short_code}`
+          ? t('supsas:red_card_for', 'Kad Merah: {{name}}', { name: playerNameInput || targetKontingen?.short_code })
           : eventType === 'foul'
-          ? `Foul: ${playerNameInput || targetKontingen?.short_code}`
-          : `Catatan perlawanan oleh Pengadil`,
+          ? t('supsas:foul_by', 'Foul: {{name}}', { name: playerNameInput || targetKontingen?.short_code })
+          : t('supsas:referee_match_note', 'Catatan perlawanan oleh Pengadil'),
       created_at: new Date().toISOString(),
     };
 
@@ -293,15 +295,15 @@ export function SupsasScorekeeperPage() {
 
     setShowEventModal(false);
     setPlayerNameInput('');
-    toast.success('Acara perlawanan direkodkan!');
+    toast.success(t('supsas:event_recorded_toast', 'Acara perlawanan direkodkan!'));
     setTimeout(() => syncToDatabase(), 300);
   };
 
   const handleFinishMatch = async () => {
-    if (!confirm('Adakah anda pasti untuk TAMATKAN perlawanan ini?')) return;
+    if (!confirm(t('supsas:confirm_finish_match', 'Adakah anda pasti untuk TAMATKAN perlawanan ini?'))) return;
     setIsTimerRunning(false);
     await syncToDatabase('completed');
-    toast.success('Perlawanan telah ditamatkan secara rasmi!');
+    toast.success(t('supsas:match_finished_toast', 'Perlawanan telah ditamatkan secara rasmi!'));
     localStorage.removeItem('supsas_referee_pin');
     localStorage.removeItem('supsas_fixture_id');
     setFixture(null);
@@ -326,8 +328,8 @@ export function SupsasScorekeeperPage() {
               <KeyRound className="w-8 h-8" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/80">SUPSAS 2.0</p>
-            <h1 className="text-2xl font-black text-white">Portal Juri & Pengadil</h1>
-            <p className="text-xs text-white/50">Masukkan 4-digit PIN Perlawanan yang diberikan oleh Urus Setia/Admin</p>
+            <h1 className="text-2xl font-black text-white">{t('supsas:referee_portal_title', 'Portal Juri & Pengadil')}</h1>
+            <p className="text-xs text-white/50">{t('supsas:referee_portal_subtitle', 'Masukkan 4-digit PIN Perlawanan yang diberikan oleh Urus Setia/Admin')}</p>
           </div>
 
           <div className="space-y-4">
@@ -337,7 +339,7 @@ export function SupsasScorekeeperPage() {
                 maxLength={6}
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value.toUpperCase())}
-                placeholder="PIN (cth: 4829)"
+                placeholder={t('supsas:referee_pin_placeholder', 'PIN (cth: 4829)')}
                 className="w-full text-center text-3xl font-black tracking-[0.3em] px-6 py-4 rounded-3xl bg-white/5 border border-white/15 text-amber-400 placeholder-white/10 focus:outline-none focus:border-amber-500 transition-all uppercase"
               />
             </div>
@@ -347,12 +349,12 @@ export function SupsasScorekeeperPage() {
               disabled={loading || !pinInput.trim()}
               className="w-full py-4 rounded-3xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase tracking-widest text-sm transition-all shadow-[0_10px_30px_rgba(245,158,11,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? 'Mengesahkan...' : 'Masuk Skrin Pengadil'}
+              {loading ? t('common:loading', 'Mengesahkan...') : t('supsas:btn_enter_referee', 'Masuk Skrin Pengadil')}
             </button>
           </div>
 
           <div className="text-center">
-            <a href="/supsas" className="text-xs text-white/30 hover:text-white/60 transition-all">← Kembali ke Utama SUP/SAS</a>
+            <a href="/supsas" className="text-xs text-white/30 hover:text-white/60 transition-all">{t('supsas:back_to_supsas', '← Kembali ke Utama SUP/SAS')}</a>
           </div>
         </div>
       </div>
@@ -372,7 +374,7 @@ export function SupsasScorekeeperPage() {
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest text-amber-500">{sportName}</p>
               <h2 className={cn("text-xs font-black truncate max-w-[180px]", textClass)}>
-                {fixture.group_name ? `Kumpulan ${fixture.group_name}` : fixture.round || 'Perlawanan'} #{fixture.match_number}
+                {fixture.group_name ? t('supsas:group_label', { label: fixture.group_name }) : fixture.round || t('supsas:match', 'Perlawanan')} #{fixture.match_number}
               </h2>
             </div>
           </div>
@@ -381,7 +383,7 @@ export function SupsasScorekeeperPage() {
             <button 
               onClick={() => setSunGlareMode(!sunGlareMode)} 
               className={cn("p-1.5 rounded-lg border", sunGlareMode ? "bg-amber-500 text-black border-amber-600" : "bg-white/5 text-white/40 border-white/10")}
-              title="Mod Padang (Sun-Glare Mode)"
+              title={t('supsas:sun_glare_mode', 'Mod Padang (Sun-Glare Mode)')}
             >
               {sunGlareMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -391,7 +393,7 @@ export function SupsasScorekeeperPage() {
               isTimerRunning ? (sunGlareMode ? 'bg-red-100 border-red-300 text-red-700 animate-pulse' : 'bg-red-500/10 border-red-500/30 text-red-400 animate-pulse') :
               (sunGlareMode ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-amber-500/10 border-amber-500/30 text-amber-400')
             )}>
-              {fixture.status === 'completed' ? '✅ Selesai' : isTimerRunning ? '🔴 LIVE' : '⏸ Rehat'}
+              {fixture.status === 'completed' ? t('supsas:status_finished', '✅ Selesai') : isTimerRunning ? t('supsas:status_live', '🔴 LIVE') : t('supsas:status_break', '⏸ Rehat')}
             </span>
           </div>
         </div>
@@ -400,9 +402,9 @@ export function SupsasScorekeeperPage() {
         <div className="flex justify-between items-center text-[10px] font-bold">
           <div className="flex items-center gap-1.5">
             {isOnline ? (
-              <span className="flex items-center gap-1 text-emerald-500"><Wifi className="w-3 h-3" /> 🟢 Talian Stabil</span>
+              <span className="flex items-center gap-1 text-emerald-500"><Wifi className="w-3 h-3" /> {t('supsas:online_stable', '🟢 Talian Stabil')}</span>
             ) : (
-              <span className="flex items-center gap-1 text-red-500"><WifiOff className="w-3 h-3" /> 🔴 Luar Talian (Simpan Lokal)</span>
+              <span className="flex items-center gap-1 text-red-500"><WifiOff className="w-3 h-3" /> {t('supsas:offline_local', '🔴 Luar Talian (Simpan Lokal)')}</span>
             )}
           </div>
         </div>
@@ -416,7 +418,7 @@ export function SupsasScorekeeperPage() {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <p className={cn("text-[9px] font-black uppercase tracking-widest", subTextClass)}>Masa Perlawanan</p>
+              <p className={cn("text-[9px] font-black uppercase tracking-widest", subTextClass)}>{t('supsas:match_time_elapsed', 'Masa Perlawanan')}</p>
               <span className={cn("text-2xl font-black font-mono tracking-wider", textClass)}>
                 {formatTime(elapsedSeconds)}
               </span>
@@ -442,7 +444,7 @@ export function SupsasScorekeeperPage() {
 
             <button
               onClick={() => {
-                if (confirm('Reset masa perlawanan ke 00:00?')) {
+                if (confirm(t('supsas:confirm_reset_timer', 'Reset masa perlawanan ke 00:00?'))) {
                   accumulatedTimeRef.current = 0;
                   startTimeRef.current = isTimerRunning ? Date.now() : null;
                   setElapsedSeconds(0);
@@ -461,7 +463,7 @@ export function SupsasScorekeeperPage() {
         {fixture.score_type === 'sets' && (
           <div className={cn("border rounded-2xl p-3 flex flex-col gap-2", cardBgClass)}>
             <div className="flex justify-between items-center">
-              <span className={cn("text-xs font-bold", textClass)}>Pengurusan Set</span>
+              <span className={cn("text-xs font-bold", textClass)}>{t('supsas:sets_management', 'Pengurusan Set')}</span>
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map(setNum => (
                   <button 
@@ -481,7 +483,7 @@ export function SupsasScorekeeperPage() {
               <div className="text-center font-mono font-bold">
                 A: {setsDetail.scores?.[setsDetail.current_set]?.A || 0}
               </div>
-              <div className={cn("text-[9px] uppercase font-bold", subTextClass)}>Set {setsDetail.current_set}</div>
+              <div className={cn("text-[9px] uppercase font-bold", subTextClass)}>{t('supsas:set_number', { num: setsDetail.current_set })}</div>
               <div className="text-center font-mono font-bold">
                 B: {setsDetail.scores?.[setsDetail.current_set]?.B || 0}
               </div>
@@ -497,7 +499,7 @@ export function SupsasScorekeeperPage() {
               {teamA?.short_code?.charAt(0) || 'A'}
             </div>
             <p className={cn("text-xs font-black text-center truncate max-w-full", textClass)}>
-              {teamA?.name || 'Pasukan A'}
+              {teamA?.name || t('supsas:team_a_label', 'Pasukan A')}
             </p>
             <span className={cn("text-5xl font-black font-mono tracking-tighter", textClass)}>
               {scoreA}
@@ -517,7 +519,7 @@ export function SupsasScorekeeperPage() {
                 </button>
               </div>
               <button onClick={() => modifyScore('A', -1)} className={cn("w-full py-3 rounded-xl border font-black text-xs", sunGlareMode ? "bg-white border-gray-300 text-gray-500 hover:text-black hover:bg-gray-50" : "bg-white/5 border-white/10 text-white/40 hover:text-white")}>
-                -1 Mata
+                {t('supsas:minus_one_point', '-1 Mata')}
               </button>
             </div>
           </div>
@@ -528,7 +530,7 @@ export function SupsasScorekeeperPage() {
               {teamB?.short_code?.charAt(0) || 'B'}
             </div>
             <p className={cn("text-xs font-black text-center truncate max-w-full", textClass)}>
-              {teamB?.name || 'Pasukan B'}
+              {teamB?.name || t('supsas:team_b_label', 'Pasukan B')}
             </p>
             <span className={cn("text-5xl font-black font-mono tracking-tighter", textClass)}>
               {scoreB}
@@ -548,7 +550,7 @@ export function SupsasScorekeeperPage() {
                 </button>
               </div>
               <button onClick={() => modifyScore('B', -1)} className={cn("w-full py-3 rounded-xl border font-black text-xs", sunGlareMode ? "bg-white border-gray-300 text-gray-500 hover:text-black hover:bg-gray-50" : "bg-white/5 border-white/10 text-white/40 hover:text-white")}>
-                -1 Mata
+                {t('supsas:minus_one_point', '-1 Mata')}
               </button>
             </div>
           </div>
@@ -560,7 +562,7 @@ export function SupsasScorekeeperPage() {
           className={cn("w-full py-3.5 rounded-2xl border font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all", sunGlareMode ? "bg-white hover:bg-gray-50 border-gray-300 text-black shadow-sm" : "bg-white/10 hover:bg-white/15 border-white/15 text-white")}
         >
           <Activity className="w-4 h-4 text-amber-500" />
-          Rekod Peristiwa (Gol / Kad / Foul / Nota)
+          {t('supsas:record_event_btn', 'Rekod Peristiwa (Gol / Kad / Foul / Nota)')}
         </button>
 
         {/* EVENT TIMELINE */}
@@ -568,12 +570,12 @@ export function SupsasScorekeeperPage() {
           <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
             <h3 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-2", textClass)}>
               <Flag className="w-3.5 h-3.5 text-amber-500" />
-              Log Peristiwa Minit Demi Minit ({events.length})
+              {t('supsas:timeline_events_title', { count: events.length })}
             </h3>
           </div>
 
           {events.length === 0 ? (
-            <p className={cn("text-center text-xs py-4", subTextClass)}>Tiada peristiwa direkodkan lagi</p>
+            <p className={cn("text-center text-xs py-4", subTextClass)}>{t('supsas:no_events_recorded', 'Tiada peristiwa direkodkan lagi')}</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {events.map((ev) => (
@@ -595,7 +597,7 @@ export function SupsasScorekeeperPage() {
           className="w-full py-4 rounded-3xl bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all shadow-[0_10px_30px_rgba(16,185,129,0.3)] disabled:opacity-50"
         >
           <CheckCircle className="w-4 h-4" />
-          {saving ? 'Menyimpan...' : 'Tamatkan Perlawanan Ini'}
+          {saving ? t('common:saving', 'Menyimpan...') : t('supsas:finish_match_btn', 'Tamatkan Perlawanan Ini')}
         </button>
       </div>
 
@@ -609,7 +611,7 @@ export function SupsasScorekeeperPage() {
               exit={{ y: 50, opacity: 0 }}
               className={cn("w-full max-w-sm border rounded-3xl p-6 space-y-4", sunGlareMode ? "bg-white border-gray-300" : "bg-[#0A1628] border-white/15")}
             >
-              <h3 className={cn("text-sm font-black uppercase tracking-wider text-center", textClass)}>Rekod Acara Padang</h3>
+              <h3 className={cn("text-sm font-black uppercase tracking-wider text-center", textClass)}>{t('supsas:field_event_record_title', 'Rekod Acara Padang')}</h3>
 
               {/* Select Team Side */}
               <div className="grid grid-cols-2 gap-2">
@@ -622,7 +624,7 @@ export function SupsasScorekeeperPage() {
                       : (sunGlareMode ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white/5 border-white/10 text-white/40')
                   )}
                 >
-                  {teamA?.short_code || 'Pasukan A'}
+                  {teamA?.short_code || t('supsas:team_a_label', 'Pasukan A')}
                 </button>
                 <button
                   onClick={() => setSelectedSide('B')}
@@ -633,24 +635,24 @@ export function SupsasScorekeeperPage() {
                       : (sunGlareMode ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white/5 border-white/10 text-white/40')
                   )}
                 >
-                  {teamB?.short_code || 'Pasukan B'}
+                  {teamB?.short_code || t('supsas:team_b_label', 'Pasukan B')}
                 </button>
               </div>
 
               {/* Event Type */}
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => setEventType('goal')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'goal' ? 'bg-amber-500 text-black border-amber-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>⚽ Gol (+1)</button>
-                <button onClick={() => setEventType('yellow_card')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'yellow_card' ? 'bg-yellow-500 text-black border-yellow-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>🟨 Kad Kuning</button>
-                <button onClick={() => setEventType('red_card')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'red_card' ? 'bg-red-500 text-white border-red-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>🟥 Kad Merah</button>
-                <button onClick={() => setEventType('foul')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'foul' ? 'bg-orange-500 text-white border-orange-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>🤬 Foul</button>
-                <button onClick={() => setEventType('note')} className={cn('col-span-2 p-2.5 rounded-xl border text-xs font-black', eventType === 'note' ? 'bg-blue-500 text-white border-blue-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>📝 Catatan Lain</button>
+                <button onClick={() => setEventType('goal')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'goal' ? 'bg-amber-500 text-black border-amber-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>{t('supsas:event_goal', '⚽ Gol (+1)')}</button>
+                <button onClick={() => setEventType('yellow_card')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'yellow_card' ? 'bg-yellow-500 text-black border-yellow-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>{t('supsas:event_yellow_card', '🟨 Kad Kuning')}</button>
+                <button onClick={() => setEventType('red_card')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'red_card' ? 'bg-red-500 text-white border-red-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>{t('supsas:event_red_card', '🟥 Kad Merah')}</button>
+                <button onClick={() => setEventType('foul')} className={cn('p-2.5 rounded-xl border text-xs font-black', eventType === 'foul' ? 'bg-orange-500 text-white border-orange-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>{t('supsas:event_foul', '🤬 Foul')}</button>
+                <button onClick={() => setEventType('note')} className={cn('col-span-2 p-2.5 rounded-xl border text-xs font-black', eventType === 'note' ? 'bg-blue-500 text-white border-blue-600' : (sunGlareMode ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-white/60'))}>{t('supsas:event_note', '📝 Catatan Lain')}</button>
               </div>
 
               {/* Player Name / Quick Chips */}
               <div className="space-y-2">
                 <input
                   type="text"
-                  placeholder="Nama Pemain / Jersi (Opsional)"
+                  placeholder={t('supsas:player_jersey_placeholder', 'Nama Pemain / Jersi (Opsional)')}
                   value={playerNameInput}
                   onChange={(e) => setPlayerNameInput(e.target.value)}
                   className={cn("w-full px-4 py-3 rounded-2xl border text-xs font-bold focus:outline-none focus:border-amber-500", sunGlareMode ? "bg-white border-gray-300 text-black" : "bg-white/5 border-white/10 text-white")}
@@ -678,8 +680,8 @@ export function SupsasScorekeeperPage() {
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => setShowEventModal(false)} className={cn("flex-1 py-3 rounded-2xl font-black text-xs border", sunGlareMode ? "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200" : "bg-white/5 text-white/60 border-transparent")}>Batal</button>
-                <button onClick={handleAddEvent} className="flex-1 py-3 rounded-2xl bg-amber-500 text-black font-black text-xs shadow-md">Simpan Peristiwa</button>
+                <button onClick={() => setShowEventModal(false)} className={cn("flex-1 py-3 rounded-2xl font-black text-xs border", sunGlareMode ? "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200" : "bg-white/5 text-white/60 border-transparent")}>{t('common:cancel', 'Batal')}</button>
+                <button onClick={handleAddEvent} className="flex-1 py-3 rounded-2xl bg-amber-500 text-black font-black text-xs shadow-md">{t('supsas:btn_save_event', 'Simpan Peristiwa')}</button>
               </div>
             </motion.div>
           </div>

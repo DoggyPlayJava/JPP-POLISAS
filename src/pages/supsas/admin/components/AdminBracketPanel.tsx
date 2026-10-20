@@ -8,6 +8,7 @@
  * Berfungsi tanpa WebSocket. Broadcast ke pelajar hanya sebagai bonus.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Shuffle, CheckCircle, Loader, AlertTriangle, Wifi, Users,
@@ -73,7 +74,7 @@ function GroupColumn({ label, color, entries, revealedCount }: {
         className="text-center py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest"
         style={{ backgroundColor: `${color}12`, color, border: `1px solid ${color}28` }}
       >
-        Kumpulan {label}
+        {t('supsas:group_label', 'Kumpulan {{label}}', { label })}
       </div>
       <div className="space-y-1">
         {entries.map((entry, i) => (
@@ -89,6 +90,7 @@ function GroupColumn({ label, color, entries, revealedCount }: {
 
 // ─── Main panel ───────────────────────────────────────────────
 export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: AdminBracketPanelProps) {
+  const { t } = useTranslation(['supsas', 'common']);
   const { kontingen, teams: allTeams, refetch } = useSupsas();
   const { saving, errorMsg, generateGroups, saveFixtures } = useBracket();
 
@@ -161,11 +163,11 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
       for (let g = 0; g < bg.numGroups; g++) {
         const entry = bg.groups[g][i];
         if (!entry) continue;
-        const t = setTimeout(() => ch.send({
+        const timerId = setTimeout(() => ch.send({
           type: 'broadcast', event: 'draw',
           payload: { type: 'GROUP_REVEAL', group: GROUP_LABELS[g], slot: i + 1, entryId: entry.id, kontingenId: entry.kontingenId, teamId: entry.teamId, name: entry.name, shortCode: entry.shortCode, color: entry.color },
         }), DELAY * seq++);
-        timerRefs.current.push(t);
+        timerRefs.current.push(timerId);
       }
     }
     const done = setTimeout(() => ch.send({ type: 'broadcast', event: 'draw', payload: { type: 'DRAW_COMPLETE', groupA: bg.groups[0]?.map(e => e.id) ?? [], groupB: bg.groups[1]?.map(e => e.id) ?? [] } }), DELAY * (seq + 1));
@@ -175,7 +177,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
   // ── Start draw ─────────────────────────────────────────────
   const handleStartDraw = useCallback(() => {
     if (!canDraw) {
-      toast.error('Perlukan sekurang-kurangnya 4 entri untuk format Kumpulan+KO.');
+      toast.error(t('supsas:min_entries_warning', 'Perlukan sekurang-kurangnya 4 entri untuk format Kumpulan+KO.'));
       return;
     }
     timerRefs.current.forEach(clearTimeout);
@@ -196,12 +198,12 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
         if (!bg.groups[g][i]) continue;
         const gIdx = g;
         const revealTo = i + 1;
-        const t = setTimeout(() => setRevealed(prev => {
+        const timerId = setTimeout(() => setRevealed(prev => {
           const next = [...prev];
           next[gIdx] = revealTo;
           return next;
         }), DELAY * seq++);
-        timerRefs.current.push(t);
+        timerRefs.current.push(timerId);
       }
     }
 
@@ -228,7 +230,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
     if (ok) {
       const totalGroupMatches = bracketGroups.groups.reduce((sum, g) => sum + g.length * (g.length - 1) / 2, 0);
       const koMatches = bracketGroups.numGroups === 4 ? 7 : 3;
-      toast.success(`Bracket ${sport.name} berjaya! ${totalGroupMatches} match kumpulan + ${koMatches} match KO.`);
+      toast.success(t('supsas:bracket_generated_success', 'Bracket {{name}} berjaya! {{group}} match kumpulan + {{ko}} match KO.', { name: sport.name, group: totalGroupMatches, ko: koMatches }));
       // Broadcast finalized so student views get instant notification
       channelRef.current?.send({
         type: 'broadcast', event: 'draw',
@@ -238,7 +240,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
       onConfirmed();
       onClose();
     } else {
-      toast.error('Gagal simpan bracket: ' + (errorMsg ?? 'Ralat tidak diketahui'));
+      toast.error(t('supsas:save_failed_prefix', 'Gagal simpan bracket: ') + (errorMsg ?? t('supsas:unknown_error', 'Ralat tidak diketahui')));
     }
   }, [bracketGroups, editionId, sport, saveFixtures, errorMsg, refetch, onConfirmed, onClose]);
 
@@ -261,7 +263,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-white">🎰 Undian Kumpulan</h2>
+              <h2 className="text-lg font-black text-white">{t('supsas:draw_groups_title', '🎰 Undian Kumpulan')}</h2>
               <p className="text-amber-400 text-xs font-bold mt-0.5">{sport.name}</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
@@ -295,7 +297,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
             <Wifi className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              Pelajar dapat menonton undian secara langsung
+              {t('supsas:live_draw_broadcast_hint', 'Pelajar dapat menonton undian secara langsung')}
             </span>
           </div>
 
@@ -304,7 +306,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-3.5 h-3.5 text-white/30" />
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                {drawEntries.length} {isMultiGroup ? 'Kumpulan Berdaftar' : 'Kontinjen Aktif'}
+                {drawEntries.length} {isMultiGroup ? t('supsas:stat_total_teams', 'Kumpulan Berdaftar') : t('supsas:stat_contingent', 'Kontinjen Aktif')}
                 {drawEntries.length > 0 && (
                   <span className="ml-2 text-white/20">
                     → {willUse4Groups ? '4' : '2'} kumpulan · Suku Akhir {willUse4Groups ? '✓' : '✗'}
@@ -313,7 +315,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
               </p>
               {!canDraw && (
                 <span className="ml-auto text-[9px] font-black text-red-400/70 bg-red-500/10 border border-red-500/20 rounded-lg px-2 py-0.5">
-                  Min. 4 entri
+                  {t('supsas:min_entries_warning', 'Min. 4 entri')}
                 </span>
               )}
             </div>
@@ -333,7 +335,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
               ))}
               {drawEntries.length === 0 && (
                 <p className="col-span-full text-[10px] text-white/20">
-                  {isMultiGroup ? 'Tiada kumpulan didaftarkan.' : 'Tiada kontingen aktif.'}
+                  {isMultiGroup ? t('supsas:no_teams_registered', 'Tiada kumpulan didaftarkan.') : t('supsas:no_active_contingents', 'Tiada kontinjen aktif.')}
                 </p>
               )}
             </div>
@@ -344,7 +346,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
             <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-amber-400/80 font-medium">
-                Fixture sedia ada akan <strong>dipadam</strong> dan diganti dengan bracket baru.
+                {t('supsas:draw_replace_warning', 'Fixture sedia ada akan dipadam dan diganti dengan bracket baru.')}
               </p>
             </div>
           )}
@@ -377,7 +379,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
               <button onClick={handleStartDraw} disabled={!canDraw}
                 className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2">
                 <Shuffle className="w-4 h-4" />
-                Mulakan Undian Langsung
+                {t('supsas:start_live_draw', 'Mulakan Undian Langsung')}
               </button>
             )}
             {isRevealing && (
@@ -385,7 +387,7 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                   <Shuffle className="w-4 h-4" />
                 </motion.div>
-                Undian Sedang Berjalan...
+                {t('supsas:draw_in_progress', 'Undian Sedang Berjalan...')}
               </div>
             )}
             {isDone && (
@@ -393,19 +395,19 @@ export function AdminBracketPanel({ sport, editionId, onClose, onConfirmed }: Ad
                 <button onClick={handleConfirm} disabled={saving}
                   className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2">
                   {saving ? <Loader className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  {saving ? 'Menyimpan Bracket...' : 'Sahkan & Jana Bracket'}
+                  {saving ? t('supsas:saving_bracket', 'Menyimpan Bracket...') : t('supsas:confirm_generate_bracket', 'Sahkan & Jana Bracket')}
                 </button>
                 <button onClick={handleReDraw} disabled={saving}
                   className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40">
                   <Shuffle className="w-4 h-4" />
-                  Ulang Undian
+                  {t('supsas:redraw', 'Ulang Undian')}
                 </button>
               </>
             )}
           </div>
 
           <p className="text-[10px] text-white/20 text-center">
-            Pembahagian kumpulan adalah rawak sepenuhnya untuk memastikan ketelusan.
+            {t('supsas:draw_random_hint', 'Pembahagian kumpulan adalah rawak sepenuhnya untuk memastikan ketelusan.')}
           </p>
         </div>
       </motion.div>

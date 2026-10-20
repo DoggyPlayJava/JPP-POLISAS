@@ -208,7 +208,7 @@ export function KlkResidencyFormPage() {
                     <MapPin className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-white">Di mana anda tinggal?</h2>
+                    <h2 className="text-lg font-black text-white">{t('housing:where_do_you_live', 'Di mana anda tinggal?')}</h2>
                     <p className="text-[11px] text-slate-500">Semester {semInfo.semester} — {academicYear}</p>
                   </div>
                 </div>
@@ -223,8 +223,8 @@ export function KlkResidencyFormPage() {
                       <Building2 className="w-7 h-7 text-emerald-400" />
                     </div>
                     <div className="text-center">
-                      <p className="font-black text-emerald-300 text-sm">Dalam KAMSIS</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Tinggal di asrama</p>
+                      <p className="font-black text-emerald-300 text-sm">{t('housing:in_kamsis', 'Dalam KAMSIS')}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:stay_hostel', 'Tinggal di asrama')}</p>
                     </div>
                   </motion.button>
 
@@ -237,15 +237,15 @@ export function KlkResidencyFormPage() {
                       <Home className="w-7 h-7 text-blue-400" />
                     </div>
                     <div className="text-center">
-                      <p className="font-black text-blue-300 text-sm">Luar Kampus</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Sewa / Rumah sendiri</p>
+                      <p className="font-black text-blue-300 text-sm">{t('housing:off_campus', 'Luar Kampus')}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{t('housing:stay_rental_home', 'Sewa / Rumah sendiri')}</p>
                     </div>
                   </motion.button>
                 </div>
 
                 {loading && (
                   <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...
+                    <Loader2 className="w-4 h-4 animate-spin" /> {t('common:saving', 'Menyimpan...')}
                   </div>
                 )}
               </motion.div>
@@ -262,9 +262,9 @@ export function KlkResidencyFormPage() {
                     <ArrowLeft className="w-4 h-4 text-slate-400" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-black text-white">Maklumat Kediaman</h2>
+                    <h2 className="text-lg font-black text-white">{t('housing:residence_info', 'Maklumat Kediaman')}</h2>
                     <p className="text-[11px] text-slate-500">
-                      {existingRecord ? 'Kemaskini maklumat kediaman anda' : 'Isi maklumat tempat tinggal anda'}
+                      {existingRecord ? t('housing:update_residence_info', 'Kemaskini maklumat kediaman anda') : t('housing:fill_residence_info', 'Isi maklumat tempat tinggal anda')}
                     </p>
                   </div>
                 </div>
@@ -272,24 +272,24 @@ export function KlkResidencyFormPage() {
                 <form onSubmit={handleSubmitForm} className="space-y-5">
                   {/* Read-only fields */}
                   <div className="grid grid-cols-2 gap-4">
-                    <FieldReadOnly label="Nama Pelajar" value={profile?.full_name ?? ''} />
-                    <FieldReadOnly label="No. Matrik" value={profile?.matric_no?.toUpperCase() ?? ''} />
+                    <FieldReadOnly label={t('housing:student_name', 'Nama Pelajar')} value={profile?.full_name ?? ''} />
+                    <FieldReadOnly label={t('housing:matric_no', 'No. Matrik')} value={profile?.matric_no?.toUpperCase() ?? ''} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <FieldReadOnly label="No. Telefon" value={profile?.phone ?? '—'} />
-                    <FieldReadOnly label="Jabatan" value={jabatanLabel} />
+                    <FieldReadOnly label={t('housing:phone_number', 'No. Telefon')} value={profile?.phone ?? '—'} />
+                    <FieldReadOnly label={t('housing:department', 'Jabatan')} value={jabatanLabel} />
                   </div>
 
                   {/* Editable fields */}
                   <FieldTextarea
                     label={t('housing:emergency_contact_address', 'Alamat Kecemasan Tempatan')} required
                     value={alamat} onChange={setAlamat}
-                    placeholder="Contoh: No. 12, Jalan Semambu 1..."
+                    placeholder={t('housing:address_placeholder', 'Contoh: No. 12, Jalan Semambu 1...')}
                   />
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      Kawasan Kediaman <span className="text-red-400">*</span>
+                      {t('housing:residential_area', 'Kawasan Kediaman')} <span className="text-red-400">*</span>
                     </label>
                     <KawasanSearchSelect
                       value={kawasan}
@@ -302,9 +302,9 @@ export function KlkResidencyFormPage() {
 
                   {kawasan === 'LAIN_LAIN' && (
                     <FieldText
-                      label="Nyatakan Kawasan" required
+                      label={t('housing:specify_area', 'Nyatakan Kawasan')} required
                       value={kawasanCustom} onChange={setKawasanCustom}
-                      placeholder="Nama kawasan..."
+                      placeholder={t('housing:area_name_placeholder', 'Nama kawasan...')}
                     />
                   )}
 
@@ -313,16 +313,16 @@ export function KlkResidencyFormPage() {
                   </div>
 
                   <FieldTextarea
-                    label="Cadangan / Penambahbaikan"
+                    label={t('housing:suggestions_feedback', 'Cadangan / Penambahbaikan')}
                     value={cadangan} onChange={setCadangan}
-                    placeholder="Cadangan kepada Exco KLK... (pilihan)"
+                    placeholder={t('housing:suggestions_placeholder', 'Cadangan kepada Exco KLK... (pilihan)')}
                     optional
                   />
 
                   {/* Soalan Dinamik dari Form Builder */}
                   {dynamicFields.length > 0 && (
                     <div className="space-y-4 pt-2 border-t border-white/[0.05]">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Soalan Tambahan</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">{t('housing:additional_questions', 'Soalan Tambahan')}</p>
                       <KlkDynamicFieldRenderer
                         fields={dynamicFields}
                         values={extraData}
@@ -340,7 +340,7 @@ export function KlkResidencyFormPage() {
                       <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Menyimpan...</span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        {existingRecord ? 'Kemaskini Maklumat' : 'Hantar Maklumat'}
+                        {existingRecord ? t('housing:update_info', 'Kemaskini Maklumat') : t('housing:submit_info', 'Hantar Maklumat')}
                         <ArrowRight className="w-4 h-4" />
                       </span>
                     )}
@@ -359,14 +359,14 @@ export function KlkResidencyFormPage() {
                 >
                   <CheckCircle2 className="w-10 h-10 text-emerald-400" />
                 </motion.div>
-                <h2 className="text-2xl font-black text-white mb-2">Terima Kasih!</h2>
-                <p className="text-sm text-slate-400 mb-6">Maklumat kediaman anda telah disimpan untuk semester ini.</p>
+                <h2 className="text-2xl font-black text-white mb-2">{t('common:thank_you', 'Terima Kasih!')}</h2>
+                <p className="text-sm text-slate-400 mb-6">{t('housing:residence_saved_desc', 'Maklumat kediaman anda telah disimpan untuk semester ini.')}</p>
                 <Button
                   onClick={() => navigate('/portal')}
                   className="rounded-xl font-black text-sm uppercase tracking-widest"
                   variant="outline"
                 >
-                  Kembali ke Portal
+                  {t('housing:back_to_portal', 'Kembali ke Portal')}
                 </Button>
               </motion.div>
             )}

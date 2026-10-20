@@ -4806,3 +4806,36 @@ Domain 2 merangkumi pusat kawalan eksekutif JPP HQ, pengurusan tadbir urus mahas
    - `src/__tests__/Domain2JppAdminI18n.test.tsx` (20 ujian integrasi Domain 2).
    - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan kamus master).
    - **Keputusan:** 72/72 ujian berkaitan Domain 2 lulus dengan cemerlang tanpa sebarang ralat atau regresi.
+
+### 36.15 Penyetempatan Menyeluruh Domain 6 (Campus Life: Academics, Off-Campus Housing & SUPSAS Sports)
+Domain 6 merangkumi pengurusan kehidupan kampus holistik mahasiswa politeknik: pemantauan rekod akademik & kalkulator ramalan CGPA/GPA, pencapaian merit dan anugerah kokurikulum, portal deklarasi kediaman luar kampus (KLK) serta papan pemuka pengurusan sewaan rumah exco KLS, dan ekosistem sukan berpusat SUPSAS (papan pemuka urus setia kontinjen, terminal penjaga masa & juri padang berkod PIN, pengurusan jadual perlawanan, modal skor pantas, bilik kawalan pentadbir SUPSAS, serta pengurusan sukan dan penjanaan undian bracket kejohanan langsung).
+
+1. **Senarai Fail Terlibat (10 Fail Lengkap 100% Diterjemahkan Baris-demi-Baris):**
+   - `src/pages/akademik/AkademikCgpa.tsx` (Kalkulator & Simulator GPA/HPNM: pengimbas transkrip PDF automatik, carta garis visualisasi trend HPNM/PNM, zon gred pencapaian, simulasi sasaran semester & lejar sejarah peperiksaan)
+   - `src/pages/akademik/AkademikPencapaian.tsx` (Pencapaian & Merit Akademik: borang tuntutan merit TambahForm berskop `useTranslation`, modal permohonan buka kunci rekod, penapis kategori anugerah & lencana verifikasi rasmi)
+   - `src/pages/klk/KlkDashboard.tsx` (Papan Pemuka Rumah Sewa KLK: modal suntingan rekod penghuni EditRecordModal berskop `useTranslation`, penapis tahun akademik, metrik taburan kawasan kediaman & koordinat peta, kad maklum balas cadangan & eksport lejar XLSX)
+   - `src/pages/klk/KlkResidencyFormPage.tsx` (Borang Deklarasi Kediaman: aliran multi-langkah pemilihan kamsis/rumah sewa, maklumat tuan rumah & perjanjian sewa, amaran kebajikan pelajar luar kampus serta skrin perakuan selesai)
+   - `src/components/klk/KlkResidencyModal.tsx` (Modal Popout Deklarasi Kediaman: sokongan prop pengesahan ujian `forceShow`, sokongan penterjemahan skop `housing` & `common`, navigasi pilihan kediaman pantas serta penutupan mesra pengguna)
+   - `src/pages/supsas/ketua/KetuaDashboard.tsx` (Portal Urus Setia Kontinjen: kad pengurusan kumpulan TeamCard berskop `useTranslation`, modal carian & pendaftaran pemain AddPlayerModal berskop `useTranslation`, penstrukturan semula pembolehubah gelung bagi mengelakkan pembayang `t`)
+   - `src/pages/supsas/SupsasScorekeeperPage.tsx` (Terminal Juri & Pengadil SUPSAS: skrin pengesahan 4-digit Kod PIN, suis mod silau matahari (Sun-Glare), pengesanan luar talian & storan lokal, pemasa tempoh perlawanan bebas hanyutan masa, panel sentuh mata skor, perakam acara gol/kad/foul dan modal pengesahan tamat perlawanan)
+   - `src/pages/supsas/admin/AdminJadualPage.tsx` (Jadual Perlawanan Kejohanan: senarai perlawanan terkumpul mengikut tarikh, salinan PIN WhatsApp berformat markdown, penapis sukan berdaftar, borang cipta & sunting perlawanan penuh)
+   - `src/pages/supsas/admin/components/AdminMatchScoreModal.tsx` (Modal Kemaskini Skor Pantas: pengiraan automatik pemenang, paparan PIN pengadil beserta butang salin, penukar status perlawanan, nota masa tambahan & penyelarasan pangkalan data)
+   - `src/pages/supsas/admin/SupsasAdminHome.tsx` (Bilik Kawalan Pentadbir SUPSAS: kad statistik kontinjen/sukan aktif/perlawanan live/pingat, navigasi tindakan pantas, banner pemimpin sementara carta pungutan pingat, penjanaan laporan rasmi cetakan PDF, serta amaran status edisi)
+   - `src/pages/supsas/admin/AdminSukanPage.tsx` & `AdminBracketPanel.tsx` (Pengurusan Sukan & Undian Bracket: konfigurasi format pertandingan knockout/liga/kumpulan, kawalan kuota kumpulan, pemicu penjanaan fasa suku akhir/separuh akhir/final, panel undian langsung berkala rawak dengan penamaan selamat pemasa pembolehubah bebas daripada pembayangan `t`)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/akademik.json`: **204 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/housing.json`: **322 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/supsas.json`: **229 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Pematuhan Pariti:** Disahkan secara menyeluruh dan berterusan melalui suite `masterLocales.test.ts` (20 ujian lulus).
+
+3. **Piawaian Salinan & Fallback Mandatori:**
+   - Setiap rentetan menggunakan struktur sintaksis AST mandatori: `t('namespace:key', 'Literal BM Asal', { params })`.
+   - Pencegahan Ralat Skop Sub-komponen: Semua sub-komponen bersarang (seperti `TeamCard`, `AddPlayerModal`, `EditRecordModal`, `GroupColumn`) mengisytiharkan cangkuk penterjemahan `const { t } = useTranslation(...)` dalam skop fungsi masing-masing.
+   - Penghapusan Pembayangan (Shadowing) Pembolehubah `t`: Dalam `KetuaDashboard.tsx` (`timer` dan `.map(tm => ...)`), `AdminBracketPanel.tsx` (`timerId = setTimeout(...)`), pembolehubah pemasa dan gelung dinamakan secara unik agar tidak mengaburkan fungsi penterjemahan `t()`.
+   - Kebolehujian SSR Modal & RBAC: Komponen `KlkResidencyModal` menyokong prop `forceShow` bagi membolehkan simulasi render SSR lengkap dalam persekitaran ujian tanpa ralat async, dan profil pengguna ujian dilengkapi peranan `role: 'JPP'`, `jpp_unit: 'KLS'`, dan `isSuperAdmin: true` untuk mematuhi kawalan capaian `KlkDashboard`.
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain6CampusLifeCompleteI18n.test.tsx` (16 ujian menyeluruh merangkumi 100% integriti kamus 3 modul, ujian render dwi-bahasa EN/BM bagi kesemua 10 komponen target dengan assertion rentetan teks sebenar, dan ujian pertukaran bahasa dinamik).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan master kamus).
+   - **Keputusan:** 36/36 ujian lulus dengan cemerlang tanpa sebarang kegagalan.

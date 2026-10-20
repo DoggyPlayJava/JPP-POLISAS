@@ -3,7 +3,9 @@
 // Muncul untuk pelajar Sem 2 dan ke atas (KECUALI Sem 1) yang belum declare kediaman
 // Pattern ikut ForcePhoneUpdateModal.tsx
 // ============================================================
-import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import React, { useState,
+ useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Home, Building2, ArrowRight, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,14 +22,19 @@ import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 const KLS_COLOR = '#60A5FA';
 
-export function KlkResidencyModal() {
+interface KlkResidencyModalProps {
+  forceShow?: boolean;
+}
+
+export function KlkResidencyModal({ forceShow = false }: KlkResidencyModalProps = {}) {
+  const { t } = useTranslation(['housing', 'common']);
   const { profile, user } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(forceShow);
   const [step, setStep] = useState<'choice' | 'form' | 'done'>('choice');
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(!forceShow);
   const academicYear = getKlkAcademicYear();
 
   // Form state
@@ -266,10 +273,10 @@ export function KlkResidencyModal() {
                 {step === 'choice' && (
                   <motion.div key="choice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <h2 className="text-xl font-black text-white mb-1 tracking-tight">
-                      Di mana anda tinggal semester ini?
+                      {t('housing:where_do_you_live', 'Di mana anda tinggal semester ini?')}
                     </h2>
                     <p className="text-xs text-slate-400 font-medium mb-6">
-                      Exco Kediaman Luar Kampus perlu mengumpul maklumat kediaman pelajar setiap semester.
+                      {t('housing:residency_collection_notice', 'Exco Kediaman Luar Kampus perlu mengumpul maklumat kediaman pelajar setiap semester.')}
                     </p>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -285,8 +292,8 @@ export function KlkResidencyModal() {
                           <Building2 className="w-6 h-6 text-emerald-400" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-black text-emerald-300">Dalam KAMSIS</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">(Asrama)</p>
+                          <p className="text-sm font-black text-emerald-300">{t('housing:in_kamsis', 'Dalam KAMSIS')}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">({t('housing:stay_hostel', 'Asrama')})</p>
                         </div>
                       </motion.button>
 
@@ -301,8 +308,8 @@ export function KlkResidencyModal() {
                           <Home className="w-6 h-6 text-blue-400" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-black text-blue-300">Luar Kampus</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">(Sewa / Rumah)</p>
+                          <p className="text-sm font-black text-blue-300">{t('housing:off_campus', 'Luar Kampus')}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">({t('housing:stay_rental_home', 'Sewa / Rumah')})</p>
                         </div>
                       </motion.button>
                     </div>
@@ -320,15 +327,15 @@ export function KlkResidencyModal() {
                         <X className="w-4 h-4 text-slate-400" />
                       </button>
                       <div>
-                        <h2 className="text-lg font-black text-white tracking-tight">Maklumat Kediaman</h2>
-                        <p className="text-[11px] text-slate-500">Isi maklumat tempat tinggal anda</p>
+                        <h2 className="text-lg font-black text-white tracking-tight">{t('housing:residence_info', 'Maklumat Kediaman')}</h2>
+                        <p className="text-[11px] text-slate-500">{t('housing:fill_residence_info', 'Isi maklumat tempat tinggal anda')}</p>
                       </div>
                     </div>
 
                     <form onSubmit={handleSubmitForm} className="space-y-4 max-h-[55dvh] overflow-y-auto pr-1 scrollbar-hide">
                       {/* Nama — pre-filled, read-only */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Pelajar</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t('housing:student_name', 'Nama Pelajar')}</label>
                         <input
                           readOnly
                           value={profile?.full_name ?? ''}
@@ -338,7 +345,7 @@ export function KlkResidencyModal() {
 
                       {/* No Matrik — pre-filled */}
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">No. Matrik</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t('housing:matric_no', 'No. Matrik')}</label>
                         <input
                           readOnly
                           value={profile?.matric_no?.toUpperCase() ?? ''}
@@ -349,12 +356,12 @@ export function KlkResidencyModal() {
                       {/* Alamat */}
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Alamat Kediaman <span className="text-red-400">*</span>
+                          {t('housing:residence_address', 'Alamat Kediaman')} <span className="text-red-400">*</span>
                         </label>
                         <textarea
                           value={alamat}
                           onChange={e => setAlamat(e.target.value)}
-                          placeholder="Contoh: No. 12, Jalan Semambu 1, Taman Semambu..."
+                          placeholder={t('housing:address_placeholder', 'Contoh: No. 12, Jalan Semambu 1, Taman Semambu...')}
                           rows={2}
                           required
                           className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium resize-none focus:outline-none focus:border-blue-500/50 focus:bg-slate-800 transition-all placeholder:text-slate-600"
@@ -364,7 +371,7 @@ export function KlkResidencyModal() {
                       {/* Kawasan */}
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Kawasan Kediaman <span className="text-red-400">*</span>
+                          {t('housing:residential_area', 'Kawasan Kediaman')} <span className="text-red-400">*</span>
                         </label>
                         <KawasanSearchSelect
                           value={kawasan}
@@ -379,13 +386,13 @@ export function KlkResidencyModal() {
                       {kawasan === 'LAIN_LAIN' && (
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            Nyatakan Kawasan <span className="text-red-400">*</span>
+                            {t('housing:specify_area', 'Nyatakan Kawasan')} <span className="text-red-400">*</span>
                           </label>
                           <input
                             type="text"
                             value={kawasanCustom}
                             onChange={e => setKawasanCustom(e.target.value)}
-                            placeholder="Nama kawasan..."
+                            placeholder={t('housing:area_name_placeholder', 'Nama kawasan...')}
                             required
                             className="w-full h-11 px-4 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600"
                           />
@@ -395,13 +402,13 @@ export function KlkResidencyModal() {
                       {/* Cadangan */}
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Cadangan / Penambahbaikan
-                          <span className="ml-1 font-medium normal-case text-slate-600">(Pilihan)</span>
+                          {t('housing:suggestions_feedback', 'Cadangan / Penambahbaikan')}
+                          <span className="ml-1 font-medium normal-case text-slate-600">{t('common:optional', '(Pilihan)')}</span>
                         </label>
                         <textarea
                           value={cadangan}
                           onChange={e => setCadangan(e.target.value)}
-                          placeholder="Cadangan kepada Exco KLK..."
+                          placeholder={t('housing:suggestions_placeholder', 'Cadangan kepada Exco KLK...')}
                           rows={2}
                           className="w-full px-4 py-3 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium resize-none focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600"
                         />
@@ -422,11 +429,11 @@ export function KlkResidencyModal() {
                       >
                         {loading ? (
                           <span className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...
+                            <Loader2 className="w-4 h-4 animate-spin" /> {t('common:saving', 'Menyimpan...')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">
-                            Hantar Maklumat <ArrowRight className="w-4 h-4" />
+                            {t('housing:submit_info', 'Hantar Maklumat')} <ArrowRight className="w-4 h-4" />
                           </span>
                         )}
                       </Button>
@@ -450,8 +457,8 @@ export function KlkResidencyModal() {
                     >
                       <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                     </motion.div>
-                    <h2 className="text-xl font-black text-white mb-2">Terima Kasih!</h2>
-                    <p className="text-sm text-slate-400">Maklumat kediaman anda telah disimpan.</p>
+                    <h2 className="text-xl font-black text-white mb-2">{t('common:thank_you', 'Terima Kasih!')}</h2>
+                    <p className="text-sm text-slate-400">{t('housing:residence_saved_desc', 'Maklumat kediaman anda telah disimpan.')}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
