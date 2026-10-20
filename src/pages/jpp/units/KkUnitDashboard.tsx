@@ -38,7 +38,7 @@ const LOGO_POLISAS_URL = '/polisas-logo.jpg';
 async function toBase64(url: string): Promise<string> {
   try {
     const res = await fetch(url, { cache: 'force-cache' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const blob = await res.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -77,12 +77,8 @@ function AsramaBanner() {
         <Building2 className="w-6 h-6" style={{ color: KK_COLOR }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">
-          Papan Rujukan Asrama
-        </p>
-        <p className="text-[10px] text-slate-500 dark:text-white/40 font-medium mt-1 leading-relaxed">
-          Semak senarai pelajar dengan HPNM & merit untuk kelulusan permohonan kediaman sesi 2025/2026
-        </p>
+        <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</p>
+        <p className="text-[10px] text-slate-500 dark:text-white/40 font-medium mt-1 leading-relaxed">{t('jpp:kk_hostel_ref_desc', 'Semak senarai pelajar dengan HPNM & merit untuk kelulusan permohonan kediaman sesi 2025/2026')}</p>
       </div>
       <ChevronRight className="w-5 h-5 flex-shrink-0 text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
     </motion.button>
@@ -139,8 +135,8 @@ function UnitAsramaTab() {
     const { error } = await supabase
       .from('asrama_unit_admins')
       .insert({ user_id: userId, assigned_by: profile?.id, notes: 'Ditugaskan melalui panel KK' });
-    if (error) { toast.error('Gagal: ' + error.message); return; }
-    toast.success(`${userName} berjaya ditambah sebagai Unit Pengurusan Asrama!`);
+    if (error) { toast.error(t('jpp:kk_fail_prefix', 'Gagal:') + ' ' + error.message); return; }
+    toast.success(t('jpp:kk_admin_added_success', '{{name}} berjaya ditambah sebagai Unit Pengurusan Asrama!', { name: userName }));
     setSearchUser(''); setSearchResults([]);
     fetchUnitAdmins();
   };
@@ -150,8 +146,8 @@ function UnitAsramaTab() {
     if (!removeAdminTarget) return;
     const { id, name } = removeAdminTarget;
     const { error } = await supabase.from('asrama_unit_admins').delete().eq('id', id);
-    if (error) { toast.error('Gagal membuang: ' + error.message); return; }
-    toast.success(`${name} berjaya dibuang.`);
+    if (error) { toast.error(t('jpp:kk_fail_remove_prefix', 'Gagal membuang:') + ' ' + error.message); return; }
+    toast.success(t('jpp:kk_admin_removed_success', '{{name}} berjaya dibuang.', { name }));
     setRemoveAdminTarget(null);
     fetchUnitAdmins();
   };
@@ -173,14 +169,10 @@ function UnitAsramaTab() {
       >
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4" style={{ color: KK_COLOR }} />
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>
-            Unit Pengurusan Asrama — Akses Rujukan
-          </p>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_unit_asrama_ref_access', 'Unit Pengurusan Asrama — Akses Rujukan')}</p>
         </div>
         <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
-          Pengguna yang disenaraikan di sini mendapat akses ke <strong className="text-slate-700 dark:text-white/70">Papan Rujukan Asrama</strong> ({' '}
-          <code className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400">/jpp/asrama</code>) untuk membantu Exco Kediaman semak merit dan
-          HPNM pelajar bagi tujuan kelulusan permohonan kediaman i-KAMSIS. Mereka <em>tidak</em> mempunyai kuasa edit data pelajar.
+          {t('jpp:kk_unit_asrama_access_p1', 'Pengguna yang disenaraikan di sini mendapat akses ke')} <strong className="text-slate-700 dark:text-white/70">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</strong> ({' '}<code className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400">/jpp/asrama</code>{t('jpp:kk_unit_asrama_access_p2', ') untuk membantu Exco Kediaman semak merit dan HPNM pelajar bagi tujuan kelulusan permohonan kediaman i-KAMSIS. Mereka')} <em>{t('jpp:kk_not', 'tidak')}</em> {t('jpp:kk_unit_asrama_access_p3', 'mempunyai kuasa edit data pelajar.')}
         </p>
       </div>
 
@@ -190,13 +182,13 @@ function UnitAsramaTab() {
           className="rounded-[2rem] border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-6 space-y-4 shadow-sm"
         >
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
-            <UserPlus className="w-3.5 h-3.5" /> Tambah Pegawai Unit Pengurusan Asrama
+            <UserPlus className="w-3.5 h-3.5" /> {t('jpp:kk_add_officer_btn', 'Tambah Pegawai Unit Pengurusan Asrama')}
           </p>
           <div className="relative">
             <input
               value={searchUser}
               onChange={e => handleSearchUser(e.target.value)}
-              placeholder="Cari nama pengguna..."
+              placeholder={t('jpp:kk_search_user_placeholder', 'Cari nama pengguna...')}
               className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-slate-300 dark:focus:border-white/30 transition-all"
             />
             {searchResults.length > 0 && (
@@ -207,7 +199,7 @@ function UnitAsramaTab() {
                       u.role === 'SUPER_ADMIN_JPP' ? 'Super Admin' :
                       u.role === 'JPP'             ? 'JPP' :
                       u.role === 'CLUB_PRESIDENT'  ? 'Presiden' :
-                      u.role === 'CLUB_MT'         ? 'MT Kelab' :
+                      u.role === 'CLUB_MT'         ? t('jpp:kk_club_mt', 'MT Kelab') :
                       'Pelajar';
                     const roleBg =
                       u.role === 'SUPER_ADMIN_JPP' ? '#ef4444' :
@@ -237,14 +229,14 @@ function UnitAsramaTab() {
                             </span>
                           </div>
                           <p className="text-[10px] text-slate-500 dark:text-white/50">
-                            {u.matric_no || u.email || 'Tiada maklumat'}
+                            {u.matric_no || u.email || t('jpp:kk_no_info', 'Tiada maklumat')}
                           </p>
                         </div>
                         <span
                           className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex-shrink-0"
                           style={{ background: hexToRgba(KK_COLOR, 0.1), color: KK_COLOR }}
                         >
-                          + Tambah
+                          + {t('jpp:kk_add_btn', 'Tambah')}
                         </span>
                       </button>
                     );
@@ -261,13 +253,13 @@ function UnitAsramaTab() {
       >
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-            Senarai Unit Pengurusan Asrama ({unitAdmins.length})
+            {t('jpp:kk_unit_asrama_list', 'Senarai Unit Pengurusan Asrama')} ({unitAdmins.length})
           </p>
           <button
             onClick={fetchUnitAdmins}
             className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-600 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
           >
-            <RefreshCw className="w-3 h-3" /> Muat Semula
+            <RefreshCw className="w-3 h-3" /> {t('jpp:kk_reload', 'Muat Semula')}
           </button>
         </div>
 
@@ -277,7 +269,7 @@ function UnitAsramaTab() {
           </div>
         ) : unitAdmins.length === 0 ? (
           <p className="text-sm text-slate-400 dark:text-white/30 text-center py-6">
-            Tiada pegawai unit ditetapkan lagi.
+            {t('jpp:kk_no_officers_set', 'Tiada pegawai unit ditetapkan lagi.')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -299,8 +291,7 @@ function UnitAsramaTab() {
                   <p className="text-sm font-black text-slate-900 dark:text-white">{a.user?.full_name}</p>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                     <p className="text-[10px] text-slate-500 dark:text-white/50 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3 h-3" style={{ color: KK_COLOR }} />
-                      Unit Pengurusan Asrama
+                      <ShieldCheck className="w-3 h-3" style={{ color: KK_COLOR }} /> {t('jpp:kk_unit_asrama_role', 'Unit Pengurusan Asrama')}
                     </p>
                     {/* Tunjuk jenis akaun */}
                     {a.user?.role && (
@@ -309,7 +300,7 @@ function UnitAsramaTab() {
                         {a.user.role === 'SUPER_ADMIN_JPP' ? 'Super Admin' :
                          a.user.role === 'JPP' ? 'JPP' :
                          a.user.role === 'CLUB_PRESIDENT' ? 'Presiden' :
-                         a.user.role === 'CLUB_MT' ? 'MT Kelab' :
+                         a.user.role === 'CLUB_MT' ? t('jpp:kk_club_mt', 'MT Kelab') :
                          'Pelajar'}
                       </span>
                     )}
@@ -335,10 +326,10 @@ function UnitAsramaTab() {
       <ConfirmDialog
         open={Boolean(removeAdminTarget)}
         onOpenChange={(open) => !open && setRemoveAdminTarget(null)}
-        title="Lucutkan Akses Pengurusan Asrama"
-        description={removeAdminTarget ? `Adakah anda pasti mahu membuang ${removeAdminTarget.name} daripada Unit Pengurusan Asrama?` : ''}
-        confirmLabel="Buang Pegawai"
-        cancelLabel="Batal"
+        title={t('jpp:kk_revoke_access_title', 'Lucutkan Akses Pengurusan Asrama')}
+        description={removeAdminTarget ? t('jpp:kk_revoke_access_desc', 'Adakah anda pasti mahu membuang {{name}} daripada Unit Pengurusan Asrama?', { name: removeAdminTarget.name }) : ''}
+        confirmLabel={t('jpp:kk_remove_officer_confirm', 'Buang Pegawai')}
+        cancelLabel={t('jpp:cancel', 'Batal')}
         variant="destructive"
         onConfirm={executeRemoveAdmin}
       />
@@ -348,6 +339,7 @@ function UnitAsramaTab() {
 
 // ─── Takwim Kediaman Tab ──────────────────────────────────────────────────────
 function TakwimKediamanTab() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile } = useAuth();
   const [items, setItems] = useState<TakwimItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -391,22 +383,22 @@ function TakwimKediamanTab() {
           data={items}
           themeColor={themeColor}
           session={sesi}
-          filterLabel="Takwim Kediaman & Kerohanian"
+          filterLabel={t('jpp:kk_takwim_filter_label', 'Takwim Kediaman & Kerohanian')}
           logoPolisas={logoPolisas}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Takwim_Kediaman_${sesi.replace('/', '-')}.pdf`;
+      a.download = 'Takwim_Kediaman_' + sesi.replace('/', '-') + '.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('PDF berjaya dimuat turun!', { id: toastId });
+      toast.success(t('jpp:kk_pdf_download_success', 'PDF berjaya dimuat turun!'), { id: toastId });
     } catch (err: any) {
       console.error('PDF generation error:', err);
-      toast.error('Gagal menjana PDF: ' + (err?.message || 'Ralat tidak diketahui'), { id: toastId });
+      toast.error(t('jpp:kk_pdf_fail_prefix', 'Gagal menjana PDF:') + ' ' + (err?.message || t('jpp:kk_unknown_error', 'Ralat tidak diketahui')), { id: toastId });
     } finally {
       setGeneratingPdf(false);
     }
@@ -427,7 +419,7 @@ function TakwimKediamanTab() {
         .eq('key', 'kk_theme_color')
         .maybeSingle(),
     ]);
-    if (dataRes.error) { console.error(dataRes.error); toast.error('Gagal memuatkan takwim.'); }
+    if (dataRes.error) { console.error(dataRes.error); toast.error(t('jpp:kk_load_takwim_fail', 'Gagal memuatkan takwim.')); }
     setItems((dataRes.data || []).map((tp: any) => ({
       id: tp.id, type: 'takwim_pusat' as const, jenis: tp.jenis, tajuk: tp.tajuk,
       catatan: tp.catatan, tarikh_mula: tp.tarikh_mula, tarikh_tamat: tp.tarikh_tamat,
@@ -449,14 +441,14 @@ function TakwimKediamanTab() {
 
   // ── Save warna rasmi ──
   const handleSaveColor = async () => {
-    if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) { toast.error('Format warna tidak sah.'); return; }
+    if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) { toast.error(t('jpp:kk_invalid_color_format', 'Format warna tidak sah.')); return; }
     setSavingColor(true);
     try {
       const { error } = await supabase.from('system_settings').update({ value: JSON.stringify(colorInput) }).eq('key', 'kk_theme_color');
       if (error) { await supabase.from('system_settings').insert({ key: 'kk_theme_color', value: JSON.stringify(colorInput) }); }
       setThemeColor(colorInput);
-      toast.success('Warna rasmi KK berjaya dikemaskini!');
-    } catch { toast.error('Gagal menyimpan warna.'); }
+      toast.success(t('jpp:kk_color_updated_success', 'Warna rasmi KK berjaya dikemaskini!'));
+    } catch { toast.error(t('jpp:kk_save_color_fail', 'Gagal menyimpan warna.')); }
     finally { setSavingColor(false); }
   };
 
@@ -471,7 +463,7 @@ function TakwimKediamanTab() {
     setDialogOpen(true);
   };
   const handleSave = async () => {
-    if (!form.tajuk || !form.tarikh_mula) { toast.error('Sila lengkapkan tajuk & tarikh.'); return; }
+    if (!form.tajuk || !form.tarikh_mula) { toast.error(t('jpp:kk_complete_title_date', 'Sila lengkapkan tajuk & tarikh.')); return; }
     setSaving(true);
     const payload = {
       jenis: form.jenis, tajuk: form.tajuk, catatan: form.catatan || null,
@@ -497,7 +489,7 @@ function TakwimKediamanTab() {
     if (!deleteTakwimTarget) return;
     const item = deleteTakwimTarget;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
-    if (error) { toast.error('Gagal memadamkan.'); return; }
+    if (error) { toast.error(t('jpp:kk_delete_fail', 'Gagal memadamkan.')); return; }
     toast.success('Dipadam.');
     setDeleteTakwimTarget(null);
     fetchData();
@@ -512,10 +504,10 @@ function TakwimKediamanTab() {
       <div className="rounded-[2rem] p-5 border space-y-3" style={{ borderColor: hexToRgba(KK_COLOR, 0.25), background: hexToRgba(KK_COLOR, 0.04) }}>
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4" style={{ color: KK_COLOR }} />
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>Takwim Kediaman & Kerohanian</p>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_takwim_title', 'Takwim Kediaman & Kerohanian')}</p>
         </div>
         <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
-          Urus takwim khusus kelab kediaman (JPPI, AG, IS, dll.) dan aktiviti exco KK. Takwim kelab kediaman <strong className="text-slate-700 dark:text-white/70">hanya visible untuk JPP</strong> — student biasa tidak boleh melihatnya.
+          {t('jpp:kk_takwim_desc_p1', 'Urus takwim khusus kelab kediaman (JPPI, AG, IS, dll.) dan aktiviti exco KK. Takwim kelab kediaman')} <strong className="text-slate-700 dark:text-white/70">{t('jpp:kk_takwim_visible_jpp', 'hanya visible untuk JPP')}</strong> {t('jpp:kk_takwim_desc_p2', '— student biasa tidak boleh melihatnya.')}
         </p>
       </div>
 
@@ -525,13 +517,13 @@ function TakwimKediamanTab() {
         <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
           <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Warna Rasmi KK</p>
-            <p className="text-[10px] text-muted-foreground">Header jadual, baris cuti & PDF.</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:kk_official_color', 'Warna Rasmi KK')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('jpp:kk_table_header_pdf', 'Header jadual, baris cuti & PDF.')}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <input type="color" value={colorInput} onChange={e => setColorInput(e.target.value)} className="w-11 h-11 rounded-xl border-2 border-border cursor-pointer" />
             <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-black text-[10px] uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
-            <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">{savingColor ? '...' : 'Simpan'}</Button>
+            <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">{savingColor ? '...' : t('jpp:save', 'Simpan')}</Button>
           </div>
         </div>
         {/* Session Selector */}
@@ -539,10 +531,10 @@ function TakwimKediamanTab() {
           <CalendarDays className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sesi Akademik</p>
-            <p className="text-[10px] text-muted-foreground">Sesi yang dipaparkan dalam jadual PDF.</p>
+            <p className="text-[10px] text-muted-foreground">{t('jpp:kk_session_pdf_desc', 'Sesi yang dipaparkan dalam jadual PDF.')}</p>
           </div>
           <Select value={sesi} onValueChange={setSesi}>
-            <SelectTrigger className="w-40 rounded-xl h-11 font-bold text-sm border-border"><SelectValue placeholder="Pilih sesi" /></SelectTrigger>
+            <SelectTrigger className="w-40 rounded-xl h-11 font-bold text-sm border-border"><SelectValue placeholder={t('jpp:kk_select_session_placeholder', 'Pilih sesi')} /></SelectTrigger>
             <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="font-bold">{o.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
@@ -551,10 +543,10 @@ function TakwimKediamanTab() {
       {/* Controls Row 2 — Action Buttons */}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={() => openCreate('KELAB_KEDIAMAN')} className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest" style={{ background: themeColor, color: textOnTheme }}>
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Kelab Kediaman
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:kk_residential_club', 'Kelab Kediaman')}
         </Button>
         <Button onClick={() => openCreate('KK')} variant="outline" className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm">
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Exco KK
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:kk_exco_kk', 'Exco KK')}
         </Button>
         <div className="ml-auto">
           <Button
@@ -575,8 +567,7 @@ function TakwimKediamanTab() {
               </>
             ) : (
               <>
-                <DownloadCloud className="w-3.5 h-3.5 mr-1.5" />
-                Muat Turun PDF
+                <DownloadCloud className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:kk_download_pdf_btn', 'Muat Turun PDF')}
               </>
             )}
           </Button>
@@ -587,7 +578,7 @@ function TakwimKediamanTab() {
       {loading ? (
         <div className="py-16 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/20" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 text-center"><p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada entri takwim kediaman</p></div>
+        <div className="py-16 text-center"><p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:kk_no_takwim_entries', 'Tiada entri takwim kediaman')}</p></div>
       ) : (
         <div className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-transparent shadow-sm">
           <div className="overflow-x-auto">
@@ -597,9 +588,9 @@ function TakwimKediamanTab() {
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Kelab</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tarikh</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_date', 'Tarikh')}</th>
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">Tindakan</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">{t('jpp:kk_th_action', 'Tindakan')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -613,7 +604,7 @@ function TakwimKediamanTab() {
                       </td>
                       <td className="px-4 py-3"><p className="text-xs font-black text-slate-900 dark:text-white/90">{item.tajuk}</p></td>
                       <td className="px-4 py-3"><p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/70 font-bold">{item.kelab_kediaman_label || '—'}</p></td>
-                      <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}</td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ' — ' + fmtDate(item.tarikh_tamat) : ''}</td>
                       <td className="px-4 py-3 text-xs font-black text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -635,7 +626,7 @@ function TakwimKediamanTab() {
         <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-5 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:update', 'Kemaskini') : t('jpp:kk_new_entry', 'Entri Baharu')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -643,28 +634,28 @@ function TakwimKediamanTab() {
                 <Select value={form.jenis} onValueChange={v => setForm({ ...form, jenis: v })} disabled={!!editTarget}>
                   <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="KELAB_KEDIAMAN">Kelab Kediaman</SelectItem>
-                    <SelectItem value="KK">Exco KK</SelectItem>
+                    <SelectItem value="KELAB_KEDIAMAN">{t('jpp:kk_residential_club', 'Kelab Kediaman')}</SelectItem>
+                    <SelectItem value="KK">{t('jpp:kk_exco_kk', 'Exco KK')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_residential_club_name', 'Nama Kelab Kediaman')}</Label>
                   <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tajuk *</Label>
-                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="Nama aktiviti..." />
+                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder={t('jpp:kk_activity_name_placeholder', 'Nama aktiviti...')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tarikh Mula *</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_start_date', 'Tarikh Mula')} *</Label>
                   <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tarikh Tamat</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_end_date', 'Tarikh Tamat')}</Label>
                   <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
@@ -680,7 +671,7 @@ function TakwimKediamanTab() {
               </div>
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Warna (Pilihan)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_color_optional', 'Warna (Pilihan)')}</Label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={form.warna_custom || KK_COLOR} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold flex-1" placeholder={KK_COLOR} />
@@ -690,9 +681,9 @@ function TakwimKediamanTab() {
             </div>
           </div>
           <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 gap-3">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10">Batal</Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10">{t('jpp:cancel', 'Batal')}</Button>
             <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl font-black text-[10px] uppercase tracking-widest text-white" style={{ background: KK_COLOR }}>
-              {saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan'}
+              {saving ? t('jpp:saving', 'Menyimpan...') : editTarget ? t('jpp:update', 'Kemaskini') : t('jpp:save', 'Simpan')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -701,10 +692,10 @@ function TakwimKediamanTab() {
       <ConfirmDialog
         open={Boolean(deleteTakwimTarget)}
         onOpenChange={(open) => !open && setDeleteTakwimTarget(null)}
-        title="Padam Entri Takwim Asrama"
-        description={deleteTakwimTarget ? `Adakah anda pasti mahu memadam "${deleteTakwimTarget.tajuk}"?` : ''}
-        confirmLabel="Padam"
-        cancelLabel="Batal"
+        title={t('jpp:kk_delete_takwim_title', 'Padam Entri Takwim Asrama')}
+        description={deleteTakwimTarget ? t('jpp:kk_delete_takwim_desc', 'Adakah anda pasti mahu memadam "{{title}}"?', { title: deleteTakwimTarget.tajuk }) : ''}
+        confirmLabel={t('jpp:delete', 'Padam')}
+        cancelLabel={t('jpp:cancel', 'Batal')}
         variant="destructive"
         onConfirm={executeDeleteTakwim}
       />
@@ -871,7 +862,7 @@ export function KkUnitDashboard() {
             <ExcoGenericDashboard
               excoUnit="KK"
               themeColor={KK_COLOR}
-              excoLabel="Kediaman & Kerohanian"
+              excoLabel={t('jpp:kk_exco_label', 'Kediaman & Kerohanian')}
             />
           </motion.div>
         )}

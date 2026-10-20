@@ -5188,6 +5188,19 @@ Melengkapkan gelombang pembersihan mendalam pusingan kedua (Batch 2) merentasi 1
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 5,645 kepada 4,155 (penurunan 1,490 kejadian dalam 2 batch).
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.28 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 3): EMS Events, Commerce POS/PolyMart & JPP Administration
+Melengkapkan gelombang pembersihan pusingan ketiga (Batch 3) merentasi 15 fail berketumpatan tinggi:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 3 Disjoint Sweep):**
+   - **Pengurusan Acara EMS (`ems.json`):** `EmsLeaderboardPage.tsx` (73 isu -> 0), `EmsPublicRegisterPage.tsx` (70 isu -> 0), `EmsEventFormPage.tsx` (48 isu -> 0), `EmsJuryPortalPage.tsx` (48 isu -> 0), dan `EmsDashboardPage.tsx` (42 isu -> 0) diselubungi sepenuhnya bagi carta pemenang, pendaftaran tiket terbuka, borang acara rasmi, dan portal juri. Kunci `ems.json` meningkat ke 818 kunci dengan 100% pariti.
+   - **Keusahawanan Pelajar, POS & PolyMart (`commerce.json`):** `UrusPerniagaanPage.tsx` (74 isu -> 0), `PolyMartProductDetail.tsx` (52 isu -> 0), `PosProductPage.tsx` (49 isu -> 0), dan `PolyMartHome.tsx` (28 isu -> 0) diselaraskan bagi pendaftaran perniagaan SSM, borang produk POS, spesifikasi produk, dan troli belian PolyMart. Kunci `commerce.json` ditambah 253 kunci dengan 100% pariti.
+   - **Pentadbiran JPP HQ & Papan Pemuka Unit (`jpp.json`):** `KkUnitDashboard.tsx` (72 isu -> 0), `AkademikUnitDashboard.tsx` (67 isu -> 0), `JppOverviewPage.tsx` (52 isu -> 0), `JppMembersPage.tsx` (51 isu -> 0), `JppAsramaPage.tsx` (45 isu -> 0), dan `JppLogsPage.tsx` (43 isu -> 0) diselaraskan bagi audit kafetaria, pemantauan peperiksaan/CGPA, ringkasan operasi eksekutif JPP, direktori perwakilan, dan log keselamatan. Kunci `jpp.json` meningkat ke 1,837 kunci dengan 100% pariti.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 92/92 ujian lulus merentasi suite `Domain2JppAdminCompleteI18n`, `Domain4EmsMakmpCompleteI18n`, `Domain5CommerceCompleteI18n`, dan `masterLocales`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 4,155 kepada **3,255** (penurunan kumulatif 2,390 kejadian dalam 3 batch).
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

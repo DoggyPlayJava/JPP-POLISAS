@@ -31,7 +31,7 @@ interface LogEntry {
 interface AnomalyAlert { user: string; reason: string; count: number; }
 
 // ── Anomaly Scanner ───────────────────────────────────────────────────────────
-function scanAnomalies(logs: LogEntry[]): { flagged: Set<string>; alerts: AnomalyAlert[] } {
+function scanAnomalies(logs: LogEntry[], t: any): { flagged: Set<string>; alerts: AnomalyAlert[] } {
   const flagged = new Set<string>();
   const alerts: AnomalyAlert[] = [];
   const WINDOW_MS = 5 * 60 * 1000; // 5 minit
@@ -52,19 +52,20 @@ function scanAnomalies(logs: LogEntry[]): { flagged: Set<string>; alerts: Anomal
       const t2 = new Date(entries[i + 2].created_at).getTime();
       if (t2 - t0 <= WINDOW_MS) {
         entries.slice(i, i + 3).forEach(e => flagged.add(e.id));
-        alerts.push({ user, reason: '3+ tindakan padam dalam 5 minit', count: entries.length });
+        alerts.push({ user, reason: t('jpp:logs_anomaly_delete_burst', '3+ tindakan padam dalam 5 minit'), count: entries.length });
         break;
       }
     }
   });
 
   // 2. Tindakan waktu pelik (12am – 5am)
+  const oddHoursReason = t('jpp:logs_anomaly_odd_hours', 'Tindakan pada waktu pelik (12am–5am)');
   logs.forEach(l => {
     const hour = new Date(l.created_at).getHours();
     if (hour >= 0 && hour < 5) {
       flagged.add(l.id);
-      if (!alerts.find(a => a.user === l.full_name && a.reason.includes('waktu pelik'))) {
-        alerts.push({ user: l.full_name || 'Unknown', reason: 'Tindakan pada waktu pelik (12am–5am)', count: 1 });
+      if (!alerts.find(a => a.user === l.full_name && (a.reason === oddHoursReason || a.reason.includes('waktu pelik')))) {
+        alerts.push({ user: l.full_name || 'Unknown', reason: oddHoursReason, count: 1 });
       }
     }
   });
@@ -95,13 +96,13 @@ export function JppLogsPage() {
   const handleExportAuditLogs = async () => {
     try {
       const columns = [
-        { header: 'ID', width: 25 },
-        { header: 'Timestamp', width: 22 },
-        { header: 'Tindakan', width: 20 },
-        { header: 'Modul', width: 18 },
-        { header: 'Pengguna', width: 25 },
-        { header: 'Peranan', width: 15 },
-        { header: 'Butiran', width: 40 },
+        { header: t('jpp:logs_header_id', 'ID'), width: 25 },
+        { header: t('jpp:logs_th_timestamp', 'Timestamp'), width: 22 },
+        { header: t('jpp:logs_header_action', 'Tindakan'), width: 20 },
+        { header: t('jpp:logs_header_module', 'Modul'), width: 18 },
+        { header: t('jpp:logs_header_user', 'Pengguna'), width: 25 },
+        { header: t('jpp:logs_header_role', 'Peranan'), width: 15 },
+        { header: t('jpp:logs_header_details', 'Butiran'), width: 40 },
       ];
       const rows = logs.map(l => [
         l.id,
@@ -113,9 +114,9 @@ export function JppLogsPage() {
         l.details || '',
       ]);
       await exportXlsx('jpp_audit_logs', [{ name: 'Audit Trail', columns, rows }]);
-      toast.success('Log audit berjaya dieksport.');
+      toast.success(t('jpp:logs_export_success', 'Log audit berjaya dieksport.'));
     } catch (err: any) {
-      toast.error('Gagal mengeksport log: ' + err.message);
+      toast.error(t('jpp:logs_export_fail', 'Gagal mengeksport log:') + ' ' + (err?.message || ''));
     }
   };
 
@@ -135,7 +136,7 @@ export function JppLogsPage() {
     const rows: LogEntry[] = (data || []).map(l => ({ ...l, profiles: { full_name: l.full_name, role: l.role } }));
     setLogs(rows);
 
-    const { flagged, alerts } = scanAnomalies(rows);
+    const { flagged, alerts } = scanAnomalies(rows, t);
     setFlaggedIds(flagged);
     setAnomalyAlerts(alerts);
 
@@ -156,7 +157,7 @@ export function JppLogsPage() {
       });
       sessionStorage.setItem('anomaly_email_sent', '1');
       setEmailSent(true);
-      toast.error(`⚠️ ${alerts.length} anomali dikesan! Emel amaran dihantar.`, { duration: 6000 });
+      toast.error(t('jpp:logs_anomaly_detected_alert', '⚠️ {{count}} anomali dikesan! Emel amaran dihantar.', { count: alerts.length }), { duration: 6000 });
     } catch (_) {
       // Senyap — jangan ganggu UX jika edge function belum deploy
     }
@@ -177,7 +178,7 @@ export function JppLogsPage() {
           payload: {
             task: 'summarize_report',
             data: {
-              arahan: 'Sila buat ringkasan naratif aktiviti dalam log sistem ini. Gunakan Bahasa Melayu yang profesional. JANGAN tulis perenggan yang panjang meleret. Gunakan bullet points (•) untuk menyenaraikan aktiviti penting. Gunakan **bold** untuk nama kelab atau modul. Asingkan aktiviti biasa dengan aktiviti yang mencurigakan (jika ada).',
+              arahan: t('jpp:logs_ai_prompt_instruction', 'Sila buat ringkasan naratif aktiviti dalam log sistem ini. Gunakan Bahasa Melayu yang profesional. JANGAN tulis perenggan yang panjang meleret. Gunakan bullet points (•) untuk menyenaraikan aktiviti penting. Gunakan **bold** untuk nama kelab atau modul. Asingkan aktiviti biasa dengan aktiviti yang mencurigakan (jika ada).'),
               log_terbaru: recentLogs
             }
           }
@@ -186,9 +187,9 @@ export function JppLogsPage() {
       
       const resData = await response.json();
       if (!response.ok) throw new Error(resData.error || 'Failed');
-      setAiSummary(resData.result || 'Tiada ringkasan dijana.');
+      setAiSummary(resData.result || t('jpp:logs_no_summary_generated', 'Tiada ringkasan dijana.'));
     } catch (e) {
-      setAiSummary('Gagal jana ringkasan AI.');
+      setAiSummary(t('jpp:logs_ai_summary_fail', 'Gagal jana ringkasan AI.'));
     }
     setAiLoading(false);
   };
@@ -198,18 +199,18 @@ export function JppLogsPage() {
     setStorageResult(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('Sesi tamat — sila log masuk semula.');
+      if (!session?.access_token) throw new Error(t('jpp:logs_session_expired', 'Sesi tamat — sila log masuk semula.'));
       const response = await fetch(`${API_BASE_URL}/api/storage-audit`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Gagal menjalankan audit storage.');
+      if (!response.ok) throw new Error(data.error || t('jpp:logs_storage_audit_fail', 'Gagal menjalankan audit storage.'));
       setStorageResult(data);
       const n = data?.orphanedFiles?.length ?? 0;
-      toast.success(n > 0 ? `Audit selesai: ${n} fail orphaned dikesan.` : 'Audit selesai: tiada fail orphaned.', { duration: 5000 });
+      toast.success(n > 0 ? t('jpp:logs_storage_audit_orphaned_found', 'Audit selesai: {{count}} fail orphaned dikesan.', { count: n }) : t('jpp:logs_storage_audit_no_orphaned', 'Audit selesai: tiada fail orphaned.'), { duration: 5000 });
     } catch (e: any) {
-      toast.error(e.message || 'Gagal menjalankan audit storage.');
+      toast.error(e.message || t('jpp:logs_storage_audit_fail', 'Gagal menjalankan audit storage.'));
     } finally {
       setStorageLoading(false);
     }
@@ -275,19 +276,19 @@ export function JppLogsPage() {
 
     if (!text) {
       const fallbacks: Record<string, string> = {
-        STATUS_UPDATE: `Status tiket dikemaskini${log.entity_id ? ` (ID: ${log.entity_id.slice(0, 8)}…)` : ''}`,
-        UPDATE_CLUB: 'Maklumat kelab dikemaskini',
-        RESET_MERIT: 'Merit ahli telah di-reset',
-        MANAGE_COMMITTEE: 'Barisan kepimpinan dikemaskini',
-        MEMBER_KICKED: 'Ahli telah dikeluarkan dari kelab',
-        SETTINGS_UPDATED: 'Tetapan sistem dikemaskini.',
-        TRANSACTION_CREATE: 'Transaksi baharu dicipta.',
-        PRODUCT_ADD: 'Produk baharu ditambah.',
-        PRODUCT_EDIT: 'Produk dikemaskini.',
-        STOCK_EDIT: 'Stok produk dikemaskini.',
-        COHORT_DISSOLVED: 'Kohort telah dibubarkan',
+        STATUS_UPDATE: t('jpp:logs_fallback_status_update', 'Status tiket dikemaskini{{id}}', { id: log.entity_id ? (' (ID: ' + log.entity_id.slice(0, 8) + '…)') : '' }),
+        UPDATE_CLUB: t('jpp:logs_fallback_update_club', 'Maklumat kelab dikemaskini'),
+        RESET_MERIT: t('jpp:logs_fallback_reset_merit', 'Merit ahli telah di-reset'),
+        MANAGE_COMMITTEE: t('jpp:logs_fallback_manage_committee', 'Barisan kepimpinan dikemaskini'),
+        MEMBER_KICKED: t('jpp:logs_fallback_member_kicked', 'Ahli telah dikeluarkan dari kelab'),
+        SETTINGS_UPDATED: t('jpp:logs_fallback_settings_updated', 'Tetapan sistem dikemaskini.'),
+        TRANSACTION_CREATE: t('jpp:logs_fallback_transaction_create', 'Transaksi baharu dicipta.'),
+        PRODUCT_ADD: t('jpp:logs_fallback_product_add', 'Produk baharu ditambah.'),
+        PRODUCT_EDIT: t('jpp:logs_fallback_product_edit', 'Produk dikemaskini.'),
+        STOCK_EDIT: t('jpp:logs_fallback_stock_edit', 'Stok produk dikemaskini.'),
+        COHORT_DISSOLVED: t('jpp:logs_fallback_cohort_dissolved', 'Kohort telah dibubarkan'),
       };
-      const fallbackText = fallbacks[log.action_type] || 'Tiada butiran tambahan';
+      const fallbackText = fallbacks[log.action_type] || t('jpp:logs_fallback_no_details', 'Tiada butiran tambahan');
       return (
         <span className="italic text-slate-400 dark:text-white/30 flex items-center flex-wrap gap-1">
           {fallbackText}{clubBadge && !fallbackText.includes('.') ? '.' : ''} {clubBadge}
@@ -338,19 +339,19 @@ export function JppLogsPage() {
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={handleExportAuditLogs} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs font-bold">
-                <Download className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:export_audit_report')}
+                <Download className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:export_audit_report', 'Eksport Laporan Audit')}
               </Button>
               <Button variant="outline" size="sm" onClick={handleStorageAudit} disabled={storageLoading} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
-                <HardDrive className="w-3.5 h-3.5 mr-1.5" /> {storageLoading ? 'Mengimbas...' : 'Semak Storage'}
+                <HardDrive className="w-3.5 h-3.5 mr-1.5" /> {storageLoading ? t('jpp:logs_scanning', 'Mengimbas...') : t('jpp:logs_check_storage_btn', 'Semak Storage')}
               </Button>
               <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
-                <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Muat Semula
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:logs_reload_btn', 'Muat Semula')}
               </Button>
               <Button size="sm" onClick={handleAiSummary} disabled={aiLoading}
                 className="rounded-xl text-xs font-black uppercase tracking-widest text-white"
                 style={{ background: hexToRgba(themeColor, 0.8) }}>
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                {aiLoading ? 'Menjana...' : 'Ringkasan AI'}
+                {aiLoading ? t('jpp:logs_generating', 'Menjana...') : t('jpp:logs_ai_summary_btn', 'Ringkasan AI')}
               </Button>
             </div>
           </div>
@@ -361,7 +362,7 @@ export function JppLogsPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-sm text-slate-800 dark:text-white/70 leading-relaxed font-medium shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-4 flex items-center gap-2">
-              <Sparkles className="w-3 h-3" /> Ringkasan Analitik AI
+              <Sparkles className="w-3 h-3" /> {t('jpp:logs_ai_analytics_summary', 'Ringkasan Analitik AI')}
             </p>
             <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-slate-400 dark:marker:text-white/30 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold">
               <ReactMarkdown>{aiSummary}</ReactMarkdown>
@@ -375,20 +376,20 @@ export function JppLogsPage() {
             className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-2 text-slate-800 dark:text-white/80">
               <HardDrive className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Hasil Audit Storage (Dry-Run)</span>
+              <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:logs_storage_audit_dryrun_title', 'Hasil Audit Storage (Dry-Run)')}</span>
             </div>
             {storageResult.aborted ? (
               <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
-                Audit gagal dijalankan{storageResult.error ? `: ${storageResult.error}` : ''}. Sila semak log pelayan.
+                {t('jpp:logs_audit_failed_run', 'Audit gagal dijalankan')}{storageResult.error ? (': ' + storageResult.error) : ''}. {t('jpp:logs_check_server_log', 'Sila semak log pelayan.')}
               </p>
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: 'Fail Diimbas', value: storageResult.totalScanned ?? 0, color: 'text-sky-600 dark:text-sky-400' },
-                    { label: 'Fail Dikekalkan', value: storageResult.totalKept ?? 0, color: 'text-emerald-600 dark:text-emerald-400' },
-                    { label: 'Fail Orphaned', value: (storageResult.orphanedFiles?.length ?? 0), color: 'text-rose-600 dark:text-rose-400' },
-                    { label: 'Mod', value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-600 dark:text-amber-400' },
+                    { label: t('jpp:logs_files_scanned', 'Fail Diimbas'), value: storageResult.totalScanned ?? 0, color: 'text-sky-600 dark:text-sky-400' },
+                    { label: t('jpp:logs_files_retained', 'Fail Dikekalkan'), value: storageResult.totalKept ?? 0, color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: t('jpp:logs_files_orphaned', 'Fail Orphaned'), value: (storageResult.orphanedFiles?.length ?? 0), color: 'text-rose-600 dark:text-rose-400' },
+                    { label: t('jpp:logs_mode', 'Mod'), value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-600 dark:text-amber-400' },
                   ].map(s => (
                     <div key={s.label} className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl p-4">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{s.label}</p>
@@ -398,21 +399,25 @@ export function JppLogsPage() {
                 </div>
                 {(storageResult.orphanedFiles?.length ?? 0) > 0 ? (
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-slate-700 dark:text-white/60">Senarai fail orphaned (tiada rujukan DB):</p>
+                    <p className="text-xs font-bold text-slate-700 dark:text-white/60">{t('jpp:logs_orphaned_files_list', 'Senarai fail orphaned (tiada rujukan DB):')}</p>
                     <div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/5">
                       {storageResult.orphanedFiles.slice(0, 200).map((p: string, i: number) => (
                         <div key={i} className="px-3 py-1.5 font-mono text-[11px] text-slate-600 dark:text-white/50 truncate">{p}</div>
                       ))}
                     </div>
                     {storageResult.orphanedFiles.length > 200 && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-400">… dan {storageResult.orphanedFiles.length - 200} lagi fail (dipotong).</p>
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                        {t('jpp:logs_and_more_files_truncated', '… dan {{count}} lagi fail (dipotong).', { count: storageResult.orphanedFiles.length - 200 })}
+                      </p>
                     )}
                     <p className="text-[11px] text-slate-500 dark:text-white/40">
-                      Tiada fail dipadam secara automatik. Untuk padam fail yang disahkan tidak diperlukan, jalankan <code className="font-mono bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded">node scripts/storage-cleanup.js --confirm</code> di pelayan.
+                      {t('jpp:logs_no_files_auto_deleted_p1', 'Tiada fail dipadam secara automatik. Untuk padam fail yang disahkan tidak diperlukan, jalankan')}{' '}
+                      <code className="font-mono bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded">node scripts/storage-cleanup.js --confirm</code>{' '}
+                      {t('jpp:logs_on_server_p2', 'di pelayan.')}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">✅ Tiada fail orphaned dikesan.</p>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{t('jpp:logs_no_orphaned_files_detected', '✅ Tiada fail orphaned dikesan.')}</p>
                 )}
               </>
             )}
@@ -425,8 +430,8 @@ export function JppLogsPage() {
             className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-5 space-y-2">
             <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest">{anomalyAlerts.length} Anomali Dikesan</span>
-              {emailSent && <span className="ml-auto text-[10px] text-rose-500/60 dark:text-rose-400/60">Emel amaran dihantar ✓</span>}
+              <span className="text-xs font-black uppercase tracking-widest">{t('jpp:logs_anomaly_detected_count', '{{count}} Anomali Dikesan', { count: anomalyAlerts.length })}</span>
+              {emailSent && <span className="ml-auto text-[10px] text-rose-500/60 dark:text-rose-400/60">{t('jpp:logs_warning_email_sent', 'Emel amaran dihantar ✓')}</span>}
             </div>
             {anomalyAlerts.map((a, i) => (
               <p key={i} className="text-[11px] text-rose-600 dark:text-rose-300/70 font-medium pl-6">
@@ -440,10 +445,10 @@ export function JppLogsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Activity, label: 'Aktiviti Hari Ini', value: todayCount, color: 'text-emerald-600 dark:text-emerald-400' },
-            { icon: Trash2, label: 'Tindakan Padam', value: deleteCount, color: 'text-rose-600 dark:text-rose-400' },
-            { icon: User, label: 'Pengguna Paling Aktif', value: topUser, color: 'text-amber-600 dark:text-amber-400', small: true },
-            { icon: Clock, label: 'Log Terbaru', value: lastLog, color: 'text-sky-600 dark:text-sky-400', small: true },
+            { icon: Activity, label: t('jpp:logs_today_activity', 'Aktiviti Hari Ini'), value: todayCount, color: 'text-emerald-600 dark:text-emerald-400' },
+            { icon: Trash2, label: t('jpp:logs_delete_actions', 'Tindakan Padam'), value: deleteCount, color: 'text-rose-600 dark:text-rose-400' },
+            { icon: User, label: t('jpp:logs_most_active_user', 'Pengguna Paling Aktif'), value: topUser, color: 'text-amber-600 dark:text-amber-400', small: true },
+            { icon: Clock, label: t('jpp:logs_latest_log', 'Log Terbaru'), value: lastLog, color: 'text-sky-600 dark:text-sky-400', small: true },
           ].map(({ icon: Icon, label, value, color, small }) => (
             <div key={label} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-2 shadow-sm">
               <Icon className={cn('w-4 h-4', color)} />
@@ -463,12 +468,12 @@ export function JppLogsPage() {
           </div>
           <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
             className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
-            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Tindakan</option>
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:logs_all_actions', 'Semua Tindakan')}</option>
             {uniqueActions.map(a => <option key={a} value={a} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{a}</option>)}
           </select>
           <select value={filterUser} onChange={e => setFilterUser(e.target.value)}
             className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
-            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Pengguna</option>
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:logs_all_users', 'Semua Pengguna')}</option>
             {uniqueUsers.map(u => <option key={u} value={u!} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{u}</option>)}
           </select>
         </motion.div>
@@ -493,11 +498,11 @@ export function JppLogsPage() {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 bg-slate-50 dark:bg-black/40 sticky top-0 z-10 border-b border-slate-200 dark:border-white/5">
                 <tr>
-                  <th className="px-5 py-4 whitespace-nowrap">Timestamp</th>
-                  <th className="px-5 py-4">Tindakan</th>
-                  <th className="px-5 py-4">Modul</th>
-                  <th className="px-5 py-4">Pelaksana</th>
-                  <th className="px-5 py-4">Butiran</th>
+                  <th className="px-5 py-4 whitespace-nowrap">{t('jpp:logs_th_timestamp', 'Timestamp')}</th>
+                  <th className="px-5 py-4">{t('jpp:logs_header_action', 'Tindakan')}</th>
+                  <th className="px-5 py-4">{t('jpp:logs_header_module', 'Modul')}</th>
+                  <th className="px-5 py-4">{t('jpp:logs_header_actor', 'Pelaksana')}</th>
+                  <th className="px-5 py-4">{t('jpp:logs_header_details', 'Butiran')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -505,14 +510,14 @@ export function JppLogsPage() {
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
                     <div className="flex flex-col items-center gap-3">
                       <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
-                      <p className="text-[10px] uppercase tracking-widest font-black">Memuat Audit Trail...</p>
+                      <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_loading_audit_trail', 'Memuat Audit Trail...')}</p>
                     </div>
                   </td></tr>
                 ) : filteredLogs.length === 0 ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
                     <div className="flex flex-col items-center gap-3">
                       <ShieldCheck className="w-8 h-8 opacity-50" />
-                      <p className="text-[10px] uppercase tracking-widest font-black">Tiada rekod dijumpai</p>
+                      <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_no_records_found', 'Tiada rekod dijumpai')}</p>
                     </div>
                   </td></tr>
                 ) : filteredLogs.map(log => {
@@ -547,10 +552,10 @@ export function JppLogsPage() {
                           </div>
                           <div>
                             <p className="text-xs font-bold text-slate-900 dark:text-white/80">
-                              {log.full_name || (log.metadata?.actor_label ? String(log.metadata.actor_label) : 'Sistem')}
+                              {log.full_name || (log.metadata?.actor_label ? String(log.metadata.actor_label) : t('common:system', 'Sistem'))}
                             </p>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">
-                              {log.role || (log.metadata?.backfill ? 'REKOD LAMA' : 'SYSTEM')}
+                              {log.role || (log.metadata?.backfill ? t('jpp:logs_old_record', 'REKOD LAMA') : 'SYSTEM')}
                             </p>
                           </div>
                         </div>
@@ -565,7 +570,7 @@ export function JppLogsPage() {
             </table>
           </div>
           <div className="px-6 py-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-400 dark:text-white/20 font-black uppercase tracking-widest">
-            {filteredLogs.length} rekod dipaparkan · {logs.length} jumlah dimuatkan
+            {t('jpp:logs_footer_summary', '{{showing}} rekod dipaparkan · {{total}} jumlah dimuatkan', { showing: filteredLogs.length, total: logs.length })}
           </div>
         </motion.div>
 

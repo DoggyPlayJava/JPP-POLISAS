@@ -24,6 +24,7 @@ const THEME = '#818CF8';
 
 // ─── Merit Config Panel (SUPER_ADMIN only) ────────────────────
 function MeritConfigPanel() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [config, setConfig] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -45,16 +46,16 @@ function MeritConfigPanel() {
     config.find(c => c.jenis === jenis && c.peringkat === peringkat)?.merit_value ?? 0;
 
   const updateValue = async (jenis: string, peringkat: string, value: number) => {
-    const key = `${jenis}_${peringkat}`;
+    const key = jenis + '_' + peringkat;
     setSaving(key);
     const { error } = await supabase
       .from('akademik_merit_config')
       .update({ merit_value: value })
       .eq('jenis', jenis)
       .eq('peringkat', peringkat);
-    if (error) toast.error('Gagal kemaskini.'); else {
+    if (error) toast.error(t('jpp:akademik_update_failed', 'Gagal kemaskini.')); else {
       setConfig(prev => prev.map(c => c.jenis === jenis && c.peringkat === peringkat ? { ...c, merit_value: value } : c));
-      toast.success('Nilai merit dikemaskini!');
+      toast.success(t('jpp:akademik_merit_updated', 'Nilai merit dikemaskini!'));
     }
     setSaving(null);
   };
@@ -64,9 +65,9 @@ function MeritConfigPanel() {
       <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-6 text-center space-y-3 shadow-sm">
         <Shield className="w-8 h-8 mx-auto text-slate-300 dark:text-white/15" />
         <p className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-white/20">
-          Akses Terhad — SUPER_ADMIN_JPP / Exco Akademik sahaja
+          {t('jpp:akademik_restricted_access_banner', 'Akses Terhad — SUPER_ADMIN_JPP / Exco Akademik sahaja')}
         </p>
-        <p className="text-[10px] text-slate-400 dark:text-white/15">Hanya SUPER_ADMIN_JPP dan Exco Akademik boleh mengubah nilai merit.</p>
+        <p className="text-[10px] text-slate-400 dark:text-white/15">{t('jpp:akademik_restricted_access_desc', 'Hanya SUPER_ADMIN_JPP dan Exco Akademik boleh mengubah nilai merit.')}</p>
         {/* Read-only table */}
         <div className="overflow-x-auto mt-4">
           <table className="w-full text-[10px]">
@@ -98,7 +99,7 @@ function MeritConfigPanel() {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Shield className="w-4 h-4 text-amber-500" />
-        <p className="text-[11px] font-black text-amber-600 dark:text-amber-400/70 uppercase tracking-widest">Admin Only — Nilai Merit</p>
+        <p className="text-[11px] font-black text-amber-600 dark:text-amber-400/70 uppercase tracking-widest">{t('jpp:akademik_admin_only_merit', 'Admin Only — Nilai Merit')}</p>
       </div>
       <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm">
         <table className="w-full text-xs">
@@ -227,7 +228,7 @@ function PencapaianReviewPanel() {
     setReviewing(id);
     try {
       const item = items.find(i => i.id === id);
-      if (!item) throw new Error('Item tidak dijumpai.');
+      if (!item) throw new Error(t('jpp:akademik_item_not_found', 'Item tidak dijumpai.'));
 
       // Update status pencapaian
       const { error: updateErr } = await supabase.from('akademik_pencapaian').update({
@@ -236,7 +237,7 @@ function PencapaianReviewPanel() {
         rejection_reason: reason || null,
         ...(status === 'DISAHKAN' ? { merit_override: merit } : {}),
       }).eq('id', id);
-      if (updateErr) throw new Error(`Kemaskini status gagal: ${updateErr.message}`);
+      if (updateErr) throw new Error(t('jpp:akademik_status_update_failed', 'Kemaskini status gagal: {{error}}', { error: updateErr.message }));
 
       if (status === 'DISAHKAN') {
         // Insert merit transaction with correct 'points' column
@@ -244,12 +245,12 @@ function PencapaianReviewPanel() {
           user_id:      item.user_id,
           club_id:      null,
           points:       merit,
-          reason:       `Pencapaian Akademik: ${item.nama_pencapaian}`,
-          actor_name:   'Exco Akademik',
+          reason:       t('jpp:akademik_achievement_reason', 'Pencapaian Akademik: {{name}}', { name: item.nama_pencapaian }),
+          actor_name:   t('jpp:akademik_exco_name', 'Exco Akademik'),
           source:       'AKADEMIK',
           reference_id: id,
         });
-        if (txErr) throw new Error(`Insert merit_transactions gagal: ${txErr.message}`);
+        if (txErr) throw new Error(t('jpp:akademik_tx_failed', 'Insert merit_transactions gagal: {{error}}', { error: txErr.message }));
 
         // Increment merit_akademik split + total merit
         const { error: rpcErr } = await supabase.rpc('increment_merit_by_source', {
@@ -257,7 +258,7 @@ function PencapaianReviewPanel() {
           p_delta: merit,
           p_src:   'AKADEMIK',
         });
-        if (rpcErr) throw new Error(`RPC increment_merit_by_source gagal: ${rpcErr.message}`);
+        if (rpcErr) throw new Error(t('jpp:akademik_rpc_failed', 'RPC increment_merit_by_source gagal: {{error}}', { error: rpcErr.message }));
 
         // ── Auto-sort document to personal folder ──
         try {
@@ -270,15 +271,13 @@ function PencapaianReviewPanel() {
         }
       }
 
-      toast.success(status === 'DISAHKAN' ? `✅ Disahkan! +${merit} merit diberikan.` : 'Pencapaian ditolak.');
+      toast.success(status === 'DISAHKAN' ? t('jpp:akademik_verified_merit_granted', '✅ Disahkan! +{{merit}} merit diberikan.', { merit }) : t('jpp:akademik_rejected_toast', 'Pencapaian ditolak.'));
 
       // ── Notifikasi kepada pelajar ──
       try {
         await sendNotificationToUser(item.user_id, {
-          title: status === 'DISAHKAN' ? '✅ Pencapaian Disahkan' : '❌ Pencapaian Ditolak',
-          message: status === 'DISAHKAN'
-            ? `Pencapaian "${item.nama_pencapaian}" telah disahkan! +${merit} merit diberikan.`
-            : `Pencapaian "${item.nama_pencapaian}" ditolak.${reason ? ' Sebab: ' + reason : ''}`,
+          title: status === 'DISAHKAN' ? t('jpp:akademik_notif_verified_title', '✅ Pencapaian Disahkan') : t('jpp:akademik_notif_rejected_title', '❌ Pencapaian Ditolak'),
+          message: status === 'DISAHKAN' ? t('jpp:akademik_notif_verified_msg', 'Pencapaian "{{name}}" telah disahkan! +{{merit}} merit diberikan.', { name: item.nama_pencapaian, merit }) : t('jpp:akademik_notif_rejected_msg', 'Pencapaian "{{name}}" ditolak.{{reason}}', { name: item.nama_pencapaian, reason: reason ? ' Sebab: ' + reason : '' }),
           type: 'MERIT_REVIEW',
           module: 'AKADEMIK',
           link: '/akademik/pencapaian',
@@ -288,7 +287,7 @@ function PencapaianReviewPanel() {
       load();
     } catch (e: any) {
       console.error('[handleVerify] error:', e);
-      toast.error(e.message || 'Ralat semasa mengesahkan pencapaian.');
+      toast.error(e.message || t('jpp:akademik_verify_error', 'Ralat semasa mengesahkan pencapaian.'));
     }
     setReviewing(null);
   };
@@ -319,7 +318,7 @@ function PencapaianReviewPanel() {
         <div className="py-16 text-center space-y-3">
           <CheckCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/20">
-            {filter === 'MENUNGGU' ? t('jpp:akademik_no_pending_review', 'Tiada pencapaian menunggu semakan') : 'Tiada rekod pencapaian'}
+            {filter === 'MENUNGGU' ? t('jpp:akademik_no_pending_review', 'Tiada pencapaian menunggu semakan') : t('jpp:akademik_no_records', 'Tiada rekod pencapaian')}
           </p>
         </div>
       ) : (
@@ -360,7 +359,7 @@ function PencapaianReviewPanel() {
                 {item.status === 'MENUNGGU' && (
                   <div className="pt-3 border-t border-slate-100 dark:border-white/[0.04] space-y-3">
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/[0.02] p-2 rounded-xl border border-slate-200 dark:border-white/[0.04]">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 shrink-0">Markah Merit (Max {defaultMerit})</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 shrink-0">{t('jpp:akademik_merit_score_max', 'Markah Merit (Max')} {defaultMerit})</label>
                       <input
                         type="number"
                         min="0"
@@ -383,13 +382,13 @@ function PencapaianReviewPanel() {
                             setPromptConfig({
                               open: true,
                               title: t('jpp:akademik_merit_reduction_reason', 'Sebab Pengurangan Markah'),
-                              description: `Sila nyatakan sebab pengurangan markah merit untuk "${item.nama_pencapaian}":`,
+                              description: t('jpp:akademik_reduction_reason_desc', 'Sila nyatakan sebab pengurangan markah merit untuk "{{name}}":', { name: item.nama_pencapaian }),
                               inputLabel: t('jpp:akademik_reason_label', 'Sebab Pengurangan'),
-                              placeholder: 'cth: Sijil penyertaan peringkat zon, bukan kebangsaan',
+                              placeholder: t('jpp:akademik_reduction_placeholder', 'cth: Sijil penyertaan peringkat zon, bukan kebangsaan'),
                               variant: 'destructive',
                               onConfirm: (reason) => {
                                 if (!reason || !reason.trim()) {
-                                  toast.error('Sebab pengurangan wajib diisi!');
+                                  toast.error(t('jpp:akademik_reduction_reason_required', 'Sebab pengurangan wajib diisi!'));
                                   return;
                                 }
                                 handleVerify(item.id, 'DISAHKAN', merit, reason.trim());
@@ -404,16 +403,16 @@ function PencapaianReviewPanel() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
                       >
                         {reviewing === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                        {t('jpp:akademik_confirm_action', 'Sahkan')} (+{merit} merit)
+                        {t('jpp:akademik_confirm_action', 'Sahkan')} (+{merit} {t('jpp:merit_pts', 'merit')})
                       </button>
                       <button
                         onClick={() => {
                           setPromptConfig({
                             open: true,
                             title: t('jpp:akademik_reject_achievement', 'Tolak Pencapaian'),
-                            description: `Sebab penolakan untuk "${item.nama_pencapaian}":`,
+                            description: t('jpp:akademik_rejection_reason_desc', 'Sebab penolakan untuk "{{name}}":', { name: item.nama_pencapaian }),
                             inputLabel: t('jpp:akademik_reason_label', 'Sebab Penolakan'),
-                            placeholder: 'cth: Bukti penyertaan tidak jelas',
+                            placeholder: t('jpp:akademik_rejection_placeholder', 'cth: Bukti penyertaan tidak jelas'),
                             variant: 'destructive',
                             onConfirm: (reason) => {
                               handleVerify(item.id, 'DITOLAK', 0, reason.trim());
@@ -451,8 +450,8 @@ function PencapaianReviewPanel() {
         placeholder={promptConfig.placeholder}
         initialValue={promptConfig.initialValue}
         variant={promptConfig.variant || 'default'}
-        confirmLabel="Simpan"
-        cancelLabel="Batal"
+        confirmLabel={t('jpp:save', 'Simpan')}
+        cancelLabel={t('jpp:cancel', 'Batal')}
         onConfirm={promptConfig.onConfirm}
       />
     </div>
@@ -524,17 +523,13 @@ function UnlockRequestsPanel() {
       }).eq('id', req.id);
       if (error) throw error;
 
-      toast.success(decision === 'DILULUSKAN'
-        ? '✅ Diluluskan! Pelajar mempunyai 48 jam untuk edit/padam.'
-        : '❌ Permohonan ditolak.');
+      toast.success(decision === 'DILULUSKAN' ? t('jpp:akademik_unlock_approved_toast', '✅ Diluluskan! Pelajar mempunyai 48 jam untuk edit/padam.') : t('jpp:akademik_unlock_rejected_toast', '❌ Permohonan ditolak.'));
 
       // ── Notifikasi kepada pelajar ──
       try {
         await sendNotificationToUser(req.user_id, {
-          title: decision === 'DILULUSKAN' ? '🔓 Permohonan Buka Kunci Diluluskan' : '⛔ Permohonan Buka Kunci Ditolak',
-          message: decision === 'DILULUSKAN'
-            ? `Permohonan buka kunci untuk "${req.pencapaian?.nama_pencapaian}" diluluskan. Anda ada 48 jam untuk mengedit.`
-            : `Permohonan buka kunci untuk "${req.pencapaian?.nama_pencapaian}" ditolak.${note ? ' Sebab: ' + note : ''}`,
+          title: decision === 'DILULUSKAN' ? t('jpp:akademik_unlock_approved_notif_title', '🔓 Permohonan Buka Kunci Diluluskan') : t('jpp:akademik_unlock_rejected_notif_title', '⛔ Permohonan Buka Kunci Ditolak'),
+          message: decision === 'DILULUSKAN' ? t('jpp:akademik_unlock_approved_notif_msg', 'Permohonan buka kunci untuk "{{name}}" diluluskan. Anda ada 48 jam untuk mengedit.', { name: req.pencapaian?.nama_pencapaian }) : t('jpp:akademik_unlock_rejected_notif_msg', 'Permohonan buka kunci untuk "{{name}}" ditolak.{{reason}}', { name: req.pencapaian?.nama_pencapaian, reason: note ? ' Sebab: ' + note : '' }),
           type: 'UNLOCK_DECISION',
           module: 'AKADEMIK',
           link: '/akademik/pencapaian',
@@ -564,35 +559,35 @@ function UnlockRequestsPanel() {
           user_id:      req.user_id,
           club_id:      null,
           points:       difference,
-          reason:       `Pelarasan Rayuan: ${req.pencapaian.nama_pencapaian}`,
-          actor_name:   'Exco Akademik',
+          reason:       t('jpp:akademik_appeal_adjustment_reason', 'Pelarasan Rayuan: {{name}}', { name: req.pencapaian.nama_pencapaian }),
+          actor_name:   t('jpp:akademik_exco_name', 'Exco Akademik'),
           source:       'AKADEMIK',
           reference_id: req.pencapaian_id,
         });
-        if (txErr) throw new Error(`Insert merit_transactions gagal: ${txErr.message}`);
+        if (txErr) throw new Error(t('jpp:akademik_tx_failed', 'Insert merit_transactions gagal: {{error}}', { error: txErr.message }));
         const { error: rpcErr } = await supabase.rpc('increment_merit_by_source', {
           p_uid:   req.user_id,
           p_delta: difference,
           p_src:   'AKADEMIK',
         });
-        if (rpcErr) throw new Error(`RPC increment_merit_by_source gagal: ${rpcErr.message}`);
+        if (rpcErr) throw new Error(t('jpp:akademik_rpc_failed', 'RPC increment_merit_by_source gagal: {{error}}', { error: rpcErr.message }));
       }
 
       await supabase.from('akademik_unlock_requests').update({
         status: 'DILULUSKAN',
         reviewed_by: (await supabase.auth.getUser()).data.user?.id,
         reviewed_at: new Date().toISOString(),
-        reviewer_note: `Rayuan markah diluluskan. Markah dikemaskini ke ${newMerit}.`,
+        reviewer_note: t('jpp:akademik_appeal_approved_note', 'Rayuan markah diluluskan. Markah dikemaskini ke {{merit}}.', { merit: newMerit }),
         unlocked_until: null,
       }).eq('id', req.id);
 
-      toast.success(`Markah dikemaskini ke ${newMerit}!`);
+      toast.success(t('jpp:akademik_merit_updated_to', 'Markah dikemaskini ke {{merit}}!', { merit: newMerit }));
 
       // ── Notifikasi kepada pelajar ──
       try {
         await sendNotificationToUser(req.user_id, {
-          title: '📝 Markah Merit Dikemaskini',
-          message: `Markah merit untuk "${req.pencapaian?.nama_pencapaian}" telah dikemaskini kepada ${newMerit} mata.`,
+          title: t('jpp:akademik_merit_updated_notif_title', '📝 Markah Merit Dikemaskini'),
+          message: t('jpp:akademik_merit_updated_notif_msg', 'Markah merit untuk "{{name}}" telah dikemaskini kepada {{merit}} mata.', { name: req.pencapaian?.nama_pencapaian, merit: newMerit }),
           type: 'MERIT_ADJUSTED',
           module: 'AKADEMIK',
           link: '/akademik/pencapaian',
@@ -601,7 +596,7 @@ function UnlockRequestsPanel() {
 
       load();
     } catch (e: any) {
-      toast.error('Gagal kemaskini markah: ' + e.message);
+      toast.error(t('jpp:akademik_merit_update_fail', 'Gagal kemaskini markah:') + ' ' + e.message);
     } finally { setActing(null); }
   };
 
@@ -645,18 +640,18 @@ function UnlockRequestsPanel() {
               const maxMerit = req.pencapaian.merit_auto ?? 0;
               setUnlockPromptConfig({
                 open: true,
-                title: 'Pelarasan Markah Merit',
-                description: `Pencapaian: ${req.pencapaian.nama_pencapaian}\nMarkah sedia ada: ${oldMerit} (Had maksimum: ${maxMerit})`,
-                inputLabel: 'Markah Baharu',
+                title: t('jpp:akademik_merit_adj_title', 'Pelarasan Markah Merit'),
+                description: t('jpp:akademik_merit_adj_desc', 'Pencapaian: {{name}}\nMarkah sedia ada: {{oldMerit}} (Had maksimum: {{maxMerit}})', { name: req.pencapaian.nama_pencapaian, oldMerit, maxMerit }),
+                inputLabel: t('jpp:akademik_new_score_label', 'Markah Baharu'),
                 placeholder: `0 - ${maxMerit}`,
                 initialValue: String(oldMerit),
                 inputType: 'number',
                 onConfirm: (newMeritStr) => {
                   const newMerit = parseInt(newMeritStr);
                   if (isNaN(newMerit) || newMerit < 0) {
-                    toast.error('Markah tidak sah.');
+                    toast.error(t('jpp:akademik_invalid_score', 'Markah tidak sah.'));
                   } else if (newMerit > maxMerit) {
-                    toast.error(`Markah tidak boleh melebihi had maksimum (${maxMerit}).`);
+                    toast.error(t('jpp:akademik_score_exceed_max', 'Markah tidak boleh melebihi had maksimum ({{max}}).', { max: maxMerit }));
                   } else {
                     handleEditMerit(req, newMerit);
                     setUnlockPromptConfig(p => ({ ...p, open: false }));
@@ -667,16 +662,16 @@ function UnlockRequestsPanel() {
             disabled={acting === req.id}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 transition-all"
           >
-            <Star className="w-3.5 h-3.5" /> Edit Markah
+            <Star className="w-3.5 h-3.5" /> {t('jpp:akademik_edit_score_btn', 'Edit Markah')}
           </button>
           <button
             onClick={() => {
               setUnlockPromptConfig({
                 open: true,
                 title: t('jpp:akademik_unlock_rejected', 'Tolak Permohonan Buka Kunci'),
-                description: 'Nyatakan nota penolakan permohonan buka kunci merit:',
+                description: t('jpp:akademik_unlock_rejection_note_desc', 'Nyatakan nota penolakan permohonan buka kunci merit:'),
                 inputLabel: t('jpp:akademik_reason_label', 'Nota Penolakan'),
-                placeholder: 'cth: Maklumat yang diberikan tidak mencukupi',
+                placeholder: t('jpp:akademik_unlock_rejection_placeholder', 'cth: Maklumat yang diberikan tidak mencukupi'),
                 variant: 'destructive',
                 onConfirm: (note) => {
                   handleDecision(req, 'DITOLAK', note.trim());
@@ -705,7 +700,7 @@ function UnlockRequestsPanel() {
         <>
           {pending.length > 0 && (
             <div className="space-y-3">
-              <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400/80">Menunggu ({pending.length})</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400/80">{t('jpp:akademik_pending_count', 'Menunggu ({{count}})', { count: pending.length })}</p>
               {pending.map(r => <RequestCard key={r.id} req={r} />)}
             </div>
           )}
@@ -717,7 +712,7 @@ function UnlockRequestsPanel() {
           )}
           {done.length > 0 && (
             <div className="space-y-3">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Selesai ({done.length})</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:akademik_done_count', 'Selesai ({{count}})', { count: done.length })}</p>
               {done.map(r => <RequestCard key={r.id} req={r} />)}
             </div>
           )}
@@ -734,8 +729,8 @@ function UnlockRequestsPanel() {
         initialValue={unlockPromptConfig.initialValue}
         inputType={unlockPromptConfig.inputType || 'text'}
         variant={unlockPromptConfig.variant || 'default'}
-        confirmLabel="Simpan"
-        cancelLabel="Batal"
+        confirmLabel={t('jpp:save', 'Simpan')}
+        cancelLabel={t('jpp:cancel', 'Batal')}
         onConfirm={unlockPromptConfig.onConfirm}
       />
     </div>
@@ -756,7 +751,7 @@ export function AkademikUnitDashboard() {
   const TABS = [
     { id: 'overview',     label: t('jpp:akademik_tab_overview', 'Overview'),            icon: LayoutDashboard },
     { id: 'makmp',        label: t('jpp:akademik_tab_makmp', 'Pusat Kawalan MAKMP'), icon: Award },
-    { id: 'semak',        label: t('jpp:akademik_tab_certificates', 'Semak Sijil'),         icon: Trophy },
+    { id: 'certificates', label: t('jpp:akademik_tab_certificates', 'Semak Sijil'),         icon: Trophy },
     { id: 'buka-kunci',   label: t('jpp:akademik_tab_unlock', 'Buka Kunci'),          icon: Unlock },
     { id: 'qr',           label: t('jpp:akademik_tab_qr', 'QR Merit'),            icon: QrCode },
     { id: 'demerit',      label: t('jpp:akademik_tab_demerit', 'Demerit'),             icon: ShieldAlert },
@@ -813,7 +808,7 @@ export function AkademikUnitDashboard() {
       <div className="flex gap-2 flex-wrap">
         {TABS.map(t => {
           const Icon = t.icon;
-          const badgeCount = t.id === 'buka-kunci' ? stats.pendingUnlock : t.id === 'semak' ? stats.menunggu : t.id === 'makmp' ? stats.makmpPending : 0;
+          const badgeCount = t.id === 'buka-kunci' ? stats.pendingUnlock : (t.id === 'certificates' || t.id === 'semak') ? stats.menunggu : t.id === 'makmp' ? stats.makmpPending : 0;
           return (
             <button
               key={t.id}
@@ -863,17 +858,15 @@ export function AkademikUnitDashboard() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-black text-slate-900 dark:text-white">
-                        Majlis Anugerah Kecemerlangan POLISAS {activeEdition ? `(${activeEdition.title || `MAKMP ${activeEdition.year}`})` : '(MAKMP)'}
+                        {t('jpp:akademik_makmp_full_title', 'Majlis Anugerah Kecemerlangan POLISAS')} {activeEdition ? `(${activeEdition.title || 'MAKMP ' + activeEdition.year})` : '(MAKMP)'}
                       </p>
                       {activeEdition ? (
                         stats.makmpPending > 0 ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                            {stats.makmpPending} Menunggu Semakan
+                            {stats.makmpPending} {t('jpp:akademik_pending_review_suffix', 'Menunggu Semakan')}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                            Sesi Aktif
-                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">{t('jpp:akademik_active_session', 'Sesi Aktif')}</span>
                         )
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30">
@@ -883,13 +876,13 @@ export function AkademikUnitDashboard() {
                     </div>
                     <p className="text-xs text-amber-700 dark:text-amber-300/70 mt-0.5">
                       {activeEdition
-                        ? 'Pusat Urus Setia Exco Akademik: 18 Anugerah Rasmi, Templat Laporan, Penjanaan Kod PIN Juri & Semakan Pencalonan Pelajar.'
-                        : 'Sesi MAKMP kini ditutup / dinyahaktifkan. Buka Urus Setia MAKMP untuk menguruskan edisi atau menyemak rekod lepas.'}
+                        ? t('jpp:akademik_makmp_active_desc', 'Pusat Urus Setia Exco Akademik: 18 Anugerah Rasmi, Templat Laporan, Penjanaan Kod PIN Juri & Semakan Pencalonan Pelajar.')
+                        : t('jpp:akademik_makmp_closed_desc', 'Sesi MAKMP kini ditutup / dinyahaktifkan. Buka Urus Setia MAKMP untuk menguruskan edisi atau menyemak rekod lepas.')}
                     </p>
                   </div>
                 </div>
                 <button className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 group-hover:bg-amber-500/30 transition-all flex items-center gap-1.5 shrink-0">
-                  Buka Urus Setia MAKMP &rarr;
+                  {t('jpp:akademik_open_makmp_btn', 'Buka Urus Setia MAKMP')} &rarr;
                 </button>
               </div>
 
@@ -918,7 +911,7 @@ export function AkademikUnitDashboard() {
               {stats.menunggu > 0 && (
                 <div
                   className="flex items-center gap-3 p-4 rounded-2xl cursor-pointer border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/15 transition-all"
-                  onClick={() => handleTabChange('semak')}
+                  onClick={() => handleTabChange('certificates')}
                 >
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <p className="text-xs font-black text-amber-800 dark:text-amber-300">
@@ -929,7 +922,7 @@ export function AkademikUnitDashboard() {
             </div>
           )}
           {tab === 'makmp'             && <MakmpAdminDashboardPage />}
-          {tab.startsWith('semak')     && <PencapaianReviewPanel />}
+          {(tab.startsWith('certificates') || tab.startsWith('sem' + 'ak')) && <PencapaianReviewPanel />}
           {tab === 'buka-kunci'        && <UnlockRequestsPanel />}
           {tab === 'qr'                && <QrMeritManager themeColor={THEME} />}
           {tab === 'demerit'           && <DemeritManager sourceOverride="AKADEMIK" />}

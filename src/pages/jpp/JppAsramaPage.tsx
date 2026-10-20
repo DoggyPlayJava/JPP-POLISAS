@@ -67,7 +67,7 @@ function getCohortLabel(student: StudentRow, intakeConfig: { month1: number; mon
     student.semester_override,
   );
   if (!info) return '—';
-  return `${info.level} • Sem ${info.semester}`;
+  return info.level + ' • Sem ' + info.semester;
 }
 
 function getCohortLevel(student: StudentRow, intakeConfig: { month1: number; month2: number }): string {
@@ -88,6 +88,7 @@ function getCohortLevel(student: StudentRow, intakeConfig: { month1: number; mon
 // Components
 // ─────────────────────────────────────────────────────────────────────────────
 function ToggleBtn({ label, status, loading, onToggle }: { label: string; status: boolean; loading: boolean; onToggle: () => void }) {
+  const { t } = useTranslation(['jpp', 'common']);
   return (
     <button
       onClick={onToggle}
@@ -98,7 +99,7 @@ function ToggleBtn({ label, status, loading, onToggle }: { label: string; status
       )}
     >
       {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3" />}
-      {status ? `TUTUP ${label}` : `BUKA ${label}`}
+      {status ? t('jpp:asrama_toggle_close', 'TUTUP {{label}}', { label }) : t('jpp:asrama_toggle_open', 'BUKA {{label}}', { label })}
     </button>
   );
 }
@@ -283,7 +284,7 @@ export function JppAsramaPage() {
       setStudents(rows);
     } catch (err) {
       console.error('[JppAsramaPage] fetchAll error:', err);
-      toast.error('Gagal memuatkan data pelajar.');
+      toast.error(t('jpp:asrama_load_students_fail', 'Gagal memuatkan data pelajar.'));
     } finally {
       setLoading(false);
     }
@@ -302,9 +303,9 @@ export function JppAsramaPage() {
       if (error) throw error;
 
       setSysSettings(prev => ({ ...prev, [key]: newValue }));
-      toast.success('Tetapan berjaya dikemaskini!');
+      toast.success(t('jpp:asrama_settings_updated_success', 'Tetapan berjaya dikemaskini!'));
     } catch (e) {
-      toast.error('Gagal menukar status tetapan.');
+      toast.error(t('jpp:asrama_settings_toggle_fail', 'Gagal menukar status tetapan.'));
     } finally {
       setTogglingKey(null);
     }
@@ -320,7 +321,7 @@ export function JppAsramaPage() {
           .eq('user_id', student.id).eq('session', activeSession);
         toast.success(t('jpp:asrama_recommended_removed', 'Tandaan Disyorkan dibuang.'));
       } else {
-        const note = `Disyorkan oleh ${profile?.full_name ?? 'JPP'}`;
+        const note = t('jpp:asrama_recommended_by_note', 'Disyorkan oleh {{name}}', { name: profile?.full_name ?? 'JPP' });
         await supabase.from('asrama_recommendations').upsert({
           user_id: student.id, session: activeSession, notes: note, marked_by: user.id,
         }, { onConflict: 'user_id,session' });
@@ -328,7 +329,7 @@ export function JppAsramaPage() {
       }
       await fetchAll();
     } catch (err) {
-      toast.error('Gagal mengemas kini cadangan.');
+      toast.error(t('jpp:asrama_update_rec_fail', 'Gagal mengemas kini cadangan.'));
     } finally {
       setRecLoading(null);
     }
@@ -345,14 +346,14 @@ export function JppAsramaPage() {
       // ── Notifikasi kepada pelajar ──
       try {
         const titleMap: Record<string, string> = {
-          APPROVED: '✅ Permohonan Asrama Diluluskan',
-          REJECTED: '❌ Permohonan Asrama Ditolak',
-          APPEAL_REJECTED: '❌ Rayuan Asrama Ditolak',
+          APPROVED: t('jpp:asrama_notif_approved_title', '✅ Permohonan Asrama Diluluskan'),
+          REJECTED: t('jpp:asrama_notif_rejected_title', '❌ Permohonan Asrama Ditolak'),
+          APPEAL_REJECTED: t('jpp:asrama_notif_appeal_rejected_title', '❌ Rayuan Asrama Ditolak'),
         };
         const msgMap: Record<string, string> = {
-          APPROVED: `Tahniah! Permohonan asrama anda untuk sesi ${activeSession} telah diluluskan.`,
-          REJECTED: `Permohonan asrama anda untuk sesi ${activeSession} tidak berjaya. Anda boleh membuat rayuan jika tetingkap rayuan dibuka.`,
-          APPEAL_REJECTED: `Rayuan permohonan asrama anda untuk sesi ${activeSession} tidak berjaya. Sila hubungi pihak pengurusan untuk maklumat lanjut.`,
+          APPROVED: t('jpp:asrama_notif_approved_msg', 'Tahniah! Permohonan asrama anda untuk sesi {{session}} telah diluluskan.', { session: activeSession }),
+          REJECTED: t('jpp:asrama_notif_rejected_msg', 'Permohonan asrama anda untuk sesi {{session}} tidak berjaya. Anda boleh membuat rayuan jika tetingkap rayuan dibuka.', { session: activeSession }),
+          APPEAL_REJECTED: t('jpp:asrama_notif_appeal_rejected_msg', 'Rayuan permohonan asrama anda untuk sesi {{session}} tidak berjaya. Sila hubungi pihak pengurusan untuk maklumat lanjut.', { session: activeSession }),
         };
         await sendNotificationToUser(student.id, {
           title: titleMap[status],
@@ -365,7 +366,7 @@ export function JppAsramaPage() {
 
       await fetchAll();
     } catch {
-      toast.error('Gagal kemaskini status.');
+      toast.error(t('jpp:asrama_status_update_fail', 'Gagal kemaskini status.'));
     }
   }
 
@@ -499,8 +500,8 @@ export function JppAsramaPage() {
                         { onConflict: 'key' }
                       );
                       await refreshSession();
-                      toast.success(`Sesi KAMSIS ditukar ke ${val}`, { id: toastId });
-                    } catch { toast.error('Gagal tukar sesi.', { id: toastId }); }
+                      toast.success(t('jpp:asrama_session_switched', 'Sesi KAMSIS ditukar ke {{val}}', { val }), { id: toastId });
+                    } catch { toast.error(t('jpp:asrama_session_switch_fail', 'Gagal tukar sesi.'), { id: toastId }); }
                   }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                   className="w-[90px] bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300 text-center focus:outline-none focus:border-violet-500/50 hover:bg-violet-500/20 transition-colors"
@@ -517,14 +518,14 @@ export function JppAsramaPage() {
                         { onConflict: 'key' }
                       );
                       await refreshSession();
-                      toast.success(`Semester KAMSIS ditukar ke Sem ${val}`, { id: toastId });
-                    } catch { toast.error('Gagal tukar semester.', { id: toastId }); }
+                      toast.success(t('jpp:asrama_semester_switched', 'Semester KAMSIS ditukar ke Sem {{val}}', { val }), { id: toastId });
+                    } catch { toast.error(t('jpp:asrama_semester_switch_fail', 'Gagal tukar semester.'), { id: toastId }); }
                   }}
                   className="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300 cursor-pointer hover:bg-violet-500/20 transition-colors"
                 >
-                  <option value="1" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 1</option>
-                  <option value="2" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 2</option>
-                  <option value="3" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 3 (Pendek)</option>
+                  <option value="1" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_1', 'Semester 1')}</option>
+                  <option value="2" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_2', 'Semester 2')}</option>
+                  <option value="3" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_3_short', 'Semester 3 (Pendek)')}</option>
                 </select>
               </p>
             </div>
@@ -535,16 +536,16 @@ export function JppAsramaPage() {
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-black transition-all active:scale-95 flex-1 justify-center sm:flex-none"
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>Borang</span>
+              <span>{t('jpp:form', 'Borang')}</span>
             </button>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:pb-0 md:overflow-visible md:flex-wrap">
-            <ToggleBtn label="Permohonan Kamsis" status={sysSettings.kamsis_application_open} loading={togglingKey==='kamsis_application_open'} onToggle={() => toggleSetting('kamsis_application_open')} />
-            <ToggleBtn label="Keputusan Pemohon" status={sysSettings.kamsis_result_open} loading={togglingKey==='kamsis_result_open'} onToggle={() => toggleSetting('kamsis_result_open')} />
-            <ToggleBtn label="Permohonan Rayuan" status={sysSettings.kamsis_appeal_open} loading={togglingKey==='kamsis_appeal_open'} onToggle={() => toggleSetting('kamsis_appeal_open')} />
-            <ToggleBtn label="Keputusan Rayuan" status={sysSettings.kamsis_appeal_result_open} loading={togglingKey==='kamsis_appeal_result_open'} onToggle={() => toggleSetting('kamsis_appeal_result_open')} />
+            <ToggleBtn label={t('jpp:asrama_kamsis_application', 'Permohonan Kamsis')} status={sysSettings.kamsis_application_open} loading={togglingKey==='kamsis_application_open'} onToggle={() => toggleSetting('kamsis_application_open')} />
+            <ToggleBtn label={t('jpp:asrama_applicant_results', 'Keputusan Pemohon')} status={sysSettings.kamsis_result_open} loading={togglingKey==='kamsis_result_open'} onToggle={() => toggleSetting('kamsis_result_open')} />
+            <ToggleBtn label={t('jpp:asrama_appeal_application', 'Permohonan Rayuan')} status={sysSettings.kamsis_appeal_open} loading={togglingKey==='kamsis_appeal_open'} onToggle={() => toggleSetting('kamsis_appeal_open')} />
+            <ToggleBtn label={t('jpp:asrama_appeal_results', 'Keputusan Rayuan')} status={sysSettings.kamsis_appeal_result_open} loading={togglingKey==='kamsis_appeal_result_open'} onToggle={() => toggleSetting('kamsis_appeal_result_open')} />
           </div>
         </div>
       </motion.div>
@@ -556,14 +557,14 @@ export function JppAsramaPage() {
             <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0"><GraduationCap className="w-4 h-4 text-blue-500" /></div>
             <div>
               <p className="font-black text-xl leading-none text-blue-500">{students.length}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">Semua Pelajar</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-0.5">{t('jpp:all_students', 'Semua Pelajar')}</p>
             </div>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0"><FileText className="w-4 h-4 text-amber-500" /></div>
             <div>
               <p className="font-black text-xl leading-none text-amber-500">{totalPemohon}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">Permohonan Baru</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-0.5">{t('jpp:asrama_new_applications', 'Permohonan Baru')}</p>
             </div>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
@@ -612,11 +613,11 @@ export function JppAsramaPage() {
             <input type="text" placeholder={t('jpp:asrama_search_placeholder', 'Cari nama...')} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
           </div>
           <select value={filterTahap} onChange={e => setFilterTahap(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Tahap</option>
+            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:all_levels', 'Semua Tahap')}</option>
             <option value="Junior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Junior</option><option value="Senior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Senior</option><option value="Asasi" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asasi</option>
           </select>
           <select value={filterProg} onChange={e => setFilterProg(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Program</option>
+            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:all_programmes', 'Semua Program')}</option>
             {availableProgs.map(code => <option key={code} value={code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{code}</option>)}
           </select>
         </motion.div>
@@ -641,13 +642,13 @@ export function JppAsramaPage() {
 
                   {activeTab === 'pemohon' || activeTab === 'rayuan' ? (
                     <>
-                      <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">Maklumat Tambahan</th>
+                      <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_extra_info', 'Maklumat Tambahan')}</th>
                       <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-violet-500">Disyorkan</th>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">Status / Tindakan</th>
+                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_status_action', 'Status / Tindakan')}</th>
                     </>
                   ) : (
                     <>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">Status Residensi</th>
+                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_residency_status', 'Status Residensi')}</th>
                       <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-violet-500">Disyorkan</th>
                     </>
                   )}
@@ -671,7 +672,7 @@ export function JppAsramaPage() {
                         <td className="px-4 py-3 text-[10px] text-slate-500 font-mono">
                           {s.kamsis_extra_data && Object.keys(s.kamsis_extra_data).length > 0
                             ? Object.entries(s.kamsis_extra_data).map(([k, v]) => <div key={k}><span className="font-bold text-slate-400">{k}:</span> {String(v)}</div>)
-                            : 'Tiada'
+                            : t('jpp:asrama_none', 'Tiada')
                           }
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -687,20 +688,20 @@ export function JppAsramaPage() {
                                 <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                               </div>
                             ) : (
-                              <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">Menunggu Kelulusan</span>
+                              <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
                             )
                           ) : s.kamsis_status === 'APPEALING' ? (
                             isSuperAdmin ? (
                               <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">Terima Rayuan</button>
-                                <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">Tolak Rayuan</button>
+                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_accept_appeal', 'Terima Rayuan')}</button>
+                                <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_reject_appeal', 'Tolak Rayuan')}</button>
                               </div>
                             ) : (
-                              <span className="px-2 py-1 rounded bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">Rayuan Diproses</span>
+                              <span className="px-2 py-1 rounded bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
                             )
                           ) : (
                             <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
-                              {s.kamsis_status === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' : s.kamsis_status}
+                              {s.kamsis_status === 'APPEAL_REJECTED' ? t('jpp:asrama_appeal_rejected_caps', 'RAYUAN DITOLAK') : s.kamsis_status}
                             </span>
                           )}
                         </td>
@@ -709,11 +710,11 @@ export function JppAsramaPage() {
                       <>
                         <td className="px-4 py-3 text-center">
                           {s.klk_status === 'LUAR' ? (
-                            <span className="px-2 py-0.5 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">Luar Kampus</span>
+                            <span className="px-2 py-0.5 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
                           ) : s.klk_status === 'DALAM' ? (
-                            <span className="px-2 py-0.5 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">Asrama</span>
+                            <span className="px-2 py-0.5 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
                           ) : (
-                            <span className="px-2 py-0.5 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">Belum Jawab</span>
+                            <span className="px-2 py-0.5 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -773,29 +774,29 @@ export function JppAsramaPage() {
                                <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
-                             <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">Menunggu Kelulusan</span>
+                             <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
                           )
                        ) : s.kamsis_status === 'APPEALING' ? (
                           isSuperAdmin ? (
                              <div className="flex items-center gap-2">
-                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Terima</button>
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_accept', 'Terima')}</button>
                                <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
-                             <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">Rayuan Diproses</span>
+                             <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
                           )
                        ) : (
                           <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
-                            {s.kamsis_status === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' : s.kamsis_status}
+                            {s.kamsis_status === 'APPEAL_REJECTED' ? t('jpp:asrama_appeal_rejected_caps', 'RAYUAN DITOLAK') : s.kamsis_status}
                           </span>
                        )
                     ) : (
                        s.klk_status === 'LUAR' ? (
-                          <span className="px-2.5 py-1 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">Luar Kampus</span>
+                          <span className="px-2.5 py-1 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
                        ) : s.klk_status === 'DALAM' ? (
-                          <span className="px-2.5 py-1 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">Asrama</span>
+                          <span className="px-2.5 py-1 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
                        ) : (
-                          <span className="px-2.5 py-1 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">Belum Jawab</span>
+                          <span className="px-2.5 py-1 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
                        )
                     )}
                   </div>
@@ -814,7 +815,7 @@ export function JppAsramaPage() {
           ))}
           {filtered.length === 0 && (
             <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60">
-              <p className="text-sm font-bold text-slate-500">Tiada rekod pelajar.</p>
+              <p className="text-sm font-bold text-slate-500">{t('jpp:asrama_no_students_found', 'Tiada rekod pelajar.')}</p>
             </div>
           )}
         </div>

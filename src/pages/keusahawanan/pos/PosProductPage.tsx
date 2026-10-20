@@ -112,17 +112,17 @@ const EMPTY_FORM = {
 
 // ── Margin Logic ──────────────────────────────────────────────────────────────
 
-function getMarginInfo(price: number, cost: number) {
+function getMarginInfo(price: number, cost: number, t: (k: string, d: string) => string = (_k, def) => def) {
   if (cost <= 0 || price <= 0) return null;
   const profit = price - cost;
   const margin = (profit / price) * 100;
   let level: 'great' | 'ok' | 'low' | 'danger';
   let label: string;
   let color: string;
-  if (margin >= 40) { level = 'great'; label = 'Sangat Baik'; color = '#22c55e'; }
-  else if (margin >= 20) { level = 'ok'; label = 'Wajar'; color = '#f59e0b'; }
-  else if (margin >= 1) { level = 'low'; label = 'Rendah'; color = '#ef4444'; }
-  else { level = 'danger'; label = 'RUGI!'; color = '#dc2626'; }
+  if (margin >= 40) { level = 'great'; label = t('commerce:margin_great', 'Sangat Baik'); color = '#22c55e'; }
+  else if (margin >= 20) { level = 'ok'; label = t('commerce:margin_fair', 'Wajar'); color = '#f59e0b'; }
+  else if (margin >= 1) { level = 'low'; label = t('commerce:margin_low', 'Rendah'); color = '#ef4444'; }
+  else { level = 'danger'; label = t('commerce:margin_loss', 'RUGI!'); color = '#dc2626'; }
   return { profit, margin, level, label, color };
 }
 
@@ -221,7 +221,7 @@ function CostBuilder({
   mode, onModeChange, quickCost, onQuickCostChange,
   items, onItemsChange, costNotes, onCostNotesChange, totalCost, accent,
 }: CostBuilderProps) {
-  const { t } = useTranslation(['keusahawanan', 'common']);
+  const { t } = useTranslation(['commerce', 'keusahawanan', 'common']);
 
   // ── Update helper: auto-recalculate subtotal on any field change ────────────
   const updateItem = (id: string, field: keyof CostItem, value: any) => {
@@ -264,7 +264,7 @@ function CostBuilder({
               ? { background: hexToRgba(accent, 0.12), color: accent, borderBottom: `2px solid ${accent}` }
               : { color: 'hsl(var(--muted-foreground)/0.6)' }}
           >
-            {m === 'quick' ? '⚡ Kos Ringkas' : '🧮 Pecahan Kos'}
+            {m === 'quick' ? t('commerce:cost_quick_mode', 'Kos Ringkas') : t('commerce:cost_breakdown_mode', 'Pecahan Kos')}
           </button>
         ))}
       </div>
@@ -273,7 +273,7 @@ function CostBuilder({
       {mode === 'quick' && (
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
-            Jumlah Kos Per Unit (RM)
+            {t('commerce:total_cost_per_unit_rm', 'Jumlah Kos Per Unit (RM)')}
           </p>
           <input
             type="number" min="0" step="0.01"
@@ -282,7 +282,7 @@ function CostBuilder({
             className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all"
           />
           <p className="text-[9px] text-muted-foreground/40 mt-1">
-            Jumlah kesemua kos untuk satu unit produk ini: bahan, balutan, overhead, dll.
+            {t('commerce:total_cost_desc', 'Jumlah kesemua kos untuk satu unit produk ini: bahan, balutan, overhead, dll.')}
           </p>
         </div>
       )}
@@ -294,18 +294,18 @@ function CostBuilder({
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-muted/30 border border-border/30">
             <Info className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 shrink-0" />
             <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
-              Tambah setiap bahan satu persatu. Untuk setiap bahan, pilih cara kira:
+              {t('commerce:cost_add_ingredients_guide', 'Tambah setiap bahan satu persatu. Untuk setiap bahan, pilih cara kira:')}
               <br />
-              <strong className="text-foreground/60">⚖️ Guna Berapa</strong> — tahu berapa gram/ml digunakan (cth: guna 50g gula per produk)
+              <strong className="text-foreground/60">{t('commerce:calc_mode_usage_strong', 'Guna Berapa')}</strong> {t('commerce:calc_mode_usage_desc', '— tahu berapa gram/ml digunakan (cth: guna 50g gula per produk)')}
               <br />
-              <strong className="text-foreground/60">📦 Buat Berapa</strong> — tahu 1 beg/balang buat berapa (cth: 1 balang air isi 25 cawan)
+              <strong className="text-foreground/60">{t('commerce:calc_mode_yield_strong', 'Buat Berapa')}</strong> {t('commerce:calc_mode_yield_desc', '— tahu 1 beg/balang buat berapa (cth: 1 balang air isi 25 cawan)')}
             </p>
           </div>
 
           {/* Item list */}
           {items.length === 0 && (
             <p className="text-[10px] text-muted-foreground/40 text-center py-3">
-              Tiada bahan lagi. Tekan "＋ Tambah Bahan" untuk mula.
+              {t('commerce:no_ingredients_yet', 'Tiada bahan lagi. Tekan "Tambah Bahan" untuk mula.')}
             </p>
           )}
 
@@ -315,7 +315,7 @@ function CostBuilder({
                 item.calc_mode === 'yield' ? item.yield_per_purchase > 0 : item.purchase_qty > 0
               );
               const subtotalDisplay = costOk
-                ? `RM ${item.subtotal.toFixed(4).replace(/\.?0+$/, '') || '0'} / produk`
+                ? `RM ${item.subtotal.toFixed(4).replace(/\.?0+$/, '') || '0'} / ` + t('commerce:unit_product', 'produk')
                 : '—';
               const isYield = item.calc_mode === 'yield';
 
@@ -333,14 +333,14 @@ function CostBuilder({
                     {/* Mod toggle — framed as a question, not a concept */}
                     <button type="button" onClick={() => toggleCalcMode(item.id)}
                       title={isYield
-                        ? 'Mod: Buat Berapa — klik tukar ke Guna Berapa'
-                        : 'Mod: Guna Berapa — klik tukar ke Buat Berapa'}
+                        ? t('commerce:mode_yield_tooltip', 'Mod: Buat Berapa — klik tukar ke Guna Berapa')
+                        : t('commerce:mode_usage_tooltip', 'Mod: Guna Berapa — klik tukar ke Buat Berapa')}
                       className="shrink-0 h-7 px-2 rounded-lg border text-[9px] font-black transition-all whitespace-nowrap"
                       style={isYield
                         ? { borderColor: hexToRgba(accent, 0.4), background: hexToRgba(accent, 0.1), color: accent }
                         : { borderColor: 'hsl(var(--border)/0.5)', background: 'hsl(var(--muted)/0.3)', color: 'hsl(var(--muted-foreground)/0.6)' }}
                     >
-                      {isYield ? '📦 Buat Berapa' : '⚖️ Guna Berapa'}
+                      {isYield ? t('commerce:calc_mode_yield', 'Buat Berapa') : t('commerce:calc_mode_usage', 'Guna Berapa')}
                     </button>
                     <button type="button" onClick={() => removeItem(item.id)}
                       className="w-7 h-7 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center transition-colors shrink-0">
@@ -352,7 +352,7 @@ function CostBuilder({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
-                        {isYield ? 'Apa yang dibeli' : 'Beli'}
+                        {isYield ? t('commerce:what_is_purchased', 'Apa yang dibeli') : t('commerce:buy_label', 'Beli')}
                       </p>
                       <div className="flex items-center gap-1.5">
                         <input
@@ -389,7 +389,7 @@ function CostBuilder({
                   {!isYield && (
                     <div className="space-y-1">
                       <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
-                        Guna dalam 1 Produk
+                        {t('commerce:use_in_one_product', 'Guna dalam 1 Produk')}
                       </p>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1.5 flex-1">
@@ -421,7 +421,7 @@ function CostBuilder({
                     <div className="space-y-2">
                       <div className="space-y-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
-                          1 {item.purchase_unit || 'unit'} ini boleh buat / isi berapa?
+                          {t('commerce:yield_prompt', '1 {{unit}} ini boleh buat / isi berapa?', { unit: item.purchase_unit || t('commerce:unit_word', 'unit') })}
                         </p>
                         <div className="flex items-center gap-1.5">
                           <input
@@ -450,7 +450,7 @@ function CostBuilder({
                         <span>
                           {costOk
                             ? `RM ${item.total_purchase_cost.toFixed(2)} ÷ ${item.yield_per_purchase} ${item.yield_unit || 'servis'}`
-                            : 'Isi harga beli & bilangan hasil dulu'}
+                            : t('commerce:fill_cost_and_yield_first', 'Isi harga beli & bilangan hasil dulu')}
                         </span>
                         <span style={costOk ? { color: accent } : {}}>
                           {costOk ? subtotalDisplay : '—'}
@@ -468,7 +468,7 @@ function CostBuilder({
           {/* Add button */}
           <button type="button" onClick={addItem}
             className="w-full h-9 rounded-xl border border-dashed border-border/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 hover:text-muted-foreground hover:border-border transition-all flex items-center justify-center gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> Tambah Bahan
+            <Plus className="w-3.5 h-3.5" /> {t('commerce:add_ingredient', 'Tambah Bahan')}
           </button>
 
           {/* Grand total */}
@@ -488,7 +488,7 @@ function CostBuilder({
       {/* Cost notes */}
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
-          Nota Kos (Pilihan)
+          {t('commerce:cost_notes_optional', 'Nota Kos (Pilihan)')}
         </p>
         <input type="text" value={costNotes} onChange={e => onCostNotesChange(e.target.value)}
           placeholder="e.g: Termasuk anggaran gas & overhead 10%"
@@ -502,14 +502,14 @@ function CostBuilder({
 // ── Margin Preview Panel ──────────────────────────────────────────────────────
 
 function MarginPreview({ price, cost, accent }: { price: number; cost: number; accent: string }) {
-  const { t } = useTranslation(['keusahawanan', 'common']);
-  const info = getMarginInfo(price, cost);
+  const { t } = useTranslation(['commerce', 'keusahawanan', 'common']);
+  const info = getMarginInfo(price, cost, t);
 
   if (!info) {
     return (
       <div className="p-3 rounded-2xl border border-dashed border-border/40 text-center">
         <p className="text-[10px] text-muted-foreground/40">
-          Isi harga jual & kos untuk lihat analisis untung 📊
+          {t('commerce:fill_price_cost_prompt', 'Isi harga jual & kos untuk lihat analisis untung')}
         </p>
       </div>
     );
@@ -574,7 +574,7 @@ function MarginPreview({ price, cost, accent }: { price: number; cost: number; a
 
 // ── PolyMart Ads Banner ───────────────────────────────────────────────────────
 function PolymartAdsPromoBanner({ color }: { color: string }) {
-  const { t } = useTranslation(['keusahawanan', 'common']);
+  const { t } = useTranslation(['commerce', 'keusahawanan', 'common']);
   const [adsPhone, setAdsPhone] = useState<string | null>(null);
 
   useEffect(() => {
@@ -588,7 +588,10 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
       className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 mb-4 cursor-pointer hover:bg-amber-500/15 transition-colors"
-      onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya berminat untuk menempah slot Iklan/Penaja di PolyMart untuk tingkatkan jualan kedai saya!`, '_blank')}
+      onClick={() => {
+        const msg = t('commerce:wa_ads_booking_message', 'Hai Exco Keusahawanan, saya berminat untuk menempah slot Iklan/Penaja di PolyMart untuk tingkatkan jualan kedai saya!');
+        window.open('https://wa.me/' + adsPhone + '?text=' + encodeURIComponent(msg), '_blank');
+      }}
     >
       <div className="flex items-start sm:items-center gap-3">
 <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
@@ -601,7 +604,7 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
       </div>
       <button className="h-9 px-4 rounded-xl text-xs font-bold text-white shrink-0 whitespace-nowrap shadow-md hover:scale-105 active:scale-95 transition-transform truncate"
         style={{ background: `linear-gradient(135deg, ${color}, #f59e0b)` }}>
-        Hubungi Exco
+        {t('commerce:contact_exco_btn', 'Hubungi Exco')}
       </button>
     </motion.div>
   );
@@ -611,7 +614,7 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
 
 export function PosProductPage() {
   const { color } = useExcoTheme();
-  const { t } = useTranslation(['keusahawanan', 'common']);
+  const { t } = useTranslation(['commerce', 'keusahawanan', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
   const businessId = selectedBusiness?.id;
@@ -650,7 +653,7 @@ export function PosProductPage() {
   })();
 
   const priceNum = parseFloat(form.price) || 0;
-  const marginInfo = getMarginInfo(priceNum, derivedTotalCost);
+  const marginInfo = getMarginInfo(priceNum, derivedTotalCost, t);
 
   const filtered = pos.products
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
@@ -761,7 +764,7 @@ export function PosProductPage() {
   const handleSave = async () => {
     if (!businessId) return;
     if (!form.name.trim()) { toast.error(t('keusahawanan:toast_product_name_required', 'Nama produk wajib diisi.')); return; }
-    if (!form.price || parseFloat(form.price) < 0) { toast.error('Harga tidak sah.'); return; }
+    if (!form.price || parseFloat(form.price) < 0) { toast.error(t('commerce:err_invalid_price', 'Harga tidak sah.')); return; }
     setSaving(true);
 
     const payload = {
@@ -803,7 +806,7 @@ export function PosProductPage() {
   };
 
   const handleDelete = async (p: BusinessProduct) => {
-    if (!window.confirm(`Padam "${p.name}"? Tindakan ini tidak boleh diundur.`)) return;
+    if (!window.confirm(t('commerce:confirm_delete_product', 'Padam "{{name}}"? Tindakan ini tidak boleh diundur.', { name: p.name }))) return;
     if (businessId) await pos.deleteProduct(p.id, businessId, p.name);
   };
 
@@ -874,7 +877,7 @@ export function PosProductPage() {
           {filtered.map((p, i) => {
             const isLow = p.stock_quantity > 0 && p.stock_quantity <= p.stock_alert_threshold;
             const isOut = p.stock_quantity === 0;
-            const mi = p.total_cost > 0 ? getMarginInfo(p.price, p.total_cost) : null;
+            const mi = p.total_cost > 0 ? getMarginInfo(p.price, p.total_cost, t) : null;
 
             return (
               <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -971,9 +974,9 @@ export function PosProductPage() {
                   {/* Progress Step Indicator */}
                   <div className="flex items-center justify-between my-2 bg-muted/20 p-3 rounded-2xl border border-border/30">
                     {[
-                      { step: 1, label: 'Asas & Harga' },
-                      { step: 2, label: 'Variasi & Promo' },
-                      { step: 3, label: 'PolyMart & Simpan' }
+                      { step: 1, label: t('commerce:step_basics_price', 'Asas & Harga') },
+                      { step: 2, label: t('commerce:step_variations_promo', 'Variasi & Promo') },
+                      { step: 3, label: t('commerce:step_polymart_save', 'PolyMart & Simpan') }
                     ].map((s, idx) => {
                       const active = formStep === s.step;
                       const done = formStep > s.step;
@@ -1057,7 +1060,7 @@ export function PosProductPage() {
                                 ) : (
                                   <label className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted/30 transition-colors">
                                     <Camera className="w-4 h-4 text-muted-foreground/30" />
-                                    <span className="text-[8px] font-bold text-muted-foreground/40">Tambah</span>
+                                    <span className="text-[8px] font-bold text-muted-foreground/40">{t('commerce:add_image_slot', 'Tambah')}</span>
                                     <input type="file" accept="image/*" className="hidden" onChange={handleUploadAdditional} disabled={uploading} />
                                   </label>
                                 )}
@@ -1066,7 +1069,7 @@ export function PosProductPage() {
                           })}
                         </div>
                         {uploading && (
-                          <p className="text-[9px] text-amber-500 font-semibold mt-1 animate-pulse">⏳ Sedang memuat naik gambar...</p>
+                          <p className="text-[9px] text-amber-500 font-semibold mt-1 animate-pulse">{t('commerce:uploading_image_wait', 'Sedang memuat naik gambar...')}</p>
                         )}
                       </div>
 
@@ -1227,7 +1230,7 @@ export function PosProductPage() {
                             <p className="text-[9.5px] text-muted-foreground/40 px-1 leading-tight flex items-start gap-1.5">
                               <Info className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
                               <span>
-                                <strong>Stok Tunggal:</strong> Produk ini tiada variasi saiz/warna. Jika anda ingin menambah variasi, masukkan nama variasi di bawah untuk mengaktifkannya.
+                                <strong>{t('commerce:single_stock_strong', 'Stok Tunggal:')}</strong> {t('commerce:single_stock_desc', 'Produk ini tiada variasi saiz/warna. Jika anda ingin menambah variasi, masukkan nama variasi di bawah untuk mengaktifkannya.')}
                               </span>
                             </p>
                           </div>
@@ -1277,7 +1280,7 @@ export function PosProductPage() {
                             className="h-9 px-4 rounded-xl text-xs font-bold text-white uppercase tracking-wider transition-all hover:brightness-110"
                             style={{ background: color }}
                           >
-                            Tambah
+                            {t('commerce:add_btn', 'Tambah')}
                           </button>
                         </div>
                       </div>
@@ -1336,7 +1339,7 @@ export function PosProductPage() {
                             </div>
                             <div className="text-left">
                               <div className="flex items-center gap-2">
-                                <p className="text-xs font-black text-foreground">Siarkan ke PolyMart</p>
+                                <p className="text-xs font-black text-foreground">{t('commerce:publish_to_polymart', 'Siarkan ke PolyMart')}</p>
                                 <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${form.publish_to_polymart ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-muted text-muted-foreground/50 border border-border'}`}>
                                   {form.publish_to_polymart ? 'Aktif' : 'Nyahaktif'}
                                 </span>
@@ -1351,7 +1354,7 @@ export function PosProductPage() {
                             className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
                             style={{ backgroundColor: form.publish_to_polymart ? '#f59e0b' : 'rgba(156, 163, 175, 0.3)' }}
                           >
-                            <span className="sr-only">Siarkan ke PolyMart</span>
+                            <span className="sr-only">{t('commerce:publish_to_polymart', 'Siarkan ke PolyMart')}</span>
                             <span
                               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                                 form.publish_to_polymart ? 'translate-x-5' : 'translate-x-0'
@@ -1364,7 +1367,7 @@ export function PosProductPage() {
                             <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }}
                               exit={{ opacity: 0, }} className="space-y-2.5 overflow-hidden pt-1">
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Lokasi / Booth</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{t('commerce:location_booth', 'Lokasi / Booth')}</p>
                                 <input value={form.polymart_location}
                                   onChange={e => setForm(f => ({ ...f, polymart_location: e.target.value }))}
                                   placeholder="cth: Kafeteria A, Kiosk B2..."
@@ -1385,19 +1388,19 @@ export function PosProductPage() {
                         <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/15 space-y-2 mt-2">
                           <div className="flex items-center gap-2">
                             <CreditCard className="w-3.5 h-3.5 text-blue-500" />
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">Pembayaran Online (QR) PolyMart</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">{t('commerce:polymart_online_qr_payment', 'Pembayaran Online (QR) PolyMart')}</p>
                           </div>
                           <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
-                            Override tetapan pembayaran perniagaan untuk produk ini sahaja (Berfungsi apabila disiarkan ke PolyMart).
+                            {t('commerce:override_payment_setting_desc', 'Override tetapan pembayaran perniagaan untuk produk ini sahaja (Berfungsi apabila disiarkan ke PolyMart).')}
                             {selectedBusiness?.online_payment_enabled
-                              ? ' Perniagaan anda telah mengaktifkan QR Online.'
-                              : ' Perniagaan anda belum aktifkan QR Online di Urus Perniagaan.'}
+                              ? t('commerce:biz_qr_active', ' Perniagaan anda telah mengaktifkan QR Online.')
+                              : t('commerce:biz_qr_not_active', ' Perniagaan anda belum aktifkan QR Online di Urus Perniagaan.')}
                           </p>
                           <div className="flex rounded-xl overflow-hidden border border-border/50">
                             {[
-                              { key: null,  label: '🏢 Ikut Perniagaan' },
-                              { key: true,  label: '✅ Aktif' },
-                              { key: false, label: '❌ Matikan' },
+                              { key: null,  label: t('commerce:payment_opt_follow_biz', 'Ikut Perniagaan') },
+                              { key: true,  label: t('commerce:payment_opt_active', 'Aktif') },
+                              { key: false, label: t('commerce:payment_opt_disable', 'Matikan') },
                             ].map(opt => (
                               <button key={String(opt.key)} type="button"
                                 onClick={() => setForm(f => ({ ...f, online_payment_override: opt.key as boolean | null }))}
@@ -1415,7 +1418,7 @@ export function PosProductPage() {
                       <div className="p-4 rounded-2xl bg-muted/30 border border-border/40 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
-                            📊 Rumusan Stok Akhir
+                            {t('commerce:final_stock_summary', 'Rumusan Stok Akhir')}
                           </p>
                           <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                             Muktamad (Langkah 3)
@@ -1446,7 +1449,7 @@ export function PosProductPage() {
                             <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
                               <div>
                                 <p className="text-xs font-bold text-foreground">{t('keusahawanan:pos_total_overall_stock', 'Total Stok Keseluruhan')}</p>
-                                <p className="text-[9px] text-muted-foreground/50">Hasil tambah {form.variations.length} variasi di atas</p>
+                                <p className="text-[9px] text-muted-foreground/50">{t('commerce:sum_variations_above', 'Hasil tambah {{count}} variasi di atas', { count: form.variations.length })}</p>
                               </div>
                               <div className="text-right">
                                 <span className="text-lg font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${color}, #eab308)` }}>
@@ -1459,7 +1462,7 @@ export function PosProductPage() {
                           <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
                             <div>
                               <p className="text-xs font-bold text-foreground">{t('keusahawanan:pos_single_product_stock', 'Stok Produk Tunggal')}</p>
-                              <p className="text-[9px] text-muted-foreground/50">Tiada variasi atau saiz ditetapkan</p>
+                              <p className="text-[9px] text-muted-foreground/50">{t('commerce:no_variations_set', 'Tiada variasi atau saiz ditetapkan')}</p>
                             </div>
                             <div className="text-right">
                               <span className="text-base font-black" style={{ color }}>
@@ -1481,7 +1484,7 @@ export function PosProductPage() {
                         className="flex-1 h-12 rounded-2xl font-black text-xs uppercase tracking-wider border-2 border-border/60 hover:bg-muted/50 transition-all"
                         style={{ color }}
                       >
-                        Kembali
+                        {t('common:back', 'Kembali')}
                       </button>
                     )}
                     
@@ -1492,7 +1495,7 @@ export function PosProductPage() {
                           // Validasi Langkah 1
                           if (formStep === 1) {
                             if (!form.name.trim()) { toast.error(t('keusahawanan:toast_product_name_required', 'Nama produk wajib diisi.')); return; }
-                            if (!form.price || parseFloat(form.price) < 0) { toast.error('Harga tidak sah.'); return; }
+                            if (!form.price || parseFloat(form.price) < 0) { toast.error(t('commerce:err_invalid_price', 'Harga tidak sah.')); return; }
                           }
                           setFormStep(s => (s + 1) as any);
                         }}
