@@ -90,7 +90,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
 
   const handleDemerit = async () => {
     if (!selectedStudent) return;
-    if (!demeritForm.reason) { toast.error('Sila nyatakan kesalahan'); return; }
+    if (!demeritForm.reason) { toast.error(t('akademik:error_specify_offense', 'Sila nyatakan kesalahan')); return; }
     
     setSubmitting(true);
     try {
@@ -120,12 +120,12 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
       });
       if (rpcError) console.error('RPC increment_merit_by_source gagal:', rpcError.message);
 
-      toast.success(`Demerit berjaya direkod untuk ${selectedStudent.full_name}`);
+      toast.success(t('akademik:demerit_recorded_success', 'Demerit berjaya direkod untuk {{name}}', { name: selectedStudent.full_name }));
       setSelectedStudent(null);
       setSearchQuery('');
       setDemeritForm({ reason: '', points: 5, proof_url: '' });
     } catch (err: any) {
-      toast.error(err.message || 'Gagal merekod demerit');
+      toast.error(err.message || t('akademik:error_record_demerit_failed', 'Gagal merekod demerit'));
     } finally {
       setSubmitting(false);
     }
@@ -140,12 +140,12 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
       .order('created_at', { ascending: false });
     
     if (error) {
-      toast.error('Gagal memuatkan rayuan');
+      toast.error(t('akademik:error_load_appeals_failed', 'Gagal memuatkan rayuan'));
     } else {
       setAppeals(data || []);
     }
     setLoadingAppeals(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (activeTab === 'APPEALS') {
@@ -179,7 +179,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
           await supabase.from('merit_transactions').insert({
             user_id: appeal.user_id,
             points: refundPoints,
-            reason: `Refund Rayuan Lulus: ${appeal.transaction.reason}`,
+            reason: t('akademik:appeal_approved_refund_reason', 'Refund Rayuan Lulus: {{reason}}', { reason: appeal.transaction.reason }),
             actor_name: profile?.full_name,
             source: finalSource
           });
@@ -193,15 +193,15 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
         }
       }
 
-      toast.success(status === 'APPROVED' ? 'Rayuan diluluskan' : 'Rayuan ditolak');
+      toast.success(status === 'APPROVED' ? t('akademik:appeal_approved_toast', 'Rayuan diluluskan') : t('akademik:appeal_rejected_toast', 'Rayuan ditolak'));
       loadAppeals();
     } catch (err: any) {
-      toast.error(err.message || 'Ralat mengemaskini status rayuan');
+      toast.error(err.message || t('akademik:error_update_appeal_failed', 'Ralat mengemaskini status rayuan'));
     }
   };
 
   const handleArchiveCohort = async () => {
-    if (!cohortName) { toast.error('Sila masukkan nama Sesi/Kohort'); return; }
+    if (!cohortName) { toast.error(t('akademik:error_enter_cohort_name', 'Sila masukkan nama Sesi/Kohort')); return; }
 
     // Determine which pool to reset based on sourceOverride or unit
     let resetSource = sourceOverride;
@@ -211,12 +211,18 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
       else if (profile?.jpp_unit === 'AKADEMIK') resetSource = 'AKADEMIK';
     }
 
-    const poolLabel = resetSource === 'KELAB' ? 'Merit Kelab' : resetSource === 'AKADEMIK' ? 'Merit Akademik' : resetSource === 'QR_SCAN' ? 'Merit Asrama' : 'Semua Merit';
+    const poolLabel = resetSource === 'KELAB'
+      ? t('akademik:pool_club_merit', 'Merit Kelab')
+      : resetSource === 'AKADEMIK'
+      ? t('akademik:pool_academic_merit', 'Merit Akademik')
+      : resetSource === 'QR_SCAN'
+      ? t('akademik:pool_hostel_merit', 'Merit Asrama')
+      : t('akademik:pool_all_merit', 'Semua Merit');
     const isGlobal = isAdmin && (!resetSource || resetSource === 'MANUAL');
 
     const confirmMsg = isGlobal
-      ? `PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "${cohortName}"?\n\nSEMUA merit pelajar akan di-reset ke 0. Proses ini tidak boleh diundur.`
-      : `PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "${cohortName}"?\n\nHanya ${poolLabel} akan di-reset ke 0. Merit pool lain kekal.`;
+      ? t('akademik:cohort_archive_confirm_global', 'PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "{{cohortName}}"?\n\nSEMUA merit pelajar akan di-reset ke 0. Proses ini tidak boleh diundur.', { cohortName })
+      : t('akademik:cohort_archive_confirm_pool', 'PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "{{cohortName}}"?\n\nHanya {{poolLabel}} akan di-reset ke 0. Merit pool lain kekal.', { cohortName, poolLabel });
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -236,11 +242,14 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
         });
         if (error) throw error;
       }
-      toast.success(`Kohort "${cohortName}" (${isGlobal ? 'Global' : poolLabel}) telah berjaya ditutup.`);
+      toast.success(t('akademik:cohort_archive_success', 'Kohort "{{cohortName}}" ({{type}}) telah berjaya ditutup.', {
+        cohortName,
+        type: isGlobal ? t('akademik:cohort_global_type', 'Global') : poolLabel
+      }));
       setSelectedSession('');
       setCohortConfirm('');
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menutup kohort');
+      toast.error(err.message || t('akademik:error_close_cohort_failed', 'Gagal menutup kohort'));
     } finally {
       setArchiving(false);
     }
@@ -250,8 +259,8 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
     return (
       <div className="py-12 text-center text-slate-500 dark:text-white/50">
         <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-20 text-slate-400 dark:text-white" />
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">Akses Ditolak</h2>
-        <p className="text-sm text-slate-500 dark:text-white/50">Hanya EXCO dibenarkan mengakses modul ini.</p>
+        <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('akademik:access_denied_title', 'Akses Ditolak')}</h2>
+        <p className="text-sm text-slate-500 dark:text-white/50">{t('akademik:access_denied_desc', 'Hanya EXCO dibenarkan mengakses modul ini.')}</p>
       </div>
     );
   }
@@ -356,7 +365,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                     </button>
                   ))}
                   {searchQuery.length >= 3 && students.length === 0 && (
-                    <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">Tiada pelajar ditemui.</p>
+                    <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">{t('akademik:no_students_found', 'Tiada pelajar ditemui.')}</p>
                   )}
                 </div>
               )}
@@ -392,7 +401,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">{t('akademik:evidence_url', 'Pautan Bukti')}</label>
                   <input
                     type="text"
-                    placeholder="Link GDrive/Imej (Opsional)"
+                    placeholder={t('akademik:proof_url_placeholder', 'Link GDrive/Imej (Opsional)')}
                     value={demeritForm.proof_url}
                     onChange={(e) => setDemeritForm(p => ({ ...p, proof_url: e.target.value }))}
                     className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-slate-300 dark:focus:border-white/30"
@@ -415,7 +424,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
             {loadingAppeals ? (
               <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
             ) : appeals.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 dark:text-white/30">Tiada rayuan setakat ini.</div>
+              <div className="py-12 text-center text-slate-400 dark:text-white/30">{t('akademik:no_appeals_yet', 'Tiada rayuan setakat ini.')}</div>
             ) : (
               <div className="space-y-4">
                 {appeals.map(appeal => (
@@ -427,7 +436,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                           appeal.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
                           'bg-rose-500/20 text-rose-600 dark:text-rose-400'
                         }`}>
-                          {appeal.status}
+                          {appeal.status === 'PENDING' ? t('akademik:appeal_status_processing', 'DALAM SEMAKAN') : appeal.status === 'APPROVED' ? t('akademik:appeal_status_approved', 'DILULUSKAN') : t('akademik:appeal_status_rejected', 'DITOLAK')}
                         </span>
                         <span className="text-[10px] text-slate-500 dark:text-white/30">
                           {format(parseISO(appeal.created_at), 'd MMM yyyy')}
@@ -440,11 +449,11 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                       </div>
 
                       <div className="bg-white dark:bg-white/5 p-3 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
-                        <p className="text-[10px] uppercase font-black text-rose-600 dark:text-rose-400 mb-1">Kesalahan Asal: {appeal.transaction?.reason} ({appeal.transaction?.points} Merit)</p>
-                        <p className="text-xs text-slate-700 dark:text-white/80"><span className="text-slate-500 dark:text-white/40">Alasan Rayuan:</span> {appeal.appeal_reason}</p>
+                        <p className="text-[10px] uppercase font-black text-rose-600 dark:text-rose-400 mb-1">{t('akademik:original_offense_label', 'Kesalahan Asal')}: {appeal.transaction?.reason} ({appeal.transaction?.points} {t('akademik:merit_label', 'Merit')})</p>
+                        <p className="text-xs text-slate-700 dark:text-white/80"><span className="text-slate-500 dark:text-white/40">{t('akademik:appeal_reason_label_text', 'Alasan Rayuan')}:</span> {appeal.appeal_reason}</p>
                         {appeal.proof_url && (
                           <a href={appeal.proof_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-flex items-center gap-1">
-                            <FileText className="w-3 h-3" /> Lihat Bukti Dilampirkan
+                            <FileText className="w-3 h-3" /> {t('akademik:view_attached_proof', 'Lihat Bukti Dilampirkan')}
                           </a>
                         )}
                       </div>
@@ -479,40 +488,40 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Tutup Kohort Merit</h3>
-                  <p className="text-[10px] text-slate-500 dark:text-white/40">Arkib semua merit pelajar untuk sesi lepas</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('akademik:close_merit_cohort_title', 'Tutup Kohort Merit')}</h3>
+                  <p className="text-[10px] text-slate-500 dark:text-white/40">{t('akademik:close_merit_cohort_desc', 'Arkib semua merit pelajar untuk sesi lepas')}</p>
                 </div>
               </div>
               
               <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
-                <p className="text-[10px] font-black text-rose-700 dark:text-rose-300 mb-2 uppercase tracking-widest">Awas: Operasi Kekal</p>
+                <p className="text-[10px] font-black text-rose-700 dark:text-rose-300 mb-2 uppercase tracking-widest">{t('akademik:warning_permanent_operation', 'Awas: Operasi Kekal')}</p>
                 <ul className="text-[11px] text-rose-800 dark:text-rose-200/80 list-disc list-inside space-y-1">
                   {sourceOverride && sourceOverride !== 'MANUAL' ? (
                     <>
-                      <li>Hanya <b>{sourceOverride === 'KELAB' ? 'Merit Kelab' : sourceOverride === 'AKADEMIK' ? 'Merit Akademik' : 'Merit Asrama'}</b> akan di-reset.</li>
-                      <li>Merit pool lain kekal tidak berubah.</li>
-                      <li>Jumlah merit total akan dikurangkan mengikut baki pool ini.</li>
+                      <li>{t('akademik:cohort_rule_pool_1', 'Hanya')} <b>{sourceOverride === 'KELAB' ? t('akademik:pool_club_merit', 'Merit Kelab') : sourceOverride === 'AKADEMIK' ? t('akademik:pool_academic_merit', 'Merit Akademik') : t('akademik:pool_hostel_merit', 'Merit Asrama')}</b> {t('akademik:cohort_rule_pool_2', 'akan di-reset.')}</li>
+                      <li>{t('akademik:cohort_rule_pool_3', 'Merit pool lain kekal tidak berubah.')}</li>
+                      <li>{t('akademik:cohort_rule_pool_4', 'Jumlah merit total akan dikurangkan mengikut baki pool ini.')}</li>
                     </>
                   ) : (
                     <>
-                      <li>Semua transaksi merit sesi semasa akan dikategorikan di bawah Sesi ini.</li>
-                      <li>Satu rekod sejarah akan dicipta untuk setiap pelajar.</li>
-                      <li>Baki merit <b>semua pelajar</b> akan di-reset kepada 0 untuk mula sesi baharu.</li>
+                      <li>{t('akademik:cohort_rule_global_1', 'Semua transaksi merit sesi semasa akan dikategorikan di bawah Sesi ini.')}</li>
+                      <li>{t('akademik:cohort_rule_global_2', 'Satu rekod sejarah akan dicipta untuk setiap pelajar.')}</li>
+                      <li>{t('akademik:cohort_rule_global_3a', 'Baki merit')} <b>{t('akademik:cohort_rule_global_3b', 'semua pelajar')}</b> {t('akademik:cohort_rule_global_3c', 'akan di-reset kepada 0 untuk mula sesi baharu.')}</li>
                     </>
                   )}
                 </ul>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Pilih Sesi Akademik</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">{t('akademik:select_academic_session', 'Pilih Sesi Akademik')}</label>
                 <select
                   value={selectedSession}
                   onChange={(e) => { setSelectedSession(e.target.value); setCohortConfirm(''); }}
                   className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
                 >
-                  <option value="" disabled className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">— Pilih sesi —</option>
+                  <option value="" disabled className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">{t('akademik:select_session_placeholder', '— Pilih sesi —')}</option>
                   {sessionOptions.map(s => (
-                    <option key={s} value={s} className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">{s}{s === currentSession ? ' ★ Semasa' : ''}</option>
+                    <option key={s} value={s} className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">{s}{s === currentSession ? (' ' + t('akademik:session_current_badge', '★ Semasa')) : ''}</option>
                   ))}
                 </select>
               </div>
@@ -520,7 +529,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               {selectedSession && (
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">
-                    Taip “<span className="text-amber-600 dark:text-amber-400 font-bold">{selectedSession}</span>” untuk sahkan
+                    {t('akademik:type_session_to_confirm_prefix', 'Taip “')}<span className="text-amber-600 dark:text-amber-400 font-bold">{selectedSession}</span>{t('akademik:type_session_to_confirm_suffix', '” untuk sahkan')}
                   </label>
                   <input
                     type="text"
@@ -532,7 +541,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                     }`}
                   />
                   {cohortConfirm && !confirmMatch && (
-                    <p className="text-[10px] text-rose-500 dark:text-rose-400 mt-1">Nama sesi tidak sepadan.</p>
+                    <p className="text-[10px] text-rose-500 dark:text-rose-400 mt-1">{t('akademik:session_name_mismatch', 'Nama sesi tidak sepadan.')}</p>
                   )}
                 </div>
               )}
@@ -543,7 +552,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-amber-600 text-white hover:bg-amber-500 transition-all disabled:opacity-50 mt-4 shadow-sm"
               >
                 {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
-                Sahkan Tutup Kohort
+                {t('akademik:confirm_close_cohort_btn', 'Sahkan Tutup Kohort')}
               </button>
             </div>
           </div>

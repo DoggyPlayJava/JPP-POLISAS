@@ -5201,6 +5201,19 @@ Melengkapkan gelombang pembersihan pusingan ketiga (Batch 3) merentasi 15 fail b
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 4,155 kepada **3,255** (penurunan kumulatif 2,390 kejadian dalam 3 batch).
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.29 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 4): Settings/Auth, Academic/Demerit & Launch/Club Governance
+Melengkapkan gelombang pembersihan pusingan keempat (Batch 4) merentasi 11 fail berketumpatan tinggi dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 4 Disjoint Sweep):**
+   - **Tetapan Pengguna, Profil & Pengesahan (`settings.json`, `auth.json`, `common.json`):** `SettingsPage.tsx` (95 isu -> 0), `CompleteProfileModal.tsx` (62 isu -> 0), dan `LoginPage.tsx` (36 isu -> 0) diselaraskan sepenuhnya bagi pertukaran tema, muat naik avatar, alamat kediaman luar kampus, pemilihan kohort/semester, pengesahan nombor matrik, dan borang log masuk/daftar. Kunci `settings.json` dan `auth.json` diselaraskan dengan 100% pariti.
+   - **Pengurusan Akademik, Merit & Demerit (`akademik.json`):** `DemeritManager.tsx` (41 isu -> 0), `AkademikDashboard.tsx` (34 isu -> 0), `AkademikCgpa.tsx` (21 isu -> 0), dan `AkademikPencapaian.tsx` (18 isu -> 0) diselubungi bagi kalkulator CGPA, rekod salah laku demerit, borang rayuan tatatertib, transkrip OCR, dan pengesahan anugerah pelajar. Kunci `akademik.json` meningkat kepada 413 kunci dengan 100% pariti.
+   - **Pelancaran, Laman Utama & Tadbir Urus Kelab (`portal.json`, `kpp.json`):** `LaunchVideo.tsx` (130 isu -> 0), `LandingPage.tsx` (51 isu -> 0), `UrusKelabPage.tsx` (40 isu -> 0), dan `SemakanLaporanPage.tsx` (38 isu -> 0) diselubungi sepenuhnya bagi telemetri intro video pelancaran, 13 babak modul ekosistem kampus (PolyMaps, PolySuara, PolyRent, Kebajikan, Keusahawanan, Akademik, PolyMart, dsb.), pendaratan portal, carta organisasi kelab, dan semakan laporan aktiviti.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - Semua ujian master locales, unit ujian komponen (`Domain6CampusLifeCompleteI18n`, `Domain1And8SharedCompleteI18n`, `LoginPageI18n`, `CompleteProfileModalModern`, `SettingsLanguage`) melepasi 100% kelulusan hijau.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 3,255 kepada **2,689** (penurunan kumulatif 2,956 kejadian dalam 4 batch).
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

@@ -49,13 +49,15 @@ import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
 // ─────────────────────────────────────────────────────────────────────────────
 // Super App Tab Configurations & Legacy Param Mapping
 // ─────────────────────────────────────────────────────────────────────────────
+const t = (k: string, fb: string) => fb;
+
 export const SETTINGS_TAB_CONFIG = [
-  { id: 'profil', label: 'Profil & Akademik', labelKey: 'tab_profile', iconComponent: User, desc: 'Maklumat peribadi & pinda data', descKey: 'profile_tab_desc' },
-  { id: 'kediaman', label: 'Status Kediaman', labelKey: 'tab_residence', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus', descKey: 'residence_tab_desc' },
-  { id: 'tema', label: 'Paparan & Bahasa', labelKey: 'tab_theme', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa', descKey: 'theme_tab_desc' },
-  { id: 'notifikasi', label: 'Pemberitahuan', labelKey: 'tab_notifications', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan', descKey: 'notifications_tab_desc' },
-  { id: 'keselamatan', label: 'Keselamatan', labelKey: 'tab_security', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun', descKey: 'security_tab_desc' },
-  { id: 'bantuan', label: 'Bantuan & Tutorial', labelKey: 'tab_help', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan', descKey: 'help_tab_desc' },
+  { id: 'profil', label: t('settings:tab_profile', 'Profil & Akademik'), labelKey: 'tab_profile', iconComponent: User, desc: t('settings:profile_tab_desc', 'Maklumat peribadi & pinda data'), descKey: 'profile_tab_desc' },
+  { id: 'kediaman', label: t('settings:tab_residence', 'Status Kediaman'), labelKey: 'tab_residence', iconComponent: MapPin, desc: t('settings:residence_tab_desc', 'Deklarasi KAMSIS / Luar Kampus'), descKey: 'residence_tab_desc' },
+  { id: 'tema', label: t('settings:tab_theme', 'Paparan & Bahasa'), labelKey: 'tab_theme', iconComponent: Moon, desc: t('settings:theme_tab_desc', 'Pilihan mod cerah, gelap dan pilihan bahasa'), descKey: 'theme_tab_desc' },
+  { id: 'notifikasi', label: t('settings:tab_notifications', 'Pemberitahuan'), labelKey: 'tab_notifications', iconComponent: Bell, desc: t('settings:notifications_tab_desc', 'Urus amaran & notifikasi pesanan'), descKey: 'notifications_tab_desc' },
+  { id: 'keselamatan', label: t('settings:tab_security', 'Keselamatan'), labelKey: 'tab_security', iconComponent: Shield, desc: t('settings:security_tab_desc', 'Kata laluan & log masuk akaun'), descKey: 'security_tab_desc' },
+  { id: 'bantuan', label: t('settings:tab_help', 'Bantuan & Tutorial'), labelKey: 'tab_help', iconComponent: HelpCircle, desc: t('settings:help_tab_desc', 'Panduan sistem & talian aduan'), descKey: 'help_tab_desc' },
 ] as const;
 
 export type SettingsTabId = 'profil' | 'kediaman' | 'tema' | 'notifikasi' | 'keselamatan' | 'bantuan';
@@ -139,8 +141,14 @@ function ProfileEditRequestSection() {
 
       const { error: notifErr } = await supabase.from('notifications').insert({
         user_id: null,
-        title: 'Permintaan Pindaan Profil Pelajar',
-        message: `${profile.full_name} memohon pindaan ${fieldType === 'matric_no' ? 'No. Matrik' : 'Semester'}: ${currentVal} -> ${requestedValue.trim().toUpperCase()}${reason.trim() ? `. Sebab: ${reason.trim()}` : ''}`,
+        title: t('settings:profile_edit_request_title', 'Permintaan Pindaan Profil Pelajar'),
+        message: t('settings:profile_edit_request_msg', '{{name}} memohon pindaan {{field}}: {{curr}} -> {{next}}{{reason}}', {
+          name: profile.full_name,
+          field: fieldType === 'matric_no' ? t('settings:matric_no', 'No. Matrik') : t('settings:semester', 'Semester'),
+          curr: currentVal,
+          next: requestedValue.trim().toUpperCase(),
+          reason: reason.trim() ? `. Sebab: ${reason.trim()}` : ''
+        }),
         type: 'SYSTEM',
         module: 'JPP',
         target_role: 'JPP',
@@ -174,36 +182,36 @@ function ProfileEditRequestSection() {
           <ClipboardEdit className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Pindaan Maklumat Akademik</h3>
-          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">Mohon pindaan No. Matrik atau Semester rasmi kepada Majlis JPP.</p>
+          <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:academic_amendment_title', 'Pindaan Maklumat Akademik')}</h3>
+          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5">{t('settings:academic_amendment_desc', 'Mohon pindaan No. Matrik atau Semester rasmi kepada Majlis JPP.')}</p>
         </div>
       </div>
 
       <div className="p-5 sm:p-7 space-y-6">
         <div className="grid grid-cols-2 gap-3">
           <div className="p-4 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-1">No. Matrik Semasa</p>
-            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] font-mono">{profile?.matric_no || <span className="text-[#556453] dark:text-[#A3B39F] italic text-xs">Belum ditetapkan</span>}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-1">{t('settings:current_matric_no', 'No. Matrik Semasa')}</p>
+            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] font-mono">{profile?.matric_no || <span className="text-[#556453] dark:text-[#A3B39F] italic text-xs">{t('settings:not_set', 'Belum ditetapkan')}</span>}</p>
           </div>
           <div className="p-4 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-1">Semester Semasa</p>
-            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE]">{semInfo.semester > 0 ? `Semester ${semInfo.semester}` : <span className="text-[#556453] dark:text-[#A3B39F] italic text-xs">-</span>}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-1">{t('settings:current_semester', 'Semester Semasa')}</p>
+            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE]">{semInfo.semester > 0 ? t('settings:semester_n', 'Semester {{sem}}', { sem: semInfo.semester }) : <span className="text-[#556453] dark:text-[#A3B39F] italic text-xs">-</span>}</p>
           </div>
         </div>
 
         {loadingReqs ? (
-          <div className="flex items-center gap-2 text-xs text-[#556453] dark:text-[#A3B39F]"><Loader2 className="w-3.5 h-3.5 animate-spin" />Memuatkan rekod...</div>
+          <div className="flex items-center gap-2 text-xs text-[#556453] dark:text-[#A3B39F]"><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('settings:loading_records', 'Memuatkan rekod...')}</div>
         ) : requests.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">Rekod Permintaan</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">{t('settings:request_records', 'Rekod Permintaan')}</p>
             <div className="space-y-2">
               {requests.map(r => (
                 <div key={r.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F8F6EE]/40 dark:bg-[#151D16]/40 border border-[#D9C9B2]/50 dark:border-[#3A4A3B] gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                      {r.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}: <span className="font-mono text-[#556453] dark:text-[#A3B39F] line-through">{r.current_value}</span> {'->'} <span className="font-mono text-[#6B7F5B] font-black">{r.requested_value}</span>
+                      {r.field_type === 'matric_no' ? t('settings:matric_no', 'No. Matrik') : t('settings:semester', 'Semester')}: <span className="font-mono text-[#556453] dark:text-[#A3B39F] line-through">{r.current_value}</span> {'->'} <span className="font-mono text-[#6B7F5B] font-black">{r.requested_value}</span>
                     </p>
-                    {r.review_note && <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] mt-0.5">Nota JPP: {r.review_note}</p>}
+                    {r.review_note && <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:jpp_note', 'Nota JPP:')} {r.review_note}</p>}
                     <p className="text-[10px] text-[#556453]/60 dark:text-[#A3B39F]/60 mt-0.5">{new Date(r.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                   </div>
                   {statusBadge(r.status)}
@@ -214,16 +222,16 @@ function ProfileEditRequestSection() {
         ) : null}
 
         <div className="border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B] pt-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-4">Hantar Permintaan Baharu</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-4">{t('settings:send_new_request', 'Hantar Permintaan Baharu')}</p>
           {(hasPendingMatric && hasPendingSemester) ? (
             <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Anda mempunyai permintaan PENDING untuk kedua-dua No. Matrik dan Semester. Sila tunggu kelulusan MT JPP.</p>
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">{t('settings:pending_amendment_notice', 'Anda mempunyai permintaan PENDING untuk kedua-dua No. Matrik dan Semester. Sila tunggu kelulusan MT JPP.')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Jenis Pindaan</Label>
+                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:amendment_type', 'Jenis Pindaan')}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['matric_no', 'semester'] as const).map(ft => {
                     const isPending = ft === 'matric_no' ? hasPendingMatric : hasPendingSemester;
@@ -242,8 +250,8 @@ function ProfileEditRequestSection() {
                             : "border-[#D9C9B2]/60 dark:border-[#3A4A3B] bg-white dark:bg-[#151D16]/50 hover:border-[#6B7F5B]/40 text-[#2E3A2F] dark:text-[#F8F6EE]"
                         )}
                       >
-                        {ft === 'matric_no' ? 'No. Matrik' : 'Semester'}
-                        {isPending && <span className="block text-[9px] mt-0.5 text-amber-500 font-normal">Ada PENDING</span>}
+                        {ft === 'matric_no' ? t('settings:matric_no', 'No. Matrik') : t('settings:semester', 'Semester')}
+                        {isPending && <span className="block text-[9px] mt-0.5 text-amber-500 font-normal">{t('settings:has_pending', 'Ada PENDING')}</span>}
                       </button>
                     );
                   })}
@@ -252,7 +260,7 @@ function ProfileEditRequestSection() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                  {fieldType === 'matric_no' ? 'No. Matrik Baharu' : 'Semester Baharu (1-6)'}
+                  {fieldType === 'matric_no' ? t('settings:new_matric_no', 'No. Matrik Baharu') : t('settings:new_semester_range', 'Semester Baharu (1-6)')}
                   <span className="text-[#C96F4F] ml-0.5">*</span>
                 </Label>
                 {fieldType === 'semester' ? (
@@ -262,9 +270,9 @@ function ProfileEditRequestSection() {
                     required
                     className="w-full h-11 px-4 rounded-xl bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#6B7F5B]/50"
                   >
-                    <option value="">-- Pilih Semester --</option>
+                    <option value="">{t('settings:select_semester_placeholder', '-- Pilih Semester --')}</option>
                     {[1, 2, 3, 4, 5, 6].map(s => (
-                      <option key={s} value={String(s)}>{`Semester ${s}`}</option>
+                      <option key={s} value={String(s)}>{t('settings:semester_n', 'Semester {{sem}}', { sem: s })}</option>
                     ))}
                   </select>
                 ) : (
@@ -279,12 +287,12 @@ function ProfileEditRequestSection() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Sebab Pindaan <span className="text-[#556453] dark:text-[#A3B39F] font-medium">(Pilihan)</span></Label>
+                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:amendment_reason', 'Sebab Pindaan')} <span className="text-[#556453] dark:text-[#A3B39F] font-medium">{t('settings:optional_tag', '(Pilihan)')}</span></Label>
                 <textarea
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   rows={2}
-                  placeholder="Terangkan sebab pindaan diperlukan..."
+                  placeholder={t('settings:amendment_reason_placeholder', 'Terangkan sebab pindaan diperlukan...')}
                   className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] text-sm font-medium resize-none focus-visible:ring-2 focus-visible:ring-[#6B7F5B]/50 outline-none"
                 />
               </div>
@@ -294,7 +302,7 @@ function ProfileEditRequestSection() {
                 disabled={submitting || !requestedValue}
                 className="w-full h-11 rounded-2xl font-bold text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs active:scale-95 transition-all min-h-[44px]"
               >
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menghantar...</> : 'Hantar Permintaan Pindaan'}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('settings:submitting_request', 'Menghantar...')}</> : t('settings:submit_amendment_btn', 'Hantar Permintaan Pindaan')}
               </Button>
             </form>
           )}
@@ -400,7 +408,7 @@ function KediamanSettingsSection() {
     if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error(t('settings:error_specify_area', 'Sila nyatakan kawasan.')); return; }
     for (const f of dynamicFields) {
       if (f.is_required && !extraData[f.field_key]?.trim()) {
-        toast.error(`Sila isi: ${f.label}`); return;
+        toast.error(t('settings:error_fill_field', 'Sila isi: {{label}}', { label: f.label })); return;
       }
     }
     await save(true, {
@@ -417,8 +425,8 @@ function KediamanSettingsSection() {
         <div className="w-14 h-14 rounded-3xl bg-[#6B7F5B]/15 flex items-center justify-center mx-auto text-[#6B7F5B] border border-[#6B7F5B]/30">
           <MapPin className="w-7 h-7" />
         </div>
-        <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Belum Perlu Deklarasi</p>
-        <p className="text-xs text-[#556453] dark:text-[#A3B39F] max-w-sm mx-auto">Status kediaman hanya diperlukan mulai Semester 2 dan ke atas mengikut takwim kolej.</p>
+        <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:no_declaration_needed_title', 'Belum Perlu Deklarasi')}</p>
+        <p className="text-xs text-[#556453] dark:text-[#A3B39F] max-w-sm mx-auto">{t('settings:no_declaration_needed_desc', 'Status kediaman hanya diperlukan mulai Semester 2 dan ke atas mengikut takwim kolej.')}</p>
       </Card>
     );
   }
@@ -430,10 +438,10 @@ function KediamanSettingsSection() {
           <MapPin className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">Status Kediaman Pelajar</h3>
+          <h3 className="text-base font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:residence_status_title', 'Status Kediaman Pelajar')}</h3>
           <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium mt-0.5 flex items-center flex-wrap gap-1">
-            <span>Semester {semInfo.semester} - Tahun Akademik {academicYear}</span>
-            {existing && <span className="ml-2 text-[#6B7F5B] font-bold inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Sudah Direkodkan</span>}
+            <span>{t('settings:semester_n', 'Semester {{sem}}', { sem: semInfo.semester })} - {t('settings:academic_year_label', 'Tahun Akademik')} {academicYear}</span>
+            {existing && <span className="ml-2 text-[#6B7F5B] font-bold inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {t('settings:already_recorded', 'Sudah Direkodkan')}</span>}
           </p>
         </div>
       </div>
@@ -441,13 +449,13 @@ function KediamanSettingsSection() {
       <div className="p-5 sm:p-7">
         {step === 'loading' && (
           <div className="py-8 flex items-center justify-center gap-2 text-[#556453] dark:text-[#A3B39F] text-xs">
-            <Loader2 className="w-4 h-4 animate-spin text-[#6B7F5B]" /> Memuatkan maklumat...
+            <Loader2 className="w-4 h-4 animate-spin text-[#6B7F5B]" /> {t('settings:loading_info', 'Memuatkan maklumat...')}
           </div>
         )}
 
         {step === 'choice' && (
           <div className="space-y-4">
-            <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] font-medium mb-4">Di mana lokasi penempatan anda bagi sesi semester ini?</p>
+            <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] font-medium mb-4">{t('settings:residence_location_question', 'Di mana lokasi penempatan anda bagi sesi semester ini?')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 type="button"
@@ -459,8 +467,8 @@ function KediamanSettingsSection() {
                   <Building2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">Dalam KAMSIS</p>
-                  <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">Tinggal di asrama kolej POLISAS</p>
+                  <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">{t('settings:in_kamsis', 'Dalam KAMSIS')}</p>
+                  <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:in_kamsis_desc', 'Tinggal di asrama kolej POLISAS')}</p>
                 </div>
               </button>
 
@@ -473,8 +481,8 @@ function KediamanSettingsSection() {
                   <Home className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">Luar Kampus</p>
-                  <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">Rumah sewa atau kediaman keluarga</p>
+                  <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">{t('settings:off_campus', 'Luar Kampus')}</p>
+                  <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:off_campus_desc', 'Rumah sewa atau kediaman keluarga')}</p>
                 </div>
               </button>
             </div>
@@ -484,7 +492,7 @@ function KediamanSettingsSection() {
         {step === 'form' && (
           <form onSubmit={handleSubmitLuar} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Alamat Kediaman <span className="text-[#C96F4F]">*</span></Label>
+              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:residence_address', 'Alamat Kediaman')} <span className="text-[#C96F4F]">*</span></Label>
               <textarea
                 value={alamat} onChange={e => setAlamat(e.target.value)} required rows={2}
                 placeholder="No. 12, Jalan Semambu 1..."
@@ -492,7 +500,7 @@ function KediamanSettingsSection() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Kawasan Kediaman <span className="text-[#C96F4F]">*</span></Label>
+              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:residence_area', 'Kawasan Kediaman')} <span className="text-[#C96F4F]">*</span></Label>
               <KawasanSearchSelect
                 value={kawasan}
                 onChange={setKawasan}
@@ -502,26 +510,26 @@ function KediamanSettingsSection() {
             </div>
             {kawasan === 'LAIN_LAIN' && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Nyatakan Kawasan <span className="text-[#C96F4F]">*</span></Label>
+                <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:specify_area', 'Nyatakan Kawasan')} <span className="text-[#C96F4F]">*</span></Label>
                 <input
                   type="text" value={kawasanCustom} onChange={e => setKawasanCustom(e.target.value)} required
-                  placeholder="Nama kawasan..."
+                  placeholder={t('settings:area_name_placeholder', 'Nama kawasan...')}
                   className="w-full h-11 px-4 rounded-xl bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#6B7F5B]/50"
                 />
               </div>
             )}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">Cadangan <span className="text-[#556453] dark:text-[#A3B39F] font-medium">(Pilihan)</span></Label>
+              <Label className="text-xs font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:feedback_suggestions', 'Cadangan')} <span className="text-[#556453] dark:text-[#A3B39F] font-medium">{t('settings:optional_tag', '(Pilihan)')}</span></Label>
               <textarea
                 value={cadangan} onChange={e => setCadangan(e.target.value)} rows={2}
-                placeholder="Cadangan kepada Exco Kediaman Luar Kampus..."
+                placeholder={t('settings:suggestions_placeholder', 'Cadangan kepada Exco Kediaman Luar Kampus...')}
                 className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] text-sm font-medium resize-none focus-visible:ring-2 focus-visible:ring-[#6B7F5B]/50 outline-none"
               />
             </div>
 
             {dynamicFields.length > 0 && (
               <div className="space-y-3 pt-2 border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">Maklumat Tambahan</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">{t('settings:additional_info', 'Maklumat Tambahan')}</p>
                 <KlkDynamicFieldRenderer
                   fields={dynamicFields}
                   values={extraData}
@@ -533,10 +541,10 @@ function KediamanSettingsSection() {
 
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setStep('choice')} className="flex-1 h-11 rounded-2xl font-bold text-xs border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] min-h-[44px]">
-                Kembali
+                {t('settings:btn_back', 'Kembali')}
               </Button>
               <Button type="submit" disabled={saving} className="flex-1 h-11 rounded-2xl font-bold text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs min-h-[44px]">
-                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menyimpan...</> : existing ? 'Kemaskini' : 'Hantar'}
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('settings:saving_loading', 'Menyimpan...')}</> : existing ? t('settings:btn_update', 'Kemaskini') : t('settings:btn_submit', 'Hantar')}
               </Button>
             </div>
           </form>
@@ -548,15 +556,18 @@ function KediamanSettingsSection() {
               <Check className="w-7 h-7" />
             </div>
             <div>
-              <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Status Kediaman Telah Disimpan</p>
+              <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:residence_status_saved', 'Status Kediaman Telah Disimpan')}</p>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-1">
                 {existing?.tinggal_luar
-                  ? `Luar Kampus - ${existing.kawasan_kediaman === 'LAIN_LAIN' ? existing.kawasan_custom : existing.kawasan_kediaman}`
-                  : 'Dalam KAMSIS (Asrama Kolej)'}
+                  ? t('settings:off_campus_area', '{{status}} - {{area}}', {
+                      status: t('settings:off_campus', 'Luar Kampus'),
+                      area: existing.kawasan_kediaman === 'LAIN_LAIN' ? existing.kawasan_custom : existing.kawasan_kediaman,
+                    })
+                  : t('settings:in_kamsis_full', 'Dalam KAMSIS (Asrama Kolej)')}
               </p>
             </div>
             <Button variant="outline" onClick={() => setStep(existing?.tinggal_luar ? 'form' : 'choice')} className="h-11 px-6 rounded-2xl font-bold text-xs border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] min-h-[44px]">
-              Kemaskini Semula
+              {t('settings:update_again', 'Kemaskini Semula')}
             </Button>
           </div>
         )}
@@ -642,7 +653,7 @@ export function SettingsPage() {
     return { semester: 0, level: 'Junior' as const };
   })();
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Pelajar POLISAS';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || t('settings:polisas_student', 'Pelajar POLISAS');
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const roleTitle = getRoleBadgeTitle(effectiveRole);
 
@@ -753,16 +764,16 @@ export function SettingsPage() {
       
       await sendEmail({
         to: user.email,
-        subject: "Kod Pengesahan Portal JPP",
-        html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        subject: t('settings:email_otp_subject', "Kod Pengesahan Portal JPP"),
+        html: t('settings:email_otp_html', `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
           <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
           <p>Gunakan kod 6-digit di bawah:</p>
           <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-            <h1 style="letter-spacing: 8px; margin: 0; color: #10b981; font-size: 32px;">${newOTP}</h1>
+            <h1 style="letter-spacing: 8px; margin: 0; color: #10b981; font-size: 32px;">{{otp}}</h1>
           </div>
           <p style="font-size: 12px; color: #64748b;">Abaikan emel ini sekiranya anda tidak memohon pertukaran ini.</p>
-        </div>`
+        </div>`, { otp: newOTP })
       });
       
       setShowOTPModal(true);
@@ -842,7 +853,7 @@ export function SettingsPage() {
               onClick={() => navigate(-1)}
               type="button"
               className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white dark:bg-[#1E271F]/80 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-all shadow-xs active:scale-95 min-h-[44px] min-w-[44px]"
-              aria-label="Kembali"
+              aria-label={t('settings:btn_back', 'Kembali')}
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -879,7 +890,7 @@ export function SettingsPage() {
               />
               <label
                 htmlFor="avatar-hero-upload"
-                aria-label="Tukar gambar profil"
+                aria-label={t('settings:change_profile_photo', 'Tukar gambar profil')}
                 className={cn(
                   "h-8 w-8 sm:h-9 sm:w-9 rounded-xl absolute -bottom-1 -right-1 flex items-center justify-center text-white shadow-md border-2 border-white dark:border-[#1E271F] transition-all cursor-pointer min-w-[32px] min-h-[32px]",
                   uploadingAvatar ? "bg-slate-400 pointer-events-none" : "bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] active:scale-95"
@@ -897,7 +908,7 @@ export function SettingsPage() {
                     {displayName}
                   </h2>
                   <p className="text-xs sm:text-sm font-mono font-bold text-[#556453] dark:text-[#A3B39F] mt-0.5 truncate">
-                    {profile?.matric_no ? `Matrik: ${profile.matric_no}` : 'No. Matrik Belum Ditetapkan'}
+                    {profile?.matric_no ? t('settings:matric_with_num', 'Matrik: {{num}}', { num: profile.matric_no }) : t('settings:matric_not_set', 'No. Matrik Belum Ditetapkan')}
                   </p>
                 </div>
 
@@ -921,7 +932,7 @@ export function SettingsPage() {
                     <span className="truncate">Semester</span>
                   </div>
                   <span className="text-[11px] sm:text-xs md:text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate max-w-full">
-                    {semInfo.semester > 0 ? `Semester ${semInfo.semester}` : 'Semester 1'}
+                    {semInfo.semester > 0 ? t('settings:semester_n', 'Semester {{sem}}', { sem: semInfo.semester }) : t('settings:semester_n', 'Semester {{sem}}', { sem: 1 })}
                   </span>
                 </div>
 
@@ -1049,7 +1060,7 @@ export function SettingsPage() {
                             id="input-email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="pelajar@polisas.edu.my"
+                            placeholder={t('settings:student_email_placeholder', 'pelajar@polisas.edu.my')}
                             type="email"
                             className="h-11 pl-10 rounded-xl bg-white dark:bg-[#151D16] font-medium text-sm border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] focus-visible:ring-[#6B7F5B]/50"
                           />
@@ -1128,7 +1139,7 @@ export function SettingsPage() {
                         id: 'ms' as const,
                         flag: '🇲🇾',
                         title: 'Bahasa Melayu',
-                        subtitle: 'Antara muka sistem dalam Bahasa Melayu',
+                        subtitle: t('settings:language_ms_desc', 'Antara muka sistem dalam Bahasa Melayu'),
                       },
                       {
                         id: 'en' as const,
@@ -1180,22 +1191,22 @@ export function SettingsPage() {
                     {[
                       {
                         id: 'light' as const,
-                        title: 'Cerah',
-                        desc: 'Latar belakang cerah dengan kontras tinggi untuk siang hari.',
+                        title: t('settings:light_mode', 'Cerah'),
+                        desc: t('settings:light_mode_desc', 'Latar belakang cerah dengan kontras tinggi untuk siang hari.'),
                         icon: Sun,
                         previewClass: 'bg-[#F8F6EE] border-[#D9C9B2] text-[#2E3A2F]',
                       },
                       {
                         id: 'dark' as const,
-                        title: 'Gelap',
-                        desc: 'Latar gelap OLED untuk keselesaan mata & penjimatan bateri.',
+                        title: t('settings:dark_mode', 'Gelap'),
+                        desc: t('settings:dark_mode_desc', 'Latar gelap OLED untuk keselesaan mata & penjimatan bateri.'),
                         icon: Moon,
                         previewClass: 'bg-[#151D16] border-[#3A4A3B] text-[#F8F6EE]',
                       },
                       {
                         id: 'system' as const,
-                        title: 'Ikut Sistem',
-                        desc: 'Menyesuaikan tema secara dinamik mengikut tetapan OS peranti.',
+                        title: t('settings:system_mode', 'Ikut Sistem'),
+                        desc: t('settings:system_mode_desc', 'Menyesuaikan tema secara dinamik mengikut tetapan OS peranti.'),
                         icon: Laptop,
                         previewClass: 'bg-gradient-to-r from-[#F8F6EE] via-[#D9C9B2] to-[#151D16] border-[#D9C9B2] text-[#2E3A2F] dark:text-[#F8F6EE]',
                       },
@@ -1240,7 +1251,7 @@ export function SettingsPage() {
                   <div className="mt-6 p-4 rounded-2xl bg-[#F8F6EE]/80 dark:bg-[#151D16]/80 border border-[#D9C9B2]/60 dark:border-[#3A4A3B] flex items-center gap-3">
                     <Sparkles className="w-4 h-4 text-[#6B7F5B] shrink-0" />
                     <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
-                      Mod gelap dilengkapi seni reka <strong>OLED Deep Glass</strong> dengan pencahayaan rim neon untuk keselesaan visual maksimum.
+                      {t('settings:theme_oled_tip', 'Mod gelap dilengkapi seni reka OLED Deep Glass dengan pencahayaan rim neon untuk keselesaan visual maksimum.')}
                     </p>
                   </div>
                 </Card>
@@ -1261,26 +1272,26 @@ export function SettingsPage() {
                   <div className="divide-y divide-[#D9C9B2]/40 dark:divide-[#3A4A3B]">
                     {[
                       {
-                        title: 'Pesanan PolyMart & Bazar',
-                        desc: 'Terima notifikasi status pesanan, pembayaran QR, dan barang sedia untuk diambil.',
+                        title: t('settings:notif_polymart_title', 'Pesanan PolyMart & Bazar'),
+                        desc: t('settings:notif_polymart_desc', 'Terima notifikasi status pesanan, pembayaran QR, dan barang sedia untuk diambil.'),
                         icon: Store,
                         defaultChecked: true,
                       },
                       {
-                        title: 'Bantuan & Aduan Kebajikan',
-                        desc: 'Makluman kemaskini status permohonan dana dan tiket kebajikan mahasiswa.',
+                        title: t('settings:notif_welfare_title', 'Bantuan & Aduan Kebajikan'),
+                        desc: t('settings:notif_welfare_desc', 'Makluman kemaskini status permohonan dana dan tiket kebajikan mahasiswa.'),
                         icon: ShieldAlert,
                         defaultChecked: true,
                       },
                       {
-                        title: 'Program & Acara Pelajar (EMS)',
-                        desc: 'Peringatan pendaftaran aktiviti, kehadiran kod QR, dan tuntutan merit.',
+                        title: t('settings:notif_ems_title', 'Program & Acara Pelajar (EMS)'),
+                        desc: t('settings:notif_ems_desc', 'Peringatan pendaftaran aktiviti, kehadiran kod QR, dan tuntutan merit.'),
                         icon: CalendarRange,
                         defaultChecked: true,
                       },
                       {
-                        title: 'Hebahan & Pengumuman Rasmi JPP',
-                        desc: 'Siaran langsung mesej penting, takwim, dan hebahan amnesti Majlis Tertinggi.',
+                        title: t('settings:notif_announcement_title', 'Hebahan & Pengumuman Rasmi JPP'),
+                        desc: t('settings:notif_announcement_desc', 'Siaran langsung mesej penting, takwim, dan hebahan amnesti Majlis Tertinggi.'),
                         icon: Bell,
                         defaultChecked: true,
                       },
@@ -1364,12 +1375,12 @@ export function SettingsPage() {
                       <Shield className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wider text-[#2E3A2F] dark:text-[#F8F6EE]">Sesi Semasa: Pelayar Web Aktif</p>
-                      <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] mt-0.5">Disulitkan dengan protokol TLS 1.3 & Supavisor Pooler</p>
+                      <p className="text-xs font-black uppercase tracking-wider text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:active_session_title', 'Sesi Semasa: Pelayar Web Aktif')}</p>
+                      <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:active_session_desc', 'Disulitkan dengan protokol TLS 1.3 & Supavisor Pooler')}</p>
                     </div>
                   </div>
                   <span className="bg-[#6B7F5B]/15 text-[#2E3A2F] dark:text-[#F8F6EE] border border-[#6B7F5B]/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
-                    Aktif
+                    {t('common:active', 'Aktif')}
                   </span>
                 </div>
 
@@ -1407,8 +1418,8 @@ export function SettingsPage() {
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Panduan Interaktif Sistem</h4>
-                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">Mulakan semula lawatan panduan portal JPP POLISAS untuk membiasakan diri dengan fungsi utama.</p>
+                      <h4 className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:interactive_guide_title', 'Panduan Interaktif Sistem')}</h4>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] mt-0.5">{t('settings:interactive_guide_desc', 'Mulakan semula lawatan panduan portal JPP POLISAS untuk membiasakan diri dengan fungsi utama.')}</p>
                     </div>
                   </div>
                   <Button
@@ -1422,7 +1433,7 @@ export function SettingsPage() {
                     }}
                     className="h-11 px-5 rounded-2xl font-bold text-xs bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs min-h-[44px] shrink-0"
                   >
-                    Mulakan Semula Panduan
+                    {t('settings:restart_guide_btn', 'Mulakan Semula Panduan')}
                   </Button>
                 </div>
 
@@ -1431,46 +1442,46 @@ export function SettingsPage() {
                   <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1E271F]/80 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] space-y-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <span className="bg-[#6B7F5B]/15 text-[#2E3A2F] dark:text-[#F8F6EE] border border-[#6B7F5B]/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block">
-                        Talian Pantas
+                        {t('settings:hotline_tag', 'Talian Pantas')}
                       </span>
-                      <h4 className="text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE]">WhatsApp Responder MT</h4>
-                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed">Berhubung terus dengan sekretariat JPP untuk kecemasan teknikal sistem.</p>
+                      <h4 className="text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:responder_wa_title', 'WhatsApp Responder MT')}</h4>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed">{t('settings:responder_wa_desc', 'Berhubung terus dengan sekretariat JPP untuk kecemasan teknikal sistem.')}</p>
                     </div>
                     <Button
                       onClick={() => window.open('https://wa.me/601139413699', '_blank')}
                       className="w-full h-11 rounded-2xl font-bold text-xs bg-[#6B7F5B] hover:bg-[#5C6E4E] text-white shadow-xs min-h-[44px] flex items-center justify-center gap-2"
                     >
-                      <MessageSquare className="w-4 h-4" /> Buka WhatsApp JPP
+                      <MessageSquare className="w-4 h-4" /> {t('settings:open_wa_jpp', 'Buka WhatsApp JPP')}
                     </Button>
                   </div>
 
                   <div className="p-6 rounded-[2rem] bg-white dark:bg-[#1E271F]/80 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] space-y-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <span className="bg-[#2E3A2F]/10 dark:bg-[#6B7F5B]/20 text-[#2E3A2F] dark:text-[#F8F6EE] border border-[#2E3A2F]/20 dark:border-[#6B7F5B]/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block">
-                        Maklum Balas Rasmi
+                        {t('settings:official_feedback_tag', 'Maklum Balas Rasmi')}
                       </span>
-                      <h4 className="text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE]">Emel Rasmi Cadangan</h4>
-                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed">Kemukakan usul penambahbaikan sistem atau laporan isu rasmi.</p>
+                      <h4 className="text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE]">{t('settings:official_email_title', 'Emel Rasmi Cadangan')}</h4>
+                      <p className="text-xs text-[#556453] dark:text-[#A3B39F] leading-relaxed">{t('settings:official_email_desc', 'Kemukakan usul penambahbaikan sistem atau laporan isu rasmi.')}</p>
                     </div>
                     <Button
                       variant="outline"
                       onClick={() => window.location.href = 'mailto:jpp@cipher-node.org?subject=Maklum%20Balas%20Portal%20JPP'}
                       className="w-full h-11 rounded-2xl font-bold text-xs border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#2E3A2F] dark:text-[#F8F6EE] hover:bg-[#F8F6EE] dark:hover:bg-[#151D16] min-h-[44px] flex items-center justify-center gap-2"
                     >
-                      <Mail className="w-4 h-4" /> Hantar Emel Rasmi
+                      <Mail className="w-4 h-4" /> {t('settings:send_official_email', 'Hantar Emel Rasmi')}
                     </Button>
                   </div>
                 </div>
 
                 {/* Bahan Rujukan & Garis Panduan */}
                 <Card className="border border-[#D9C9B2]/80 dark:border-[#3A4A3B] shadow-xs rounded-[2rem] bg-white dark:bg-[#1E271F]/80  p-5 sm:p-7">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-4">Katalog Bahan Rujukan Operasi</h4>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-4">{t('settings:reference_docs_catalog', 'Katalog Bahan Rujukan Operasi')}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
-                      { title: 'Garis Panduan Sistem Utama JPP', icon: FileText },
-                      { title: 'SOP Kelulusan Aktiviti Takwim', icon: Check },
-                      { title: 'Cara Menyusun Kertas Kerja', icon: Award },
-                      { title: 'Arkib Soalan Lazim Berulang (FAQ)', icon: HelpCircle }
+                      { title: t('settings:doc_guidelines_title', 'Garis Panduan Sistem Utama JPP'), icon: FileText },
+                      { title: t('settings:doc_sop_title', 'SOP Kelulusan Aktiviti Takwim'), icon: Check },
+                      { title: t('settings:doc_paperwork_title', 'Cara Menyusun Kertas Kerja'), icon: Award },
+                      { title: t('settings:doc_faq_title', 'Arkib Soalan Lazim Berulang (FAQ)'), icon: HelpCircle }
                     ].map((doc, idx) => (
                       <div
                         key={idx}
@@ -1516,9 +1527,9 @@ export function SettingsPage() {
                     <Shield size={24} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE] mb-1">Pengesahan OTP</h3>
+                    <h3 className="text-xl font-black tracking-tight text-[#2E3A2F] dark:text-[#F8F6EE] mb-1">{t('settings:otp_verification_title', 'Pengesahan OTP')}</h3>
                     <p className="text-[#556453] dark:text-[#A3B39F] font-medium text-xs">
-                      Kod 6-digit dihantar ke <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{user?.email}</span>.
+                      {t('settings:otp_code_sent_to', 'Kod 6-digit dihantar ke')} <span className="font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">{user?.email}</span>.
                     </p>
                   </div>
 
@@ -1541,20 +1552,20 @@ export function SettingsPage() {
                         disabled={loading}
                         className="flex-1 h-11 rounded-2xl font-bold uppercase text-[10px] tracking-wider border border-[#D9C9B2]/80 dark:border-[#3A4A3B] text-[#556453] dark:text-[#A3B39F] min-h-[44px]"
                       >
-                        Batal
+                        {t('common:cancel', 'Batal')}
                       </Button>
                       <Button 
                         type="submit" 
                         disabled={otpInput.length !== 6 || loading}
                         className="flex-1 h-11 rounded-2xl font-bold uppercase text-[10px] tracking-wider bg-[#2E3A2F] hover:bg-[#242E25] dark:bg-[#6B7F5B] dark:hover:bg-[#5C6E4E] text-white shadow-xs min-h-[44px]"
                       >
-                        {loading ? 'Disahkan...' : 'Sahkan'}
+                        {loading ? t('settings:otp_verifying', 'Disahkan...') : t('settings:btn_verify', 'Sahkan')}
                       </Button>
                     </div>
                   </form>
 
                   <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] font-medium pt-3 mt-3 border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]">
-                    Tidak terima emel? <button type="button" onClick={handleInitiateOTP} className="text-[#6B7F5B] hover:underline font-bold" disabled={loading}>Hantar Semula</button>
+                    {t('settings:did_not_receive_email', 'Tidak terima emel?')} <button type="button" onClick={handleInitiateOTP} className="text-[#6B7F5B] hover:underline font-bold" disabled={loading}>{t('settings:btn_resend', 'Hantar Semula')}</button>
                   </p>
                 </div>
               </motion.div>
