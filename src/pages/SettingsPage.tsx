@@ -50,12 +50,12 @@ import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
 // Super App Tab Configurations & Legacy Param Mapping
 // ─────────────────────────────────────────────────────────────────────────────
 export const SETTINGS_TAB_CONFIG = [
-  { id: 'profil', label: 'Profil & Akademik', iconComponent: User, desc: 'Maklumat peribadi & pinda data', descKey: 'profile_tab_desc' },
-  { id: 'kediaman', label: 'Status Kediaman', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus', descKey: 'residence_tab_desc' },
-  { id: 'tema', label: 'Paparan & Bahasa', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa', descKey: 'theme_tab_desc' },
-  { id: 'notifikasi', label: 'Pemberitahuan', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan', descKey: 'notifications_tab_desc' },
-  { id: 'keselamatan', label: 'Keselamatan', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun', descKey: 'security_tab_desc' },
-  { id: 'bantuan', label: 'Bantuan & Tutorial', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan', descKey: 'help_tab_desc' },
+  { id: 'profil', label: 'Profil & Akademik', labelKey: 'tab_profile', iconComponent: User, desc: 'Maklumat peribadi & pinda data', descKey: 'profile_tab_desc' },
+  { id: 'kediaman', label: 'Status Kediaman', labelKey: 'tab_residence', iconComponent: MapPin, desc: 'Deklarasi KAMSIS / Luar Kampus', descKey: 'residence_tab_desc' },
+  { id: 'tema', label: 'Paparan & Bahasa', labelKey: 'tab_theme', iconComponent: Moon, desc: 'Pilihan mod cerah, gelap dan pilihan bahasa', descKey: 'theme_tab_desc' },
+  { id: 'notifikasi', label: 'Pemberitahuan', labelKey: 'tab_notifications', iconComponent: Bell, desc: 'Urus amaran & notifikasi pesanan', descKey: 'notifications_tab_desc' },
+  { id: 'keselamatan', label: 'Keselamatan', labelKey: 'tab_security', iconComponent: Shield, desc: 'Kata laluan & log masuk akaun', descKey: 'security_tab_desc' },
+  { id: 'bantuan', label: 'Bantuan & Tutorial', labelKey: 'tab_help', iconComponent: HelpCircle, desc: 'Panduan sistem & talian aduan', descKey: 'help_tab_desc' },
 ] as const;
 
 export type SettingsTabId = 'profil' | 'kediaman' | 'tema' | 'notifikasi' | 'keselamatan' | 'bantuan';
@@ -938,10 +938,10 @@ export function SettingsPage() {
                 <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B] text-center min-w-0 overflow-hidden">
                   <div className="flex items-center gap-1 text-[#556453] dark:text-[#A3B39F] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
                     <Home className="w-3.5 h-3.5 text-[#2E3A2F] dark:text-[#6B7F5B] shrink-0" />
-                    <span className="truncate">Kediaman</span>
+                    <span className="truncate">{t('settings:residence', 'Kediaman')}</span>
                   </div>
                   <span className="text-[11px] sm:text-xs md:text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate max-w-full">
-                    {profile?.residence_type === 'KAMSIS' ? 'Asrama Kamsis' : 'Rumah Sewa'}
+                    {profile?.residence_type === 'KAMSIS' ? t('settings:asrama_kamsis', 'Asrama Kamsis') : t('settings:rumah_sewa', 'Rumah Sewa')}
                   </span>
                 </div>
               </div>
@@ -968,7 +968,7 @@ export function SettingsPage() {
                 )}
               >
                 <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#2E3A2F] dark:text-[#6B7F5B]" : "text-[#556453] dark:text-[#A3B39F]")} />
-                <span>{tConfig.label}</span>
+                <span>{t(`settings:${tConfig.labelKey}`, tConfig.label)}</span>
               </button>
             );
           })}

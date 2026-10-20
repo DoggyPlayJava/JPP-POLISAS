@@ -4666,3 +4666,24 @@ Sebelum sebarang kod digabungkan (*merged*) ke cawangan utama:
 3. **Audit Ketumpatan & Kepanjangan Terjemahan:**
    - Jalankan `node scratch/check_lengths.cjs` bagi mengesan sebarang frasa Bahasa Inggeris yang terlampau panjang atau herot berbanding Bahasa Melayu.
    - Jalankan `node scratch/scan_hardcoded_malay.cjs` bagi memastikan tiada teks teras baharu yang tercicir daripada terjemahan.
+
+### 36.11 Penyetempatan Domain 0 (Global Shells, Navigations & All Sidebars)
+Domain 0 merangkumi kesemua cengkerang navigasi global, bar sisi (*sidebars*), dok terapung dan susun atur utama merentas seluruh ekosistem:
+1. **Komponen Bar Sisi & Navigasi:**
+   - `src/pages/jpp/JppSidebar.tsx` (Menu HQ, sub-nav unit, penukar warna tema & profil)
+   - `src/pages/kebajikan/KebajikanSidebar.tsx` (Hab Kebajikan, pengurusan tiket, aduan kafeteria)
+   - `src/pages/klk/KlkSidebar.tsx` (E-Kediaman luar kampus, statistik & logistik PolyRider)
+   - `src/pages/polyrent/PolyRentSidebar.tsx` (Carian rumah, iklan saya, log keluar)
+   - `src/components/layout/Sidebar.tsx` (Bar sisi modular utama kelab & navigasi pantas)
+   - `src/components/layout/PortalSidebar.tsx` (Bar sisi portal mahasiswa & sistem aktif)
+   - `src/components/layout/BottomNav.tsx` (Dok navigasi bawah mudah alih & tindakan pantas)
+   - `src/components/portal/PortalNavbar.tsx` (Bar navigasi atas portal berserta nama sandaran)
+2. **Cengkerang Susun Atur & Halaman Tetapan:**
+   - `src/pages/SettingsPage.tsx` (Pusat tetapan super app, tab dwi-bahasa, deklarasi kediaman)
+   - `src/pages/kebajikan/KebajikanSettingsPage.tsx` (Konfigurasi SLA, pengekalan data & pembersihan gambar, preset PIC)
+   - `src/pages/polymart/PolyMartLayout.tsx` (Pill kategori pasaran, carian responsif, navigasi vendor)
+   - `src/pages/akademik/AkademikLayout.tsx` (Cengkerang modul akademik, menu sampingan & status merit)
+   - `src/pages/jpp/JppStructureSettings.tsx` (Konfigurasi penamaan jawatan & unit kepimpinan)
+3. **Penyelarasan Kamus & Ujian Pengesahan:**
+   - Ruang nama kamus `nav.json`, `portal.json`, `settings.json`, `jpp.json`, `kebajikan.json`, `housing.json`, `klk.json`, `common.json`, `ems.json`, `commerce.json`, `akademik.json` diselaraskan 100% pariti.
+   - Ujian unit integrasi komprehensif didokumenkan dalam `src/__tests__/Domain0NavigationShellsI18n.test.tsx` (40 ujian khusus merangkumi paparan BM, EN dan penukaran dinamik).

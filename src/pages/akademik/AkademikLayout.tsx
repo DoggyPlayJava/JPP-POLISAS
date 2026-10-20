@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -27,19 +28,20 @@ const AKADEMIK_UNIT_LINKS = [
 ];
 
 const NAV_ITEMS = [
-  { path: '/akademik',            label: 'Dashboard',    icon: LayoutDashboard },
-  { path: '/akademik/pencapaian', label: 'Pencapaian',   icon: Trophy },
-  { path: '/akademik/cgpa',       label: 'HPNM / CGPA',  icon: BookOpen },
-  { path: '/akademik/merit',      label: 'Merit Saya',   icon: Star },
-  { path: '/akademik/folder',     label: 'Dokumen',      icon: FileText },
-  { path: '/akademik/leaderboard',label: 'Leaderboard',  icon: BarChart3 },
-  { path: '/akademik/takwim',     label: 'Takwim',       icon: CalendarDays },
-  { path: '/akademik/qr',         label: 'Scan QR',      icon: QrCode },
+  { path: '/akademik',            label: 'Dashboard',    labelKey: 'nav:dashboard', icon: LayoutDashboard },
+  { path: '/akademik/pencapaian', label: 'Pencapaian',   labelKey: 'akademik:nav_achievements', icon: Trophy },
+  { path: '/akademik/cgpa',       label: 'HPNM / CGPA',  labelKey: 'akademik:nav_cgpa', icon: BookOpen },
+  { path: '/akademik/merit',      label: 'Merit Saya',   labelKey: 'akademik:nav_my_merit', icon: Star },
+  { path: '/akademik/folder',     label: 'Dokumen',      labelKey: 'akademik:nav_documents', icon: FileText },
+  { path: '/akademik/leaderboard',label: 'Leaderboard',  labelKey: 'akademik:nav_leaderboard', icon: BarChart3 },
+  { path: '/akademik/takwim',     label: 'Takwim',       labelKey: 'nav:takwim', icon: CalendarDays },
+  { path: '/akademik/qr',         label: 'Scan QR',      labelKey: 'nav:scan_qr', icon: QrCode },
 ];
 
 const THEME = '#818CF8';
 
 export function AkademikLayout() {
+  const { t } = useTranslation(['akademik', 'nav', 'common']);
   const { profile } = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
@@ -179,7 +181,7 @@ export function AkademikLayout() {
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-all text-[10px] font-black uppercase tracking-widest"
             >
               <ArrowLeft className="w-3 h-3" />
-              Portal
+              {t('nav:portal', 'Portal')}
             </button>
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.08]">
               <Avatar className="w-full h-full rounded-none">
@@ -212,6 +214,7 @@ export function AkademikLayout() {
 
 // ─── Sidebar Component ────────────────────────────────────────
 function Sidebar({ onClose, isActive, navigate, profile }: any) {
+  const { t } = useTranslation(['akademik', 'nav', 'common']);
   const { signOut, isSuperAdmin } = useAuth();
   const isJpp = isSuperAdmin || profile?.role === 'JPP';
   const displayName = profile?.full_name || profile?.email?.split('@')[0] || '?';
@@ -226,7 +229,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
           className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/75 w-max"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
         </button>
         <div className="flex items-center justify-between px-5 pb-4 pt-1">
           <div className="flex items-center gap-3">
@@ -252,7 +255,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
 
       {/* Nav */}
       <nav className="tour-akademik-sidebar flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">Navigasi</p>
+        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">{t('nav:navigation', 'Navigasi')}</p>
         {NAV_ITEMS.map(item => {
           const active = isActive(item.path);
           const Icon   = item.icon;
@@ -276,7 +279,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
               >
                 <Icon className="w-3.5 h-3.5" />
               </div>
-              <span className="text-xs font-black flex-1">{item.label}</span>
+              <span className="text-xs font-black flex-1">{item.labelKey ? t(item.labelKey, item.label) : item.label}</span>
               {active && <ChevronRight className="w-3 h-3 shrink-0" style={{ color: THEME }} />}
             </button>
           );
@@ -293,7 +296,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
             <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-600 dark:text-amber-400 text-left">Global JPP<br />Dashboard</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-600 dark:text-amber-400 text-left">{t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}</span>
           </button>
         </div>
       )}
@@ -324,7 +327,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
           className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-slate-500 dark:text-white/30 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Log Keluar
+          {t('nav:logout', 'Log Keluar')}
         </Button>
       </div>
     </div>
