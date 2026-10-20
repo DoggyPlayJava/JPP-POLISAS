@@ -956,8 +956,8 @@ export function KebajikanReportPage() {
           {/* PIC Tab Header + Month Nav */}
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-lg font-black text-slate-50">Jana Laporan untuk PIC</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Pilih tiket, tetapkan PIC, jana PDF untuk edaran</p>
+              <h2 className="text-lg font-black text-slate-50">{t('kebajikan:report_generate_pic_title', 'Jana Laporan untuk PIC')}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{t('kebajikan:report_generate_pic_subtitle', 'Pilih tiket, tetapkan PIC, jana PDF untuk edaran')}</p>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setPicMonthOffset(o => o + 1)} className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors">
@@ -974,18 +974,18 @@ export function KebajikanReportPage() {
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
               <Filter className="w-3.5 h-3.5 text-teal-400" />
-              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Penapis Tiket</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t('kebajikan:report_ticket_filter', 'Penapis Tiket')}</p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Kategori</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_col_category', 'Kategori')}</p>
                 <select value={picCatFilter} onChange={e => { setPicCatFilter(e.target.value); setSelectedTicketIds(new Set()); }}
                   className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
                   {KEBAJIKAN_CATS.map(c => <option key={c.key} value={c.key} className="bg-slate-800">{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Status</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_col_status', 'Status')}</p>
                 <select value={picStatusFilter} onChange={e => { setPicStatusFilter(e.target.value); setSelectedTicketIds(new Set()); }}
                   className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
                   {KEBAJIKAN_STATUSES.map(s => <option key={s.key} value={s.key} className="bg-slate-800">{s.label}</option>)}
@@ -995,18 +995,18 @@ export function KebajikanReportPage() {
 
             {/* Quick Select */}
             <div className="flex items-center gap-2 mt-4 flex-wrap">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mr-1">Pilih Cepat:</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mr-1">{t('kebajikan:report_quick_select', 'Pilih Cepat:')}</p>
               <button onClick={selectAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.05] hover:bg-white/10 text-slate-300 border border-white/10 transition-all">
-                ☑ Semua ({picTickets.length})
+                {t('kebajikan:report_select_all', '☑ Semua')} ({picTickets.length})
               </button>
               <button onClick={selectEscalated} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all">
-                ⚠ Escalated Sahaja ({picTickets.filter(t => t.status === 'ESCALATED').length})
+                {t('kebajikan:report_escalated_only', '⚠ Escalated Sahaja')} ({picTickets.filter(t => t.status === 'ESCALATED').length})
               </button>
               <button onClick={clearAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.03] hover:bg-white/5 text-white/30 border border-white/5 transition-all">
-                ☐ Bersih Semua
+                {t('kebajikan:report_clear_all', '☐ Bersih Semua')}
               </button>
               {selectedTicketIds.size > 0 && (
-                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTicketIds.size} tiket dipilih</span>
+                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTicketIds.size} {t('kebajikan:report_tickets_selected', 'tiket dipilih')}</span>
               )}
             </div>
           </GlassCard>
@@ -1018,18 +1018,18 @@ export function KebajikanReportPage() {
                 <div className="w-10 h-10 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
               </div>
             ) : picTickets.length === 0 ? (
-              <p className="text-center text-sm text-white/30 py-12">Tiada tiket untuk bulan dan penapis ini.</p>
+              <p className="text-center text-sm text-white/30 py-12">{t('kebajikan:report_no_tickets_found', 'Tiada tiket untuk bulan dan penapis ini.')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-white/5">
                       <th className="pb-3 text-left w-8"><input type="checkbox" checked={selectedTicketIds.size === picTickets.length && picTickets.length > 0} onChange={e => e.target.checked ? selectAll() : clearAll()} className="accent-teal-400 w-3.5 h-3.5" /></th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">No. Tiket</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Tarikh</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Kategori</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Tajuk</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Status</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_ticket_no', 'No. Tiket')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_date', 'Tarikh')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_category', 'Kategori')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_title', 'Tajuk')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_status', 'Status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
@@ -1058,12 +1058,12 @@ export function KebajikanReportPage() {
             <GlassCard>
               <div className="flex items-center gap-2 mb-5">
                 <UserCheck className="w-4 h-4" style={{ color: TEAL }} />
-                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">Jana Laporan</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">{t('kebajikan:report_generate_heading', 'Jana Laporan')}</p>
                 <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTickets.length} tiket dipilih</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Pilih Preset PIC</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_select_pic_preset', 'Pilih Preset PIC')}</p>
                   <select value={reportPicId} onChange={e => {
                     setReportPicId(e.target.value);
                     const found = picPresets.find(p => p.id === e.target.value);

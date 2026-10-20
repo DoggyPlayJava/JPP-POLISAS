@@ -8,6 +8,14 @@ import fs from 'fs';
 import path from 'path';
 
 // Polyfills for Node environment
+vi.mock('react-dom', async () => {
+  const actual = await vi.importActual<any>('react-dom');
+  return {
+    ...actual,
+    createPortal: (children: any) => children,
+  };
+});
+
 if (typeof globalThis.localStorage === 'undefined') {
   let store: Record<string, string> = {};
   (globalThis as any).localStorage = {
@@ -378,6 +386,7 @@ import { KebajikanKafeteriaPage } from '@/pages/kebajikan/KebajikanKafeteriaPage
 import { KarnivalLandingPage } from '@/pages/karnival/KarnivalLandingPage';
 import { KarnivalVotePage } from '@/pages/karnival/KarnivalVotePage';
 import { KarnivalScoreboard } from '@/pages/karnival/KarnivalScoreboard';
+import { SesiBusiness } from '@/pages/keusahawanan/BusinessShiftModule';
 
 function renderPage(ui: React.ReactElement): string {
   return renderToString(
@@ -636,6 +645,25 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
       expect(html).toContain('Total Verified Votes Cast');
       expect(html).toContain('Official Results Tallying');
       expect(html).toContain('Leading Popular Booth');
+    });
+
+    it('renders localized shift opening checklist and foodbank claim modals in English', async () => {
+      await changeLanguage('en');
+      const shiftHtml = renderPage(
+        <SesiBusiness
+          businessId="biz-1"
+          color="#1B5E20"
+          profile={{ id: 'test-user-exco', full_name: 'Ahmad Faiz Exco' }}
+          initialOpenModal={true}
+        />
+      );
+      expect(shiftHtml).toContain('Opening Checklist');
+      expect(shiftHtml).toContain('All products/beverages are prepared');
+      expect(shiftHtml).toContain('Equipment in good working condition');
+
+      const foodbankHtml = renderPage(<KebajikanFoodBankPage />);
+      expect(foodbankHtml).toContain('Operating Hours:');
+      expect(foodbankHtml).toContain('Ready Care Box: Standard Student Rahmah Package');
     });
   });
 
