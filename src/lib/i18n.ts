@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { supabase } from '@/lib/supabase';
 
 // Core & Shell namespaces
 import commonEn from '@/locales/en/common.json';
@@ -148,7 +149,7 @@ i18n
     },
   });
 
-export async function changeLanguage(lang: SupportedLanguage): Promise<void> {
+export async function changeLanguage(lang: SupportedLanguage, syncToDb = true): Promise<void> {
   await i18n.changeLanguage(lang);
   if (typeof localStorage !== 'undefined') {
     try {
@@ -159,6 +160,24 @@ export async function changeLanguage(lang: SupportedLanguage): Promise<void> {
   }
   if (typeof document !== 'undefined' && document?.documentElement) {
     document.documentElement.lang = lang;
+  }
+
+  if (syncToDb && typeof window !== 'undefined') {
+    try {
+      if (typeof supabase?.auth?.getSession === 'function') {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        if (session?.user?.id) {
+          supabase
+            .from('profiles')
+            .update({ preferred_language: lang })
+            .eq('id', session.user.id)
+            .then(() => {}, () => {});
+        }
+      }
+    } catch {
+      // Silent error for unauthenticated or network dropouts
+    }
   }
 }
 

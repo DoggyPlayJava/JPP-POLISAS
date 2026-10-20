@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase, Profile } from '@/lib/supabase';
 import { UserRole, setGlobalClubs } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import i18n, { changeLanguage, SupportedLanguage } from '@/lib/i18n';
 
 // Simpan data keahlian penuh per kelab (untuk multi-role)
 interface ClubMembership {
@@ -150,6 +151,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setProfile(profileData);
+
+        // Segerakkan bahasa pilihan dari profil pengguna jika wujud
+        if (profileData?.preferred_language) {
+          const pref = profileData.preferred_language;
+          if (i18n.language !== pref) {
+            changeLanguage(pref, false);
+          }
+        } else if (profileData?.id) {
+          // Jika profil belum ada preferred_language (cth: pengguna baru),
+          // rekodkan bahasa aktif semasa ke profil
+          const currentLang = (i18n.language?.startsWith('ms') ? 'ms' : 'en') as SupportedLanguage;
+          supabase
+            .from('profiles')
+            .update({ preferred_language: currentLang })
+            .eq('id', profileData.id)
+            .then(() => {}, () => {});
+        }
         // Set primary club sebagai default selected
         if (profileData?.club_id) {
           setSelectedClubIdState(prev => {
