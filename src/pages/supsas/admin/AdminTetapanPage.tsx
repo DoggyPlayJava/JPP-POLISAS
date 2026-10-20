@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Save, Calendar, AlertTriangle, CheckCircle, Loader } from 'lucide-react';
+import { Save, AlertTriangle, CheckCircle, Loader } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
@@ -31,10 +32,10 @@ const DEFAULT_FORM: EditionForm = {
 };
 
 export function AdminTetapanPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { edition, refetch } = useSupsas();
   const [form, setForm] = useState<EditionForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (edition) {
@@ -55,7 +56,7 @@ export function AdminTetapanPage() {
   const inputCls = 'w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-amber-500/40 focus:bg-white/8 transition-all';
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Sila isi nama edisi'); return; }
+    if (!form.name.trim()) { toast.error(t('supsas:fill_edition_name', 'Sila isi nama edisi')); return; }
     setSaving(true);
     const payload = {
       ...form,
@@ -68,32 +69,32 @@ export function AdminTetapanPage() {
       ? await supabase.from('supsas_editions').update(payload).eq('id', edition.id)
       : await supabase.from('supsas_editions').insert(payload);
     setSaving(false);
-    if (error) { toast.error('Gagal simpan: ' + error.message); return; }
-    toast.success('Tetapan edisi disimpan!');
+    if (error) { toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan')}: ${error.message}`); return; }
+    toast.success(t('supsas:edition_settings_saved', 'Tetapan edisi disimpan!'));
     refetch();
   };
 
   const handleActivate = async () => {
     if (!edition) return;
     const { error } = await supabase.from('supsas_editions').update({ is_active: true }).eq('id', edition.id);
-    if (error) { toast.error('Gagal aktifkan: ' + error.message); return; }
-    toast.success('Edisi diaktifkan! SUPSAS sekarang aktif.');
+    if (error) { toast.error(`${t('common:failed', 'Gagal')}: ${error.message}`); return; }
+    toast.success(t('supsas:edition_activated_success', 'Edisi diaktifkan! SUPSAS sekarang aktif.'));
     refetch();
   };
 
   const handleDeactivate = async () => {
     if (!edition) return;
     const { error } = await supabase.from('supsas_editions').update({ is_active: false }).eq('id', edition.id);
-    if (error) { toast.error('Gagal nyahaktifkan'); return; }
-    toast.success('Edisi dinyahaktifkan');
+    if (error) { toast.error(t('supsas:deactivate_failed', 'Gagal nyahaktifkan')); return; }
+    toast.success(t('supsas:edition_deactivated_success', 'Edisi dinyahaktifkan'));
     refetch();
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-black text-white">Tetapan Edisi</h1>
-        <p className="text-white/30 text-sm mt-1">Urus edisi SUPSAS yang aktif & mata pingat</p>
+        <h1 className="text-2xl font-black text-white">{t('supsas:edition_settings_title', 'Tetapan Edisi')}</h1>
+        <p className="text-white/30 text-sm mt-1">{t('supsas:edition_settings_subtitle', 'Urus edisi SUPSAS yang aktif & mata pingat')}</p>
       </div>
 
       {/* Active status */}
@@ -111,12 +112,12 @@ export function AdminTetapanPage() {
             }
             <div>
               <p className={cn('font-black text-sm', edition.is_active ? 'text-emerald-400' : 'text-amber-400')}>
-                {edition.is_active ? 'Edisi Sedang Aktif' : 'Edisi Tidak Aktif'}
+                {edition.is_active ? t('supsas:edition_active_badge', 'Edisi Sedang Aktif') : t('supsas:edition_inactive_badge', 'Edisi Tidak Aktif')}
               </p>
               <p className="text-white/30 text-xs">
                 {edition.is_active
-                  ? 'Papan markah public sedang live. Scoreboard boleh diakses tanpa log masuk.'
-                  : 'Aktifkan edisi ini supaya scoreboard public boleh dipapar.'
+                  ? t('supsas:edition_active_desc', 'Papan markah public sedang live. Scoreboard boleh diakses tanpa log masuk.')
+                  : t('supsas:edition_inactive_desc', 'Aktifkan edisi ini supaya scoreboard public boleh dipapar.')
                 }
               </p>
             </div>
@@ -130,7 +131,7 @@ export function AdminTetapanPage() {
                 : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
             )}
           >
-            {edition.is_active ? 'Nyahaktifkan' : 'Aktifkan'}
+            {edition.is_active ? t('supsas:deactivate_btn', 'Nyahaktifkan') : t('supsas:activate_btn', 'Aktifkan')}
           </button>
         </div>
       )}
@@ -138,32 +139,32 @@ export function AdminTetapanPage() {
       {/* Form */}
       <div className="space-y-5 p-6 rounded-3xl bg-white/[0.02] border border-white/5">
         <h2 className="text-sm font-black uppercase tracking-widest text-white/50">
-          {edition ? 'Kemaskini Edisi Semasa' : 'Cipta Edisi Baharu'}
+          {edition ? t('supsas:update_current_edition', 'Kemaskini Edisi Semasa') : t('supsas:create_new_edition', 'Cipta Edisi Baharu')}
         </h2>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Nama Edisi</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:edition_name_label', 'Nama Edisi')}</label>
           <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-            placeholder="cth: SUPSAS 2025" className={inputCls} />
+            placeholder={t('supsas:edition_name_placeholder', 'cth: SUPSAS 2025')} className={inputCls} />
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tagline</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:tagline_label', 'Tagline')}</label>
           <input value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))}
-            placeholder="cth: Bersatu, Berjuang, Berjaya" className={inputCls} />
+            placeholder={t('supsas:tagline_placeholder', 'cth: Bersatu, Berjuang, Berjaya')} className={inputCls} />
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tahun</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:year_label', 'Tahun')}</label>
             <input type="number" value={form.edition_year} onChange={e => setForm(p => ({ ...p, edition_year: +e.target.value }))} className={inputCls} />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tarikh Mula</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:start_date_label', 'Tarikh Mula')}</label>
             <input type="date" value={form.start_date} onChange={e => setForm(p => ({ ...p, start_date: e.target.value }))} className={inputCls} />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tarikh Tamat</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:end_date_label', 'Tarikh Tamat')}</label>
             <input type="date" value={form.end_date} onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))} className={inputCls} />
           </div>
         </div>
@@ -171,21 +172,21 @@ export function AdminTetapanPage() {
         {/* MEDAL POINTS CONFIGURATION */}
         <div className="pt-4 border-t border-white/10 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-widest text-amber-400">Pengiraan Mata Johan Keseluruhan</h3>
-            <span className="text-[10px] text-white/40">Tentukan mata per pingat</span>
+            <h3 className="text-xs font-black uppercase tracking-widest text-amber-400">{t('supsas:overall_points_calc_title', 'Pengiraan Mata Johan Keseluruhan')}</h3>
+            <span className="text-[10px] text-white/40">{t('supsas:set_points_per_medal', 'Tentukan mata per pingat')}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">🥇 Mata Emas</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">{t('supsas:gold_points_label', '🥇 Mata Emas')}</label>
               <input type="number" value={form.gold_points} onChange={e => setForm(p => ({ ...p, gold_points: +e.target.value }))} className={inputCls} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">🥈 Mata Perak</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">{t('supsas:silver_points_label', '🥈 Mata Perak')}</label>
               <input type="number" value={form.silver_points} onChange={e => setForm(p => ({ ...p, silver_points: +e.target.value }))} className={inputCls} />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400">🥉 Mata Gangsa</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400">{t('supsas:bronze_points_label', '🥉 Mata Gangsa')}</label>
               <input type="number" value={form.bronze_points} onChange={e => setForm(p => ({ ...p, bronze_points: +e.target.value }))} className={inputCls} />
             </div>
           </div>
@@ -197,7 +198,7 @@ export function AdminTetapanPage() {
           className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {edition ? 'Simpan Perubahan' : 'Cipta Edisi'}
+          {edition ? t('supsas:save_changes_btn', 'Simpan Perubahan') : t('supsas:create_edition_btn', 'Cipta Edisi')}
         </button>
       </div>
     </div>

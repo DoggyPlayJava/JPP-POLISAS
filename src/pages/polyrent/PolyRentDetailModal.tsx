@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Phone, Users, CheckCircle2, Navigation, Home, ShieldCheck, Share2, Calendar, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
+import { X, MapPin, Phone, Users, Navigation, Home, ShieldCheck, Calendar, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +37,7 @@ interface DetailModalProps {
 }
 
 export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }: DetailModalProps) {
+  const { t, i18n } = useTranslation(['housing', 'common']);
   const { profile } = useAuth();
   const [activeImgIndex, setActiveImgIndex] = useState(0);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -74,11 +76,11 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
 
   const handleReport = async () => {
     if (!profile) {
-      toast.error('Sila log masuk untuk melaporkan iklan.');
+      toast.error(t('housing:detail_login_to_report', 'Sila log masuk untuk melaporkan iklan.'));
       return;
     }
     if (!reportReason.trim()) {
-      toast.error('Sila nyatakan sebab aduan.');
+      toast.error(t('housing:detail_specify_reason', 'Sila nyatakan sebab aduan.'));
       return;
     }
     setIsSubmittingReport(true);
@@ -90,15 +92,15 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
         status: 'OPEN'
       });
       if (error) {
-        if (error.code === '23505') throw new Error('Anda telah melaporkan iklan ini sebelum ini.');
+        if (error.code === '23505') throw new Error(t('housing:detail_already_reported', 'Anda telah melaporkan iklan ini sebelum ini.'));
         throw error;
       }
-      toast.success('Aduan berjaya dihantar untuk semakan JPP.');
+      toast.success(t('housing:detail_report_success', 'Aduan berjaya dihantar untuk semakan JPP.'));
       setIsReportOpen(false);
       setReportReason('');
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Gagal menghantar aduan.');
+      toast.error(err.message || t('housing:detail_report_failed', 'Gagal menghantar aduan.'));
     } finally {
       setIsSubmittingReport(false);
     }
@@ -106,7 +108,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
 
   const handleSubmitRating = async () => {
     if (!profile) {
-      toast.error('Sila log masuk untuk memberi rating.');
+      toast.error(t('housing:detail_login_to_rate', 'Sila log masuk untuk memberi rating.'));
       return;
     }
     setIsSubmittingRating(true);
@@ -118,15 +120,15 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
         facility_rating: facilityRatingForm
       });
       if (error) {
-        if (error.code === '23505') throw new Error('Anda telah memberi rating untuk kawasan ini sebelum ini.');
+        if (error.code === '23505') throw new Error(t('housing:detail_already_rated', 'Anda telah memberi rating untuk kawasan ini sebelum ini.'));
         throw error;
       }
-      toast.success('Terima kasih! Rating anda berjaya direkodkan.');
+      toast.success(t('housing:detail_rating_success', 'Terima kasih! Rating anda berjaya direkodkan.'));
       setIsRatingOpen(false);
       fetchRating(); // refresh average
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Gagal menghantar rating.');
+      toast.error(err.message || t('housing:detail_rating_failed', 'Gagal menghantar rating.'));
     } finally {
       setIsSubmittingRating(false);
     }
@@ -173,7 +175,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/50 dark:to-emerald-900/50 animate-pulse">
                   <Home className="w-16 h-16 mb-4 text-teal-500/50" />
-                  <span className="text-sm font-bold uppercase tracking-widest text-teal-600/50">Tiada Gambar</span>
+                  <span className="text-sm font-bold uppercase tracking-widest text-teal-600/50">{t('housing:detail_no_image', 'Tiada Gambar')}</span>
                 </div>
               )}
               
@@ -187,7 +189,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                 </div>
                 <h2 className="text-3xl font-black text-white leading-tight drop-shadow-md flex items-center gap-2">
                   {listing.title}
-                  {listing.is_verified && <ShieldCheck className="w-6 h-6 text-emerald-400 drop-shadow-md shrink-0" title="Disahkan oleh KLK" />}
+                  {listing.is_verified && <ShieldCheck className="w-6 h-6 text-emerald-400 drop-shadow-md shrink-0" title={t('housing:verified_by_klk', 'Disahkan oleh KLK')} />}
                 </h2>
               </div>
             </div>
@@ -207,17 +209,19 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-widest">Keselamatan KLK</span>
+                          <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-widest">{t('housing:detail_klk_safety', 'Keselamatan KLK')}</span>
                           <span className="text-sm font-black text-teal-900 dark:text-teal-100">{kawasanRating.avg_safety} / 5.0</span>
                         </div>
                       </div>
                       <div className="w-[1px] h-8 bg-teal-200 dark:bg-teal-500/30" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-widest">Fasiliti</span>
+                        <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-widest">{t('housing:detail_facility', 'Fasiliti')}</span>
                         <span className="text-sm font-black text-teal-900 dark:text-teal-100">{kawasanRating.avg_facility} / 5.0</span>
                       </div>
                       <div className="ml-auto flex items-center">
-                         <span className="text-xs font-medium text-teal-600 dark:text-teal-400 bg-teal-100 dark:bg-teal-500/20 px-2 py-1 rounded-full whitespace-nowrap">{kawasanRating.total_reviews} Ulasan</span>
+                         <span className="text-xs font-medium text-teal-600 dark:text-teal-400 bg-teal-100 dark:bg-teal-500/20 px-2 py-1 rounded-full whitespace-nowrap">
+                           {t('housing:detail_reviews_count', '{{count}} Ulasan', { count: kawasanRating.total_reviews })}
+                         </span>
                       </div>
                     </div>
                   </div>
@@ -230,14 +234,14 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                         onClick={() => setIsRatingOpen(true)}
                         className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
                       >
-                        Pernah tinggal di sini? Beri Rating Kawasan
+                        {t('housing:detail_rate_area_prompt', 'Pernah tinggal di sini? Beri Rating Kawasan')}
                       </button>
                     ) : (
-                      <motion.div initial={{ opacity: 0, }} animate={{ opacity: 1, }} className="mt-2 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-3">Nilai Kawasan KLK Ini</h4>
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-3">{t('housing:detail_rate_area_title', 'Nilai Kawasan KLK Ini')}</h4>
                         
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Keselamatan</span>
+                          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('housing:detail_safety_label', 'Keselamatan')}</span>
                           <div className="flex items-center gap-2">
                             {[1, 2, 3, 4, 5].map(v => (
                               <button key={'s'+v} onClick={() => setSafetyRatingForm(v)} className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-colors ${safetyRatingForm >= v ? 'bg-teal-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
@@ -248,7 +252,7 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                         </div>
 
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Kemudahan/Fasiliti</span>
+                          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('housing:detail_amenities_label', 'Kemudahan/Fasiliti')}</span>
                           <div className="flex items-center gap-2">
                             {[1, 2, 3, 4, 5].map(v => (
                               <button key={'f'+v} onClick={() => setFacilityRatingForm(v)} className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-colors ${facilityRatingForm >= v ? 'bg-teal-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
@@ -259,14 +263,16 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                         </div>
 
                         <div className="flex gap-2 justify-end">
-                          <button onClick={() => setIsRatingOpen(false)} className="px-3 py-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">Batal</button>
+                          <button onClick={() => setIsRatingOpen(false)} className="px-3 py-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
+                            {t('common:cancel', 'Batal')}
+                          </button>
                           <button 
                             onClick={handleSubmitRating} 
                             disabled={isSubmittingRating}
                             className="px-4 py-1.5 rounded-lg bg-teal-500 text-white text-[10px] font-bold hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center gap-1"
                           >
                             {isSubmittingRating ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
-                            Simpan Rating
+                            {t('housing:detail_save_rating_btn', 'Simpan Rating')}
                           </button>
                         </div>
                       </motion.div>
@@ -276,17 +282,17 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                 
                 <div className="flex flex-wrap gap-4 border-b border-slate-100 dark:border-white/5 pb-6">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                    <Users className="w-4 h-4 text-indigo-500" /> {listing.kekosongan} Kekosongan
+                    <Users className="w-4 h-4 text-indigo-500" /> {listing.kekosongan} {t('housing:detail_vacancies_count', 'Kekosongan', { count: listing.kekosongan })}
                   </div>
                   <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-700" />
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                    <Navigation className="w-4 h-4 text-emerald-500" /> {listing.jarak_polisas_km ? `${listing.jarak_polisas_km} KM ke POLISAS` : 'Jarak unknown'}
+                    <Navigation className="w-4 h-4 text-emerald-500" /> {listing.jarak_polisas_km ? t('housing:detail_km_to_polisas', '{{distance}} KM ke POLISAS', { distance: listing.jarak_polisas_km }) : t('housing:detail_distance_unknown', 'Jarak unknown')}
                   </div>
                   {listing.available_from && (
                     <>
                       <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-700" />
                       <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        <Calendar className="w-4 h-4 text-amber-500" /> Bermula {new Date(listing.available_from).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        <Calendar className="w-4 h-4 text-amber-500" /> {t('housing:detail_available_from', 'Bermula {{date}}', { date: new Date(listing.available_from).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) })}
                       </div>
                     </>
                   )}
@@ -295,15 +301,15 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
 
               {/* Syarat & Ciri */}
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Syarat & Ciri Dicari</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">{t('housing:detail_terms_traits_heading', 'Syarat & Ciri Dicari')}</h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
-                  {listing.ciri_ciri_dicari || 'Tiada syarat khusus. Sila hubungi tuan rumah.'}
+                  {listing.ciri_ciri_dicari || t('housing:detail_no_special_terms', 'Tiada syarat khusus. Sila hubungi tuan rumah.')}
                 </p>
               </div>
 
               {listing.kemudahan && (
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Kemudahan Disediakan</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">{t('housing:detail_facilities_heading', 'Kemudahan Disediakan')}</h3>
                   <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{listing.kemudahan}</p>
                 </div>
               )}
@@ -314,8 +320,12 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                   {listing.profiles?.full_name?.substring(0,2) || 'PR'}
                 </div>
                 <div>
-                   <p className="text-base font-bold text-slate-900 dark:text-white">Diiklankan oleh {listing.profiles?.full_name}</p>
-                   <p className="text-xs text-slate-500 font-medium">Dimuat naik {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: ms })}</p>
+                   <p className="text-base font-bold text-slate-900 dark:text-white">
+                     {t('housing:detail_posted_by', 'Diiklankan oleh {{name}}', { name: listing.profiles?.full_name })}
+                   </p>
+                   <p className="text-xs text-slate-500 font-medium">
+                     {t('housing:detail_uploaded_ago', 'Dimuat naik {{time}}', { time: formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: i18n.language === 'en' ? enUS : ms }) })}
+                   </p>
                 </div>
               </div>
 
@@ -326,15 +336,15 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                     onClick={() => setIsReportOpen(true)}
                     className="flex items-center gap-2 text-sm text-slate-500 hover:text-rose-500 transition-colors font-medium"
                   >
-                    <AlertTriangle className="w-4 h-4" /> Laporkan Iklan Ini
+                    <AlertTriangle className="w-4 h-4" /> {t('housing:detail_report_listing_btn', 'Laporkan Iklan Ini')}
                   </button>
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-white/10">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Sebab Aduan (Scam / Palsu / Dll)</h4>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">{t('housing:detail_report_reason_title', 'Sebab Aduan (Scam / Palsu / Dll)')}</h4>
                     <textarea 
                       value={reportReason}
                       onChange={(e) => setReportReason(e.target.value)}
-                      placeholder="Sila jelaskan sebab anda melaporkan iklan ini..."
+                      placeholder={t('housing:detail_report_reason_placeholder', 'Sila jelaskan sebab anda melaporkan iklan ini...')}
                       rows={3}
                       className="w-full text-sm p-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-rose-500/50 outline-none mb-3 resize-none dark:text-white"
                     />
@@ -343,14 +353,14 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                         onClick={() => setIsReportOpen(false)}
                         className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors"
                       >
-                        Batal
+                        {t('common:cancel', 'Batal')}
                       </button>
                       <button 
                         onClick={handleReport}
                         disabled={isSubmittingReport}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-colors disabled:opacity-50"
                       >
-                        {isSubmittingReport ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />} Hantar Aduan
+                        {isSubmittingReport ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />} {t('housing:detail_submit_report_btn', 'Hantar Aduan')}
                       </button>
                     </div>
                   </motion.div>
@@ -363,20 +373,22 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
           {/* Floating Sticky Action Bar (Airbnb Reserve Style) */}
           <div className="absolute bottom-0 inset-x-0 px-6 py-4 pb-8 sm:pb-6 bg-white/80 dark:bg-slate-950/80  border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
              <div className="flex flex-col">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">Sewa Bulanan</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">{t('housing:detail_monthly_rent_label', 'Sewa Bulanan')}</p>
                 <div className="flex items-end gap-1">
                   <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">RM{listing.sewa_bulanan}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-0.5">/kepala</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-0.5">{t('housing:detail_per_person', '/kepala')}</span>
                 </div>
                 {listing.deposit_awal > 0 && (
-                   <span className="text-[10px] text-slate-500 font-medium mt-1 underline decoration-dashed underline-offset-2">Depo: RM{listing.deposit_awal}</span>
+                   <span className="text-[10px] text-slate-500 font-medium mt-1 underline decoration-dashed underline-offset-2">
+                     {t('housing:detail_deposit_label', 'Depo: RM{{amount}}', { amount: listing.deposit_awal })}
+                   </span>
                 )}
              </div>
              
            <div className="flex flex-col items-end">
                {(listing.interested_count > 0) && (
                   <div className="text-rose-500 text-[10px] font-bold uppercase tracking-widest animate-pulse mb-1">
-                    🔥 {listing.interested_count} sedang berunding
+                    🔥 {t('housing:detail_negotiating_count', '{{count}} sedang berunding', { count: listing.interested_count })}
                   </div>
                )}
                <div className="flex items-center gap-2">
@@ -385,14 +397,14 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                    <button
                      onClick={() => {
                        if (profile?.id === listing.author_id) {
-                         toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                         toast(t('housing:detail_own_listing', 'Ini adalah iklan anda sendiri'), { icon: 'ℹ️' });
                        } else {
                          onOpenChat(listing.author_id, listing.profiles?.full_name || 'Tuan Rumah');
                        }
                      }}
                      className="h-12 px-6 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
                    >
-                     <MessageCircle className="w-4 h-4" /> Chat
+                     <MessageCircle className="w-4 h-4" /> {t('housing:detail_chat_btn', 'Chat')}
                    </button>
                  )}
 
@@ -415,12 +427,12 @@ export function PolyRentDetailModal({ listing, onClose, onInterest, onOpenChat }
                            style: { maxWidth: '320px', fontSize: '13px' }
                          });
                        } else {
-                         toast('Tiada maklumat hubungi disediakan. Sila guna In-App Chat.', { icon: '⚠️' });
+                         toast(t('housing:detail_no_contact_info', 'Tiada maklumat hubungi disediakan. Sila guna In-App Chat.'), { icon: '⚠️' });
                        }
                      }}
                      className="h-12 px-6 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
                    >
-                     <Phone className="w-4 h-4" /> Hubungi
+                     <Phone className="w-4 h-4" /> {t('housing:detail_contact_btn', 'Hubungi')}
                    </button>
                  )}
                </div>

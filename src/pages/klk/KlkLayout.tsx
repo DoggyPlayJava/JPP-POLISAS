@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { KlkSidebar } from './KlkSidebar';
 import { Menu, MapPin } from 'lucide-react';
@@ -9,16 +10,17 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
 
-const KLK_UNIT_LINKS = [
-  { label: 'Borang Deklarasi Kediaman', path: '/klk' },
-  { label: 'Dashboard Exco KLS', path: '/klk/dashboard' },
-  { label: 'Statistik Kediaman Luar Kampus', path: '/klk/statistik' },
-];
-
 export function KlkLayout() {
+  const { t } = useTranslation(['housing', 'common']);
   const { isLoading, profile, isSuperAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+
+  const klkUnitLinks = [
+    { label: t('housing:nav_declaration_form', 'Borang Deklarasi Kediaman'), path: '/klk' },
+    { label: t('housing:nav_exco_dashboard', 'Dashboard Exco KLS'), path: '/klk/dashboard' },
+    { label: t('housing:nav_public_stats', 'Statistik Kediaman Luar Kampus'), path: '/klk/statistik' },
+  ];
 
   // Tutup sidebar auto bila tukar page di mobile
   useEffect(() => {
@@ -41,7 +43,7 @@ export function KlkLayout() {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
         <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20 text-white">
-          Memuatkan Kediaman Luar Kampus...
+          {t('housing:loading_klk', 'Memuatkan Kediaman Luar Kampus...')}
         </div>
       </div>
     );
@@ -89,7 +91,7 @@ export function KlkLayout() {
             <div className="flex items-center gap-2 ml-1">
               <MapPin className="w-3.5 h-3.5 text-blue-400" />
               <span className="font-black text-[10px] uppercase tracking-widest text-blue-400">
-                Kediaman Luar Kampus
+                {t('housing:title_klk', 'Kediaman Luar Kampus')}
               </span>
             </div>
           </div>
@@ -104,7 +106,7 @@ export function KlkLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB — untuk Exco KLS jana QR */}
-        <QrCodeFab unitLinks={KLK_UNIT_LINKS} />
+        <QrCodeFab unitLinks={klkUnitLinks} />
         <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
       </main>
     </div>
