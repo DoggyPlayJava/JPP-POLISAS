@@ -69,6 +69,8 @@ interface TakwimPusatPDFTemplateProps {
 }
 
 // ── Component ──
+const t = (k: string, fb: string, _opt?: any) => fb;
+
 export default function TakwimPusatPDFTemplate({
   data, themeColor, session, filterLabel,
   logoPolisas,
@@ -95,22 +97,22 @@ export default function TakwimPusatPDFTemplate({
         {/* Title — page 1 only (no fixed) */}
         <View style={s.titleWrap}>
           <Text style={s.titleMain}>
-            TAKWIM POLISAS BERPUSAT — {filterLabel.toUpperCase()} SESI {session}
+            {t('kpp:takwim_pusat_title', `TAKWIM POLISAS BERPUSAT — ${filterLabel.toUpperCase()} SESI ${session}`, { filterLabel: filterLabel.toUpperCase(), session })}
           </Text>
-          <Text style={s.titleSub}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
-          <Text style={s.titleSub}>POLITEKNIK SULTAN HAJI AHMAD SHAH (INSTITUSI B)</Text>
+          <Text style={s.titleSub}>{t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR')}</Text>
+          <Text style={s.titleSub}>{t('common:polisas_full_institution_b', 'POLITEKNIK SULTAN HAJI AHMAD SHAH (INSTITUSI B)')}</Text>
         </View>
 
         {/* Table */}
         <View style={s.table}>
           {/* Table header — fixed on every page so table stays readable */}
           <View style={[s.row, { backgroundColor: themeColor }]} fixed>
-            <HeaderCell w={COL.BIL} label="BIL" color={textColor} />
-            <HeaderCell w={COL.JENIS} label="JENIS" color={textColor} />
-            <HeaderCell w={COL.TAJUK} label="TAJUK / AKTIVITI" color={textColor} />
-            <HeaderCell w={COL.TARIKH} label="TARIKH" color={textColor} />
-            <HeaderCell w={COL.MINGGU} label="MINGGU" color={textColor} />
-            <HeaderCell w={COL.CATATAN} label="CATATAN" color={textColor} isLast />
+            <HeaderCell w={COL.BIL} label={t('common:bil_short', 'BIL')} color={textColor} />
+            <HeaderCell w={COL.JENIS} label={t('common:type_caps', 'JENIS')} color={textColor} />
+            <HeaderCell w={COL.TAJUK} label={t('kpp:title_or_activity_caps', 'TAJUK / AKTIVITI')} color={textColor} />
+            <HeaderCell w={COL.TARIKH} label={t('common:date_caps', 'TARIKH')} color={textColor} />
+            <HeaderCell w={COL.MINGGU} label={t('common:week_caps', 'MINGGU')} color={textColor} />
+            <HeaderCell w={COL.CATATAN} label={t('common:notes_caps', 'CATATAN')} color={textColor} isLast />
           </View>
 
           {/* Data rows — wrap={false} prevents mid-row page splits */}
@@ -118,7 +120,7 @@ export default function TakwimPusatPDFTemplate({
             const isHoliday = item.type === 'holiday' || item.jenis === 'CUTI_UMUM';
 
             if (isHoliday) {
-              const label = `${formatDateDMY(item.tarikh_mula)}   ${item.tajuk.toUpperCase()}`;
+              const label = t('kpp:holiday_schedule_item', `${formatDateDMY(item.tarikh_mula)}   ${item.tajuk.toUpperCase()}`, { date: formatDateDMY(item.tarikh_mula), title: item.tajuk.toUpperCase() });
               return (
                 <View key={`${item.type}-${item.id}`} style={[s.row, { backgroundColor: themeColor }]} wrap={false}>
                   <View style={{
@@ -137,10 +139,11 @@ export default function TakwimPusatPDFTemplate({
             bilCounter++;
             const jenisLabel = TAKWIM_JENIS[item.jenis]?.shortLabel || item.jenis;
             const tarikh = item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula
-              ? `${formatDateDMY(item.tarikh_mula)} - ${formatDateDMY(item.tarikh_tamat)}`
+              ? t('common:date_range_display', `${formatDateDMY(item.tarikh_mula)} - ${formatDateDMY(item.tarikh_tamat)}`, { start: formatDateDMY(item.tarikh_mula), end: formatDateDMY(item.tarikh_tamat) })
               : formatDateDMY(item.tarikh_mula);
             const minggu = item.bil_minggu ? String(item.bil_minggu) : '-';
-            const catatan = [item.catatan, item.club_name, item.status && item.status !== 'CONFIRMED' ? `[${item.status}]` : ''].filter(Boolean).join(' · ');
+            const statusStr = item.status && item.status !== 'CONFIRMED' ? t('portal:status_bracket', `[${item.status}]`, { status: item.status }) : '';
+            const catatan = [item.catatan, item.club_name, statusStr].filter(Boolean).join(' · ');
 
             return (
               <View key={`${item.type}-${item.id}`} style={s.row} wrap={false} minPresenceAhead={20}>
@@ -158,10 +161,10 @@ export default function TakwimPusatPDFTemplate({
         {/* Signature */}
         <View style={s.footer} wrap={false}>
           <View style={s.sigBlock}>
-            <Text style={s.sigLabel}>Disediakan oleh:</Text>
+            <Text style={s.sigLabel}>{t('kpp:prepared_by_colon', 'Disediakan oleh:')}</Text>
             <View style={s.sigLine} />
-            <Text style={s.sigRole}>Exco Akademik & Pembangunan Mahasiswa</Text>
-            <Text style={s.sigOrg}>Jawatankuasa Perwakilan Pelajar</Text>
+            <Text style={s.sigRole}>{t('kpp:exco_academic_full', 'Exco Akademik & Pembangunan Mahasiswa')}</Text>
+            <Text style={s.sigOrg}>{t('common:jpp_full_mixed', 'Jawatankuasa Perwakilan Pelajar')}</Text>
             <Text style={s.sigOrg}>POLISAS</Text>
           </View>
         </View>

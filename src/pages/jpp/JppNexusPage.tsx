@@ -412,14 +412,14 @@ export function JppNexusPage() {
                                             <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_pro_work_paper', 'Kertas Kerja PRO')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', t('jpp:nexus_feature_pro_paper', 'Janaan Kertas Kerja Pro'))} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/5 hover:bg-cyan-100 dark:hover:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/10 transition-colors">
                                             <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_flash_work_paper', 'Kertas Kerja FLASH')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-cyan-600 dark:text-cyan-400 font-bold">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', t('jpp:nexus_feature_flash_paper', 'Janaan Kertas Kerja Flash'))} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                     </div>
@@ -430,14 +430,14 @@ export function JppNexusPage() {
                                     <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_club_report', 'Analisis Laporan Kelab')}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
-                                        <button onClick={() => updateAiTokenCost('analisis', 'Analisis Laporan')} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => updateAiTokenCost('analisis', t('jpp:nexus_feature_report_analysis', 'Analisis Laporan'))} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/10 transition-colors">
                                     <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa')}</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? t('jpp:nexus_cost_free', 'Percuma') : `${settings.ai_token_settings?.costs?.semak_ejaan} Tk`}</span>
-                                        <button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa')} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? t('jpp:nexus_cost_free', 'Percuma') : t('jpp:nexus_cost_tokens', '{{cost}} Tk', { cost: settings.ai_token_settings?.costs?.semak_ejaan })}</span>
+                                        <button onClick={() => updateAiTokenCost('semak_ejaan', t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa'))} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                             </div>

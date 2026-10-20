@@ -1,21 +1,23 @@
 import { KEBAJIKAN_THEME_COLOR } from '@/types';
 
+const t = (k: string, fb: string, _opt?: any) => fb;
+
 /**
  * Generate an HTML email for when a Kebajikan Ticket is assigned to an Exco.
  */
-export function generateTicketAssignedEmail(studentName: string, excoName: string, ticketNo: string, ticketUrl: string): string {
+export function generateTicketAssignedEmail(studentName: string, excoName: string, ticketNo: string, ticketUrl: string, ticketTitle?: string): string {
   const primaryColor = KEBAJIKAN_THEME_COLOR; // '#0D9488'
   const appUrl = window.location.origin;
   const fullTicketUrl = ticketUrl.startsWith('http') ? ticketUrl : `${appUrl}${ticketUrl}`;
   const year = new Date().getFullYear();
 
-  return `
+  return t('kebajikan:email_ticket_assigned_template', `
 <!DOCTYPE html>
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aduan Anda Sedang Diuruskan</title>
+  <title>${t('kebajikan:email_ticket_in_progress_title', 'Aduan Anda Sedang Diuruskan')}</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; color: #334155; }
     .container { max-width: 550px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
@@ -52,29 +54,29 @@ export function generateTicketAssignedEmail(studentName: string, excoName: strin
     </div>
     <div class="content">
       <div class="icon-box"><span>📋</span></div>
-      <div class="status-title">Aduan Anda Sedang Diuruskan</div>
+      <div class="status-title">${t('kebajikan:email_ticket_in_progress_title', 'Aduan Anda Sedang Diuruskan')}</div>
       <table class="details-table">
-        <tr><td class="label">No. Tiket</td><td class="value"><a href="${fullTicketUrl}">${ticketNo}</a></td></tr>
-        <tr><td class="label">Tajuk</td><td class="value">${ticketTitle}</td></tr>
-        <tr><td class="label">Nama</td><td class="value">${studentName}</td></tr>
-        <tr><td class="label">Exco</td><td class="value">${excoName}</td></tr>
+        <tr><td class="label">${t('common:ticket_no', 'No. Tiket')}</td><td class="value"><a href="${fullTicketUrl}">${ticketNo}</a></td></tr>
+        <tr><td class="label">${t('common:title', 'Tajuk')}</td><td class="value">${ticketTitle || '-'}</td></tr>
+        <tr><td class="label">${t('common:name', 'Nama')}</td><td class="value">${studentName}</td></tr>
+        <tr><td class="label">${t('portal:exco', 'Exco')}</td><td class="value">${excoName}</td></tr>
       </table>
       <div class="alert-box">
-        <p class="alert-title">📩 Dipantau oleh Exco</p>
-        <p class="alert-msg">Aduan anda sedang diuruskan oleh ${excoName}. Sila log masuk ke portal untuk berbual atau memberi maklumat lanjut.</p>
+        <p class="alert-title">${t('kebajikan:monitored_by_exco', 'Dipantau oleh Exco')}</p>
+        <p class="alert-msg">${t('kebajikan:email_assigned_alert_msg', `Aduan anda sedang diuruskan oleh ${excoName}. Sila log masuk ke portal untuk berbual atau memberi maklumat lanjut.`, { excoName })}</p>
       </div>
       <div class="cta-container">
-        <a href="${fullTicketUrl}" class="btn">Lihat & Balas Mesej</a>
+        <a href="${fullTicketUrl}" class="btn">${t('kebajikan:view_and_reply_msg', 'Lihat & Balas Mesej')}</a>
       </div>
     </div>
     <div class="footer">
-      <p>&copy; ${year} Jawatankuasa Perwakilan Pelajar POLISAS. Hak cipta terpelihara.</p>
-      <p class="auto-note">Emel ini dijana secara automatik. Sila jangan balas terus kepada emel ini.</p>
+      <p>&copy; ${year} ${t('portal:copyright_reserved', 'Jawatankuasa Perwakilan Pelajar POLISAS. Hak cipta terpelihara.')}</p>
+      <p class="auto-note">${t('portal:email_auto_generated_note', 'Emel ini dijana secara automatik. Sila jangan balas terus kepada emel ini.')}</p>
     </div>
   </div>
 </body>
 </html>
-  `;
+  `);
 }
 
 /**
@@ -100,32 +102,32 @@ export function generateStaffNotificationEmail(
 
   switch (type) {
     case 'NEW':
-      title = 'Aduan Baharu Diterima';
+      title = t('kebajikan:email_new_complaint_title', 'Aduan Baharu Diterima');
       iconEmoji = '📣';
-      alertTitle = '⚠️ Tindakan diperlukan';
-      alertMsg = 'Sila log masuk ke portal E-Kebajikan untuk mengambil tindakan.';
+      alertTitle = t('kebajikan:action_required', 'Tindakan diperlukan');
+      alertMsg = t('kebajikan:email_login_to_act_msg', 'Sila log masuk ke portal E-Kebajikan untuk mengambil tindakan.');
       break;
     case 'WARNING':
-      title = '⚠️ Amaran SLA (48 Jam)';
+      title = t('kebajikan:email_sla_warning_title', 'Amaran SLA (48 Jam)');
       iconEmoji = '⏰';
-      alertTitle = '⏳ Tindakan segera diperlukan';
-      alertMsg = 'Tiket ini belum menerima sebarang kemaskini melebihi 48 jam. Sila ambil tindakan segera.';
+      alertTitle = t('kebajikan:urgent_action_required', 'Tindakan segera diperlukan');
+      alertMsg = t('kebajikan:email_sla_warning_msg', 'Tiket ini belum menerima sebarang kemaskini melebihi 48 jam. Sila ambil tindakan segera.');
       break;
     case 'ESCALATION':
-      title = '🔴 Auto-Escalation (72 Jam)';
+      title = t('kebajikan:email_escalation_title', 'Auto-Escalation (72 Jam)');
       iconEmoji = '🚨';
-      alertTitle = '🔴 Tiket telah diescalate';
-      alertMsg = 'Sistem telah auto-escalate tiket ini kerana tiada tindakan selama lebih 72 jam.';
+      alertTitle = t('kebajikan:email_ticket_escalated', 'Tiket telah diescalate');
+      alertMsg = t('kebajikan:email_escalation_msg', 'Sistem telah auto-escalate tiket ini kerana tiada tindakan selama lebih 72 jam.');
       break;
     case 'REOPEN':
-      title = 'Permohonan Buka Semula (Reopen)';
+      title = t('kebajikan:email_reopen_request_title', 'Permohonan Buka Semula (Reopen)');
       iconEmoji = '🔄';
-      alertTitle = '🔄 Permohonan buka semula';
-      alertMsg = 'Pelajar telah memohon untuk membuka semula tiket ini. Sila semak kelulusan.';
+      alertTitle = t('kebajikan:email_reopen_request', 'Permohonan buka semula');
+      alertMsg = t('kebajikan:email_reopen_request_msg', 'Pelajar telah memohon untuk membuka semula tiket ini. Sila semak kelulusan.');
       break;
   }
 
-  return `
+  return t('kebajikan:email_staff_notification_template', `
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -168,25 +170,25 @@ export function generateStaffNotificationEmail(
       <div class="icon-box" style="background-color:${type === 'NEW' ? '#f0fdfa' : type === 'WARNING' ? '#fffbeb' : type === 'ESCALATION' ? '#fef2f2' : '#eef2ff'};"><span>${iconEmoji}</span></div>
       <div class="status-title">${title}</div>
       <table class="details-table">
-        <tr><td class="label">No. Tiket</td><td class="value"><a href="${fullTicketUrl}">${ticketNo}</a></td></tr>
-        <tr><td class="label">Tajuk Aduan</td><td class="value">${ticketTitle}</td></tr>
-        <tr><td class="label">Nama Pelajar</td><td class="value">${studentName}</td></tr>
-        ${additionalInfo ? `<tr><td class="label">Nota</td><td class="value">${additionalInfo}</td></tr>` : ''}
+        <tr><td class="label">${t('common:ticket_no', 'No. Tiket')}</td><td class="value"><a href="${fullTicketUrl}">${ticketNo}</a></td></tr>
+        <tr><td class="label">${t('kebajikan:complaint_title', 'Tajuk Aduan')}</td><td class="value">${ticketTitle}</td></tr>
+        <tr><td class="label">${t('portal:student_name', 'Nama Pelajar')}</td><td class="value">${studentName}</td></tr>
+        ${additionalInfo ? `<tr><td class="label">${t('common:note', 'Nota')}</td><td class="value">${additionalInfo}</td></tr>` : ''}
       </table>
       <div class="alert-box" style="background-color:${type === 'NEW' ? '#f0fdfa' : type === 'WARNING' ? '#fffbeb' : type === 'ESCALATION' ? '#fef2f2' : '#eef2ff'};border-color:${type === 'NEW' ? '#99f6e4' : type === 'WARNING' ? '#fde68a' : type === 'ESCALATION' ? '#fecaca' : '#c7d2fe'};">
         <p class="alert-title" style="color:${type === 'NEW' ? '#0d9488' : type === 'WARNING' ? '#d97706' : type === 'ESCALATION' ? '#dc2626' : '#6366f1'};">${alertTitle}</p>
         <p class="alert-msg" style="color:${type === 'NEW' ? '#0f766e' : type === 'WARNING' ? '#92400e' : type === 'ESCALATION' ? '#991b1b' : '#4338ca'};">${alertMsg}</p>
       </div>
       <div class="cta-container">
-        <a href="${fullTicketUrl}" class="btn" style="background-color:${primaryColor};">Buka Tiket</a>
+        <a href="${fullTicketUrl}" class="btn" style="background-color:${primaryColor};">${t('kebajikan:open_ticket', 'Buka Tiket')}</a>
       </div>
     </div>
     <div class="footer">
-      <p>&copy; ${year} Jawatankuasa Perwakilan Pelajar POLISAS. Hak cipta terpelihara.</p>
-      <p class="auto-note">Emel ini dijana secara automatik. Sila jangan balas terus kepada emel ini.</p>
+      <p>&copy; ${year} ${t('portal:copyright_reserved', 'Jawatankuasa Perwakilan Pelajar POLISAS. Hak cipta terpelihara.')}</p>
+      <p class="auto-note">${t('portal:email_auto_generated_note', 'Emel ini dijana secara automatik. Sila jangan balas terus kepada emel ini.')}</p>
     </div>
   </div>
 </body>
 </html>
-  `;
+  `);
 }

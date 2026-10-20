@@ -402,7 +402,7 @@ export function EventCouponPanel() {
                   {t('jpp:coupon_field_desc', 'Penerangan')}
                 </label>
                 <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Diskaun RM5 untuk pembelian di gerai..." className={inputCls + ' mt-1'} />
+                  placeholder={t('jpp:coupon_placeholder_desc', 'Diskaun RM5 untuk pembelian di gerai...')} className={inputCls + ' mt-1'} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

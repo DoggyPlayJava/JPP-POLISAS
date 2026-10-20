@@ -5292,6 +5292,19 @@ Melengkapkan gelombang pembersihan pusingan kesepuluh (Batch 10) merentasi 42 fa
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 638 kepada **454** (penurunan kumulatif 5,191 kejadian dalam 10 batch). Jumlah fail yang masih mempunyai sebarang teks BM tersisa menurun ke 94 fail sahaja.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.36 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 11): Reports/Emails, JPP Units/Takwim & Kebajikan/EMS
+Melengkapkan gelombang pembersihan pusingan kesebelas (Batch 11) merentasi 42 fail serentak dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 11 Disjoint Sweep):**
+   - **Laporan, Dokumen PDF/DOCX & Templat E-mel (`portal.json`, `kpp.json`, `common.json`) [11 Fail]:** `emailTemplates.ts` (14 isu -> 0), `foodbankEmail.ts` (14 isu -> 0), `LaporanPDFTemplate.tsx` (13 isu -> 0), `LaporanPreviewModal.tsx` (13 isu -> 0), `FoodBankPassPDF.tsx` (11 isu -> 0), `TakwimJPPPDFTemplate.tsx` (10 isu -> 0), `TakwimPusatPDFTemplate.tsx` (10 isu -> 0), `generateLaporanDocx.ts` (12 isu -> 0), `makmpEmail.ts` (7 isu -> 0), `email-templates.ts` (5 isu -> 0), dan `email.ts` (1 isu -> 0) diselaraskan sepenuhnya bagi templat notifikasi e-mel automatik, pas muat turun FoodBank, dokumen laporan PDF, takwim pusat/JPP PDF, dan penjana DOCX.
+   - **Unit Pentadbiran JPP & Takwim Pusat (`jpp.json`) [16 Fail]:** `JppCommandPalette.tsx` (13 isu -> 0), `TakwimPusatBulkForm.tsx` (12 isu -> 0), `KolaborasiUnitDashboard.tsx` (10 isu -> 0), `TimetableUploadModal.tsx` (7 isu -> 0), `JppNexusPage.tsx` (5 isu -> 0), `JppStructureSettings.tsx` (5 isu -> 0), `QrCodeFab.tsx` (5 isu -> 0), `TimetableMatrixGrid.tsx` (5 isu -> 0), `DayDetailSheet.tsx` (4 isu -> 0), `TimetablePreviewModal.tsx` (4 isu -> 0), `JppSidebar.tsx` (3 isu -> 0), `KlsUnitDashboard.tsx` (2 isu -> 0), `JppTelemetryPage.tsx` (1 isu -> 0), `TelemetryTopologyFlow.tsx` (1 isu -> 0), `telemetryTypes.ts` (1 isu -> 0), dan `EventCouponPanel.tsx` (1 isu -> 0) diselubungi bagi pintasan palet perintah JPP HQ, borang pukal takwim, jadual matriks waktu pelajar, dan penjejakan topologi telemetri. Kunci kamus `jpp.json` meningkat ke 2,310 kunci dengan 100% pariti.
+   - **Modul Penuh Kebajikan & Acara EMS (`kebajikan.json`, `ems.json`) [15 Fail]:** `EmsEventCertsModal.tsx` (9 isu -> 0), `EmsCheckinPage.tsx` (8 isu -> 0), `KebajikanKafeteriaPage.tsx` (8 isu -> 0), `KebajikanLayout.tsx` (7 isu -> 0), `KebajikanTicketsPage.tsx` (7 isu -> 0), `EmsCompleteConfirmModal.tsx` (5 isu -> 0), `EmsQrCodeModal.tsx` (5 isu -> 0), `KebajikanLiveTrackerCard.tsx` (4 isu -> 0), `KebajikanMyTickets.tsx` (3 isu -> 0), `KebajikanSidebar.tsx` (3 isu -> 0), `KebajikanStudentChat.tsx` (3 isu -> 0), `StudentSearchCombobox.tsx` (3 isu -> 0), `KebajikanDashboard.tsx` (1 isu -> 0), `KebajikanPublicStats.tsx` (1 isu -> 0), dan `EmsJuryCodeModal.tsx` (1 isu -> 0) diselaraskan bagi semakan kafetaria, sistem tiket aduan mahasiswa, semakan kod juri, imbasan daftar masuk acara, dan sijil digital peserta.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 30/30 ujian lulus merentasi suite `masterLocales` dan `SweepGroup2JppUnitsAndTelemetryI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 454 kepada **197** (penurunan kumulatif 5,448 kejadian dalam 11 batch). Hanya 52 fail sahaja yang masih mempunyai sebarang teks BM tersisa di seluruh projek.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

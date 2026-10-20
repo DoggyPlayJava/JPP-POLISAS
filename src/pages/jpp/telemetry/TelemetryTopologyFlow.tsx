@@ -146,7 +146,7 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
       route: '/portal',
       stats: [
         { label: t('jpp:telemetry_topo_registered_students', 'Jumlah Siswa Berdaftar'), val: `${(modules.profiles || 0).toLocaleString()} ${t('jpp:telemetry_topo_records_unit', 'rekod')}` },
-        { label: t('jpp:telemetry_topo_push_subs', 'Push Subscriptions'), val: `${modules.push_subscriptions || 0} ${t('jpp:telemetry_topo_active', 'aktif')}` },
+        { label: t('jpp:telemetry_topo_push_subs', 'Push Subscriptions'), val: t('jpp:telemetry_topo_push_subs_val', '{{count}} aktif', { count: modules.push_subscriptions || 0 }) },
         { label: t('jpp:telemetry_topo_notifications_sent', 'Notifikasi Terhantar'), val: `${(modules.notifications || 0).toLocaleString()} ${t('jpp:telemetry_topo_notifs_unit', 'notif')}` },
       ],
     },

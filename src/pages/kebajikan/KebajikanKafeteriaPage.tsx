@@ -30,24 +30,24 @@ export function KebajikanKafeteriaPage() {
   const audits: CafeteriaAudit[] = [
     {
       id: '1',
-      name: 'Kafeteria Utama Kamsis A',
-      location: 'Blok Siswa A',
+      name: t('kebajikan:cafe_kamsis_a', 'Kafeteria Utama Kamsis A'),
+      location: t('kebajikan:block_siswa_a', 'Blok Siswa A'),
       hygieneGrade: 'A',
       priceCheckStatus: 'COMPLIANT',
       lastInspection: '12 Okt 2026',
     },
     {
       id: '2',
-      name: 'Kafeteria Siswi Kamsis B',
-      location: 'Blok Siswi B',
+      name: t('kebajikan:cafe_kamsis_b', 'Kafeteria Siswi Kamsis B'),
+      location: t('kebajikan:block_siswi_b', 'Blok Siswi B'),
       hygieneGrade: 'A',
       priceCheckStatus: 'COMPLIANT',
       lastInspection: '14 Okt 2026',
     },
     {
       id: '3',
-      name: 'Kiosk Kafeteria Fakulti Kejuruteraan',
-      location: 'Kompleks JKE',
+      name: t('kebajikan:cafe_jke_kiosk', 'Kiosk Kafeteria Fakulti Kejuruteraan'),
+      location: t('kebajikan:complex_jke', 'Kompleks JKE'),
       hygieneGrade: 'B',
       priceCheckStatus: 'WARNING',
       lastInspection: '08 Okt 2026',
@@ -92,7 +92,7 @@ export function KebajikanKafeteriaPage() {
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Cari kafeteria atau lokasi..."
+          placeholder={t('kebajikan:search_cafe_placeholder', 'Cari kafeteria atau lokasi...')}
           className="pl-10 h-11 rounded-2xl bg-muted/30 border-border"
         />
       </div>
@@ -116,13 +116,13 @@ export function KebajikanKafeteriaPage() {
                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                 }`}
               >
-                Gred {audit.hygieneGrade}
+                {t('kebajikan:grade_prefix', 'Gred')} {audit.hygieneGrade}
               </span>
             </div>
 
             <div className="text-xs space-y-1 pt-2 border-t border-border/20">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Kawalan Harga Menu:</span>
+                <span className="text-muted-foreground">{t('kebajikan:menu_price_control_label', 'Kawalan Harga Menu:')}</span>
                 <span
                   className={`font-bold ${
                     audit.priceCheckStatus === 'COMPLIANT'
@@ -130,11 +130,11 @@ export function KebajikanKafeteriaPage() {
                       : 'text-amber-600 dark:text-amber-400'
                   }`}
                 >
-                  {audit.priceCheckStatus === 'COMPLIANT' ? 'Mematuhi Had Siling' : 'Amaran Semakan'}
+                  {audit.priceCheckStatus === 'COMPLIANT' ? t('kebajikan:price_compliant', 'Mematuhi Had Siling') : t('kebajikan:price_warning', 'Amaran Semakan')}
                 </span>
               </div>
               <div className="flex justify-between items-center text-muted-foreground">
-                <span>Pemeriksaan Terakhir:</span>
+                <span>{t('kebajikan:last_inspection_label', 'Pemeriksaan Terakhir:')}</span>
                 <span className="font-medium">{audit.lastInspection}</span>
               </div>
             </div>

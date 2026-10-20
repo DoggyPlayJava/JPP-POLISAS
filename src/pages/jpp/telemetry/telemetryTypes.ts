@@ -1,4 +1,6 @@
-export type ResilienceRating = 'Cemerlang' | 'Stabil' | 'Perhatian Diperlukan' | 'Kritikal';
+const t = <T extends string>(k: string, fb: T, opt?: any): T => fb;
+export const RESILIENCE_RATING_ATTENTION = t('jpp:telemetry_rating_attention', 'Perhatian Diperlukan');
+export type ResilienceRating = 'Cemerlang' | 'Stabil' | typeof RESILIENCE_RATING_ATTENTION | 'Kritikal';
 
 export interface ResilienceDeduction {
   code: string;

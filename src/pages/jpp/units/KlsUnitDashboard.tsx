@@ -17,21 +17,22 @@ import { cn } from '@/lib/utils';
 import { KamsisKlkStatsWidget } from './KamsisKlkStatsWidget';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 const KLS_COLOR = '#60A5FA';
 
 // ── Master Hotspot Reference with Approx Distance ───────────────────────
 const HOTSPOT_REFERENCE: Record<string, { label: string; distance: string; zone: string }> = {
-  'SEMAMBU': { label: 'Semambu / Politeknik', distance: '1 - 3 km', zone: 'Zon Utama' },
-  'INDERA MAHKOTA': { label: 'Indera Mahkota (IM 1 - 15)', distance: '4 - 7 km', zone: 'Zon Bandar' },
-  'BESERAH': { label: 'Beserah / Pantai Batu Hitam', distance: '8 - 12 km', zone: 'Zon Pesisir' },
-  'ALOR AKAR': { label: 'Alor Akar / Seri Kuantan', distance: '5 - 8 km', zone: 'Zon Tengah' },
-  'AIR PUTIH': { label: 'Air Putih / Galing', distance: '6 - 9 km', zone: 'Zon Bandar' },
-  'TAMAN TAS': { label: 'Taman Tas / Pandan', distance: '14 - 18 km', zone: 'Zon Barat' },
-  'KUBANG BUAYA': { label: 'Kubang Buaya / Teluk Sisek', distance: '9 - 13 km', zone: 'Zon Pantai' },
-  'BUKIT SEKILAU': { label: 'Bukit Sekilau / Bukit Ubi', distance: '7 - 10 km', zone: 'Zon Bandar' },
-  'SUNGAI ISAP': { label: 'Sungai Isap / Permatang Badak', distance: '11 - 15 km', zone: 'Zon Selatan' },
-  'BUKIT RANGIN': { label: 'Bukit Rangin / KotaSAS', distance: '9 - 14 km', zone: 'Zon Utara' },
+  'SEMAMBU': { label: 'Semambu / Politeknik', distance: '1 - 3 km', zone: t('jpp:kls_zone_main', 'Zon Utama') },
+  'INDERA MAHKOTA': { label: 'Indera Mahkota (IM 1 - 15)', distance: '4 - 7 km', zone: t('jpp:kls_zone_city', 'Zon Bandar') },
+  'BESERAH': { label: 'Beserah / Pantai Batu Hitam', distance: '8 - 12 km', zone: t('jpp:kls_zone_coastal', 'Zon Pesisir') },
+  'ALOR AKAR': { label: 'Alor Akar / Seri Kuantan', distance: '5 - 8 km', zone: t('jpp:kls_zone_central', 'Zon Tengah') },
+  'AIR PUTIH': { label: 'Air Putih / Galing', distance: '6 - 9 km', zone: t('jpp:kls_zone_city', 'Zon Bandar') },
+  'TAMAN TAS': { label: 'Taman Tas / Pandan', distance: '14 - 18 km', zone: t('jpp:kls_zone_west', 'Zon Barat') },
+  'KUBANG BUAYA': { label: 'Kubang Buaya / Teluk Sisek', distance: '9 - 13 km', zone: t('jpp:kls_zone_beach', 'Zon Pantai') },
+  'BUKIT SEKILAU': { label: 'Bukit Sekilau / Bukit Ubi', distance: '7 - 10 km', zone: t('jpp:kls_zone_city', 'Zon Bandar') },
+  'SUNGAI ISAP': { label: 'Sungai Isap / Permatang Badak', distance: '11 - 15 km', zone: t('jpp:kls_zone_south', 'Zon Selatan') },
+  'BUKIT RANGIN': { label: 'Bukit Rangin / KotaSAS', distance: '9 - 14 km', zone: t('jpp:kls_zone_north', 'Zon Utara') },
 };
 
 export function KlsUnitDashboard() {
@@ -107,8 +108,8 @@ export function KlsUnitDashboard() {
         pct: Math.round((count / (luarCount || 1)) * 100),
         meta: HOTSPOT_REFERENCE[name] || {
           label: name,
-          distance: 'Luar Sempadan Utama',
-          zone: 'Zon Bebas',
+          distance: t('jpp:kls_outside_main_boundary', 'Luar Sempadan Utama'),
+          zone: t('jpp:kls_zone_free', 'Zon Bebas'),
         },
       }))
       .sort((a, b) => b.count - a.count);

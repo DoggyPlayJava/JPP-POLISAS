@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { EmsEvent } from '@/types';
 
 export interface EmsQrCodeModalProps {
@@ -10,6 +11,7 @@ export interface EmsQrCodeModalProps {
 }
 
 export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
+  const { t } = useTranslation(['ems', 'common']);
   const [qrModalTab, setQrModalTab] = useState<'PARTICIPANT' | 'AUDIENCE'>('PARTICIPANT');
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -24,8 +26,8 @@ export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
     setCopiedLink(true);
     toast.success(
       qrModalTab === 'AUDIENCE'
-        ? 'Pautan QR Pengunjung disalin!'
-        : 'Pautan QR Peserta disalin!'
+        ? t('ems:qr_audience_link_copied', 'Pautan QR Pengunjung disalin!')
+        : t('ems:qr_participant_link_copied', 'Pautan QR Peserta disalin!')
     );
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -36,14 +38,14 @@ export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-          aria-label="Tutup Modal"
+          aria-label={t('ems:close_modal', 'Tutup Modal')}
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="text-center space-y-1">
           <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-            Kod QR Acara
+            {t('ems:event_qr_title', 'Kod QR Acara')}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate px-4">
             {event.title}
@@ -61,7 +63,7 @@ export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            QR Peserta Pertandingan
+            {t('ems:qr_tab_participant', 'QR Peserta Pertandingan')}
           </button>
           <button
             type="button"
@@ -72,7 +74,7 @@ export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            QR Pengunjung / Penonton
+            {t('ems:qr_tab_audience', 'QR Pengunjung / Penonton')}
           </button>
         </div>
 
@@ -103,10 +105,10 @@ export function EmsQrCodeModal({ event, onClose }: EmsQrCodeModalProps) {
           {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           <span>
             {copiedLink
-              ? 'Berjaya Disalin!'
+              ? t('ems:copied_success', 'Berjaya Disalin!')
               : qrModalTab === 'AUDIENCE'
-              ? 'Salin Pautan QR Pengunjung'
-              : 'Salin Pautan QR Peserta'}
+              ? t('ems:copy_audience_qr_link', 'Salin Pautan QR Pengunjung')
+              : t('ems:copy_participant_qr_link', 'Salin Pautan QR Peserta')}
           </span>
         </button>
       </div>

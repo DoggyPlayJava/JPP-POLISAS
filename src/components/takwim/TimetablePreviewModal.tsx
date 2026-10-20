@@ -69,6 +69,8 @@ export function parseTimeToMinutes(t: string): number {
   return hours * 60 + mins;
 }
 
+const t = (k: string, fb: string, opt?: any): string => fb;
+
 export function checkTimetableConflicts(
   slots: { day_of_week: number; start_time: string; end_time: string; course_code: string }[]
 ): ConflictInfo[] {
@@ -93,12 +95,12 @@ export function checkTimetableConflicts(
         const endB = parseTimeToMinutes(b.end_time);
 
         if (startA < endB && endA > startB) {
-          const dayName = dayNameMap[a.day_of_week] || `Hari ${a.day_of_week}`;
+          const dayName = dayNameMap[a.day_of_week] || t('jpp:day_fallback', 'Hari {{day}}', { day: a.day_of_week });
           conflicts.push({
             indexA: i,
             indexB: j,
             dayOfWeek: a.day_of_week,
-            message: `Pertindihan pada hari ${dayName}: ${a.course_code || 'Slot'} (${a.start_time.slice(0, 5)} - ${a.end_time.slice(0, 5)}) dengan ${b.course_code || 'Slot'} (${b.start_time.slice(0, 5)} - ${b.end_time.slice(0, 5)})`,
+            message: t('jpp:timetable_conflict_msg', 'Pertindihan pada hari {{day}}: {{slotA}} ({{startA}} - {{endA}}) dengan {{slotB}} ({{startB}} - {{endB}})', { day: dayName, slotA: a.course_code || 'Slot', startA: a.start_time.slice(0, 5), endA: a.end_time.slice(0, 5), slotB: b.course_code || 'Slot', startB: b.start_time.slice(0, 5), endB: b.end_time.slice(0, 5) }),
           });
         }
       }
@@ -437,7 +439,7 @@ export function TimetablePreviewModal({
             semester_end_date: endDate,
             is_active: true,
           },
-          { onConflict: 'user_id,academic_session,semester' }
+          { onConflict: t('jpp:onconflict_user_session_sem', 'user_id,academic_session,semester') }
         );
 
       if (metaError) {
@@ -459,7 +461,7 @@ export function TimetablePreviewModal({
             unrecognizedRooms.map(roomCode =>
               supabase.rpc('report_missing_timetable_room', {
                 p_room_code: roomCode,
-                p_description: `Dikesan daripada jadual waktu kelas ${className.trim().toUpperCase()} (${session.trim() || 'Semasa'})`,
+                p_description: t('jpp:timetable_missing_room_desc', 'Dikesan daripada jadual waktu kelas {{class}} ({{session}})', { class: className.trim().toUpperCase(), session: session.trim() || 'Semasa' }),
               })
             )
           ).catch(err => {

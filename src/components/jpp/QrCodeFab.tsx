@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { QrCode, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +24,7 @@ interface QrCodeFabProps {
  * Diletakkan di bottom-right, di atas FloatingAiChat.
  */
 export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { isJppMember } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -52,8 +54,8 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
             ? `linear-gradient(135deg, ${accentColor}cc, ${accentColor}88)`
             : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))',
         }}
-        title="Jana QR Code"
-        aria-label="Buka Penjana QR Code"
+        title={t('jpp:qr_fab_generate_title', 'Jana QR Code')}
+        aria-label={t('jpp:qr_fab_open_generator_label', 'Buka Penjana QR Code')}
       >
         <QrCode className="w-5 h-5 text-white" />
       </motion.button>
@@ -103,17 +105,17 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
                   </div>
                   <div>
                     <p className="font-black text-xs uppercase tracking-widest text-foreground">
-                      Jana QR Code
+                      {t('jpp:qr_fab_generate_title', 'Jana QR Code')}
                     </p>
                     <p className="text-[10px] text-muted-foreground font-medium">
-                      Dengan logo JPP di tengah
+                      {t('jpp:qr_fab_with_logo_desc', 'Dengan logo JPP di tengah')}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-xl hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Tutup"
+                  aria-label={t('jpp:qr_fab_close_label', 'Tutup')}
                 >
                   <X className="w-4 h-4" />
                 </button>

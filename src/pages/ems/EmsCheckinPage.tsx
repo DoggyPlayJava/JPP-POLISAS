@@ -150,7 +150,7 @@ export function EmsCheckinPage() {
         .order('scanned_at', { ascending: false });
       setVisitors(vData || []);
     } catch (err: any) {
-      toast.error(t('ems:checkin_failed_badge', 'Gagal memuatkan acara') + ': ' + (err?.message || 'Ralat'));
+      toast.error(t('ems:checkin_failed_badge', 'Gagal memuatkan acara') + ': ' + (err?.message || t('ems:error_label', 'Ralat')));
     } finally {
       setLoading(false);
     }
@@ -446,7 +446,7 @@ export function EmsCheckinPage() {
           to="/ems/dashboard"
           className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 rounded-xl font-bold transition-all shadow-sm"
         >
-          Kembali ke Dashboard EMS
+          {t('ems:btn_back_to_ems_dashboard', 'Kembali ke Dashboard EMS')}
         </Link>
       </div>
     );
@@ -739,7 +739,7 @@ export function EmsCheckinPage() {
                         onClick={startCamera}
                         className="mt-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg text-xs font-semibold transition-all border border-slate-200 dark:border-slate-700"
                       >
-                        Cuba Aktifkan Semula Kamera
+                        {t('ems:retry_activate_camera', 'Cuba Aktifkan Semula Kamera')}
                       </button>
                     </div>
                   )}
@@ -891,7 +891,7 @@ export function EmsCheckinPage() {
 
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">Nama Ketua / Peserta</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-medium">{t('ems:leader_or_participant_name', 'Nama Ketua / Peserta')}</span>
                       <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{scanResult.participant.leader_name}</p>
                     </div>
 
@@ -930,7 +930,7 @@ export function EmsCheckinPage() {
                     onClick={() => setScanResult(null)}
                     className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700"
                   >
-                    Cuba Lagi
+                    {t('ems:btn_try_again', 'Cuba Lagi')}
                   </button>
                 </div>
               )}
@@ -1004,10 +1004,10 @@ export function EmsCheckinPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-              Senarai Kehadiran Peserta Live
+              {t('ems:live_attendance_list_title', 'Senarai Kehadiran Peserta Live')}
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              Kemaskini Masa-Nyata (Supabase Realtime)
+              {t('ems:realtime_update_badge', 'Kemaskini Masa-Nyata (Supabase Realtime)')}
             </span>
           </div>
 
@@ -1044,12 +1044,12 @@ export function EmsCheckinPage() {
                         {p.is_checked_in ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            Disahkan
+                            {t('ems:status_confirmed', 'Disahkan')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
                             <Clock className="w-3.5 h-3.5" />
-                            Belum Hadir
+                            {t('ems:status_not_present', 'Belum Hadir')}
                           </span>
                         )}
                       </td>

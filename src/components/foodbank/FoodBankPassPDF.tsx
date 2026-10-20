@@ -2,6 +2,8 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { FoodBankApplication } from '@/types';
 
+const t = (k: string, fb: string, _opt?: any) => fb;
+
 const styles = StyleSheet.create({
   page: {
     backgroundColor: '#ffffff',
@@ -124,8 +126,8 @@ export function FoodBankPassPDF({
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Pas Pengambilan Food Bank</Text>
-            <Text style={styles.headerSub}>JPP POLISAS • E-Kebajikan &amp; Food Bank</Text>
+            <Text style={styles.headerTitle}>{t('kebajikan:foodbank_pass_title', 'Pas Pengambilan Food Bank')}</Text>
+            <Text style={styles.headerSub}>{t('kebajikan:foodbank_pass_sub', 'JPP POLISAS • E-Kebajikan & Food Bank')}</Text>
           </View>
           <Text style={styles.headerBadge}>{statusLabel}</Text>
         </View>
@@ -133,52 +135,52 @@ export function FoodBankPassPDF({
         {/* Pelajar */}
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Nama Mahasiswa</Text>
+            <Text style={styles.label}>{t('portal:student_name', 'Nama Mahasiswa')}</Text>
             <Text style={styles.value}>{studentName}</Text>
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>No. Matrik</Text>
+            <Text style={styles.label}>{t('common:matric_no', 'No. Matrik')}</Text>
             <Text style={styles.value}>{studentMatric}</Text>
           </View>
         </View>
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Program</Text>
+            <Text style={styles.label}>{t('portal:programme', 'Program')}</Text>
             <Text style={styles.value}>{studentProgramme}</Text>
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Tempat Tinggal</Text>
+            <Text style={styles.label}>{t('housing:place_of_residence', 'Tempat Tinggal')}</Text>
             <Text style={styles.value}>{residence}</Text>
           </View>
         </View>
 
         {/* Temujanji */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Butiran Temujanji Pengambilan</Text>
+          <Text style={styles.sectionTitle}>{t('kebajikan:pickup_appointment_details', 'Butiran Temujanji Pengambilan')}</Text>
           <View style={styles.row}>
             <View style={styles.col}>
-              <Text style={styles.label}>No. Permohonan</Text>
+              <Text style={styles.label}>{t('common:application_no', 'No. Permohonan')}</Text>
               <Text style={styles.valueMono}>{application.application_no || '-'}</Text>
             </View>
             <View style={styles.col}>
-              <Text style={styles.label}>Tarikh Pengambilan</Text>
+              <Text style={styles.label}>{t('kebajikan:pickup_date', 'Tarikh Pengambilan')}</Text>
               <Text style={styles.value}>{fmtDate(application.pickup_date)}</Text>
             </View>
           </View>
           <View style={styles.row}>
             <View style={styles.col}>
-              <Text style={styles.label}>Slot Masa</Text>
+              <Text style={styles.label}>{t('kebajikan:time_slot', 'Slot Masa')}</Text>
               <Text style={styles.value}>{application.pickup_time_slot || '-'}</Text>
             </View>
             <View style={styles.col}>
-              <Text style={styles.label}>Pusat Agihan</Text>
+              <Text style={styles.label}>{t('kebajikan:distribution_center', 'Pusat Agihan')}</Text>
               <Text style={styles.value}>{application.location?.name || '-'}</Text>
             </View>
           </View>
           {application.location?.room_detail ? (
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text style={styles.label}>Lokasi Terperinci</Text>
+                <Text style={styles.label}>{t('kebajikan:detailed_location', 'Lokasi Terperinci')}</Text>
                 <Text style={styles.value}>{application.location.room_detail}</Text>
               </View>
             </View>
@@ -187,9 +189,9 @@ export function FoodBankPassPDF({
 
         {/* Barangan */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Senarai Barangan Diluluskan</Text>
+          <Text style={styles.sectionTitle}>{t('kebajikan:approved_items_list', 'Senarai Barangan Diluluskan')}</Text>
           {items.length === 0 ? (
-            <Text style={styles.note}>Tiada barangan.</Text>
+            <Text style={styles.note}>{t('kebajikan:no_items', 'Tiada barangan.')}</Text>
           ) : (
             items.map((it, idx) => (
               <View key={idx} style={styles.itemRow}>
@@ -205,19 +207,14 @@ export function FoodBankPassPDF({
         {/* QR */}
         <View style={styles.qrWrap}>
           <View style={{ flex: 1, paddingRight: 12 }}>
-            <Text style={styles.label}>Kod QR Pengesahan</Text>
+            <Text style={styles.label}>{t('kebajikan:qr_verification_code', 'Kod QR Pengesahan')}</Text>
             <Text style={styles.token}>{application.pickup_qr_code || application.application_no || '-'}</Text>
-            <Text style={styles.note}>
-              Sila imbas atau tunjukkan kod QR ini di kaunter agihan. Pegawai akan mengesahkan
-              pengambilan secara automatik.
-            </Text>
+            <Text style={styles.note}>{t('kebajikan:qr_scan_note', 'Sila imbas atau tunjukkan kod QR ini di kaunter agihan. Pegawai akan mengesahkan pengambilan secara automatik.')}</Text>
           </View>
           {qrDataUrl ? <Image src={qrDataUrl} style={styles.qrImage} /> : null}
         </View>
 
-        <Text style={styles.footer}>
-          SISTEM E-KEBAJIKAN &amp; FOOD BANK JPP POLISAS • VERIFIKASI DIGITAL KAMPUS
-        </Text>
+        <Text style={styles.footer}>{t('kebajikan:foodbank_pdf_footer', 'SISTEM E-KEBAJIKAN & FOOD BANK JPP POLISAS • VERIFIKASI DIGITAL KAMPUS')}</Text>
       </Page>
     </Document>
   );

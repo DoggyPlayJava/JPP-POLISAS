@@ -20,6 +20,7 @@ import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 const KOLAB_COLOR = '#34D399';
 
@@ -42,41 +43,41 @@ const INITIAL_PARTNERS: MouPartner[] = [
   {
     id: 'mou-01',
     name: 'Petronas Chemicals MTBE Sdn Bhd (Gebeng)',
-    type: 'Industri / Korporat',
-    scope: 'Penajaan Geran Inovasi Siswa & Misi Khidmat Komuniti Pesisir Pantai',
+    type: t('jpp:kolab_partner_type_industry', 'Industri / Korporat'),
+    scope: t('jpp:kolab_partner_scope_petronas', 'Penajaan Geran Inovasi Siswa & Misi Khidmat Komuniti Pesisir Pantai'),
     validUntil: '2028-12-31',
     status: 'AKTIF',
-    contactPerson: 'Ir. Ahmad Razif (Pengurus CSR)',
+    contactPerson: t('jpp:kolab_partner_contact_petronas', 'Ir. Ahmad Razif (Pengurus CSR)'),
     contactEmail: 'razif_mtbe@petronas.com.my',
   },
   {
     id: 'mou-02',
-    name: 'Majlis Bandaraya Kuantan (MBK)',
-    type: 'Agensi Kerajaan Tempatan',
-    scope: 'Program Bandar Pintar, Gotong-Royong Komuniti & Skuad Sukarelawan Belia',
+    name: t('jpp:kolab_partner_name_mbk', 'Majlis Bandaraya Kuantan (MBK)'),
+    type: t('jpp:kolab_partner_type_local_gov', 'Agensi Kerajaan Tempatan'),
+    scope: t('jpp:kolab_partner_scope_mbk', 'Program Bandar Pintar, Gotong-Royong Komuniti & Skuad Sukarelawan Belia'),
     validUntil: '2027-06-30',
     status: 'AKTIF',
-    contactPerson: 'Puan Noraini (Bahagian Belia & Sukan)',
+    contactPerson: t('jpp:kolab_partner_contact_mbk', 'Puan Noraini (Bahagian Belia & Sukan)'),
     contactEmail: 'noraini@mbk.gov.my',
   },
   {
     id: 'mou-03',
     name: 'Yayasan Pahang',
-    type: 'Agensi Negeri',
-    scope: 'Dana Tabung Khidmat Komuniti & Bantuan Kecemasan Bencana Mahasiswa',
+    type: t('jpp:kolab_partner_type_state_gov', 'Agensi Negeri'),
+    scope: t('jpp:kolab_partner_scope_yp', 'Dana Tabung Khidmat Komuniti & Bantuan Kecemasan Bencana Mahasiswa'),
     validUntil: '2027-12-31',
     status: 'AKTIF',
-    contactPerson: 'Encik Kamarul (Unit Bantuan Mahasiswa)',
+    contactPerson: t('jpp:kolab_partner_contact_yp', 'Encik Kamarul (Unit Bantuan Mahasiswa)'),
     contactEmail: 'kamarul@yp.org.my',
   },
   {
     id: 'mou-04',
-    name: 'Bulan Sabit Merah Malaysia (Cawangan Kuantan)',
-    type: 'Badan Bukan Kerajaan (NGO)',
-    scope: 'Latihan Pertolongan Cemas CPR & Skuad Tindak Balas Banjir Mahasiswa',
+    name: t('jpp:kolab_partner_name_bsmm', 'Bulan Sabit Merah Malaysia (Cawangan Kuantan)'),
+    type: t('jpp:kolab_partner_type_ngo', 'Badan Bukan Kerajaan (NGO)'),
+    scope: t('jpp:kolab_partner_scope_bsmm', 'Latihan Pertolongan Cemas CPR & Skuad Tindak Balas Banjir Mahasiswa'),
     validUntil: '2026-11-15',
     status: 'RUNDINGAN',
-    contactPerson: 'Dr. Subramaniam (Penyelaras Operasi)',
+    contactPerson: t('jpp:kolab_partner_contact_bsmm', 'Dr. Subramaniam (Penyelaras Operasi)'),
     contactEmail: 'subra@pbsmkuantan.org',
   },
 ];
@@ -509,7 +510,7 @@ export function KolaborasiUnitDashboard() {
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                CSR & Tajaan
+                {t('jpp:kolab_csr_sponsorship', 'CSR & Tajaan')}
               </span>
             </div>
 

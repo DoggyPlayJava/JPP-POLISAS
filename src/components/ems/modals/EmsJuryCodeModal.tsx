@@ -458,7 +458,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!window.confirm(`Adakah anda pasti untuk memadam kod juri ${j.code}?`))
+                        if (!window.confirm(t('ems:confirm_delete_jury_code', 'Adakah anda pasti untuk memadam kod juri {{code}}?', { code: j.code })))
                           return;
                         try {
                           await deleteJuryCode(j.id);
