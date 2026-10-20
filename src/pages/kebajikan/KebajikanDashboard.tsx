@@ -79,7 +79,14 @@ export function KebajikanDashboard() {
   ];
 
   const greetingKey = getGreetingKey();
-  const greetingWord = t(`kebajikan:dash_greeting_${greetingKey}`, getGreetingBM(greetingKey));
+  const greetingWord =
+    greetingKey === 'morning'
+      ? t('kebajikan:dash_greeting_morning', 'pagi')
+      : greetingKey === 'afternoon'
+      ? t('kebajikan:dash_greeting_afternoon', 'tengah hari')
+      : greetingKey === 'evening'
+      ? t('kebajikan:dash_greeting_evening', 'petang')
+      : t('kebajikan:dash_greeting_night', 'malam');
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen relative transition-colors">
@@ -236,15 +243,6 @@ function getGreetingKey() {
   if (h < 15) return 'afternoon';
   if (h < 19) return 'evening';
   return 'night';
-}
-
-function getGreetingBM(key: string) {
-  switch (key) {
-    case 'morning': return 'pagi';
-    case 'afternoon': return 'tengah hari';
-    case 'evening': return 'petang';
-    default: return 'malam';
-  }
 }
 
 function hexToRgbStr(hex: string) {

@@ -41,7 +41,7 @@ export function KebajikanSidebar() {
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const posLabel    = isKebajikanExco ? 'Exco Kebajikan' : isKediamanExco ? 'Exco KK (Kafeteria)' : isUnitKebajikanStaff ? 'Unit Kebajikan' : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+  const posLabel    = isKebajikanExco ? t('kebajikan:role_exco_kebajikan', 'Exco Kebajikan') : isKediamanExco ? t('kebajikan:role_exco_kk', 'Exco KK (Kafeteria)') : isUnitKebajikanStaff ? t('kebajikan:role_unit_kebajikan', 'Unit Kebajikan') : isSuperAdmin ? 'Super Admin' : t('kebajikan:role_ahli_jpp', 'Ahli JPP');
   const isStaffOrAbove = isKebajikanExco || isKediamanExco || isUnitKebajikanStaff || isSuperAdmin || isYdp;
   const isJpp = isSuperAdmin || profile?.role === 'JPP';
 

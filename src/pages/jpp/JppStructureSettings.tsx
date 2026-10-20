@@ -40,7 +40,7 @@ export function JppStructureSettings() {
 
         } catch (error) {
             console.error("Error fetching JPP structure config", error);
-            toast.error("Gagal memuatkan konfigurasi struktur JPP");
+            toast.error(t('jpp:structure_load_config_error', 'Gagal memuatkan konfigurasi struktur JPP'));
         } finally {
             setLoading(false);
         }
@@ -62,7 +62,7 @@ export function JppStructureSettings() {
 
     const handleSave = async () => {
         setSaving(true);
-        const toastId = toast.loading('Menyimpan perubahan struktur...');
+        const toastId = toast.loading(t('jpp:structure_saving_loading', 'Menyimpan perubahan struktur...'));
         try {
             // Update position labels
             await supabase.from('system_settings').upsert({
@@ -81,9 +81,9 @@ export function JppStructureSettings() {
                 value: cleanUnitConfig
             });
 
-            toast.success('Struktur JPP berjaya dikemaskini. Sila refresh halaman bagi melihat perubahan pada visual.', { id: toastId });
+            toast.success(t('jpp:structure_saved_success', 'Struktur JPP berjaya dikemaskini. Sila refresh halaman bagi melihat perubahan pada visual.'), { id: toastId });
         } catch (error: any) {
-            toast.error(error.message || 'Gagal menyimpan perubahan.', { id: toastId });
+            toast.error(error.message || t('jpp:structure_save_error', 'Gagal menyimpan perubahan.'), { id: toastId });
         } finally {
             setSaving(false);
         }
@@ -92,7 +92,7 @@ export function JppStructureSettings() {
     const executeReset = () => {
         setPositionLabels({ ...JPP_POSITION_LABELS });
         setUnitConfig({ ...UNIT_CFG });
-        toast.success('Struktur berjaya ditetapkan semula kepada tetapan asal.');
+        toast.success(t('jpp:structure_reset_success', 'Struktur berjaya ditetapkan semula kepada tetapan asal.'));
     };
 
     if (loading) return null;
@@ -169,7 +169,7 @@ export function JppStructureSettings() {
                                             value={currentCfg.shortLabel || ''}
                                             onChange={(e) => handleUnitChange(code, 'shortLabel', e.target.value)}
                                             className="h-9 bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
-                                            placeholder="Nama Pendek..."
+                                            placeholder={t('jpp:structure_short_name_placeholder', 'Nama Pendek...')}
                                         />
                                     </div>
                                     <div className="w-full md:w-[40%]">
@@ -178,7 +178,7 @@ export function JppStructureSettings() {
                                             value={currentCfg.fullLabel || ''}
                                             onChange={(e) => handleUnitChange(code, 'fullLabel', e.target.value)}
                                             className="h-9 bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
-                                            placeholder="Nama Penuh Exco..."
+                                            placeholder={t('jpp:structure_full_name_placeholder', 'Nama Penuh Exco...')}
                                         />
                                     </div>
                                 </div>

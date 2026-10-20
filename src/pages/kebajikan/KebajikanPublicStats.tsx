@@ -295,10 +295,11 @@ export function KebajikanStatsPage() {
 }
 
 function EmptyChart({ text }: { text?: string }) {
+  const { t } = useTranslation(['kebajikan', 'common']);
   return (
     <div className="h-[180px] flex flex-col items-center justify-center">
       <BarChart3 className="w-10 h-10 text-slate-300 dark:text-white/10 mb-2" />
-      <p className="text-[10px] text-slate-400 dark:text-white/20">{text || 'Belum ada data yang mencukupi'}</p>
+      <p className="text-[10px] text-slate-400 dark:text-white/20">{text || t('kebajikan:not_enough_data', 'Belum ada data yang mencukupi')}</p>
     </div>
   );
 }

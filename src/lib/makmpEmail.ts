@@ -3,6 +3,8 @@
  * Tema Maroon & Gold (selari identiti JPP Polisas).
  */
 
+const t = (k: string, fb: string, _opt?: any) => fb;
+
 const C = {
   maroon: '#871A1A',
   maroonDark: '#371010',
@@ -43,26 +45,26 @@ export function buildMakmpEmail(data: MakmpEmailData): { subject: string; html: 
   const portalUrl = data.portalUrl || 'https://jpp-polisas.cipher-node.org/portal';
 
   const badge = approved
-    ? { label: 'DISAHKAN', icon: '✓', bg: '#FFF3D6', color: '#9A6A00' }
-    : { label: 'DITOLAK', icon: '✕', bg: '#FDE8E8', color: '#B91C1C' };
+    ? { label: t('common:certified_caps', 'DISAHKAN'), icon: '✓', bg: '#FFF3D6', color: '#9A6A00' }
+    : { label: t('common:rejected_caps', 'DITOLAK'), icon: '✕', bg: '#FDE8E8', color: '#B91C1C' };
 
   const subject = approved
-    ? `✅ Permohonan MAKMP "${data.awardName}" Telah Disahkan`
-    : `ℹ️ Kemaskini Permohonan MAKMP "${data.awardName}"`;
+    ? t('makmp:email_approved_subject', `✅ Permohonan MAKMP "${data.awardName}" Telah Disahkan`, { awardName: data.awardName })
+    : t('makmp:email_update_subject', `ℹ️ Kemaskini Permohonan MAKMP "${data.awardName}"`, { awardName: data.awardName });
 
   const meritRow = approved && data.totalMerit != null
-    ? infoRow('Jumlah Merit', `+${data.totalMerit} merit`)
+    ? infoRow(t('makmp:total_merit_label', 'Jumlah Merit'), t('makmp:merit_points_plus', `+${data.totalMerit} merit`, { totalMerit: data.totalMerit }))
     : '';
 
   const reasonBlock = !approved && data.reason
-    ? `
+    ? t('makmp:reason_block_html', `
       <div style="margin-top:16px;padding:14px 16px;background:${badge.bg};border-left:4px solid ${badge.color};border-radius:10px;">
-        <p style="margin:0;color:${badge.color};font-size:13px;font-weight:700;">Sebab penolakan:</p>
+        <p style="margin:0;color:${badge.color};font-size:13px;font-weight:700;">${t('common:rejection_reason_label', 'Sebab penolakan:')}</p>
         <p style="margin:4px 0 0;color:${C.ink};font-size:14px;">${esc(data.reason)}</p>
-      </div>`
+      </div>`)
     : '';
 
-  const html = `
+  const html = t('makmp:email_html', `
   <!DOCTYPE html>
   <html lang="ms">
   <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
@@ -72,7 +74,7 @@ export function buildMakmpEmail(data: MakmpEmailData): { subject: string; html: 
         <div style="background:linear-gradient(135deg,${C.maroon} 0%,${C.maroonDeep} 55%,${C.maroonDark} 100%);padding:36px 32px 28px;text-align:center;">
           <div style="display:inline-block;background:linear-gradient(135deg,${C.gold} 0%,${C.goldLight} 100%);color:${C.maroonDark};font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:6px 16px;border-radius:999px;">JPP Polisas · MAKMP</div>
           <h1 style="margin:18px 0 4px;color:${C.white};font-size:24px;font-weight:800;line-height:1.3;">${badge.label}</h1>
-          <p style="margin:0;color:rgba(255,255,255,0.78);font-size:13px;font-weight:500;">Majlis Anugerah Kecemerlangan Mahasiswa POLISAS</p>
+          <p style="margin:0;color:rgba(255,255,255,0.78);font-size:13px;font-weight:500;">${t('makmp:full_award_system_title', 'Majlis Anugerah Kecemerlangan Mahasiswa POLISAS')}</p>
         </div>
         <div style="padding:32px;">
           <div style="text-align:center;margin-bottom:24px;">
@@ -80,28 +82,28 @@ export function buildMakmpEmail(data: MakmpEmailData): { subject: string; html: 
               <span style="font-size:16px;">${badge.icon}</span> ${badge.label}
             </div>
           </div>
-          <p style="margin:0 0 20px;color:${C.ink};font-size:15px;font-weight:600;line-height:1.6;">Salam sejahtera, <strong>${esc(data.studentName)}</strong>.</p>
+          <p style="margin:0 0 20px;color:${C.ink};font-size:15px;font-weight:600;line-height:1.6;">${t('common:greeting_student', 'Salam sejahtera,')} <strong>${esc(data.studentName)}</strong>.</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${C.border};border-radius:12px;overflow:hidden;">
-            ${infoRow('Anugerah', data.awardName)}
-            ${data.matricNo ? infoRow('No. Matrik', data.matricNo) : ''}
+            ${infoRow(t('makmp:award_label', 'Anugerah'), data.awardName)}
+            ${data.matricNo ? infoRow(t('common:matric_no', 'No. Matrik'), data.matricNo) : ''}
             ${meritRow}
           </table>
           ${reasonBlock}
           <div style="margin-top:24px;text-align:center;">
-            <a href="${portalUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,${C.gold} 0%,${C.goldLight} 100%);color:${C.maroonDark};font-size:14px;font-weight:800;letter-spacing:0.04em;text-decoration:none;border-radius:999px;">Lihat Status Permohonan</a>
+            <a href="${portalUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,${C.gold} 0%,${C.goldLight} 100%);color:${C.maroonDark};font-size:14px;font-weight:800;letter-spacing:0.04em;text-decoration:none;border-radius:999px;">${t('makmp:view_application_status_cta', 'Lihat Status Permohonan')}</a>
           </div>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid ${C.border};text-align:center;">
-            <p style="margin:0;color:${C.muted};font-size:11px;line-height:1.6;">Emel ini dihantar secara automatik oleh sistem MAKMP JPP Polisas.<br/>Sebarang pertanyaan, sila hubungi urus setia MAKMP.</p>
+            <p style="margin:0;color:${C.muted};font-size:11px;line-height:1.6;">${t('makmp:email_auto_note', 'Emel ini dihantar secara automatik oleh sistem MAKMP JPP Polisas.<br/>Sebarang pertanyaan, sila hubungi urus setia MAKMP.')}</p>
           </div>
         </div>
         <div style="background:${C.maroonDark};padding:20px 32px;text-align:center;">
           <p style="margin:0;color:${C.gold};font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;">JPP Polisas</p>
-          <p style="margin:4px 0 0;color:rgba(255,255,255,0.55);font-size:11px;">Bersama Membina Kesejahteraan Mahasiswa</p>
+          <p style="margin:4px 0 0;color:rgba(255,255,255,0.55);font-size:11px;">${t('portal:motto_welfare', 'Bersama Membina Kesejahteraan Mahasiswa')}</p>
         </div>
       </div>
     </div>
   </body>
-  </html>`;
+  </html>`);
 
   return { subject, html };
 }

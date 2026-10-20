@@ -92,8 +92,8 @@ export function KebajikanMyTickets({
     await supabase.from('kebajikan_tickets').update({ status: 'REOPENED', reopen_reason: reopenReason, reopen_requested_at: new Date().toISOString() }).eq('id', reopenTicket.id);
     await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: reopenTicket.id, actor_id: user?.id, actor_role: 'PELAJAR', old_status: 'RESOLVED', new_status: 'REOPENED', note: reopenReason });
     await sendNotificationToKebajikanExco({
-      title:       'Permintaan Buka Semula Tiket',
-      message:     `Tiket ${reopenTicket.ticket_no} diminta dibuka semula. Sebab: ${reopenReason}`,
+      title:       t('kebajikan:reopen_ticket_request_title', 'Permintaan Buka Semula Tiket'),
+      message:     t('kebajikan:reopen_ticket_request_msg', 'Tiket {{ticket_no}} diminta dibuka semula. Sebab: {{reason}}', { ticket_no: reopenTicket.ticket_no, reason: reopenReason }),
       type:        'REOPEN_REQUEST',
       module:      'KEBAJIKAN',
       link:        `/kebajikan/tiket/${reopenTicket.id}`,
@@ -139,7 +139,7 @@ export function KebajikanMyTickets({
 
           await sendEmail({
             to: emails,
-            subject: `Permohonan Buka Semula: ${reopenTicket.ticket_no}`,
+            subject: t('kebajikan:reopen_ticket_email_subject', 'Permohonan Buka Semula: {{ticket_no}}', { ticket_no: reopenTicket.ticket_no }),
             html: emailHtml,
           });
         }

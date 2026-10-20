@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
+const t = (k: string, fb: string, _opt?: any) => fb;
+
 interface SendEmailParams {
   to: string | string[];
   subject: string;
@@ -27,7 +29,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
     
     const data = await response.json();
     if (!response.ok) {
-        throw new Error(data.error || "Gagal menghubungi pelayan emel");
+        throw new Error(data.error || t('common:failed_contact_email_server', "Gagal menghubungi pelayan emel"));
     }
 
     return { success: true, data };

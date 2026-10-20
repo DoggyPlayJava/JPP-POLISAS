@@ -235,8 +235,10 @@ const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | nu
 // ─── HARDCODED YDP (JPP POLISAS 2026) ────────────────────────────────────────
 
 const YDP_NAME = 'MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI';
-const YDP_TITLE = 'YANG DI-PERTUA';
-const DEFAULT_JPP = 'JAWATANKUASA PERWAKILAN PELAJAR';
+const t = (k: string, fb: string, _opt?: any) => fb;
+
+const YDP_TITLE = t('kpp:yang_di_pertua', 'YANG DI-PERTUA');
+const DEFAULT_JPP = t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR');
 const DEFAULT_POLI = 'POLITEKNIK SULTAN HAJI AHMAD SHAH';
 
 export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
@@ -247,8 +249,8 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   submitterRole,
   submitterUnit,
   dateRange,
-  presidenName = "NAMA PRESIDEN KELAB",
-  reviewerRole = "PRESIDEN",
+  presidenName = t('kpp:club_president_name_placeholder', "NAMA PRESIDEN KELAB"),
+  reviewerRole = t('kpp:president_caps', "PRESIDEN"),
   reviewerUnit,
   clubLogoUrl,
   isExco = false,
@@ -299,13 +301,13 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
         <View style={styles.coverCenter}>
           {dateRange ? (
             <>
-              <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
+              <Text style={styles.coverTitleLine}>{t('kpp:monthly_report_caps', 'LAPORAN BULAN')}</Text>
               <Text style={[styles.coverTitleLine, { fontSize: 28 }]}>{dateRange}</Text>
-              <Text style={[styles.coverTitleLine, { fontSize: 16, marginTop: 8, fontWeight: 'normal' }]}>(GABUNGAN)</Text>
+              <Text style={[styles.coverTitleLine, { fontSize: 16, marginTop: 8, fontWeight: 'normal' }]}>{t('kpp:combined_caps', '(GABUNGAN)')}</Text>
             </>
           ) : (
             <>
-              <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
+              <Text style={styles.coverTitleLine}>{t('kpp:monthly_report_caps', 'LAPORAN BULAN')}</Text>
               <Text style={styles.coverTitleLine}>{coverMonth}</Text>
               <Text style={styles.coverTitleLine}>{coverYear}</Text>
             </>
@@ -348,9 +350,9 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
             <View style={styles.table}>
               <View style={styles.tableRow}>
-                <View style={[styles.tableColHeader, { width: '22%' }]}><Text style={styles.tableCellHeader}>TARIKH</Text></View>
-                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>AKTIVITI</Text></View>
-                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>TINDAKAN</Text></View>
+                <View style={[styles.tableColHeader, { width: '22%' }]}><Text style={styles.tableCellHeader}>{t('common:date_caps', 'TARIKH')}</Text></View>
+                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>{t('kpp:activity_caps', 'AKTIVITI')}</Text></View>
+                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>{t('common:action_caps', 'TINDAKAN')}</Text></View>
               </View>
               <View style={styles.tableRow}>
                 <View style={[styles.tableCol, { width: '22%' }]}>
@@ -364,7 +366,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
             </View>
 
             {/* ── BUKTI ATAU GAMBAR ── */}
-            <Text style={styles.lampiranTitle}>BUKTI ATAU GAMBAR</Text>
+            <Text style={styles.lampiranTitle}>{t('kpp:evidence_or_photo_caps', 'BUKTI ATAU GAMBAR')}</Text>
 
             {validImages.length > 0 ? (
               <View style={styles.imageContainer}>
@@ -375,7 +377,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
                 ))}
               </View>
             ) : (
-              <Text style={{ fontSize: 10, marginTop: 10, color: '#666' }}>[ Tiada gambar dilampirkan ]</Text>
+              <Text style={{ fontSize: 10, marginTop: 10, color: '#666' }}>{t('kpp:no_photos_attached', '[ Tiada gambar dilampirkan ]')}</Text>
             )}
 
             {/* Huraiam / Deskripsi Lampiran */}
@@ -397,10 +399,10 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
           {/* ── Disediakan oleh ─── */}
           {(() => {
-            const primaryName = (submitterName || 'SETIAUSAHA').toUpperCase();
+            const primaryName = (submitterName || t('kpp:secretary_caps', 'SETIAUSAHA')).toUpperCase();
             return (
               <View>
-                <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
+                <Text style={styles.signRoleTitle}>{t('kpp:prepared_by_colon', 'Disediakan oleh:')}</Text>
                 {/* Wrapper shrink ke lebar nama — garisan auto ikut tepat */}
                 <View style={{ alignSelf: 'flex-start' }}>
                   <View style={styles.signLine} />
@@ -424,7 +426,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
           {(() => {
             return (
               <View>
-                <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
+                <Text style={styles.signRoleTitle}>{t('kpp:reviewed_by_colon', 'Disemak oleh:')}</Text>
                 <View style={{ alignSelf: 'flex-start' }}>
                   <View style={styles.signLine} />
                   <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
@@ -444,10 +446,10 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
           {/* ── Disahkan oleh ─── */}
           {(() => {
-            const ydpDisplayName = isExco ? YDP_NAME : 'YANG DIPERTUA';
+            const ydpDisplayName = isExco ? YDP_NAME : t('kpp:yang_di_pertua', 'YANG DIPERTUA');
             return (
               <View>
-                <Text style={styles.signRoleTitle}>Disahkan oleh:</Text>
+                <Text style={styles.signRoleTitle}>{t('kpp:certified_by_colon', 'Disahkan oleh:')}</Text>
                 <View style={{ alignSelf: 'flex-start' }}>
                   <View style={styles.signLine} />
                   {isExco ? (
@@ -464,7 +466,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
                   </>
                 ) : (
                   <>
-                    <Text style={styles.signRole}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
+                    <Text style={styles.signRole}>{t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR')}</Text>
                     <Text style={styles.signRole}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
                   </>
                 )}

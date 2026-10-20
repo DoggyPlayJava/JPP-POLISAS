@@ -16,11 +16,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 
-const KEBAJIKAN_UNIT_LINKS = [
-  { label: 'Hantar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
-  { label: 'Statistik Kebajikan', path: '/kebajikan/statistik' },
-  { label: 'Semak Status Tiket', path: '/kebajikan/tiket' },
-];
+
 
 export function KebajikanLayout() {
   const { t } = useTranslation(['kebajikan', 'common']);
@@ -28,6 +24,12 @@ export function KebajikanLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { runTour, startTour, closeTour } = useTour('kebajikan_module_tour', false);
+
+  const kebajikanUnitLinks = [
+    { label: t('kebajikan:nav_submit_complaint', 'Hantar Aduan Kebajikan'), path: '/kebajikan/buat-aduan' },
+    { label: t('kebajikan:nav_welfare_stats', 'Statistik Kebajikan'), path: '/kebajikan/statistik' },
+    { label: t('kebajikan:nav_check_ticket_status', 'Semak Status Tiket'), path: '/kebajikan/tiket' },
+  ];
 
   const isSubmitOrChatPage =
     location.pathname.includes('/kebajikan/buat-aduan') ||
@@ -55,7 +57,7 @@ export function KebajikanLayout() {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20">
-          Memuatkan E-Kebajikan...
+          {t('kebajikan:loading_ekebajikan', 'Memuatkan E-Kebajikan...')}
         </div>
       </div>
     );
@@ -80,20 +82,22 @@ export function KebajikanLayout() {
   const kebajikanTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke modul E-Kebajikan! Sistem pemantauan aduan dan penyelesaian masalah berpusat.',
+      content: t('kebajikan:tour_welcome_desc', 'Selamat datang ke modul E-Kebajikan! Sistem pemantauan aduan dan penyelesaian masalah berpusat.'),
       title: 'E-Kebajikan 🤝',
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-kebajikan-sidebar',
-      content: isMobile ? 'Gunakan menu ini untuk membuat aduan atau memantau status aduan anda.' : 'Akses semua keperluan e-kebajikan dari panel sisi ini. Buat aduan, semak status dan lihat statistik awam.',
+      content: isMobile
+        ? t('kebajikan:tour_nav_mobile_desc', 'Gunakan menu ini untuk membuat aduan atau memantau status aduan anda.')
+        : t('kebajikan:tour_nav_desktop_desc', 'Akses semua keperluan e-kebajikan dari panel sisi ini. Buat aduan, semak status dan lihat statistik awam.'),
       title: 'Menu Navigasi 📑',
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-kebajikan-mobile-nav',
-      content: 'Ruangan pantas navigasi untuk mengakses pelbagai fungsi ke arah kebajikan warga kampus.',
+      content: t('kebajikan:tour_fast_nav_desc', 'Ruangan pantas navigasi untuk mengakses pelbagai fungsi ke arah kebajikan warga kampus.'),
       title: 'Navigasi Pantas 🚀',
       placement: 'top' as const,
     }
@@ -132,7 +136,7 @@ export function KebajikanLayout() {
               <Link
                 to="/portal"
                 className="p-2 -ml-2 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold"
-                aria-label="Kembali ke Portal"
+                aria-label={t('kebajikan:back_to_portal', 'Kembali ke Portal')}
               >
                 <ChevronLeft className="w-5 h-5" />
                 <span className="hidden xs:inline">Portal</span>
@@ -170,7 +174,7 @@ export function KebajikanLayout() {
           <>
             <FloatingAiChat />
             {/* QR Code FAB — untuk Exco Kebajikan */}
-            <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
+            <QrCodeFab unitLinks={kebajikanUnitLinks} />
             <div className="tour-kebajikan-mobile-nav">
               <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
             </div>

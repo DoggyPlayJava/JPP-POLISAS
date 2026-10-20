@@ -196,14 +196,16 @@ export function KebajikanStudentChat({
     } else if (data) {
       setComments(prev => prev.map(c => c.id === tempId ? (data as KebajikanTicketComment) : c));
       
+      const studentName = profile?.full_name || t('kebajikan:student_label', 'Pelajar');
+      const snippet = `${content.slice(0, 60)}${content.length > 60 ? '...' : ''}`;
       const payload = {
-        title:       `Mesej Baru: ${ticket.ticket_no}`,
-        message:     `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 60)}${content.length > 60 ? '...' : ''}"`,
+        title:       t('kebajikan:new_message_ticket_title', 'Mesej Baru: {{ticket_no}}', { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:chat_message_summary', '{{name}}: "{{snippet}}"', { name: studentName, snippet }),
         type:        'STUDENT_MESSAGE',
         module:      'KEBAJIKAN' as const,
         link:        `/kebajikan/tiket/${ticket.id}`,
         reference_id: ticket.ticket_no,
-        actor_name:  profile?.full_name || 'Pelajar',
+        actor_name:  studentName,
       };
 
       if (ticket.handled_by_unit === 'KK') {
@@ -246,14 +248,15 @@ export function KebajikanStudentChat({
       ticket_id: ticket.id, actor_id: user?.id, actor_role: 'PELAJAR',
       old_status: 'RESOLVED', new_status: 'REOPENED', note: reopenNote,
     });
+    const studentName = profile?.full_name || t('kebajikan:student_label', 'Pelajar');
     await sendNotificationToKebajikanExco({
-      title:       `Permintaan Buka Semula: ${ticket.ticket_no}`,
-      message:     `Pelajar meminta tiket dibuka semula. Sebab: ${reopenNote}`,
+      title:       t('kebajikan:reopen_ticket_request_title_with_no', 'Permintaan Buka Semula: {{ticket_no}}', { ticket_no: ticket.ticket_no }),
+      message:     t('kebajikan:reopen_ticket_student_reason_msg', 'Pelajar meminta tiket dibuka semula. Sebab: {{reason}}', { reason: reopenNote }),
       type:        'REOPEN_REQUEST',
       module:      'KEBAJIKAN',
       link:        `/kebajikan/tiket/${ticket.id}`,
       reference_id: ticket.id,
-      actor_name:  profile?.full_name || 'Pelajar',
+      actor_name:  studentName,
     });
     setReopenBusy(false);
     setShowReopen(false);

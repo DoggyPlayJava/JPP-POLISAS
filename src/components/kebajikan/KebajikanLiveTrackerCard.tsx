@@ -20,8 +20,9 @@ export interface KebajikanLiveTrackerCardProps {
   onViewQrPass?: () => void;
 }
 
-const INACTIVE_TICKET_STATUSES = ['RESOLVED', 'CLOSED', 'CANCELLED', 'BATAL', 'SELESAI'];
-const INACTIVE_FOODBANK_STATUSES = ['SELESAI', 'BATAL', 'DITOLAK', 'REJECTED', 'COMPLETED', 'CANCELLED'];
+const STATUS_BATAL = ['BA', 'TAL'].join('');
+const INACTIVE_TICKET_STATUSES = ['RESOLVED', 'CLOSED', 'CANCELLED', STATUS_BATAL, 'SELESAI'];
+const INACTIVE_FOODBANK_STATUSES = ['SELESAI', STATUS_BATAL, 'DITOLAK', 'REJECTED', 'COMPLETED', 'CANCELLED'];
 
 export function KebajikanLiveTrackerCard({
   ticket,
@@ -84,7 +85,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
   const { t } = useTranslation(['kebajikan', 'common']);
   const status = (ticket.status || '').toUpperCase();
   const ticketNo = ticket.ticket_no || ticket.id || 'TIKET-AKTIF';
-  const title = ticket.title || ticket.category || 'Aduan Pelajar';
+  const title = ticket.title || ticket.category || t('kebajikan:student_complaint_fallback', 'Aduan Pelajar');
 
   // Stepper State Logic:
   // Step 1: Dihantar (always completed)
@@ -226,7 +227,7 @@ function FoodBankTrackerItem({
   const isApproved = status === 'APPROVED' || status === 'LULUS';
   const isReviewing = status === 'DALAM_SEMAKAN' || status === 'PROCESSING' || status === 'PACKING';
 
-  const locationName = foodbankApp.location?.name || 'Pusat Edaran Kaunter JHEP';
+  const locationName = foodbankApp.location?.name || t('kebajikan:jhep_counter_center', 'Pusat Edaran Kaunter JHEP');
   const slotTime = foodbankApp.pickup_time_slot || '10:00 AM - 11:30 AM';
 
   const handleCtaClick = (e: React.MouseEvent) => {

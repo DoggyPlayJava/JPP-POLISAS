@@ -55,7 +55,7 @@ export function JppTelemetryPage() {
 
       if (!telemetryRes.ok) {
         const errJson = await telemetryRes.json().catch(() => ({}));
-        throw new Error(errJson.error || `HTTP ${telemetryRes.status}`);
+        throw new Error(errJson.error || t('jpp:telemetry_http_status', 'HTTP {{status}}', { status: telemetryRes.status }));
       }
 
       const telemetryJson: TelemetryData = await telemetryRes.json();

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, User, RefreshCw, X, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
 export interface StudentSelectData {
@@ -29,10 +30,12 @@ interface ProfileResult {
 
 export function StudentSearchCombobox({
   onSelectStudent,
-  placeholder = 'Cari pelajar POLISAS (Nama / No. Matrik)...',
+  placeholder,
   className = '',
   value = '',
 }: StudentSearchComboboxProps) {
+  const { t } = useTranslation(['ems', 'common']);
+  const effectivePlaceholder = placeholder || t('ems:search_polisas_student_placeholder', 'Cari pelajar POLISAS (Nama / No. Matrik)...');
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<ProfileResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +83,7 @@ export function StudentSearchCombobox({
         if (!error && data) {
           const mapped: ProfileResult[] = data.map((p: any) => ({
             id: p.id,
-            full_name: p.full_name || 'Pelajar POLISAS',
+            full_name: p.full_name || t('ems:polisas_student_fallback', 'Pelajar POLISAS'),
             matrix_no: p.matrix_no || p.matric_no || '',
             email: p.email || '',
             avatar_url: p.avatar_url || '',
@@ -132,7 +135,7 @@ export function StudentSearchCombobox({
           onFocus={() => {
             if (results.length > 0) setIsOpen(true);
           }}
-          placeholder={placeholder}
+          placeholder={effectivePlaceholder}
           className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-9 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition"
         />
         {loading ? (
@@ -189,7 +192,7 @@ export function StudentSearchCombobox({
             ))
           ) : (
             <div className="p-4 text-center text-xs text-slate-400">
-              Tiada pelajar POLISAS ditemui untuk &quot;{query}&quot;
+              {t('ems:no_polisas_student_found', 'Tiada pelajar POLISAS ditemui untuk "{{query}}"', { query })}
             </div>
           )}
         </div>

@@ -1,4 +1,6 @@
-export const emailLayout = (title: string, bodyHTML: string, preheader?: string) => `
+const t = (k: string, fb: string, _opt?: any) => fb;
+
+export const emailLayout = (title: string, bodyHTML: string, preheader?: string) => t('portal:email_layout', `
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,41 +25,45 @@ export const emailLayout = (title: string, bodyHTML: string, preheader?: string)
             </tr>
             <tr>
                 <td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
-                    <p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
+                    <p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">${t('portal:copyright_reserved_html', `&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.`, { year: new Date().getFullYear() })}</p>
                 </td>
             </tr>
         </table>
     </div>
 </body>
 </html>
-`;
+`);
 
 export const applicationApprovedTemplate = (studentName: string, roleName: string, clubName: string) => {
-  const body = `
-      <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 20px 0;">Permohonan Berjaya! ✨</h2>
+  const body = t('portal:email_leadership_approved_body', `
+      <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 20px 0;">${t('portal:application_successful', 'Permohonan Berjaya!')}</h2>
       <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 20px 0;text-align:left;">
-          Salam <strong>${studentName}</strong>,
+          ${t('portal:email_greeting_student', `Salam <strong>${studentName}</strong>,`, { studentName })}
       </p>
       <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 25px 0;text-align:left;">
-          Tahniah! Permohonan kepimpinan anda untuk menggalas peranan sebagai <strong style="color:#881B1B;">${roleName}</strong> bagi kelab/unit <strong>${clubName}</strong> telah rasmi <strong>diluluskan</strong> oleh penasihat.
+          ${t('portal:email_leadership_approved_body', `Tahniah! Permohonan kepimpinan anda untuk menggalas peranan sebagai <strong style="color:#881B1B;">${roleName}</strong> bagi kelab/unit <strong>${clubName}</strong> telah rasmi <strong>diluluskan</strong> oleh penasihat.`, { roleName, clubName })}
       </p>
       <div style="margin:35px 0;">
-          <a href="${window.location.origin}/dashboard" style="display:inline-block;background-color:#881B1B;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:16px 36px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 14px 0 rgba(136,27,27,0.39);">Ke Papan Pemuka</a>
+          <a href="${window.location.origin}/dashboard" style="display:inline-block;background-color:#881B1B;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:16px 36px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 14px 0 rgba(136,27,27,0.39);">${t('portal:to_dashboard', 'Ke Papan Pemuka')}</a>
       </div>
       <p style="color:#475569;font-size:14px;line-height:1.6;margin:0;text-align:left;">
-          Sila log masuk untuk mengakses ciri pentadbiran kelab anda.
+          ${t('portal:login_to_access_club_admin', 'Sila log masuk untuk mengakses ciri pentadbiran kelab anda.')}
       </p>
-  `;
-  return emailLayout('Permohonan Diluluskan | JPP POLISAS', body, 'Tahniah! Permohonan anda telah berjaya diluluskan.');
+  `);
+  return emailLayout(
+    t('portal:email_app_approved_title', 'Permohonan Diluluskan | JPP POLISAS'),
+    body,
+    t('portal:email_app_approved_preheader', 'Tahniah! Permohonan anda telah berjaya diluluskan.')
+  );
 };
 
 export const generalNotificationTemplate = (title: string, message: string) => {
-  const body = `
+  const body = t('portal:general_notification_body', `
       <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 20px 0;">${title}</h2>
       <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 30px 0;text-align:left;white-space:pre-wrap;">${message}</p>
       <div style="margin:20px 0;">
-          <a href="${window.location.origin}/" style="display:inline-block;background-color:#0f172a;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;">Log Masuk Aplikasi</a>
+          <a href="${window.location.origin}/" style="display:inline-block;background-color:#0f172a;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;">${t('portal:login_application', 'Log Masuk Aplikasi')}</a>
       </div>
-  `;
+  `);
   return emailLayout(`${title} | JPP POLISAS`, body);
 };

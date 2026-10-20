@@ -59,7 +59,7 @@ export function TimetableUploadModal({
   onSuccess,
   onParsed,
 }: TimetableUploadModalProps) {
-  const { t } = useTranslation(['kpp', 'common']);
+  const { t } = useTranslation(['kpp', 'jpp', 'common']);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -152,7 +152,7 @@ export function TimetableUploadModal({
     } catch (err: any) {
       console.error('Failed to scan PDF classes:', err);
       setErrorMessage(
-        err.message || 'Gagal membaca fail PDF. Sila pastikan fail tidak rosak atau berkunci.'
+        err.message || t('jpp:timetable_upload_pdf_read_error', 'Gagal membaca fail PDF. Sila pastikan fail tidak rosak atau berkunci.')
       );
     } finally {
       setIsScanning(false);
@@ -177,7 +177,7 @@ export function TimetableUploadModal({
         const buffer = await selected.arrayBuffer();
         await processPdfBuffer(selected, buffer);
       } catch (err: any) {
-        setErrorMessage('Ralat semasa membaca fail: ' + err.message);
+        setErrorMessage(t('jpp:timetable_upload_read_error', 'Ralat semasa membaca fail: ') + err.message);
       }
       return;
     }
@@ -194,7 +194,7 @@ export function TimetableUploadModal({
       return;
     }
 
-    setErrorMessage('Format tidak disokong. Sila pilih fail PDF atau imej (PNG/JPG/WebP).');
+    setErrorMessage(t('jpp:timetable_upload_unsupported_format', 'Format tidak disokong. Sila pilih fail PDF atau imej (PNG/JPG/WebP).'));
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -241,11 +241,11 @@ export function TimetableUploadModal({
       console.error('Failed to parse timetable image:', err);
       if (err?.message === 'RESOLUTION_RENDAH') {
         setErrorMessage(
-          'Imej terlalu kecil / resolusi rendah. Sila muat naik imej asal (bukan screenshot yang di-compress WhatsApp/Telegram), atau screenshot semula dalam keadaan landskap (mendatar).',
+          t('jpp:timetable_upload_low_res_error', 'Imej terlalu kecil / resolusi rendah. Sila muat naik imej asal (bukan screenshot yang di-compress WhatsApp/Telegram), atau screenshot semula dalam keadaan landskap (mendatar).'),
         );
         toast.error(t('kpp:low_res_image_toast', 'Imej resolusi rendah. Muat naik imej asal (landskap).'));
       } else {
-        setErrorMessage('Gagal memproses imej: ' + (err.message || 'Format imej tidak disokong.'));
+        setErrorMessage(t('jpp:timetable_upload_image_process_error', 'Gagal memproses imej: ') + (err.message || t('jpp:timetable_upload_image_format_not_supported', 'Format imej tidak disokong.')));
         toast.error(t('kpp:failed_extract_schedule_image', 'Gagal mengekstrak jadual dari imej.'));
       }
     } finally {
@@ -493,7 +493,7 @@ export function TimetableUploadModal({
 
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    {imageQuality.daysDetected}/5 {t('kpp:days_detected', 'Hari dikesan')} · {t('kpp:class', 'Kelas')} {imageQuality.daysDetected >= 3 ? 'dijumpai' : 'tidak lengkap'}
+                    {imageQuality.daysDetected}/5 {t('kpp:days_detected', 'Hari dikesan')} · {t('kpp:class', 'Kelas')} {imageQuality.daysDetected >= 3 ? t('jpp:timetable_class_found', 'dijumpai') : t('jpp:timetable_class_incomplete', 'tidak lengkap')}
                   </p>
 
                   {/* mandatory review notice */}

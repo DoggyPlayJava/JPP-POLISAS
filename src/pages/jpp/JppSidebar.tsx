@@ -24,15 +24,23 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // Auto-calculate current academic session based on date
-function getCurrentAcademicSession(t: (key: string, fallback: string) => string): string {
+function getCurrentAcademicSession(t: any): string {
   const now = new Date();
   const month = now.getMonth(); // 0-indexed
   const year = now.getFullYear();
   // Malaysian poly: Sem 1 = Jul-Dec, Sem 2 = Jan-Jun
   if (month >= 6) {
-    return `${t('jpp:semester_1', 'Sem 1')} ${year}/${year + 1}`;
+    return t('jpp:academic_session_sem1', '{{sem}} {{year1}}/{{year2}}', {
+      sem: t('jpp:semester_1', 'Sem 1'),
+      year1: year,
+      year2: year + 1,
+    });
   }
-  return `${t('jpp:semester_2', 'Sem 2')} ${year - 1}/${year}`;
+  return t('jpp:academic_session_sem2', '{{sem}} {{year1}}/{{year2}}', {
+    sem: t('jpp:semester_2', 'Sem 2'),
+    year1: year - 1,
+    year2: year,
+  });
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -161,7 +169,7 @@ export function JppSidebar() {
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const posLabel    = jppPosition
     ? (positionLabels[jppPosition] ?? jppPosition)
-    : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+    : isSuperAdmin ? 'Super Admin' : t('jpp:member_default_label', 'Ahli JPP');
 
   const isNormalExco = !isYDP && !isMT && !!jppUnit;
 

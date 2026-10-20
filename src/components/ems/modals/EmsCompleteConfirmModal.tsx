@@ -1,5 +1,6 @@
 import React from 'react';
 import { Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { EmsEvent } from '@/types';
 
 interface EmsCompleteConfirmModalProps {
@@ -13,6 +14,7 @@ export const EmsCompleteConfirmModal: React.FC<EmsCompleteConfirmModalProps> = (
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation(['ems', 'common']);
   if (!event) return null;
 
   return (
@@ -23,10 +25,10 @@ export const EmsCompleteConfirmModal: React.FC<EmsCompleteConfirmModalProps> = (
         </div>
         <div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white">
-            Sahkan Penyelesaian Acara?
+            {t('ems:confirm_complete_title', 'Sahkan Penyelesaian Acara?')}
           </h3>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-            Acara <strong className="text-slate-900 dark:text-white">&quot;{event.title}&quot;</strong> akan ditandakan sebagai <strong>SELESAI</strong>. Sistem akan menjana e-sijil secara automatik untuk semua peserta dan markah juri akan dikunci daripada sebarang pindaan lanjut.
+            {t('ems:confirm_complete_desc', 'Acara "{{title}}" akan ditandakan sebagai SELESAI. Sistem akan menjana e-sijil secara automatik untuk semua peserta dan markah juri akan dikunci daripada sebarang pindaan lanjut.', { title: event.title })}
           </p>
         </div>
         <div className="flex items-center justify-end gap-3 pt-2">
@@ -35,7 +37,7 @@ export const EmsCompleteConfirmModal: React.FC<EmsCompleteConfirmModalProps> = (
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition"
           >
-            Batal
+            {t('common:cancel', 'Batal')}
           </button>
           <button
             type="button"
@@ -46,7 +48,7 @@ export const EmsCompleteConfirmModal: React.FC<EmsCompleteConfirmModalProps> = (
             }}
             className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-md shadow-amber-500/20 active:scale-[0.98]"
           >
-            Sahkan &amp; Selesaikan
+            {t('ems:confirm_and_complete_btn', 'Sahkan & Selesaikan')}
           </button>
         </div>
       </div>
