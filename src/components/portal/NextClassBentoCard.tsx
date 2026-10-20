@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Calendar,
   Clock,
   MapPin,
   ExternalLink,
-  Sparkles,
   ArrowRight,
   Laptop,
   BookOpen,
   CheckCircle2,
-  ChevronRight,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
-  Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StudentTimetableEntry } from '@/types';
@@ -24,34 +21,25 @@ export interface NextClassBentoCardProps {
   className?: string;
 }
 
-const DAY_LABELS: Record<number, string> = {
-  1: 'Isnin',
-  2: 'Selasa',
-  3: 'Rabu',
-  4: 'Khamis',
-  5: 'Jumaat',
-  6: 'Sabtu',
-  0: 'Ahad',
-};
-
-const CLASS_TYPE_BADGES: Record<string, { label: string; badgeClass: string }> = {
-  KULIAH: {
-    label: 'Kuliah',
-    badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  },
-  AMALI: {
-    label: 'Amali',
-    badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-  },
-  TUTORIAL: {
-    label: 'Tutorial',
-    badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-  },
-  LAIN_LAIN: {
-    label: 'Lain-lain',
-    badgeClass: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
-  },
-};
+export function getDayLabel(day: number, t?: (key: string, fallback?: string) => string): string {
+  switch (day) {
+    case 1:
+      return t ? t('portal:day_monday', 'Isnin') : 'Isnin';
+    case 2:
+      return t ? t('portal:day_tuesday', 'Selasa') : 'Selasa';
+    case 3:
+      return t ? t('portal:day_wednesday', 'Rabu') : 'Rabu';
+    case 4:
+      return t ? t('portal:day_thursday', 'Khamis') : 'Khamis';
+    case 5:
+      return t ? t('portal:day_friday', 'Jumaat') : 'Jumaat';
+    case 6:
+      return t ? t('portal:day_saturday', 'Sabtu') : 'Sabtu';
+    case 0:
+    default:
+      return t ? t('portal:day_sunday', 'Ahad') : 'Ahad';
+  }
+}
 
 /**
  * Parses time string (e.g. "08:30:00" or "08:30") to minutes from midnight
@@ -110,7 +98,8 @@ export function getMalaysianNow() {
  */
 export function findNextUpcomingClass(
   entries: StudentTimetableEntry[],
-  currentDayOfWeek: number
+  currentDayOfWeek: number,
+  t?: (key: string, fallback?: string) => string
 ): { entry: StudentTimetableEntry; dayLabel: string; isTomorrow: boolean } | null {
   if (!entries || entries.length === 0) return null;
 
@@ -124,7 +113,8 @@ export function findNextUpcomingClass(
 
       if (dayClasses.length > 0) {
         const isTomorrow = offset === 1;
-        const dayLabel = isTomorrow ? 'Esok' : (DAY_LABELS[nextDay] || `Hari ${nextDay}`);
+        const tomorrowLabel = t ? t('portal:tomorrow', 'Esok') : 'Esok';
+        const dayLabel = isTomorrow ? tomorrowLabel : getDayLabel(nextDay, t);
         return {
           entry: dayClasses[0],
           dayLabel,
@@ -144,8 +134,11 @@ export function buildPolyMapsRoomUrl(entry: Pick<StudentTimetableEntry, 'locatio
 /**
  * Formats timetable location, condensing long building names to campus acronyms (JTMK, JKA, etc.)
  */
-export function formatCompactLocation(entry?: Pick<StudentTimetableEntry, 'location' | 'room_raw'>): string {
-  if (!entry) return 'Dewan / Bilik Kuliah';
+export function formatCompactLocation(
+  entry?: Pick<StudentTimetableEntry, 'location' | 'room_raw'>,
+  fallbackText: string = 'Dewan / Bilik Kuliah'
+): string {
+  if (!entry) return fallbackText;
   if (entry.location?.room_code) {
     const rawBuilding = entry.location.building?.name || entry.location.building?.code;
     const building = rawBuilding
@@ -158,7 +151,7 @@ export function formatCompactLocation(entry?: Pick<StudentTimetableEntry, 'locat
       : '';
     return building ? `${entry.location.room_code} · ${building}` : entry.location.room_code;
   }
-  const raw = entry.room_raw || 'Dewan / Bilik Kuliah';
+  const raw = entry.room_raw || fallbackText;
   return raw
     .replace(/BANGUNAN TEKNOLOGI MAKLUMAT & KOMUNIKASI/i, 'JTMK')
     .replace(/BANGUNAN KEJURUTERAAN AWAM/i, 'JKA')
@@ -171,6 +164,7 @@ export function NextClassBentoCard({
   entries,
   className,
 }: NextClassBentoCardProps) {
+  const { t } = useTranslation(['portal', 'common']);
   // Client-side live timer (zero DB polling) updating every 30 seconds
   const [now, setNow] = useState(() => getMalaysianNow());
 
@@ -254,7 +248,7 @@ export function NextClassBentoCard({
       }
 
       // State 2: All classes completed today
-      const nextUpcoming = findNextUpcomingClass(activeEntries, now.dayOfWeek);
+      const nextUpcoming = findNextUpcomingClass(activeEntries, now.dayOfWeek, t);
       return {
         type: 'COMPLETED_TODAY' as const,
         nextClass: nextUpcoming,
@@ -262,13 +256,13 @@ export function NextClassBentoCard({
     }
 
     // State 3: Weekend or no classes scheduled on this weekday
-    const nextUpcoming = findNextUpcomingClass(activeEntries, now.dayOfWeek);
+    const nextUpcoming = findNextUpcomingClass(activeEntries, now.dayOfWeek, t);
     return {
       type: 'NO_CLASS_TODAY' as const,
       isWeekend: !isWeekday,
       nextClass: nextUpcoming,
     };
-  }, [activeEntries, now]);
+  }, [activeEntries, now, t]);
 
   // Helper for PolyMaps deep link URL
   const getPolyMapsUrl = (entry: Pick<StudentTimetableEntry, 'location_id' | 'room_raw'>): string => {
@@ -277,7 +271,26 @@ export function NextClassBentoCard({
 
   // Helper for physical location label
   const getLocationLabel = (entry: StudentTimetableEntry): string => {
-    return formatCompactLocation(entry);
+    return formatCompactLocation(entry, t('portal:default_classroom', 'Dewan / Bilik Kuliah'));
+  };
+
+  const classTypeBadges: Record<string, { label: string; badgeClass: string }> = {
+    KULIAH: {
+      label: t('portal:class_lecture', 'Kuliah'),
+      badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    },
+    AMALI: {
+      label: t('portal:class_practical', 'Amali'),
+      badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    },
+    TUTORIAL: {
+      label: t('portal:class_tutorial', 'Tutorial'),
+      badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+    },
+    LAIN_LAIN: {
+      label: t('portal:class_other', 'Lain-lain'),
+      badgeClass: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
+    },
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -341,7 +354,7 @@ export function NextClassBentoCard({
                     {stateData.entry.is_online ? (
                       <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
                         <Laptop className="w-3 h-3" />
-                        <span>Dalam Talian (Teams)</span>
+                        <span>{t('portal:online_teams', 'Dalam Talian (Teams)')}</span>
                       </span>
                     ) : (
                       <span className="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1 truncate">
@@ -354,22 +367,22 @@ export function NextClassBentoCard({
               ) : stateData.type === 'COMPLETED_TODAY' ? (
                 <>
                   <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                    Semua kelas selesai hari ini
+                    {t('portal:all_classes_completed_today', 'Semua kelas selesai hari ini')}
                   </div>
                   {stateData.nextClass && (
                     <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
-                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                      {t('portal:next_class_prefix', 'Seterusnya')} {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
                 </>
               ) : (
                 <>
                   <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
-                    Tiada kelas hari ini
+                    {t('portal:no_classes_today', 'Tiada kelas hari ini')}
                   </div>
                   {stateData.nextClass && (
                     <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
-                      Seterusnya {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
+                      {t('portal:next_class_prefix', 'Seterusnya')} {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
                 </>
@@ -387,10 +400,10 @@ export function NextClassBentoCard({
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
-                  title="Sertai Kelas Dalam Talian"
+                  title={t('portal:join_online_class', 'Sertai Kelas Dalam Talian')}
                 >
                   <Laptop className="w-3.5 h-3.5" />
-                  <span>Sertai</span>
+                  <span>{t('portal:join_short', 'Sertai')}</span>
                   <ExternalLink className="w-3 h-3 opacity-80" />
                 </a>
               ) : (
@@ -398,10 +411,10 @@ export function NextClassBentoCard({
                   to={getPolyMapsUrl(stateData.entry)}
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-all shadow-sm group-hover:scale-105"
-                  title="Tunjuk Arah ke Bilik Kelas"
+                  title={t('portal:directions_title', 'Tunjuk Arah ke Bilik Kelas')}
                 >
                   <MapPin className="w-3.5 h-3.5 text-rose-400 dark:text-rose-600 shrink-0" />
-                  <span>Tunjuk Arah</span>
+                  <span>{t('portal:directions_short', 'Tunjuk Arah')}</span>
                   <ArrowRight className="w-3 h-3 opacity-80" />
                 </Link>
               )
@@ -414,14 +427,14 @@ export function NextClassBentoCard({
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-bold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
               >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Jadual</span>
+                <span>{t('portal:schedule_short', 'Jadual')}</span>
               </Link>
             )}
 
             {/* Subtle expand chevron */}
             <span
               className="p-1 rounded-lg text-[#556453] dark:text-[#A3B39F] group-hover:text-[#2E3A2F] dark:group-hover:text-[#F8F6EE] group-hover:bg-[#2E3A2F]/5 dark:group-hover:bg-[#F8F6EE]/5 transition-colors"
-              title="Kembangkan untuk maklumat penuh"
+              title={t('portal:expand_card', 'Kembangkan untuk maklumat penuh')}
             >
               <ChevronDown className="w-4 h-4" />
             </span>
@@ -452,15 +465,15 @@ export function NextClassBentoCard({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                  Peribadi Pelajar
+                  {t('portal:student_personal_badge', 'Peribadi Pelajar')}
                 </span>
                 <span className="text-xs text-[#556453] dark:text-[#A3B39F]">e-Akademik</span>
               </div>
               <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                Jadual Kuliah Belum Dimuat Naik
+                {t('portal:timetable_not_uploaded_title', 'Jadual Kuliah Belum Dimuat Naik')}
               </h3>
               <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] max-w-xl leading-relaxed">
-                Takut terlepas kelas? Muat naik jadual sekarang untuk peringatan automatik & panduan lokasi bilik.
+                {t('portal:timetable_not_uploaded_desc', 'Takut terlepas kelas? Muat naik jadual sekarang untuk peringatan automatik & panduan lokasi bilik.')}
               </p>
             </div>
           </div>
@@ -469,7 +482,7 @@ export function NextClassBentoCard({
             to="/akademik/takwim"
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shrink-0 shadow-sm"
           >
-            <span>Muat Naik Jadual</span>
+            <span>{t('portal:upload_timetable_btn', 'Muat Naik Jadual')}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -482,7 +495,7 @@ export function NextClassBentoCard({
   // ─────────────────────────────────────────────────────────────────────────────
   if (stateData.type === 'TODAY_ACTIVE') {
     const { entry, isOngoing } = stateData;
-    const typeBadge = CLASS_TYPE_BADGES[entry.class_type] || CLASS_TYPE_BADGES.KULIAH;
+    const typeBadge = classTypeBadges[entry.class_type] || classTypeBadges.KULIAH;
 
     const startMin = parseTimeToMinutes(entry.start_time);
     const endMin = parseTimeToMinutes(entry.end_time);
@@ -490,29 +503,33 @@ export function NextClassBentoCard({
     const elapsedMinutes = Math.min(Math.max(now.currentMinutes - startMin, 0), totalDuration);
     const progressPercent = Math.round((elapsedMinutes / totalDuration) * 100);
 
-    // Clean Countdown text (No redundant labels)
-    let countdownBadgeText = 'Sedang berlangsung';
+    // Clean Countdown text
+    let countdownBadgeText = t('portal:ongoing_class', 'Sedang berlangsung');
     if (isOngoing) {
       const remainingMin = endMin - now.currentMinutes;
       if (remainingMin <= 0) {
-        countdownBadgeText = 'Sedang berlangsung';
+        countdownBadgeText = t('portal:ongoing_class', 'Sedang berlangsung');
       } else if (remainingMin < 60) {
-        countdownBadgeText = `Sedang berlangsung · Berbaki ${remainingMin} minit`;
+        countdownBadgeText = t('portal:ongoing_remaining_minutes', 'Sedang berlangsung · Berbaki {{count}} minit', { count: remainingMin });
       } else {
         const rh = Math.floor(remainingMin / 60);
         const rm = remainingMin % 60;
-        countdownBadgeText = rm > 0 ? `Sedang berlangsung · Berbaki ${rh} jam ${rm} minit` : `Sedang berlangsung · Berbaki ${rh} jam`;
+        countdownBadgeText = rm > 0
+          ? t('portal:ongoing_remaining_hours_minutes', 'Sedang berlangsung · Berbaki {{hours}} jam {{mins}} minit', { hours: rh, mins: rm })
+          : t('portal:ongoing_remaining_hours', 'Sedang berlangsung · Berbaki {{hours}} jam', { hours: rh });
       }
     } else {
       const diffMin = startMin - now.currentMinutes;
       if (diffMin <= 1) {
-        countdownBadgeText = 'Bermula sebentar lagi';
+        countdownBadgeText = t('portal:starting_soon', 'Bermula sebentar lagi');
       } else if (diffMin < 60) {
-        countdownBadgeText = `Dalam ${diffMin} minit`;
+        countdownBadgeText = t('portal:starting_in_minutes', 'Dalam {{count}} minit', { count: diffMin });
       } else {
         const hours = Math.floor(diffMin / 60);
         const mins = diffMin % 60;
-        countdownBadgeText = mins > 0 ? `Dalam ${hours} jam ${mins} minit` : `Dalam ${hours} jam`;
+        countdownBadgeText = mins > 0
+          ? t('portal:starting_in_hours_minutes', 'Dalam {{hours}} jam {{mins}} minit', { hours, mins })
+          : t('portal:starting_in_hours', 'Dalam {{hours}} jam', { hours });
       }
     }
 
@@ -525,11 +542,11 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
           'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md  space-y-4',
+          'shadow-sm hover:shadow-md space-y-4',
           className
         )}
       >
-        {/* Top Bar: Only the live countdown pill + Minimize button (No redundant headers) */}
+        {/* Top Bar */}
         <div className="flex items-center justify-between gap-3">
           <span
             className={cn(
@@ -552,15 +569,15 @@ export function NextClassBentoCard({
             type="button"
             onClick={toggleCollapsed}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
-            title="Kecilkan kad"
-            aria-label="Kecilkan kad"
+            title={t('portal:collapse_card', 'Kecilkan')}
+            aria-label={t('portal:collapse_card', 'Kecilkan')}
           >
-            <span>Kecilkan</span>
+            <span>{t('portal:collapse_card', 'Kecilkan')}</span>
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Course Details (Full Subject Name display: no duplicate course code badge if name present) */}
+        {/* Course Details */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span
@@ -588,7 +605,7 @@ export function NextClassBentoCard({
             {entry.is_online ? (
               <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold">
                 <Laptop className="w-3.5 h-3.5" />
-                <span>Dalam Talian (Microsoft Teams)</span>
+                <span>{t('portal:online_teams_full', 'Dalam Talian (Microsoft Teams)')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-[#2E3A2F] dark:text-[#F8F6EE] font-semibold">
@@ -600,7 +617,7 @@ export function NextClassBentoCard({
             {entry.lecturer_code && (
               <div className="flex items-center gap-1 text-[11px] text-[#556453] dark:text-[#A3B39F]">
                 <BookOpen className="w-3 h-3 opacity-70" />
-                <span>Pensyarah:</span>
+                <span>{t('portal:lecturer_label', 'Pensyarah:')}</span>
                 <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{entry.lecturer_code}</span>
               </div>
             )}
@@ -616,8 +633,8 @@ export function NextClassBentoCard({
                 />
               </div>
               <div className="flex justify-between text-[10px] text-[#556453] dark:text-[#A3B39F] font-medium">
-                <span>{elapsedMinutes} min berlalu</span>
-                <span>{totalDuration - elapsedMinutes} min berbaki</span>
+                <span>{t('portal:min_elapsed', '{{count}} min berlalu', { count: elapsedMinutes })}</span>
+                <span>{t('portal:min_remaining', '{{count}} min berbaki', { count: totalDuration - elapsedMinutes })}</span>
               </div>
             </div>
           )}
@@ -633,7 +650,7 @@ export function NextClassBentoCard({
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm"
             >
               <Laptop className="w-4 h-4" />
-              <span>Sertai Kelas Dalam Talian</span>
+              <span>{t('portal:join_online_class', 'Sertai Kelas Dalam Talian')}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           ) : (
@@ -642,7 +659,7 @@ export function NextClassBentoCard({
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-sm"
             >
               <MapPin className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
-              <span>Tunjuk Arah PolyMaps</span>
+              <span>{t('portal:polymaps_directions', 'Tunjuk Arah PolyMaps')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           )}
@@ -652,7 +669,7 @@ export function NextClassBentoCard({
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#2E3A2F]/15 dark:border-[#F8F6EE]/15 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 transition-colors"
           >
             <Calendar className="w-3.5 h-3.5" />
-            <span>Lihat Jadual Penuh</span>
+            <span>{t('portal:view_full_schedule', 'Lihat Jadual Penuh')}</span>
           </Link>
         </div>
       </div>
@@ -670,7 +687,7 @@ export function NextClassBentoCard({
         className={cn(
           'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
           'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md  space-y-4',
+          'shadow-sm hover:shadow-md space-y-4',
           className
         )}
       >
@@ -681,13 +698,13 @@ export function NextClassBentoCard({
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-block">
-                Hari Ini Selesai
+                {t('portal:today_done_badge', 'Hari Ini Selesai')}
               </span>
               <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                Semua kelas selesai untuk hari ini
+                {t('portal:all_classes_completed_today', 'Semua kelas selesai hari ini')}
               </h3>
               <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
-                Semua sesi kuliah anda telah tamat. Berehat atau buat persediaan untuk sesi kelas seterusnya.
+                {t('portal:all_classes_completed_desc', 'Semua sesi kuliah anda telah tamat. Berehat atau buat persediaan untuk sesi kelas seterusnya.')}
               </p>
             </div>
           </div>
@@ -696,10 +713,10 @@ export function NextClassBentoCard({
             type="button"
             onClick={toggleCollapsed}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
-            title="Kecilkan kad"
-            aria-label="Kecilkan kad"
+            title={t('portal:collapse_card', 'Kecilkan')}
+            aria-label={t('portal:collapse_card', 'Kecilkan')}
           >
-            <span>Kecilkan</span>
+            <span>{t('portal:collapse_card', 'Kecilkan')}</span>
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -711,7 +728,7 @@ export function NextClassBentoCard({
               <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
                 <Clock className="w-3.5 h-3.5 text-blue-500" />
                 <span>
-                  Seterusnya {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
+                  {t('portal:next_class_prefix', 'Seterusnya')} {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
                 </span>
               </div>
               <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
@@ -721,7 +738,7 @@ export function NextClassBentoCard({
                 {nextClass.entry.is_online ? (
                   <>
                     <Laptop className="w-3 h-3 text-blue-500" />
-                    <span>Dalam Talian</span>
+                    <span>{t('portal:online_generic', 'Dalam Talian')}</span>
                   </>
                 ) : (
                   <>
@@ -746,7 +763,7 @@ export function NextClassBentoCard({
                 to="/akademik/takwim?tab=personal"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
               >
-                <span>Lihat Jadual</span>
+                <span>{t('portal:view_schedule', 'Lihat Jadual')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -766,7 +783,7 @@ export function NextClassBentoCard({
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
         'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-        'shadow-sm hover:shadow-md  space-y-4',
+        'shadow-sm hover:shadow-md space-y-4',
         className
       )}
     >
@@ -778,16 +795,16 @@ export function NextClassBentoCard({
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
-                {isWeekend ? 'Hujung Minggu' : 'Cuti / Tiada Kuliah'}
+                {isWeekend ? t('portal:weekend_badge', 'Hujung Minggu') : t('portal:holiday_no_class_badge', 'Cuti / Tiada Kuliah')}
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-              Tiada kelas hari ini
+              {t('portal:no_classes_today', 'Tiada kelas hari ini')}
             </h3>
             <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
               {isWeekend
-                ? 'Selamat berehat pada hujung minggu! Bersedia untuk jadual kuliah minggu akan datang.'
-                : 'Tiada sesi kelas berjadual untuk hari ini. Gunakan masa lapang untuk mengulang kaji pelajaran.'}
+                ? t('portal:weekend_desc', 'Selamat berehat pada hujung minggu! Bersedia untuk jadual kuliah minggu akan datang.')
+                : t('portal:holiday_desc', 'Tiada sesi kelas berjadual untuk hari ini. Gunakan masa lapang untuk mengulang kaji pelajaran.')}
             </p>
           </div>
         </div>
@@ -796,10 +813,10 @@ export function NextClassBentoCard({
           type="button"
           onClick={toggleCollapsed}
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
-          title="Kecilkan kad"
-          aria-label="Kecilkan kad"
+          title={t('portal:collapse_card', 'Kecilkan')}
+          aria-label={t('portal:collapse_card', 'Kecilkan')}
         >
-          <span>Kecilkan</span>
+          <span>{t('portal:collapse_card', 'Kecilkan')}</span>
           <ChevronUp className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -811,7 +828,7 @@ export function NextClassBentoCard({
             <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
               <Clock className="w-3.5 h-3.5 text-blue-500" />
               <span>
-                Seterusnya {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
+                {t('portal:next_class_prefix', 'Seterusnya')} {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
               </span>
             </div>
             <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
@@ -821,7 +838,7 @@ export function NextClassBentoCard({
               {nextClass.entry.is_online ? (
                 <>
                   <Laptop className="w-3 h-3 text-blue-500" />
-                  <span>Dalam Talian</span>
+                  <span>{t('portal:online_generic', 'Dalam Talian')}</span>
                 </>
               ) : (
                 <>
@@ -846,7 +863,7 @@ export function NextClassBentoCard({
               to="/akademik/takwim?tab=personal"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
             >
-              <span>Lihat Jadual</span>
+              <span>{t('portal:view_schedule', 'Lihat Jadual')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -855,3 +872,5 @@ export function NextClassBentoCard({
     </div>
   );
 }
+
+export default NextClassBentoCard;

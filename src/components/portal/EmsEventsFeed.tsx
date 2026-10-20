@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Calendar, MapPin, ArrowRight, Trophy } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { filterUpcomingEvents } from '@/lib/superAppHelpers';
@@ -11,6 +12,7 @@ export interface EmsEventsFeedProps {
 }
 
 export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFeedProps) {
+  const { t, i18n } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>(initialEvents || []);
   const [loading, setLoading] = useState<boolean>(!initialEvents);
@@ -68,7 +70,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
   }
 
   return (
-    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label="Acara Kampus">
+    <section className={cn('w-full max-w-full overflow-hidden space-y-3', className)} aria-label={t('portal:campus_events_aria', 'Acara Kampus')}>
       {/* Section Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -78,14 +80,14 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
-                Acara Kampus
+                {t('portal:campus_events_title', 'Acara Kampus')}
               </h2>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 EMS
               </span>
             </div>
             <p className="text-[11px] text-[#556453] dark:text-[#A3B39F] hidden sm:block">
-              Pertandingan & program siswa terkini
+              {t('portal:campus_events_subtitle', 'Pertandingan & program siswa terkini')}
             </p>
           </div>
         </div>
@@ -95,7 +97,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           onClick={handleSeeAll}
           className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors cursor-pointer group"
         >
-          <span>Lihat Semua</span>
+          <span>{t('portal:view_all', 'Lihat Semua')}</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
@@ -120,12 +122,12 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
         <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
           {events.map((evt) => {
             const dateStr = evt.event_date
-              ? new Date(evt.event_date).toLocaleDateString('ms-MY', {
+              ? new Date(evt.event_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric',
                 })
-              : 'Tarikh Menyusul';
+              : t('portal:date_tba', 'Tarikh Menyusul');
 
             const bannerUrl = evt.banner_url || evt.image_url;
 
@@ -156,7 +158,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800/90 p-2 text-center">
                       <Trophy className="w-8 h-8 text-amber-500/50 mb-1" />
                       <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest line-clamp-1">
-                        {evt.category || 'Acara POLISAS'}
+                        {evt.category || t('portal:polisas_event', 'Acara POLISAS')}
                       </span>
                     </div>
                   )}
@@ -164,7 +166,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                   {/* "TERBUKA" Badge */}
                   <div className="absolute top-2.5 right-2.5">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500 dark:bg-rose-500 text-white shadow-sm dark:shadow-[0_0_8px_rgba(244,63,94,0.4)] border border-rose-400/30">
-                      TERBUKA
+                      {t('portal:open_registration_badge', 'TERBUKA')}
                     </span>
                   </div>
                 </div>
@@ -185,7 +187,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
 
                     <div className="flex items-center gap-1.5 text-[11px] text-[#556453] dark:text-slate-300">
                       <MapPin className="w-3.5 h-3.5 shrink-0 text-[#84A98C]" />
-                      <span className="truncate font-medium">{evt.location || 'Kampus POLISAS'}</span>
+                      <span className="truncate font-medium">{evt.location || t('portal:campus_polisas', 'Kampus POLISAS')}</span>
                     </div>
                   </div>
                 </div>

@@ -246,26 +246,26 @@ export function PortalPage() {
     if (!karnivalActive || !karnivalStatus?.name) return;
     const key = `karnival_toast_${karnivalStatus.name}`;
     if (!sessionStorage.getItem(key)) {
-      const t = setTimeout(() => {
-        toast('Karnival JPP sedang berlangsung! Undi booth kegemaran anda sekarang.', { duration: 5000 });
+      const timerId = setTimeout(() => {
+        toast(t('portal:karnival_toast_ongoing', 'Karnival JPP sedang berlangsung! Undi booth kegemaran anda sekarang.'), { duration: 5000 });
         sessionStorage.setItem(key, '1');
       }, 1800);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timerId);
     }
-  }, [karnivalActive, karnivalStatus?.name]);
+  }, [karnivalActive, karnivalStatus?.name, t]);
 
   // ── SUPSAS toast notification ──
   useEffect(() => {
     if (!isModuleEnabled('supsas') || !supsasEdition?.name) return;
     const key = `supsas_toast_${supsasEdition.name}`;
     if (!sessionStorage.getItem(key)) {
-      const t = setTimeout(() => {
-        toast('SUPSAS sedang berlangsung! Pantau keputusan dan jadual sukan terkini.', { duration: 5000 });
+      const timerId = setTimeout(() => {
+        toast(t('portal:supsas_toast_ongoing', 'SUPSAS sedang berlangsung! Pantau keputusan dan jadual sukan terkini.'), { duration: 5000 });
         sessionStorage.setItem(key, '1');
       }, 1800);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timerId);
     }
-  }, [isModuleEnabled, supsasEdition?.name]);
+  }, [isModuleEnabled, supsasEdition?.name, t]);
 
   // ── QR Redirect Miss alert ──
   useEffect(() => {
@@ -273,12 +273,12 @@ export function PortalPage() {
     if (missedQr) {
       sessionStorage.removeItem('qr_redirect_missed');
       setTimeout(() => {
-        toast('Sila scan QR sekali lagi untuk meneruskan ke destinasi asal anda!', {
+        toast(t('portal:qr_redirect_miss_toast', 'Sila scan QR sekali lagi untuk meneruskan ke destinasi asal anda!'), {
           duration: 8000,
         });
       }, 1500);
     }
-  }, []);
+  }, [t]);
 
   const handleToggle = async (moduleId: string, newState: boolean) => {
     const { error } = await supabase
@@ -286,10 +286,17 @@ export function PortalPage() {
       .update({ is_enabled: newState, updated_by: profile?.id, updated_at: new Date().toISOString() })
       .eq('exco_module', moduleId);
 
-    if (error) { toast.error('Failed to update status.'); return; }
+    if (error) { 
+      toast.error(t('common:error_occurred', 'Ralat berlaku. Sila cuba sebentar lagi.')); 
+      return; 
+    }
 
     setSettings(prev => prev.map(s => s.exco_module === moduleId ? { ...s, is_enabled: newState } : s));
-    toast.success(`${moduleId} ${newState ? 'enabled' : 'disabled'}.`);
+    toast.success(t('portal:module_status_updated', {
+      module: moduleId,
+      status: newState ? t('portal:status_active', 'Aktif') : t('portal:status_locked', 'Kunci'),
+      defaultValue: `${moduleId} ${newState ? 'enabled' : 'disabled'}.`
+    }));
   };
 
   const handleColorSave = async (moduleId: string, newColor: string) => {
@@ -298,10 +305,13 @@ export function PortalPage() {
       .update({ color: newColor, updated_by: profile?.id, updated_at: new Date().toISOString() })
       .eq('exco_module', moduleId);
 
-    if (error) { toast.error('Failed to update color.'); return; }
+    if (error) { 
+      toast.error(t('common:error_occurred', 'Ralat berlaku. Sila cuba sebentar lagi.')); 
+      return; 
+    }
 
     setSettings(prev => prev.map(s => s.exco_module === moduleId ? { ...s, color: newColor } : s));
-    toast.success('Color saved.');
+    toast.success(t('common:saved', 'Disimpan.'));
   };
 
   const canAppeal = useMemo(() => {
@@ -313,13 +323,13 @@ export function PortalPage() {
   const displayStatus = useMemo(() => {
     if (!kamsisStatus) return null;
     const map: Record<string, string> = {
-      'LULUS': 'Berjaya Ditawarkan',
-      'DITOLAK': 'Tidak Berjaya',
-      'SENARAI_MENUNGGU': 'Senarai Menunggu',
-      'MENUNGGU_SEMAKAN': 'Dalam Semakan',
+      'LULUS': t('portal:kamsis_status_offered', 'Berjaya Ditawarkan'),
+      'DITOLAK': t('portal:kamsis_status_rejected', 'Tidak Berjaya'),
+      'SENARAI_MENUNGGU': t('portal:kamsis_status_waiting_list', 'Senarai Menunggu'),
+      'MENUNGGU_SEMAKAN': t('portal:kamsis_status_in_review', 'Dalam Semakan'),
     };
     return map[kamsisStatus] || kamsisStatus;
-  }, [kamsisStatus]);
+  }, [kamsisStatus, t]);
 
   const campaignSlides = useMemo(() => {
     return buildCampaignSlides({
@@ -327,8 +337,59 @@ export function PortalPage() {
       makmpStatus,
       karnivalActive,
       supsasActive,
-    });
-  }, [kamsisStatus, makmpStatus, karnivalActive, supsasActive]);
+    }, t);
+  }, [kamsisStatus, makmpStatus, karnivalActive, supsasActive, t]);
+
+  const tourSteps = useMemo(() => [
+    {
+      target: '.tour-superapp-header',
+      content: t('portal:tour_portal_content', 'Selamat datang ke Portal Rasmi JPP POLISAS Super App. Akses profil, tetapan tema, dan notifikasi anda di sini.'),
+      title: t('portal:tour_portal_title', 'Portal Pelajar'),
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-services-grid',
+      content: t('portal:tour_services_content', 'Grid Servis Kampus pintar. Akses pantas ke Aduan Kebajikan, Semakan Asrama KAMSIS, dan PolyMart.'),
+      title: t('portal:tour_services_title', 'Servis Kampus'),
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-campaign-carousel',
+      content: t('portal:tour_campaign_content', 'Kapsul status mahasiswa masa nyata! Semak keputusan asrama, jemputan anugerah MAKMP, dan kempen aktif.'),
+      title: t('portal:tour_campaign_title', 'Kempen & Status Anda'),
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-exco-modules',
+      content: t('portal:tour_exco_content', 'Modul Rasmi Exco JPP. Terokai perkhidmatan khusus setiap portfolio Jawatankuasa Perwakilan Pelajar.'),
+      title: t('portal:tour_exco_title', 'Modul Rasmi Exco'),
+      placement: 'top' as const,
+    },
+    {
+      target: '.tour-mod-ekpp',
+      content: t('portal:tour_ekpp_content', 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.'),
+      title: t('portal:tour_ekpp_title', 'Sistem Kelab'),
+      placement: 'top' as const,
+    },
+    {
+      target: '.tour-mod-keusahawanan',
+      content: t('portal:tour_keusahawanan_content', 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.'),
+      title: t('portal:tour_keusahawanan_title', 'e-Keusahawanan'),
+      placement: 'top' as const,
+    },
+    {
+      target: '.tour-mod-akademik',
+      content: t('portal:tour_akademik_content', 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.'),
+      title: t('portal:tour_akademik_title', 'e-Akademik'),
+      placement: 'top' as const,
+    },
+    {
+      target: '.tour-bottomnav-fab',
+      content: t('portal:tour_fab_content', 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.'),
+      title: t('portal:tour_fab_title', 'Navigasi Pintar (FAB)'),
+      placement: 'top' as const,
+    }
+  ], [t]);
 
   return (
     <div className="relative min-h-screen bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] flex flex-col font-sans transition-colors duration-300">
@@ -338,56 +399,7 @@ export function PortalPage() {
           <SystemTour
             run={runTour}
             onClose={closeTour}
-            steps={[
-              {
-                target: '.tour-superapp-header',
-                content: 'Selamat datang ke Portal Rasmi JPP POLISAS Super App. Akses profil, tetapan tema, dan notifikasi anda di sini.',
-                title: 'Portal Pelajar',
-                placement: 'bottom',
-              },
-              {
-                target: '.tour-services-grid',
-                content: 'Grid Servis Kampus pintar. Akses pantas ke Aduan Kebajikan, Semakan Asrama KAMSIS, dan PolyMart.',
-                title: 'Servis Kampus',
-                placement: 'bottom',
-              },
-              {
-                target: '.tour-campaign-carousel',
-                content: 'Kapsul status mahasiswa masa nyata! Semak keputusan asrama, jemputan anugerah MAKMP, dan kempen aktif.',
-                title: 'Kempen & Status Anda',
-                placement: 'bottom',
-              },
-              {
-                target: '.tour-exco-modules',
-                content: 'Modul Rasmi Exco JPP. Terokai perkhidmatan khusus setiap portfolio Jawatankuasa Perwakilan Pelajar.',
-                title: 'Modul Rasmi Exco',
-                placement: 'top',
-              },
-              {
-                target: '.tour-mod-ekpp',
-                content: 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.',
-                title: 'Sistem Kelab',
-                placement: 'top',
-              },
-              {
-                target: '.tour-mod-keusahawanan',
-                content: 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.',
-                title: 'e-Keusahawanan',
-                placement: 'top',
-              },
-              {
-                target: '.tour-mod-akademik',
-                content: 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.',
-                title: 'e-Akademik',
-                placement: 'top',
-              },
-              {
-                target: '.tour-bottomnav-fab',
-                content: 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.',
-                title: 'Navigasi Pintar (FAB)',
-                placement: 'top',
-              }
-            ]}
+            steps={tourSteps}
           />
         </React.Suspense>
       )}
@@ -439,7 +451,7 @@ export function PortalPage() {
           onOpenPolymartModal={() => setShowPolymartModal(true)}
           onOpenKamsisModal={() => {
             if (canAppeal) setShowAppealModal(true);
-            else toast('Status Asrama: ' + (displayStatus || 'Tiada Rekod'));
+            else toast(t('portal:hostel_status_toast', { status: displayStatus || t('portal:no_record', 'Tiada Rekod'), defaultValue: 'Status Asrama: {{status}}' }));
           }}
           kamsisStatus={kamsisStatus}
           kbStats={kbStats}
@@ -452,17 +464,17 @@ export function PortalPage() {
         <PolyMartFeed />
 
         {/* 5. Official Exco Modules Section */}
-        <section aria-label={t('portal:portal_title')} className="tour-exco-modules space-y-4">
+        <section aria-label={t('portal:portal_title', 'Hab Portal Pelajar POLISAS')} className="tour-exco-modules space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7F5B] block mb-1">
-                {t('portal:portal_welcome')}
+                {t('portal:portal_welcome', 'Selamat Datang ke Kampus Digital')}
               </span>
               <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight [text-wrap:balance]">
-                {t('portal:portal_title')}
+                {t('portal:portal_title', 'Hab Portal Pelajar POLISAS')}
               </h2>
               <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] [text-wrap:balance]">
-                {t('portal:portal_select_module')}
+                {t('portal:portal_select_module', 'Pilih unit exco atau perkhidmatan kampus di bawah untuk meneruskan:')}
               </p>
             </div>
           </div>
@@ -475,11 +487,11 @@ export function PortalPage() {
               if (mod.id === 'kebajikan' && kbStats?.open) {
                 notificationCount = kbStats.open;
               } else if (mod.id === 'karnival' && karnivalActive) {
-                badgeText = "BERLANGSUNG";
+                badgeText = t('portal:ongoing_badge', 'BERLANGSUNG');
               } else if (mod.id === 'supsas' && supsasActive) {
-                badgeText = "BERLANGSUNG";
+                badgeText = t('portal:ongoing_badge', 'BERLANGSUNG');
               } else if (mod.id === 'akademik') {
-                badgeText = "NEW";
+                badgeText = t('portal:new_badge', 'BAHARU');
               }
 
               return (
@@ -510,9 +522,9 @@ export function PortalPage() {
               transition={{ delay: 0.5 }}
               className="pt-6 flex flex-wrap justify-center items-center gap-x-8 gap-y-4 opacity-50 hover:opacity-100 transition-opacity duration-300"
             >
-              <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
-              <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
-              <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label="Dalam Pembangunan" />
+              <AdminStatusIndicator color="bg-emerald-400" label={t('portal:admin_status_live', 'Sistem Operasi (Live)')} />
+              <AdminStatusIndicator color="bg-amber-400" label={t('portal:admin_status_preview', 'Pratonton Pentadbir')} />
+              <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label={t('portal:admin_status_dev', 'Dalam Pembangunan')} />
             </motion.div>
           )}
         </section>

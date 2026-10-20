@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Lock, Palette, PowerOff, Power, ArrowRight } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
@@ -18,7 +19,8 @@ interface ColorPickerProps {
   onClose: () => void;
 }
 
-export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClose }: ColorPickerProps) {
+export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClose: _onClose }: ColorPickerProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const [selectedColor, setSelectedColor] = useState(currentColor);
   const [hexInput, setHexInput] = useState(currentColor);
 
@@ -36,8 +38,8 @@ export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave,
   };
 
   const PRESET_GROUPS = [
-    { label: 'Primary & Corporate', colors: ['#7B1C1C', '#1A237E', '#1B5E20', '#E65100', '#4A148C'] },
-    { label: 'Modern Vibrancy', colors: ['#F43F5E', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'] },
+    { label: t('portal:theme_primary_corporate', 'Primary & Corporate'), colors: ['#7B1C1C', '#1A237E', '#1B5E20', '#E65100', '#4A148C'] },
+    { label: t('portal:theme_modern_vibrancy', 'Modern Vibrancy'), colors: ['#F43F5E', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'] },
   ];
 
   return (
@@ -45,7 +47,9 @@ export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave,
       <div className="p-5 space-y-5">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Customize Theme</h4>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              {t('portal:customize_theme', 'Customize Theme')}
+            </h4>
             <p className="text-xs font-bold truncate max-w-[140px]">{moduleName}</p>
           </div>
           <div
@@ -106,7 +110,7 @@ export function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave,
             boxShadow: `0 8px 20px -6px ${hexToRgba(selectedColor, 0.4)}`
           }}
         >
-          Apply Theme
+          {t('portal:apply_theme', 'Apply Theme')}
         </Button>
       </div>
     </div>
@@ -132,19 +136,36 @@ export interface ExcoCardProps {
   className?: string;
 }
 
-export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave, karnivalActive, supsasActive, badgeText, notificationCount, className }: ExcoCardProps) {
+export function ExcoCard({
+  module,
+  color,
+  index,
+  isEnabled,
+  isSuperAdmin,
+  onToggle,
+  onColorSave,
+  karnivalActive,
+  supsasActive,
+  badgeText,
+  notificationCount,
+  className,
+}: ExcoCardProps) {
+  const { t } = useTranslation(['portal', 'common']);
   const navigate = useNavigate();
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const canAccess = isEnabled || isSuperAdmin;
   const isPreviewMode = !isEnabled && isSuperAdmin;
-  // DynamicIcon handles lazy-loading the icon by name
   const isEventMode = karnivalActive || supsasActive;
+
+  const moduleName = t(`portal:module_${module.id}_title`, module.name);
+  const moduleDesc = t(`portal:module_${module.id}_desc`, module.description);
+  const moduleTagline = t(`portal:module_${module.id}_tagline`, module.tagline);
 
   const handleClick = () => {
     if (!canAccess) {
       triggerHaptic('light');
-      toast(`${module.name} bakal tiba tidak lama lagi!`, {
+      toast(t('portal:module_coming_soon_toast', '{{name}} bakal tiba tidak lama lagi!', { name: moduleName }), {
         duration: 2500,
       });
       return;
@@ -152,7 +173,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
     triggerHaptic('medium');
     if (isPreviewMode) {
-      toast.success('Admin Preview Mode Active', {
+      toast.success(t('portal:admin_preview_active_toast', 'Admin Preview Mode Active'), {
         style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
       });
     }
@@ -191,8 +212,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
         />
       )}
       
-      {/* Animated Conic Gradient Border (Karnival Mode) */}
-      {/* Very Subtle Hover Gradient Background */}
+      {/* Subtle Hover Gradient Background */}
       <div
         className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
         style={{ background: `radial-gradient(circle at 100% 0%, ${hexToRgba(karnivalActive ? '#c084fc' : color, 0.08)}, transparent 60%)` }}
@@ -241,11 +261,11 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                 )}
               >
                 {isEnabled ? (
-                  <span className="flex items-center gap-1">Aktif</span>
+                  <span className="flex items-center gap-1">{t('portal:status_active', 'Aktif')}</span>
                 ) : isPreviewMode ? (
-                  <span className="flex items-center gap-1">Pratonton</span>
+                  <span className="flex items-center gap-1">{t('portal:status_preview', 'Pratonton')}</span>
                 ) : (
-                  <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> Kunci</span>
+                  <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> {t('portal:status_locked', 'Kunci')}</span>
                 )}
               </div>
             </div>
@@ -264,11 +284,11 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                   <PopoverContent
                     align="end"
                     sideOffset={8}
-                    className="w-72 rounded-3xl shadow-xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a0a0a]/95  p-0 overflow-hidden"
+                    className="w-72 rounded-3xl shadow-xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a0a0a]/95 p-0 overflow-hidden"
                   >
                     <ColorPickerPopover
                       moduleId={module.id}
-                      moduleName={module.name}
+                      moduleName={moduleName}
                       currentColor={color}
                       onSave={(id, c) => { onColorSave(id, c); setShowColorPicker(false); }}
                       onClose={() => setShowColorPicker(false)}
@@ -299,13 +319,13 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
             !canAccess && "opacity-70",
             isEventMode ? "text-white" : "text-[#2E3A2F] dark:text-[#F8F6EE]"
           )}>
-            {module.name}
+            {moduleName}
           </h2>
           <p className={cn(
             "text-sm leading-relaxed font-medium transition-colors",
             isEventMode ? "text-white/70" : "text-[#556453] dark:text-[#A3B39F]"
           )}>
-            {module.description}
+            {moduleDesc}
           </p>
         </div>
       </div>
@@ -319,7 +339,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
         )}
         style={canAccess ? { '--hover-color': color } as React.CSSProperties : {}}>
           <span className="group-hover:text-[var(--hover-color)] transition-colors">
-            {canAccess ? "Masuk Portal" : "Bakal Tiba"}
+            {canAccess ? t('portal:enter_portal', 'Masuk Portal') : t('portal:coming_soon', 'Bakal Tiba')}
           </span>
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 group-hover:text-[var(--hover-color)]" />
         </div>
@@ -328,7 +348,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
           "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md",
           isEventMode ? "bg-white/10 text-white/50" : "bg-[#F8F6EE] dark:bg-[#151D16] text-[#556453] dark:text-[#A3B39F] border border-[#D9C9B2]/60 dark:border-[#3A4A3B]"
         )}>
-          {module.tagline}
+          {moduleTagline}
         </div>
       </div>
 
@@ -341,3 +361,5 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
     </motion.div>
   );
 }
+
+export default ExcoCard;
