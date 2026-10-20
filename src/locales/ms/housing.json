@@ -270,5 +270,9 @@
   "webhook_secret_label": "Webhook Secret (Header: x-webhook-secret)",
   "webhook_url": "Webhook URL",
   "zero_slot_warning": "Kekosongan adalah 0. Iklan masih 'Aktif' tetapi pencari mungkin tidak berminat. Sila 'Tandakan Disewa' jika rumah sudah penuh.",
-  "zone_name_placeholder": "Nama kawasan (cth: SEMAMBU)"
+  "zone_name_placeholder": "Nama kawasan (cth: SEMAMBU)",
+  "no_image": "Tiada Gambar",
+  "vacancies_summary": "{{count}} Kekosongan • {{gender}}",
+  "per_month": "/ bulan",
+  "below_market_rate_desc": "Harga lebih rendah dari purata pasaran"
 }

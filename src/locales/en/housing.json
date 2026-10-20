@@ -270,5 +270,9 @@
   "webhook_secret_label": "Webhook Secret (Header: x-webhook-secret)",
   "webhook_url": "Webhook URL",
   "zero_slot_warning": "Available slots is 0. The ad is still 'Active' but searchers may not be interested. Please 'Mark as Rented' if the house is full.",
-  "zone_name_placeholder": "Zone name (e.g. SEMAMBU)"
+  "zone_name_placeholder": "Zone name (e.g. SEMAMBU)",
+  "no_image": "No Image",
+  "vacancies_summary": "{{count}} Vacancies • {{gender}}",
+  "per_month": "/ month",
+  "below_market_rate_desc": "Price lower than market average"
 }

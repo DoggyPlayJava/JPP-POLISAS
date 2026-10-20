@@ -454,5 +454,10 @@
   "wishlist": "Wishlist",
   "write_review_title": "Write a Review",
   "zoom_in_aria": "Zoom In",
-  "zoom_out_aria": "Zoom Out"
+  "zoom_out_aria": "Zoom Out",
+  "payment_qr_online": "DuitNow QR (Online)",
+  "payment_cod": "Pay Upon Pickup (Cash/COD)",
+  "access_denied": "Access Denied",
+  "access_denied_desc": "You are not a member of this business.",
+  "share_phone_desc": "Allows merchant to contact you regarding your order"
 }

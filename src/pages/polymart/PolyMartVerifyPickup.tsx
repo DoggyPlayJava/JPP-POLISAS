@@ -183,12 +183,12 @@ export function PolyMartVerifyPickup() {
   if (!order) return (
     <div className="text-center py-20">
       <AlertCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-      <p className="text-sm font-bold text-foreground">Pesanan tidak dijumpai</p>
-      <p className="text-xs text-muted-foreground mt-1">ID pesanan tidak sah atau tidak wujud.</p>
+      <p className="text-sm font-bold text-foreground">{t('commerce:order_not_found', 'Pesanan tidak dijumpai')}</p>
+      <p className="text-xs text-muted-foreground mt-1">{t('commerce:order_not_found_desc', 'ID pesanan tidak sah atau tidak wujud.')}</p>
       <button onClick={() => navigate('/polymart')}
         className="mt-4 px-5 py-2 rounded-xl text-xs font-bold text-white"
         style={{ background: PM_GRADIENT }}>
-        Kembali ke PolyMart
+        {t('commerce:back_to_polymart', 'Kembali ke PolyMart')}
       </button>
     </div>
   );
@@ -196,16 +196,16 @@ export function PolyMartVerifyPickup() {
   if (!authorized) return (
     <div className="text-center py-20">
       <AlertCircle className="w-12 h-12 text-rose-500/30 mx-auto mb-3" />
-      <p className="text-sm font-bold text-foreground">Akses Ditolak</p>
-      <p className="text-xs text-muted-foreground mt-1">Anda bukan ahli perniagaan ini.</p>
+      <p className="text-sm font-bold text-foreground">{t('commerce:access_denied', 'Akses Ditolak')}</p>
+      <p className="text-xs text-muted-foreground mt-1">{t('commerce:access_denied_desc', 'Anda bukan ahli perniagaan ini.')}</p>
     </div>
   );
 
-  const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING;
+  const statusCfg = statusConfig[order.status] || statusConfig.PENDING;
   const FallbackIcon = CATEGORY_ICON_MAP[order.product?.category ?? ''] ?? Package;
   const totalAmt = order.total_price ?? (order.unit_price * order.quantity);
   const shortId = order.id.slice(0, 8).toUpperCase();
-  const paymentLabel = order.payment_method === 'QR_ONLINE' ? 'QR DuitNow (Online)' : 'Bayar Semasa Ambil (Tunai/COD)';
+  const paymentLabel = order.payment_method === 'QR_ONLINE' ? t('commerce:payment_qr_online', 'QR DuitNow (Online)') : t('commerce:payment_cod', 'Bayar Semasa Ambil (Tunai/COD)');
   const paymentVerified = !!order.payment_verified_at;
 
   return (

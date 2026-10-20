@@ -533,7 +533,7 @@ export function ProductVariationBottomSheet({
                   <Phone className="w-3.5 h-3.5 text-muted-foreground/60" />
                   <div>
                     <p className="text-[11px] font-bold text-foreground">{t('commerce:share_phone_toggle', 'Kongsikan No. Telefon')}</p>
-                    <p className="text-[9px] text-muted-foreground/50">Membolehkan peniaga hubungi pesanan anda</p>
+                    <p className="text-[9px] text-muted-foreground/50">{t('commerce:share_phone_desc', 'Membolehkan peniaga hubungi pesanan anda')}</p>
                   </div>
                 </div>
                 <button
