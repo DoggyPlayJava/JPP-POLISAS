@@ -48,22 +48,46 @@ interface Program {
   club_id: string;
 }
 
-const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' },
-  { value: 'Laporan Kewangan', icon: DollarSignIcon, color: 'text-emerald-500', bg: 'bg-emerald-100' },
-  { value: 'Takwim Aktiviti', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-100' },
-  { value: 'Profil Ahli Kelab', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-  { value: 'Struktur Jawatan', icon: Award, color: 'text-purple-500', bg: 'bg-purple-100' },
-  { value: 'Carta Organisasi', icon: Users, color: 'text-pink-500', bg: 'bg-pink-100' },
-  { value: 'Perlembagaan Kelab', icon: BookOpen, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-muted' },
-];
-
 function DollarSignIcon(props: any) {
   return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
 }
 
+function getDocMeta(reportType: string | undefined) {
+  const typeStr = (reportType || '').toLowerCase();
+  if (typeStr.includes('kewangan') || typeStr.includes('finance')) {
+    return { icon: DollarSignIcon, color: 'text-emerald-500', bg: 'bg-emerald-100' };
+  }
+  if (/takwim|calendar/i.test(typeStr)) {
+    return { icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-100' };
+  }
+  if (typeStr.includes('profil') || typeStr.includes('profile')) {
+    return { icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' };
+  }
+  if (typeStr.includes('jawatan') || typeStr.includes('structure')) {
+    return { icon: Award, color: 'text-purple-500', bg: 'bg-purple-100' };
+  }
+  if (typeStr.includes('carta') || typeStr.includes('chart')) {
+    return { icon: Users, color: 'text-pink-500', bg: 'bg-pink-100' };
+  }
+  if (typeStr.includes('perlembagaan') || typeStr.includes('constitution')) {
+    return { icon: BookOpen, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-muted' };
+  }
+  return { icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' };
+}
+
 export function SemakanLaporanPage() {
   const { t } = useTranslation(['kpp', 'common']);
+
+  const getReportLabel = (type: string) => {
+    if (type === 'Aktiviti' || type === 'Laporan Aktiviti') return t('kpp:monthly_report', 'Laporan Bulanan');
+    if (type === 'Kewangan' || type === 'Laporan Kewangan') return t('kpp:report_type_finance', 'Laporan Kewangan');
+    if (type === 'Takwim Aktiviti') return t('kpp:report_type_takwim', 'Takwim Aktiviti');
+    if (type === 'Profil Ahli Kelab' || type === 'Profil Ahli') return t('kpp:report_type_profile', 'Profil Ahli Kelab');
+    if (type === 'Struktur Jawatan') return t('kpp:report_type_structure', 'Struktur Jawatan');
+    if (type === 'Carta Organisasi') return t('kpp:report_type_org_chart', 'Carta Organisasi');
+    if (type === 'Perlembagaan Kelab' || type === 'Perlembagaan') return t('kpp:report_type_constitution', 'Perlembagaan Kelab');
+    return REPORT_TYPE_LABELS[type as ReportType] || type;
+  };
   const { user, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -74,9 +98,6 @@ export function SemakanLaporanPage() {
   const [actionDialog, setActionDialog] = useState<{ open: boolean, type: 'APPROVE' | 'REJECT' | 'UNLOCK' | 'REJECT_UNLOCK' | null, data: Program | null }>({
     open: false, type: null, data: null
   });
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [reportType, setReportType] = useState('Laporan Aktiviti');
-  const [reportFile, setReportFile] = useState<File | null>(null);
   const [aiReviewProgramId, setAiReviewProgramId] = useState<{id: string, name: string} | null>(null);
   const [remarks, setRemarks] = useState('');
 
@@ -101,8 +122,8 @@ export function SemakanLaporanPage() {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-5 text-center">
         <div className="w-24 h-24 rounded-full bg-rose-500/10 flex items-center justify-center shadow-inner"><Lock className="text-rose-500 w-10 h-10" /></div>
-        <h2 className="text-3xl font-black tracking-tighter">Akses Terhad</h2>
-        <p className="text-muted-foreground font-medium max-w-xs">Halaman ini dikhaskan untuk Unit KPP & Admin JPP sahaja.</p>
+        <h2 className="text-3xl font-black tracking-tighter">{t('common:restricted_access', 'Akses Terhad')}</h2>
+        <p className="text-muted-foreground font-medium max-w-xs">{t('kpp:access_restricted_kpp_admin', 'Halaman ini dikhaskan untuk Unit KPP & Admin JPP sahaja.')}</p>
       </div>
     );
   }
@@ -161,12 +182,12 @@ export function SemakanLaporanPage() {
       const progItems = (completedPrograms.data || []).flatMap((p: any) => {
         const items = [];
         if (p.url_kertas_kerja) items.push({
-          id: `kk-${p.id}`, type: 'kertas_kerja', label: 'Kertas Kerja',
+          id: `kk-${p.id}`, type: 'kertas_kerja', label: t('kpp:proposal_paper', 'Kertas Kerja'),
           name: p.nama_program, file_url: p.url_kertas_kerja,
           club_id: p.club_id, date: p.updated_at
         });
         if (p.url_post_mortem) items.push({
-          id: `pm-${p.id}`, type: 'post_mortem', label: 'Post-Mortem',
+          id: `pm-${p.id}`, type: 'post_mortem', label: t('kpp:post_mortem', 'Post-Mortem'),
           name: p.nama_program, file_url: p.url_post_mortem,
           club_id: p.club_id, date: p.updated_at
         });
@@ -174,7 +195,7 @@ export function SemakanLaporanPage() {
       });
 
       const repItems = (approvedReports.data || []).map((r: any) => ({
-        id: `rp-${r.id}`, type: 'laporan', label: r.report_type || 'Laporan',
+        id: `rp-${r.id}`, type: 'laporan', label: r.report_type || t('kpp:report', 'Laporan'),
         name: r.file_name, file_url: r.file_url,
         club_id: r.club_id, date: r.created_at
       }));
@@ -208,33 +229,38 @@ export function SemakanLaporanPage() {
     if (actionDialog.type === 'APPROVE') {
       nextStatus = actionDialog.data.status === 'PENDING_APPROVAL' ? 'CONFIRMED' : 'COMPLETED';
       isLocked = true;
-      notificationTitle = nextStatus === 'CONFIRMED' ? '✅ Kertas Kerja Diluluskan' : '🎉 Program Selesai & Diarkib';
-      notificationContent = `Program "${actionDialog.data.nama_program}" telah disahkan oleh JPP.`;
+      notificationTitle = nextStatus === 'CONFIRMED'
+        ? t('kpp:notif_proposal_approved_title', 'Kertas Kerja Diluluskan')
+        : t('kpp:notif_program_completed_title', 'Program Selesai & Diarkib');
+      notificationContent = t('kpp:notif_program_confirmed_msg', 'Program "{{programName}}" telah disahkan oleh JPP.', { programName: actionDialog.data.nama_program });
     }
     else if (actionDialog.type === 'REJECT') {
       if (actionDialog.data.status === 'PENDING_POSTMORTEM') {
         nextStatus = 'PENDING_POSTMORTEM';
         isLocked = false;
-        notificationTitle = '❌ Post-Mortem Ditolak';
-        notificationContent = `Post-Mortem "${actionDialog.data.nama_program}" memerlukan pindaan. Sila semak ulasan JPP.`;
+        notificationTitle = t('kpp:notif_postmortem_rejected_title', 'Post-Mortem Ditolak');
+        notificationContent = t('kpp:notif_postmortem_rejected_msg', 'Post-Mortem "{{programName}}" memerlukan pindaan. Sila semak ulasan JPP.', { programName: actionDialog.data.nama_program });
       } else {
         nextStatus = 'DRAFT';
         isLocked = false;
-        notificationTitle = '❌ Kertas Kerja Ditolak';
-        notificationContent = `Program "${actionDialog.data.nama_program}" memerlukan pindaan. Sila semak ulasan JPP.`;
+        notificationTitle = t('kpp:notif_proposal_rejected_title', 'Kertas Kerja Ditolak');
+        notificationContent = t('kpp:notif_proposal_rejected_msg', 'Program "{{programName}}" memerlukan pindaan. Sila semak ulasan JPP.', { programName: actionDialog.data.nama_program });
       }
     }
     else if (actionDialog.type === 'UNLOCK') {
       nextStatus = 'DRAFT';
       isLocked = false;
-      notificationTitle = '🔓 Permohonan Unlock Diluluskan';
-      notificationContent = `JPP telah meluluskan permohonan unlock untuk "${actionDialog.data.nama_program}". Anda kini boleh mengedit tarikh semula.`;
+      notificationTitle = t('kpp:notif_unlock_approved_title', 'Permohonan Unlock Diluluskan');
+      notificationContent = t('kpp:notif_unlock_approved_msg', 'JPP telah meluluskan permohonan unlock untuk "{{programName}}". Anda kini boleh mengedit tarikh semula.', { programName: actionDialog.data.nama_program });
     }
     else if (actionDialog.type === 'REJECT_UNLOCK') {
       nextStatus = 'CONFIRMED';
       isLocked = true;
-      notificationTitle = '⛔ Permohonan Unlock Ditolak';
-      notificationContent = `JPP telah MENOLAK permohonan unlock anda untuk "${actionDialog.data.nama_program}". ${remarks ? 'Alasan: ' + remarks : ''}`;
+      notificationTitle = t('kpp:notif_unlock_rejected_title', 'Permohonan Unlock Ditolak');
+      notificationContent = t('kpp:notif_unlock_rejected_msg', 'JPP telah MENOLAK permohonan unlock anda untuk "{{programName}}". {{remarks}}', {
+        programName: actionDialog.data.nama_program,
+        remarks: remarks ? `${t('kpp:reason_prefix', 'Alasan: ')}${remarks}` : ''
+      });
     }
 
     const toastId = toast.loading(t('common:updating', 'Mengemas kini...'));
@@ -274,7 +300,7 @@ export function SemakanLaporanPage() {
     const toastId = toast.loading(t('kpp:scanning_database', 'Mengimbas pangkalan data...'));
 
     // Fetch all active programs
-    const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').not('status', 'eq', 'COMPLETED');
+    const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').neq('status', 'COMPLETED');
 
     if (error || !allPrograms) {
       toast.error(t('kpp:db_access_error', 'Ralat mengakses pangkalan data.'), { id: toastId });
@@ -292,21 +318,21 @@ export function SemakanLaporanPage() {
         const daysLeft = differenceInDays(parseISO(prog.tarikh_mula), now);
         if (daysLeft < 9) {
           isOverdue = true;
-          reason = 'Kertas Kerja tertunggak / belum disahkan (Kurang 9 hari)';
+          reason = t('kpp:overdue_proposal_reason', 'Kertas Kerja tertunggak / belum disahkan (Kurang 9 hari)');
         }
       } else if (prog.status === 'CONFIRMED' && prog.tarikh_tamat) {
         const daysAfter = differenceInDays(now, parseISO(prog.tarikh_tamat));
         if (daysAfter > 3) {
           isOverdue = true;
-          reason = 'Post-Mortem tertunggak (Melepasi 3 hari selepas tamat)';
+          reason = t('kpp:overdue_postmortem_reason', 'Post-Mortem tertunggak (Melepasi 3 hari selepas tamat)');
         }
       }
 
       if (isOverdue && prog.user_id) {
         noticesToInsert.push({
           user_id: prog.user_id,
-          title: '⚠️ PERINGATAN JPP: AMARAN TERTUNGGAK',
-          message: `Sila selesaikan dokumen bagi program "${prog.nama_program}" dengan SEGERA. Sebab: ${reason}.`,
+          title: t('kpp:notif_overdue_warning_title', 'PERINGATAN JPP: AMARAN TERTUNGGAK'),
+          message: t('kpp:notif_overdue_warning_msg', 'Sila selesaikan dokumen bagi program "{{programName}}" dengan SEGERA. Sebab: {{reason}}.', { programName: prog.nama_program, reason }),
           type: 'SYSTEM_ALERT',
           module: 'EKPP',
           link: '/laporan',
@@ -330,7 +356,7 @@ export function SemakanLaporanPage() {
 
   // ── Tab 2: General Report Logic ──
   const filteredReports = reports.filter(r => {
-    const matchStatus = filterStatus === 'Semua' || r.status === filterStatus;
+    const matchStatus = filterStatus === 'Semua' || r.status === filterStatus || (filterStatus === 'IN_REVIEW' && /dalam semakan|in progress/i.test(r.status));
     const matchClub = filterClub === 'Semua' || r.club_id === filterClub;
     return matchStatus && matchClub;
   });
@@ -350,10 +376,13 @@ export function SemakanLaporanPage() {
       toast.success(t('kpp:document_status_toast', 'Dokumen {{status}}!', { status: newStatus.toLowerCase() }), { id: toastId }); 
       
       const isApproved = newStatus === 'Diluluskan';
-      const notificationTitle = isApproved ? '✅ Laporan Diluluskan' : '❌ Laporan Ditolak';
-      let notificationContent = `Dokumen "${r.file_name}" telah ${newStatus.toLowerCase()} oleh JPP.`;
+      const notificationTitle = isApproved ? t('kpp:notif_report_approved_title', 'Laporan Diluluskan') : t('kpp:notif_report_rejected_title', 'Laporan Ditolak');
+      let notificationContent = t('kpp:notif_report_status_msg', 'Dokumen "{{fileName}}" telah {{status}} oleh JPP.', {
+        fileName: r.file_name,
+        status: newStatus.toLowerCase()
+      });
       if (!isApproved && remarksInput) {
-        notificationContent += ` Alasan: ${remarksInput}`;
+        notificationContent += ` ${t('kpp:reason_prefix', 'Alasan: ')}${remarksInput}`;
       }
       
       if (r.submitted_by) {
@@ -438,7 +467,7 @@ export function SemakanLaporanPage() {
                 return (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={`alert-${p.id}`} className="bg-rose-500/10 border-2 border-rose-500/20 p-5 rounded-[2rem] flex items-center gap-5 shadow-sm">
                     <div className="bg-rose-500 p-4 rounded-2xl text-white animate-pulse shadow-lg shadow-rose-500/30"><AlertTriangle size={24} /></div>
-                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('kpp:audit_critical', 'Kritikal')} ({Math.floor(diffInDays)} Hari)</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
+                    <div><p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('kpp:audit_critical', 'Kritikal')} ({Math.floor(diffInDays)} {t('common:days', 'Hari')})</p><p className="font-bold text-foreground leading-tight mt-1">{p.nama_program}</p></div>
                   </motion.div>
                 );
               })}
@@ -577,7 +606,7 @@ export function SemakanLaporanPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-black text-sm text-foreground truncate">{p.nama_program}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mt-1">
-                          Selesai · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
+                          {t('common:completed', 'Selesai')} · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
                           {p.club_id && (
                             <>
                               <span className="w-1 h-1 rounded-full bg-border"></span>
@@ -607,10 +636,10 @@ export function SemakanLaporanPage() {
           <div className="flex flex-col xl:flex-row gap-4 items-center justify-between bg-card p-3 rounded-[2rem] shadow-sm border border-border/50">
             <Select value={filterClub} onValueChange={setFilterClub}>
               <SelectTrigger className="w-full xl:w-72 h-14 rounded-2xl border-none bg-muted font-black text-xs px-5 shadow-inner hover:bg-muted/80 transition-colors">
-                <SelectValue placeholder="Semua Kelab & Persatuan" />
+                <SelectValue placeholder={t('kpp:all_clubs_associations', 'Semua Kelab & Persatuan')} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl font-bold">
-                <SelectItem value="Semua">Semua Kelab & Persatuan</SelectItem>
+                <SelectItem value="Semua">{t('kpp:all_clubs_associations', 'Semua Kelab & Persatuan')}</SelectItem>
                 {ALL_CLUBS.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -619,7 +648,7 @@ export function SemakanLaporanPage() {
               {[
                 { key: 'Semua', label: t('common:all', 'Semua') },
                 { key: 'Menunggu', label: t('kpp:status_pending', 'Menunggu') },
-                { key: 'Dalam Semakan', label: t('common:in_progress', 'Dalam Semakan') },
+                { key: 'IN_REVIEW', label: t('common:in_progress', 'Dalam Semakan') },
                 { key: 'Diluluskan', label: t('kpp:report_status_approved', 'Diluluskan') },
                 { key: 'Ditolak', label: t('kpp:status_rejected', 'Ditolak') },
               ].map(s => (
@@ -645,7 +674,7 @@ export function SemakanLaporanPage() {
                 </motion.div>
               ) : (
                 filteredReports.map((r, i) => {
-                  const docMeta = ALL_DOC_TYPES.find(d => d.value === r.report_type) || ALL_DOC_TYPES[0];
+                  const docMeta = getDocMeta(r.report_type);
                   const DocIcon = docMeta.icon;
                   return (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={r.id}>
@@ -660,7 +689,7 @@ export function SemakanLaporanPage() {
                               <div>
                                 <h4 className="font-black text-foreground text-lg leading-tight line-clamp-2">{r.title || r.file_name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}</p>
+                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{getReportLabel(r.report_type)}</p>
                                   {r.club_id && (
                                     <>
                                       <span className="w-1 h-1 rounded-full bg-border"></span>
@@ -720,20 +749,20 @@ export function SemakanLaporanPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-card p-3 rounded-[2rem] shadow-sm border border-border/50">
             <Select value={arkibClub} onValueChange={setArkibClub}>
               <SelectTrigger className="w-full sm:w-64 h-12 rounded-2xl border-none bg-muted font-black text-xs px-5">
-                <SelectValue placeholder="Semua Kelab" />
+                <SelectValue placeholder={t('kpp:all_clubs', 'Semua Kelab')} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl font-bold">
-                <SelectItem value="Semua">Semua Kelab</SelectItem>
+                <SelectItem value="Semua">{t('kpp:all_clubs', 'Semua Kelab')}</SelectItem>
                 {ALL_CLUBS.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <div className="flex flex-wrap gap-2 bg-muted p-1.5 rounded-2xl">
               {[
-                { key: 'semua', label: 'Semua' },
-                { key: 'kertas_kerja', label: 'Kertas Kerja' },
-                { key: 'post_mortem', label: 'Post-Mortem' },
-                { key: 'laporan', label: 'Laporan' },
+                { key: 'semua', label: t('common:all', 'Semua') },
+                { key: 'kertas_kerja', label: t('kpp:proposal_paper', 'Kertas Kerja') },
+                { key: 'post_mortem', label: t('kpp:post_mortem', 'Post-Mortem') },
+                { key: 'laporan', label: t('kpp:report', 'Laporan') },
               ].map(f => (
                 <button
                   key={f.key}
@@ -757,7 +786,7 @@ export function SemakanLaporanPage() {
               className="rounded-xl h-10 px-4 font-black text-[10px] uppercase tracking-widest ml-auto"
             >
               <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', arkibLoading && 'animate-spin')} />
-              Muat Semula
+              {t('common:reload', 'Muat Semula')}
             </Button>
           </div>
 
@@ -778,7 +807,7 @@ export function SemakanLaporanPage() {
             if (filtered.length === 0) return (
               <div className="py-24 text-center opacity-30 border-2 border-dashed rounded-[3rem]">
                 <Archive className="w-12 h-12 mx-auto mb-4" />
-                <p className="font-black uppercase tracking-widest text-sm">Tiada rekod dalam arkib</p>
+                <p className="font-black uppercase tracking-widest text-sm">{t('kpp:no_records_in_archive', 'Tiada rekod dalam arkib')}</p>
               </div>
             );
 

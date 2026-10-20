@@ -21,11 +21,11 @@ const HPNM_COLOR = '#818CF8';
 const PNM_COLOR  = '#34D399';
 
 // ─── Grade helper ─────────────────────────────────────────────
-function gradeInfo(val: number, t?: (key: string, fallback: string) => string) {
-  const cemerlang = t ? t('akademik:grade_excellent', 'Cemerlang') : 'Cemerlang';
-  const kepujian  = t ? t('akademik:grade_honours', 'Kepujian') : 'Kepujian';
-  const lulus     = t ? t('akademik:grade_pass', 'Lulus') : 'Lulus';
-  const gagal     = t ? t('akademik:grade_fail', 'Gagal') : 'Gagal';
+function gradeInfo(val: number, t: any) {
+  const cemerlang = t('akademik:grade_excellent', 'Cemerlang');
+  const kepujian  = t('akademik:grade_honours', 'Kepujian');
+  const lulus     = t('akademik:grade_pass', 'Lulus');
+  const gagal     = t('akademik:grade_fail', 'Gagal');
 
   if (val >= 3.5) return { label: cemerlang,  color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
   if (val >= 3.0) return { label: kepujian,   color: THEME,     bg: 'rgba(129,140,248,0.12)' };
@@ -34,8 +34,12 @@ function gradeInfo(val: number, t?: (key: string, fallback: string) => string) {
 }
 
 // ─── Semester label builder ───────────────────────────────────
-function semLabel(semester: number, tahun: string) {
-  return `Sem ${semester}${tahun ? ` · ${tahun}` : ''}`;
+function semLabel(semester: number, academicYear: string, t?: any) {
+  const yearSuffix = academicYear ? (' · ' + academicYear) : '';
+  if (t) {
+    return t('akademik:sem_label_format', 'Sem {{sem}}{{year}}', { sem: semester, year: yearSuffix });
+  }
+  return 'Sem ' + semester + yearSuffix;
 }
 
 // ─── Custom Recharts Tooltip ──────────────────────────────────
@@ -65,7 +69,7 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as ArrayBuffer);
-    reader.onerror = () => reject(new Error('Gagal membaca fail.'));
+    reader.onerror = () => reject(new Error('Failed to read file.'));
     reader.readAsArrayBuffer(file);
   });
 }
@@ -86,7 +90,7 @@ async function extractCgpaFromPdf(file: File) {
     if (!useWorker) opts.disableWorker = true;
     const promise = pdfjsLib.getDocument(opts).promise;
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('PDF terlalu lama untuk dibaca (timeout).')), 15000)
+      setTimeout(() => reject(new Error('PDF read timed out.')), 15000)
     );
     return Promise.race([promise, timeout]);
   };
@@ -258,7 +262,7 @@ export function AkademikCgpa() {
     const isImg = file.type.startsWith('image/') ||
       /\.(jpe?g|png|webp|heic)$/i.test(file.name || '');
 
-    if (!isPdf && !isImg) { toast.error('PDF atau imej sahaja.'); return; }
+    if (!isPdf && !isImg) { toast.error(t('akademik:error_pdf_or_image_only', 'PDF atau imej sahaja.')); return; }
     setScanning(true);
     setScanOk(null);
     setPendingFile(file);
@@ -267,7 +271,7 @@ export function AkademikCgpa() {
       // Slip image captured from mobile camera
       setScanOk(false);
       setDraftMode('SCAN');
-      toast('Slip imej diterima. Sila isi HPNM secara manual di bawah.', { duration: 5000 });
+      toast(t('akademik:toast_slip_image_received', 'Slip imej diterima. Sila isi HPNM secara manual di bawah.'), { duration: 5000 });
       setScanning(false);
       return;
     }
@@ -314,21 +318,21 @@ export function AkademikCgpa() {
         setScanOk(!!result.hpnm);
         setDraftMode('SCAN');
         if (result.hpnm) {
-          toast.success(`HPNM ${Number(result.hpnm).toFixed(2)} berjaya dikesan!`);
+          toast.success(t('akademik:toast_hpnm_detected', 'HPNM {{hpnm}} berjaya dikesan!', { hpnm: Number(result.hpnm).toFixed(2) }));
         } else {
-          toast.error('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { duration: 4000 });
+          toast.error(t('akademik:toast_hpnm_not_detected', 'HPNM tidak dikesan — sila isi manual atau hubungi JPP.'), { duration: 4000 });
         }
       } else {
         // Both strategies failed
         setScanOk(false);
         setDraftMode('SCAN');
-        toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { duration: 5000 });
+        toast(t('akademik:toast_pdf_parse_fallback', 'PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.'), { duration: 5000 });
       }
     } catch (e: any) {
       console.error('[cgpa-scan] PDF error:', e);
       setScanOk(false);
       setDraftMode('SCAN');
-      toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { duration: 5000 });
+      toast(t('akademik:toast_pdf_parse_fallback', 'PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.'), { duration: 5000 });
     } finally {
       setScanning(false);
     }
@@ -337,11 +341,11 @@ export function AkademikCgpa() {
   const handleSave = async () => {
     const hpnm = parseFloat(fHpnm);
     if (isNaN(hpnm) || hpnm < 0 || hpnm > 4) {
-      toast.error('HPNM mestilah antara 0.00 – 4.00'); return;
+      toast.error(t('akademik:error_hpnm_range', 'HPNM mestilah antara 0.00 – 4.00')); return;
     }
     const semInt = parseInt(fSem);
     if (fSem && (isNaN(semInt) || semInt < 1 || semInt > 9)) {
-      toast.error('Semester mestilah 1–9'); return;
+      toast.error(t('akademik:error_semester_range', 'Semester mestilah 1–9')); return;
     }
 
     setSaving(true);
@@ -384,14 +388,14 @@ export function AkademikCgpa() {
 
       if (error) throw error;
 
-      toast.success('Rekod HPNM berjaya disimpan!');
+      toast.success(t('akademik:toast_hpnm_saved', 'Rekod HPNM berjaya disimpan!'));
       
       // --- Trigger Push Notification ---
       try {
         const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
         await sendNotificationToAkademikExco({
-          title: 'Muat Naik HPNM Baru',
-          message: `Pelajar telah memuat naik rekod HPNM baru (${hpnm.toFixed(2)}).`,
+          title: t('akademik:notif_new_hpnm_title', 'Muat Naik HPNM Baru'),
+          message: t('akademik:notif_new_hpnm_desc', 'Pelajar telah memuat naik rekod HPNM baru ({{hpnm}}).', { hpnm: hpnm.toFixed(2) }),
           type: 'DOCUMENT_UPLOAD',
           module: 'AKADEMIK',
           link: '/akademik/cgpa'
@@ -406,18 +410,18 @@ export function AkademikCgpa() {
       await load();
     } catch (e: any) {
       console.error('[cgpa] save error:', e);
-      toast.error(`Gagal simpan: ${e.message}`);
+      toast.error(t('akademik:error_save_failed', 'Gagal simpan: {{msg}}', { msg: e.message }));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Padam rekod ini?')) return;
+    if (!confirm(t('akademik:delete_record_confirm', 'Padam rekod ini?'))) return;
     const { error } = await supabase.from('akademik_cgpa_records').delete().eq('id', id);
-    if (error) { toast.error('Gagal padam.'); return; }
+    if (error) { toast.error(t('akademik:error_delete_failed', 'Gagal padam.')); return; }
     setRecords(p => p.filter(r => r.id !== id));
-    toast.success('Rekod dipadam.');
+    toast.success(t('akademik:record_deleted_success', 'Rekod dipadam.'));
   };
 
   const resetDraft = () => {
@@ -428,7 +432,7 @@ export function AkademikCgpa() {
 
   // Build chart data — oldest first
   const chartData = records.map(r => ({
-    name:  semLabel(r.semester, r.tahun),
+    name:  semLabel(r.semester, r.tahun, t),
     hpnm:  r.hpnm  ? Number(r.hpnm)  : null,
     pnm:   r.pnm   ? Number(r.pnm)   : null,
   }));
@@ -477,7 +481,7 @@ export function AkademikCgpa() {
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">{t('akademik:latest_cgpa', 'Terkini')}</p>
               <p className="text-xl font-black text-slate-900 dark:text-white">{grade.label}</p>
               <p className="text-[10px] font-bold text-slate-500 dark:text-white/40 mt-1">
-                {semLabel(latestRecord.semester, latestRecord.tahun)}
+                {semLabel(latestRecord.semester, latestRecord.tahun, t)}
               </p>
             </div>
             {/* Trend indicator */}
@@ -751,7 +755,7 @@ export function AkademikCgpa() {
                 onClick={resetDraft}
                 className="px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60 bg-slate-100 dark:bg-white/[0.04]"
               >
-                Batal
+                {t('akademik:cancel_btn', 'Batal')}
               </button>
             </div>
           </motion.div>
@@ -828,7 +832,7 @@ export function AkademikCgpa() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
-                        {r.semester ? `Semester ${r.semester}` : 'Sem —'}
+                        {r.semester ? t('akademik:semester_n', 'Semester {{sem}}', { sem: r.semester }) : t('akademik:semester_empty', 'Sem —')}
                       </p>
                       <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full"
                         style={{ background: hexToRgba(g.color, 0.12), color: g.color }}>

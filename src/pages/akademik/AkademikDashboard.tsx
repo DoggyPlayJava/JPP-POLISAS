@@ -70,6 +70,7 @@ function QuickAction({ label, desc, icon: Icon, color, onClick }: any) {
 
 // ─── QR Scan CTA Banner (student-only) ───────────────────────
 function QrScanCta({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation(['akademik', 'common']);
   return (
     <motion.button
       initial={{ opacity: 0, y: 12 }}
@@ -89,16 +90,16 @@ function QrScanCta({ onClick }: { onClick: () => void }) {
       </div>
 
       <div className="pr-20 relative">
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 dark:text-indigo-300/60 mb-1">Merit Aktiviti</p>
-        <p className="text-lg font-black text-slate-900 dark:text-white">Scan QR Merit</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 dark:text-indigo-300/60 mb-1">{t('akademik:qr_cta_badge', 'Merit Aktiviti')}</p>
+        <p className="text-lg font-black text-slate-900 dark:text-white">{t('akademik:scan_qr_merit_title', 'Scan QR Merit')}</p>
         <p className="text-[11px] text-slate-600 dark:text-white/40 font-medium mt-1">
-          Hadir program &amp; pamer di kaunter aktiviti untuk dapatkan merit
+          {t('akademik:qr_cta_desc', 'Hadir program & pamer di kaunter aktiviti untuk dapatkan merit')}
         </p>
         <div
           className="flex items-center gap-1.5 mt-3 text-[10px] font-black uppercase tracking-widest"
           style={{ color: THEME }}
         >
-          Buka Kamera Scan <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          {t('akademik:open_camera_scan', 'Buka Kamera Scan')} <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>
     </motion.button>
@@ -109,6 +110,7 @@ function QrScanCta({ onClick }: { onClick: () => void }) {
 const TUTORIAL_KEY = 'akademik_tutorial_seen';
 
 function TutorialCollapsible() {
+  const { t } = useTranslation(['akademik', 'common']);
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem(TUTORIAL_KEY) !== 'true'; }
     catch { return true; }
@@ -123,22 +125,22 @@ function TutorialCollapsible() {
     {
       num: '1',
       icon: Upload,
-      label: 'Upload Pencapaian',
-      desc: 'Rekod sijil, anugerah, & pertandingan. Exco akan sahkan dalam 3–5 hari bekerja.',
+      label: t('akademik:tutorial_step_1_title', 'Upload Pencapaian'),
+      desc: t('akademik:tutorial_step_1_desc', 'Rekod sijil, anugerah, & pertandingan. Exco akan sahkan dalam 3–5 hari bekerja.'),
       color: THEME,
     },
     {
       num: '2',
       icon: QrCode,
-      label: 'Scan QR Aktiviti',
-      desc: 'Hadir program & scan kod QR di kaunter untuk merit aktiviti tambahan.',
+      label: t('akademik:tutorial_step_2_title', 'Scan QR Aktiviti'),
+      desc: t('akademik:tutorial_step_2_desc', 'Hadir program & scan kod QR di kaunter untuk merit aktiviti tambahan.'),
       color: '#34D399',
     },
     {
       num: '3',
       icon: CheckCircle,
-      label: 'Semak Merit & HPNM',
-      desc: 'Pantau jumlah merit & upload slip HPNM untuk rekod akademik lengkap.',
+      label: t('akademik:tutorial_step_3_title', 'Semak Merit & HPNM'),
+      desc: t('akademik:tutorial_step_3_desc', 'Pantau jumlah merit & upload slip HPNM untuk rekod akademik lengkap.'),
       color: '#F59E0B',
     },
   ];
@@ -158,7 +160,7 @@ function TutorialCollapsible() {
         <div className="flex items-center gap-2">
           <ListChecks className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-            Panduan Bermula — 3 Langkah
+            {t('akademik:tutorial_guide_title', 'Panduan Bermula — 3 Langkah')}
           </span>
         </div>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -202,7 +204,7 @@ function TutorialCollapsible() {
                 onClick={dismiss}
                 className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-600 dark:hover:text-white/40 transition-colors py-2 px-3 min-h-[44px] flex items-center"
               >
-                Faham, jangan tunjuk lagi →
+                {t('akademik:tutorial_dismiss', 'Faham, jangan tunjuk lagi →')}
               </button>
             </div>
           </motion.div>
@@ -278,9 +280,9 @@ export function AkademikDashboard() {
   useEffect(() => { load(); }, [load]);
 
   const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-    MENUNGGU: { label: 'Menunggu', color: '#F59E0B', bg: '#F59E0B15', icon: Clock },
-    DISAHKAN: { label: 'Disahkan', color: '#10B981', bg: '#10B98115', icon: CheckCircle },
-    DITOLAK:  { label: 'Ditolak',  color: '#EF4444', bg: '#EF444415', icon: XCircle },
+    MENUNGGU: { label: t('akademik:status_pending', 'Menunggu'), color: '#F59E0B', bg: '#F59E0B15', icon: Clock },
+    DISAHKAN: { label: t('akademik:status_approved', 'Disahkan'), color: '#10B981', bg: '#10B98115', icon: CheckCircle },
+    DITOLAK:  { label: t('akademik:status_rejected', 'Ditolak'),  color: '#EF4444', bg: '#EF444415', icon: XCircle },
   };
 
   const totalMerit = (profile?.merit || 0);
@@ -357,11 +359,11 @@ export function AkademikDashboard() {
                 </span>
                 <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                  Aktif
+                  {t('akademik:status_active', 'Aktif')}
                 </span>
               </div>
               <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight truncate">
-                {profile?.full_name || 'Pelajar POLISAS'}
+                {profile?.full_name || t('akademik:default_student_name', 'Pelajar POLISAS')}
               </h1>
               <p className="text-xs text-slate-500 dark:text-white/40 font-medium">
                 {t('akademik:module_subtitle', 'Matriks jadual kuliah, tarikh peperiksaan, parser jadual kelas, dan anggaran HPNM.')}
@@ -370,15 +372,15 @@ export function AkademikDashboard() {
               <div className="flex items-center gap-2.5 flex-wrap text-slate-500 dark:text-white/40 text-[11px] font-medium pt-1">
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
                   <CreditCard className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.matric_no || profile?.matrix_no || 'Tiada No. Matrik'}</span>
+                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.matric_no || profile?.matrix_no || t('akademik:no_matric_no', 'Tiada No. Matrik')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
                   <Building2 className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.department || profile?.programme_code || 'Jabatan POLISAS'}</span>
+                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.department || profile?.programme_code || t('akademik:default_department', 'Jabatan POLISAS')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
                   <GraduationCap className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">Sem {semInfo.semester} ({semInfo.level})</span>
+                  <span className="font-bold text-slate-700 dark:text-white/70">{t('akademik:semester_n', 'Sem {{sem}}', { sem: semInfo.semester })} ({semInfo.level})</span>
                 </div>
               </div>
             </div>
@@ -398,7 +400,7 @@ export function AkademikDashboard() {
               <p className="text-xl font-black text-slate-900 dark:text-white leading-none">
                 {stats.latestHpnm !== null ? stats.latestHpnm.toFixed(2) : '—'}
               </p>
-              <span className="text-[8px] font-semibold text-sky-600 dark:text-sky-400/80 mt-1">Terkini</span>
+              <span className="text-[8px] font-semibold text-sky-600 dark:text-sky-400/80 mt-1">{t('akademik:latest_badge', 'Terkini')}</span>
             </div>
 
             {/* Merit Aktiviti Card */}
@@ -408,12 +410,12 @@ export function AkademikDashboard() {
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Zap className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">Merit Aktiviti</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">{t('akademik:merit_activity', 'Merit Aktiviti')}</span>
               </div>
               <p className="text-xl font-black text-slate-900 dark:text-white leading-none">
                 {stats.meritQr}
               </p>
-              <span className="text-[8px] font-semibold text-emerald-600 dark:text-emerald-400/80 mt-1">Total {totalMerit} m</span>
+              <span className="text-[8px] font-semibold text-emerald-600 dark:text-emerald-400/80 mt-1">{t('akademik:total_merit_short', 'Total {{count}} m', { count: totalMerit })}</span>
             </div>
           </div>
         </div>
@@ -437,7 +439,7 @@ export function AkademikDashboard() {
             <span className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase">
               {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}
             </span>
-            <p className="font-bold text-slate-800 dark:text-slate-200">DK 1 / Makmal Komputer 3</p>
+            <p className="font-bold text-slate-800 dark:text-slate-200">{t('akademik:mock_hall_computer_lab', 'DK 1 / Makmal Komputer 3')}</p>
             <p className="text-[11px] text-slate-500 dark:text-white/40">
               {t('akademik:lecturer_name', 'Pensyarah / Pengajar')}: Dr. Haslina
             </p>
@@ -451,7 +453,7 @@ export function AkademikDashboard() {
                 {t('akademik:free_slot', 'Masa Lapang / Rehat')} (13:00 - 14:00)
               </span>
             </div>
-            <p className="font-bold text-slate-800 dark:text-slate-200">Sains Komputer & Algoritma</p>
+            <p className="font-bold text-slate-800 dark:text-slate-200">{t('akademik:mock_subject_cs_algo', 'Sains Komputer & Algoritma')}</p>
             <p className="text-[11px] text-slate-500 dark:text-white/40">
               {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}: DK 2
             </p>
@@ -479,10 +481,10 @@ export function AkademikDashboard() {
         />
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 mb-1">Jumlah Merit Keseluruhan</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 mb-1">{t('akademik:total_merit_overall', 'Jumlah Merit Keseluruhan')}</p>
             <div className="flex items-end gap-2">
               <span className="text-5xl font-black text-slate-900 dark:text-white">{totalMerit}</span>
-              <span className="text-sm font-black text-slate-500 dark:text-white/40 mb-1">merit</span>
+              <span className="text-sm font-black text-slate-500 dark:text-white/40 mb-1">{t('akademik:merit_unit', 'merit')}</span>
             </div>
             {/* Breakdown row */}
             <div className="flex items-center gap-4 mt-3 flex-wrap">
@@ -491,7 +493,7 @@ export function AkademikDashboard() {
                   <Trophy className="w-2.5 h-2.5" />
                 </div>
                 <span className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
-                  Pencapaian <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritAkademik}</span>
+                  {t('akademik:tab_achievements', 'Pencapaian')} <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritAkademik}</span>
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -499,7 +501,7 @@ export function AkademikDashboard() {
                   <Zap className="w-2.5 h-2.5" />
                 </div>
                 <span className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
-                  QR Aktiviti <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritQr}</span>
+                  {t('akademik:qr_cta_badge', 'QR Aktiviti')} <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritQr}</span>
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -507,7 +509,7 @@ export function AkademikDashboard() {
                   <Award className="w-2.5 h-2.5" />
                 </div>
                 <span className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
-                  Kelab <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritKelab}</span>
+                  {t('akademik:club_label', 'Kelab')} <span className="text-slate-800 dark:text-white/70 font-black">{stats.meritKelab}</span>
                 </span>
               </div>
               {stats.latestHpnm !== null && (
@@ -533,10 +535,10 @@ export function AkademikDashboard() {
 
       {/* ── 4 Stat Cards ── */}
       <div className="tour-akademik-cgpa grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Pencapaian"   value={stats.totalPencapaian} icon={Trophy}      color={THEME}      delay={0.0}  onClick={() => navigate('/akademik/pencapaian')} />
-        <StatCard label="Disahkan"     value={stats.disahkan}        icon={CheckCircle}  color="#10B981"    delay={0.06} />
-        <StatCard label="Menunggu"     value={stats.menunggu}        icon={Clock}        color={stats.menunggu > 0 ? '#F59E0B' : '#94A3B8'} delay={0.12} />
-        <StatCard label="HPNM Terkini" value={stats.latestHpnm !== null ? stats.latestHpnm.toFixed(2) : '—'} icon={BookOpen} color="#60A5FA" delay={0.18} onClick={() => navigate('/akademik/cgpa')} />
+        <StatCard label={t('akademik:tab_achievements', 'Pencapaian')}   value={stats.totalPencapaian} icon={Trophy}      color={THEME}      delay={0.0}  onClick={() => navigate('/akademik/pencapaian')} />
+        <StatCard label={t('akademik:status_approved', 'Disahkan')}     value={stats.disahkan}        icon={CheckCircle}  color="#10B981"    delay={0.06} />
+        <StatCard label={t('akademik:status_pending', 'Menunggu')}     value={stats.menunggu}        icon={Clock}        color={stats.menunggu > 0 ? '#F59E0B' : '#94A3B8'} delay={0.12} />
+        <StatCard label={t('akademik:latest_cgpa_label', 'HPNM Terkini')} value={stats.latestHpnm !== null ? stats.latestHpnm.toFixed(2) : '—'} icon={BookOpen} color="#60A5FA" delay={0.18} onClick={() => navigate('/akademik/cgpa')} />
       </div>
 
       {/* ── Alert: ditolak ── */}
@@ -549,17 +551,17 @@ export function AkademikDashboard() {
           <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
-              {stats.ditolak} pencapaian ditolak
+              {t('akademik:rejected_achievements_count', '{{count}} pencapaian ditolak', { count: stats.ditolak })}
             </p>
             <p className="text-[11px] text-rose-500 dark:text-rose-300/60 font-medium mt-0.5">
-              Sila semak nota penolakan dan hantar semula.
+              {t('akademik:rejected_achievements_notice', 'Sila semak nota penolakan dan hantar semula.')}
             </p>
           </div>
           <button
             onClick={() => navigate('/akademik/pencapaian')}
             className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shrink-0 min-h-[44px] flex items-center"
           >
-            Semak →
+            {t('akademik:review_arrow', 'Semak →')}
           </button>
         </motion.div>
       )}
@@ -570,13 +572,13 @@ export function AkademikDashboard() {
         {/* Pencapaian Terkini */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Pencapaian Terkini</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:recent_achievements_title', 'Pencapaian Terkini')}</h3>
             <button
               onClick={() => navigate('/akademik/pencapaian')}
               className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity min-h-[44px]"
               style={{ color: THEME }}
             >
-              Semua <ArrowRight className="w-3 h-3" />
+              {t('akademik:all_arrow', 'Semua')} <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
@@ -584,13 +586,13 @@ export function AkademikDashboard() {
             <div className="py-10 text-center space-y-3">
               <Trophy className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
-                Belum ada pencapaian
+                {t('akademik:no_achievements_yet', 'Belum ada pencapaian')}
               </p>
               <button
                 onClick={() => navigate('/akademik/pencapaian')}
                 className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60 underline underline-offset-2 transition-all min-h-[44px]"
               >
-                + Tambah Sekarang
+                {t('akademik:add_now_btn', '+ Tambah Sekarang')}
               </button>
             </div>
           ) : (
@@ -625,7 +627,7 @@ export function AkademikDashboard() {
                       </span>
                       {p.status === 'DISAHKAN' && (
                         <span className="text-[8px] font-black text-slate-500 dark:text-white/40">
-                          +{p.merit_override ?? p.merit_auto} merit
+                          +{p.merit_override ?? p.merit_auto} {t('akademik:merit_unit', 'merit')}
                         </span>
                       )}
                     </div>
@@ -638,32 +640,32 @@ export function AkademikDashboard() {
 
         {/* Quick Actions (Mobile-First >= 44px) */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 space-y-4 shadow-xs">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tindakan Pantas</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:quick_actions_title', 'Tindakan Pantas')}</h3>
           <div className="space-y-2.5">
             <QuickAction
-              label="Pencapaian & Sijil"
-              desc="Rekod anugerah, sijil atau dokumen baru"
+              label={t('akademik:quick_action_achievements_title', 'Pencapaian & Sijil')}
+              desc={t('akademik:quick_action_achievements_desc', 'Rekod anugerah, sijil atau dokumen baru')}
               icon={FileText}
               color={THEME}
               onClick={() => navigate('/akademik/pencapaian')}
             />
             <QuickAction
-              label="Semakan HPNM & CGPA"
-              desc="Pantau graf prestasi & muat naik slip keputusan"
+              label={t('akademik:quick_action_cgpa_title', 'Semakan HPNM & CGPA')}
+              desc={t('akademik:quick_action_cgpa_desc', 'Pantau graf prestasi & muat naik slip keputusan')}
               icon={BookOpen}
               color="#60A5FA"
               onClick={() => navigate('/akademik/cgpa')}
             />
             <QuickAction
-              label="Scan QR Merit"
-              desc="Scan kod QR kehadiran untuk merit aktiviti"
+              label={t('akademik:quick_action_qr_title', 'Scan QR Merit')}
+              desc={t('akademik:quick_action_qr_desc', 'Scan kod QR kehadiran untuk merit aktiviti')}
               icon={QrCode}
               color="#34D399"
               onClick={() => navigate('/akademik/qr')}
             />
             <QuickAction
-              label="Takwim & Tarikh Penting"
-              desc="Jadual akademik, peperiksaan & tarikh aktiviti"
+              label={t('akademik:quick_action_calendar_title', 'Takwim & Tarikh Penting')}
+              desc={t('akademik:quick_action_calendar_desc', 'Jadual akademik, peperiksaan & tarikh aktiviti')}
               icon={CalendarDays}
               color="#F59E0B"
               onClick={() => navigate('/akademik/takwim')}

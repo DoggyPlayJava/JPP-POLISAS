@@ -162,7 +162,7 @@ export function LoginPage() {
           return;
         }
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-        const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
+        const response = await fetch((API_BASE_URL || '') + '/api/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: resolved.email }),
@@ -278,10 +278,13 @@ export function LoginPage() {
         if (matricCheck?.exists) {
           const hint = matricCheck.email_hint || '***';
           const count = matricCheck.account_count || 1;
+          const accountCount = count > 1 ? t('auth:matric_accounts_count', ' ({{count}} akaun!)', { count }) : '';
           toast.error(
-            `No matrik ${matricNo.trim()} sudah didaftarkan${count > 1 ? ` (${count} akaun!)` : ''}. ` +
-            `Sila log masuk dengan emel asal anda (${hint}), atau tekan "Teruskan dengan Google". ` +
-            `Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.`,
+            t(
+              'auth:matric_already_registered_detailed',
+              'No matrik {{matric}} sudah didaftarkan{{accountCount}}. Sila log masuk dengan emel asal anda ({{hint}}), atau tekan "Teruskan dengan Google". Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.',
+              { matric: matricNo.trim(), accountCount, hint }
+            ),
             { duration: 10000 }
           );
           setIsLoading(false);
@@ -576,12 +579,12 @@ export function LoginPage() {
                         <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
                         <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                       </svg>
-                      <span>Daftar bersama Google</span>
+                      <span>{t('auth:register_with_google', 'Daftar bersama Google')}</span>
                     </button>
 
                     <div className="flex items-center gap-3 my-2">
                       <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
-                      <span className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F] uppercase tracking-widest">atau</span>
+                      <span className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F] uppercase tracking-widest">{t('common:or', 'atau')}</span>
                       <div className="flex-1 h-[1px] bg-[#D9C9B2]/60 dark:bg-[#3A4A3B]"></div>
                     </div>
 
@@ -591,7 +594,7 @@ export function LoginPage() {
                         onClick={() => setShowManualRegister(!showManualRegister)}
                         className="w-full py-2.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <span>{showManualRegister ? 'Tutup Pendaftaran Manual' : 'Isi Borang Manual'}</span>
+                        <span>{showManualRegister ? t('auth:close_manual_register', 'Tutup Pendaftaran Manual') : t('auth:fill_manual_form', 'Isi Borang Manual')}</span>
                         <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
                       </button>
                     )}
@@ -607,7 +610,7 @@ export function LoginPage() {
                       className="space-y-3 pt-1"
                     >
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Nama Penuh</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:name', 'Nama Penuh')}</Label>
                         <Input
                           placeholder="CTH: MUHAMMAD BIN AHMAD ALI"
                           required
@@ -619,7 +622,7 @@ export function LoginPage() {
 
                       <div className="space-y-1">
                         <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">
-                          {registerMode === 'staff' ? 'No. Pekerja (Staf ID)' : 'No. Matrik'}
+                          {registerMode === 'staff' ? t('auth:staff_id_label', 'No. Pekerja (Staf ID)') : t('auth:matric_no_label', 'No. Matrik')}
                         </Label>
                         <Input
                           placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"}
@@ -632,10 +635,10 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Emel Peribadi</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:personal_email', 'Emel Peribadi')}</Label>
                         <Input
                           type="email"
-                          placeholder="emel@gmail.com"
+                          placeholder={t('auth:email_placeholder_sample', 'emel@gmail.com')}
                           required
                           value={email}
                           onChange={e => setEmail(e.target.value)}
@@ -644,7 +647,7 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">No Telefon Bimbit</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:phone', 'No Telefon Bimbit')}</Label>
                         <Input
                           placeholder="CTH: 0123456789"
                           required
@@ -655,7 +658,7 @@ export function LoginPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kata Laluan</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:password', 'Kata Laluan')}</Label>
                         <Input
                           type="password"
                           required
@@ -692,7 +695,7 @@ export function LoginPage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] mb-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Kembali ke Langkah 1</span>
+                  <span>{t('auth:back_to_step_1', 'Kembali ke Langkah 1')}</span>
                 </button>
 
                 {registerMode !== 'staff' && (
@@ -706,7 +709,7 @@ export function LoginPage() {
                           registerMode === 'student' ? "bg-white dark:bg-[#2E3A2F] shadow-xs text-[#2E3A2F] dark:text-white" : "text-[#556453] dark:text-[#A3B39F]"
                         )}
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" /> Pelajar Biasa
+                        <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" /> {t('auth:regular_student', 'Pelajar Biasa')}
                       </button>
                       <button
                         type="button"
@@ -722,11 +725,11 @@ export function LoginPage() {
 
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">
-                        Jabatan Akademik Anda
+                        {t('auth:your_academic_dept', 'Jabatan Akademik Anda')}
                       </Label>
                       <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
                         <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] dark:border-[#3A4A3B] text-xs">
-                          <SelectValue placeholder="Pilih jabatan akademik..." />
+                          <SelectValue placeholder={t('auth:select_academic_dept_placeholder', 'Pilih jabatan akademik...')} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-[#D9C9B2] dark:border-[#3A4A3B] shadow-xl">
                           {JABATAN_LIST.map(j => (
@@ -743,17 +746,17 @@ export function LoginPage() {
                 <AnimatePresence mode="wait">
                   {registerMode === 'student' && (
                     <div className="p-3.5 rounded-2xl bg-[#6B7F5B]/10 border border-[#6B7F5B]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                      <span className="font-bold">Info:</span> Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.
+                      <span className="font-bold">{t('common:info', 'Info')}:</span> {t('auth:academic_club_reg_info', 'Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.')}
                     </div>
                   )}
 
                   {registerMode === 'leader' && (
                     <div className="space-y-3">
                       <div className="p-3.5 rounded-2xl bg-[#C96F4F]/10 border border-[#C96F4F]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                        <span className="font-bold">Perhatian:</span> Permohonan jawatan kepimpinan kelab tertakluk kepada kelulusan Penasihat kelab masing-masing.
+                        <span className="font-bold">{t('common:attention', 'Perhatian:')}</span> {t('auth:leadership_advisor_approval_notice', 'Permohonan jawatan kepimpinan kelab tertakluk kepada kelulusan Penasihat kelab masing-masing.')}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Jawatan</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:position', 'Jawatan')}</Label>
                         <Select value={leaderRole} onValueChange={v => setLeaderRole(v as UserRole)}>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
                             <SelectValue />
@@ -768,10 +771,10 @@ export function LoginPage() {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kelab (Diterajui)</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:club_lead_label', 'Kelab (Diterajui)')}</Label>
                         <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                            <SelectValue placeholder="Pilih kelab untuk diterajui..." />
+                            <SelectValue placeholder={t('auth:select_club_lead_placeholder', 'Pilih kelab untuk diterajui...')} />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl border-[#D9C9B2] max-h-60">
                             {ALL_CLUBS.filter(c => !['Badan Beruniform', 'badan_beruniform'].includes(c.category)).map(c => (
@@ -789,10 +792,10 @@ export function LoginPage() {
                   {registerMode === 'staff' && (
                     <div className="space-y-3">
                       <div className="p-3.5 rounded-2xl bg-[#6B7F5B]/10 border border-[#6B7F5B]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                        Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan institusi POLISAS.
+                        {t('auth:staff_reg_service_desc', 'Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan institusi POLISAS.')}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Tujuan Pendaftaran</Label>
+                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:purpose_label', 'Tujuan Pendaftaran')}</Label>
                         <Select value={staffRole} onValueChange={v => setStaffRole(v as UserRole)}>
                           <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs font-bold text-[#2E3A2F] dark:text-white">
                             <SelectValue />
@@ -809,10 +812,10 @@ export function LoginPage() {
 
                       {staffRole === 'CLUB_ADVISOR' && (
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">Kelab Yang Dinasihati</Label>
+                          <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:advised_club_label', 'Kelab Yang Dinasihati')}</Label>
                           <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
                             <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                              <SelectValue placeholder="Sila pilih kelab anda..." />
+                              <SelectValue placeholder={t('auth:select_club_placeholder', 'Sila pilih kelab anda...')} />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-[#D9C9B2] max-h-60">
                               {ALL_CLUBS.map(c => (
@@ -827,10 +830,10 @@ export function LoginPage() {
                       )}
 
                       <div className="space-y-1 pt-1">
-                        <Label className="text-[11px] font-bold text-rose-600">KOD PENGESAHAN STAF</Label>
+                        <Label className="text-[11px] font-bold text-rose-600">{t('auth:staff_passcode_label', 'KOD PENGESAHAN STAF')}</Label>
                         <Input
                           type="password"
-                          placeholder="Dapatkan dari Admin"
+                          placeholder={t('auth:passcode_placeholder', 'Dapatkan dari Admin')}
                           required
                           value={passcode}
                           onChange={e => setPasscode(e.target.value)}
@@ -846,7 +849,7 @@ export function LoginPage() {
                   disabled={isLoading}
                   className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#2E3A2F] hover:bg-[#242E25] text-[#F8F6EE] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
                 >
-                  <span>{isLoading ? 'Mendaftar...' : 'Daftar Sekarang'}</span>
+                  <span>{isLoading ? t('auth:registering', 'Mendaftar...') : t('auth:register_now', 'Daftar Sekarang')}</span>
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
               </motion.form>
@@ -921,7 +924,7 @@ export function LoginPage() {
                       </Label>
                       <Input
                         type="text"
-                        placeholder={isForgotPassword ? "emel@gmail.com" : t('auth:matrix_no_placeholder')}
+                        placeholder={isForgotPassword ? t('auth:email_placeholder_sample', 'emel@gmail.com') : t('auth:matrix_no_placeholder')}
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -1033,13 +1036,17 @@ export function LoginPage() {
       {/* Institutional Micro-Footer (Airy, dignified, calm) */}
       <footer className="w-full max-w-sm pb-2 pt-6 text-center border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/40 space-y-1">
         <p className="text-[10px] font-bold text-[#2E3A2F]/80 dark:text-[#F8F6EE]/80 uppercase tracking-widest">
-          Perpaduan Progresif Demi Mahasiswa
+          {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
         </p>
         <p className="text-[10px] text-[#556453]/70 dark:text-[#A3B39F]/60">
-          Jawatankuasa Perwakilan Pelajar &middot; Politeknik Sultan Haji Ahmad Shah
+          {t('auth:footer_org_name', 'Jawatankuasa Perwakilan Pelajar · Politeknik Sultan Haji Ahmad Shah')}
         </p>
         <p className="text-[9px] text-[#556453]/50 dark:text-[#A3B39F]/40 font-mono">
-          {realStats.clubCount} Kelab &middot; {realStats.unitCount} Unit Exco JPP &middot; {realStats.deptCount} Jabatan Akademik
+          {t('auth:footer_stats', '{{clubCount}} Kelab · {{unitCount}} Unit Exco JPP · {{deptCount}} Jabatan Akademik', {
+            clubCount: realStats.clubCount,
+            unitCount: realStats.unitCount,
+            deptCount: realStats.deptCount,
+          })}
         </p>
       </footer>
     </div>

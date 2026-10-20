@@ -41,7 +41,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
   const handleSubmit = async () => {
     if (!form.jenis || !form.peringkat || !form.nama_pencapaian) {
-      toast.error('Sila lengkapkan medan wajib.'); return;
+      toast.error(t('akademik:error_fill_required_fields', 'Sila lengkapkan medan wajib.')); return;
     }
     setSaving(true);
     try {
@@ -53,7 +53,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
         const url = await uploadPdfToDrive(
           file,
           'Akademik-Pencapaian',
-          `pencapaian_${profile?.id}_${Date.now()}`
+          `achievement_${profile?.id}_${Date.now()}`
         );
         drive_view_url = url;
         drive_download_url = url;
@@ -75,14 +75,14 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
       });
 
       if (error) throw error;
-      toast.success('Pencapaian berjaya dihantar! Menunggu pengesahan exco.');
+      toast.success(t('akademik:toast_achievement_submitted', 'Pencapaian berjaya dihantar! Menunggu pengesahan exco.'));
       
       // --- Trigger Push Notification ---
       try {
         const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
         await sendNotificationToAkademikExco({
-          title: 'Permohonan Merit Baru',
-          message: `Pelajar telah memuat naik sijil/pencapaian baru untuk disahkan: ${form.nama_pencapaian}.`,
+          title: t('akademik:notif_new_merit_title', 'Permohonan Merit Baru'),
+          message: t('akademik:notif_new_merit_desc', 'Pelajar telah memuat naik sijil/pencapaian baru untuk disahkan: {{name}}.', { name: form.nama_pencapaian }),
           type: 'DOCUMENT_UPLOAD',
           module: 'AKADEMIK',
           link: '/jpp/unit/akademik'
@@ -94,7 +94,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
       onSuccess();
       onClose();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal hantar pencapaian.');
+      toast.error(e.message || t('akademik:error_submit_achievement_failed', 'Gagal hantar pencapaian.'));
     } finally {
       setSaving(false);
     }
@@ -193,7 +193,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
                     : undefined
                   }
                 >
-                  {p === 'ANTARABANGSA' ? 'Antarabangsa' : p === 'KEBANGSAAN' ? 'Kebangsaan' : p === 'NEGERI' ? 'Negeri' : p === 'DAERAH' ? 'Daerah' : 'Dalaman'}
+                  {p === 'ANTARABANGSA' ? t('akademik:level_international', 'Antarabangsa') : p === 'KEBANGSAAN' ? t('akademik:level_national', 'Kebangsaan') : p === 'NEGERI' ? t('akademik:level_state', 'Negeri') : p === 'DAERAH' ? t('akademik:level_district', 'Daerah') : t('akademik:level_internal', 'Dalaman')}
                 </button>
               ))}
             </div>
@@ -237,7 +237,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
               <input
                 type="date"
                 value={form.tarikh}
-                onChange={e => field('tarikh', e.target.value)}
+                onChange={e => setForm(p => ({ ...p, tarikh: e.target.value }))}
                 className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500/50 dark:focus:border-white/20 transition-all shadow-2xs [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
@@ -332,7 +332,7 @@ export function AkademikPencapaian() {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Padam pencapaian ini? Tindakan ini tidak boleh dibatalkan.')) return;
+    if (!confirm(t('akademik:delete_achievement_confirm', 'Padam pencapaian ini? Tindakan ini tidak boleh dibatalkan.'))) return;
 
     // Fetch the pencapaian first so we can reverse merit if it was DISAHKAN
     const { data: pencRow } = await supabase
@@ -347,14 +347,14 @@ export function AkademikPencapaian() {
       .eq('id', id);
 
     if (error) {
-      toast.error('Gagal padam: ' + error.message);
+      toast.error(t('akademik:error_delete_achievement_failed', 'Gagal padam: {{msg}}', { msg: error.message }));
       return;
     }
     if (count === 0) {
       // RLS blocked the delete silently — possible causes:
       // 1. DISAHKAN but unlock window expired
       // 2. Not owner
-      toast.error('Tidak dapat dipadam. Jika pencapaian ini telah disahkan, sila mohon buka kunci dahulu atau semak tempoh buka kunci sudah tamat.');
+      toast.error(t('akademik:error_delete_locked_achievement', 'Tidak dapat dipadam. Jika pencapaian ini telah disahkan, sila mohon buka kunci dahulu atau semak tempoh buka kunci sudah tamat.'));
       return;
     }
 
@@ -379,7 +379,7 @@ export function AkademikPencapaian() {
           user_id:      pencRow.user_id,
           club_id:      null,
           points:       -meritToReverse,
-          reason:       `Pemadaman Pencapaian: ${pencRow.nama_pencapaian}`,
+          reason:       t('akademik:reversal_reason_deleted', 'Pemadaman Pencapaian: {{name}}', { name: pencRow.nama_pencapaian }),
           actor_name:   'Sistem',
           source:       'AKADEMIK',
           reference_id: id,
@@ -393,13 +393,13 @@ export function AkademikPencapaian() {
       }
     }
 
-    toast.success('Pencapaian berjaya dipadam.');
+    toast.success(t('akademik:toast_achievement_deleted', 'Pencapaian berjaya dipadam.'));
     load();
   };
 
 
   const handleUnlockRequest = async () => {
-    if (!unlockReason.trim()) { toast.error('Sila nyatakan sebab permohonan.'); return; }
+    if (!unlockReason.trim()) { toast.error(t('akademik:error_specify_unlock_reason', 'Sila nyatakan sebab permohonan.')); return; }
     if (!unlockTarget || !profile?.id) return;
     setUnlockSaving(true);
     try {
@@ -409,11 +409,11 @@ export function AkademikPencapaian() {
         reason: unlockReason.trim(),
       });
       if (error) throw error;
-      toast.success('Permohonan buka kunci dihantar! Menunggu kelulusan exco.');
+      toast.success(t('akademik:toast_unlock_request_sent', 'Permohonan buka kunci dihantar! Menunggu kelulusan exco.'));
       setUnlockTarget(null);
       setUnlockReason('');
     } catch (e: any) {
-      toast.error('Gagal: ' + e.message);
+      toast.error(t('akademik:error_with_msg', 'Gagal: {{msg}}', { msg: e.message }));
     } finally {
       setUnlockSaving(false);
     }
@@ -460,7 +460,7 @@ export function AkademikPencapaian() {
               <textarea
                 value={unlockReason}
                 onChange={e => setUnlockReason(e.target.value)}
-                placeholder="Nyatakan sebab permohonan..."
+                placeholder={t('akademik:unlock_reason_placeholder_input', 'Nyatakan sebab permohonan...')}
                 rows={3}
                 className="w-full bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 outline-none focus:border-indigo-500/50 dark:focus:border-white/20 resize-none shadow-2xs"
               />
@@ -513,7 +513,7 @@ export function AkademikPencapaian() {
                 : "bg-white dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
             )}
           >
-            {f === 'SEMUA' ? t('akademik:folder_all', 'Semua') : f === 'MENUNGGU' ? t('akademik:status_pending', 'Menunggu') : f === 'DISAHKAN' ? t('akademik:status_approved', 'Disahkan') : t('akademik:status_rejected', 'Ditolak')} <span className="opacity-60">({counts[f]})</span>
+            {f === 'SEMUA' ? t('akademik:filter_all', 'Semua') : f === 'MENUNGGU' ? t('akademik:status_pending', 'Menunggu') : f === 'DISAHKAN' ? t('akademik:status_approved', 'Disahkan') : t('akademik:status_rejected', 'Ditolak')} <span className="opacity-60">({counts[f]})</span>
           </button>
         ))}
       </div>
@@ -691,7 +691,7 @@ export function AkademikPencapaian() {
                       <button
                         onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-amber-700 hover:bg-amber-50 dark:text-white/20 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 transition-all border border-slate-200 hover:border-amber-300 dark:border-white/[0.06] dark:hover:border-amber-500/20"
-                        title={isReduced ? "Rayuan Markah / Buka Kunci" : "Minta buka kunci"}
+                        title={isReduced ? t('akademik:score_appeal_or_unlock_title', 'Rayuan Markah / Buka Kunci') : t('akademik:request_unlock_title', 'Minta buka kunci')}
                       >
                         <UnlockKeyhole className="w-2.5 h-2.5" /> {isReduced ? t('akademik:score_appeal', 'Rayuan Markah') : t('akademik:unlock_btn', 'Buka Kunci')}
                       </button>
