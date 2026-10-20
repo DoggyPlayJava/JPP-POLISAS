@@ -29,15 +29,20 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
+import i18n from '@/lib/i18n';
+
+const tStatic = (k: string, fb: string, opt?: any) => (i18n?.isInitialized ? i18n.t(k, fb, opt) : fb);
+const t = tStatic;
+
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
 const STATUSES: { key: KebajikanTicketStatus; label: string }[] = [
-  { key: 'NEW',              label: 'Diterima'              },
-  { key: 'IN_PROGRESS',      label: 'Dalam Tindakan'        },
-  { key: 'WAITING_INFO',     label: 'Menunggu Maklumat'     },
-  { key: 'PENDING_EXTERNAL', label: 'Menunggu Pihak Lain'   },
-  { key: 'RESOLVED',         label: 'Selesai'               },
-  { key: 'CLOSED',           label: 'Ditutup'               },
+  { key: 'NEW',              label: t('kebajikan:ticket_status_new', 'Diterima')              },
+  { key: 'IN_PROGRESS',      label: t('kebajikan:ticket_status_in_progress', 'Dalam Tindakan')        },
+  { key: 'WAITING_INFO',     label: t('kebajikan:ticket_status_waiting_info', 'Menunggu Maklumat')     },
+  { key: 'PENDING_EXTERNAL', label: t('kebajikan:ticket_status_pending_external', 'Menunggu Pihak Lain')   },
+  { key: 'RESOLVED',         label: t('kebajikan:ticket_status_resolved', 'Selesai')               },
+  { key: 'CLOSED',           label: t('kebajikan:ticket_status_closed', 'Ditutup')               },
 ];
 
 export function KebajikanTicketDetail() {
@@ -136,7 +141,7 @@ export function KebajikanTicketDetail() {
         
         await sendEmail({
           to: profileData.email,
-          subject: `[JPP POLISAS] Aduan Anda Sedang Diuruskan (${ticket.ticket_no})`,
+          subject: t('kebajikan:email_ticket_under_action_subject', `[JPP POLISAS] Aduan Anda Sedang Diuruskan (${ticket.ticket_no})`, { ticket_no: ticket.ticket_no }),
           html
         });
       }
@@ -160,7 +165,7 @@ export function KebajikanTicketDetail() {
     if (!isInternal && isStaff && ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
         title:       `Komen Baru: ${ticket.ticket_no}`,
-        message:     `Pihak kebajikan telah membalas: "${newComment.slice(0, 60)}..."`,
+        message:     t('kebajikan:notif_comment_reply_body', `Pihak kebajikan telah membalas: "${newComment.slice(0, 60)}..."`, { comment: newComment.slice(0, 60) }),
         type:        'COMMENT',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -198,7 +203,7 @@ export function KebajikanTicketDetail() {
       actor_role:  actorRole,
       old_status:  ticket.status,
       new_status:  targetStatus,
-      note:        noteText?.trim() || `Tindakan pantas: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}`,
+      note:        noteText?.trim() || t('kebajikan:quick_action_log_note', `Tindakan pantas: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus] }),
     });
 
     if (noteText?.trim()) {
@@ -210,14 +215,14 @@ export function KebajikanTicketDetail() {
         is_internal: false,
         content:     targetStatus === 'RESOLVED'
           ? `[Resolusi] ${noteText.trim()}`
-          : `[Status: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}] ${noteText.trim()}`,
+          : t('kebajikan:status_note_prefix', `[Status: ${KEBAJIKAN_STATUS_LABELS[targetStatus]}] ${noteText.trim()}`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus], note: noteText.trim() }),
       });
     }
 
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Status Aduan Dikemaskini: ${ticket.ticket_no}`,
-        message:     `Aduan anda telah ditukar status kepada "${KEBAJIKAN_STATUS_LABELS[targetStatus]}"`,
+        title:       t('kebajikan:notif_ticket_status_updated_title', `Status Aduan Dikemaskini: ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_ticket_status_updated_body', `Aduan anda telah ditukar status kepada "${KEBAJIKAN_STATUS_LABELS[targetStatus]}"`, { status: KEBAJIKAN_STATUS_LABELS[targetStatus] }),
         type:        'STATUS_CHANGE',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -264,7 +269,7 @@ export function KebajikanTicketDetail() {
       await supabase.from('kebajikan_ticket_comments').insert({
         ticket_id: ticket.id,
         author_id: user?.id,
-        author_name: profile?.full_name || 'Exco Kebajikan',
+        author_name: profile?.full_name || t('kebajikan:role_exco_kebajikan', 'Exco Kebajikan'),
         author_role: actorRole,
         is_internal: false,
         content: `[Nota Resolusi] ${resolutionNote}`,
@@ -273,8 +278,8 @@ export function KebajikanTicketDetail() {
 
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Status Aduan Dikemaskini: ${ticket.ticket_no}`,
-        message:     `Aduan anda kini dalam status "${KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus]}"`,
+        title:       t('kebajikan:notif_ticket_status_updated_title', `Status Aduan Dikemaskini: ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_ticket_status_updated_body_current', `Aduan anda kini dalam status "${KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus]}"`, { status: KEBAJIKAN_STATUS_LABELS[statusChange as KebajikanTicketStatus] }),
         type:        'STATUS_CHANGE',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -297,17 +302,17 @@ export function KebajikanTicketDetail() {
     await supabase.from('kebajikan_ticket_status_log').insert({
       ticket_id: ticket.id, actor_id: user?.id,
       actor_name: profile?.full_name, actor_role: actorRole,
-      old_status: ticket.status, new_status: 'DELEGATED', note: `Delegasikan ke pegawai. ${delegateNote}`,
+      old_status: ticket.status, new_status: 'DELEGATED', note: t('kebajikan:delegation_log_note', `Delegasikan ke pegawai. ${delegateNote}`, { note: delegateNote }),
     });
     await supabase.from('kebajikan_ticket_comments').insert({
       ticket_id: ticket.id, author_id: user?.id,
       author_name: profile?.full_name || 'Unknown', author_role: actorRole,
       is_internal: true, is_delegation_note: true,
-      content: `[Delegasi] Tiket ini telah didelegasikan kepada pegawai. Nota: ${delegateNote || '(Tiada nota)'}`,
+      content: t('kebajikan:delegation_comment_content', `[Delegasi] Tiket ini telah didelegasikan kepada pegawai. Nota: ${delegateNote || t('kebajikan:no_note', '(Tiada nota)')}`, { note: delegateNote || t('kebajikan:no_note', '(Tiada nota)') }),
     });
     await sendNotificationToUser(delegateId, {
       title:       `Tiket Didelegasikan: ${ticket.ticket_no}`,
-      message:     `Anda telah diassign untuk menguruskan tiket ini. ${delegateNote ? 'Nota: ' + delegateNote : ''}`,
+      message:     t('kebajikan:delegation_notif_body', `Anda telah diassign untuk menguruskan tiket ini. ${delegateNote ? 'Nota: ' + delegateNote : ''}`, { note: delegateNote ? `Nota: ${delegateNote}` : '' }),
       type:        'DELEGATION',
       module:      'KEBAJIKAN',
       link:        `/kebajikan/tiket/${ticket.id}`,
@@ -324,11 +329,11 @@ export function KebajikanTicketDetail() {
     if (!ticket) return;
     setSaving(true);
     await supabase.from('kebajikan_tickets').update({ status: 'NEW', reopen_approved_by: user?.id, reopen_count: ticket.reopen_count + 1 }).eq('id', ticket.id);
-    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'NEW', note: 'Exco luluskan reopen' });
+    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'NEW', note: t('kebajikan:log_note_exco_approved_reopen', 'Exco luluskan reopen') });
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Permohonan Buka Semula Diluluskan — ${ticket.ticket_no}`,
-        message:     `Exco Kebajikan telah meluluskan permohonan anda untuk membuka semula aduan. Ia kini dalam status Diterima.`,
+        title:       t('kebajikan:notif_reopen_approved_title', `Permohonan Buka Semula Diluluskan — ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_reopen_approved_body', 'Exco Kebajikan telah meluluskan permohonan anda untuk membuka semula aduan. Ia kini dalam status Diterima.'),
         type:        'REOPEN_APPROVED',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -344,11 +349,11 @@ export function KebajikanTicketDetail() {
     if (!ticket) return;
     setSaving(true);
     await supabase.from('kebajikan_tickets').update({ status: 'RESOLVED' }).eq('id', ticket.id);
-    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'RESOLVED', note: 'Exco tolak reopen' });
+    await supabase.from('kebajikan_ticket_status_log').insert({ ticket_id: ticket.id, actor_id: user?.id, actor_name: profile?.full_name, actor_role: actorRole, old_status: 'REOPENED', new_status: 'RESOLVED', note: t('kebajikan:log_note_exco_rejected_reopen', 'Exco tolak reopen') });
     if (ticket.submitter_id) {
       await sendNotificationToUser(ticket.submitter_id, {
-        title:       `Permohonan Buka Semula Ditolak — ${ticket.ticket_no}`,
-        message:     `Exco Kebajikan telah menolak permohonan untuk membuka semula aduan. Aduan anda kekal dalam status Selesai.`,
+        title:       t('kebajikan:notif_reopen_rejected_title', `Permohonan Buka Semula Ditolak — ${ticket.ticket_no}`, { ticket_no: ticket.ticket_no }),
+        message:     t('kebajikan:notif_reopen_rejected_body', 'Exco Kebajikan telah menolak permohonan untuk membuka semula aduan. Aduan anda kekal dalam status Selesai.'),
         type:        'REOPEN_REJECTED',
         module:      'KEBAJIKAN',
         link:        `/kebajikan/aduan/${ticket.id}`,
@@ -686,37 +691,37 @@ interface QuickActionBarProps {
 
 const QUICK_TRANSITIONS: Record<string, { key: KebajikanTicketStatus; labelKey: string; defaultLabel: string; icon: string; color: string; bg: string }[]> = {
   NEW: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: 'Ambil Tindakan',     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: 'Tunggu Maklumat',    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: t('kebajikan:quick_action_take_action', 'Ambil Tindakan'),     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: t('kebajikan:quick_action_waiting_info', 'Tunggu Maklumat'),    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   IN_PROGRESS: [
-    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: 'Tunggu Maklumat',    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
-    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: 'Tunggu Pihak Lain',  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
-    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: 'Escalate',           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
+    { key: 'WAITING_INFO',     labelKey: 'quick_action_waiting_info', defaultLabel: t('kebajikan:quick_action_waiting_info', 'Tunggu Maklumat'),    icon: '⏳', color: '#d97706', bg: 'rgba(217,119,6,0.12)'   },
+    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: t('kebajikan:quick_action_waiting_external', 'Tunggu Pihak Lain'),  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: t('kebajikan:quick_action_escalate', 'Escalate'),           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
   ],
   WAITING_INFO: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: 'Tunggu Pihak Lain',  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'PENDING_EXTERNAL', labelKey: 'quick_action_waiting_external', defaultLabel: t('kebajikan:quick_action_waiting_external', 'Tunggu Pihak Lain'),  icon: '🏢', color: '#ea580c', bg: 'rgba(234,88,12,0.12)'   },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   PENDING_EXTERNAL: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
-    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: 'Escalate',           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'ESCALATED',        labelKey: 'quick_action_escalate', defaultLabel: t('kebajikan:quick_action_escalate', 'Escalate'),           icon: '⚠',  color: '#dc2626', bg: 'rgba(220,38,38,0.12)'   },
   ],
   ESCALATED: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: 'Sambung Tindakan',   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_resume', defaultLabel: t('kebajikan:quick_action_resume', 'Sambung Tindakan'),   icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   REOPENED: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: 'Ambil Tindakan',     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_take_action', defaultLabel: t('kebajikan:quick_action_take_action', 'Ambil Tindakan'),     icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
   DELEGATED: [
-    { key: 'IN_PROGRESS',      labelKey: 'quick_action_retake', defaultLabel: 'Ambil Semula',       icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
-    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: 'Selesaikan',         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
+    { key: 'IN_PROGRESS',      labelKey: 'quick_action_retake', defaultLabel: t('kebajikan:quick_action_retake', 'Ambil Semula'),       icon: '▶', color: '#0d9488', bg: 'rgba(13,148,136,0.12)'  },
+    { key: 'RESOLVED',         labelKey: 'quick_action_resolve', defaultLabel: t('kebajikan:quick_action_resolve', 'Selesaikan'),         icon: '✓',  color: '#16a34a', bg: 'rgba(22,163,74,0.12)'   },
   ],
 };
 
@@ -932,7 +937,7 @@ function EscalationActionPanel({
                 <div key={a.id} className="rounded-2xl p-3.5 bg-white dark:bg-red-500/[0.05] border border-red-100 dark:border-red-500/15 shadow-sm">
                   {(a.pic?.pic_name || a.pic_name_manual) && (
                     <p className="text-[10px] font-black text-red-700 dark:text-red-400/80 mb-1">
-                      PIC: {a.pic ? `${a.pic.pic_name} (${a.pic.jabatan_label})` : a.pic_name_manual}
+                      PIC: {a.pic ? t('kebajikan:pic_with_dept', `${a.pic.pic_name} (${a.pic.jabatan_label})`, { name: a.pic.pic_name, dept: a.pic.jabatan_label }) : a.pic_name_manual}
                     </p>
                   )}
                   <p className="text-xs text-slate-800 dark:text-white/80 leading-relaxed whitespace-pre-wrap">{a.action_summary}</p>

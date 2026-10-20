@@ -1,5 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+import i18n, { changeLanguage } from '@/lib/i18n';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,6 +25,10 @@ vi.mock('@/lib/supabase', () => ({
 vi.mock('@/lib/notifications', () => ({
   sendNotificationToUser: vi.fn().mockResolvedValue(undefined),
 }));
+
+beforeAll(async () => {
+  await changeLanguage('ms');
+});
 
 describe('ReceiptReviewSheet Component', () => {
   it('exports ReceiptReviewSheet correctly as named and default export', async () => {

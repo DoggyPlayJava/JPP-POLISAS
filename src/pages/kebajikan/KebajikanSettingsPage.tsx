@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
+
+const tStatic = (k: string, fb: string, opt?: any) => (i18n?.isInitialized ? i18n.t(k, fb, opt) : fb);
+const t = tStatic;
 import { supabase } from '@/lib/supabase';
 import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,7 +37,7 @@ interface KebajikanSettings {
 const DEFAULT_SETTINGS: KebajikanSettings = {
   sla: { warning_hours: 48, escalate_hours: 72 },
   email_prefs: { new_ticket: true, warning: true, escalation: true, reopen: true },
-  auto_reply: 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.',
+  auto_reply: t('kebajikan:settings_default_auto_reply', 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.'),
 };
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -149,15 +153,15 @@ export function KebajikanSettingsPage() {
   const handleSaveSla = async () => {
     if (!isAllowed) return;
     if (slaInput.warning_hours <= 0 || slaInput.escalate_hours <= slaInput.warning_hours) {
-      toast.error('Jam Escalation mestilah lebih besar daripada jam Warning.');
+      toast.error(t('kebajikan:sla_warning_must_be_less', 'Jam Escalation mestilah lebih besar daripada jam Warning.'));
       return;
     }
     setSavingSla(true);
     try {
       await persistSla(slaInput.warning_hours, slaInput.escalate_hours);
       setSettings(s => ({ ...s, sla: { warning_hours: slaInput.warning_hours, escalate_hours: slaInput.escalate_hours } }));
-      toast.success('Konfigurasi SLA dikemaskini! ⏱');
-    } catch { toast.error('Gagal simpan SLA.'); }
+      toast.success(t('kebajikan:sla_config_updated_toast', 'Konfigurasi SLA dikemaskini!'));
+    } catch { toast.error(t('kebajikan:sla_config_error_toast', 'Gagal simpan SLA.')); }
     setSavingSla(false);
   };
 
@@ -170,7 +174,7 @@ export function KebajikanSettingsPage() {
     setSettings(s => ({ ...s, email_prefs: { ...s.email_prefs, [prefKey]: val } }));
     try {
       await persistEmailPref(dbFieldMap[prefKey], val);
-    } catch { toast.error('Gagal kemaskini tetapan email.'); }
+    } catch { toast.error(t('kebajikan:email_pref_error_toast', 'Gagal kemaskini tetapan email.')); }
   };
 
   const handleSaveAutoReply = async () => {
@@ -179,8 +183,8 @@ export function KebajikanSettingsPage() {
     try {
       await persistAutoReply(autoReply);
       setSettings(s => ({ ...s, auto_reply: autoReply }));
-      toast.success('Mesej auto-reply dikemaskini! 📨');
-    } catch { toast.error('Gagal simpan mesej auto-reply.'); }
+      toast.success(t('kebajikan:auto_reply_updated_toast', 'Mesej auto-reply dikemaskini!'));
+    } catch { toast.error(t('kebajikan:auto_reply_error_toast', 'Gagal simpan mesej auto-reply.')); }
     setSavingReply(false);
   };
 
@@ -192,9 +196,9 @@ export function KebajikanSettingsPage() {
       await supabase.from('kebajikan_settings')
         .update({ data_retention_months: retentionMonths, updated_by: user?.id, updated_at: new Date().toISOString() })
         .not('id', 'is', null);
-      toast.success(`Tempoh pengekalan dikemaskini: ${retentionMonths} bulan 💾`);
+      toast.success(t('kebajikan:retention_period_updated_toast', 'Tempoh pengekalan dikemaskini: {{count}} bulan', { count: retentionMonths }));
       setCleanupPreview(null);
-    } catch { toast.error('Gagal simpan tetapan.'); }
+    } catch { toast.error(t('kebajikan:retention_save_error_toast', 'Gagal simpan tetapan.')); }
     setSavingRetention(false);
   };
 
@@ -214,7 +218,7 @@ export function KebajikanSettingsPage() {
 
   const handleRunCleanup = async () => {
     if (!isAllowed) return;
-    if (!window.confirm(`Anda pasti? Ini akan MEMADAM GAMBAR daripada ${cleanupPreview?.count ?? 0} tiket lama. Rekod tiket TIDAK dipadam.`)) return;
+    if (!window.confirm(t('kebajikan:confirm_run_cleanup', 'Anda pasti? Ini akan MEMADAM GAMBAR daripada {{count}} tiket lama. Rekod tiket TIDAK dipadam.', { count: cleanupPreview?.count ?? 0 }))) return;
     setCleaning(true);
     try {
       const cutoff = new Date();
@@ -228,7 +232,7 @@ export function KebajikanSettingsPage() {
       const tickets = (rawTickets || []).filter(t => t.image_urls && t.image_urls.length > 0);
 
       if (!tickets || tickets.length === 0) {
-        toast.success('Tiada gambar untuk dipadam.');
+        toast.success(t('kebajikan:cleanup_no_images_toast', 'Tiada gambar untuk dipadam.'));
         setCleaning(false);
         return;
       }
@@ -254,19 +258,19 @@ export function KebajikanSettingsPage() {
         .update({ image_urls: [] })
         .in('id', ids);
 
-      toast.success(`✅ Berjaya! ${deleted} gambar dipadam dari ${tickets.length} tiket.`);
+      toast.success(t('kebajikan:cleanup_success_toast', 'Berjaya! {{deleted}} gambar dipadam dari {{count}} tiket.', { deleted, count: tickets.length }));
       setCleanupPreview(null);
     } catch (e: any) {
-      toast.error('Ralat semasa pembersihan: ' + e.message);
+      toast.error(t('kebajikan:cleanup_error_toast', 'Ralat semasa pembersihan: {{error}}', { error: e.message }));
     }
     setCleaning(false);
   };
 
   const EMAIL_TOGGLES: { key: keyof EmailPrefs; label: string; desc: string }[] = [
-    { key: 'new_ticket',  label: 'Tiket Baru',       desc: 'Notif bila pelajar hantar aduan baharu' },
-    { key: 'warning',     label: 'Warning SLA (48j)', desc: 'Notif bila tiket hampir melebihi SLA Warning' },
-    { key: 'escalation',  label: 'Escalation (72j)',  desc: 'Notif bila tiket diescalate secara auto' },
-    { key: 'reopen',      label: 'Reopen Request',    desc: 'Notif bila pelajar request buka semula tiket' },
+    { key: 'new_ticket',  label: t('kebajikan:email_pref_new_ticket_label', 'Tiket Baru'),       desc: t('kebajikan:email_pref_new_ticket_desc', 'Notif bila pelajar hantar aduan baharu') },
+    { key: 'warning',     label: t('kebajikan:email_pref_warning_label', 'Warning SLA (48j)'), desc: t('kebajikan:email_pref_warning_desc', 'Notif bila tiket hampir melebihi SLA Warning') },
+    { key: 'escalation',  label: t('kebajikan:email_pref_escalation_label', 'Escalation (72j)'),  desc: t('kebajikan:email_pref_escalation_desc', 'Notif bila tiket diescalate secara auto') },
+    { key: 'reopen',      label: t('kebajikan:email_pref_reopen_label', 'Reopen Request'),    desc: t('kebajikan:email_pref_reopen_desc', 'Notif bila pelajar request buka semula tiket') },
   ];
 
   return (
@@ -306,9 +310,9 @@ export function KebajikanSettingsPage() {
                     disabled={!isAllowed}
                     className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-slate-200 outline-none focus:border-teal-500 transition-colors disabled:opacity-50 shadow-inner"
                   />
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">jam</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:hours_unit', 'jam')}</span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1.5">Semasa ini: {settings.sla.warning_hours}j</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1.5">{t('kebajikan:current_value_hours', 'Semasa ini: {{count}}j', { count: settings.sla.warning_hours })}</p>
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-400 mb-2 block">{t('kebajikan:sla_escalate_hours', '🔴 Escalation (jam)')}</label>
@@ -321,9 +325,9 @@ export function KebajikanSettingsPage() {
                     disabled={!isAllowed}
                     className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-slate-200 outline-none focus:border-teal-500 transition-colors disabled:opacity-50 shadow-inner"
                   />
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">jam</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('kebajikan:hours_unit', 'jam')}</span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1.5">Semasa ini: {settings.sla.escalate_hours}j</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1.5">{t('kebajikan:current_value_hours', 'Semasa ini: {{count}}j', { count: settings.sla.escalate_hours })}</p>
               </div>
             </div>
             {isAllowed && (
@@ -337,7 +341,7 @@ export function KebajikanSettingsPage() {
               </button>
             )}
             <div className="mt-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10">
-              <p className="text-[11px] text-amber-800 dark:text-amber-400/80">⚠️ Edge Function <code className="bg-amber-100 dark:bg-amber-500/10 px-1 rounded font-bold">check-kebajikan-sla</code> akan membaca nilai ini setiap jam untuk memproses warning dan escalation secara automatik.</p>
+              <p className="text-[11px] text-amber-800 dark:text-amber-400/80">{t('kebajikan:sla_edge_function_notice', 'Edge Function check-kebajikan-sla akan membaca nilai ini setiap jam untuk memproses warning dan escalation secara automatik.')}</p>
             </div>
           </GlassCard>
 
@@ -361,7 +365,7 @@ export function KebajikanSettingsPage() {
               ))}
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-3">
-              * Fungsi email menggunakan Resend API yang dikendalikan melalui pelayan Express.
+              {t('kebajikan:email_api_notice', '* Fungsi email menggunakan Resend API yang dikendalikan melalui pelayan Express.')}
             </p>
           </GlassCard>
 
@@ -416,12 +420,12 @@ export function KebajikanSettingsPage() {
                         : 'bg-slate-50 dark:bg-white/[0.03] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/5'
                     )}
                   >
-                    {m} Bulan
+                    {m} {t('kebajikan:months_unit', 'Bulan')}
                   </button>
                 ))}
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-3">
-                Gambar dari tiket SELESAI / DITUTUP / DIBATAL yang lebih lama daripada <span className="font-black text-teal-600 dark:text-teal-400">{retentionMonths} bulan</span> akan dipadam semasa pembersihan dijalankan.
+                {t('kebajikan:retention_notice', 'Gambar dari tiket SELESAI / DITUTUP / DIBATAL yang lebih lama daripada {{count}} bulan akan dipadam semasa pembersihan dijalankan.', { count: retentionMonths })}
               </p>
             </div>
 
@@ -451,7 +455,7 @@ export function KebajikanSettingsPage() {
                   disabled={loadingPreview || !isAllowed}
                   className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 transition-colors disabled:opacity-30 bg-white dark:bg-transparent shadow-sm"
                 >
-                  {loadingPreview ? 'Menganalisis...' : 'Semak Sekarang'}
+                  {loadingPreview ? t('common:analyzing', 'Menganalisis...') : t('kebajikan:btn_check_now', 'Semak Sekarang')}
                 </button>
               </div>
 
@@ -463,13 +467,13 @@ export function KebajikanSettingsPage() {
                   style={{ borderColor: cleanupPreview.count > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)' }}
                 >
                   {cleanupPreview.count === 0 ? (
-                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">✅ Tiada data untuk dibersihkan. Storan bersih!</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">{t('kebajikan:cleanup_no_data', 'Tiada data untuk dibersihkan. Storan bersih!')}</p>
                   ) : (
                     <>
                       <p className="text-sm font-black text-amber-700 dark:text-amber-400 mb-1">
-                        {cleanupPreview.count} tiket · {cleanupPreview.images} gambar layak dipadam
+                        {t('kebajikan:cleanup_eligible_summary', '{{tickets}} tiket · {{images}} gambar layak dipadam', { tickets: cleanupPreview.count, images: cleanupPreview.images })}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Rekod tiket TIDAK akan dipadam — hanya gambar sahaja.</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('kebajikan:cleanup_tickets_kept_notice', 'Rekod tiket TIDAK akan dipadam — hanya gambar sahaja.')}</p>
                     </>
                   )}
                 </motion.div>
@@ -480,7 +484,7 @@ export function KebajikanSettingsPage() {
                 <div className="p-4 rounded-2xl border border-rose-300 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/[0.03]">
                   <div className="flex items-center gap-2 mb-3">
                     <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-400">Zon Bahaya — Tindakan Tidak Boleh Diterbalikkan</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-400">{t('kebajikan:cleanup_danger_zone_title', 'Zon Bahaya — Tindakan Tidak Boleh Diterbalikkan')}</p>
                   </div>
                   <button
                     onClick={handleRunCleanup}
@@ -488,7 +492,7 @@ export function KebajikanSettingsPage() {
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all bg-rose-100 dark:bg-red-500/10 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20 hover:bg-rose-200 shadow-sm"
                   >
                     <Trash2 className="w-4 h-4" />
-                    {cleaning ? 'Sedang Membersihkan...' : `Jalankan Pembersihan (${cleanupPreview.images} Gambar)`}
+                    {cleaning ? t('kebajikan:cleaning_in_progress', 'Sedang Membersihkan...') : t('kebajikan:run_cleanup_btn', 'Jalankan Pembersihan ({{count}} Gambar)', { count: cleanupPreview.images })}
                   </button>
                 </div>
               )}
@@ -496,8 +500,8 @@ export function KebajikanSettingsPage() {
               {/* Export XLSX */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-white/[0.01]">
                 <div>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-300">Eksport Semua Data</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Muat turun semua tiket sebagai XLSX</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-300">{t('kebajikan:export_all_title', 'Eksport Semua Data')}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('kebajikan:export_all_desc', 'Muat turun semua tiket sebagai XLSX')}</p>
                 </div>
                 <button
                   onClick={async () => {
@@ -511,17 +515,17 @@ export function KebajikanSettingsPage() {
                       }));
                       const rows = data.map((r: any) => cols.map((c) => (r[c] === null || r[c] === undefined ? '' : r[c])));
                       await exportXlsx(`kebajikan_tiket_${new Date().toISOString().slice(0,10)}.xlsx`, [
-                        { name: 'Tiket Kebajikan', columns, rows },
+                        { name: t('kebajikan:export_sheet_name', 'Tiket Kebajikan'), columns, rows },
                       ]);
-                      toast.success('XLSX berjaya dimuat turun!');
+                      toast.success(t('kebajikan:export_success_toast', 'XLSX berjaya dimuat turun!'));
                     } else {
-                      toast.error('Tiada data untuk dieksport.');
+                      toast.error(t('kebajikan:export_empty_toast', 'Tiada data untuk dieksport.'));
                     }
                   }}
                   disabled={!isAllowed}
                   className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-400 hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 transition-colors disabled:opacity-30 bg-white dark:bg-transparent shadow-sm"
                 >
-                  Eksport XLSX
+                  {t('kebajikan:btn_export_xlsx', 'Eksport XLSX')}
                 </button>
               </div>
             </div>
@@ -534,7 +538,7 @@ export function KebajikanSettingsPage() {
               {picLoading ? (
                 <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">Memuatkan...</p>
               ) : pics.length === 0 ? (
-                <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">Tiada preset PIC lagi. Tambah di bawah.</p>
+                <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">{t('kebajikan:no_pic_presets_desc', 'Tiada preset PIC lagi. Tambah di bawah.')}</p>
               ) : pics.map(p => (
                 <div key={p.id} className={cn('flex items-center gap-3 p-3.5 rounded-2xl border transition-colors', p.is_active ? 'border-slate-100 dark:border-white/[0.06] bg-slate-50/60 dark:bg-white/[0.02]' : 'border-slate-100 dark:border-white/[0.03] bg-slate-100 dark:bg-black/20 opacity-50')}>
                   <div className="flex-1 min-w-0">
@@ -548,10 +552,10 @@ export function KebajikanSettingsPage() {
                     {p.is_active ? <ToggleRight className="w-5 h-5 text-teal-600 dark:text-teal-400" /> : <ToggleLeft className="w-5 h-5" />}
                   </button>
                   <button onClick={async () => {
-                    if (!confirm(`Padam preset PIC "${p.pic_name}"?`)) return;
+                    if (!confirm(t('kebajikan:confirm_delete_pic', 'Padam preset PIC "{{name}}"?', { name: p.pic_name }))) return;
                     await supabase.from('kebajikan_pics').delete().eq('id', p.id);
                     fetchPics();
-                    toast.success('Preset PIC dipadam.');
+                    toast.success(t('kebajikan:pic_deleted_toast', 'Preset PIC dipadam.'));
                   }} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -567,34 +571,34 @@ export function KebajikanSettingsPage() {
                 </button>
               ) : (
                 <div className="rounded-2xl border border-teal-200 dark:border-teal-500/20 bg-teal-50/50 dark:bg-teal-500/[0.03] p-4 space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-800 dark:text-teal-400/90 mb-2 font-bold">Preset PIC Baru</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-800 dark:text-teal-400/90 mb-2 font-bold">{t('kebajikan:pic_new_preset_header', 'Preset PIC Baru')}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">Nama Jabatan / Kemudahan *</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">{t('kebajikan:pic_dept_label_required', 'Nama Jabatan / Kemudahan *')}</p>
                       <input value={newPic.jabatan_label} onChange={e => setNewPic(p => ({ ...p, jabatan_label: e.target.value }))}
-                        placeholder="cth: Jabatan Kejuruteraan Mekanikal"
+                        placeholder={t('kebajikan:pic_dept_placeholder', 'cth: Jabatan Kejuruteraan Mekanikal')}
                         className="w-full h-8 px-3 rounded-xl text-xs bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:border-teal-500 outline-none shadow-sm" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">Nama PIC *</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">{t('kebajikan:pic_name_label_required', 'Nama PIC *')}</p>
                       <input value={newPic.pic_name} onChange={e => setNewPic(p => ({ ...p, pic_name: e.target.value }))}
-                        placeholder="cth: Encik Ahmad bin Ali"
+                        placeholder={t('kebajikan:pic_name_placeholder', 'cth: Encik Ahmad bin Ali')}
                         className="w-full h-8 px-3 rounded-xl text-xs bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:border-teal-500 outline-none shadow-sm" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">Jawatan</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">{t('kebajikan:pic_title_label', 'Jawatan')}</p>
                       <input value={newPic.pic_title} onChange={e => setNewPic(p => ({ ...p, pic_title: e.target.value }))}
-                        placeholder="cth: Ketua Jabatan"
+                        placeholder={t('kebajikan:pic_title_placeholder', 'cth: Ketua Jabatan')}
                         className="w-full h-8 px-3 rounded-xl text-xs bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:border-teal-500 outline-none shadow-sm" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">Emel</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">{t('kebajikan:pic_email_label', 'Emel')}</p>
                       <input value={newPic.pic_email} onChange={e => setNewPic(p => ({ ...p, pic_email: e.target.value }))}
                         placeholder="pic@polisas.edu.my"
                         className="w-full h-8 px-3 rounded-xl text-xs bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:border-teal-500 outline-none shadow-sm" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">No. Telefon</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 mb-1">{t('kebajikan:pic_phone_label', 'No. Telefon')}</p>
                       <input value={newPic.pic_phone} onChange={e => setNewPic(p => ({ ...p, pic_phone: e.target.value }))}
                         placeholder="01x-xxxxxxx"
                         className="w-full h-8 px-3 rounded-xl text-xs bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:border-teal-500 outline-none shadow-sm" />
@@ -602,7 +606,7 @@ export function KebajikanSettingsPage() {
                   </div>
                   <div className="flex gap-2 pt-1">
                     <button onClick={async () => {
-                      if (!newPic.jabatan_label.trim() || !newPic.pic_name.trim()) { toast.error('Nama jabatan dan nama PIC wajib diisi.'); return; }
+                      if (!newPic.jabatan_label.trim() || !newPic.pic_name.trim()) { toast.error(t('kebajikan:pic_validation_error_toast', 'Nama jabatan dan nama PIC wajib diisi.')); return; }
                       setSavingPic(true);
                       const { error } = await supabase.from('kebajikan_pics').insert({
                         category: 'FASILITI_JABATAN',
@@ -614,18 +618,18 @@ export function KebajikanSettingsPage() {
                         created_by: user?.id,
                       });
                       if (!error) {
-                        toast.success('Preset PIC berjaya ditambah!');
+                        toast.success(t('kebajikan:pic_created_toast', 'Preset PIC berjaya ditambah!'));
                         setNewPic({ jabatan_label: '', pic_name: '', pic_title: '', pic_email: '', pic_phone: '' });
                         setShowAddPic(false);
                         fetchPics();
                       } else {
-                        toast.error('Gagal tambah PIC: ' + error.message);
+                        toast.error(t('kebajikan:pic_create_error_toast', 'Gagal tambah PIC: {{error}}', { error: error.message }));
                       }
                       setSavingPic(false);
                     }} disabled={savingPic} className="flex items-center gap-1.5 px-4 h-8 rounded-xl text-xs font-black text-slate-950 transition-all bg-teal-400 hover:bg-teal-300 shadow-sm">
-                      <Save className="w-3.5 h-3.5" /> {savingPic ? 'Menyimpan...' : 'Simpan'}
+                      <Save className="w-3.5 h-3.5" /> {savingPic ? t('common:saving', 'Menyimpan...') : t('kebajikan:btn_save_pic', 'Simpan')}
                     </button>
-                    <button onClick={() => setShowAddPic(false)} className="px-4 h-8 rounded-xl text-xs font-black text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-colors">Batal</button>
+                    <button onClick={() => setShowAddPic(false)} className="px-4 h-8 rounded-xl text-xs font-black text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-colors">{t('common:cancel', 'Batal')}</button>
                   </div>
                 </div>
               )}

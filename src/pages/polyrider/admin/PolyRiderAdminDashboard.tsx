@@ -74,8 +74,8 @@ export function PolyRiderAdminDashboard() {
 
     if (!error) {
       setSystemActive(newStatus);
-      toast.success(`Sistem PolyRider kini ${newStatus ? 'AKTIF' : 'DITUTUP'}`);
-      logAuditAction({ actionType: newStatus ? 'SYSTEM_ACTIVATED' : 'SYSTEM_DEACTIVATED', module: 'PolyRider', description: `Sistem PolyRider ${newStatus ? 'diaktifkan' : 'ditutup'}`, actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(newStatus ? t('gig:system_status_active_toast', 'Sistem PolyRider kini AKTIF') : t('gig:system_status_closed_toast', 'Sistem PolyRider kini DITUTUP'));
+      logAuditAction({ actionType: newStatus ? 'SYSTEM_ACTIVATED' : 'SYSTEM_DEACTIVATED', module: 'PolyRider', description: newStatus ? t('gig:audit_system_activated', 'Sistem PolyRider diaktifkan') : t('gig:audit_system_deactivated', 'Sistem PolyRider ditutup'), actorId: (await supabase.auth.getUser()).data.user!.id });
     }
   };
 
@@ -164,7 +164,7 @@ export function PolyRiderAdminDashboard() {
 
     if (error) {
       console.error('Fetch appeals error:', error);
-      toast.error('Gagal memuat turun senarai rayuan: ' + error.message);
+      toast.error(t('gig:fetch_appeals_failed', 'Gagal memuat turun senarai rayuan: {{error}}', { error: error.message }));
     }
     if (data) {
       setAppeals(data);
@@ -172,7 +172,7 @@ export function PolyRiderAdminDashboard() {
   };
 
   const processAppeal = async (appealId: string, approve: boolean) => {
-    const notes = window.prompt(`Sila masukkan nota tindakan (pilihan) untuk ${approve ? 'kelulusan' : 'penolakan'} ini:`);
+    const notes = window.prompt(t('gig:appeal_prompt_notes', 'Sila masukkan nota tindakan (pilihan) untuk {{action}} ini:', { action: approve ? t('gig:action_approval', 'kelulusan') : t('gig:action_rejection', 'penolakan') }));
     if (notes === null) return; // Cancelled
 
     const { error } = await supabase.rpc('process_polyrider_appeal', {
@@ -182,10 +182,10 @@ export function PolyRiderAdminDashboard() {
     });
 
     if (error) {
-      toast.error('Gagal memproses rayuan. ' + error.message);
+      toast.error(t('gig:process_appeal_failed', 'Gagal memproses rayuan. {{error}}', { error: error.message }));
     } else {
-      toast.success(approve ? 'Rayuan diluluskan' : 'Rayuan ditolak');
-      logAuditAction({ actionType: approve ? 'APPEAL_APPROVED' : 'APPEAL_REJECTED', module: 'PolyRider', entityId: appealId, description: `Rayuan PolyRider ${approve ? 'diluluskan' : 'ditolak'}${notes ? ': ' + notes : ''}`, actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(approve ? t('gig:appeal_approved_toast', 'Rayuan diluluskan') : t('gig:appeal_rejected_toast', 'Rayuan ditolak'));
+      logAuditAction({ actionType: approve ? 'APPEAL_APPROVED' : 'APPEAL_REJECTED', module: 'PolyRider', entityId: appealId, description: approve ? (notes ? t('gig:audit_appeal_approved_notes', 'Rayuan PolyRider diluluskan: {{notes}}', { notes }) : t('gig:audit_appeal_approved', 'Rayuan PolyRider diluluskan')) : (notes ? t('gig:audit_appeal_rejected_notes', 'Rayuan PolyRider ditolak: {{notes}}', { notes }) : t('gig:audit_appeal_rejected', 'Rayuan PolyRider ditolak')), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchAppeals();
     }
   };
@@ -201,11 +201,11 @@ export function PolyRiderAdminDashboard() {
         // Bebaskan rider/pelajar daripada status kecemasan dengan membatalkan tugasan
         await supabase.from('polyrider_jobs').update({ status: 'CANCELLED' }).eq('id', sos.job_id);
       }
-      toast.success('Kes SOS diselesaikan.');
-      logAuditAction({ actionType: 'SOS_RESOLVED', module: 'PolyRider', entityId: sosId, description: 'Kes SOS diselesaikan oleh admin', actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(t('gig:sos_case_resolved_toast', 'Kes SOS diselesaikan.'));
+      logAuditAction({ actionType: 'SOS_RESOLVED', module: 'PolyRider', entityId: sosId, description: t('gig:audit_sos_resolved', 'Kes SOS diselesaikan oleh admin'), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchSosAlerts();
     } else {
-      toast.error('Gagal menanda selesai.');
+      toast.error(t('gig:resolve_sos_failed', 'Gagal menanda selesai.'));
     }
   };
 
@@ -213,7 +213,7 @@ export function PolyRiderAdminDashboard() {
     const sos = sosAlerts.find(s => s.id === sosId);
     if (!sos) return;
 
-    const notes = window.prompt('PENGGANTUNGAN: Sila masukkan nota untuk laporan khianat/palsu ini. Akaun pelapor akan digantung 24 jam.');
+    const notes = window.prompt(t('gig:fake_sos_prompt', 'PENGGANTUNGAN: Sila masukkan nota untuk laporan khianat/palsu ini. Akaun pelapor akan digantung 24 jam.'));
     if (notes === null) return;
 
     // 1. Update SOS Log
@@ -238,9 +238,9 @@ export function PolyRiderAdminDashboard() {
         .eq('id', sos.triggered_by);
         
       if (profileError) {
-         toast.error('SOS berjaya ditanda, TEPATI gagal menggantung akaun: ' + profileError.message);
+         toast.error(t('gig:fake_sos_suspend_failed', 'SOS berjaya ditanda, TEPATI gagal menggantung akaun: {{error}}', { error: profileError.message }));
       } else {
-         toast.success('SOS ditanda palsu & akaun pelapor digantung 24 jam.');
+         toast.success(t('gig:fake_sos_marked_toast', 'SOS ditanda palsu & akaun pelapor digantung 24 jam.'));
          
          // Notify KLK via Email
          const { data: offenderData } = await supabase.from('profiles').select('full_name, matric_no').eq('id', sos.triggered_by).single();
@@ -251,7 +251,7 @@ export function PolyRiderAdminDashboard() {
       fetchSosAlerts();
     } else {
       console.error('SOS Update Error:', sosError);
-      toast.error('Gagal memproses tindakan: ' + sosError.message);
+      toast.error(t('gig:process_action_failed', 'Gagal memproses tindakan: {{error}}', { error: sosError.message }));
     }
   };
 
@@ -296,12 +296,12 @@ export function PolyRiderAdminDashboard() {
       if (url) {
         await supabase.from('system_settings').upsert({ key: 'polyrider_admin_qr', value: url });
         setQrPreview(url);
-        toast.success('QR Code berjaya dimuat naik!');
+        toast.success(t('gig:qr_uploaded_success', 'QR Code berjaya dimuat naik!'));
       } else {
-        toast.error('Gagal memuat naik gambar.');
+        toast.error(t('gig:upload_image_failed', 'Gagal memuat naik gambar.'));
       }
     } catch (e: any) {
-      toast.error(e.message || 'Ralat muat naik.');
+      toast.error(e.message || t('gig:upload_error', 'Ralat muat naik.'));
     } finally {
       setSavingQr(false);
     }
@@ -309,7 +309,7 @@ export function PolyRiderAdminDashboard() {
 
   const addPreset = async () => {
     if (!newPreset.label.trim() || !newPreset.address.trim()) {
-      toast.error('Label dan alamat wajib diisi.'); return;
+      toast.error(t('gig:label_address_required', 'Label dan alamat wajib diisi.')); return;
     }
     setSavingPreset(true);
     const { error } = await supabase.from('polyrider_location_presets').insert({
@@ -321,8 +321,8 @@ export function PolyRiderAdminDashboard() {
       sort_order: presets.length + 1,
     });
     setSavingPreset(false);
-    if (error) { toast.error('Gagal tambah preset.'); return; }
-    toast.success('Preset ditambah!');
+    if (error) { toast.error(t('gig:add_preset_failed', 'Gagal tambah preset.')); return; }
+    toast.success(t('gig:preset_added_toast', 'Preset ditambah!'));
     setNewPreset({ label: '', address: '', icon: '📍', lat: '', lng: '' });
     fetchPresets();
   };
@@ -333,9 +333,9 @@ export function PolyRiderAdminDashboard() {
   };
 
   const deletePreset = async (id: string) => {
-    if (!window.confirm('Padam preset ini?')) return;
+    if (!window.confirm(t('gig:confirm_delete_preset', 'Padam preset ini?'))) return;
     await supabase.from('polyrider_location_presets').delete().eq('id', id);
-    toast.success('Preset dipadam.');
+    toast.success(t('gig:preset_deleted_toast', 'Preset dipadam.'));
     fetchPresets();
   };
 
@@ -353,59 +353,59 @@ export function PolyRiderAdminDashboard() {
       .eq('user_id', id);
 
     if (!error) {
-      toast.success('Pendaftaran diluluskan & langganan diaktifkan 30 hari!');
-      logAuditAction({ actionType: 'RIDER_APPROVED', module: 'PolyRider', entityId: id, description: 'Pendaftaran rider diluluskan (30 hari)', actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(t('gig:rider_approved_toast', 'Pendaftaran diluluskan & langganan diaktifkan 30 hari!'));
+      logAuditAction({ actionType: 'RIDER_APPROVED', module: 'PolyRider', entityId: id, description: t('gig:audit_rider_approved', 'Pendaftaran rider diluluskan (30 hari)'), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
-      toast.error('Gagal meluluskan pendaftaran.');
+      toast.error(t('gig:approve_rider_failed', 'Gagal meluluskan pendaftaran.'));
     }
   };
 
   const handleReject = async (id: string) => {
-    if (!window.confirm('Pasti untuk tolak pendaftaran ini?')) return;
+    if (!window.confirm(t('gig:confirm_reject_rider', 'Pasti untuk tolak pendaftaran ini?'))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'REJECTED', updated_at: new Date().toISOString() })
       .eq('user_id', id);
 
     if (!error) {
-      toast.success('Pendaftaran ditolak.');
-      logAuditAction({ actionType: 'RIDER_REJECTED', module: 'PolyRider', entityId: id, description: 'Pendaftaran rider ditolak', actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(t('gig:rider_rejected_toast', 'Pendaftaran ditolak.'));
+      logAuditAction({ actionType: 'RIDER_REJECTED', module: 'PolyRider', entityId: id, description: t('gig:audit_rider_rejected', 'Pendaftaran rider ditolak'), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
-      toast.error('Ralat.');
+      toast.error(t('common:error', 'Ralat.'));
     }
   };
 
   const handleSuspend = async (id: string) => {
-    if (!window.confirm('Pasti untuk gantung rider ini? Mereka tidak akan dapat bertugas.')) return;
+    if (!window.confirm(t('gig:confirm_suspend_rider', 'Pasti untuk gantung rider ini? Mereka tidak akan dapat bertugas.'))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'SUSPENDED', is_active: false, updated_at: new Date().toISOString() })
       .eq('user_id', id);
 
     if (!error) {
-      toast.success('Rider telah digantung.');
-      logAuditAction({ actionType: 'RIDER_SUSPENDED', module: 'PolyRider', entityId: id, description: 'Rider digantung dari tugas', actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(t('gig:rider_suspended_toast', 'Rider telah digantung.'));
+      logAuditAction({ actionType: 'RIDER_SUSPENDED', module: 'PolyRider', entityId: id, description: t('gig:audit_rider_suspended', 'Rider digantung dari tugas'), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
-      toast.error('Ralat menggantung rider.');
+      toast.error(t('gig:suspend_rider_failed', 'Ralat menggantung rider.'));
     }
   };
 
   const handleResume = async (id: string) => {
-    if (!window.confirm('Pasti untuk sambung tugas rider ini?')) return;
+    if (!window.confirm(t('gig:confirm_resume_rider', 'Pasti untuk sambung tugas rider ini?'))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
       .eq('user_id', id);
 
     if (!error) {
-      toast.success('Tugas rider telah disambung.');
-      logAuditAction({ actionType: 'RIDER_RESUMED', module: 'PolyRider', entityId: id, description: 'Tugas rider disambung semula', actorId: (await supabase.auth.getUser()).data.user!.id });
+      toast.success(t('gig:rider_resumed_toast', 'Tugas rider telah disambung.'));
+      logAuditAction({ actionType: 'RIDER_RESUMED', module: 'PolyRider', entityId: id, description: t('gig:audit_rider_resumed', 'Tugas rider disambung semula'), actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
-      toast.error('Ralat menyambung rider.');
+      toast.error(t('gig:resume_rider_failed', 'Ralat menyambung rider.'));
     }
   };
 
@@ -620,7 +620,7 @@ export function PolyRiderAdminDashboard() {
               <div>
                 <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:location_label', 'Label *')}</label>
                 <input value={newPreset.label} onChange={e => setNewPreset({...newPreset, label: e.target.value})}
-                  placeholder="Kamsis D" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+                  placeholder={t('gig:preset_placeholder_label', 'Kamsis D')} className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:icon_emoji', 'Icon Emoji')}</label>
@@ -631,7 +631,7 @@ export function PolyRiderAdminDashboard() {
             <div className="mb-3">
               <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:address_desc', 'Alamat / Huraian *')}</label>
               <input value={newPreset.address} onChange={e => setNewPreset({...newPreset, address: e.target.value})}
-                placeholder="Kolej Kediaman D, POLISAS" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+                placeholder={t('gig:preset_placeholder_address', 'Kolej Kediaman D, POLISAS')} className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
             </div>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
@@ -701,7 +701,7 @@ export function PolyRiderAdminDashboard() {
               <AlertTriangle className="w-4 h-4" /> {t('gig:active_sos_alerts', 'Isyarat SOS Aktif')}
             </h2>
             <button onClick={fetchSosAlerts} className="text-[10px] font-black text-slate-400 dark:text-white/40 bg-slate-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg uppercase tracking-widest">
-              ↻ Muat Semula
+              {t('gig:refresh_button', '↻ Muat Semula')}
             </button>
           </div>
 
@@ -725,7 +725,7 @@ export function PolyRiderAdminDashboard() {
                         <span className="text-2xl animate-pulse">🚨</span>
                         <div>
                           <p className="font-black text-red-700 dark:text-red-400 text-sm">{t('gig:emergency_sos', 'SOS KECEMASAN')}</p>
-                          <p className="text-[10px] text-red-500 dark:text-red-400/70 font-bold">{elapsed} minit lepas</p>
+                          <p className="text-[10px] text-red-500 dark:text-red-400/70 font-bold">{t('gig:minutes_ago', '{{count}} minit lepas', { count: elapsed })}</p>
                         </div>
                       </div>
                       <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded-lg uppercase">{t('gig:unresolved', 'Belum Selesai')}</span>
@@ -758,7 +758,7 @@ export function PolyRiderAdminDashboard() {
                       )}
                       {!mapsLink && (
                         <div className="bg-white dark:bg-zinc-900 rounded-xl p-3">
-                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase">Lokasi GPS</p>
+                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase">{t('gig:gps_location', 'Lokasi GPS')}</p>
                           <p className="text-sm font-bold text-slate-500 dark:text-white/60">{t('gig:gps_unavailable', 'Tidak tersedia')}</p>
                         </div>
                       )}
@@ -906,7 +906,7 @@ export function PolyRiderAdminDashboard() {
                 <label htmlFor="qr-upload" className="cursor-pointer flex flex-col items-center">
                   <Upload className="w-8 h-8 text-slate-400 dark:text-white/40 mb-2" />
                   <span className="text-sm font-bold text-amber-600">{qrFile ? qrFile.name : t('gig:choose_qr_image', 'Pilih Gambar QR')}</span>
-                  <span className="text-xs text-slate-400 dark:text-white/40 mt-1">Sokongan JPG, PNG</span>
+                  <span className="text-xs text-slate-400 dark:text-white/40 mt-1">{t('gig:support_jpg_png', 'Sokongan JPG, PNG')}</span>
                 </label>
               </div>
               
@@ -922,7 +922,7 @@ export function PolyRiderAdminDashboard() {
                 <button onClick={saveQrCode} disabled={!qrFile || savingQr}
                   className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
                   <Upload className="w-4 h-4" />
-                  {savingQr ? 'Memuat naik...' : t('gig:save_qr_btn', 'Simpan QR Code')}
+                  {savingQr ? t('common:uploading', 'Memuat naik...') : t('gig:save_qr_btn', 'Simpan QR Code')}
                 </button>
               </div>
             </div>

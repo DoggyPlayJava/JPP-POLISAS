@@ -38,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { ReceiptReviewSheet } from './ReceiptReviewSheet';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -99,20 +100,20 @@ export const PIPELINE_STAGES: Array<{
 }> = [
   {
     key: 'actions',
-    label: 'Tindakan Diperlukan',
-    sublabel: 'Menunggu Pengesahan',
+    label: i18n.t('commerce:pipeline_action_required', 'Tindakan Diperlukan'),
+    sublabel: i18n.t('commerce:pipeline_waiting_verification', 'Menunggu Pengesahan'),
     icon: AlertCircle,
   },
   {
     key: 'processing',
-    label: 'Sedang Disediakan',
-    sublabel: 'Dalam Penyediaan',
+    label: i18n.t('commerce:pipeline_being_prepared', 'Sedang Disediakan'),
+    sublabel: i18n.t('commerce:pipeline_in_preparation', 'Dalam Penyediaan'),
     icon: Clock,
   },
   {
     key: 'completed',
-    label: 'Selesai & Arkib',
-    sublabel: 'Selesai / Dibatalkan',
+    label: i18n.t('commerce:pipeline_completed_archived', 'Selesai & Arkib'),
+    sublabel: i18n.t('commerce:pipeline_completed_or_cancelled', 'Selesai / Dibatalkan'),
     icon: CheckCircle2,
   },
 ];
@@ -467,20 +468,22 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
 
         const messages: Record<string, { title: string; message: string }> = {
           CONFIRMED: {
-            title: '[PolyMart] Pesanan Disahkan',
-            message: `Pesanan anda (${itemsDesc}) telah disahkan. Sedia pada: ${order.pickup_time ?? 'Akan dimaklumkan'}`,
+            title: t('commerce:notif_order_confirmed_title', '[PolyMart] Pesanan Disahkan'),
+            message: t('commerce:notif_order_confirmed_msg', 'Pesanan anda ({{itemsDesc}}) telah disahkan. Sedia pada: {{pickupTime}}', { itemsDesc, pickupTime: order.pickup_time ?? t('commerce:will_be_notified', 'Akan dimaklumkan') }),
           },
           READY: {
-            title: '[PolyMart] Pesanan Siap Diambil',
-            message: `Pesanan anda (${itemsDesc}) sudah siap. Sila datang ambil!`,
+            title: t('commerce:notif_order_ready_title', '[PolyMart] Pesanan Siap Diambil'),
+            message: t('commerce:notif_order_ready_msg', 'Pesanan anda ({{itemsDesc}}) sudah siap. Sila datang ambil!', { itemsDesc }),
           },
           COMPLETED: {
-            title: '[PolyMart] Pesanan Selesai',
-            message: 'Terima kasih kerana berurusan di PolyMart!',
+            title: t('commerce:notif_order_completed_title', '[PolyMart] Pesanan Selesai'),
+            message: t('commerce:notif_order_completed_msg', 'Terima kasih kerana berurusan di PolyMart!'),
           },
           CANCELLED: {
-            title: '[PolyMart] Pesanan Dibatalkan',
-            message: `Pesanan anda dibatalkan${extra.cancel_reason ? `: ${extra.cancel_reason}` : ''}`,
+            title: t('commerce:notif_order_cancelled_title', '[PolyMart] Pesanan Dibatalkan'),
+            message: extra.cancel_reason
+              ? t('commerce:notif_order_cancelled_reason_msg', 'Pesanan anda dibatalkan: {{reason}}', { reason: extra.cancel_reason })
+              : t('commerce:notif_order_cancelled_msg', 'Pesanan anda dibatalkan'),
           },
         };
 
@@ -556,8 +559,8 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
 
       if (reviewOrder.buyer?.id) {
         await sendNotificationToUser(reviewOrder.buyer.id, {
-          title: '[PolyMart] Bayaran Disahkan',
-          message: 'Bayaran untuk tempahan anda telah disahkan. Pesanan sedang diproses!',
+          title: t('commerce:notif_payment_verified_title', '[PolyMart] Bayaran Disahkan'),
+          message: t('commerce:notif_payment_verified_msg', 'Bayaran untuk tempahan anda telah disahkan. Pesanan sedang diproses!'),
           type: 'polymart_payment_verified',
           module: 'POLYMART',
           link: '/polymart/pesanan-saya',
@@ -569,7 +572,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
       setReviewOrder(null);
       onUpdate();
     } catch (err: any) {
-      toast.error('Gagal mengesahkan bayaran: ' + err.message);
+      toast.error(t('commerce:payment_verify_failed', 'Gagal mengesahkan bayaran: {{error}}', { error: err.message }));
     } finally {
       setReviewLoading(false);
     }
@@ -617,8 +620,8 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
 
       if (reviewOrder.buyer?.id) {
         await sendNotificationToUser(reviewOrder.buyer.id, {
-          title: '[PolyMart] Resit Ditolak',
-          message: 'Resit pembayaran anda telah ditolak. Sila muat naik semula resit yang sah.',
+          title: t('commerce:notif_receipt_rejected_title', '[PolyMart] Resit Ditolak'),
+          message: t('commerce:notif_receipt_rejected_msg', 'Resit pembayaran anda telah ditolak. Sila muat naik semula resit yang sah.'),
           type: 'polymart_receipt_rejected',
           module: 'POLYMART',
           link: '/polymart/pesanan-saya',
@@ -630,7 +633,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
       setReviewOrder(null);
       onUpdate();
     } catch (err: any) {
-      toast.error('Gagal menolak resit: ' + err.message);
+      toast.error(t('commerce:receipt_reject_failed', 'Gagal menolak resit: {{error}}', { error: err.message }));
     } finally {
       setReviewLoading(false);
     }
@@ -696,8 +699,8 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               .join(', ');
 
             await sendNotificationToUser(buyerId, {
-              title: '[PolyMart] Bayaran Disahkan',
-              message: `Bayaran untuk tempahan anda telah disahkan secara pukal. Pesanan sedang diproses! Sedia pada: ${group.pickup_time ?? 'Akan dimaklumkan'}`,
+              title: t('commerce:notif_payment_verified_title', '[PolyMart] Bayaran Disahkan'),
+              message: t('commerce:notif_bulk_payment_verified_msg', 'Bayaran untuk tempahan anda telah disahkan secara pukal. Pesanan sedang diproses! Sedia pada: {{pickupTime}}', { pickupTime: group.pickup_time ?? t('commerce:will_be_notified', 'Akan dimaklumkan') }),
               type: 'polymart_payment_verified',
               module: 'POLYMART',
               link: '/polymart/pesanan-saya',
@@ -773,8 +776,8 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               .join(', ');
 
             await sendNotificationToUser(buyerId, {
-              title: '[PolyMart] Pesanan Siap Diambil',
-              message: `Pesanan anda (${itemsDesc}) sudah siap. Sila datang ambil!`,
+              title: t('commerce:notif_order_ready_title', '[PolyMart] Pesanan Siap Diambil'),
+              message: t('commerce:notif_order_ready_msg', 'Pesanan anda ({{itemsDesc}}) sudah siap. Sila datang ambil!', { itemsDesc }),
               type: 'polymart_order_ready',
               module: 'POLYMART',
               link: '/polymart/pesanan-saya',
@@ -895,7 +898,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-md"
-                aria-label="Kosongkan carian"
+                aria-label={t('commerce:clear_search', 'Kosongkan carian')}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -974,7 +977,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                     : 'hover:text-foreground'
                 }`}
               >
-                7 Hari
+                {t('commerce:seven_days', '7 Hari')}
               </button>
             </div>
           </div>
@@ -1012,7 +1015,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                 onClick={() => setSelectedOrderIds([])}
                 className="px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground font-bold"
               >
-                Batal Pilihan
+                {t('commerce:cancel_selection', 'Batal Pilihan')}
               </button>
             )}
 
@@ -1111,20 +1114,21 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
 
             // Dynamic WhatsApp Templates
             const storeName = bizName || 'PolyMart';
+            const buyerName = order.buyer?.full_name || t('commerce:student_buyer', 'Pelajar');
             let waText = '';
             if (order.status === 'PENDING') {
               if (order.payment_method === 'QR_ONLINE') {
-                waText = `[PolyMart] Hai ${order.buyer?.full_name || t('commerce:student_buyer', 'Pelajar')}! Tempahan anda ${shortId} di kedai ${storeName} telah diterima. Sila buat pembayaran QR Online dan muat naik resit ke sistem supaya kami boleh mengesahkan pesanan anda. Terima kasih!`;
+                waText = t('commerce:wa_template_pending_qr', '[PolyMart] Hai {{name}}! Tempahan anda {{shortId}} di kedai {{storeName}} telah diterima. Sila buat pembayaran QR Online dan muat naik resit ke sistem supaya kami boleh mengesahkan pesanan anda. Terima kasih!', { name: buyerName, shortId, storeName });
               } else {
-                waText = `[PolyMart] Hai ${order.buyer?.full_name || 'Pelajar'}! Tempahan anda ${shortId} secara COD di kedai ${storeName} telah diterima. Sila tunggu maklum balas daripada kami untuk pengesahan lanjut ya. Terima kasih!`;
+                waText = t('commerce:wa_template_pending_cod', '[PolyMart] Hai {{name}}! Tempahan anda {{shortId}} secara COD di kedai {{storeName}} telah diterima. Sila tunggu maklum balas daripada kami untuk pengesahan lanjut ya. Terima kasih!', { name: buyerName, shortId, storeName });
               }
             } else if (order.status === 'CONFIRMED') {
-              waText = `[PolyMart] Hai ${order.buyer?.full_name || 'Pelajar'}! Pembayaran / pesanan anda ${shortId} di kedai ${storeName} telah disahkan. Kami sedang menyiapkannya sekarang. Kami akan maklumkan semula apabila sedia untuk diambil. Terima kasih!`;
+              waText = t('commerce:wa_template_confirmed', '[PolyMart] Hai {{name}}! Pembayaran / pesanan anda {{shortId}} di kedai {{storeName}} telah disahkan. Kami sedang menyiapkannya sekarang. Kami akan maklumkan semula apabila sedia untuk diambil. Terima kasih!', { name: buyerName, shortId, storeName });
             } else if (order.status === 'READY') {
-              const pickupPart = order.pickup_time ? ` pada ${order.pickup_time}` : '';
-              waText = `[PolyMart] Hai ${order.buyer?.full_name || 'Pelajar'}! Tempahan anda ${shortId} di kedai ${storeName} telah SEDIA untuk diambil. Sila datang ambil di lokasi perniagaan kami${pickupPart}. Terima kasih!`;
+              const pickupPart = order.pickup_time ? t('commerce:wa_pickup_at', ' pada {{time}}', { time: order.pickup_time }) : '';
+              waText = t('commerce:wa_template_ready', '[PolyMart] Hai {{name}}! Tempahan anda {{shortId}} di kedai {{storeName}} telah SEDIA untuk diambil. Sila datang ambil di lokasi perniagaan kami{{pickupPart}}. Terima kasih!', { name: buyerName, shortId, storeName, pickupPart });
             } else if (order.status === 'CANCELLED') {
-              waText = `[PolyMart] Hai ${order.buyer?.full_name || 'Pelajar'}! Tempahan anda ${shortId} di kedai ${storeName} telah dibatalkan. Jika bayaran telah dibuat, pihak kami akan berhubung lanjut untuk proses pemulangan wang. Terima kasih.`;
+              waText = t('commerce:wa_template_cancelled', '[PolyMart] Hai {{name}}! Tempahan anda {{shortId}} di kedai {{storeName}} telah dibatalkan. Jika bayaran telah dibuat, pihak kami akan berhubung lanjut untuk proses pemulangan wang. Terima kasih.', { name: buyerName, shortId, storeName });
             }
 
             const buyerPhone = order.buyer?.phone
@@ -1424,7 +1428,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                           className="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/25 font-black text-xs flex items-center justify-center gap-1 transition-colors active:scale-95 disabled:opacity-50"
                         >
                           <X className="w-3.5 h-3.5" />
-                          <span>Batal</span>
+                          <span>{t('common:cancel', 'Batal')}</span>
                         </button>
                       </>
                     )}
@@ -1448,7 +1452,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                           className="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/25 font-black text-xs flex items-center justify-center gap-1 transition-colors active:scale-95 disabled:opacity-50"
                         >
                           <X className="w-3.5 h-3.5" />
-                          <span>Batal</span>
+                          <span>{t('common:cancel', 'Batal')}</span>
                         </button>
                       </>
                     )}
@@ -1478,7 +1482,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                             rel="noopener noreferrer"
                             className="px-2 py-0.5 rounded-lg bg-rose-500 text-white font-black text-[10px] shrink-0"
                           >
-                            Hubungi WhatsApp
+                            {t('commerce:contact_whatsapp', 'Hubungi WhatsApp')}
                           </a>
                         )}
                       </div>
@@ -1543,7 +1547,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                   disabled={actionLoading}
                   className="flex-1 py-2.5 rounded-xl border border-border/60 text-xs font-bold text-muted-foreground hover:bg-muted/40 transition-colors"
                 >
-                  Kembali
+                  {t('common:back', 'Kembali')}
                 </button>
                 <button
                   type="button"
@@ -1555,7 +1559,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                   disabled={actionLoading}
                   className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black transition-colors"
                 >
-                  {actionLoading ? 'Memproses...' : 'Sahkan Batal'}
+                  {actionLoading ? t('common:processing', 'Memproses...') : t('commerce:confirm_cancel_btn', 'Sahkan Batal')}
                 </button>
               </div>
             </motion.div>
@@ -1592,7 +1596,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                         : 'bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/60'
                     }`}
                   >
-                    {method === 'CASH' ? 'Tunai' : method === 'QR' ? 'QR Pay' : 'Transfer'}
+                    {method === 'CASH' ? t('commerce:payment_cash', 'Tunai') : method === 'QR' ? 'QR Pay' : 'Transfer'}
                   </button>
                 ))}
               </div>
@@ -1603,7 +1607,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                   disabled={actionLoading}
                   className="flex-1 py-2.5 rounded-xl border border-border/60 text-xs font-bold text-muted-foreground hover:bg-muted/40 transition-colors"
                 >
-                  Batal
+                  {t('common:cancel', 'Batal')}
                 </button>
                 <button
                   type="button"
@@ -1615,7 +1619,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
                   disabled={actionLoading}
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-colors"
                 >
-                  {actionLoading ? 'Menyimpan...' : 'Sahkan Selesai'}
+                  {actionLoading ? t('common:saving', 'Menyimpan...') : t('commerce:confirm_complete_btn', 'Sahkan Selesai')}
                 </button>
               </div>
             </motion.div>

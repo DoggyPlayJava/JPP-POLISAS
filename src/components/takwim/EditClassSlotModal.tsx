@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -127,6 +128,7 @@ export function EditClassSlotModal({
   onSaveSuccess,
   onDeleteSuccess,
 }: EditClassSlotModalProps) {
+  const { t } = useTranslation(['jpp', 'common']);
   const auth = useSafeAuth();
   const userId = auth.profile?.id || auth.user?.id || slot?.user_id;
 
@@ -230,12 +232,12 @@ export function EditClassSlotModal({
     if (!slot || !userId) return;
 
     if (!courseCode.trim()) {
-      toast.error('Sila masukkan kod kursus.');
+      toast.error(t('jpp:timetable_enter_course_code', 'Sila masukkan kod kursus.'));
       return;
     }
 
     if (!isTimeOrderValid) {
-      toast.error('Masa tamat mestilah selepas masa mula.');
+      toast.error(t('jpp:timetable_time_order_invalid', 'Masa tamat mestilah selepas masa mula.'));
       return;
     }
 
@@ -265,12 +267,12 @@ export function EditClassSlotModal({
 
       if (error) throw error;
 
-      toast.success('Slot kelas berjaya dikemaskini.');
+      toast.success(t('jpp:timetable_slot_updated_success', 'Slot kelas berjaya dikemaskini.'));
       onSaveSuccess();
       onClose();
     } catch (err: any) {
       console.error('Error updating class slot:', err);
-      toast.error(err?.message || 'Gagal mengemaskini slot kelas.');
+      toast.error(err?.message || t('jpp:timetable_slot_update_fail', 'Gagal mengemaskini slot kelas.'));
     } finally {
       setSaving(false);
     }
@@ -280,7 +282,7 @@ export function EditClassSlotModal({
   const handleDelete = async () => {
     if (!slot || !userId) return;
 
-    const confirmed = window.confirm('Adakah anda pasti ingin memadam slot kelas ini?');
+    const confirmed = window.confirm(t('jpp:timetable_confirm_delete_slot', 'Adakah anda pasti ingin memadam slot kelas ini?'));
     if (!confirmed) return;
 
     try {
@@ -293,12 +295,12 @@ export function EditClassSlotModal({
 
       if (error) throw error;
 
-      toast.success('Slot kelas berjaya dipadam.');
+      toast.success(t('jpp:timetable_slot_deleted_success', 'Slot kelas berjaya dipadam.'));
       onDeleteSuccess();
       onClose();
     } catch (err: any) {
       console.error('Error deleting class slot:', err);
-      toast.error(err?.message || 'Gagal memadam slot.');
+      toast.error(err?.message || t('jpp:timetable_delete_slot_fail', 'Gagal memadam slot.'));
     } finally {
       setDeleting(false);
     }
@@ -308,7 +310,8 @@ export function EditClassSlotModal({
     return null;
   }
 
-  const selectedDayLabel = DAY_OPTIONS.find(d => d.value === dayOfWeek)?.label || 'Isnin';
+  const selectedDayOpt = DAY_OPTIONS.find(d => d.value === dayOfWeek);
+  const selectedDayLabel = selectedDayOpt ? t('jpp:day_' + selectedDayOpt.label.toLowerCase(), selectedDayOpt.label) : t('jpp:day_isnin', 'Isnin');
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
@@ -317,10 +320,10 @@ export function EditClassSlotModal({
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <DialogTitle className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <span>Kemaskini Slot Kelas</span>
+                <span>{t('jpp:timetable_edit_slot_modal_title', 'Kemaskini Slot Kelas')}</span>
               </DialogTitle>
               <DialogDescription className="text-xs text-slate-500 dark:text-white/60">
-                Ubah maklumat dan masa untuk slot subjek ini secara individu.
+                {t('jpp:timetable_edit_slot_modal_desc', 'Ubah maklumat dan masa untuk slot subjek ini secara individu.')}
               </DialogDescription>
             </div>
 
@@ -344,12 +347,20 @@ export function EditClassSlotModal({
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <p className="font-bold">Amaran Pertindihan Jadual</p>
+              <p className="font-bold">{t('jpp:timetable_conflict_warning_title', 'Amaran Pertindihan Jadual')}</p>
               <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
-                Waktu slot ini bertindih dengan{' '}
-                <span className="font-bold underline">{conflict.course_code || 'kelas lain'}</span>{' '}
-                ({conflict.start_time.slice(0, 5)} - {conflict.end_time.slice(0, 5)}) pada hari{' '}
-                {DAY_OPTIONS.find(d => d.value === conflict.day_of_week)?.label || `Hari ${conflict.day_of_week}`}.
+                {t(
+                  'jpp:timetable_conflict_warning_body',
+                  'Waktu slot ini bertindih dengan {{course}} ({{startTime}} - {{endTime}}) pada hari {{day}}.',
+                  {
+                    course: conflict.course_code || t('jpp:timetable_another_class', 'kelas lain'),
+                    startTime: conflict.start_time.slice(0, 5),
+                    endTime: conflict.end_time.slice(0, 5),
+                    day: DAY_OPTIONS.find(d => d.value === conflict.day_of_week)
+                      ? t('jpp:day_' + DAY_OPTIONS.find(d => d.value === conflict.day_of_week).label.toLowerCase(), DAY_OPTIONS.find(d => d.value === conflict.day_of_week).label)
+                      : t('jpp:timetable_day_prefix', 'Hari {{day}}', { day: conflict.day_of_week }),
+                  }
+                )}
               </p>
             </div>
           </div>
@@ -362,7 +373,7 @@ export function EditClassSlotModal({
             <div className="space-y-1.5 sm:col-span-1">
               <Label htmlFor="course_code" className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-                Kod Kursus
+                {t('jpp:timetable_course_code_label', 'Kod Kursus')}
               </Label>
               <Input
                 id="course_code"
@@ -375,7 +386,7 @@ export function EditClassSlotModal({
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="course_name" className="text-xs font-bold text-slate-700 dark:text-white/80">
-                Nama Kursus
+                {t('jpp:timetable_course_name_label', 'Nama Kursus')}
               </Label>
               <Input
                 id="course_name"
@@ -392,16 +403,16 @@ export function EditClassSlotModal({
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                Hari
+                {t('jpp:timetable_day_label', 'Hari')}
               </Label>
               <Select value={String(dayOfWeek)} onValueChange={v => setDayOfWeek(Number(v))}>
                 <SelectTrigger className="h-9 text-xs sm:text-sm border-slate-200 dark:border-white/10">
-                  <SelectValue placeholder="Pilih Hari" />
+                  <SelectValue placeholder={t('jpp:timetable_select_day_ph', 'Pilih Hari')} />
                 </SelectTrigger>
                 <SelectContent>
                   {DAY_OPTIONS.map(d => (
                     <SelectItem key={d.value} value={String(d.value)} className="text-xs sm:text-sm">
-                      {d.label}
+                      {t('jpp:day_' + d.label.toLowerCase(), d.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -411,7 +422,7 @@ export function EditClassSlotModal({
             <div className="space-y-1.5">
               <Label htmlFor="start_time" className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                Masa Mula
+                {t('jpp:timetable_start_time_label', 'Masa Mula')}
               </Label>
               <Input
                 id="start_time"
@@ -425,7 +436,7 @@ export function EditClassSlotModal({
             <div className="space-y-1.5">
               <Label htmlFor="end_time" className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                Masa Tamat
+                {t('jpp:timetable_end_time_label', 'Masa Tamat')}
               </Label>
               <Input
                 id="end_time"
@@ -439,7 +450,7 @@ export function EditClassSlotModal({
 
           {!isTimeOrderValid && (
             <p className="text-xs font-semibold text-rose-500">
-              * Masa tamat mestilah lebih lewat daripada masa mula.
+              {t('jpp:timetable_time_order_note', '* Masa tamat mestilah lebih lewat daripada masa mula.')}
             </p>
           )}
 
@@ -447,16 +458,16 @@ export function EditClassSlotModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-700 dark:text-white/80">
-                Jenis Kelas
+                {t('jpp:timetable_class_type_label', 'Jenis Kelas')}
               </Label>
               <Select value={classType} onValueChange={v => setClassType(v as ClassType)}>
                 <SelectTrigger className="h-9 text-xs sm:text-sm border-slate-200 dark:border-white/10">
-                  <SelectValue placeholder="Pilih Jenis" />
+                  <SelectValue placeholder={t('jpp:timetable_select_type_ph', 'Pilih Jenis')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {CLASS_TYPE_OPTIONS.map(t => (
-                    <SelectItem key={t.value} value={t.value} className="text-xs sm:text-sm">
-                      {t.label}
+                  {CLASS_TYPE_OPTIONS.map(typeOpt => (
+                    <SelectItem key={typeOpt.value} value={typeOpt.value} className="text-xs sm:text-sm">
+                      {t('jpp:class_type_' + typeOpt.value.toLowerCase(), typeOpt.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -467,10 +478,10 @@ export function EditClassSlotModal({
               <div className="space-y-0.5">
                 <Label htmlFor="is_online" className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 cursor-pointer">
                   <Wifi className="w-3.5 h-3.5 text-sky-500" />
-                  Kelas Atas Talian
+                  {t('jpp:timetable_online_class_label', 'Kelas Atas Talian')}
                 </Label>
                 <span className="text-[10px] text-slate-500 dark:text-white/50 block">
-                  Tandakan jika kelas berlangsung via Google Meet/Teams
+                  {t('jpp:timetable_online_class_hint', 'Tandakan jika kelas berlangsung via Google Meet/Teams')}
                 </span>
               </div>
               <Switch
@@ -487,11 +498,11 @@ export function EditClassSlotModal({
               <Label htmlFor="room_raw" className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-                  Bilik / Ruang Kuliah
+                  {t('jpp:timetable_room_label', 'Bilik / Ruang Kuliah')}
                 </span>
                 {locationId && (
                   <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
-                    Dipadankan
+                    {t('jpp:timetable_matched_badge', 'Dipadankan')}
                   </span>
                 )}
               </Label>
@@ -499,7 +510,7 @@ export function EditClassSlotModal({
                 id="room_raw"
                 value={roomRaw}
                 onChange={e => handleRoomChange(e.target.value)}
-                placeholder="Cth: BK01, MAKMAL 2, KULIAH 3"
+                placeholder={t('jpp:timetable_room_placeholder', 'Cth: BK01, MAKMAL 2, KULIAH 3')}
                 className="h-9 text-xs sm:text-sm border-slate-200 dark:border-white/10 focus-visible:ring-indigo-500"
               />
             </div>
@@ -507,7 +518,7 @@ export function EditClassSlotModal({
             <div className="space-y-1.5">
               <Label htmlFor="lecturer_code" className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-indigo-500" />
-                Kod Pensyarah
+                {t('jpp:timetable_lecturer_code_label', 'Kod Pensyarah')}
               </Label>
               <Input
                 id="lecturer_code"
@@ -523,7 +534,7 @@ export function EditClassSlotModal({
           <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-white/5">
             <Label className="text-xs font-bold text-slate-700 dark:text-white/80 flex items-center gap-1.5">
               <Palette className="w-3.5 h-3.5 text-indigo-500" />
-              Warna Tema Subjek
+              {t('jpp:timetable_theme_color_label', 'Warna Tema Subjek')}
             </Label>
             <div className="flex items-center gap-2 flex-wrap">
               {COURSE_PALETTE.map(c => {
@@ -540,7 +551,7 @@ export function EditClassSlotModal({
                         : 'border-transparent hover:scale-105 opacity-80 hover:opacity-100'
                     )}
                     style={{ backgroundColor: c }}
-                    aria-label={`Pilih warna ${c}`}
+                    aria-label={t('jpp:timetable_select_color_aria', 'Pilih warna {{color}}', { color: c })}
                   >
                     {isSelected && (
                       <span className="w-2 h-2 rounded-full bg-white shadow-xs" />
@@ -567,7 +578,7 @@ export function EditClassSlotModal({
             ) : (
               <Trash2 className="w-3.5 h-3.5" />
             )}
-            Padam Slot Ini
+            {t('jpp:timetable_delete_this_slot_btn', 'Padam Slot Ini')}
           </Button>
 
           {/* Cancel & Save Buttons */}
@@ -579,7 +590,7 @@ export function EditClassSlotModal({
               disabled={saving || deleting}
               className="w-full sm:w-auto text-xs sm:text-sm font-bold border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               type="button"
@@ -592,7 +603,7 @@ export function EditClassSlotModal({
               ) : (
                 <Save className="w-3.5 h-3.5" />
               )}
-              Simpan Perubahan
+              {t('jpp:timetable_save_changes_btn', 'Simpan Perubahan')}
             </Button>
           </div>
         </DialogFooter>

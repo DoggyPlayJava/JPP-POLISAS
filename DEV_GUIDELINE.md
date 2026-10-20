@@ -5214,6 +5214,19 @@ Melengkapkan gelombang pembersihan pusingan keempat (Batch 4) merentasi 11 fail 
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 3,255 kepada **2,689** (penurunan kumulatif 2,956 kejadian dalam 4 batch).
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.30 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 5): FoodBank/Welfare, Commerce/POS/Rider & Takwim/Announcements
+Melengkapkan gelombang pembersihan pusingan kelima (Batch 5) merentasi 14 fail berketumpatan tinggi dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 5 Disjoint Sweep):**
+   - **Pengurusan FoodBank, Bantuan Kebajikan & Nilai Lalai (`kebajikan.json`):** `JppFoodBankAdmin.tsx` (75 isu -> 0), `FoodBankQrPassModal.tsx` (39 isu -> 0), `KebajikanSettingsPage.tsx` (41 isu -> 0), `KebajikanTicketDetail.tsx` (31 isu -> 0), dan `foodbankDefaults.ts` (49 isu -> 0) diselaraskan sepenuhnya bagi lejar perbelanjaan, imbasan pas digital, konfigurasi SLA tiket, log resolusi aduan, dan pembantu token semantik kategori makanan. Kunci `kebajikan.json` diselaraskan dengan 100% pariti.
+   - **Saluran Pesanan PolyMart, Kaunter POS & Logistik Rider (`commerce.json`, `gig.json`, `services.json`):** `VendorOrdersPipeline.tsx` (39 isu -> 0), `usePosData.ts` (38 isu -> 0), `PolyRiderAdminDashboard.tsx` (40 isu -> 0), dan `PolyServicesAdmin.tsx` (42 isu -> 0) diselubungi bagi status pesanan vendor, lejar tunai POS, kelulusan penunggang PolyRider, dan telemetri penyederhanaan PolySuara. Kunci kamus ditambah dengan 100% pariti.
+   - **Takwim Kampus, Jadual Waktu & Hebahan JPP (`jpp.json`):** `JppTakwimPage.tsx` (38 isu -> 0), `MyTimetableView.tsx` (34 isu -> 0), `PemantauanTakwimTab.tsx` (34 isu -> 0), `EditClassSlotModal.tsx` (31 isu -> 0), dan `AnnouncementsPage.tsx` (34 isu -> 0) diselaraskan sepenuhnya bagi takwim interaktif, kad jadual kelas mingguan, pemantauan cuti umum/PDF, modal kemas kini slot, dan hebahan notifikasi tolak.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 105/105 ujian lulus merentasi suite `masterLocales`, `SweepGroup4CommerceAndPosI18n`, `Domain7PolyGigI18n`, `SweepGroup2JppUnitsAndTelemetryI18n`, dan `polymartVendorSuperApp`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 2,689 kepada **2,124** (penurunan kumulatif 3,521 kejadian dalam 5 batch).
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP
