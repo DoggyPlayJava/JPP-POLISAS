@@ -110,6 +110,7 @@ function WalkwayDrawingMap({
   existingWalkways: { name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[],
   existingBuildings: Building[]
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const MapEvents = () => {
     useMapEvents({
       click(e) {
