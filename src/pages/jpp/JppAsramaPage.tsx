@@ -112,7 +112,7 @@ export function JppAsramaPage() {
   const { activeSession, semesterString, refreshSession } = useAcademicSession();
 
   const [students, setStudents] = useState<StudentRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [intakeConfig, setIntakeConfig] = useState({ month1: 7, month2: 1 });
 
   // System Settings
@@ -451,7 +451,7 @@ export function JppAsramaPage() {
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center space-y-3">
           <AlertCircle className="w-12 h-12 text-rose-400 mx-auto" />
-          <p className="font-black text-slate-700 dark:text-slate-200">Akses Terhad</p>
+          <p className="font-black text-slate-700 dark:text-slate-200">{t('jpp:asrama_access_restricted', 'Akses Terhad')}</p>
         </div>
       </div>
     );
@@ -478,8 +478,11 @@ export function JppAsramaPage() {
             </div>
             <div>
               <h1 className="font-black text-base text-slate-900 dark:text-white leading-none">
-                {t('jpp:asrama_title', 'Papan Rujukan Asrama')}
+                {t('jpp:asrama_admin_title', 'Pengurusan Penginapan Asrama (KAMSIS)')}
               </h1>
+              <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+                {t('jpp:asrama_admin_subtitle', 'Pengurusan penginapan asrama, semakan rayuan, dan kuota KAMSIS.')}
+              </p>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
                 Sesi
                 <input
@@ -489,7 +492,7 @@ export function JppAsramaPage() {
                   onBlur={async (e) => {
                     const val = e.target.value.trim();
                     if (!val || val === activeSession) return;
-                    const toastId = toast.loading('Menukar sesi...');
+                    const toastId = toast.loading(t('jpp:asrama_changing_session', 'Menukar sesi...'));
                     try {
                       await supabase.from('system_settings').upsert(
                         { key: 'current_academic_session', value: val },
@@ -507,7 +510,7 @@ export function JppAsramaPage() {
                   value={semesterString}
                   onChange={async (e) => {
                     const val = e.target.value;
-                    const toastId = toast.loading('Menukar semester...');
+                    const toastId = toast.loading(t('jpp:asrama_changing_semester', 'Menukar semester...'));
                     try {
                       await supabase.from('system_settings').upsert(
                         { key: 'current_academic_semester', value: val },
@@ -582,11 +585,11 @@ export function JppAsramaPage() {
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {[
-            { id: 'semua', label: 'Semua Data' },
-            { id: 'pemohon', label: 'Senarai Pemohon Baru' },
-            { id: 'rayuan', label: 'Senarai Rayuan' },
-            { id: 'kamsis', label: 'Dalam Asrama' },
-            { id: 'klk', label: 'Luar Kampus (KLK)' },
+            { id: 'semua', label: t('jpp:asrama_tab_all', 'Semua Data') },
+            { id: 'pemohon', label: t('jpp:asrama_tab_applicants', 'Senarai Pemohon Baru') },
+            { id: 'rayuan', label: t('jpp:asrama_tab_appeals', 'Senarai Rayuan') },
+            { id: 'kamsis', label: t('jpp:asrama_tab_kamsis', 'Dalam Asrama') },
+            { id: 'klk', label: t('jpp:asrama_tab_klk', 'Luar Kampus (KLK)') },
           ].map(tab => (
             <button
               key={tab.id}
@@ -606,7 +609,7 @@ export function JppAsramaPage() {
           <Filter className="w-4 h-4 text-slate-400 flex-shrink-0" />
           <div className="relative flex-1 min-w-[160px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-            <input type="text" placeholder="Cari nama..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
+            <input type="text" placeholder={t('jpp:asrama_search_placeholder', 'Cari nama...')} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
           </div>
           <select value={filterTahap} onChange={e => setFilterTahap(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
             <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Tahap</option>
@@ -620,6 +623,11 @@ export function JppAsramaPage() {
 
         {/* ── Table (desktop) ─────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+              {t('jpp:asrama_residents_list', 'Senarai Penghuni Asrama')}
+            </h3>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>

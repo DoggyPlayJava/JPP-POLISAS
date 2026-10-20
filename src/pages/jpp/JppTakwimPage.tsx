@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -76,6 +77,7 @@ function useRbac() {
 
 // ── Main Page ──
 export function JppTakwimPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const [filter, setFilter] = useState('KESELURUHAN');
   const [sesi, setSesi] = useState('2026/2027');
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
@@ -216,8 +218,12 @@ export function JppTakwimPage() {
               <CalendarDays className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Takwim POLISAS Berpusat</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{INSTITUSI_LABEL} · {sesi}</p>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {t('jpp:takwim_admin_title', 'Takwim Aktiviti Kampus & Jadual Akademik')}
+              </h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+                {INSTITUSI_LABEL} · {sesi} · {t('jpp:takwim_admin_subtitle', 'Pengurusan kalendar akademik, peperiksaan, cuti umum, dan acara rasmi kampus POLISAS.')}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -227,7 +233,7 @@ export function JppTakwimPage() {
           <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
             <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Warna Rasmi JPP</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_official_color', 'Warna Rasmi JPP')}</p>
               <p className="text-[10px] text-muted-foreground">Digunakan pada header jadual, baris cuti & PDF takwim.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -260,13 +266,13 @@ export function JppTakwimPage() {
             {rbac.isAkademik && (
               <Button onClick={() => setBulkMode(true)} variant="outline" className="h-10 rounded-xl border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest">
                 <Upload className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Auto-Fill Akademik</span>
+                <span className="hidden md:inline">{t('jpp:takwim_autofill_btn', 'Auto-Fill Akademik')}</span>
               </Button>
             )}
             {rbac.isYDP && (
               <Button onClick={handleNotify} variant="outline" className="h-10 rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest">
                 <Bell className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Hebah</span>
+                <span className="hidden md:inline">{t('jpp:takwim_broadcast_btn', 'Hebah')}</span>
               </Button>
             )}
             {items.length > 0 && (
@@ -291,13 +297,13 @@ export function JppTakwimPage() {
                 className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest"
               >
                 {isExportingPdf ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
-                <span className="hidden md:inline">PDF</span>
+                <span className="hidden md:inline">{t('jpp:takwim_export_pdf', 'Eksport PDF')}</span>
               </Button>
             )}
             {rbac.canAdd && (
               <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
                 <Plus className="w-3 h-3 md:mr-2" />
-                <span className="hidden md:inline">Tambah</span>
+                <span className="hidden md:inline">{t('jpp:takwim_add_event_btn', 'Tambah Acara Takwim')}</span>
               </Button>
             )}
           </div>
@@ -305,7 +311,7 @@ export function JppTakwimPage() {
 
         {/* ── Stats Badges ── */}
         <div className="flex flex-wrap gap-2">
-          {Object.entries(stats).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
+          {Object.entries(stats || {}).filter(([k]) => k !== 'KESELURUHAN').map(([k, v]) => {
             const cfg = TAKWIM_JENIS[k];
             if (!cfg || v === 0) return null;
             return (
@@ -316,7 +322,7 @@ export function JppTakwimPage() {
               </Badge>
             );
           })}
-          {stats.KESELURUHAN > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
+          {(stats?.KESELURUHAN || 0) > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
         </div>
 
         {/* ── Floating Bulk Actions Dock ── */}
@@ -454,7 +460,7 @@ export function JppTakwimPage() {
       <ConfirmDialog
         open={Boolean(deleteTargetItem)}
         onOpenChange={(open) => !open && setDeleteTargetItem(null)}
-        title="Padam Entri Takwim"
+        title={t('jpp:takwim_confirm_delete_title', 'Padam Entri Takwim')}
         description={deleteTargetItem ? `Adakah anda pasti mahu memadam "${deleteTargetItem.tajuk}" daripada takwim berpusat?` : ''}
         confirmLabel="Padam Entri"
         cancelLabel="Batal"
@@ -466,9 +472,9 @@ export function JppTakwimPage() {
       <ConfirmDialog
         open={bulkConfirmOpen}
         onOpenChange={setBulkConfirmOpen}
-        title="Padam Entri Pukal"
+        title={t('jpp:takwim_delete_bulk_title', 'Padam Entri Pukal')}
         description={`Adakah anda pasti mahu memadam ${bulkSelected.size} entri takwim yang dipilih?`}
-        confirmLabel="Padam Semua"
+        confirmLabel={t('jpp:takwim_delete_all_btn', 'Padam Semua')}
         cancelLabel="Batal"
         variant="destructive"
         isLoading={bulkDeleting}
@@ -483,6 +489,7 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
   items: TakwimItem[]; rbac: any; onEdit: (i: TakwimItem) => void; onDelete: (i: TakwimItem) => void;
   bulkSelected: Set<string>; onBulkToggle: (s: Set<string>) => void;
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   if (items.length === 0) return <EmptyState />;
   const fmtDate = (d: string) => { try { return format(parseISO(d), 'd MMM yyyy', { locale: ms }); } catch { return d; } };
   const editableItems = items.filter(i => i.type === 'takwim_pusat' && rbac.canEdit(i));
@@ -510,11 +517,11 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                     className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-rose-500 focus:ring-rose-500/30" />
                 )}
               </th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tarikh</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Catatan</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_type', 'Jenis')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_title', 'Tajuk')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_date', 'Tarikh')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_week', 'Minggu')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_notes', 'Catatan')}</th>
               <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 w-20"></th>
             </tr>
           </thead>
@@ -617,11 +624,12 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
 }
 
 function EmptyState() {
+  const { t } = useTranslation(['jpp', 'common']);
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
-      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">Tiada entri takwim</p>
-      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">Gunakan butang "Tambah" untuk menambah entri baru</p>
+      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">{t('jpp:takwim_empty_title', 'Tiada entri takwim')}</p>
+      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{t('jpp:takwim_empty_desc', 'Gunakan butang "Tambah" untuk menambah entri baru')}</p>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 // Tab 2: Unit Pengurusan Asrama — assign/remove staff
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -55,6 +56,7 @@ const KK_COLOR = '#E879F9';
 
 // ─── Rujukan Asrama Banner ────────────────────────────────────────────────────
 function AsramaBanner() {
+  const { t } = useTranslation(['jpp', 'common']);
   const navigate = useNavigate();
   return (
     <motion.button
@@ -89,6 +91,7 @@ function AsramaBanner() {
 
 // ─── Unit Pengurusan Asrama Tab ───────────────────────────────────────────────
 function UnitAsramaTab() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { profile, isSuperAdmin, isKediamanExco } = useAuth();
 
   const [unitAdmins, setUnitAdmins]       = useState<any[]>([]);
@@ -711,6 +714,7 @@ function TakwimKediamanTab() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function KkUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { hasKediamanAccess, isKediamanExco, isSuperAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -735,6 +739,22 @@ export function KkUnitDashboard() {
 
   return (
     <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <Building2 className="w-7 h-7" style={{ color: KK_COLOR }} />
+            {t('jpp:kk_dashboard_title', 'Pusat Kawalan Unit Kelab & Perpaduan')}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
+            {t('jpp:kk_dashboard_subtitle', 'Penyeliaan kelab dan persatuan mahasiswa POLISAS, semakan geran, dan pemantauan merit rasmi.')}
+          </p>
+        </div>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs font-bold text-purple-600 dark:text-purple-300">
+          {t('jpp:kk_directory_title', 'Direktori Kelab & Persatuan')}
+        </div>
+      </div>
+
       {/* Tabs — hanya papar jika ada hak manage */}
       {showUnitTab && (
         <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
@@ -751,7 +771,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <LayoutGrid className="w-3.5 h-3.5" /> Dashboard
+            <LayoutGrid className="w-3.5 h-3.5" /> {t('jpp:kk_tab_dashboard', 'Dashboard')}
           </button>
           <button
             onClick={() => handleTabChange('unit')}
@@ -766,7 +786,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <ShieldCheck className="w-3.5 h-3.5" /> Unit Pengurusan Asrama
+            <ShieldCheck className="w-3.5 h-3.5" /> {t('jpp:kk_tab_unit_asrama', 'Unit Pengurusan Asrama')}
           </button>
           <button
             onClick={() => handleTabChange('merit-rasmi')}
@@ -781,7 +801,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <Trophy className="w-3.5 h-3.5" /> Merit Rasmi
+            <Trophy className="w-3.5 h-3.5" /> {t('jpp:kk_tab_merit_rasmi', 'Merit Rasmi')}
           </button>
           <button
             onClick={() => handleTabChange('qr')}
@@ -796,7 +816,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <QrCode className="w-3.5 h-3.5" /> QR Merit
+            <QrCode className="w-3.5 h-3.5" /> {t('jpp:kk_tab_qr_merit', 'QR Merit')}
           </button>
           <button
             onClick={() => handleTabChange('takwim')}
@@ -811,7 +831,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <CalendarDays className="w-3.5 h-3.5" /> Takwim
+            <CalendarDays className="w-3.5 h-3.5" /> {t('jpp:kk_tab_takwim', 'Takwim')}
           </button>
           <button
             onClick={() => handleTabChange('demerit')}
@@ -826,7 +846,7 @@ export function KkUnitDashboard() {
                 : undefined
             }
           >
-            <ShieldAlert className="w-3.5 h-3.5" /> Demerit
+            <ShieldAlert className="w-3.5 h-3.5" /> {t('jpp:kk_tab_demerit', 'Demerit')}
           </button>
         </div>
       )}
