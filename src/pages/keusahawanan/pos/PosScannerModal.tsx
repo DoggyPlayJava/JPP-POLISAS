@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -32,6 +33,7 @@ interface PosScannerModalProps {
 }
 
 export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosScannerModalProps) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
@@ -104,17 +106,17 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
         .single();
 
       if (fetchError || !rawOrder) {
-        throw new Error('Pesanan tidak wujud atau kod QR tidak sah.');
+        throw new Error(t('keusahawanan:pos_scanner_order_not_found', 'Pesanan tidak wujud atau kod QR tidak sah.'));
       }
 
       const order = rawOrder as unknown as ScannedOrder;
 
       if (order.business_id !== businessIdRef.current) {
-        throw new Error('Pesanan ini bukan untuk perniagaan anda.');
+        throw new Error(t('keusahawanan:pos_scanner_order_not_yours', 'Pesanan ini bukan untuk perniagaan anda.'));
       }
 
       if (order.status !== 'READY' && order.status !== 'CONFIRMED') {
-        throw new Error(`Pesanan sudah selesai/batal (Status: ${order.status}).`);
+        throw new Error(t('keusahawanan:pos_scanner_order_already_completed', 'Pesanan sudah selesai/batal (Status: {{status}}).', { status: order.status }));
       }
 
       // 2. Selesaikan order melalui RPC
@@ -139,25 +141,28 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
 
       // 4. Set Success HUD
       const sizeStr = order.selected_variation ? ` [Saiz: ${order.selected_variation}]` : '';
+      const buyerName = order.buyer?.full_name || t('keusahawanan:pos_scanner_default_customer', 'Pelanggan');
+      const prodName = order.business_products?.name || t('keusahawanan:pos_scanner_default_product', 'Produk');
+
       if (mountedRef.current) {
         setHudState({
           status: 'success',
-          message: `SELESAI: ${order.buyer?.full_name || 'Pelanggan'}`,
-          subMessage: `${order.business_products?.name || 'Produk'}${sizeStr} x ${order.quantity}`
+          message: t('keusahawanan:pos_scanner_done_buyer', 'SELESAI: {{name}}', { name: buyerName }),
+          subMessage: `${prodName}${sizeStr} x ${order.quantity}`
         });
       }
-      toast.success(`SELESAI: ${order.buyer?.full_name || 'Pelanggan'}`);
+      toast.success(t('keusahawanan:pos_scanner_done_buyer', 'SELESAI: {{name}}', { name: buyerName }));
 
     } catch (err: any) {
       playBeep(false);
       if (mountedRef.current) {
         setHudState({
           status: 'error',
-          message: 'RALAT IMBASAN',
-          subMessage: err.message || 'Gagal memproses pesanan.'
+          message: t('keusahawanan:pos_scanner_error_title', 'RALAT IMBASAN'),
+          subMessage: err.message || t('keusahawanan:pos_scanner_error_fallback', 'Gagal memproses pesanan.')
         });
       }
-      toast.error(err.message || 'Gagal memproses pesanan.');
+      toast.error(err.message || t('keusahawanan:pos_scanner_error_fallback', 'Gagal memproses pesanan.'));
     } finally {
       // 5. Padam HUD dan buka kekunci throttle selepas 1.5 saat
       setTimeout(() => {
@@ -167,7 +172,7 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
         processingRef.current = false;
       }, 1500);
     }
-  }, [playBeep]);
+  }, [playBeep, t]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -205,9 +210,9 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
     ).catch((err) => {
       console.error("QR Scanner failed to start", err);
       if (err?.name === 'NotAllowedError' || err?.message?.includes('NotAllowedError')) {
-        setErrorMsg('Akses kamera ditolak atau disekat oleh pelayar web (Sila pastikan guna HTTPS/Localhost).');
+        setErrorMsg(t('keusahawanan:pos_scanner_camera_permission', 'Akses kamera ditolak atau disekat oleh pelayar web (Sila pastikan guna HTTPS/Localhost).'));
       } else {
-        setErrorMsg('Gagal memulakan kamera. Peranti mungkin tiada kamera atau disekat.');
+        setErrorMsg(t('keusahawanan:pos_scanner_camera_failed', 'Gagal memulakan kamera. Peranti mungkin tiada kamera atau disekat.'));
       }
     });
 
@@ -221,7 +226,7 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
         audioCtxRef.current.close().catch(console.error);
       }
     };
-  }, [onScan, handleBulkProcess]);
+  }, [onScan, handleBulkProcess, t]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -230,8 +235,12 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
       {/* Top Header */}
       <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20">
         <div className="flex flex-col">
-          <h3 className="font-black text-lg tracking-tight">Imbas QR PolyMart</h3>
-          <p className="text-[10px] text-white/50 font-semibold">Kaunter POS Bersepadu</p>
+          <h3 className="font-black text-lg tracking-tight">
+            {t('keusahawanan:pos_scanner_hud_title', 'Imbas QR PolyMart')}
+          </h3>
+          <p className="text-[10px] text-white/50 font-semibold">
+            {t('keusahawanan:pos_scanner_hud_sub', 'Kaunter POS Bersepadu')}
+          </p>
         </div>
         <button onClick={onClose} className="p-2.5 bg-white/10 rounded-full hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
           <X className="w-5 h-5" />
@@ -305,7 +314,9 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
                 <span className={`text-[9px] font-black uppercase tracking-widest mt-6 bg-white/10 px-2.5 py-1 rounded-md ${
                   hudState.status === 'success' ? 'text-emerald-400' : 'text-rose-400'
                 }`}>
-                  {hudState.status === 'success' ? '⚡ Bersedia untuk Imbasan Seterusnya' : '⚠️ Sila Semak Tempahan'}
+                  {hudState.status === 'success' 
+                    ? t('keusahawanan:pos_scanner_ready_next', '⚡ Bersedia untuk Imbasan Seterusnya') 
+                    : t('keusahawanan:pos_scanner_check_order', '⚠️ Sila Semak Tempahan')}
                 </span>
               </motion.div>
             )}
@@ -323,12 +334,12 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
             }`}
           >
             <Zap className={`w-4 h-4 ${bulkMode ? 'animate-pulse text-emerald-400' : ''}`} />
-            ⚡ Mod Imbas Pukal (Pantas)
+            {t('keusahawanan:pos_scanner_bulk_toggle', '⚡ Mod Imbas Pukal (Pantas)')}
           </button>
           <p className="text-[10px] text-white/40 font-bold text-center px-4 leading-normal">
             {bulkMode 
-              ? 'Kamera kekal aktif. Menyelesaikan pesanan secara automatik sebaik sahaja diimbas dengan HUD 1.5s.' 
-              : 'Imbasan tunggal biasa. Memaparkan tetingkap sahkan bayaran sebelum menyelesaikan pesanan.'
+              ? t('keusahawanan:pos_scanner_bulk_desc_on', 'Kamera kekal aktif. Menyelesaikan pesanan secara automatik sebaik sahaja diimbas dengan HUD 1.5s.') 
+              : t('keusahawanan:pos_scanner_bulk_desc_off', 'Imbasan tunggal biasa. Memaparkan tetingkap sahkan bayaran sebelum menyelesaikan pesanan.')
             }
           </p>
         </div>
@@ -336,9 +347,11 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
       
       {/* Bottom Footer Info */}
       <div className="p-6 text-center text-xs font-bold text-white/50 pb-10">
-        <p>Halakan kamera pada Kod QR pesanan pelanggan untuk memulakan semakan</p>
+        <p>{t('keusahawanan:pos_scanner_instructions', 'Halakan kamera pada Kod QR pesanan pelanggan untuk memulakan semakan')}</p>
         {bulkMode && processedIdsRef.current.size > 0 && (
-          <p className="mt-1 text-emerald-400/60">✅ {processedIdsRef.current.size} pesanan telah diimbas sesi ini</p>
+          <p className="mt-1 text-emerald-400/60">
+            {t('keusahawanan:pos_scanner_bulk_session_count', '✅ {{count}} pesanan telah diimbas sesi ini', { count: processedIdsRef.current.size })}
+          </p>
         )}
       </div>
     </motion.div>
