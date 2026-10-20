@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import {
   verifyJuryCode,
   submitJuryScore,
@@ -789,7 +790,8 @@ export function EmsJuryPortalPage() {
   if (!session || !eventData || !juryCodeData) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 pb-28 md:pb-8 relative overflow-hidden transition-colors">
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle />
         </div>
 
@@ -1022,6 +1024,7 @@ export function EmsJuryPortalPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1 ml-1">
+                <LanguageToggle />
                 <ThemeToggle />
                 <button
                   onClick={handleLogout}

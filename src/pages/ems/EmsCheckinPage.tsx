@@ -38,6 +38,7 @@ import { fetchEmsEventById, checkinEmsParticipant, EmsEventDetail } from '@/lib/
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import type { EmsParticipant, EmsVisitor } from '@/types';
 
 // Web Audio API beep sound generator for scan feedback
@@ -490,6 +491,7 @@ export function EmsCheckinPage() {
         </div>
 
         <div className="flex items-center gap-2 self-end md:self-auto">
+          <LanguageToggle />
           <ThemeToggle />
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}

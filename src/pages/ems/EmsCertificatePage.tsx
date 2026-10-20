@@ -25,6 +25,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import {
   EmsCertData,
   EmsCertificateDocument,
@@ -259,6 +260,7 @@ export const EmsCertificatePage: React.FC = () => {
                 Semak
               </button>
             </form>
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </div>

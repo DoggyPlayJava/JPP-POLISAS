@@ -16,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { fetchUserCertificates } from '@/lib/ems';
 import type { EmsCertificate } from '@/types';
 
@@ -70,6 +71,7 @@ export const EmsCertVerifyPage: React.FC = () => {
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> Portal Rasmi POLISAS
           </span>
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>

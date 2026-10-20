@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { supabase } from '@/lib/supabase';
 import type { EmsEvent, EmsVisitor } from '@/types';
 
@@ -244,7 +245,8 @@ export function EmsAudienceScanPage({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans transition-colors">
       {/* Floating ThemeToggle in top-right corner */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
 

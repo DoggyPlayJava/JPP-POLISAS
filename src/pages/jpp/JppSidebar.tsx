@@ -20,6 +20,7 @@ import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, getJppSidebarBg, JPP_COLOR_PRESETS } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // Auto-calculate current academic session based on date
@@ -207,6 +208,7 @@ export function JppSidebar() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1">
+            <LanguageToggle />
             <ThemeToggle />
             {canCustomize && (
               <button

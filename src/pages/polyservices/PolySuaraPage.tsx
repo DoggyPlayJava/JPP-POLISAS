@@ -19,6 +19,7 @@ import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import ReactMarkdown from 'react-markdown';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { PolySuaraReactions } from '@/components/polysuara/PolySuaraReactions';
 import {
   cleanConfessionText,
@@ -1562,6 +1563,7 @@ export function PolySuaraPage({
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
             <button
               disabled={notifToggleLoading}

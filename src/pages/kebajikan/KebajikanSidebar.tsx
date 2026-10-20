@@ -25,6 +25,7 @@ import { useNotificationStore } from '@/store/useNotificationStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { cn, hexToRgba } from '@/lib/utils';
 import { KEBAJIKAN_THEME_COLOR } from '@/types';
 
@@ -265,6 +266,7 @@ export function KebajikanSidebar() {
             <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
             {t('nav:logout', 'Log Keluar')}
           </Button>
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>
