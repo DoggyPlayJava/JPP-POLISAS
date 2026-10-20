@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Briefcase, ChevronRight, User, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
@@ -11,6 +12,7 @@ import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
 
 export function PolyTaskMyJobs() {
+  const { t } = useTranslation(['gig', 'common']);
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
@@ -40,10 +42,10 @@ export function PolyTaskMyJobs() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'OPEN': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">DIBUKA</span>;
-      case 'IN_PROGRESS': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">SEDANG DIJALANKAN</span>;
-      case 'COMPLETED': return <span className="px-3 py-1 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">SELESAI</span>;
-      case 'CANCELLED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">DIBATALKAN</span>;
+      case 'OPEN': return <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">{t('gig:status_open', 'DIBUKA')}</span>;
+      case 'IN_PROGRESS': return <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">{t('gig:status_in_progress', 'SEDANG DIJALANKAN')}</span>;
+      case 'COMPLETED': return <span className="px-3 py-1 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">{t('gig:status_completed_task', 'SELESAI')}</span>;
+      case 'CANCELLED': return <span className="px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">{t('gig:status_cancelled_task', 'DIBATALKAN')}</span>;
       default: return null;
     }
   };
@@ -52,8 +54,8 @@ export function PolyTaskMyJobs() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto min-h-screen">
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">Kerja <span className="text-indigo-400">Saya</span></h1>
-          <p className="text-slate-400">Pantau status tugasan yang anda iklankan dan pilih Tasker terbaik.</p>
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">{t('gig:my_jobs_title_prefix', 'Kerja')} <span className="text-indigo-400">{t('gig:my_jobs_title_suffix', 'Saya')}</span></h1>
+          <p className="text-slate-400">{t('gig:my_jobs_subtitle', 'Pantau status tugasan yang anda iklankan dan pilih Tasker terbaik.')}</p>
         </div>
         <button 
           onClick={startTour} 
@@ -74,9 +76,9 @@ export function PolyTaskMyJobs() {
           <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
             <Briefcase className="w-8 h-8 text-slate-500" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Belum ada tugasan</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('gig:no_jobs_posted_title', 'Belum ada tugasan')}</h3>
           <p className="text-slate-400 max-w-sm mb-6">
-            Anda belum pernah mengiklankan apa-apa tugasan setakat ini. Cipta tugasan pertama anda sekarang!
+            {t('gig:no_jobs_posted_desc', 'Anda belum pernah mengiklankan apa-apa tugasan setakat ini. Cipta tugasan pertama anda sekarang!')}
           </p>
         </div>
       ) : (
@@ -105,13 +107,13 @@ export function PolyTaskMyJobs() {
                     <User className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-medium">Bidaan Diterima</p>
-                    <p className="text-sm font-bold text-white">{job.polytask_bids?.[0]?.count || 0} Tasker</p>
+                    <p className="text-xs text-slate-500 font-medium">{t('gig:bids_received_label', 'Bidaan Diterima')}</p>
+                    <p className="text-sm font-bold text-white">{t('gig:bids_received_count', '{{count}} Tasker', { count: job.polytask_bids?.[0]?.count || 0 })}</p>
                   </div>
                 </div>
 
                 <button className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)]">
-                  Lihat Bidaan <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {t('gig:view_bids_btn', 'Lihat Bidaan')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </motion.div>

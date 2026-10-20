@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bike, CheckCircle, ShieldAlert, Navigation, Upload, Clock, MapPin, X, MessageCircle, Send, Banknote, Users, Star, TrendingUp, Phone, UserCircle, History, ChevronRight, Bug, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -36,6 +37,7 @@ const VALID_TRANSITIONS: Record<string, string> = {
 
 export function PolyRiderDashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation(['gig', 'common']);
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -778,14 +780,14 @@ export function PolyRiderDashboard() {
           <div className="w-20 h-20 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Bike className="w-10 h-10 text-amber-500" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Jadi PolyRider</h1>
-          <p className="text-slate-500 dark:text-white/60 mt-2 font-medium">Jana pendapatan dengan menghantar pelajar, dokumen atau makanan di sekitar kampus.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white">{t('gig:become_polyrider_title', 'Jadi PolyRider')}</h1>
+          <p className="text-slate-500 dark:text-white/60 mt-2 font-medium">{t('gig:become_polyrider_desc', 'Jana pendapatan dengan menghantar pelajar, dokumen atau makanan di sekitar kampus.')}</p>
         </div>
 
         <form onSubmit={handleRegister} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 shadow-xl dark:shadow-none border border-slate-100 dark:border-white/5 flex-1">
           <div className="space-y-6">
             <div>
-              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">Jenis Kenderaan</label>
+              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">{t('gig:vehicle_type', 'Jenis Kenderaan')}</label>
               <div className="grid grid-cols-2 gap-3">
                 {['MOTOR', 'KERETA'].map(type => (
                   <button
@@ -801,11 +803,11 @@ export function PolyRiderDashboard() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">No. Plat Kenderaan</label>
+              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">{t('gig:plate_number', 'No. Plat Kenderaan')}</label>
               <input
                 type="text"
                 required
-                placeholder="Cth: CEH1234"
+                placeholder={t('gig:plate_number_placeholder', 'Cth: CEH1234')}
                 className="w-full bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 font-bold uppercase text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 value={plateNumber}
                 onChange={(e) => setPlateNumber(e.target.value)}
@@ -813,11 +815,11 @@ export function PolyRiderDashboard() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">Yuran Langganan Bulanan (RM 10.00)</label>
+              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">{t('gig:monthly_fee', 'Yuran Langganan Bulanan (RM 10.00)')}</label>
               
               {adminQrUrl && (
                 <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-4 mb-4 flex flex-col items-center border border-slate-200 dark:border-white/10">
-                  <p className="text-xs font-bold text-slate-500 dark:text-white/60 mb-2">Imbas kod QR di bawah untuk pembayaran:</p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-white/60 mb-2">{t('gig:qr_instruction', 'Imbas kod QR di bawah untuk pembayaran:')}</p>
                   <img src={adminQrUrl} alt="Admin QR Code" className="w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-white/10" />
                 </div>
               )}
@@ -833,8 +835,8 @@ export function PolyRiderDashboard() {
                 />
                 <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center">
                   <Upload className="w-8 h-8 text-slate-400 dark:text-white/40 mb-2" />
-                  <span className="text-sm font-bold text-amber-600">{receiptFile ? receiptFile.name : 'Muat Naik Resit'}</span>
-                  <span className="text-xs text-slate-400 dark:text-white/40 mt-1">Sokongan JPG, PNG, PDF</span>
+                  <span className="text-sm font-bold text-amber-600">{receiptFile ? receiptFile.name : t('gig:upload_receipt', 'Muat Naik Resit')}</span>
+                  <span className="text-xs text-slate-400 dark:text-white/40 mt-1">{t('gig:upload_receipt_types', 'Sokongan JPG, PNG, PDF')}</span>
                 </label>
               </div>
             </div>
@@ -844,7 +846,7 @@ export function PolyRiderDashboard() {
               disabled={isSubmitting}
               className="w-full bg-slate-900 dark:bg-amber-500 hover:bg-slate-800 dark:hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-lg transition-all"
             >
-              {isSubmitting ? 'Menghantar...' : 'Hantar Permohonan'}
+              {isSubmitting ? t('gig:submitting', 'Menghantar...') : t('gig:submit_application', 'Hantar Permohonan')}
             </button>
           </div>
         </form>
@@ -862,9 +864,9 @@ export function PolyRiderDashboard() {
         <div className="w-24 h-24 bg-blue-50 dark:bg-blue-500/10 border-8 border-white dark:border-zinc-950 shadow-xl dark:shadow-none rounded-full flex items-center justify-center mb-6">
           <Clock className="w-10 h-10 text-blue-500" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Permohonan Diproses</h2>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('gig:application_pending_title', 'Permohonan Diproses')}</h2>
         <p className="text-slate-500 dark:text-white/60 max-w-sm font-medium leading-relaxed">
-          Pihak KLK sedang menyemak resit bayaran anda. Kelulusan biasanya mengambil masa kurang 24 jam bekerja.
+          {t('gig:application_pending_desc', 'Pihak KLK sedang menyemak resit bayaran anda. Kelulusan biasanya mengambil masa kurang 24 jam bekerja.')}
         </p>
         {renderContactJPP()}
       </div>
@@ -877,12 +879,12 @@ export function PolyRiderDashboard() {
         <div className="w-24 h-24 bg-red-50 dark:bg-red-500/10 border-8 border-white dark:border-zinc-950 shadow-xl dark:shadow-none rounded-full flex items-center justify-center mb-6">
           <X className="w-10 h-10 text-red-500" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Permohonan Ditolak</h2>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('gig:application_rejected_title', 'Permohonan Ditolak')}</h2>
         <p className="text-slate-500 dark:text-white/60 max-w-sm font-medium leading-relaxed mb-6">
-          Sila muat naik resit yang sah atau hubungi pihak pengurusan JPP / KLK untuk maklumat lanjut.
+          {t('gig:application_rejected_desc', 'Sila muat naik resit yang sah atau hubungi pihak pengurusan JPP / KLK untuk maklumat lanjut.')}
         </p>
         <button onClick={() => setProfile(null)} className="px-6 py-3 bg-slate-900 dark:bg-amber-500 text-white rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-amber-600">
-          Buat Permohonan Baru
+          {t('gig:reapply_btn', 'Buat Permohonan Baru')}
         </button>
         {renderContactJPP()}
       </div>
@@ -908,7 +910,7 @@ export function PolyRiderDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            Papan Tugasan <Bike className="w-6 h-6 text-emerald-500" />
+            {t('gig:task_board', 'Papan Tugasan')} <Bike className="w-6 h-6 text-emerald-500" />
           </h1>
           <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-1">
             Plat: {profile.plate_number}
@@ -921,7 +923,7 @@ export function PolyRiderDashboard() {
           className={`px-4 py-2 rounded-full font-black text-xs tracking-wider transition-all flex items-center gap-2 ${profile.status === 'SUSPENDED' ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-zinc-900/10 text-slate-500' : profile.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50'}`}
         >
           <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-white dark:bg-zinc-900 animate-pulse' : 'bg-slate-400 dark:bg-white dark:bg-zinc-900/40'}`} />
-          {profile.is_active ? 'ON-DUTY' : 'OFF-DUTY'}
+          {profile.is_active ? t('gig:on_duty', 'ON-DUTY') : t('gig:off_duty', 'OFF-DUTY')}
         </button>
       </div>
 
@@ -930,9 +932,9 @@ export function PolyRiderDashboard() {
         <div className="mb-6 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl p-4 flex items-start gap-3">
           <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-sm font-black text-rose-700 dark:text-rose-400">Akaun Digantung</h3>
+            <h3 className="text-sm font-black text-rose-700 dark:text-rose-400">{t('gig:account_suspended', 'Akaun Digantung')}</h3>
             <p className="text-xs font-medium text-rose-600 dark:text-rose-400/80 mt-1 leading-relaxed">
-              Fungsi tugas anda telah digantung sementara oleh pihak pengurusan KLK. Sila hubungi urusetia jika ini adalah satu kesilapan.
+              {t('gig:account_suspended_desc', 'Fungsi tugas anda telah digantung sementara oleh pihak pengurusan KLK. Sila hubungi urusetia jika ini adalah satu kesilapan.')}
             </p>
           </div>
         </div>
@@ -943,7 +945,7 @@ export function PolyRiderDashboard() {
       {activeJobs.length > 0 && (
         <div className="mb-8">
           <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center justify-between">
-            <span className="flex items-center gap-2"><Users className="w-4 h-4 text-emerald-500" /> Penumpang Semasa ({activeJobs.length}/3)</span>
+            <span className="flex items-center gap-2"><Users className="w-4 h-4 text-emerald-500" /> {t('gig:current_passengers', 'Penumpang Semasa')} ({activeJobs.length}/3)</span>
             <button onClick={checkActiveJobs} className="text-[10px] font-black text-slate-400 dark:text-white/40 hover:text-amber-500 uppercase tracking-widest flex items-center gap-1 transition-colors">
               ↻ Refresh
             </button>
@@ -967,7 +969,7 @@ export function PolyRiderDashboard() {
                       <p className="font-bold text-slate-900 dark:text-white">{job.student?.full_name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Bayaran</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:payment_label', 'Bayaran')}</p>
                       <p className="text-xl font-black text-amber-500">RM {Number(job.proposed_price).toFixed(2)}</p>
                     </div>
                   </div>
@@ -992,7 +994,7 @@ export function PolyRiderDashboard() {
                       </div>
                       <div className="flex-1 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Pickup</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:pickup_point', 'Pickup')}</p>
                           <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{job.pickup_name}</p>
                         </div>
                         {job.status === 'ACCEPTED' && (
@@ -1016,7 +1018,7 @@ export function PolyRiderDashboard() {
                         </div>
                         <div className="flex-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
                           <div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Singgahan {i + 1}</p>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t('gig:stop_label', 'Singgahan {{index}}', { index: i + 1 })}</p>
                             <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{s.name}</p>
                           </div>
                           {job.status === 'IN_TRANSIT' && s.lat && s.lng && (

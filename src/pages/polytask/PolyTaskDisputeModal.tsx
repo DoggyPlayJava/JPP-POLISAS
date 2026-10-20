@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,12 +14,13 @@ interface PolyTaskDisputeModalProps {
 }
 
 export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDisputeSubmitted }: PolyTaskDisputeModalProps) {
+  const { t } = useTranslation(['gig', 'common']);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      toast.error('Sila nyatakan sebab anda melaporkan tugasan ini.');
+      toast.error(t('gig:error_specify_dispute_reason', 'Sila nyatakan sebab anda melaporkan tugasan ini.'));
       return;
     }
 
@@ -33,7 +35,7 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
 
     if (disputeError) {
       console.error(disputeError);
-      toast.error('Gagal menghantar aduan. Sila cuba lagi.');
+      toast.error(t('gig:error_submit_dispute', 'Gagal menghantar aduan. Sila cuba lagi.'));
       setSubmitting(false);
       return;
     }
@@ -47,9 +49,9 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
 
     if (jobError) {
       console.error(jobError);
-      toast.error('Aduan dihantar, tetapi status tugasan gagal dikemaskini.');
+      toast.error(t('gig:error_dispute_status_update', 'Aduan dihantar, tetapi status tugasan gagal dikemaskini.'));
     } else {
-      toast.success('Aduan berjaya dihantar. Admin JPP akan menyemak kes ini.');
+      toast.success(t('gig:dispute_submitted_success', 'Aduan berjaya dihantar. Admin JPP akan menyemak kes ini.'));
       onDisputeSubmitted();
       onClose();
     }
@@ -83,20 +85,20 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
               <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
                 <AlertTriangle className="w-8 h-8 text-rose-500" />
               </div>
-              <h2 className="text-2xl font-black text-white">Lapor Pertikaian</h2>
+              <h2 className="text-2xl font-black text-white">{t('gig:dispute_modal_title', 'Lapor Pertikaian')}</h2>
               <p className="text-sm text-slate-400 mt-2">
-                Adakah berlaku masalah seperti bayaran tidak diterima, atau tugasan tidak disiapkan? Aduan anda akan dihantar kepada Admin JPP.
+                {t('gig:dispute_modal_desc', 'Adakah berlaku masalah seperti bayaran tidak diterima, atau tugasan tidak disiapkan? Aduan anda akan dihantar kepada Admin JPP.')}
               </p>
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Sebab Aduan / Pertikaian
+                {t('gig:dispute_reason_label', 'Sebab Aduan / Pertikaian')}
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Cth: Tasker sudah lari dan kerja tidak siap / Peminta enggan membayar upah..."
+                placeholder={t('gig:dispute_reason_placeholder', 'Cth: Tasker sudah lari dan kerja tidak siap / Peminta enggan membayar upah...')}
                 rows={4}
                 className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-rose-500/50 outline-none resize-none"
               />
@@ -109,10 +111,10 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Sedang Menghantar...
+                  <Loader2 className="w-5 h-5 animate-spin" /> {t('gig:sending_report', 'Sedang Menghantar...')}
                 </>
               ) : (
-                'Hantar Laporan'
+                t('gig:send_report_btn', 'Hantar Laporan')
               )}
             </button>
           </motion.div>

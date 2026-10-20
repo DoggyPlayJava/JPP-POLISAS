@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatMaskedName } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { Search, MapPin, Clock, Loader2, User, Briefcase, Zap, ShieldCheck, Laptop, Bike, Wrench, Palette, MoreHorizontal } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
@@ -13,15 +14,16 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { HelpCircle } from 'lucide-react';
 
 const CATEGORIES = [
-  { id: 'ALL', label: 'Semua', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
-  { id: 'AKADEMIK', label: 'Akademik', icon: Laptop, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
-  { id: 'RUNNER', label: 'Runner', icon: Bike, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-  { id: 'TEKNIKAL', label: 'Teknikal', icon: Wrench, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-  { id: 'KREATIF', label: 'Kreatif', icon: Palette, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20' },
-  { id: 'LAIN-LAIN', label: 'Lain-lain', icon: MoreHorizontal, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
+  { id: 'ALL', labelKey: 'cat_all', defaultLabel: 'Semua', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+  { id: 'AKADEMIK', labelKey: 'cat_akademik', defaultLabel: 'Akademik', icon: Laptop, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+  { id: 'RUNNER', labelKey: 'cat_runner', defaultLabel: 'Runner', icon: Bike, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+  { id: 'TEKNIKAL', labelKey: 'cat_teknikal', defaultLabel: 'Teknikal', icon: Wrench, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+  { id: 'KREATIF', labelKey: 'cat_kreatif', defaultLabel: 'Kreatif', icon: Palette, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20' },
+  { id: 'LAIN-LAIN', labelKey: 'cat_lain', defaultLabel: 'Lain-lain', icon: MoreHorizontal, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
 ];
 
 export function PolyTaskBoard() {
+  const { t } = useTranslation(['gig', 'common']);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -108,11 +110,11 @@ export function PolyTaskBoard() {
           className="relative z-10 text-center max-w-2xl w-full"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-6 text-xs font-bold text-indigo-300 tracking-wide">
-            <ShieldCheck className="w-3.5 h-3.5" /> 100% Khidmat Pelajar ke Pelajar
+            <ShieldCheck className="w-3.5 h-3.5" /> {t('gig:polytask_badge', '100% Khidmat Pelajar ke Pelajar')}
           </div>
           
           <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 tracking-tight leading-[1.1] mb-6">
-            Cari Peluang,<br /> Jana Pendapatan.
+            {t('gig:polytask_hero_line1', 'Cari Peluang,')}<br /> {t('gig:polytask_hero_line2', 'Jana Pendapatan.')}
           </h1>
           
           {/* Main Search Bar */}
@@ -122,13 +124,13 @@ export function PolyTaskBoard() {
               <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
               <input 
                 type="text"
-                placeholder="Cari tugasan (Cth: Format Laptop, Beli Makanan...)"
+                placeholder={t('gig:search_tasks_placeholder', 'Cari tugasan (Cth: Format Laptop, Beli Makanan...)')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full bg-transparent border-none px-4 py-3 text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-500"
               />
               <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] shrink-0">
-                Cari
+                {t('gig:search_btn', 'Cari')}
               </button>
             </div>
           </div>
@@ -141,8 +143,8 @@ export function PolyTaskBoard() {
             <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
               <ShieldCheck className="w-10 h-10 text-rose-500" />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2">Modul Ditutup Sementara</h3>
-            <p className="text-slate-400 max-w-md">Sistem PolyTask sedang diselenggara atau ditutup sementara oleh pihak pentadbir JPP. Sila kembali semula nanti.</p>
+            <h3 className="text-2xl font-black text-white mb-2">{t('gig:module_closed_title', 'Modul Ditutup Sementara')}</h3>
+            <p className="text-slate-400 max-w-md">{t('gig:module_closed_desc', 'Sistem PolyTask sedang diselenggara atau ditutup sementara oleh pihak pentadbir JPP. Sila kembali semula nanti.')}</p>
           </div>
         ) : (
           <>
@@ -162,7 +164,7 @@ export function PolyTaskBoard() {
                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${cat.bg} ${cat.color}`}>
                       <cat.icon className="w-3.5 h-3.5" />
                     </div>
-                    {cat.label}
+                    {t(`gig:${cat.labelKey}`, cat.defaultLabel)}
                   </button>
                 ))}
               </div>
@@ -171,20 +173,20 @@ export function PolyTaskBoard() {
             {/* ── JOB BOARD GRID ── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 tour-step-board-main">
               <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
-                Tugasan Tersedia 
+                {t('gig:available_tasks', 'Tugasan Tersedia')}{' '}
                 <span className="text-xs px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{filteredJobs.length}</span>
               </h2>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Susunan:</span>
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('gig:sort_label', 'Susunan:')}</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-slate-900/80 border border-white/10 text-slate-200 text-sm font-semibold rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer hover:bg-slate-800 transition-colors"
                 >
-                  <option value="LATEST">Paling Baru</option>
-                  <option value="HIGHEST_PAY">Upah Tertinggi</option>
-                  <option value="URGENT">Masa Terdekat</option>
+                  <option value="LATEST">{t('gig:sort_latest', 'Paling Baru')}</option>
+                  <option value="HIGHEST_PAY">{t('gig:sort_highest_pay', 'Upah Tertinggi')}</option>
+                  <option value="URGENT">{t('gig:sort_urgent', 'Masa Terdekat')}</option>
                 </select>
               </div>
             </div>
@@ -200,8 +202,8 @@ export function PolyTaskBoard() {
                 <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
                   <Briefcase className="w-10 h-10 text-slate-600" />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2">Tiada Hasil Ditemui</h3>
-                <p className="text-slate-400 max-w-md">Cuba gunakan kata kunci yang berbeza atau pilih kategori lain.</p>
+                <h3 className="text-2xl font-black text-white mb-2">{t('gig:no_tasks_found', 'Tiada Hasil Ditemui')}</h3>
+                <p className="text-slate-400 max-w-md">{t('gig:no_tasks_found_desc', 'Cuba gunakan kata kunci yang berbeza atau pilih kategori lain.')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -256,7 +258,7 @@ export function PolyTaskBoard() {
                         <div className="mt-auto pt-4 flex flex-wrap gap-2 relative z-10">
                           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
                             <catInfo.icon className="w-3.5 h-3.5" />
-                            {catInfo.label}
+                            {t(`gig:${catInfo.labelKey}`, catInfo.defaultLabel)}
                           </div>
                           <div className="flex items-center gap-1.5 bg-slate-800/50 border border-white/5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400">
                             <MapPin className="w-3.5 h-3.5 text-slate-500" />
@@ -268,7 +270,7 @@ export function PolyTaskBoard() {
                               : 'bg-slate-800/50 border-white/5 text-slate-400'
                           }`}>
                             <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-rose-500' : 'text-slate-500'}`} />
-                            {isUrgent ? 'Segera' : `${daysLeft} Hari Lagi`}
+                            {isUrgent ? t('gig:urgent_badge', 'Segera') : t('gig:days_left', '{{count}} Hari Lagi', { count: daysLeft })}
                           </div>
                         </div>
                       </motion.div>
